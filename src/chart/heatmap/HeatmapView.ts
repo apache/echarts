@@ -34,13 +34,14 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
-import { RectLike, RectShape } from 'zrender';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
     dimensions: ['lng', 'lat']
     getViewRect(): graphic.BoundingRect
 }
+
+type Shape = graphic.Rect['shape'];
 
 function getIsInPiecewiseRange(
     dataExtent: number[],
@@ -206,8 +207,7 @@ class HeatmapView extends ChartView {
         let emphasisStyle = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
         let blurStyle = seriesModel.getModel(['blur', 'itemStyle']).getItemStyle();
         let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
-        const itemStyle = seriesModel.getModel(['itemStyle']);
-        const borderRadius = itemStyle.get('borderRadius');
+        let borderRadius = seriesModel.get(['itemStyle', 'borderRadius']);
         let labelStatesModels = getLabelStatesModels(seriesModel);
         const emphasisModel = seriesModel.getModel('emphasis');
         let focus = emphasisModel.get('focus');
@@ -228,6 +228,17 @@ class HeatmapView extends ChartView {
         for (let idx = start; idx < end; idx++) {
             let rect;
             const style = data.getItemVisual(idx, 'style');
+            const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
+
+            // borderRadius must be set before the Rect draw.
+            if (data.hasItemOption) {
+                // Each item value struct in the data would be firstly
+                // {
+                //     itemStyle: { borderRadius: [30, 30] },
+                //     value: [2022, 02, 22]
+                // }
+                borderRadius = itemModel.get(['itemStyle', 'borderRadius']);
+            }
 
             if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
                 const dataDimX = data.get(dataDims[0], idx);
@@ -248,16 +259,14 @@ class HeatmapView extends ChartView {
                     dataDimY
                 ]);
 
-                const shape: RectShape & {
-                    r?: BorderRadius
-                } = {
+                const shape: Shape = {
                     x: Math.floor(Math.round(point[0]) - width / 2),
                     y: Math.floor(Math.round(point[1]) - height / 2),
                     width: Math.ceil(width),
                     height: Math.ceil(height)
                 };
 
-                if (borderRadius) {
+                if (borderRadius || Array.isArray(borderRadius)) {
                     shape.r = borderRadius;
                 }
 
@@ -271,11 +280,9 @@ class HeatmapView extends ChartView {
                 if (isNaN(data.get(dataDims[1], idx) as number)) {
                     continue;
                 }
-                const shape: RectLike & {
-                    r?: BorderRadius
-                } = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
+                const shape: Shape = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
 
-                if (borderRadius) {
+                if (borderRadius || Array.isArray(borderRadius)) {
                     shape.r = borderRadius;
                 }
 
@@ -285,8 +292,6 @@ class HeatmapView extends ChartView {
                     style
                 });
             }
-
-            const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
 
             // Optimization for large datset
             if (data.hasItemOption) {
