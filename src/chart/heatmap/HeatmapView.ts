@@ -41,7 +41,7 @@ interface GeoLikeCoordSys extends CoordinateSystem {
     getViewRect(): graphic.BoundingRect
 }
 
-type Shape = graphic.Rect['shape'];
+type RectShape = graphic.Rect['shape'];
 
 function getIsInPiecewiseRange(
     dataExtent: number[],
@@ -228,17 +228,6 @@ class HeatmapView extends ChartView {
         for (let idx = start; idx < end; idx++) {
             let rect;
             const style = data.getItemVisual(idx, 'style');
-            const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
-
-            // borderRadius must be set before the Rect draw.
-            if (data.hasItemOption) {
-                // Each item value struct in the data would be firstly
-                // {
-                //     itemStyle: { borderRadius: [30, 30] },
-                //     value: [2022, 02, 22]
-                // }
-                borderRadius = itemModel.get(['itemStyle', 'borderRadius']);
-            }
 
             if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
                 const dataDimX = data.get(dataDims[0], idx);
@@ -259,16 +248,12 @@ class HeatmapView extends ChartView {
                     dataDimY
                 ]);
 
-                const shape: Shape = {
+                const shape: RectShape = {
                     x: Math.floor(Math.round(point[0]) - width / 2),
                     y: Math.floor(Math.round(point[1]) - height / 2),
                     width: Math.ceil(width),
                     height: Math.ceil(height)
                 };
-
-                if (borderRadius || Array.isArray(borderRadius)) {
-                    shape.r = borderRadius;
-                }
 
                 rect = new graphic.Rect({
                     shape,
@@ -280,11 +265,7 @@ class HeatmapView extends ChartView {
                 if (isNaN(data.get(dataDims[1], idx) as number)) {
                     continue;
                 }
-                const shape: Shape = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
-
-                if (borderRadius || Array.isArray(borderRadius)) {
-                    shape.r = borderRadius;
-                }
+                const shape: RectShape = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
 
                 rect = new graphic.Rect({
                     z2: 1,
@@ -295,10 +276,18 @@ class HeatmapView extends ChartView {
 
             // Optimization for large datset
             if (data.hasItemOption) {
+                const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
                 emphasisStyle = emphasisModel.getModel('itemStyle').getItemStyle();
                 blurStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
                 selectStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
+
+                // Each item value struct in the data would be firstly
+                // {
+                //     itemStyle: { borderRadius: [30, 30] },
+                //     value: [2022, 02, 22]
+                // }
+                borderRadius = itemModel.get(['itemStyle', 'borderRadius']);
 
                 focus = emphasisModel.get('focus');
                 blurScope = emphasisModel.get('blurScope');
@@ -306,6 +295,8 @@ class HeatmapView extends ChartView {
 
                 labelStatesModels = getLabelStatesModels(itemModel);
             }
+
+            rect.shape.r = borderRadius;
 
             const rawValue = seriesModel.getRawValue(idx) as OptionDataValue[];
             let defaultText = '-';
