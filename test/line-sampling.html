@@ -18,34 +18,28 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+
 <html>
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            .test-title {
-                background: #146402;
-                color: #fff;
-            }
-            #main {
-                width: 600px;
-                height: 400px;
-            }
         </style>
-        <div id="main"></div>
+
+        <div id="main0"></div>
 
         <script>
             require([
                 'echarts'
             ], function (echarts) {
-                var container = document.getElementById('main');
-                var chart = echarts.init(container);
-                
                 const data = [
                     ["2021-03-03T15:30:00.000Z", 48.1],
                     ["2021-03-03T15:45:00.000Z", 47.9],
@@ -78,7 +72,7 @@ under the License.
                     ["2021-03-03T23:00:00.000Z", 48.3],
                     ["2021-03-03T23:15:00.000Z", 46.8],
                     ["2021-03-03T23:30:00.000Z", 48.3],
-                    ["2021-03-04 07:45:00", null],
+                    ["2021-03-03T23:45:00.000Z", null],
                     ["2021-03-04T00:00:00.000Z", 48.3],
                     ["2021-03-04T00:15:00.000Z", 51],
                     ["2021-03-04T00:30:00.000Z", 51.5],
@@ -132,7 +126,7 @@ under the License.
                         data: ["relative humidity"],
                     },
                     dataZoom: [
-                        { realtime: true, xAxisIndex: [0, 1], filterMode: "weakFilter" },
+                        { realtime: true, xAxisIndex: [0, 1], filterMode: "weakFilter", id: 'dz-s' },
                         { type: "inside", realtime: true, xAxisIndex: [0, 1] },
                     ],
                     xAxis: {
@@ -163,7 +157,35 @@ under the License.
                     ],
                 };
 
-                chart.setOption(option);
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Sampling with lttb, test **connectNulls**',
+                        'NaN point should not be filtered, toggle connectNulls value, compare it.',
+                    ],
+                    option,
+                    height: 300,
+                    buttons: [
+                        {
+                            text: 'find null series',
+                            onclick: function () {
+                                chart.dispatchAction({
+                                    type: 'dataZoom',
+                                    batch: [
+                                        {id: 'dz-s', start: 0, end: 10}
+                                    ]
+                                });
+                            }
+                        },
+                        {
+                            text: 'toggle connectNulls value',
+                            onclick: function () {
+                                const flag = option.series[0].connectNulls;
+                                option.series[0].connectNulls = !flag;
+                                chart.setOption(option);
+                            }
+                        }
+                    ]
+                });
             });
         </script>
     </body>
