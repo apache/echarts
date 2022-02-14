@@ -41,8 +41,6 @@ interface GeoLikeCoordSys extends CoordinateSystem {
     getViewRect(): graphic.BoundingRect
 }
 
-type RectShape = graphic.Rect['shape'];
-
 function getIsInPiecewiseRange(
     dataExtent: number[],
     pieceList: ReturnType<PiecewiseModel['getPieceList']>,
@@ -248,15 +246,13 @@ class HeatmapView extends ChartView {
                     dataDimY
                 ]);
 
-                const shape: RectShape = {
-                    x: Math.floor(Math.round(point[0]) - width / 2),
-                    y: Math.floor(Math.round(point[1]) - height / 2),
-                    width: Math.ceil(width),
-                    height: Math.ceil(height)
-                };
-
                 rect = new graphic.Rect({
-                    shape,
+                    shape: {
+                        x: Math.floor(Math.round(point[0]) - width / 2),
+                        y: Math.floor(Math.round(point[1]) - height / 2),
+                        width: Math.ceil(width),
+                        height: Math.ceil(height)
+                    },
                     style
                 });
             }
@@ -265,11 +261,10 @@ class HeatmapView extends ChartView {
                 if (isNaN(data.get(dataDims[1], idx) as number)) {
                     continue;
                 }
-                const shape: RectShape = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
 
                 rect = new graphic.Rect({
                     z2: 1,
-                    shape,
+                    shape: coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape,
                     style
                 });
             }
