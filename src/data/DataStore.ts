@@ -935,7 +935,7 @@ class DataStore {
         let area;
         let nextRawIndex;
 
-        const newIndices = new (getIndicesCtor(this._rawCount))(len);
+        const newIndices = new (getIndicesCtor(this._rawCount))(Math.min((Math.ceil(len / frameSize) + 2) * 2, len));
 
         // First frame use the first data.
         newIndices[sampledIndex++] = currentRawIndex;
