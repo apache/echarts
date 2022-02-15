@@ -22,7 +22,7 @@ import { toggleHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
-import HeatmapSeriesModel, { BorderRadius, HeatmapDataItemOption } from './HeatmapSeries';
+import HeatmapSeriesModel, { HeatmapDataItemOption } from './HeatmapSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 import type VisualMapModel from '../../component/visualMap/VisualMapModel';
