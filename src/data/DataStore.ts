@@ -1002,12 +1002,7 @@ class DataStore {
         // First frame use the last data.
         newIndices[sampledIndex++] = this.getRawIndex(len - 1);
         target._count = sampledIndex;
-
-        const _newIndices = new (getIndicesCtor(this._rawCount))(sampledIndex);
-        for (let idx = 0; idx < sampledIndex; idx++) {
-            _newIndices[idx] = newIndices[idx];
-        }
-        target._indices = _newIndices;
+        target._indices = newIndices;
 
         target.getRawIndex = this._getRawIdx;
         return target;
