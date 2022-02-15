@@ -33,10 +33,10 @@ import {
     OptionEncodeValue,
     Dictionary,
     OptionEncode,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     ZRColor,
     CallbackDataParams
- } from '../../util/types';
+} from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { ParallelActiveState, ParallelAxisOption } from '../../coord/parallel/AxisModel';
@@ -46,7 +46,7 @@ import ParallelModel from '../../coord/parallel/ParallelModel';
 type ParallelSeriesDataValue = OptionDataValue[];
 
 interface ParallelStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 export interface ParallelStateOption<TCbParams = never> {
     lineStyle?: LineStyleOption<(TCbParams extends never ? never : (params: TCbParams) => ZRColor) | ZRColor>
