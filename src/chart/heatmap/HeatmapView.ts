@@ -31,7 +31,7 @@ import type ContinuousModel from '../../component/visualMap/ContinuousModel';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
-import Calendar from '../../coord/calendar/Calendar';
+import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
 
