@@ -40,7 +40,7 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
-
+        <div id="main3"></div>
 
 
 
@@ -220,6 +220,61 @@ under the License.
             });
             </script>
 
+        <script>
+             require(['echarts'], function (echarts) {
+                var option = {
+                    graphic:{
+                        elements: [{
+                            type: 'group',
+                            left: '10%',
+                            top: 'center',
+                            draggable: true,
+                            children: [{
+                                type: 'rect',
+                                z: 100,
+                                left: 'center',
+                                top: 'middle',
+                                shape: {
+                                    width: 240,
+                                    height: 90
+                                },
+                                style: {
+                                    fill: 'gray',
+                                    stroke: '#555',
+                                    lineWidth: 1,
+                                    shadowBlur: 8,
+                                    shadowOffsetX: 3,
+                                    shadowOffsetY: 3,
+                                    shadowColor: 'rgba(0,0,0,0.2)'
+                                },
+                                cursor: 'move',
+                            }, {
+                                type: 'text',
+                                z: 100,
+                                left: 'center',
+                                top: 'middle',
+                                style: {
+                                    fill: '#000',
+                                    width: 220,
+                                    overflow: 'break',
+                                    text: 'the value of cursor prop is "default", it looks well on version 5.1.1. Replace echarts version with 5.3.0, the mouse will still be a pointer',
+                                    font: '14px Microsoft YaHei'
+                                },
+                                cursor: 'help',
+                            }]
+                        }]
+                    }
+                };
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Cursor should be **move** when hovering on the rect',
+                        'Cursor should be **help** when hovering on the text',
+                        'See https://github.com/apache/echarts/issues/16511'
+                    ],
+                    option: option
+                });
+             });
+        </script>
     </body>
 </html>
 
