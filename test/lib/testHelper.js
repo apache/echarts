@@ -174,7 +174,7 @@
         initRecordCanvas(opt, chart, recordCanvasContainer);
 
         if (opt.recordVideo) {
-testHelper.createRecordVideo(chart, recordVideoContainer);
+            testHelper.createRecordVideo(chart, recordVideoContainer);
         }
 
         chart.__testHelper = {
