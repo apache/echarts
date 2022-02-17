@@ -991,7 +991,10 @@ class DataStore {
             }
 
             if (countNaN > 0 && countNaN < frameEnd - frameStart) {
-                newIndices[sampledIndex++] = firstNaNIndex; // append first NaN point in every bucket
+                // Append first NaN point in every bucket.
+                // It is necessary to ensure the correct order of indices.
+                newIndices[sampledIndex++] = Math.min(firstNaNIndex, nextRawIndex);
+                nextRawIndex = Math.max(firstNaNIndex, nextRawIndex);
             }
 
             newIndices[sampledIndex++] = nextRawIndex;
