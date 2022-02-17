@@ -174,7 +174,7 @@
         initRecordCanvas(opt, chart, recordCanvasContainer);
 
         if (opt.recordVideo) {
-            initRecordVideo(chart, recordVideoContainer);
+            testHelper.createRecordVideo(chart, recordVideoContainer);
         }
 
         chart.__testHelper = {
@@ -238,7 +238,7 @@
         }
     }
 
-    function initRecordVideo(chart, recordVideoContainer) {
+    testHelper.createRecordVideo = function (chart, recordVideoContainer) {
         var button = document.createElement('button');
         button.innerHTML = 'Start Recording';
         recordVideoContainer.appendChild(button);

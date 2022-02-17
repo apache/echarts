@@ -40,6 +40,7 @@ import Model from '../../model/Model';
 import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
+import SeriesModel from '../../model/Series';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -51,7 +52,7 @@ interface UpdateOpt {
 
 interface SymbolLike extends graphic.Group {
     updateData(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
-    fadeOut?(cb: () => void): void
+    fadeOut?(cb: () => void, seriesModel: SeriesModel): void
 }
 
 interface SymbolLikeCtor {
@@ -252,7 +253,7 @@ class SymbolDraw {
                 const el = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
                 el && el.fadeOut(function () {
                     group.remove(el);
-                });
+                }, seriesModel as SeriesModel);
             })
             .execute();
 
@@ -319,7 +320,7 @@ class SymbolDraw {
             data.eachItemGraphicEl(function (el: SymbolLike) {
                 el.fadeOut(function () {
                     group.remove(el);
-                });
+                }, data.hostModel as SeriesModel);
             });
         }
         else {

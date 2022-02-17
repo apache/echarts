@@ -706,7 +706,7 @@ function removeNode(
         removeOpt: removeAnimationOpt
     });
 
-    symbolEl.fadeOut(null, {
+    symbolEl.fadeOut(null, data.hostModel as TreeSeriesModel, {
         fadeLabel: true,
         animation: removeAnimationOpt
     });
