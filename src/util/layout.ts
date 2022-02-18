@@ -84,7 +84,7 @@ function boxLayout(
             nextX = x + moveX;
             // Wrap when width exceeds maxWidth or meet a `newline` group
             // FIXME compare before adding gap?
-            if (nextX > maxWidth || (child as NewlineElement).newline) {
+            if (nextX > maxWidth || (child as NewlineElement).newline || (nextX + rect.width > maxWidth)) {
                 x = 0;
                 nextX = moveX;
                 y += currentLineMaxSize + gap;
@@ -99,7 +99,7 @@ function boxLayout(
             const moveY = rect.height + (nextChildRect ? (-nextChildRect.y + rect.y) : 0);
             nextY = y + moveY;
             // Wrap when width exceeds maxHeight or meet a `newline` group
-            if (nextY > maxHeight || (child as NewlineElement).newline) {
+            if (nextY > maxHeight || (child as NewlineElement).newline || (nextY + rect.height > maxHeight)) {
                 x += currentLineMaxSize + gap;
                 y = 0;
                 nextY = moveY;

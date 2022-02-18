@@ -44,6 +44,9 @@ under the License.
             .chart {
                 height: 300px;
             }
+            #icon-overflow .test-chart{
+                height: 280px;
+            }
         </style>
 
         <div class="chart" id="plain"></div>
@@ -72,6 +75,7 @@ under the License.
         <div id="only-single-item"></div>
         <div id="vary-size"></div>
         <div id="index-to-no-name"></div>
+        <div id="icon-overflow" style="width: 400px; height: 280px; border: red solid 1px;"></div>
 
         <script>
 
@@ -418,7 +422,7 @@ under the License.
                     tooltip: {
                     },
                     grid: {
-                        left: 280
+                        left: 330
                     },
                     xAxis: {
                         data: seriesInfo.xAxisData
@@ -1099,6 +1103,112 @@ under the License.
             })
         </script>
 
+         <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                const options = {
+                    tooltip: {
+                        trigger: "axis",
+                        axisPointer: {
+                        type: "shadow" // 'shadow' as default; can also be 'line' or 'shadow'
+                        }
+                    },
+                    grid: {
+                        left: 50,
+                        right: 20,
+                        bottom: 30
+                    },
+                    legend: {
+                        selector: [
+                        {
+                            type: "all",
+                            title: "全选"
+                        },
+                        {
+                            type: "inverse",
+                            title: "反选"
+                        }
+                        ],
+                        selectorPosition: "start"
+                    },
+                    yAxis: {
+                        type: "value"
+                    },
+                    xAxis: {
+                        type: "category",
+                        data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                    },
+                    series: [
+                        {
+                            name: "Direct",
+                            type: "bar",
+                            stack: "total",
+                            label: {
+                                show: true
+                            },
+                            emphasis: {
+                                focus: "series"
+                            },
+                            data: [320, 302, 301, 334, 390, 330, 320]
+                        },
+                        {
+                            name: "Mail Ad",
+                            type: "bar",
+                            stack: "total",
+                            label: {
+                                show: true
+                            },
+                            emphasis: {
+                                focus: "series"
+                            },
+                            data: [120, 132, 101, 134, 90, 230, 210]
+                        },
+                        {
+                            name: "Affiliate Ad",
+                            type: "bar",
+                            stack: "total",
+                            label: {
+                                show: true
+                            },
+                            emphasis: {
+                                focus: "series"
+                            },
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: "Video Ad",
+                            type: "bar",
+                            stack: "total",
+                            label: {
+                                show: true
+                            },
+                            emphasis: {
+                                focus: "series"
+                            },
+                            data: [150, 212, 201, 154, 190, 330, 410]
+                        },
+                        {
+                            name: "Search Engine",
+                            type: "bar",
+                            stack: "total",
+                            label: {
+                                show: true
+                            },
+                            emphasis: {
+                                focus: "series"
+                            },
+                            data: [820, 832, 901, 934, 1290, 1330, 1320]
+                        }
+                    ]
+                };
+                testHelper.create(echarts, 'icon-overflow', {
+                    option: options,
+                    title: 'The icon of legend will not overflow. When the selector option is turned on',
+                    draggable: false
+                });
+            });
+        </script>
 
     </body>
 </html>
