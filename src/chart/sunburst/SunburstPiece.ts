@@ -219,7 +219,7 @@ class SunburstPiece extends graphic.Sector {
             }
             else {
                 if (!textAlign || textAlign === 'center') {
-                    // set the position of label in center when angle is 2π & r0 is 0
+                    // Put label in the center if it's a circle
                     if (angle === 2 * Math.PI && layout.r0 === 0) {
                         r = 0;
                     }
