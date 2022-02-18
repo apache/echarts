@@ -50,6 +50,7 @@ under the License.
         <div id="main7"></div>
         <div id="main8"></div>
         <div id="main9"></div>
+        <div id="main10"></div>
 
 
         <script>
@@ -802,6 +803,64 @@ under the License.
                     ],
                     height: 300,
                     option: option
+                });
+
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                const option = {
+                    series: [
+                        {
+                            name: "Access From",
+                            type: "pie",
+                            radius: "50%",
+                            data: [
+                                { value: 1048, name: "Search Engine" },
+                                { value: 735, name: "Direct" },
+                                { value: 580, name: "Email" },
+                                { value: 484, name: "Union Ads" },
+                                { value: 300, name: "Video Ads" },
+                            ],
+                        },
+                    ],
+                };
+            
+                var chart = testHelper.create(echarts, 'main10', {
+                    title: [
+                        'Label line should hide when emphasis after update the emphasis.labelLine',
+                        'also label should be hidden when sector was selected',
+                        'Test case from issue #16539',
+                    ],
+                    height: 300,
+                    option: option,
+                    button: [
+                        {
+                            text: 'Click to update options',
+                            onClick: () => {
+                                chart.setOption({
+                                    series: [
+                                        {
+                                            selectedMode: true,
+                                            emphasis: {
+                                                labelLine: {
+                                                    show: false,
+                                                },
+                                            },
+                                            select: {
+                                                label: {
+                                                    show: false,
+                                                }
+                                            }
+                                        },
+                                    ],
+                                })
+                            }
+                        }
+                    ]
                 });
 
             });
