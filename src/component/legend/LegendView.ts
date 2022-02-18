@@ -468,16 +468,17 @@ class LegendView extends ComponentView {
         const selectorGroup = this.getSelectorGroup();
 
         const selectorButtonGap = legendModel.get('selectorButtonGap', true);
-        if (selector && legendModel.get('orient') === 'horizontal') {
+        const legendOrient = legendModel.get('orient');
+        if (selector && legendOrient === 'horizontal') {
             maxSize.width = maxSize.width - selectorGroup.getBoundingRect().width - selectorButtonGap;
         }
-        else if (selector && legendModel.get('orient') === 'vertical') {
+        else if (selector && legendOrient === 'vertical') {
             maxSize.height = maxSize.height - selectorGroup.getBoundingRect().height - selectorButtonGap;
         }
 
         // Place items in contentGroup.
         layoutUtil.box(
-            legendModel.get('orient'),
+            legendOrient,
             contentGroup,
             legendModel.get('itemGap'),
             maxSize.width,
@@ -501,7 +502,6 @@ class LegendView extends ComponentView {
 
             const selectorRect = selectorGroup.getBoundingRect();
             const selectorPos = [-selectorRect.x, -selectorRect.y];
-            const selectorButtonGap = legendModel.get('selectorButtonGap', true);
 
             const orientIdx = legendModel.getOrient().index;
             const wh: 'width' | 'height' = orientIdx === 0 ? 'width' : 'height';
