@@ -36,8 +36,27 @@ const roundingErrorFix = numberUtil.round;
 const mathFloor = Math.floor;
 const mathCeil = Math.ceil;
 const mathPow = Math.pow;
-
 const mathLog = Math.log;
+
+/**
+ * symmetric log, allowing negative values for logarithmic scales
+ */
+function symMathLog(x: number): number {
+    if (x >= 0) {
+        return mathLog(x);
+    }
+    return -mathLog(-x);
+}
+
+/**
+ * symmetric pow, allowing negative values for logarithmic scales
+ */
+function symMathPow(x: number, y: number): number {
+    if (y >= 0) {
+        return mathPow(x, y);
+    }
+    return -mathPow(x, -y);
+}
 
 class LogScale extends Scale {
     static type = 'log';
@@ -68,7 +87,7 @@ class LogScale extends Scale {
 
         return zrUtil.map(ticks, function (tick) {
             const val = tick.value;
-            let powVal = numberUtil.round(mathPow(this.base, val));
+            let powVal = numberUtil.round(symMathPow(this.base, val));
 
             // Fix #4158
             powVal = (val === extent[0] && this._fixMin)
@@ -86,8 +105,8 @@ class LogScale extends Scale {
 
     setExtent(start: number, end: number): void {
         const base = this.base;
-        start = mathLog(start) / mathLog(base);
-        end = mathLog(end) / mathLog(base);
+        start = symMathLog(start) / mathLog(base);
+        end = symMathLog(end) / mathLog(base);
         intervalScaleProto.setExtent.call(this, start, end);
     }
 
@@ -97,8 +116,8 @@ class LogScale extends Scale {
     getExtent() {
         const base = this.base;
         const extent = scaleProto.getExtent.call(this);
-        extent[0] = mathPow(base, extent[0]);
-        extent[1] = mathPow(base, extent[1]);
+        extent[0] = symMathPow(base, extent[0]);
+        extent[1] = symMathPow(base, extent[1]);
 
         // Fix #4158
         const originalScale = this._originalScale;
@@ -113,8 +132,8 @@ class LogScale extends Scale {
         this._originalScale.unionExtent(extent);
 
         const base = this.base;
-        extent[0] = mathLog(extent[0]) / mathLog(base);
-        extent[1] = mathLog(extent[1]) / mathLog(base);
+        extent[0] = symMathLog(extent[0]) / mathLog(base);
+        extent[1] = symMathLog(extent[1]) / mathLog(base);
         scaleProto.unionExtent.call(this, extent);
     }
 
@@ -176,18 +195,18 @@ class LogScale extends Scale {
     }
 
     contain(val: number): boolean {
-        val = mathLog(val) / mathLog(this.base);
+        val = symMathLog(val) / mathLog(this.base);
         return scaleHelper.contain(val, this._extent);
     }
 
     normalize(val: number): number {
-        val = mathLog(val) / mathLog(this.base);
+        val = symMathLog(val) / mathLog(this.base);
         return scaleHelper.normalize(val, this._extent);
     }
 
     scale(val: number): number {
         val = scaleHelper.scale(val, this._extent);
-        return mathPow(this.base, val);
+        return symMathPow(this.base, val);
     }
 
     getMinorTicks: IntervalScale['getMinorTicks'];
