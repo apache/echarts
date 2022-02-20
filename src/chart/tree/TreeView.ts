@@ -19,15 +19,15 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import {getECData} from '../../util/innerStore';
+import { getECData } from '../../util/innerStore';
 import SymbolClz from '../helper/Symbol';
-import {radialCoordinate} from './layoutHelper';
+import { radialCoordinate } from './layoutHelper';
 import * as bbox from 'zrender/src/core/bbox';
 import View from '../../coord/View';
 import * as roamHelper from '../../component/helper/roamHelper';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
-import {onIrrelevantElement} from '../../component/helper/cursorHelper';
-import {parsePercent} from '../../util/number';
+import { onIrrelevantElement } from '../../component/helper/cursorHelper';
+import { parsePercent } from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
 import Path, { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
@@ -376,7 +376,7 @@ function updateNode(
     const itemModel = node.getModel<TreeSeriesNodeItemOption>();
     const visualColor = (node.getVisual('style') as PathStyleProps).fill;
     const symbolInnerColor = node.isExpand === false && node.children.length !== 0
-            ? visualColor : '#fff';
+        ? visualColor : '#fff';
 
     const virtualRoot = data.tree.root;
 
@@ -535,6 +535,8 @@ function drawEdge(
     const edgeForkPosition = seriesModel.get('edgeForkPosition');
     const lineStyle = itemModel.getModel('lineStyle').getLineStyle();
     let edge = symbolEl.__edge;
+    // curve edge from node -> parent
+    // polyline edge from node -> children
     if (edgeShape === 'curve') {
         if (node.parentNode && node.parentNode !== virtualRoot) {
             if (!edge) {
@@ -583,7 +585,8 @@ function drawEdge(
         }
     }
 
-    if (edge) {
+    // show all edge when edgeShape is 'curve', filter node `isExpand` is false when edgeShape is 'polyline'
+    if (edge && (node.isExpand === true || (edgeShape !== 'polyline'))) {
         edge.useStyle(zrUtil.defaults({
             strokeNoScale: true, fill: null
         }, lineStyle));
