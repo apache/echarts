@@ -47,6 +47,8 @@ under the License.
 
     <div id="main3"></div>
 
+    <div id="main4"></div>
+
 
 
 
@@ -250,6 +252,101 @@ under the License.
             });
         });
     </script>
+
+<script>
+    require(['echarts'], function (echarts) {
+        var option = {
+            tooltip: {
+                formatter: '{a} <br/>{b} : {c}%'
+            },
+            toolbox: {
+                feature: {
+                    restore: {},
+                    saveAsImage: {}
+                }
+            },
+            series: [{
+                name: '学生成绩',
+                type: 'gauge',
+                startAngle: 321,
+                endAngle: -39,
+                min: 0,
+                max: 1,
+                splitNumber: 8,
+                axisLine: {
+                    lineStyle: {
+                        width: 5,
+                        color: [
+                            [0.25, '#FF6E76'],
+                            [0.5, '#FDDD60'],
+                            [0.75, '#58D9F9'],
+                            [1, '#7CFFB2'],
+                        ]
+                    }
+                },
+                pointer: {
+                    length: '80%',
+                    itemStyle: {
+                        color: 'auto'
+                    }
+                },
+                axisTick: {
+                    length: 15,
+                    lineStyle: {
+                        color: 'auto'
+                    }
+                },
+                splitLine: {
+                    length: 20,
+                    lineStyle: {
+                        color: 'auto',
+                        width: 5
+                    }
+                },
+                axisLabel: {
+                    color: '#464646',
+                    fontSize: 20,
+                    distance: -60,
+                    formatter: function(value) {
+                        if (value === 0.875) {
+                            return '优'
+                        } else if (value === 0.625) {
+                            return '中'
+                        } else if (value === 0.375) {
+                            return '良'
+                        } else if (value === 0.125) {
+                            return '差'
+                        }
+                    }
+                },
+                title: {
+                    offsetCenter: [0, '-50%'],
+                    fontSize: 40
+                },
+                detail: {
+                    valueAnimation: true,
+                    fontSize: 50,
+                    offsetCenter: [0, '-30%'],
+                    formatter: function(value) {
+                        return Math.round(value * 100) + '%';
+                    },
+                    color: 'auto'
+                },
+                data: [{
+                    value: 0.75,
+                    name: '成绩评定'
+                }]
+            }]
+        };
+
+        var chart = testHelper.create(echarts, 'main4', {
+            title: [
+                'Value animation should be enabled'
+            ],
+            option: option
+        });
+    });
+</script>
 </body>
 
 </html>

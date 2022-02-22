@@ -72,7 +72,9 @@ function formatLabel(value: number, labelFormatter: string | ((value: number) =>
     return label;
 }
 
-const PI2 = Math.PI * 2;
+function degToRad(deg: number) {
+    return deg / 180 * Math.PI;
+}
 
 class GaugeView extends ChartView {
     static type = 'gauge' as const;
@@ -109,8 +111,10 @@ class GaugeView extends ChartView {
     ) {
         const group = this.group;
         const clockwise = seriesModel.get('clockwise');
-        let startAngle = -seriesModel.get('startAngle') / 180 * Math.PI;
-        let endAngle = -seriesModel.get('endAngle') / 180 * Math.PI;
+        const startAngleDeg = -seriesModel.get('startAngle');
+        const endAngleDeg = -seriesModel.get('endAngle');
+        let startAngle = degToRad(startAngleDeg);
+        let endAngle = degToRad(endAngleDeg);
         const axisLineModel = seriesModel.getModel('axisLine');
 
         const roundCap = axisLineModel.get('roundCap');
@@ -119,8 +123,10 @@ class GaugeView extends ChartView {
         const showAxis = axisLineModel.get('show');
         const lineStyleModel = axisLineModel.getModel('lineStyle');
         const axisLineWidth = lineStyleModel.get('width');
-        const angleRangeSpan = !((endAngle - startAngle) % PI2) && endAngle !== startAngle
-            ? PI2 : (endAngle - startAngle) % PI2;
+        // avoid use calculated angle to get span range data
+        const angleRangeSpanDeg = !((endAngleDeg - startAngleDeg) % 360) && endAngleDeg !== startAngleDeg
+            ? 360 : (endAngleDeg - startAngleDeg) % 360;
+        const angleRangeSpan = degToRad(angleRangeSpanDeg);
 
         let prevEndAngle = startAngle;
 
