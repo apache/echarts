@@ -37,7 +37,7 @@ import {
     VerticalAlign,
     SeriesLabelOption,
     SeriesEncodeOptionMixin,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -49,7 +49,7 @@ type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
 };
 
 interface FunnelStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 
 export interface FunnelCallbackDataParams extends CallbackDataParams {
@@ -147,7 +147,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     }
 
     static defaultOption: FunnelSeriesOption = {
-        zlevel: 0,                  // 一级层叠
+        // zlevel: 0,                  // 一级层叠
         z: 2,                       // 二级层叠
         legendHoverLink: true,
         colorBy: 'data',

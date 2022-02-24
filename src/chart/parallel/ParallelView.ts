@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import SeriesData from '../../data/SeriesData';
 import ParallelSeriesModel, { ParallelSeriesDataItemOption } from './ParallelSeries';
@@ -30,6 +30,7 @@ import { OptionAxisType } from '../../coord/axisCommonTypes';
 import { numericToNumber } from '../../util/number';
 import { eqNaN } from 'zrender/src/core/util';
 import { saveOldStyle } from '../../animation/basicTrasition';
+import Element from 'zrender/src/Element';
 
 const DEFAULT_SMOOTH = 0.3;
 
@@ -46,6 +47,8 @@ class ParallelView extends ChartView {
 
     private _initialized = false;
 
+    private _progressiveEls: Element[];
+
     init() {
         this.group.add(this._dataGroup);
     }
@@ -59,6 +62,10 @@ class ParallelView extends ChartView {
         api: ExtensionAPI,
         payload: Payload
     ) {
+
+        // Clear previously rendered progressive elements.
+        this._progressiveEls = null;
+
         const dataGroup = this._dataGroup;
         const data = seriesModel.getData();
         const oldData = this._data;
@@ -123,11 +130,13 @@ class ParallelView extends ChartView {
         const coordSys = seriesModel.coordinateSystem;
         const dimensions = coordSys.dimensions;
         const seriesScope = makeSeriesScope(seriesModel);
+        const progressiveEls: Element[] = this._progressiveEls = [];
 
         for (let dataIndex = taskParams.start; dataIndex < taskParams.end; dataIndex++) {
             const line = addEl(data, this._dataGroup, dataIndex, dimensions, coordSys);
             line.incremental = true;
             updateElCommon(line, data, dataIndex, seriesScope);
+            progressiveEls.push(line);
         }
     }
 
@@ -209,7 +218,9 @@ function updateElCommon(
     const emphasisModel = itemModel.getModel('emphasis');
     setStatesStylesFromModel(el, itemModel, 'lineStyle');
 
-    enableHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+    toggleHoverEmphasis(
+        el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
+    );
 }
 
 // function simpleDiff(oldData, newData, dimensions) {

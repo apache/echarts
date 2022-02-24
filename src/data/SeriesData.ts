@@ -430,7 +430,7 @@ class SeriesData<
      * @return recogonized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
      */
     private _recognizeDimIndex(dim: DimensionLoose): DimensionIndex {
-        if (typeof dim === 'number'
+        if (zrUtil.isNumber(dim)
             // If being a number-like string but not being defined as a dimension name.
             || (
                 dim != null
@@ -907,7 +907,7 @@ class SeriesData<
     ): void {
         'use strict';
 
-        if (typeof dims === 'function') {
+        if (zrUtil.isFunction(dims)) {
             ctx = cb as Ctx;
             cb = dims;
             dims = [];
@@ -938,7 +938,7 @@ class SeriesData<
     ): SeriesData {
         'use strict';
 
-        if (typeof dims === 'function') {
+        if (zrUtil.isFunction(dims)) {
             ctx = cb as Ctx;
             cb = dims;
             dims = [];
@@ -994,7 +994,7 @@ class SeriesData<
     ): unknown[] {
         'use strict';
 
-        if (typeof dims === 'function') {
+        if (zrUtil.isFunction(dims)) {
             ctx = cb as Ctx;
             cb = dims;
             dims = [];
@@ -1269,15 +1269,9 @@ class SeriesData<
     setLayout(key: string, val: any): void;
     setLayout(kvObj: Dictionary<any>): void;
     setLayout(key: string | Dictionary<any>, val?: any): void {
-        if (isObject(key)) {
-            for (const name in key) {
-                if (key.hasOwnProperty(name)) {
-                    this.setLayout(name, key[name]);
-                }
-            }
-            return;
-        }
-        this._layout[key] = val;
+        isObject(key)
+            ? zrUtil.extend(this._layout, key)
+            : (this._layout[key] = val);
     }
 
     /**
@@ -1368,7 +1362,7 @@ class SeriesData<
         injectFunction: (...args: any) => any
     ): void {
         const originalMethod = this[methodName];
-        if (typeof originalMethod !== 'function') {
+        if (!zrUtil.isFunction(originalMethod)) {
             return;
         }
         this.__wrappedMethods = this.__wrappedMethods || [];

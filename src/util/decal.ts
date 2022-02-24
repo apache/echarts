@@ -21,17 +21,19 @@
 import WeakMap from 'zrender/src/core/WeakMap';
 import { ImagePatternObject, PatternObject, SVGPatternObject } from 'zrender/src/graphic/Pattern';
 import LRU from 'zrender/src/core/LRU';
-import {defaults, createCanvas, map, isArray} from 'zrender/src/core/util';
+import {defaults, map, isArray, isString, isNumber} from 'zrender/src/core/util';
 import {getLeastCommonMultiple} from './number';
 import {createSymbol} from './symbol';
 import ExtensionAPI from '../core/ExtensionAPI';
 import type SVGPainter from 'zrender/src/svg/Painter';
 import { brushSingle } from 'zrender/src/canvas/graphic';
 import {DecalDashArrayX, DecalDashArrayY, InnerDecalObject, DecalObject} from './types';
+import { SVGVNode } from 'zrender/src/svg/core';
+import { platformApi } from 'zrender/src/core/platform';
 
 const decalMap = new WeakMap<DecalObject, PatternObject>();
 
-const decalCache = new LRU<HTMLCanvasElement | SVGElement>(100);
+const decalCache = new LRU<HTMLCanvasElement | SVGVNode>(100);
 
 const decalKeys = [
     'symbol', 'symbolSize', 'symbolKeepAspect',
@@ -99,12 +101,11 @@ export function createOrUpdatePatternFromDecal(
         let isValidKey = true;
         for (let i = 0; i < decalKeys.length; ++i) {
             const value = (decalOpt as any)[decalKeys[i]];
-            const valueType = typeof value;
             if (value != null
                 && !isArray(value)
-                && valueType !== 'string'
-                && valueType !== 'number'
-                && valueType !== 'boolean'
+                && !isString(value)
+                && !isNumber(value)
+                && typeof value !== 'boolean'
             ) {
                 isValidKey = false;
                 break;
@@ -117,7 +118,7 @@ export function createOrUpdatePatternFromDecal(
             cacheKey = keys.join(',') + (isSVG ? '-svg' : '');
             const cache = decalCache.get(cacheKey);
             if (cache) {
-                isSVG ? (pattern as SVGPatternObject).svgElement = cache as SVGElement
+                isSVG ? (pattern as SVGPatternObject).svgElement = cache as SVGVNode
                     : (pattern as ImagePatternObject).image = cache as HTMLCanvasElement;
             }
         }
@@ -128,8 +129,13 @@ export function createOrUpdatePatternFromDecal(
         const lineBlockLengthsX = getLineBlockLengthX(dashArrayX);
         const lineBlockLengthY = getLineBlockLengthY(dashArrayY);
 
-        const canvas = !isSVG && createCanvas();
-        const svgRoot = isSVG && (zr.painter as SVGPainter).createSVGElement('g');
+        const canvas = !isSVG && platformApi.createCanvas();
+        const svgRoot: SVGVNode = isSVG && {
+            tag: 'g',
+            attrs: {},
+            key: 'dcl',
+            children: []
+        };
         const pSize = getPatternSize();
         let ctx: CanvasRenderingContext2D;
         if (canvas) {
@@ -284,7 +290,10 @@ export function createOrUpdatePatternFromDecal(
                     decalOpt.symbolKeepAspect
                 );
                 if (isSVG) {
-                    svgRoot.appendChild((zr.painter as SVGPainter).paintOne(symbol));
+                    const symbolVNode = (zr.painter as SVGPainter).renderOneToVNode(symbol);
+                    if (symbolVNode) {
+                        svgRoot.children.push(symbolVNode);
+                    }
                 }
                 else {
                     // Paint to canvas for all other renderers.
@@ -306,13 +315,13 @@ function normalizeSymbolArray(symbol: string | (string | string[])[]): string[][
     if (!symbol || (symbol as string[]).length === 0) {
         return [['rect']];
     }
-    if (typeof symbol === 'string') {
+    if (isString(symbol)) {
         return [[symbol]];
     }
 
     let isAllString = true;
     for (let i = 0; i < symbol.length; ++i) {
-        if (typeof symbol[i] !== 'string') {
+        if (!isString(symbol[i])) {
             isAllString = false;
             break;
         }
@@ -323,7 +332,7 @@ function normalizeSymbolArray(symbol: string | (string | string[])[]): string[][
 
     const result: string[][] = [];
     for (let i = 0; i < symbol.length; ++i) {
-        if (typeof symbol[i] === 'string') {
+        if (isString(symbol[i])) {
             result.push([symbol[i] as string]);
         }
         else {
@@ -343,7 +352,7 @@ function normalizeDashArrayX(dash: DecalDashArrayX): number[][] {
     if (!dash || (dash as number[]).length === 0) {
         return [[0, 0]];
     }
-    if (typeof dash === 'number') {
+    if (isNumber(dash)) {
         const dashValue = Math.ceil(dash);
         return [[dashValue, dashValue]];
     }
@@ -354,7 +363,7 @@ function normalizeDashArrayX(dash: DecalDashArrayX): number[][] {
      */
     let isAllNumber = true;
     for (let i = 0; i < dash.length; ++i) {
-        if (typeof dash[i] !== 'number') {
+        if (!isNumber(dash[i])) {
             isAllNumber = false;
             break;
         }
@@ -365,7 +374,7 @@ function normalizeDashArrayX(dash: DecalDashArrayX): number[][] {
 
     const result: number[][] = [];
     for (let i = 0; i < dash.length; ++i) {
-        if (typeof dash[i] === 'number') {
+        if (isNumber(dash[i])) {
             const dashValue = Math.ceil(dash[i] as number);
             result.push([dashValue, dashValue]);
         }
@@ -394,7 +403,7 @@ function normalizeDashArrayY(dash: DecalDashArrayY): number[] {
     if (!dash || typeof dash === 'object' && dash.length === 0) {
         return [0, 0];
     }
-    if (typeof dash === 'number') {
+    if (isNumber(dash)) {
         const dashValue = Math.ceil(dash);
         return [dashValue, dashValue];
     }

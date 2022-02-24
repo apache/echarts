@@ -21,7 +21,7 @@
 
 import { extend, retrieve3 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -32,7 +32,7 @@ import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/pieHelper';
-import {saveOldStyle} from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTrasition';
 import { getBasicPieLayout } from './pieLayout';
 
 /**
@@ -77,7 +77,17 @@ class PiePiece extends graphic.Sector {
             sector.setShape(sectorShape);
 
             const animationType = seriesModel.getShallow('animationType');
-            if (animationType === 'scale') {
+            if (seriesModel.ecModel.ssr) {
+                // Use scale animation in SSR mode(opacity?)
+                // Because CSS SVG animation doesn't support very customized shape animation.
+                graphic.initProps(sector, {
+                    scaleX: 0,
+                    scaleY: 0
+                }, seriesModel, { dataIndex: idx, isFrom: true});
+                sector.originX = sectorShape.cx;
+                sector.originY = sectorShape.cy;
+            }
+            else if (animationType === 'scale') {
                 sector.shape.r = layout.r0;
                 graphic.initProps(sector, {
                     shape: {
@@ -128,11 +138,10 @@ class PiePiece extends graphic.Sector {
 
         this._updateLabel(seriesModel, data, idx);
 
-        sector.ensureState('emphasis').shape = {
+        sector.ensureState('emphasis').shape = extend({
             r: layout.r + (emphasisModel.get('scale')
-                ? (emphasisModel.get('scaleSize') || 0) : 0),
-            ...getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout)
-        };
+                ? (emphasisModel.get('scaleSize') || 0) : 0)
+        }, getSectorCornerRadius(emphasisModel.getModel('itemStyle'), layout));
         extend(sector.ensureState('select'), {
             x: dx,
             y: dy,
@@ -155,7 +164,9 @@ class PiePiece extends graphic.Sector {
             y: dy
         });
 
-        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+        toggleHoverEmphasis(
+            this, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
+        );
     }
 
     private _updateLabel(seriesModel: PieSeriesModel, data: SeriesData, idx: number): void {
@@ -222,14 +233,8 @@ class PieView extends ChartView {
 
     ignoreLabelLineUpdate = true;
 
-    private _sectorGroup: graphic.Group;
     private _data: SeriesData;
     private _emptyCircleSector: graphic.Sector;
-
-    init(): void {
-        const sectorGroup = new graphic.Group();
-        this._sectorGroup = sectorGroup;
-    }
 
     render(seriesModel: PieSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         const data = seriesModel.getData();

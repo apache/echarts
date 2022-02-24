@@ -18,17 +18,11 @@
 */
 
 import { lift } from 'zrender/src/tool/color';
-import { extend, map } from 'zrender/src/core/util';
+import { extend, isString } from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
-import { Dictionary, ColorString, ZRColor } from '../../util/types';
-import { setItemVisualFromData } from '../../visual/helper';
+import { Dictionary, ColorString } from '../../util/types';
 import { TreeNode } from '../../data/Tree';
-
-type ParentColorMap = {
-    node: TreeNode,
-    parentColor: ZRColor
-};
 
 export default function sunburstVisual(ecModel: GlobalModel) {
 
@@ -42,7 +36,7 @@ export default function sunburstVisual(ecModel: GlobalModel) {
             current = current.parentNode;
         }
         let color = seriesModel.getColorFromPalette((current.name || current.dataIndex + ''), paletteScope);
-        if (node.depth > 1 && typeof color === 'string') {
+        if (node.depth > 1 && isString(color)) {
             // Lighter on the deeper level.
             color = lift(color, (node.depth - 1) / (treeHeight - 1) * 0.5);
         }

@@ -31,6 +31,7 @@ import GraphView from './GraphView';
 import GraphSeriesModel from './GraphSeries';
 import { RoamPaylod, updateCenterAndZoom } from '../../action/roamHelper';
 import GlobalModel from '../../model/Global';
+import { noop } from 'zrender/src/core/util';
 
 const actionInfo = {
     type: 'graphRoam',
@@ -62,13 +63,13 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         type: 'focusNodeAdjacency',
         event: 'focusNodeAdjacency',
         update: 'series:focusNodeAdjacency'
-    }, function () {});
+    }, noop);
 
     registers.registerAction({
         type: 'unfocusNodeAdjacency',
         event: 'unfocusNodeAdjacency',
         update: 'series:unfocusNodeAdjacency'
-    }, function () {});
+    }, noop);
 
     // Register roam action.
     registers.registerAction(actionInfo, function (payload: RoamPaylod, ecModel: GlobalModel) {

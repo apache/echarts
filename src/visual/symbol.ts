@@ -17,21 +17,24 @@
 * under the License.
 */
 
-import {isFunction} from 'zrender/src/core/util';
+import {extend, isFunction, keys} from 'zrender/src/core/util';
 import {
     StageHandler,
     SeriesOption,
     SymbolOptionMixin,
-    SymbolSizeCallback,
     SymbolCallback,
-    CallbackDataParams,
-    SymbolRotateCallback,
-    SymbolOffsetCallback
+    CallbackDataParams
 } from '../util/types';
 import SeriesData from '../data/SeriesData';
 import SeriesModel from '../model/Series';
 import GlobalModel from '../model/Global';
 
+const SYMBOL_PROPS_WITH_CB = [
+    'symbol', 'symbolSize', 'symbolRotate', 'symbolOffset'
+] as const;
+const SYMBOL_PROPS: [...typeof SYMBOL_PROPS_WITH_CB, 'symbolKeepAspect'] = SYMBOL_PROPS_WITH_CB.concat([
+    'symbolKeepAspect'
+] as any) as any;
 // Encoding visual for all series include which is filtered for legend drawing
 const seriesSymbolTask: StageHandler = {
 
@@ -54,58 +57,45 @@ const seriesSymbolTask: StageHandler = {
             return;
         }
 
-        const symbolType = seriesModel.get('symbol');
-        const symbolSize = seriesModel.get('symbolSize');
-        const keepAspect = seriesModel.get('symbolKeepAspect');
-        const symbolRotate = seriesModel.get('symbolRotate');
-        const symbolOffset = seriesModel.get('symbolOffset');
+        const symbolOptions = {} as Record<(typeof SYMBOL_PROPS_WITH_CB)[number], any>;
+        const symbolOptionsCb = {} as Record<(typeof SYMBOL_PROPS_WITH_CB)[number], any>;
+        let hasCallback = false;
+        for (let i = 0; i < SYMBOL_PROPS_WITH_CB.length; i++) {
+            const symbolPropName = SYMBOL_PROPS_WITH_CB[i];
+            const val = seriesModel.get(symbolPropName);
+            if (isFunction(val)) {
+                hasCallback = true;
+                symbolOptionsCb[symbolPropName] = val;
+            }
+            else {
+                symbolOptions[symbolPropName] = val;
+            }
+        }
+        symbolOptions.symbol = symbolOptions.symbol || seriesModel.defaultSymbol;
 
-        const hasSymbolTypeCallback = isFunction(symbolType);
-        const hasSymbolSizeCallback = isFunction(symbolSize);
-        const hasSymbolRotateCallback = isFunction(symbolRotate);
-        const hasSymbolOffsetCallback = isFunction(symbolOffset);
-        const hasCallback = hasSymbolTypeCallback
-            || hasSymbolSizeCallback
-            || hasSymbolRotateCallback
-            || hasSymbolOffsetCallback;
-        const seriesSymbol = (!hasSymbolTypeCallback && symbolType) ? symbolType : seriesModel.defaultSymbol;
-        const seriesSymbolSize = !hasSymbolSizeCallback ? symbolSize : null;
-        const seriesSymbolRotate = !hasSymbolRotateCallback ? symbolRotate : null;
-        const seriesSymbolOffset = !hasSymbolOffsetCallback ? symbolOffset : null;
-
-        data.setVisual({
-            legendIcon: seriesModel.legendIcon || seriesSymbol as string,
-            // If seting callback functions on `symbol` or `symbolSize`, for simplicity and avoiding
-            // to bring trouble, we do not pick a reuslt from one of its calling on data item here,
-            // but just use the default value. Callback on `symbol` or `symbolSize` is convenient in
-            // some cases but generally it is not recommanded.
-            symbol: seriesSymbol as string,
-            symbolSize: seriesSymbolSize as number | number[],
-            symbolKeepAspect: keepAspect,
-            symbolRotate: seriesSymbolRotate as number,
-            symbolOffset: seriesSymbolOffset as string | number | (string | number)[]
-        });
+        data.setVisual(extend({
+            legendIcon: seriesModel.legendIcon || symbolOptions.symbol,
+            symbolKeepAspect: seriesModel.get('symbolKeepAspect')
+        }, symbolOptions));
 
         // Only visible series has each data be visual encoded
         if (ecModel.isSeriesFiltered(seriesModel)) {
             return;
         }
 
+        const symbolPropsCb = keys(symbolOptionsCb);
+
         function dataEach(data: SeriesData, idx: number) {
             const rawValue = seriesModel.getRawValue(idx);
             const params = seriesModel.getDataParams(idx);
-            hasSymbolTypeCallback && data.setItemVisual(
-                idx, 'symbol', (symbolType as SymbolCallback<CallbackDataParams>)(rawValue, params)
-            );
-            hasSymbolSizeCallback && data.setItemVisual(
-                idx, 'symbolSize', (symbolSize as SymbolSizeCallback<CallbackDataParams>)(rawValue, params)
-            );
-            hasSymbolRotateCallback && data.setItemVisual(
-                idx, 'symbolRotate', (symbolRotate as SymbolRotateCallback<CallbackDataParams>)(rawValue, params)
-            );
-            hasSymbolOffsetCallback && data.setItemVisual(
-                idx, 'symbolOffset', (symbolOffset as SymbolOffsetCallback<CallbackDataParams>)(rawValue, params)
-            );
+
+            for (let i = 0; i < symbolPropsCb.length; i++) {
+                const symbolPropName = symbolPropsCb[i];
+                data.setItemVisual(
+                    idx, symbolPropName,
+                    (symbolOptionsCb[symbolPropName] as SymbolCallback<CallbackDataParams>)(rawValue, params)
+                );
+            }
         }
 
         return { dataEach: hasCallback ? dataEach : null };
@@ -135,28 +125,13 @@ const dataSymbolTask: StageHandler = {
 
         function dataEach(data: SeriesData, idx: number) {
             const itemModel = data.getItemModel<SymbolOptionMixin>(idx);
-            const itemSymbolType = itemModel.getShallow('symbol', true);
-            const itemSymbolSize = itemModel.getShallow('symbolSize', true);
-            const itemSymbolRotate = itemModel.getShallow('symbolRotate', true);
-            const itemSymbolOffset = itemModel.getShallow('symbolOffset', true);
-            const itemSymbolKeepAspect = itemModel.getShallow('symbolKeepAspect', true);
 
-            // If has item symbol
-            if (itemSymbolType != null) {
-                data.setItemVisual(idx, 'symbol', itemSymbolType);
-            }
-            if (itemSymbolSize != null) {
-                // PENDING Transform symbolSize ?
-                data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
-            }
-            if (itemSymbolRotate != null) {
-                data.setItemVisual(idx, 'symbolRotate', itemSymbolRotate);
-            }
-            if (itemSymbolOffset != null) {
-                data.setItemVisual(idx, 'symbolOffset', itemSymbolOffset);
-            }
-            if (itemSymbolKeepAspect != null) {
-                data.setItemVisual(idx, 'symbolKeepAspect', itemSymbolKeepAspect);
+            for (let i = 0; i < SYMBOL_PROPS.length; i++) {
+                const symbolPropName = SYMBOL_PROPS[i];
+                const val = itemModel.getShallow(symbolPropName, true);
+                if (val != null) {
+                    data.setItemVisual(idx, symbolPropName, val);
+                }
             }
         }
 

@@ -39,6 +39,8 @@ import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
+import Element from 'zrender/src/Element';
+import SeriesModel from '../../model/Series';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -50,7 +52,7 @@ interface UpdateOpt {
 
 interface SymbolLike extends graphic.Group {
     updateData(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
-    fadeOut?(cb: () => void): void
+    fadeOut?(cb: () => void, seriesModel: SeriesModel): void
 }
 
 interface SymbolLikeCtor {
@@ -119,6 +121,7 @@ export interface SymbolDrawSeriesScope {
 
     focus?: DefaultEmphasisFocus
     blurScope?: BlurScope
+    emphasisDisabled?: boolean
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
 
@@ -140,6 +143,7 @@ function makeSeriesScope(data: SeriesData): SymbolDrawSeriesScope {
 
         focus: emphasisModel.get('focus'),
         blurScope: emphasisModel.get('blurScope'),
+        emphasisDisabled: emphasisModel.get('disabled'),
 
         hoverScale: emphasisModel.get('scale'),
 
@@ -162,6 +166,8 @@ class SymbolDraw {
 
     private _getSymbolPoint: UpdateOpt['getSymbolPoint'];
 
+    private _progressiveEls: SymbolLike[];
+
     constructor(SymbolCtor?: SymbolLikeCtor) {
         this._SymbolCtor = SymbolCtor || SymbolClz as SymbolLikeCtor;
     }
@@ -170,6 +176,9 @@ class SymbolDraw {
      * Update symbols draw by new data
      */
     updateData(data: ListForSymbolDraw, opt?: UpdateOpt) {
+        // Remove progressive els.
+        this._progressiveEls = null;
+
         opt = normalizeUpdateOpt(opt);
 
         const group = this.group;
@@ -244,16 +253,12 @@ class SymbolDraw {
                 const el = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
                 el && el.fadeOut(function () {
                     group.remove(el);
-                });
+                }, seriesModel as SeriesModel);
             })
             .execute();
 
         this._getSymbolPoint = getSymbolPoint;
         this._data = data;
-    };
-
-    isPersistent() {
-        return true;
     };
 
     updateLayout() {
@@ -278,6 +283,10 @@ class SymbolDraw {
      * Update symbols draw by new data
      */
     incrementalUpdate(taskParams: StageHandlerProgressParams, data: ListForSymbolDraw, opt?: UpdateOpt) {
+
+        // Clear
+        this._progressiveEls = [];
+
         opt = normalizeUpdateOpt(opt);
 
         function updateIncrementalAndHover(el: Displayable) {
@@ -294,9 +303,14 @@ class SymbolDraw {
                 el.setPosition(point);
                 this.group.add(el);
                 data.setItemGraphicEl(idx, el);
+                this._progressiveEls.push(el);
             }
         }
     };
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        graphic.traverseElements(this._progressiveEls || this.group, cb);
+    }
 
     remove(enableAnimation?: boolean) {
         const group = this.group;
@@ -306,7 +320,7 @@ class SymbolDraw {
             data.eachItemGraphicEl(function (el: SymbolLike) {
                 el.fadeOut(function () {
                     group.remove(el);
-                });
+                }, data.hostModel as SeriesModel);
             });
         }
         else {

@@ -43,7 +43,8 @@ import {
     map,
     curry,
     filter,
-    HashMap
+    HashMap,
+    isNumber
 } from 'zrender/src/core/util';
 import { makeInner } from '../../util/model';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
@@ -114,7 +115,7 @@ const markLineTransform = function (
             mlTo.coord[baseIndex] = Infinity;
 
             const precision = mlModel.get('precision');
-            if (precision >= 0 && typeof value === 'number') {
+            if (precision >= 0 && isNumber(value)) {
                 value = +value.toFixed(Math.min(precision, 20));
             }
 

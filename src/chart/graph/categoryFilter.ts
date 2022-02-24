@@ -20,6 +20,7 @@
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import type LegendModel from '../../component/legend/LegendModel';
+import { isNumber } from 'zrender/src/core/util';
 
 export default function categoryFilter(ecModel: GlobalModel) {
     const legendModels = ecModel.findComponents({
@@ -39,7 +40,7 @@ export default function categoryFilter(ecModel: GlobalModel) {
             const model = data.getItemModel<GraphNodeItemOption>(idx);
             let category = model.getShallow('category');
             if (category != null) {
-                if (typeof category === 'number') {
+                if (isNumber(category)) {
                     category = categoryNames[category];
                 }
                 // If in any legend component the status is not selected.

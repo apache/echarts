@@ -23,7 +23,6 @@
 
 import * as graphic from '../../util/graphic';
 import {createSymbol} from '../../util/symbol';
-import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
 import SeriesData from '../../data/SeriesData';
 import { PathProps } from 'zrender/src/graphic/Path';
 import PathProxy from 'zrender/src/core/PathProxy';
@@ -31,6 +30,7 @@ import SeriesModel from '../../model/Series';
 import { StageHandlerProgressParams } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { getECData } from '../../util/innerStore';
+import Element from 'zrender/src/Element';
 
 const BOOST_SIZE_THRESHOLD = 4;
 
@@ -59,6 +59,11 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
     endIndex: number;
 
     private _ctx: CanvasRenderingContext2D;
+    private _off: number = 0;
+
+    hoverDataIdx: number = -1;
+
+    notClear: boolean;
 
     constructor(opts?: LargeSymbolPathProps) {
         super(opts);
@@ -70,6 +75,11 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
 
     setColor: ECSymbol['setColor'];
 
+    reset() {
+        this.notClear = false;
+        this._off = 0;
+    }
+
     buildPath(path: PathProxy | CanvasRenderingContext2D, shape: LargeSymbolPathShape) {
         const points = shape.points;
         const size = shape.size;
@@ -80,6 +90,8 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
             ? (path as PathProxy).getContext()
             : path as CanvasRenderingContext2D;
         const canBoost = ctx && size[0] < BOOST_SIZE_THRESHOLD;
+        const softClipShape = this.softClipShape;
+        let i;
 
         // Do draw in afterBrush.
         if (canBoost) {
@@ -89,14 +101,14 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
 
         this._ctx = null;
 
-        for (let i = 0; i < points.length;) {
+        for (i = this._off; i < points.length;) {
             const x = points[i++];
             const y = points[i++];
 
             if (isNaN(x) || isNaN(y)) {
                 continue;
             }
-            if (this.softClipShape && !this.softClipShape.contain(x, y)) {
+            if (softClipShape && !softClipShape.contain(x, y)) {
                 continue;
             }
 
@@ -107,6 +119,10 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
 
             symbolProxy.buildPath(path, symbolProxyShape, true);
         }
+        if (this.incremental) {
+            this._off = i;
+            this.notClear = true;
+        }
     }
 
     afterBrush() {
@@ -114,19 +130,21 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
         const points = shape.points;
         const size = shape.size;
         const ctx = this._ctx;
+        const softClipShape = this.softClipShape;
+        let i;
 
         if (!ctx) {
             return;
         }
 
         // PENDING If style or other canvas status changed?
-        for (let i = 0; i < points.length;) {
+        for (i = this._off; i < points.length;) {
             const x = points[i++];
             const y = points[i++];
             if (isNaN(x) || isNaN(y)) {
                 continue;
             }
-            if (this.softClipShape && !this.softClipShape.contain(x, y)) {
+            if (softClipShape && !softClipShape.contain(x, y)) {
                 continue;
             }
             // fillRect is faster than building a rect path and draw.
@@ -135,6 +153,10 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
                 x - size[0] / 2, y - size[1] / 2,
                 size[0], size[1]
             );
+        }
+        if (this.incremental) {
+            this._off = i;
+            this.notClear = true;
         }
     }
 
@@ -163,6 +185,53 @@ class LargeSymbolPath extends graphic.Path<LargeSymbolPathProps> {
 
         return -1;
     }
+
+    contain(x: number, y: number): boolean {
+        const localPos = this.transformCoordToLocal(x, y);
+        const rect = this.getBoundingRect();
+        x = localPos[0];
+        y = localPos[1];
+
+        if (rect.contain(x, y)) {
+            // Cache found data index.
+            const dataIdx = this.hoverDataIdx = this.findDataIndex(x, y);
+            return dataIdx >= 0;
+        }
+        this.hoverDataIdx = -1;
+        return false;
+    }
+
+    getBoundingRect() {
+        // Ignore stroke for large symbol draw.
+        let rect = this._rect;
+        if (!rect) {
+            const shape = this.shape;
+            const points = shape.points;
+            const size = shape.size;
+            const w = size[0];
+            const h = size[1];
+            let minX = Infinity;
+            let minY = Infinity;
+            let maxX = -Infinity;
+            let maxY = -Infinity;
+            for (let i = 0; i < points.length;) {
+                const x = points[i++];
+                const y = points[i++];
+                minX = Math.min(x, minX);
+                maxX = Math.max(x, maxX);
+                minY = Math.min(y, minY);
+                maxY = Math.max(y, maxY);
+            }
+
+            rect = this._rect = new graphic.BoundingRect(
+                minX - w / 2,
+                minY - h / 2,
+                maxX - minX + w,
+                maxY - minY + h
+            );
+        }
+        return rect;
+    }
 }
 
 interface UpdateOpt {
@@ -173,36 +242,23 @@ class LargeSymbolDraw {
 
     group = new graphic.Group();
 
-    _incremental: IncrementalDisplayable;
-
-    isPersistent() {
-        return !this._incremental;
-    };
+    // New add element in this frame of progressive render.
+    private _newAdded: LargeSymbolPath[];
 
     /**
      * Update symbols draw by new data
      */
     updateData(data: SeriesData, opt?: UpdateOpt) {
-        this.group.removeAll();
-        const symbolEl = new LargeSymbolPath({
-            rectHover: true,
-            cursor: 'default'
-        });
+        this._clear();
 
+        const symbolEl = this._create();
         symbolEl.setShape({
             points: data.getLayout('points')
         });
-        this._setCommon(symbolEl, data, false, opt);
-        this.group.add(symbolEl);
-
-        this._incremental = null;
+        this._setCommon(symbolEl, data, opt);
     }
 
     updateLayout(data: SeriesData) {
-        if (this._incremental) {
-            return;
-        }
-
         let points = data.getLayout('points');
         this.group.eachChild(function (child: LargeSymbolPath) {
             if (child.startIndex != null) {
@@ -211,55 +267,62 @@ class LargeSymbolDraw {
                 points = new Float32Array(points.buffer, byteOffset, len);
             }
             child.setShape('points', points);
+            // Reset draw cursor.
+            child.reset();
         });
     }
 
     incrementalPrepareUpdate(data: SeriesData) {
-        this.group.removeAll();
-
-        this._clearIncremental();
-        // Only use incremental displayables when data amount is larger than 2 million.
-        // PENDING Incremental data?
-        if (data.count() > 2e6) {
-            if (!this._incremental) {
-                this._incremental = new IncrementalDisplayable({
-                    silent: true
-                });
-            }
-            this.group.add(this._incremental);
-        }
-        else {
-            this._incremental = null;
-        }
+        this._clear();
     }
 
     incrementalUpdate(taskParams: StageHandlerProgressParams, data: SeriesData, opt: UpdateOpt) {
-        let symbolEl;
-        if (this._incremental) {
-            symbolEl = new LargeSymbolPath();
-            this._incremental.addDisplayable(symbolEl, true);
+        const lastAdded = this._newAdded[0];
+        const points = data.getLayout('points');
+        const oldPoints = lastAdded && lastAdded.shape.points;
+        // Merging the exists. Each element has 1e4 points.
+        // Consider the performance balance between too much elements and too much points in one shape(may affect hover optimization)
+        if (oldPoints && oldPoints.length < 2e4) {
+            const oldLen = oldPoints.length;
+            const newPoints = new Float32Array(oldLen + points.length);
+            // Concat two array
+            newPoints.set(oldPoints);
+            newPoints.set(points, oldLen);
+            // Update endIndex
+            lastAdded.endIndex = taskParams.end;
+            lastAdded.setShape({ points: newPoints });
         }
         else {
-            symbolEl = new LargeSymbolPath({
-                rectHover: true,
-                cursor: 'default',
-                startIndex: taskParams.start,
-                endIndex: taskParams.end
-            });
-            symbolEl.incremental = true;
-            this.group.add(symbolEl);
-        }
+            // Clear
+            this._newAdded = [];
 
-        symbolEl.setShape({
-            points: data.getLayout('points')
-        });
-        this._setCommon(symbolEl, data, !!this._incremental, opt);
+            const symbolEl = this._create();
+            symbolEl.startIndex = taskParams.start;
+            symbolEl.endIndex = taskParams.end;
+            symbolEl.incremental = true;
+            symbolEl.setShape({
+                points
+            });
+            this._setCommon(symbolEl, data, opt);
+        }
     }
 
-    _setCommon(
+    eachRendered(cb: (el: Element) => boolean | void) {
+        this._newAdded[0] && cb(this._newAdded[0]);
+    }
+
+    private _create() {
+        const symbolEl = new LargeSymbolPath({
+            cursor: 'default'
+        });
+        this.group.add(symbolEl);
+        this._newAdded.push(symbolEl);
+        return symbolEl;
+    }
+
+    private _setCommon(
         symbolEl: LargeSymbolPath,
         data: SeriesData,
-        isIncremental: boolean,
         opt: UpdateOpt
     ) {
         const hostModel = data.hostModel;
@@ -291,33 +354,27 @@ class LargeSymbolDraw {
             symbolEl.setColor(visualColor);
         }
 
-        if (!isIncremental) {
-            const ecData = getECData(symbolEl);
-            // Enable tooltip
-            // PENDING May have performance issue when path is extremely large
-            ecData.seriesIndex = (hostModel as SeriesModel).seriesIndex;
-            symbolEl.on('mousemove', function (e) {
-                ecData.dataIndex = null;
-                const dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
-                if (dataIndex >= 0) {
-                    // Provide dataIndex for tooltip
-                    ecData.dataIndex = dataIndex + (symbolEl.startIndex || 0);
-                }
-            });
-        }
+        const ecData = getECData(symbolEl);
+        // Enable tooltip
+        // PENDING May have performance issue when path is extremely large
+        ecData.seriesIndex = (hostModel as SeriesModel).seriesIndex;
+        symbolEl.on('mousemove', function (e) {
+            ecData.dataIndex = null;
+            const dataIndex = symbolEl.hoverDataIdx;
+            if (dataIndex >= 0) {
+                // Provide dataIndex for tooltip
+                ecData.dataIndex = dataIndex + (symbolEl.startIndex || 0);
+            }
+        });
     }
 
     remove() {
-        this._clearIncremental();
-        this._incremental = null;
-        this.group.removeAll();
+        this._clear();
     }
 
-    _clearIncremental() {
-        const incremental = this._incremental;
-        if (incremental) {
-            incremental.clearDisplaybles();
-        }
+    private _clear() {
+        this._newAdded = [];
+        this.group.removeAll();
     }
 }
 

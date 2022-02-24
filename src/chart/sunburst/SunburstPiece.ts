@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis, SPECIAL_STATES, DISPLAY_STATES } from '../../util/states';
+import { toggleHoverEmphasis, SPECIAL_STATES, DISPLAY_STATES } from '../../util/states';
 import {createTextStyle} from '../../label/labelStyle';
 import { TreeNode } from '../../data/Tree';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
@@ -154,7 +154,7 @@ class SunburstPiece extends graphic.Sector {
             : focus === 'descendant' ? node.getDescendantIndices()
             : focus;
 
-        enableHoverEmphasis(this, focusOrIndices, emphasisModel.get('blurScope'));
+        toggleHoverEmphasis(this, focusOrIndices, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
     }
 
     _updateLabel(
@@ -219,7 +219,13 @@ class SunburstPiece extends graphic.Sector {
             }
             else {
                 if (!textAlign || textAlign === 'center') {
-                    r = (layout.r + layout.r0) / 2;
+                    // Put label in the center if it's a circle
+                    if (angle === 2 * Math.PI && layout.r0 === 0) {
+                        r = 0;
+                    }
+                    else {
+                        r = (layout.r + layout.r0) / 2;
+                    }
                     textAlign = 'center';
                 }
                 else if (textAlign === 'left') {
@@ -259,7 +265,7 @@ class SunburstPiece extends graphic.Sector {
                     rotate += Math.PI;
                 }
             }
-            else if (typeof rotateType === 'number') {
+            else if (zrUtil.isNumber(rotateType)) {
                 rotate = rotateType * Math.PI / 180;
             }
 

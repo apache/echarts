@@ -26,6 +26,16 @@ import GlobalModel from '../../model/Global';
 import { updateCenterAndZoom, RoamPaylod } from '../../action/roamHelper';
 import MapSeries from '../../chart/map/MapSeries';
 import GeoView from './GeoView';
+import geoSourceManager from '../../coord/geo/geoSourceManager';
+
+type RegisterMapParams = Parameters<typeof geoSourceManager.registerMap>;
+function registerMap(
+    mapName: RegisterMapParams[0],
+    geoJson: RegisterMapParams[1],
+    specialAreas?: RegisterMapParams[2]
+) {
+    geoSourceManager.registerMap(mapName, geoJson, specialAreas);
+}
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 
@@ -33,6 +43,9 @@ export function install(registers: EChartsExtensionInstallRegisters) {
 
     registers.registerComponentModel(GeoModel);
     registers.registerComponentView(GeoView);
+
+    registers.registerImpl('registerMap', registerMap);
+    registers.registerImpl('getMap', (mapName: string) => geoSourceManager.getMapForUser(mapName));
 
 
     function makeAction(

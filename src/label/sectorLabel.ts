@@ -21,7 +21,7 @@
 import {calculateTextPosition, TextPositionCalculationResult} from 'zrender/src/contain/text';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import {BuiltinTextPosition, TextAlign, TextVerticalAlign} from 'zrender/src/core/types';
-import {isArray} from 'zrender/src/core/util';
+import {isArray, isNumber} from 'zrender/src/core/util';
 import {ElementCalculateTextPosition, ElementTextConfig} from 'zrender/src/Element';
 import { Sector } from '../util/graphic';
 
@@ -195,7 +195,7 @@ export function setSectorTextRotation<T extends (string | (number | string)[])>(
     positionMapping: (seriesLabelPosition: T) => SectorTextPosition,
     rotateType: number | 'auto'
 ) {
-    if (typeof rotateType === 'number') {
+    if (isNumber(rotateType)) {
         // user-set rotation
         sector.setTextConfig({
             rotation: rotateType
