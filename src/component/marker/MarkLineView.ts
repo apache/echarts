@@ -200,7 +200,7 @@ function markLineFilter(
             lineStart[0], lineStart[1], lineEnd[0], lineEnd[1],
             [
                 [area.x, area.y], [area.width + area.x, area.y],
-                [area.x, area.height + area.y], [area.width + area.x, area.height + area.y]
+                [area.width + area.x, area.height + area.y], [area.x, area.height + area.y]
             ]
         );
         if (isIntersect) {
@@ -326,7 +326,6 @@ class MarkLineView extends MarkerView {
         );
         this.group.setClipPath(clipPath);
         this.group.add(lineDraw.group);
-
 
         const mlData = createList(coordSys, seriesModel, mlModel);
 
