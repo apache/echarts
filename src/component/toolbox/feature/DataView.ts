@@ -318,25 +318,33 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
     private _dom: HTMLDivElement;
 
     onclick(ecModel: GlobalModel, api: ExtensionAPI) {
+        // FIXME: better way?
+        setTimeout(() => {
+            api.dispatchAction({
+                type: 'hideTip'
+            });
+        });
+
         const container = api.getDom();
         const model = this.model;
         if (this._dom) {
             container.removeChild(this._dom);
         }
         const root = document.createElement('div');
-        root.style.cssText = 'position:absolute;left:5px;top:5px;bottom:5px;right:5px;';
+        // use padding to avoid 5px whitespace
+        root.style.cssText = 'position:absolute;top:0;bottom:0;left:0;right:0;padding:5px';
         root.style.backgroundColor = model.get('backgroundColor') || '#fff';
 
         // Create elements
         const header = document.createElement('h4');
         const lang = model.get('lang') || [];
         header.innerHTML = lang[0] || model.get('title');
-        header.style.cssText = 'margin: 10px 20px;';
+        header.style.cssText = 'margin:10px 20px';
         header.style.color = model.get('textColor');
 
         const viewMain = document.createElement('div');
         const textarea = document.createElement('textarea');
-        viewMain.style.cssText = 'display:block;width:100%;overflow:auto;';
+        viewMain.style.cssText = 'overflow:auto';
 
         const optionToContent = model.get('optionToContent');
         const contentToOption = model.get('contentToOption');
@@ -352,22 +360,24 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         }
         else {
             // Use default textarea
-            viewMain.appendChild(textarea);
             textarea.readOnly = model.get('readOnly');
-            textarea.style.cssText = 'width:100%;height:100%;font-family:monospace;font-size:14px;line-height:1.6rem;';
-            textarea.style.color = model.get('textColor');
-            textarea.style.borderColor = model.get('textareaBorderColor');
-            textarea.style.backgroundColor = model.get('textareaColor');
+            const style = textarea.style;
+            // eslint-disable-next-line max-len
+            style.cssText = 'width:100%;height:100%;font-family:monospace;font-size:14px;line-height:1.6rem;resize:none';
+            style.color = model.get('textColor');
+            style.borderColor = model.get('textareaBorderColor');
+            style.backgroundColor = model.get('textareaColor');
             textarea.value = result.value;
+            viewMain.appendChild(textarea);
         }
 
         const blockMetaList = result.meta;
 
         const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'position:absolute;bottom:0;left:0;right:0;';
+        buttonContainer.style.cssText = 'position:absolute;bottom:5px;left:0;right:0';
 
-        let buttonStyle = 'float:right;margin-right:20px;border:none;'
-            + 'cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
+        // eslint-disable-next-line max-len
+        let buttonStyle = 'float:right;margin-right:20px;border:none;cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
         const closeButton = document.createElement('div');
         const refreshButton = document.createElement('div');
 
@@ -418,7 +428,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
 
         closeButton.innerHTML = lang[1];
         refreshButton.innerHTML = lang[2];
-        refreshButton.style.cssText = buttonStyle;
+        refreshButton.style.cssText =
         closeButton.style.cssText = buttonStyle;
 
         !model.get('readOnly') && buttonContainer.appendChild(refreshButton);

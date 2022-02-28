@@ -23,7 +23,7 @@ import {getECData} from '../../util/innerStore';
 import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis } from '../../util/states';
 import {getDefaultLabel} from './labelHelper';
 import SeriesData from '../../data/SeriesData';
-import { ColorString, BlurScope, AnimationOption, ZRColor } from '../../util/types';
+import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
@@ -31,6 +31,7 @@ import { extend } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTrasition';
+import Model from '../../model/Model';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -42,8 +43,6 @@ interface SymbolOpts {
 }
 
 class Symbol extends graphic.Group {
-
-    private _seriesModel: SeriesModel;
 
     private _symbolType: string;
 
@@ -201,8 +200,6 @@ class Symbol extends graphic.Group {
             // Must stop leave transition manually if don't call initProps or updateProps.
             this.childAt(0).stopAnimation('leave');
         }
-
-        this._seriesModel = seriesModel;
     }
 
     _updateCommon(
@@ -353,12 +350,11 @@ class Symbol extends graphic.Group {
         this.scaleX = this.scaleY = scale;
     }
 
-    fadeOut(cb: () => void, opt?: {
+    fadeOut(cb: () => void, seriesModel: Model<AnimationOptionMixin>, opt?: {
         fadeLabel: boolean,
         animation?: AnimationOption
     }) {
         const symbolPath = this.childAt(0) as ECSymbol;
-        const seriesModel = this._seriesModel;
         const dataIndex = getECData(this).dataIndex;
         const animationOpt = opt && opt.animation;
         // Avoid mistaken hover when fading out

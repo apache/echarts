@@ -233,14 +233,8 @@ class PieView extends ChartView {
 
     ignoreLabelLineUpdate = true;
 
-    private _sectorGroup: graphic.Group;
     private _data: SeriesData;
     private _emptyCircleSector: graphic.Sector;
-
-    init(): void {
-        const sectorGroup = new graphic.Group();
-        this._sectorGroup = sectorGroup;
-    }
 
     render(seriesModel: PieSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         const data = seriesModel.getData();
