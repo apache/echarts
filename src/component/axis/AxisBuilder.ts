@@ -47,7 +47,7 @@ type AxisEventData = {
     name?: string
     value?: string | number
     dataIndex?: number
-    formattedLabel?: string
+    tickIndex?: number
 } & {
     [key in AxisIndexKey]?: number
 };
@@ -816,8 +816,10 @@ function buildAxisLabel(
             const eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
             eventData.targetType = 'axisLabel';
             eventData.value = rawLabel;
-            eventData.dataIndex = index;
-            eventData.formattedLabel = formattedLabel;
+            eventData.tickIndex = index;
+            if (axis.type === 'category') {
+                eventData.dataIndex = index;
+            }
 
             getECData(textEl).eventData = eventData;
         }
