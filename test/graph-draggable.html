@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+        <div id="main1"></div>
+
+
+        <div id="main2"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {},
+                series : [
+                    {
+                        type: 'graph',
+                        symbolSize: 25,
+                        roam: true,
+                        label: {
+                            normal: {
+                                show: true,
+                                formatter(p) {
+                                    return p.name.slice(-1)
+                                }
+                            }
+                        },
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 10],
+                        edgeLabel: {
+                            normal: {
+                                textStyle: {
+                                    color: 'green',
+                                    fontSize: 30
+                                }
+                            },
+                            emphasis: {
+                                textStyle: {
+                                    color: '#987654'
+                                }
+                            }
+                        },
+                        data: [{
+                            name: '节点1',
+                            x: 300,
+                            y: 300,
+                            value: '🍌🎂🎉',
+                            draggable: true,
+                        }, {
+                            name: '节点2',
+                            value: 233,
+                            x: 800,
+                            y: 300
+                        }, {
+                            name: '节点3',
+                            x: 550,
+                            y: 100
+                        }, {
+                            name: '节点4',
+                            x: 550,
+                            y: 500
+                        }],
+                        lineStyle: {
+                            normal: {
+                                width: 3,
+                                color: '#184029',
+                                curveness: 0
+                            }
+                        },
+                        links: [{
+                            source: 0,
+                            target: 1,
+                            symbolSize: [5, 20],
+                            label: {
+                                normal: {
+                                    show: true
+                                    // position: 'end'
+                                }
+                            },
+                            lineStyle: {
+                                width: 5,
+                                opacity: 1,
+                                curveness: 0.2
+                            },
+                            emphasis: {
+                                lineStyle: {
+                                    color: 'blue',
+                                    width: 20,
+                                    opacity: 0.1
+                                },
+                                label: {
+                                    fontSize: 40,
+                                    color: 'red'
+                                }
+                            }
+                        }, {
+                            source: '节点2',
+                            target: '节点1',
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
+                            lineStyle: {
+                                normal: {
+                                    curveness: 0.2
+                                }
+                            }
+                        }, {
+                            source: '节点1',
+                            target: '节点3',
+                            emphasis: {
+                                label: {
+                                    show: true
+                                }
+                            }
+                        }, {
+                            source: '节点2',
+                            target: '节点3'
+                        }, {
+                            source: '节点2',
+                            target: '节点4'
+                        }, {
+                            source: '节点1',
+                            target: '节点4'
+                        }]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'graph draggable test case for **layout: none**',
+                    '**node 1** should be draggable'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {},
+                legend: {},
+                series: [{
+                    type: 'graph',
+                    name: 'Gene',
+                    layout: 'circular',
+                    circular: {
+                        rotateLabel: true
+                    },
+                    roam: true,
+                    focusNodeAdjacency: true,
+                    label: {
+                        show: true
+                    },
+                    lineStyle: {
+                        color: 'source',
+                        curveness: 0.3
+                    },
+                    emphasis: {
+                        label: {
+                            color: 'blue'
+                        },
+                        lineStyle: {
+                            width: 10
+                        }
+                    },
+                    data: [
+                        {
+                            itemStyle: null,
+                            name: 'DRD2',
+                            value: 40,
+                            symbolSize: 40,
+                            draggable: true,
+                            itemStyle: {
+                                color: '#91cc75'
+                            }
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'ADORA2A',
+                            value: 0,
+                            symbolSize: 20,
+                            draggable: true,
+                            itemStyle: {
+                                color: '#91cc75'
+                            }
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'ARRB2',
+                            value: 30,
+                            symbolSize: 20,
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'CALM1',
+                            value: 20,
+                            symbolSize: 40
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'CALM2',
+                            value: 0,
+                            symbolSize: 20
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'FLNA',
+                            value: 0,
+                            symbolSize: 20
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'NSF',
+                            value: 0,
+                            symbolSize: 20
+                        }
+                    ],
+                    links: [
+                        {
+                            source: 'DRD2',
+                            target: 'ADORA2A'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'ARRB2'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'CALM1'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'CALM2'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'FLNA'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'NSF'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'ADORA2A'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'ARRB2'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'CALM2'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'FLNA'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'NSF'
+                        },
+                    ]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'graph draggable test case for **layout: circular**',
+                    '**green node** should be draggable'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                tooltip: {},
+                series: [{
+                    draggable: true,
+                    type: 'graph',
+                    layout: 'force',
+                    roam: true,
+                    symbolSize: 25,
+                    emphasis: {
+                        label: {
+                            show: false,
+                        }
+                    },
+                    force: {
+                        edgeLength: 100,
+                        repulsion: 300,
+                    },
+                    data: [
+                        {
+                            name: 'node 1',
+                            value: 10,
+                        },
+                        {
+                            name: 'node 2',
+                            value: 10,
+                        },
+                        {
+                            name: 'node 3',
+                            value: 10,
+                        },
+                        {
+                            name: 'node 4',
+                            value: 10,
+                        },
+                        {
+                            name: 'node 5',
+                            value: 10,
+                        },
+                        {
+                            name: 'node 6',
+                            value: 10,
+                        },
+                    ],
+                    links: [
+                        {
+                            source: 0,
+                            target: 1
+                        },
+                        {
+                            source: 0,
+                            target: 2
+                        },
+                        {
+                            source: 0,
+                            target: 3
+                        },
+                        {
+                            source: 0,
+                            target: 4
+                        },
+                        {
+                            source: 0,
+                            target: 5
+                        },
+                    ]
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'graph draggable test case for **layout: force**',
+                    '**all node** should be draggable'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+
