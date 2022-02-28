@@ -818,7 +818,7 @@ function buildAxisLabel(
             eventData.value = rawLabel;
             eventData.tickIndex = index;
             if (axis.type === 'category') {
-                eventData.dataIndex = index;
+                eventData.dataIndex = tickValue;
             }
 
             getECData(textEl).eventData = eventData;
