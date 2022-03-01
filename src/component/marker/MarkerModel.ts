@@ -79,6 +79,11 @@ export interface MarkerPositionOption {
      * Value to be displayed as label. Totally optional
      */
     value?: string | number
+
+    /**
+     * always show the point even out of the range
+     */
+    isAlwaysShow?: boolean
 }
 
 export interface MarkerOption extends ComponentOption, AnimationOptionMixin {

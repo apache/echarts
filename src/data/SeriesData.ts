@@ -46,6 +46,7 @@ import {isSourceInstance, Source} from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
 import DataStore, { DataStoreDimensionDefine, DimValueGetter } from './DataStore';
 import { isSeriesDataSchema, SeriesDataSchema } from './helper/SeriesDataSchema';
+import { MarkPointDataItemOption } from '../component/marker/MarkPointModel';
 
 const isObject = zrUtil.isObject;
 const map = zrUtil.map;
@@ -685,7 +686,23 @@ class SeriesData<
      * be erased because of the filtering.
      */
     getApproximateExtent(dim: SeriesDimensionLoose): [number, number] {
-        return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim));
+        // We now consider the mark points When we calculate the `scale.extent` of current series.
+        const markPoints: MarkPointDataItemOption[] = (this.hostModel.option.markPoint ?? {}).data ?? [];
+        let dataExtent = this._store.getDataExtent(this._getStoreDimIndex(dim));
+        const extent: [number, number] = markPoints.reduce((chain, item) => {
+            if (item.isAlwaysShow) {
+                let key: 'yAxis' | 'xAxis';
+                if (dim === 'x') {
+                    key = 'xAxis';
+                }
+                else {
+                    key = 'yAxis';
+                }
+                return [Math.min(chain[0], +item[key]), Math.max(chain[1], +item[key])];
+            }
+            return chain;
+        }, dataExtent);
+        return this._approximateExtent[dim] || extent;
     }
 
     /**
