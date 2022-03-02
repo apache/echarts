@@ -698,7 +698,7 @@ function setVisualToOption(thisOption: VisualMappingInnerOption, visualArr: Visu
             if (!color && __DEV__) {
                 warn(`'${item}' is an illegal color, fallback to '#000000'`, true);
             }
-            return zrColor.parse(item) || [0, 0, 0, 1];
+            return color || [0, 0, 0, 1];
         });
     }
     return visualArr;
