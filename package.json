@@ -84,7 +84,7 @@
     "commander": "2.11.0",
     "cwebp-bin": "^6.1.1",
     "dtslint": "^4.0.5",
-    "esbuild": "^0.8.39",
+    "esbuild": "^0.14.23",
     "eslint": "^7.15.0",
     "fs-extra": "^10.0.0",
     "glob": "7.0.0",

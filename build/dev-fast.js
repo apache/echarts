@@ -20,21 +20,20 @@
 
 const path = require('path');
 const {build} = require('esbuild');
-const commander = require('commander');
 const outFilePath = path.resolve(__dirname, '../dist/echarts.js');
 
 const umdWrapperHead = `(function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['exports'], factory);
-    } else if (typeof exports === 'object' && typeof exports.nodeName !== 'string') {
+    } else if (typeof module === 'object' && typeof module.nodeName !== 'string') {
         // CommonJS
-        factory(exports);
+        factory(module);
     } else {
         // Browser globals
         factory((root.echarts = {}));
     }
-}(typeof self !== 'undefined' ? self : this, function (exports, b) {
+}(typeof self !== 'undefined' ? self : this, function (module) {
 `;
 
 const umdWrapperTail = `
@@ -46,8 +45,12 @@ build({
     format: 'cjs',
     sourcemap: true,
     bundle: true,
-    banner: umdWrapperHead,
-    footer: umdWrapperTail,
+    banner: {
+        js: umdWrapperHead,
+    },
+    footer: {
+        js: umdWrapperTail
+    },
     define: {
         'process.env.NODE_ENV': '"development"',
         '__DEV__': 'true'
@@ -56,12 +59,11 @@ build({
         async onRebuild(error) {
             if (error) {
                 console.error('watch build failed:', error)
-            }
-            else {
-                console.log('Bundled with esbuild')
+            } else {
+                console.log('watch build success');
             }
         },
     },
 }).then(async () => {
-    console.log('Bundled with esbuild')
+    console.log('Bundled with esbuild');
 }).catch(e => console.error(e.toString()))

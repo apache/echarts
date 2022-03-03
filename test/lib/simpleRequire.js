@@ -142,7 +142,7 @@
                 var factoryRet = factory.apply(null, deps.map(function (dep) {
                     return dep === exportsPlaceholder ? modExports : dep;
                 }));
-                return factoryRet || modExports;
+                return factoryRet || modExports.exports || modExports;
             });
         }
         else {
