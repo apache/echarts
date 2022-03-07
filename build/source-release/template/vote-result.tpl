@@ -8,13 +8,13 @@ dev@echarts.apache.org
 
 Thanks to all who voted or provided comments!
 
-We received 3 +1 votes from the PMC members, and the release has PASSED:
+We received ______NUMBER_OF_+1_VOTES______ +1 votes from the PMC members, and the release has PASSED:
 
-+1 xxx (binding)
++1 ______NAME______ (binding)
 
 Other votes from the community:
 
-+1 xxx
++1 ______NAME______
 
 Vote thread:
 https://lists.apache.org/thread/xxx
