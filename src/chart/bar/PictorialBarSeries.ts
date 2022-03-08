@@ -128,7 +128,6 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
 
     coordinateSystem: Cartesian2D;
 
-
     hasSymbolVisual = true;
     defaultSymbol = 'roundRect';
 
