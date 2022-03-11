@@ -241,7 +241,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         const node = this.getData().tree.getNodeByDataIndex(dataIndex);
         params.treeAncestors = wrapTreePathInfo(node, this);
-        params.collapsed = node.isExpand;
+        params.collapsed = !node.isExpand;
 
         return params;
     }
