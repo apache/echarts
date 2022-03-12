@@ -115,6 +115,14 @@ class ComponentView {
     }
 
     /**
+     * Hook for leaving blur target series.
+     * Can be used in marker for leaving blur the markers
+     */
+    leaveBlurSeries(seriesModels: SeriesModel[], ecModel: GlobalModel): void {
+         // Do nothing;
+    }
+
+    /**
      * Traverse the new rendered elements.
      *
      * It will traverse the new added element in progressive rendering.
