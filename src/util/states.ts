@@ -520,6 +520,7 @@ export function blurSeries(
         }
         const view = api.getViewOfComponentModel(componentModel);
         if (view && view.blurSeries) {
+            getComponentStates(componentModel).isBlured = true;
             view.blurSeries(blurredSeries, ecModel);
         }
     });
