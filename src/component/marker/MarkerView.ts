@@ -71,7 +71,7 @@ abstract class MarkerView extends ComponentView {
         inner(drawGroup).keep = true;
     }
 
-    blurSeries(seriesModelList: SeriesModel[]) {
+    toggleBlurSeries(seriesModelList: SeriesModel[], isBlur: boolean) {
         each(seriesModelList, seriesModel => {
             const markerModel = MarkerModel.getMarkerModelFromSeries(
                 seriesModel,
@@ -81,24 +81,7 @@ abstract class MarkerView extends ComponentView {
                 const data = markerModel.getData();
                 data.eachItemGraphicEl(function (el) {
                     if (el) {
-                        enterBlur(el);
-                    }
-                });
-            }
-        });
-    }
-
-    leaveBlurSeries(seriesModelList: SeriesModel[]) {
-        each(seriesModelList, seriesModel => {
-            const markerModel = MarkerModel.getMarkerModelFromSeries(
-                seriesModel,
-                this.type as 'markPoint' | 'markLine' | 'markArea'
-            );
-            if (markerModel) {
-                const data = markerModel.getData();
-                data.eachItemGraphicEl(function (el) {
-                    if (el) {
-                        leaveBlur(el);
+                        isBlur ? enterBlur(el) : leaveBlur(el);
                     }
                 });
             }

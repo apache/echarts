@@ -429,22 +429,30 @@ function shouldSilent(el: Element, e: ElementEvent) {
 export function allLeaveBlur(api: ExtensionAPI) {
     const model = api.getModel();
     const leaveBlurredSeries: SeriesModel[] = [];
+    const allComponents: ComponentModel[] = [];
     model.eachComponent(function (componentType, componentModel) {
         const componentStates = getComponentStates(componentModel);
-        const view = componentType === 'series'
-            ? api.getViewOfSeriesModel(componentModel as SeriesModel)
+        const isSeries = componentType === 'series';
+        const view = isSeries ? api.getViewOfSeriesModel(componentModel as SeriesModel)
             : api.getViewOfComponentModel(componentModel);
-        componentType === 'series' && leaveBlurredSeries.push(componentModel as SeriesModel);
+        !isSeries && allComponents.push(componentModel);
+        isSeries && leaveBlurredSeries.push(componentModel as SeriesModel);
         if (componentStates.isBlured) {
             // Leave blur anyway
             view.group.traverse(function (child) {
                 singleLeaveBlur(child);
             });
         }
-        if (view && (view as ComponentView).leaveBlurSeries) {
-            (view as ComponentView).leaveBlurSeries(leaveBlurredSeries, model);
+        if (view && (view as ComponentView).toggleBlurSeries) {
+            (view as ComponentView).toggleBlurSeries(leaveBlurredSeries, false, model);
         }
         componentStates.isBlured = false;
+    });
+    each(allComponents, function (component) {
+        const view = api.getViewOfComponentModel(component);
+        if (view && (view as ComponentView).toggleBlurSeries) {
+            (view as ComponentView).toggleBlurSeries(leaveBlurredSeries, false, model);
+        }
     });
 }
 
@@ -525,8 +533,8 @@ export function blurSeries(
             return;
         }
         const view = api.getViewOfComponentModel(componentModel);
-        if (view && view.blurSeries) {
-            view.blurSeries(blurredSeries, ecModel);
+        if (view && view.toggleBlurSeries) {
+            view.toggleBlurSeries(blurredSeries, true, ecModel);
         }
     });
 }
