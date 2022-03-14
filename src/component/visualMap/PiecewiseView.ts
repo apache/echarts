@@ -154,7 +154,6 @@ class PiecewiseVisualMapView extends VisualMapView {
 
         const itemGroup = new graphic.Group();
         const textStyleModel = this.visualMapModel.textStyleModel;
-        const textShadow = textStyleModel.getTextShadow();
 
         itemGroup.add(new graphic.Text({
             style: createTextStyle(textStyleModel, {
@@ -162,10 +161,7 @@ class PiecewiseVisualMapView extends VisualMapView {
                 y: itemSize[1] / 2,
                 verticalAlign: 'middle',
                 align: showLabel ? (itemAlign as TextAlign) : 'center',
-                text: text,
-                font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor(),
-                ...textShadow
+                text
             })
         }));
 
