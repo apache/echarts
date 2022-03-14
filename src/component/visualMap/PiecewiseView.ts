@@ -101,8 +101,6 @@ class PiecewiseVisualMapView extends VisualMapView {
         this.renderBackground(thisGroup);
 
         this.positionGroup(thisGroup);
-
-
     }
 
     private _enableHoverLink(itemGroup: graphic.Group, pieceIndex: number) {
@@ -155,6 +153,7 @@ class PiecewiseVisualMapView extends VisualMapView {
 
         const itemGroup = new graphic.Group();
         const textStyleModel = this.visualMapModel.textStyleModel;
+        const textShadow = textStyleModel.getTextShadow();
 
         itemGroup.add(new graphic.Text({
             style: {
@@ -164,7 +163,8 @@ class PiecewiseVisualMapView extends VisualMapView {
                 align: showLabel ? (itemAlign as TextAlign) : 'center',
                 text: text,
                 font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor()
+                fill: textStyleModel.getTextColor(),
+                ...textShadow
             }
         }));
 

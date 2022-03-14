@@ -49,39 +49,30 @@ under the License.
         <div class="split">Stacked Bar (and inversed)</div>
         <div id="main4" class="main"></div>
 
-
-
-
-
-
         <script type="text/javascript">
             require([
                 'echarts'
             ], function (echarts) {
-
-                var main = document.getElementById('main1');
+                const main = document.getElementById('main1');
                 if (!main) {
                     return;
                 }
-                var chart = echarts.init(main);
+                const chart = echarts.init(main);
 
-                var data0 = [];
+                const data0 = [];
+                const MAX_DIM1 = 100;
 
-                var MAX_DIM1 = 100;
-
-                var itemStyle = {
-                    normal: {
-                        opacity: 0.8,
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.3)'
-                    }
+                const itemStyle = {
+                    opacity: 0.8,
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.3)'
                 };
 
-                var last = 60;
-                var lastDelta = 20;
-                for (var i = 0; i < MAX_DIM1; i++) {
+                let last = 60;
+                let lastDelta = 20;
+                for (let i = 0; i < MAX_DIM1; i++) {
                     lastDelta += (Math.random() - 0.5) * 15;
                     data0.push([
                         i,
@@ -126,6 +117,13 @@ under the License.
                             },
                             outOfRange: {
                                 color: '#eee'
+                            },
+                            text: ['High', 'Low'],
+                            textStyle: {
+                                textShadowColor: "rgba(255, 0, 255, 1)",
+                                textShadowBlur: 5,
+                                textShadowOffsetX: 5,
+                                textShadowOffsetY: 5
                             }
                         }
                     ],
@@ -134,7 +132,7 @@ under the License.
                             name: 'bar',
                             type: 'bar',
                             barMaxWidth: 10,
-                            itemStyle: itemStyle,
+                            itemStyle,
                             data: data0
                         }
                     ]
@@ -142,47 +140,31 @@ under the License.
             })
         </script>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         <script type="text/javascript">
             require([
                 'echarts'
             ], function (echarts) {
-
-                var main = document.getElementById('main2');
+                const main = document.getElementById('main2');
                 if (!main) {
                     return;
                 }
-                var chart = echarts.init(main);
+                const chart = echarts.init(main);
 
-                var data0 = [];
-                var data1 = [];
+                const data0 = [];
+                const data1 = [];
 
-                var MAX_DIM2 = 300;
-                var MAX_DIM3 = 20000;
+                const MAX_DIM2 = 300;
+                const MAX_DIM3 = 20000;
 
-                var itemStyle = {
-                    normal: {
-                        opacity: 0.8,
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
+                const itemStyle = {
+                    opacity: 0.8,
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
                 };
 
-                for (var i = 0; i < 60; i++) {
+                for (let i = 0; i < 60; i++) {
                     data0.push(genDataItem());
                     data1.push(genDataItem());
                 }
@@ -255,31 +237,20 @@ under the License.
                             name: 'scatter0',
                             type: 'scatter',
                             symbol: 'circle',
-                            itemStyle: itemStyle,
+                            itemStyle,
                             data: data0
                         },
                         {
                             name: 'scatter1',
                             type: 'scatter',
                             symbol: 'diamond',
-                            itemStyle: itemStyle,
+                            itemStyle,
                             data: data1
                         }
                     ]
                 });
             })
         </script>
-
-
-
-
-
-
-
-
-
-
-
 
         <script type="text/javascript">
             require([
@@ -290,11 +261,11 @@ under the License.
             });
 
             function renderWorldMap(echarts) {
-                var main = document.getElementById('main3');
+                const main = document.getElementById('main3');
                 if (!main) {
                     return;
                 }
-                var chart = echarts.init(main);
+                const chart = echarts.init(main);
 
                 option = {
                     title: {
@@ -307,9 +278,9 @@ under the License.
                     tooltip: {
                         trigger: 'item',
                         formatter: function (params) {
-                            var value = (params.value + '').split('.');
-                            value = value[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
-                                    + '.' + value[1];
+                            const list = (params.value + '').split('.');
+                            const value = list[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,')
+                                    + '.' + list[1];
                             return params.seriesName + '<br/>' + params.name + ' : ' + value;
                         }
                     },
@@ -340,10 +311,12 @@ under the License.
                         {
                             name: 'World Population (2010)',
                             type: 'map',
-                            mapType: 'world',
+                            map: 'world',
                             roam: true,
-                            itemStyle:{
-                                emphasis:{label:{show:true}}
+                            emphasis: {
+                                label: {
+                                    show: true
+                                }
                             },
                             data:[
                                 {name: 'Afghanistan', value: 28397.812},
@@ -532,31 +505,21 @@ under the License.
             }
         </script>
 
-
-
-
-
-
-
-
-
         <script type="text/javascript">
-
             require(['echarts'], function (echarts) {
-
-                var main = document.getElementById('main4');
+                const main = document.getElementById('main4');
                 if (!main) {
                     return;
                 }
-                var chart = echarts.init(main);
+                const chart = echarts.init(main);
 
-                var xAxisData = [];
-                var data1 = [];
-                var data2 = [];
-                var data3 = [];
-                var data4 = [];
+                const xAxisData = [];
+                const data1 = [];
+                const data2 = [];
+                const data3 = [];
+                const data4 = [];
 
-                for (var i = 0; i < 10; i++) {
+                for (let i = 0; i < 10; i++) {
                     xAxisData.push('Class' + i);
                     data1.push((Math.random() * 2).toFixed(2));
                     data2.push(-Math.random().toFixed(2));
@@ -564,18 +527,13 @@ under the License.
                     data4.push((Math.random() + 0.3).toFixed(2));
                 }
 
-                var itemStyle = {
-                    normal: {
-                        label: {
-                            show: true,
-                            position: 'outside'
-                        }
+                const emphasis = {
+                    label: {
+                        show: true,
+                        position: 'outside'
                     },
-                    emphasis: {
-                        label: {
-                            position: 'outside'
-                        },
-                        barBorderWidth: 1,
+                    itemStyle: {
+                        borderWidth: 1,
                         shadowBlur: 10,
                         shadowOffsetX: 0,
                         shadowOffsetY: 0,
@@ -630,28 +588,28 @@ under the License.
                             name: 'bar',
                             type: 'bar',
                             stack: 'one',
-                            itemStyle: itemStyle,
+                            emphasis,
                             data: data1
                         },
                         {
                             name: 'bar2',
                             type: 'bar',
                             stack: 'one',
-                            itemStyle: itemStyle,
+                            emphasis,
                             data: data2
                         },
                         {
                             name: 'bar3',
                             type: 'bar',
                             stack: 'two',
-                            itemStyle: itemStyle,
+                            emphasis,
                             data: data3
                         },
                         {
                             name: 'bar4',
                             type: 'bar',
                             stack: 'two',
-                            itemStyle: itemStyle,
+                            emphasis,
                             data: data4
                         }
                     ]
@@ -665,7 +623,6 @@ under the License.
                 });
             });
         </script>
-
 
     </body>
 </html>

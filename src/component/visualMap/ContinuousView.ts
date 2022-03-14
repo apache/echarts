@@ -182,6 +182,7 @@ class ContinuousView extends VisualMapView {
         );
         const orient = this._orient;
         const textStyleModel = this.visualMapModel.textStyleModel;
+        const textShadow = textStyleModel.getTextShadow();
 
         this.group.add(new graphic.Text({
             style: {
@@ -191,7 +192,8 @@ class ContinuousView extends VisualMapView {
                 align: orient === 'horizontal' ? align as TextAlign : 'center',
                 text: text,
                 font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor()
+                fill: textStyleModel.getTextColor(),
+                ...textShadow
             }
         }));
     }

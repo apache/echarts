@@ -35,6 +35,8 @@ const textStyleParams = [
     'fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'padding',
     'lineHeight', 'rich', 'width', 'height', 'overflow'
 ] as const;
+type LabelTextShadowOption = Pick<LabelOption,
+    'textShadowBlur' | 'textShadowColor' | 'textShadowOffsetX' | 'textShadowOffsetY'>;
 
 // TODO Performance improvement?
 const tmpText = new ZRText();
@@ -76,6 +78,15 @@ class TextStyleMixin {
         tmpText.useStyle(style);
         tmpText.update();
         return tmpText.getBoundingRect();
+    }
+
+    getTextShadow(this: Model<LabelTextShadowOption>) {
+        return {
+            textShadowBlur: this.getShallow('textShadowBlur'),
+            textShadowColor: this.getShallow('textShadowColor'),
+            textShadowOffsetX: this.getShallow('textShadowOffsetX'),
+            textShadowOffsetY: this.getShallow('textShadowOffsetY')
+        };
     }
 };
 
