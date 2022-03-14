@@ -26,6 +26,7 @@ import * as helper from './helper';
 import PiecewiseModel from './PiecewiseModel';
 import { TextAlign } from 'zrender/src/core/types';
 import { VisualMappingOption } from '../../visual/VisualMapping';
+import { createTextStyle } from '../../label/labelStyle';
 
 class PiecewiseVisualMapView extends VisualMapView {
 
@@ -156,7 +157,7 @@ class PiecewiseVisualMapView extends VisualMapView {
         const textShadow = textStyleModel.getTextShadow();
 
         itemGroup.add(new graphic.Text({
-            style: {
+            style: createTextStyle(textStyleModel, {
                 x: showLabel ? (itemAlign === 'right' ? itemSize[0] : 0) : itemSize[0] / 2,
                 y: itemSize[1] / 2,
                 verticalAlign: 'middle',
@@ -165,7 +166,7 @@ class PiecewiseVisualMapView extends VisualMapView {
                 font: textStyleModel.getFont(),
                 fill: textStyleModel.getTextColor(),
                 ...textShadow
-            }
+            })
         }));
 
         group.add(itemGroup);

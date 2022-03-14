@@ -38,6 +38,7 @@ import { setAsHighDownDispatcher } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
+import { createTextStyle } from '../../label/labelStyle';
 
 const linearMap = numberUtil.linearMap;
 const each = zrUtil.each;
@@ -185,16 +186,16 @@ class ContinuousView extends VisualMapView {
         const textShadow = textStyleModel.getTextShadow();
 
         this.group.add(new graphic.Text({
-            style: {
+            style: createTextStyle(textStyleModel, {
                 x: position[0],
                 y: position[1],
                 verticalAlign: orient === 'horizontal' ? 'middle' : align as TextVerticalAlign,
                 align: orient === 'horizontal' ? align as TextAlign : 'center',
-                text: text,
+                text,
                 font: textStyleModel.getFont(),
                 fill: textStyleModel.getTextColor(),
                 ...textShadow
-            }
+            })
         }));
     }
 
