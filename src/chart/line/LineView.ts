@@ -150,7 +150,8 @@ function getStackedOnPoints(
 function turnPointsIntoStep(
     points: ArrayLike<number>,
     coordSys: Cartesian2D | Polar,
-    stepTurnAt: 'start' | 'end' | 'middle'
+    stepTurnAt: 'start' | 'end' | 'middle',
+    connectNulls: boolean
 ): number[] {
     const baseAxis = coordSys.getBaseAxis();
     const baseIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
@@ -160,7 +161,16 @@ function turnPointsIntoStep(
     const stepPt: number[] = [];
     const pt: number[] = [];
     const nextPt: number[] = [];
-    for (; i < points.length - 2; i += 2) {
+    const filteredPoints = [];
+    if (connectNulls) {
+      for (i = 0; i < points.length; i += 2) {
+          if (!isNaN(points[i]) && !isNaN(points[i + 1])) {
+              filteredPoints.push(points[i], points[i + 1]);
+          }
+      }
+      points = filteredPoints;
+    }
+    for (i = 0; i < points.length - 2; i += 2) {
         nextPt[0] = points[i + 2];
         nextPt[1] = points[i + 3];
         pt[0] = points[i];
@@ -645,6 +655,8 @@ class LineView extends ChartView {
 
         const showSymbol = seriesModel.get('showSymbol');
 
+        const connectNulls = seriesModel.get('connectNulls');
+
         const isIgnoreFunc = showSymbol && !isCoordSysPolar
             && getIsIgnoreFunc(seriesModel, data, coordSys as Cartesian2D);
 
@@ -706,10 +718,10 @@ class LineView extends ChartView {
 
             if (step) {
                 // TODO If stacked series is not step
-                points = turnPointsIntoStep(points, coordSys, step);
+                points = turnPointsIntoStep(points, coordSys, step, connectNulls);
 
                 if (stackedOnPoints) {
-                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step, connectNulls);
                 }
             }
 
@@ -779,16 +791,16 @@ class LineView extends ChartView {
             ) {
                 if (hasAnimation) {
                     this._doUpdateAnimation(
-                        data, stackedOnPoints, coordSys, api, step, valueOrigin
+                        data, stackedOnPoints, coordSys, api, step, valueOrigin, connectNulls
                     );
                 }
                 else {
                     // Not do it in update with animation
                     if (step) {
                         // TODO If stacked series is not step
-                        points = turnPointsIntoStep(points, coordSys, step);
+                        points = turnPointsIntoStep(points, coordSys, step, connectNulls);
                         if (stackedOnPoints) {
-                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step, connectNulls);
                         }
                     }
 
@@ -831,7 +843,7 @@ class LineView extends ChartView {
 
         const smooth = getSmooth(seriesModel.get('smooth'));
         const smoothMonotone = seriesModel.get('smoothMonotone');
-        const connectNulls = seriesModel.get('connectNulls');
+
         polyline.setShape({
             smooth,
             smoothMonotone,
@@ -1298,7 +1310,8 @@ class LineView extends ChartView {
         coordSys: Cartesian2D | Polar,
         api: ExtensionAPI,
         step: LineSeriesOption['step'],
-        valueOrigin: LineSeriesOption['areaStyle']['origin']
+        valueOrigin: LineSeriesOption['areaStyle']['origin'],
+        connectNulls: boolean
     ) {
         const polyline = this._polyline;
         const polygon = this._polygon;
@@ -1317,10 +1330,10 @@ class LineView extends ChartView {
         let stackedOnNext = diff.stackedOnNext;
         if (step) {
             // TODO If stacked series is not step
-            current = turnPointsIntoStep(diff.current, coordSys, step);
-            stackedOnCurrent = turnPointsIntoStep(diff.stackedOnCurrent, coordSys, step);
-            next = turnPointsIntoStep(diff.next, coordSys, step);
-            stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step);
+            current = turnPointsIntoStep(diff.current, coordSys, step, connectNulls);
+            stackedOnCurrent = turnPointsIntoStep(diff.stackedOnCurrent, coordSys, step, connectNulls);
+            next = turnPointsIntoStep(diff.next, coordSys, step, connectNulls);
+            stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step, connectNulls);
         }
         // Don't apply animation if diff is large.
         // For better result and avoid memory explosion problems like

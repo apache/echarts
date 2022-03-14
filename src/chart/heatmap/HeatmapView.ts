@@ -205,6 +205,7 @@ class HeatmapView extends ChartView {
         let emphasisStyle = seriesModel.getModel(['emphasis', 'itemStyle']).getItemStyle();
         let blurStyle = seriesModel.getModel(['blur', 'itemStyle']).getItemStyle();
         let selectStyle = seriesModel.getModel(['select', 'itemStyle']).getItemStyle();
+        let borderRadius = seriesModel.get(['itemStyle', 'borderRadius']);
         let labelStatesModels = getLabelStatesModels(seriesModel);
         const emphasisModel = seriesModel.getModel('emphasis');
         let focus = emphasisModel.get('focus');
@@ -268,14 +269,20 @@ class HeatmapView extends ChartView {
                 });
             }
 
-            const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
-
             // Optimization for large datset
             if (data.hasItemOption) {
+                const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
                 emphasisStyle = emphasisModel.getModel('itemStyle').getItemStyle();
                 blurStyle = itemModel.getModel(['blur', 'itemStyle']).getItemStyle();
                 selectStyle = itemModel.getModel(['select', 'itemStyle']).getItemStyle();
+
+                // Each item value struct in the data would be firstly
+                // {
+                //     itemStyle: { borderRadius: [30, 30] },
+                //     value: [2022, 02, 22]
+                // }
+                borderRadius = itemModel.get(['itemStyle', 'borderRadius']);
 
                 focus = emphasisModel.get('focus');
                 blurScope = emphasisModel.get('blurScope');
@@ -283,6 +290,8 @@ class HeatmapView extends ChartView {
 
                 labelStatesModels = getLabelStatesModels(itemModel);
             }
+
+            rect.shape.r = borderRadius;
 
             const rawValue = seriesModel.getRawValue(idx) as OptionDataValue[];
             let defaultText = '-';

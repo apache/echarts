@@ -935,7 +935,7 @@ class DataStore {
         let area;
         let nextRawIndex;
 
-        const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize) + 2);
+        const newIndices = new (getIndicesCtor(this._rawCount))(Math.min((Math.ceil(len / frameSize) + 2) * 2, len));
 
         // First frame use the first data.
         newIndices[sampledIndex++] = currentRawIndex;
@@ -965,12 +965,19 @@ class DataStore {
             maxArea = -1;
 
             nextRawIndex = frameStart;
+
+            let firstNaNIndex = -1;
+            let countNaN = 0;
             // Find a point from current frame that construct a triangel with largest area with previous selected point
             // And the average of next frame.
             for (let idx = frameStart; idx < frameEnd; idx++) {
                 const rawIndex = this.getRawIndex(idx);
                 const y = dimStore[rawIndex] as number;
                 if (isNaN(y)) {
+                    countNaN++;
+                    if (firstNaNIndex < 0) {
+                        firstNaNIndex = rawIndex;
+                    }
                     continue;
                 }
                 // Calculate triangle area over three buckets
@@ -981,6 +988,13 @@ class DataStore {
                     maxArea = area;
                     nextRawIndex = rawIndex; // Next a is this b
                 }
+            }
+
+            if (countNaN > 0 && countNaN < frameEnd - frameStart) {
+                // Append first NaN point in every bucket.
+                // It is necessary to ensure the correct order of indices.
+                newIndices[sampledIndex++] = Math.min(firstNaNIndex, nextRawIndex);
+                nextRawIndex = Math.max(firstNaNIndex, nextRawIndex);
             }
 
             newIndices[sampledIndex++] = nextRawIndex;

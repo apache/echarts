@@ -28,6 +28,7 @@ import {
     VisualOptionUnit,
     ParsedValue
 } from '../util/types';
+import { warn } from '../util/log';
 
 const each = zrUtil.each;
 const isObject = zrUtil.isObject;
@@ -693,7 +694,11 @@ function setVisualToOption(thisOption: VisualMappingInnerOption, visualArr: Visu
     thisOption.visual = visualArr;
     if (thisOption.type === 'color') {
         thisOption.parsedVisual = zrUtil.map(visualArr, function (item: string) {
-            return zrColor.parse(item);
+            const color = zrColor.parse(item);
+            if (!color && __DEV__) {
+                warn(`'${item}' is an illegal color, fallback to '#000000'`, true);
+            }
+            return color || [0, 0, 0, 1];
         });
     }
     return visualArr;

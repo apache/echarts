@@ -213,7 +213,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             divideShape: 'clone'
         },
 
-        triggerLineEvent: false,
+        triggerLineEvent: false
     };
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
