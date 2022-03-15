@@ -61,7 +61,6 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import ComponentModel from '../model/Component';
 import { error } from './log';
-import type ComponentView from '../view/Component';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -436,22 +435,19 @@ export function allLeaveBlur(api: ExtensionAPI) {
         const view = isSeries ? api.getViewOfSeriesModel(componentModel as SeriesModel)
             : api.getViewOfComponentModel(componentModel);
         !isSeries && allComponents.push(componentModel);
-        isSeries && leaveBlurredSeries.push(componentModel as SeriesModel);
         if (componentStates.isBlured) {
             // Leave blur anyway
             view.group.traverse(function (child) {
                 singleLeaveBlur(child);
             });
-        }
-        if (view && (view as ComponentView).toggleBlurSeries) {
-            (view as ComponentView).toggleBlurSeries(leaveBlurredSeries, false, model);
+            isSeries && leaveBlurredSeries.push(componentModel as SeriesModel);
         }
         componentStates.isBlured = false;
     });
     each(allComponents, function (component) {
         const view = api.getViewOfComponentModel(component);
-        if (view && (view as ComponentView).toggleBlurSeries) {
-            (view as ComponentView).toggleBlurSeries(leaveBlurredSeries, false, model);
+        if (view && view.toggleBlurSeries) {
+            view.toggleBlurSeries(leaveBlurredSeries, false, model);
         }
     });
 }
