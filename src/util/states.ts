@@ -61,6 +61,7 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import ComponentModel from '../model/Component';
 import { error } from './log';
+import type ComponentView from '../view/Component';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -428,13 +429,13 @@ function shouldSilent(el: Element, e: ElementEvent) {
 export function allLeaveBlur(api: ExtensionAPI) {
     const model = api.getModel();
     const leaveBlurredSeries: SeriesModel[] = [];
-    const allComponents: ComponentModel[] = [];
+    const allComponentViews: ComponentView[] = [];
     model.eachComponent(function (componentType, componentModel) {
         const componentStates = getComponentStates(componentModel);
         const isSeries = componentType === 'series';
         const view = isSeries ? api.getViewOfSeriesModel(componentModel as SeriesModel)
             : api.getViewOfComponentModel(componentModel);
-        !isSeries && allComponents.push(componentModel);
+        !isSeries && allComponentViews.push(view as ComponentView);
         if (componentStates.isBlured) {
             // Leave blur anyway
             view.group.traverse(function (child) {
@@ -444,8 +445,7 @@ export function allLeaveBlur(api: ExtensionAPI) {
         }
         componentStates.isBlured = false;
     });
-    each(allComponents, function (component) {
-        const view = api.getViewOfComponentModel(component);
+    each(allComponentViews, function (view) {
         if (view && view.toggleBlurSeries) {
             view.toggleBlurSeries(leaveBlurredSeries, false, model);
         }
