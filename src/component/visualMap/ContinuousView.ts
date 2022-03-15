@@ -299,11 +299,11 @@ class ContinuousView extends VisualMapView {
                 eventTool.stop(e.event);
             },
             ondragend: onDragEnd,
-            style: {
-                x: 0, y: 0, text: '',
-                font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor()
-            }
+            style: createTextStyle(textStyleModel, {
+                x: 0,
+                y: 0,
+                text: ''
+            })
         });
         handleLabel.ensureState('blur').style = {
             opacity: 0.1
@@ -359,11 +359,11 @@ class ContinuousView extends VisualMapView {
         const indicatorLabel = new graphic.Text({
             silent: true,
             invisible: true,
-            style: {
-                x: 0, y: 0, text: '',
-                font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor()
-            }
+            style: createTextStyle(textStyleModel, {
+                x: 0,
+                y: 0,
+                text: ''
+            })
         });
         this.group.add(indicatorLabel);
 
