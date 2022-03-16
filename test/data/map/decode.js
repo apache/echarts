@@ -18,7 +18,7 @@
 */
 
 function decode(json) {
-    if (json.UTF8Encoding) {
+    if (!json.UTF8Encoding) {
         return;
     }
     var jsonCompressed = json;
@@ -48,7 +48,7 @@ function decode(json) {
                 decodeRings(coordinates, encodeOffsets, encodeScale);
                 break;
             case 'MultiPolygon':
-                zrUtil.each(coordinates, function (rings, idx) {
+                coordinates.forEach(function (rings, idx) {
                     return decodeRings(rings, encodeOffsets[idx], encodeScale)
                 });
         }
