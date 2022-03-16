@@ -107,11 +107,11 @@ class ComponentView {
     }
 
     /**
-     * Hook for blur target series.
-     * Can be used in marker for blur the markers
+     * Hook for toggle blur target series.
+     * Can be used in marker for blur or leave blur the markers
      */
-    blurSeries(seriesModels: SeriesModel[], ecModel: GlobalModel): void {
-         // Do nothing;
+    toggleBlurSeries(seriesModels: SeriesModel[], isBlur: boolean, ecModel: GlobalModel): void {
+        // Do nothing;
     }
 
     /**

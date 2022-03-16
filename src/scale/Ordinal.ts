@@ -130,6 +130,10 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     }
 
     parse(val: OrdinalRawValue | OrdinalNumber): OrdinalNumber {
+        // Caution: Math.round(null) will return `0` rather than `NaN`
+        if (val == null) {
+            return NaN;
+        }
         return isString(val)
             ? this._ordinalMeta.getOrdinal(val)
             // val might be float.

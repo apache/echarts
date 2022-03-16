@@ -117,8 +117,6 @@ class EffectLine extends graphic.Group {
             return;
         }
 
-        const self = this;
-
         const points = lineData.getItemLayout(idx);
 
         let period = effectModel.get('period') * 1000;
@@ -138,40 +136,46 @@ class EffectLine extends graphic.Group {
         }
 
         if (period !== this._period || loop !== this._loop) {
-
             symbol.stopAnimation();
-
-            if (period > 0) {
-                let delayNum: number;
-                if (zrUtil.isFunction(delayExpr)) {
-                    delayNum = delayExpr(idx);
-                }
-                else {
-                    delayNum = delayExpr;
-                }
-                if (symbol.__t > 0) {
-                    delayNum = -period * symbol.__t;
-                }
-                symbol.__t = 0;
-                const animator = symbol.animate('', loop)
-                    .when(period, {
-                        __t: 1
-                    })
-                    .delay(delayNum)
-                    .during(function () {
-                        self._updateSymbolPosition(symbol);
-                    });
-                if (!loop) {
-                    animator.done(function () {
-                        self.remove(symbol);
-                    });
-                }
-                animator.start();
+            let delayNum: number;
+            if (zrUtil.isFunction(delayExpr)) {
+                delayNum = delayExpr(idx);
             }
+            else {
+                delayNum = delayExpr;
+            }
+            if (symbol.__t > 0) {
+                delayNum = -period * symbol.__t;
+            }
+
+            this._animateSymbol(
+                symbol, period, delayNum, loop
+            );
         }
 
         this._period = period;
         this._loop = loop;
+    }
+
+    private _animateSymbol(symbol: ECSymbolOnEffectLine, period: number, delayNum: number, loop: boolean) {
+        if (period > 0) {
+            symbol.__t = 0;
+            const self = this;
+            const animator = symbol.animate('', loop)
+                .when(period, {
+                    __t: 1
+                })
+                .delay(delayNum)
+                .during(function () {
+                    self._updateSymbolPosition(symbol);
+                });
+            if (!loop) {
+                animator.done(function () {
+                    self.remove(symbol);
+                });
+            }
+            animator.start();
+        }
     }
 
     protected _getLineLength(symbol: ECSymbolOnEffectLine) {

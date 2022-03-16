@@ -141,8 +141,6 @@ class TreeView extends ChartView {
     private _max: number[];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-
-
         this._controller = new RoamController(api.getZr());
 
         this._controllerHost = {
@@ -706,7 +704,7 @@ function removeNode(
         removeOpt: removeAnimationOpt
     });
 
-    symbolEl.fadeOut(null, {
+    symbolEl.fadeOut(null, data.hostModel as TreeSeriesModel, {
         fadeLabel: true,
         animation: removeAnimationOpt
     });

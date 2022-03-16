@@ -35,7 +35,7 @@ import {
     StatesOptionMixin,
     SeriesLineLabelOption,
     DimensionDefinitionLoose,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     ZRColor,
     CallbackDataParams
 } from '../../util/types';
@@ -86,7 +86,7 @@ interface LegacyDataItemOption {
 }
 
 interface LinesStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 export interface LinesStateOption<TCbParams = never> {
     lineStyle?: LinesLineStyleOption<(TCbParams extends never ? never : (params: TCbParams) => ZRColor) | ZRColor>

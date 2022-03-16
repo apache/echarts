@@ -441,10 +441,20 @@ function updateCommonAttrs(
 ) {
     if (!el.isGroup) {
         const elDisplayable = el as Displayable;
+        elDisplayable.cursor = zrUtil.retrieve2(
+            (elOption as GraphicComponentDisplayableOption).cursor,
+            Displayable.prototype.cursor
+        );
         // We should not support configure z and zlevel in the element level.
         // But seems we didn't limit it previously. So here still use it to avoid breaking.
-        elDisplayable.z = zrUtil.retrieve2((elOption as any).z, defaultZ || 0);
-        elDisplayable.zlevel = zrUtil.retrieve2((elOption as any).zlevel, defaultZlevel || 0);
+        elDisplayable.z = zrUtil.retrieve2(
+            (elOption as GraphicComponentDisplayableOption).z,
+            defaultZ || 0
+        );
+        elDisplayable.zlevel = zrUtil.retrieve2(
+            (elOption as GraphicComponentDisplayableOption).zlevel,
+            defaultZlevel || 0
+        );
         // z2 must not be null/undefined, otherwise sort error may occur.
         const optZ2 = (elOption as GraphicComponentDisplayableOption).z2;
         optZ2 != null && (elDisplayable.z2 = optZ2 || 0);
