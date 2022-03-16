@@ -27,7 +27,7 @@ import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin 
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
-import { extend } from 'zrender/src/core/util';
+import { extend, isNumber } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTrasition';
@@ -221,8 +221,8 @@ class Symbol extends graphic.Group {
 
         let labelStatesModels;
 
-        let hoverScale;
-        let cursorStyle;
+        let hoverScale: SymbolDrawSeriesScope['hoverScale'];
+        let cursorStyle: SymbolDrawSeriesScope['cursorStyle'];
 
         if (seriesScope) {
             emphasisItemStyle = seriesScope.emphasisItemStyle;
@@ -337,7 +337,7 @@ class Symbol extends graphic.Group {
         symbolPath.ensureState('blur').style = blurItemStyle;
 
         if (hoverScale) {
-            const scaleRatio = Math.max(1.1, 3 / this._sizeY);
+            const scaleRatio = Math.max((isNumber(hoverScale) ? hoverScale : 1.1), 3 / this._sizeY);
             emphasisState.scaleX = this._sizeX * scaleRatio;
             emphasisState.scaleY = this._sizeY * scaleRatio;
         }
