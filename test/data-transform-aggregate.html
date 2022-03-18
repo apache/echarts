@@ -47,10 +47,8 @@ under the License.
         <script>
         require([
             'echarts',
-            'ecSimpleTransform',
             'data/life-expectancy-table.json'
-        ], function (echarts, ecSimpleTransform, _rawData) {
-            echarts.registerTransform(ecSimpleTransform.aggregate);
+        ], function (echarts, _rawData) {
 
             option = {
                 dataset: [{
@@ -65,9 +63,9 @@ under the License.
                             dimension: 'Year', gte: 1950
                         }
                     }, {
-                        type: 'ecSimpleTransform:aggregate',
+                        type: 'aggregate',
                         config: {
-                            resultDimensions: [
+                            output: [
                                 { from: 'Income', method: 'sum' },
                                 { from: 'Country' }
                             ],
@@ -123,11 +121,9 @@ under the License.
         <script>
         require([
             'echarts',
-            'ecSimpleTransform',
             'data/life-expectancy-table.json'
-        ], function (echarts, ecSimpleTransform, _rawData) {
+        ], function (echarts, _rawData) {
 
-            echarts.registerTransform(ecSimpleTransform.aggregate);
 
             option = {
                 dataset: [{
@@ -146,9 +142,9 @@ under the License.
                             }]
                         }
                     }, {
-                        type: 'ecSimpleTransform:aggregate',
+                        type: 'aggregate',
                         config: {
-                            resultDimensions: [
+                            output: [
                                 { name: 'min', from: 'Income', method: 'min' },
                                 { name: 'Q1', from: 'Income', method: 'Q1' },
                                 { name: 'Q2', from: 'Income', method: 'Q2' },
@@ -212,11 +208,9 @@ under the License.
         <script>
         require([
             'echarts',
-            'ecSimpleTransform',
             'data/life-expectancy-table.json'
-        ], function (echarts, ecSimpleTransform, _rawData) {
+        ], function (echarts, _rawData) {
 
-            echarts.registerTransform(ecSimpleTransform.aggregate);
 
             option = {
                 dataset: [{
@@ -231,14 +225,12 @@ under the License.
                         config: {
                             and: [{
                                 dimension: 'Year', gte: 1950
-                            // }, {
-                            //     dimension: 'Country', eq: 'Japan'
                             }]
                         }
                     }, {
-                        type: 'ecSimpleTransform:aggregate',
+                        type: 'aggregate',
                         config: {
-                            resultDimensions: [
+                            output: [
                                 { from: 'Income', method: 'average' },
                                 { from: 'Country' }
                             ],

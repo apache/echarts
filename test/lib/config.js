@@ -58,7 +58,6 @@
                 'echarts': ecDistPath,
                 'zrender': 'node_modules/zrender/dist/zrender',
                 'ecStat': 'lib/ecStat.min',
-                'ecSimpleTransform': 'lib/ecSimpleTransform',
                 'ecSimpleOptionPlayer': 'lib/ecSimpleOptionPlayer',
                 // 'ecStat': 'http://localhost:8001/echarts/echarts-stat/dist/ecStat',
                 'geoJson': '../geoData/geoJson',

@@ -40,12 +40,9 @@ under the License.
         <script>
 
         require([
-            'echarts', 'ecStat', 'ecSimpleTransform', 'ecSimpleOptionPlayer',
+            'echarts', 'ecStat', 'ecSimpleOptionPlayer',
             'data/life-expectancy-table.json'
-        ], function (echarts, ecStat, ecSimpleTransform, ecSimpleOptionPlayer, rawData) {
-
-            echarts.registerTransform(ecSimpleTransform.aggregate);
-            echarts.registerTransform(ecSimpleTransform.id);
+        ], function (echarts, ecStat, ecSimpleOptionPlayer, rawData) {
 
             const COLORS = [
                 '#37A2DA', '#e06343', '#37a354', '#b55dba', '#b5bd48', '#8378EA', '#96BFFF'
@@ -93,7 +90,7 @@ under the License.
                             dimension: 'Year', gte: 1950
                         }
                     }, {
-                        type: 'ecSimpleTransform:id',
+                        type: 'id',
                         config: {
                             dimensionIndex: ID_RAW_DATA_DIMENSIONS.indexOf('Id'),
                             dimensionName: 'Id'
@@ -116,9 +113,9 @@ under the License.
                     id: 'CountryABSumIncome',
                     fromDatasetId: 'CountryABData',
                     transform: {
-                        type: 'ecSimpleTransform:aggregate',
+                        type: 'aggregate',
                         config: {
-                            resultDimensions: [
+                            output: [
                                 { from: 'Income', method: 'sum' },
                                 { from: 'Country' }
                             ],
