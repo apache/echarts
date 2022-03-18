@@ -337,7 +337,7 @@ class Symbol extends graphic.Group {
         symbolPath.ensureState('blur').style = blurItemStyle;
 
         if (hoverScale) {
-            const scaleRatio = Math.max((isNumber(hoverScale) ? hoverScale : 1.1), 3 / this._sizeY);
+            const scaleRatio = Math.max(isNumber(hoverScale) ? hoverScale : 1.1, 3 / this._sizeY);
             emphasisState.scaleX = this._sizeX * scaleRatio;
             emphasisState.scaleY = this._sizeY * scaleRatio;
         }
