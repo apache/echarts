@@ -45,7 +45,7 @@ type ScatterDataValue = OptionDataValue | OptionDataValue[];
 interface EffectScatterStatesOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
-        scale?: boolean
+        scale?: boolean | number
     }
 }
 export interface EffectScatterStateOption<TCbParams = never> {
