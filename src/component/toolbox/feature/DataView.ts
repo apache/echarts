@@ -364,7 +364,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
             textarea.readOnly = model.get('readOnly');
             const style = textarea.style;
             // eslint-disable-next-line max-len
-            style.cssText = 'width:100%;height:100%;font-family:monospace;font-size:14px;line-height:1.6rem;resize:none;vertical-align:middle;box-sizing:border-box;outline:none';
+            style.cssText = 'display:block;width:100%;height:100%;font-family:monospace;font-size:14px;line-height:1.6rem;resize:none;box-sizing:border-box;outline:none';
             style.color = model.get('textColor');
             style.borderColor = model.get('textareaBorderColor');
             style.backgroundColor = model.get('textareaColor');
