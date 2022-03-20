@@ -259,11 +259,11 @@ class ToolboxView extends ComponentView {
 
                     // Use enterEmphasis and leaveEmphasis provide by ec.
                     // There are flags managed by the echarts.
-                    enterEmphasis(this);
+                    api.enterEmphasis(this);
                 })
                 .on('mouseout', function () {
                     if (featureModel.get(['iconStatus', iconName]) !== 'emphasis') {
-                        leaveEmphasis(this);
+                        api.leaveEmphasis(this);
                     }
                     textContent.hide();
                 });
