@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-chart {
+                border: 1px solid red;
+            }
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var testNames = [
+                'Tooltip default snapping',
+                'Tooltip with axisPointer (neither snap)',
+                'Tooltip with axisPointer (x/radius snap)',
+                'Tooltip with axisPointer (both snap)'
+            ];
+
+            for (var testId = 0; testId < testNames.length; ++testId) {
+                (function () {
+                    var option = {
+                        xAxis: {
+                            axisPointer: {
+                                show: testId > 0,
+                                snap: testId > 1
+                            }
+                        },
+                        yAxis: {
+                            axisPointer: {
+                                show: testId > 0,
+                                snap: testId > 2
+                            }
+                        },
+                        grid: {
+                            left: 50,
+                            width: 800
+                        },
+                        polar: {
+                            center: [1200, 200],
+                            radius: [50, 150]
+                        },
+                        radiusAxis: {
+                            axisPointer: {
+                                show: testId > 0,
+                                snap: testId > 1
+                            }
+                        },
+                        angleAxis: {
+                            axisPointer: {
+                                show: testId > 0,
+                                snap: testId > 2
+                            }
+                        },
+                        series: [{
+                            type: 'line',
+                            data: [[15, 2], [16, 44]]
+                        }, {
+                            type: 'scatter',
+                            data: [[6, 33], [12, 13]]
+                        }, {
+                            type: 'line',
+                            data: [[15, 2], [16, 44]],
+                            coordinateSystem: 'polar'
+                        }, {
+                            type: 'scatter',
+                            data: [[6, 33], [12, 13]],
+                            coordinateSystem: 'polar'
+                        }],
+                        tooltip: {
+                            show: true,
+                            hideDelay: 1000,
+                            snap: true
+                        }
+                    };
+
+                    var cnt = 0;
+
+                    var chart = testHelper.create(echarts, 'main' + testId, {
+                        title: [
+                            '**' + testNames[testId] + '**',
+                            'Click "Run Next" button and it should test the following cases one by one',
+                            '1. Grid: Move mouse around (6, 30) and should be snapped by data "33"',
+                            '2. Grid: Move mouse around (15, 0) and should be snapped by data "2"',
+                            '3. Grid: Move mouse around (16, 0) and should not be snapped',
+                            '4. Polar: Move mouse around (3, 33) and should be snapped by data "33"',
+                            '5. Polar: Move mouse around (13, 2.5) and should be snapped by data "2"',
+                            '6. Polar: Move mouse around (9, 0) and should not be snapped'
+                        ],
+                        option: option,
+                        button: {
+                            text: 'Run Next',
+                            onclick: function () {
+                                var position = [
+                                    [319, 172],
+                                    [719, 331],
+                                    [762, 327],
+                                    [1131, 209],
+                                    [1237, 81],
+                                    [1202, 101]
+                                ];
+                                if (cnt < position.length) {
+                                    chart.dispatchAction({
+                                        type: 'showTip',
+                                        x: position[cnt][0],
+                                        y: position[cnt][1]
+                                    });
+                                }
+                                ++cnt;
+                            }
+                        }
+                        // height: 300
+                    });
+                })();
+            }
+        });
+        </script>
+    </body>
+</html>
