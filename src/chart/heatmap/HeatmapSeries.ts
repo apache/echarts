@@ -66,6 +66,7 @@ export interface HeatmapSeriesOption
     SeriesEncodeOptionMixin {
 
     type?: 'heatmap'
+    strictlyAligned?: boolean;
 
     coordinateSystem?: 'cartesian2d' | 'geo' | 'calendar'
 
@@ -128,7 +129,8 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
             itemStyle: {
                 borderColor: '#212121'
             }
-        }
+        },
+        strictlyAligned: false,
     };
 }
 
