@@ -497,9 +497,42 @@ class TooltipView extends ComponentView {
             }
         }
         else {
-            this._lastDataByCoordSys = null;
-            this._hide(dispatchAction);
+            const snapSize = tooltipModel.get('snapSize');
+            const nearestEl = this._findNearestData(this._lastX, this._lastY, snapSize);
+            if (!nearestEl) {
+                this._lastDataByCoordSys = null;
+                this._hide(dispatchAction);
+            }
+            else {
+                this._showSeriesItemTooltip(e, nearestEl, dispatchAction);
+            }
         }
+    }
+
+    private _findNearestData(x: number, y: number, snapSize: number): Element {
+        let minDistance = snapSize * snapSize;
+        let minDataEl: Element = null;
+        this._ecModel.eachSeries(seriesModel => {
+            const data = seriesModel.getData();
+            const coordSys = seriesModel.coordinateSystem;
+            // TODO: also consider snapSize as tolerance?
+            if (coordSys.containPoint([x, y])) {
+                let minDataId: number = null;
+                data.each(id => {
+                    const values = data.getValues(id);
+                    const pts = coordSys.dataToPoint(values);
+                    const distance = (pts[0] - x) * (pts[0] - x) + (pts[1] - y) * (pts[1] - y);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        minDataId = id;
+                    }
+                });
+                if (minDataId != null) {
+                    minDataEl = data.getItemGraphicEl(minDataId);
+                }
+            }
+        });
+        return minDataEl;
     }
 
     private _showOrMove(
