@@ -18,7 +18,7 @@
 */
 
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
-import {map} from 'zrender/src/core/util';
+import {isNumber, map} from 'zrender/src/core/util';
 import type Polar from '../../coord/polar/Polar';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import SeriesData from '../../data/SeriesData';
@@ -89,6 +89,11 @@ function getValueStart(valueAxis: Axis, valueOrigin: LineSeriesOption['areaStyle
     }
     else if (valueOrigin === 'end') {
         valueStart = extent[1];
+    }
+    // If origin is specified as a number, use it as
+    // valueStart directly
+    else if (isNumber(valueOrigin) && !isNaN(valueOrigin)){
+        valueStart = valueOrigin;
     }
     // auto
     else {

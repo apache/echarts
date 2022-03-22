@@ -101,7 +101,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
     lineStyle?: LineStyleOption
 
     areaStyle?: AreaStyleOption & {
-        origin?: 'auto' | 'start' | 'end'
+        origin?: 'auto' | 'start' | 'end' | number
     }
 
     step?: false | 'start' | 'end' | 'middle'
