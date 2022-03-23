@@ -17,7 +17,8 @@
 * under the License.
 */
 
-import { assert, hasOwn } from 'zrender/src/core/util';
+import { validate } from '@babel/types';
+import { assert, each, keys, map, retrieve2 } from 'zrender/src/core/util';
 import {
     DataTransformOption,
     ExternalDataTransform,
@@ -26,6 +27,7 @@ import {
 } from '../../data/helper/transform';
 import { asc, quantile } from '../../util/number';
 import { DimensionLoose, DimensionName, OptionDataValue } from '../../util/types';
+
 
 /**
  * @usage
@@ -85,115 +87,74 @@ export interface AggregateTransformOption extends DataTransformOption {
     };
 }
 
-const METHOD_INTERNAL = {
-    'SUM': true,
-    'COUNT': true,
-    'FIRST': true,
-    'AVERAGE': true,
-    'Q1': true,
-    'Q2': true,
-    'Q3': true,
-    'MIN': true,
-    'MAX': true
-} as const;
-const METHOD_NEEDS_COLLECT = {
-    AVERAGE: ['COUNT']
-} as const;
-const METHOD_NEEDS_GATHER_VALUES = {
-    Q1: true,
-    Q2: true,
-    Q3: true
-} as const;
-const METHOD_ALIAS = {
-    MEDIAN: 'Q2'
-} as const;
-
+type AggregateMethodInternal =
+    'SUM' | 'COUNT' | 'FIRST' | 'AVERAGE' | 'Q1' | 'Q2' | 'Q3' | 'MEDIAN' | 'MIN' | 'MAX' | 'VALUES';
 type AggregateMethodLoose =
     AggregateMethodInternal
     | 'sum' | 'count' | 'first' | 'average' | 'Q1' | 'Q2' | 'Q3' | 'median' | 'min' | 'max';
-type AggregateMethodInternal = keyof typeof METHOD_INTERNAL;
 
-
-class ResultDimInfoInternal {
+type AggregateResultValue = OptionDataValue | OptionDataValue[];
+type AggregateResultValueByGroup = Record<string, AggregateResultValue>;
+class AggregateResult {
 
     readonly method: AggregateMethodInternal;
     readonly name: DimensionName;
     readonly index: number;
-    readonly indexInUpstream: number;
+    /**
+     * Index in the upstream
+     */
+    readonly fromIndex: number;
 
-    readonly collectionInfoList = [] as {
-        method: AggregateMethodInternal;
-        indexInLine: number;
-    }[];
+    /**
+     * Deps applied before this method
+     */
+    readonly dep: AggregateResult;
 
-    // FIXME: refactor
-    readonly gatheredValuesByGroup: { [groupVal: string]: number[] } = {};
-    readonly gatheredValuesNoGroup = [] as number[];
-    readonly needGatherValues: boolean = false;
+    readonly groupBy: ExternalDimensionDefinition;
 
-    __collectionResult: TravelResult<CollectionResultLine>;
 
-    private _collectionInfoMap = {} as {
-        // number is the index of `list`
-        [method in AggregateMethodInternal]: number
-    };
+    values: AggregateResultValue | AggregateResultValueByGroup;
 
     constructor(
         index: number,
         indexInUpstream: number,
         method: AggregateMethodInternal,
         name: DimensionName,
-        needGatherValues: boolean
+        groupBy: ExternalDimensionDefinition,
+        dep?: AggregateResult
     ) {
         this.method = method;
         this.name = name;
         this.index = index;
-        this.indexInUpstream = indexInUpstream;
-        this.needGatherValues = needGatherValues;
-    }
+        this.fromIndex = indexInUpstream;
+        this.dep = dep;
+        this.groupBy = groupBy;
 
-    addCollectionInfo(item: ResultDimInfoInternal['collectionInfoList'][number]) {
-        this._collectionInfoMap[item.method] = this.collectionInfoList.length;
-        this.collectionInfoList.push(item);
-    }
-
-    getCollectionInfo(method: AggregateMethodInternal) {
-        return this.collectionInfoList[this._collectionInfoMap[method]];
-    }
-
-    // FIXME: temp implementation. Need refactor.
-    gatherValue(groupByDimInfo: ExternalDimensionDefinition, groupVal: OptionDataValue, value: OptionDataValue) {
-        // FIXME: convert to number compulsorily temporarily.
-        value = +value;
-        if (groupByDimInfo) {
-            if (groupVal != null) {
-                const groupValStr = groupVal + '';
-                const values = this.gatheredValuesByGroup[groupValStr]
-                    || (this.gatheredValuesByGroup[groupValStr] = []);
-                values.push(value);
-            }
+        let valuesByGroup: AggregateResultValueByGroup = {};
+        if (groupBy) {
+            valuesByGroup = this.values = {};
         }
-        else {
-            this.gatheredValuesNoGroup.push(value);
-        }
+
+        this.set = groupBy
+            ? (groupByVal, value) => valuesByGroup[groupByVal as string] = value
+            : (groupByVal, value) => this.values = value;
+
+        this.get = groupBy
+            ? (groupByVal) => valuesByGroup[groupByVal as string]
+            : () => this.values as AggregateResultValue;
+
     }
+
+    set: (groupByVal: OptionDataValue, value: AggregateResultValue) => void;
+    get: (groupByVal: OptionDataValue) => AggregateResultValue;
+
+    // getValues(): AggregateResultValue[] {
+    //     const values = this._values;
+    //     return this.groupBy
+    //         ? map(keys(values as AggregateResultValueByGroup), key => (values as AggregateResultValueByGroup)[key])
+    //         : [values as AggregateResultValue];
+    // }
 }
-
-type CreateInTravel<LINE> = (
-    upstream: ExternalSource,
-    dataIndex: number,
-    dimInfoList: ResultDimInfoInternal[],
-    groupByDimInfo?: ExternalDimensionDefinition,
-    groupByVal?: OptionDataValue
-) => LINE;
-type UpdateInTravel<LINE> = (
-    upstream: ExternalSource,
-    dataIndex: number,
-    targetLine: LINE,
-    dimInfoList: ResultDimInfoInternal[],
-    groupByDimInfo?: ExternalDimensionDefinition,
-    groupByVal?: OptionDataValue
-) => void;
 
 export const aggregateTransform: ExternalDataTransform<AggregateTransformOption> = {
 
@@ -203,393 +164,249 @@ export const aggregateTransform: ExternalDataTransform<AggregateTransformOption>
         const upstream = params.upstream;
         const config = params.config;
 
-        const groupByDimInfo = prepareGroupByDimInfo(config, upstream);
-        const { finalResultDimInfoList, collectionDimInfoList } = prepareDimensions(
-            config, upstream, groupByDimInfo
-        );
-
-        // Collect
-        let collectionResult: TravelResult<CollectionResultLine>;
-        if (collectionDimInfoList.length) {
-            collectionResult = travel(
-                groupByDimInfo,
-                upstream,
-                collectionDimInfoList,
-                createCollectionResultLine,
-                updateCollectionResultLine
-            );
-        }
-
-        for (let i = 0; i < collectionDimInfoList.length; i++) {
-            const dimInfo = collectionDimInfoList[i];
-            dimInfo.__collectionResult = collectionResult;
-            // FIXME: just for Q1, Q2, Q3: need asc.
-            asc(dimInfo.gatheredValuesNoGroup);
-
-            const gatheredValuesByGroup = dimInfo.gatheredValuesByGroup;
-            for (const key in gatheredValuesByGroup) {
-                if (hasOwn(gatheredValuesByGroup, key)) {
-                    asc(gatheredValuesByGroup[key]);
-                }
-            }
-        }
+        const { aggResults, groupByDim } = prepare(config, upstream);
 
         // Calculate
-        const finalResult = travel(
-            groupByDimInfo,
-            upstream,
-            finalResultDimInfoList,
-            createFinalResultLine,
-            updateFinalResultLine
-        );
+        doAggregate(groupByDim, upstream, aggResults);
 
-        const dimensions = [];
-        for (let i = 0; i < finalResultDimInfoList.length; i++) {
-            dimensions.push(finalResultDimInfoList[i].name);
+        // Convert to output row format.
+        let data: OptionDataValue[][];
+
+        if (groupByDim && aggResults.length) {
+            const groupKeys = keys(aggResults[0].values as any);
+            data = map(groupKeys, key => []);
+
+            each(aggResults, (agg, idx0) => {
+                each(groupKeys, (key, idx1) => {
+                    data[idx1][idx0] = (agg.values as any)[key];
+                });
+            });
+        }
+        else {
+            data = [map(aggResults, dim => dim.values) as OptionDataValue[]];
         }
 
         return {
-            dimensions: dimensions,
-            data: finalResult.outList
+            dimensions: map(aggResults, dim => dim.name),
+            // TODO Not provide values to developers?
+            data
         };
     }
 };
 
-function prepareDimensions(
+function prepare(
     config: AggregateTransformOption['config'],
-    upstream: ExternalSource,
-    groupByDimInfo: ExternalDimensionDefinition
+    upstream: ExternalSource
 ): {
-    finalResultDimInfoList: ResultDimInfoInternal[];
-    collectionDimInfoList: ResultDimInfoInternal[];
+    aggResults: AggregateResult[];
+    groupByDim: ExternalDimensionDefinition
 } {
     const outputConfig = config.output;
-    const finalResultDimInfoList: ResultDimInfoInternal[] = [];
-    const collectionDimInfoList: ResultDimInfoInternal[] = [];
-    let gIndexInLine = 0;
+    const aggResults: AggregateResult[] = [];
 
-    for (let i = 0; i < outputConfig.length; i++) {
-        const resultDimInfoConfig = outputConfig[i];
+    const groupByConfig = config.groupBy;
+    let groupByDim: ExternalDimensionDefinition;
+    if (groupByConfig != null) {
+        groupByDim = upstream.getDimensionInfo(groupByConfig);
+        assert(groupByDim, 'Can not find dimension by `groupBy`: ' + groupByConfig);
+    }
+
+    each(outputConfig, resultDimInfoConfig => {
 
         const dimInfoInUpstream = upstream.getDimensionInfo(resultDimInfoConfig.from);
         if (__DEV__) {
             assert(dimInfoInUpstream, 'Can not find dimension by `from`: ' + resultDimInfoConfig.from);
-        }
-
-        const rawMethod = resultDimInfoConfig.method;
-
-        if (__DEV__) {
             assert(
-                groupByDimInfo.index !== dimInfoInUpstream.index || rawMethod == null,
+                groupByDim.index !== dimInfoInUpstream.index || resultDimInfoConfig.method == null,
                 `Dimension ${dimInfoInUpstream.name} is the "groupBy" dimension, must not have any "method".`
             );
         }
 
-        const method = normalizeMethod(rawMethod);
-
+        const methodName = (resultDimInfoConfig.method || '').toUpperCase() as AggregateMethodInternal
+            || 'FIRST';
+        const method = methods[methodName];
         if (__DEV__) {
-            assert(method, 'method is required');
+            assert(method, `Illegal method ${methodName}.`);
         }
 
-        const name = resultDimInfoConfig.name != null ? resultDimInfoConfig.name : dimInfoInUpstream.name;
+        const name = retrieve2(resultDimInfoConfig.name, dimInfoInUpstream.name);
+        const indexInUpStream = dimInfoInUpstream.index;
 
-        const finalResultDimInfo = new ResultDimInfoInternal(
-            finalResultDimInfoList.length,
-            dimInfoInUpstream.index,
-            method,
+        const finalResultDimInfo = new AggregateResult(
+            aggResults.length,
+            indexInUpStream,
+            methodName,
             name,
-            hasOwn(METHOD_NEEDS_GATHER_VALUES, method)
+            groupByDim,
+            method.dep && new AggregateResult(
+                -1, indexInUpStream, method.dep, name, groupByDim
+            )
         );
-        finalResultDimInfoList.push(finalResultDimInfo);
+        aggResults.push(finalResultDimInfo);
+    });
 
-        // For collection.
-        let needCollect = false;
-        if (hasOwn(METHOD_NEEDS_COLLECT, method)) {
-            needCollect = true;
-            const collectionTargetMethods = METHOD_NEEDS_COLLECT[method as keyof typeof METHOD_NEEDS_COLLECT];
-            for (let j = 0; j < collectionTargetMethods.length; j++) {
-                finalResultDimInfo.addCollectionInfo({
-                    method: collectionTargetMethods[j],
-                    indexInLine: gIndexInLine++
-                });
-            }
-        }
-        if (hasOwn(METHOD_NEEDS_GATHER_VALUES, method)) {
-            needCollect = true;
-        }
-        if (needCollect) {
-            collectionDimInfoList.push(finalResultDimInfo);
-        }
-    }
-
-    return { collectionDimInfoList, finalResultDimInfoList };
+    return { aggResults, groupByDim };
 }
 
-function prepareGroupByDimInfo(
-    config: AggregateTransformOption['config'],
-    upstream: ExternalSource
-): ExternalDimensionDefinition {
-    const groupByConfig = config.groupBy;
-    let groupByDimInfo;
-    if (groupByConfig != null) {
-        groupByDimInfo = upstream.getDimensionInfo(groupByConfig);
-        assert(groupByDimInfo, 'Can not find dimension by `groupBy`: ' + groupByConfig);
-    }
-    return groupByDimInfo;
-}
-
-interface TravelResult<LINE> {
-    mapByGroup: { [groupVal: string]: LINE };
-    outList: LINE[];
-}
-
-function travel<LINE>(
-    groupByDimInfo: ExternalDimensionDefinition,
+function doAggregate(
+    groupByDim: ExternalDimensionDefinition,
     upstream: ExternalSource,
-    resultDimInfoList: ResultDimInfoInternal[],
-    doCreate: CreateInTravel<LINE>,
-    doUpdate: UpdateInTravel<LINE>
-): TravelResult<LINE> {
-    const outList: TravelResult<LINE>['outList'] = [];
-    let mapByGroup: TravelResult<LINE>['mapByGroup'];
+    aggResultDims: AggregateResult[]
+) {
 
-    if (groupByDimInfo) {
-        mapByGroup = {};
-
-        for (let dataIndex = 0, len = upstream.count(); dataIndex < len; dataIndex++) {
-            const groupByVal = upstream.retrieveValue(dataIndex, groupByDimInfo.index);
-
-            // PENDING: when value is null/undefined
-            if (groupByVal == null) {
-                continue;
-            }
-
-            const groupByValStr = groupByVal + '';
-
-            if (!hasOwn(mapByGroup, groupByValStr)) {
-                const newLine = doCreate(upstream, dataIndex, resultDimInfoList, groupByDimInfo, groupByVal);
-                outList.push(newLine);
-                mapByGroup[groupByValStr] = newLine;
-            }
-            else {
-                const targetLine = mapByGroup[groupByValStr];
-                doUpdate(upstream, dataIndex, targetLine, resultDimInfoList, groupByDimInfo, groupByVal);
-            }
-        }
-    }
-    else {
-        const targetLine = doCreate(upstream, 0, resultDimInfoList);
-        outList.push(targetLine);
-        for (let dataIndex = 1, len = upstream.count(); dataIndex < len; dataIndex++) {
-            doUpdate(upstream, dataIndex, targetLine, resultDimInfoList);
-        }
-    }
-
-    return { mapByGroup, outList };
-}
-
-function normalizeMethod(method: AggregateMethodLoose): AggregateMethodInternal {
-    if (method == null) {
-        return 'FIRST';
-    }
-    let methodInternal = method.toUpperCase() as AggregateMethodInternal;
-    methodInternal = hasOwn(METHOD_ALIAS, methodInternal)
-        ? METHOD_ALIAS[methodInternal as keyof typeof METHOD_ALIAS]
-        : methodInternal;
-    assert(hasOwn(METHOD_INTERNAL, methodInternal), `Illegal method ${method}.`);
-    return methodInternal;
-}
-
-
-
-type CollectionResultLine = number[];
-
-const createCollectionResultLine: CreateInTravel<CollectionResultLine> = (
-    upstream, dataIndex, collectionDimInfoList, groupByDimInfo, groupByVal
-) => {
-    const newLine = [] as number[];
-    for (let i = 0; i < collectionDimInfoList.length; i++) {
-        const dimInfo = collectionDimInfoList[i];
-        const collectionInfoList = dimInfo.collectionInfoList;
-        for (let j = 0; j < collectionInfoList.length; j++) {
-            const collectionInfo = collectionInfoList[j];
-            // FIXME: convert to number compulsorily temporarily.
-            newLine[collectionInfo.indexInLine] = +lineCreator[collectionInfo.method](
-                upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal
-            );
-        }
-        // FIXME: refactor
-        if (dimInfo.needGatherValues) {
-            const val = upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream);
-            dimInfo.gatherValue(groupByDimInfo, groupByVal, val);
-        }
-    }
-    return newLine;
-};
-
-const updateCollectionResultLine: UpdateInTravel<CollectionResultLine> = (
-    upstream, dataIndex, targetLine: number[], collectionDimInfoList, groupByDimInfo, groupByVal
-) => {
-    for (let i = 0; i < collectionDimInfoList.length; i++) {
-        const dimInfo = collectionDimInfoList[i];
-        const collectionInfoList = dimInfo.collectionInfoList;
-        for (let j = 0; j < collectionInfoList.length; j++) {
-            const collectionInfo = collectionInfoList[j];
-            const indexInLine = collectionInfo.indexInLine;
-            // FIXME: convert to number compulsorily temporarily.
-            targetLine[indexInLine] = +lineUpdater[collectionInfo.method](
-                targetLine[indexInLine], upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal
-            );
-        }
-        // FIXME: refactor
-        if (dimInfo.needGatherValues) {
-            const val = upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream);
-            dimInfo.gatherValue(groupByDimInfo, groupByVal, val);
-        }
-    }
-};
-
-
-
-type FinalResultLine = OptionDataValue[];
-
-const createFinalResultLine: CreateInTravel<FinalResultLine> = (
-    upstream, dataIndex, finalResultDimInfoList, groupByDimInfo, groupByVal
-) => {
-    const newLine = [];
-    for (let i = 0; i < finalResultDimInfoList.length; i++) {
-        const dimInfo = finalResultDimInfoList[i];
-        const method = dimInfo.method;
-        newLine[i] = isGroupByDimension(groupByDimInfo, dimInfo)
-            ? groupByVal
-            : lineCreator[method](
-                upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal
-            );
-    }
-    return newLine;
-};
-
-const updateFinalResultLine: UpdateInTravel<FinalResultLine> = (
-    upstream, dataIndex, targetLine, finalResultDimInfoList, groupByDimInfo, groupByVal
-) => {
-    for (let i = 0; i < finalResultDimInfoList.length; i++) {
-        const dimInfo = finalResultDimInfoList[i];
-        if (isGroupByDimension(groupByDimInfo, dimInfo)) {
-            continue;
-        }
-        const method = dimInfo.method;
-        targetLine[i] = lineUpdater[method](
-            targetLine[i], upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal
+    function doCreate(aggResult: AggregateResult, dataIndex: number, groupByVal?: string) {
+        const method = methods[aggResult.method];
+        const val = upstream.retrieveValue(dataIndex, aggResult.fromIndex);
+        aggResult.set(
+            groupByVal,
+            isGroupByDimension(groupByDim, aggResult)
+                ? groupByVal
+                : method.init(val, aggResult, groupByVal)
         );
+    };
+    function doUpdate(aggResult: AggregateResult, dataIndex: number, groupByVal?: string) {
+        if (isGroupByDimension(groupByDim, aggResult)) {
+            return;
+        }
+        const method = methods[aggResult.method];
+        const val = upstream.retrieveValue(dataIndex, aggResult.fromIndex);
+        if (method.add) {
+            aggResult.set(
+                groupByVal,
+                method.add(aggResult.get(groupByVal), val, aggResult, groupByVal)
+            );
+        }
+    };
+
+    for (let i = 0; i < aggResultDims.length; i++) {
+        const aggResult = aggResultDims[i];
+
+        // TODO share dep result
+        if (aggResult.dep) {
+            doAggregate(groupByDim, upstream, [aggResult.dep]);
+        }
+
+        if (groupByDim) {
+            const groupCreated: Record<string, boolean> = {};
+
+            for (let dataIndex = 0, len = upstream.count(); dataIndex < len; dataIndex++) {
+                let groupByVal = upstream.retrieveValue(dataIndex, groupByDim.index) as string;
+
+                // PENDING: when value is null/undefined
+                if (groupByVal == null) {
+                    continue;
+                }
+                groupByVal += '';
+
+                if (!groupCreated[groupByVal]) {
+                    doCreate(aggResult, dataIndex, groupByVal);
+                    groupCreated[groupByVal + ''] = true;
+                }
+                else {
+                    doUpdate(aggResult, dataIndex, groupByVal);
+                }
+            }
+        }
+        else {
+            doCreate(aggResult, 0);
+            for (let dataIndex = 1, len = upstream.count(); dataIndex < len; dataIndex++) {
+                doUpdate(aggResult, dataIndex);
+            }
+        }
     }
-};
+}
+
 
 function isGroupByDimension(
-    groupByDimInfo: ExternalDimensionDefinition,
-    targetDimInfo: ResultDimInfoInternal
+    groupByDim: ExternalDimensionDefinition,
+    targetDimInfo: AggregateResult
 ): boolean {
-    return groupByDimInfo && targetDimInfo.indexInUpstream === groupByDimInfo.index;
+    return groupByDim && targetDimInfo.fromIndex === groupByDim.index;
 }
 
-const lineCreator: {
-    [key in AggregateMethodInternal]: (
-        upstream: ExternalSource,
-        dataIndex: number,
-        dimInfo: ResultDimInfoInternal,
-        groupByDimInfo: ExternalDimensionDefinition,
-        groupByVal: OptionDataValue
-    ) => OptionDataValue
-} = {
-    'SUM'(upstream, dataIndex, dimInfo) {
-        return upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream);
-    },
-    'COUNT'() {
-        return 1;
-    },
-    'FIRST'(upstream, dataIndex, dimInfo) {
-        return upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream);
-    },
-    'MIN'(upstream, dataIndex, dimInfo) {
-        return upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream);
-    },
-    'MAX'(upstream, dataIndex, dimInfo) {
-        return upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream);
-    },
-    'AVERAGE'(upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal) {
-        const collectionResult = dimInfo.__collectionResult;
-        // FIXME: refactor, bad implementation.
-        const collectLine = groupByDimInfo
-            ? collectionResult.mapByGroup[groupByVal + '']
-            : collectionResult.outList[0];
-        return (upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream) as number)
-            / collectLine[dimInfo.getCollectionInfo('COUNT').indexInLine];
-    },
-    // FIXME: refactor
-    'Q1'(upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal) {
-        return lineCreatorForQ(0.25, dimInfo, groupByDimInfo, groupByVal);
-    },
-    'Q2'(upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal) {
-        return lineCreatorForQ(0.5, dimInfo, groupByDimInfo, groupByVal);
-    },
-    'Q3'(upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal) {
-        return lineCreatorForQ(0.75, dimInfo, groupByDimInfo, groupByVal);
-    }
+type MethodInit = (
+    curr: OptionDataValue,
+    aggResult: AggregateResult,
+    groupByVal: OptionDataValue
+) => AggregateResultValue;
+type MethodAdd = (
+    prev: AggregateResultValue,
+    curr: OptionDataValue,
+    dimInfo: AggregateResult,
+    groupByVal: OptionDataValue
+) => AggregateResultValue;
+
+type Method = {
+    init: MethodInit
+    add?: MethodAdd
+    dep?: AggregateMethodInternal
 };
 
-const lineUpdater: {
-    [key in AggregateMethodInternal]: (
-        val: OptionDataValue,
-        upstream: ExternalSource,
-        dataIndex: number,
-        dimInfo: ResultDimInfoInternal,
-        groupByDimInfo: ExternalDimensionDefinition,
-        groupByVal: OptionDataValue
-    ) => OptionDataValue
-} = {
-    'SUM'(val, upstream, dataIndex, dimInfo) {
-        // FIXME: handle other types
-        return (val as number) + (upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream) as number);
-    },
-    'COUNT'(val) {
-        return (val as number) + 1;
-    },
-    'FIRST'(val) {
-        return val;
-    },
-    'MIN'(val, upstream, dataIndex, dimInfo) {
-        return Math.min(val as number, upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream) as number);
-    },
-    'MAX'(val, upstream, dataIndex, dimInfo) {
-        return Math.max(val as number, upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream) as number);
-    },
-    'AVERAGE'(val, upstream, dataIndex, dimInfo, groupByDimInfo, groupByVal) {
-        // FIXME: refactor, bad implementation.
-        const collectLine = groupByDimInfo
-            ? dimInfo.__collectionResult.mapByGroup[groupByVal + '']
-            : dimInfo.__collectionResult.outList[0];
-        return (val as number)
-            + (upstream.retrieveValue(dataIndex, dimInfo.indexInUpstream) as number)
-            / collectLine[dimInfo.getCollectionInfo('COUNT').indexInLine];
-    },
-    'Q1'(val, upstream, dataIndex, dimInfo) {
-        return val;
-    },
-    'Q2'(val, upstream, dataIndex, dimInfo) {
-        return val;
-    },
-    'Q3'(val, upstream, dataIndex, dimInfo) {
-        return val;
-    }
-};
 
-function lineCreatorForQ(
+function quantileMethod(
     percent: number,
-    dimInfo: ResultDimInfoInternal,
-    groupByDimInfo: ExternalDimensionDefinition,
+    aggResult: AggregateResult,
     groupByVal: OptionDataValue
 ) {
-    const gatheredValues = groupByDimInfo
-        ? dimInfo.gatheredValuesByGroup[groupByVal + '']
-        : dimInfo.gatheredValuesNoGroup;
-    return quantile(gatheredValues, percent);
+    return quantile(asc(aggResult.get(groupByVal) as number[]), percent);
 }
+const Q2Method: Method = {
+    init(curr, aggResult, groupByVal) {
+        return quantileMethod(0.5, aggResult.dep, groupByVal);
+    },
+    dep: 'VALUES'
+};
+
+function identity(val: any) {
+    return val;
+}
+
+const methods: {
+    [key in AggregateMethodInternal]: Method
+} = {
+    VALUES: {
+        init: (curr) => [curr],
+        add(prev, curr) {
+            // FIXME: handle other types
+            (prev as any).push(curr);
+            return prev;
+        }
+    },
+    SUM: {
+        init: identity,
+        add: (prev, curr) => prev as number + (curr as number)
+    },
+    COUNT: {
+        init: () => 1,
+        add: (prev) => (prev as number)++
+    },
+    FIRST: {
+        init: identity,
+        add: identity
+    },
+    MIN: {
+        init: identity,
+        add: (prev, curr) => Math.min(prev as number, curr as number)
+    },
+    MAX: {
+        init: identity,
+        add: (prev, curr) => Math.max(prev as number, curr as number)
+    },
+    AVERAGE: {
+        init: (curr, aggResult, groupByVal) => (curr as number) / (aggResult.dep.get(groupByVal) as number),
+        add: (prev, curr, aggResult, groupByVal) =>
+            (prev as number) + (curr as number) / (aggResult.dep.get(groupByVal) as number),
+        dep: 'COUNT'
+    },
+    Q1: {
+        init: (curr, aggResult, groupByVal) => quantileMethod(0.25, aggResult.dep, groupByVal),
+        dep: 'VALUES'
+    },
+    Q2: Q2Method,
+    // Alias
+    MEDIAN: Q2Method,
+    Q3: {
+        init: (curr, aggResult, groupByVal) => quantileMethod(0.75, aggResult.dep, groupByVal),
+        dep: 'VALUES'
+    }
+};
