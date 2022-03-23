@@ -16,7 +16,7 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-import { assert, each, keys, map, retrieve2 } from 'zrender/src/core/util';
+import { assert, each, find, isArray, keys, map, retrieve2 } from 'zrender/src/core/util';
 import {
     DataTransformOption,
     ExternalDataTransform,
@@ -27,6 +27,7 @@ import { asc, quantile } from '../../util/number';
 import { DimensionLoose, DimensionName, OptionDataValue } from '../../util/types';
 
 
+const GROUP_KEY_SEPARATER = '$EC$';
 /**
  * @usage
  *
@@ -81,7 +82,7 @@ export interface AggregateTransformOption extends DataTransformOption {
             method: AggregateMethodLoose;
         }[];
         // Optional
-        groupBy: DimensionLoose;
+        groupBy: DimensionLoose | DimensionLoose[];
     };
 }
 
@@ -108,7 +109,7 @@ class AggregateResult {
      */
     readonly dep: AggregateResult;
 
-    readonly groupBy: ExternalDimensionDefinition;
+    readonly groupBy: ExternalDimensionDefinition[];
 
 
     values: AggregateResultValue | AggregateResultValueByGroup;
@@ -118,7 +119,7 @@ class AggregateResult {
         indexInUpstream: number,
         method: AggregateMethodInternal,
         name: DimensionName,
-        groupBy: ExternalDimensionDefinition,
+        groupBy: ExternalDimensionDefinition[],
         dep?: AggregateResult
     ) {
         this.method = method;
@@ -145,13 +146,6 @@ class AggregateResult {
 
     set: (groupByVal: OptionDataValue, value: AggregateResultValue) => void;
     get: (groupByVal: OptionDataValue) => AggregateResultValue;
-
-    // getValues(): AggregateResultValue[] {
-    //     const values = this._values;
-    //     return this.groupBy
-    //         ? map(keys(values as AggregateResultValueByGroup), key => (values as AggregateResultValueByGroup)[key])
-    //         : [values as AggregateResultValue];
-    // }
 }
 
 export const aggregateTransform: ExternalDataTransform<AggregateTransformOption> = {
@@ -162,15 +156,15 @@ export const aggregateTransform: ExternalDataTransform<AggregateTransformOption>
         const upstream = params.upstream;
         const config = params.config;
 
-        const { aggResults, groupByDim } = prepare(config, upstream);
+        const { aggResults, groupByDims } = prepare(config, upstream);
 
         // Calculate
-        doAggregate(groupByDim, upstream, aggResults);
+        doAggregate(groupByDims, upstream, aggResults);
 
         // Convert to output row format.
         let data: OptionDataValue[][];
 
-        if (groupByDim && aggResults.length) {
+        if (groupByDims && aggResults.length) {
             const groupKeys = keys(aggResults[0].values as any);
             data = map(groupKeys, key => []);
 
@@ -197,16 +191,19 @@ function prepare(
     upstream: ExternalSource
 ): {
     aggResults: AggregateResult[];
-    groupByDim: ExternalDimensionDefinition
+    groupByDims?: ExternalDimensionDefinition[]
 } {
     const outputConfig = config.output;
     const aggResults: AggregateResult[] = [];
 
-    const groupByConfig = config.groupBy;
-    let groupByDim: ExternalDimensionDefinition;
+    let groupByConfig = config.groupBy;
+    let groupByDims: ExternalDimensionDefinition[];
     if (groupByConfig != null) {
-        groupByDim = upstream.getDimensionInfo(groupByConfig);
-        assert(groupByDim, 'Can not find dimension by `groupBy`: ' + groupByConfig);
+        if (!isArray(groupByConfig)) {
+            groupByConfig = [groupByConfig];
+        }
+        groupByDims = map(groupByConfig, g => upstream.getDimensionInfo(g));
+        assert(groupByDims, 'Can not find dimension by `groupBy`: ' + groupByConfig);
     }
 
     each(outputConfig, resultDimInfoConfig => {
@@ -214,10 +211,12 @@ function prepare(
         const dimInfoInUpstream = upstream.getDimensionInfo(resultDimInfoConfig.from);
         if (__DEV__) {
             assert(dimInfoInUpstream, 'Can not find dimension by `from`: ' + resultDimInfoConfig.from);
-            assert(
-                groupByDim.index !== dimInfoInUpstream.index || resultDimInfoConfig.method == null,
-                `Dimension ${dimInfoInUpstream.name} is the "groupBy" dimension, must not have any "method".`
-            );
+            each(groupByDims, (gbDim) => {
+                assert(
+                    gbDim.index !== dimInfoInUpstream.index || resultDimInfoConfig.method == null,
+                    `Dimension ${dimInfoInUpstream.name} is the "groupBy" dimension, must not have any "method".`
+                );
+            });
         }
 
         const methodName = (resultDimInfoConfig.method || '').toUpperCase() as AggregateMethodInternal
@@ -235,39 +234,31 @@ function prepare(
             indexInUpStream,
             methodName,
             name,
-            groupByDim,
+            groupByDims,
             method.dep && new AggregateResult(
-                -1, indexInUpStream, method.dep, name, groupByDim
+                -1, indexInUpStream, method.dep, name, groupByDims
             )
         );
         aggResults.push(finalResultDimInfo);
     });
 
-    return { aggResults, groupByDim };
+    return { aggResults, groupByDims };
 }
 
 function doAggregate(
-    groupByDim: ExternalDimensionDefinition,
+    groupByDims: ExternalDimensionDefinition[] | undefined,
     upstream: ExternalSource,
     aggResultDims: AggregateResult[]
 ) {
 
-    function doCreate(aggResult: AggregateResult, dataIndex: number, groupByVal?: string) {
-        const method = methods[aggResult.method];
-        const val = upstream.retrieveValue(dataIndex, aggResult.fromIndex);
-        aggResult.set(
-            groupByVal,
-            isGroupByDimension(groupByDim, aggResult)
-                ? groupByVal
-                : method.init(val, aggResult, groupByVal)
+    function doCreate(isGroupByDim: boolean, aggResult: AggregateResult, val: OptionDataValue, groupByVal?: string) {
+        aggResult.set(groupByVal, isGroupByDim
+            ? groupByVal
+            : methods[aggResult.method].init(val, aggResult, groupByVal)
         );
     };
-    function doUpdate(aggResult: AggregateResult, dataIndex: number, groupByVal?: string) {
-        if (isGroupByDimension(groupByDim, aggResult)) {
-            return;
-        }
+    function doUpdate(aggResult: AggregateResult, val: OptionDataValue, groupByVal?: string) {
         const method = methods[aggResult.method];
-        const val = upstream.retrieveValue(dataIndex, aggResult.fromIndex);
         if (method.add) {
             aggResult.set(
                 groupByVal,
@@ -281,34 +272,40 @@ function doAggregate(
 
         // TODO share dep result
         if (aggResult.dep) {
-            doAggregate(groupByDim, upstream, [aggResult.dep]);
+            doAggregate(groupByDims, upstream, [aggResult.dep]);
         }
 
-        if (groupByDim) {
+        if (groupByDims) {
+            const isGroupByDim = isGroupByDimension(groupByDims, aggResult);
             const groupCreated: Record<string, boolean> = {};
-
-            for (let dataIndex = 0, len = upstream.count(); dataIndex < len; dataIndex++) {
-                let groupByVal = upstream.retrieveValue(dataIndex, groupByDim.index) as string;
-
-                // PENDING: when value is null/undefined
-                if (groupByVal == null) {
-                    continue;
+            const keyArr: string[] = [];
+            outer: for (let dataIndex = 0, len = upstream.count(); dataIndex < len; dataIndex++) {
+                for (let i = 0; i < groupByDims.length; i++) {
+                    keyArr[i] = upstream.retrieveValue(dataIndex, groupByDims[i].index) as string;
+                    if (keyArr[i] == null) {
+                        // PENDING: when value is null/undefined
+                        continue outer;
+                    }
                 }
-                groupByVal += '';
+                // TODO key conflicts?
+                const groupByVal = keyArr.join(GROUP_KEY_SEPARATER);
+                const val = upstream.retrieveValue(dataIndex, aggResult.fromIndex);
 
                 if (!groupCreated[groupByVal]) {
-                    doCreate(aggResult, dataIndex, groupByVal);
+                    doCreate(isGroupByDim, aggResult, val, groupByVal);
                     groupCreated[groupByVal + ''] = true;
                 }
-                else {
-                    doUpdate(aggResult, dataIndex, groupByVal);
+                else if (!isGroupByDim) {
+                    doUpdate(aggResult, val, groupByVal);
                 }
             }
         }
         else {
-            doCreate(aggResult, 0);
-            for (let dataIndex = 1, len = upstream.count(); dataIndex < len; dataIndex++) {
-                doUpdate(aggResult, dataIndex);
+            for (let dataIndex = 0, len = upstream.count(); dataIndex < len; dataIndex++) {
+                const val = upstream.retrieveValue(dataIndex, aggResult.fromIndex);
+                dataIndex
+                    ? doUpdate(aggResult, val)
+                    : doCreate(false, aggResult, val);
             }
         }
     }
@@ -316,10 +313,10 @@ function doAggregate(
 
 
 function isGroupByDimension(
-    groupByDim: ExternalDimensionDefinition,
+    groupByDims: ExternalDimensionDefinition[],
     targetDimInfo: AggregateResult
 ): boolean {
-    return groupByDim && targetDimInfo.fromIndex === groupByDim.index;
+    return !!find(groupByDims, dim => dim.index === targetDimInfo.fromIndex);
 }
 
 type MethodInit = (
