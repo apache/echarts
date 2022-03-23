@@ -252,18 +252,12 @@ function doAggregate(
 ) {
 
     function doCreate(isGroupByDim: boolean, aggResult: AggregateResult, val: OptionDataValue, groupByVal?: string) {
-        aggResult.set(groupByVal, isGroupByDim
-            ? groupByVal
-            : methods[aggResult.method].init(val, aggResult, groupByVal)
-        );
+        aggResult.set(groupByVal, isGroupByDim ? val : methods[aggResult.method].init(val, aggResult, groupByVal));
     };
     function doUpdate(aggResult: AggregateResult, val: OptionDataValue, groupByVal?: string) {
         const method = methods[aggResult.method];
         if (method.add) {
-            aggResult.set(
-                groupByVal,
-                method.add(aggResult.get(groupByVal), val, aggResult, groupByVal)
-            );
+            aggResult.set(groupByVal, method.add(aggResult.get(groupByVal), val, aggResult, groupByVal));
         }
     };
 
