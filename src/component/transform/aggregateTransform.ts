@@ -366,17 +366,17 @@ const methods: {
         init: (curr) => [curr],
         add(prev, curr) {
             // FIXME: handle other types
-            (prev as any).push(curr);
+            (prev as OptionDataValue[]).push(curr);
             return prev;
         }
     },
     SUM: {
         init: identity,
-        add: (prev, curr) => prev as number + (curr as number)
+        add: (prev: number, curr: number) => prev + curr
     },
     COUNT: {
         init: () => 1,
-        add: (prev) => (prev as number)++
+        add: (prev: number) => prev++
     },
     FIRST: {
         init: identity,
@@ -384,16 +384,16 @@ const methods: {
     },
     MIN: {
         init: identity,
-        add: (prev, curr) => Math.min(prev as number, curr as number)
+        add: (prev: number, curr: number) => Math.min(prev, curr)
     },
     MAX: {
         init: identity,
-        add: (prev, curr) => Math.max(prev as number, curr as number)
+        add: (prev: number, curr: number) => Math.max(prev, curr)
     },
     AVERAGE: {
-        init: (curr, aggResult, groupByVal) => (curr as number) / (aggResult.dep.get(groupByVal) as number),
-        add: (prev, curr, aggResult, groupByVal) =>
-            (prev as number) + (curr as number) / (aggResult.dep.get(groupByVal) as number),
+        init: (curr: number, aggResult, groupByVal) => curr / (aggResult.dep.get(groupByVal) as number),
+        add: (prev: number, curr: number, aggResult, groupByVal) =>
+            prev + curr / (aggResult.dep.get(groupByVal) as number),
         dep: 'COUNT'
     },
     Q1: {
