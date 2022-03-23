@@ -16,8 +16,6 @@
 * specific language governing permissions and limitations
 * under the License.
 */
-
-import { validate } from '@babel/types';
 import { assert, each, keys, map, retrieve2 } from 'zrender/src/core/util';
 import {
     DataTransformOption,
