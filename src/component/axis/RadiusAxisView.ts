@@ -116,7 +116,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
-                    r: ticksCoords[i].coord
+                    // ensure circle radius >= 0
+                    r: Math.max(ticksCoords[i].coord, 0)
                 }
             }));
         }
