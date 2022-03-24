@@ -29,8 +29,8 @@
 import ComponentModel from '../../model/Component';
 import ComponentView from '../../view/Component';
 import {
-    SERIES_LAYOUT_BY_COLUMN, ComponentOption, SeriesEncodeOptionMixin,
-    OptionSourceData, SeriesLayoutBy, OptionSourceHeader
+    SOURCE_LAYOUT_BY_COLUMN, ComponentOption, SeriesEncodeOptionMixin,
+    OptionSourceData, SourceLayout, OptionSourceHeader
 } from '../../util/types';
 import { DataTransformOption, PipedDataTransformOption } from '../../data/helper/transform';
 import GlobalModel from '../../model/Global';
@@ -44,9 +44,15 @@ export interface DatasetOption extends
         Pick<SeriesEncodeOptionMixin, 'dimensions'> {
     mainType?: 'dataset';
 
-    seriesLayoutBy?: SeriesLayoutBy;
+    sourceLayout?: SourceLayout;
     sourceHeader?: OptionSourceHeader;
     source?: OptionSourceData;
+
+    /**
+     * @deprecated
+     * Use sourceLayout instead
+     */
+    seriesLayoutBy?: SourceLayout
 
     fromDatasetIndex?: number;
     fromDatasetId?: string;
@@ -63,7 +69,7 @@ export class DatasetModel<Opts extends DatasetOption = DatasetOption> extends Co
     static type = 'dataset';
 
     static defaultOption: DatasetOption = {
-        seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN
+        sourceLayout: SOURCE_LAYOUT_BY_COLUMN
     };
 
     private _sourceManager: SourceManager;

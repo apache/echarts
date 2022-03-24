@@ -23,6 +23,7 @@ import {
     ExternalDimensionDefinition,
     ExternalSource
 } from '../../data/helper/transform';
+import { warn } from '../../util/log';
 import { asc, quantile } from '../../util/number';
 import { DimensionLoose, DimensionName, OptionDataValue } from '../../util/types';
 
@@ -211,12 +212,12 @@ function prepare(
         const dimInfoInUpstream = upstream.getDimensionInfo(resultDimInfoConfig.from);
         if (__DEV__) {
             assert(dimInfoInUpstream, 'Can not find dimension by `from`: ' + resultDimInfoConfig.from);
-            each(groupByDims, (gbDim) => {
-                assert(
-                    gbDim.index !== dimInfoInUpstream.index || resultDimInfoConfig.method == null,
-                    `Dimension ${dimInfoInUpstream.name} is the "groupBy" dimension, must not have any "method".`
-                );
-            });
+
+            if (resultDimInfoConfig.method != null
+                && find(groupByDims, gbDim => gbDim.index === dimInfoInUpstream.index)
+            ) {
+                warn(`Dimension ${dimInfoInUpstream.name} is used as "groupBy" dimension, "method" will be ignored.`);
+            }
         }
 
         const methodName = (resultDimInfoConfig.method || '').toUpperCase() as AggregateMethodInternal
@@ -225,6 +226,7 @@ function prepare(
         if (__DEV__) {
             assert(method, `Illegal method ${methodName}.`);
         }
+
 
         const name = retrieve2(resultDimInfoConfig.name, dimInfoInUpstream.name);
         const indexInUpStream = dimInfoInUpstream.index;

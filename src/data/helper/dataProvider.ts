@@ -31,10 +31,10 @@ import {
     SOURCE_FORMAT_KEYED_COLUMNS,
     SOURCE_FORMAT_TYPED_ARRAY,
     SOURCE_FORMAT_ARRAY_ROWS,
-    SERIES_LAYOUT_BY_COLUMN,
-    SERIES_LAYOUT_BY_ROW,
+    SOURCE_LAYOUT_BY_COLUMN,
+    SOURCE_LAYOUT_BY_ROW,
     DimensionName, DimensionIndex, OptionSourceData,
-    OptionDataItem, OptionDataValue, SourceFormat, SeriesLayoutBy, ParsedValue, DimensionLoose, NullUndefined
+    OptionDataItem, OptionDataValue, SourceFormat, SourceLayout, ParsedValue, DimensionLoose, NullUndefined
 } from '../../util/types';
 import SeriesData from '../SeriesData';
 
@@ -150,11 +150,11 @@ export class DefaultDataProvider implements DataProvider {
 
         mountMethods = function (provider, data, source) {
             const sourceFormat = source.sourceFormat;
-            const seriesLayoutBy = source.seriesLayoutBy;
+            const sourceLayout = source.layout;
             const startIndex = source.startIndex;
             const dimsDef = source.dimensionsDefine;
 
-            const methods = providerMethods[getMethodMapKey(sourceFormat, seriesLayoutBy)];
+            const methods = providerMethods[getMethodMapKey(sourceFormat, sourceLayout)];
             if (__DEV__) {
                 assert(methods, 'Invalide sourceFormat: ' + sourceFormat);
             }
@@ -167,9 +167,9 @@ export class DefaultDataProvider implements DataProvider {
                 provider.fillStorage = fillStorageForTypedArray;
             }
             else {
-                const rawItemGetter = getRawSourceItemGetter(sourceFormat, seriesLayoutBy);
+                const rawItemGetter = getRawSourceItemGetter(sourceFormat, sourceLayout);
                 provider.getItem = bind(rawItemGetter, null, data, startIndex, dimsDef);
-                const rawCounter = getRawSourceDataCounter(sourceFormat, seriesLayoutBy);
+                const rawCounter = getRawSourceDataCounter(sourceFormat, sourceLayout);
                 provider.count = bind(rawCounter, null, data, startIndex, dimsDef);
             }
         };
@@ -220,15 +220,15 @@ export class DefaultDataProvider implements DataProvider {
 
         providerMethods = {
 
-            [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN]: {
+            [SOURCE_FORMAT_ARRAY_ROWS + '_' + SOURCE_LAYOUT_BY_COLUMN]: {
                 pure: true,
                 appendData: appendDataSimply
             },
 
-            [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: {
+            [SOURCE_FORMAT_ARRAY_ROWS + '_' + SOURCE_LAYOUT_BY_ROW]: {
                 pure: true,
                 appendData: function () {
-                    throw new Error('Do not support appendData when set seriesLayoutBy: "row".');
+                    throw new Error('Do not support appendData when set sourceLayout: "row".');
                 }
             },
 
@@ -304,12 +304,12 @@ const getItemSimply: RawSourceItemGetter = function (
 };
 
 const rawSourceItemGetterMap: Dictionary<RawSourceItemGetter> = {
-    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN]: function (
+    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SOURCE_LAYOUT_BY_COLUMN]: function (
         rawData, startIndex, dimsDef, idx
     ) {
         return (rawData as OptionDataValue[][])[idx + startIndex];
     },
-    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: function (
+    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SOURCE_LAYOUT_BY_ROW]: function (
         rawData, startIndex, dimsDef, idx, out
     ) {
         idx += startIndex;
@@ -342,11 +342,11 @@ const rawSourceItemGetterMap: Dictionary<RawSourceItemGetter> = {
 };
 
 export function getRawSourceItemGetter(
-    sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayoutBy
+    sourceFormat: SourceFormat, sourceLayout: SourceLayout
 ): RawSourceItemGetter {
-    const method = rawSourceItemGetterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
+    const method = rawSourceItemGetterMap[getMethodMapKey(sourceFormat, sourceLayout)];
     if (__DEV__) {
-        assert(method, 'Do not support get item on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+        assert(method, 'Do not support get item on "' + sourceFormat + '", "' + sourceLayout + '".');
     }
     return method;
 }
@@ -367,12 +367,12 @@ const countSimply: RawSourceDataCounter = function (
 };
 
 const rawSourceDataCounterMap: Dictionary<RawSourceDataCounter> = {
-    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_COLUMN]: function (
+    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SOURCE_LAYOUT_BY_COLUMN]: function (
         rawData, startIndex, dimsDef
     ) {
         return Math.max(0, (rawData as OptionDataItem[][]).length - startIndex);
     },
-    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SERIES_LAYOUT_BY_ROW]: function (
+    [SOURCE_FORMAT_ARRAY_ROWS + '_' + SOURCE_LAYOUT_BY_ROW]: function (
         rawData, startIndex, dimsDef
     ) {
         const row = (rawData as OptionDataValue[][])[0];
@@ -395,11 +395,11 @@ const rawSourceDataCounterMap: Dictionary<RawSourceDataCounter> = {
 };
 
 export function getRawSourceDataCounter(
-    sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayoutBy
+    sourceFormat: SourceFormat, sourceLayout: SourceLayout
 ): RawSourceDataCounter {
-    const method = rawSourceDataCounterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
+    const method = rawSourceDataCounterMap[getMethodMapKey(sourceFormat, sourceLayout)];
     if (__DEV__) {
-        assert(method, 'Do not suppport count on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+        assert(method, 'Do not suppport count on "' + sourceFormat + '", "' + sourceLayout + '".');
     }
     return method;
 }
@@ -452,9 +452,9 @@ export function getRawSourceValueGetter(sourceFormat: SourceFormat): RawSourceVa
 }
 
 
-function getMethodMapKey(sourceFormat: SourceFormat, seriesLayoutBy: SeriesLayoutBy): string {
+function getMethodMapKey(sourceFormat: SourceFormat, sourceLayout: SourceLayout): string {
     return sourceFormat === SOURCE_FORMAT_ARRAY_ROWS
-        ? sourceFormat + '_' + seriesLayoutBy
+        ? sourceFormat + '_' + sourceLayout
         : sourceFormat;
 }
 

@@ -467,10 +467,10 @@ export type SourceFormat =
     | typeof SOURCE_FORMAT_TYPED_ARRAY
     | typeof SOURCE_FORMAT_UNKNOWN;
 
-export const SERIES_LAYOUT_BY_COLUMN = 'column' as const;
-export const SERIES_LAYOUT_BY_ROW = 'row' as const;
+export const SOURCE_LAYOUT_BY_COLUMN = 'column' as const;
+export const SOURCE_LAYOUT_BY_ROW = 'row' as const;
 
-export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYOUT_BY_ROW;
+export type SourceLayout = typeof SOURCE_LAYOUT_BY_COLUMN | typeof SOURCE_LAYOUT_BY_ROW;
 // null/undefined/'auto': auto detect header, see "src/data/helper/sourceHelper".
 // If number, means header lines count, or say, `startIndex`.
 // Like `sourceHeader: 2`, means line 0 and line 1 are header, data start from line 2.
@@ -1592,13 +1592,6 @@ export interface SeriesOption<
 
     hoverLayerThreshold?: number
 
-    /**
-     * When dataset is used, seriesLayoutBy specifies whether the column or the row of dataset is mapped to the series
-     * namely, the series is "layout" on columns or rows
-     * @default 'column'
-     */
-    seriesLayoutBy?: 'column' | 'row'
-
     labelLine?: LabelLineOption
 
     /**
@@ -1672,8 +1665,15 @@ export interface SeriesSamplingOptionMixin {
 export interface SeriesEncodeOptionMixin {
     datasetIndex?: number;
     datasetId?: string | number;
-    seriesLayoutBy?: SeriesLayoutBy;
+    sourceLayout?: SourceLayout;
     sourceHeader?: OptionSourceHeader;
+
+    /**
+     * @deprecated
+     * Use sourceLayout instead
+     */
+    seriesLayoutBy?: SourceLayout
+
     dimensions?: DimensionDefinitionLoose[];
     encode?: OptionEncode
 }

@@ -34,7 +34,7 @@ import {
     SOURCE_FORMAT_ORIGINAL,
     SOURCE_FORMAT_ARRAY_ROWS,
     SOURCE_FORMAT_OBJECT_ROWS,
-    SERIES_LAYOUT_BY_ROW,
+    SOURCE_LAYOUT_BY_ROW,
     SOURCE_FORMAT_KEYED_COLUMNS,
     DimensionName,
     OptionSourceDataArrayRows,
@@ -114,7 +114,7 @@ export function makeSeriesEncodeForAxisCoordSys(
 
     const ecModel = seriesModel.ecModel;
     const datasetMap = innerGlobalModel(ecModel).datasetMap;
-    const key = datasetModel.uid + '_' + source.seriesLayoutBy;
+    const key = datasetModel.uid + '_' + source.layout;
 
     let baseCategoryDimIndex: number;
     let categoryWayValueDimStart;
@@ -225,7 +225,7 @@ export function makeSeriesEncodeForNameBased(
         // 5 is an experience value.
         for (let i = 0, len = Math.min(5, dimCount); i < len; i++) {
             const guessResult = doGuessOrdinal(
-                source.data, sourceFormat, source.seriesLayoutBy,
+                source.data, sourceFormat, source.layout,
                 dimensionsDefine, source.startIndex, i
             );
             guessRecords.push(guessResult);
@@ -342,7 +342,7 @@ export function guessOrdinal(source: Source, dimIndex: DimensionIndex): BeOrdina
     return doGuessOrdinal(
         source.data,
         source.sourceFormat,
-        source.seriesLayoutBy,
+        source.layout,
         source.dimensionsDefine,
         source.startIndex,
         dimIndex
@@ -354,7 +354,7 @@ export function guessOrdinal(source: Source, dimIndex: DimensionIndex): BeOrdina
 function doGuessOrdinal(
     data: Source['data'],
     sourceFormat: Source['sourceFormat'],
-    seriesLayoutBy: Source['seriesLayoutBy'],
+    layout: Source['layout'],
     dimensionsDefine: Source['dimensionsDefine'],
     startIndex: Source['startIndex'],
     dimIndex: DimensionIndex
@@ -388,7 +388,7 @@ function doGuessOrdinal(
 
     if (sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
         const dataArrayRows = data as OptionSourceDataArrayRows;
-        if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
+        if (layout === SOURCE_LAYOUT_BY_ROW) {
             const sample = dataArrayRows[dimIndex];
             for (let i = 0; i < (sample || []).length && i < maxLoop; i++) {
                 if ((result = detectValue(sample[startIndex + i])) != null) {

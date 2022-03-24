@@ -21,7 +21,7 @@ import {
     Dictionary, DimensionDefinitionLoose,
     SourceFormat, DimensionDefinition, DimensionIndex,
     OptionDataValue, DimensionLoose, DimensionName, ParsedValue,
-    SERIES_LAYOUT_BY_COLUMN, SOURCE_FORMAT_OBJECT_ROWS, SOURCE_FORMAT_ARRAY_ROWS,
+    SOURCE_LAYOUT_BY_COLUMN, SOURCE_FORMAT_OBJECT_ROWS, SOURCE_FORMAT_ARRAY_ROWS,
     OptionSourceDataObjectRows, OptionSourceDataArrayRows
 } from '../../util/types';
 import { normalizeToArray } from '../../util/model';
@@ -167,12 +167,12 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
     const sourceHeaderCount = internalSource.startIndex;
 
     let errMsg = '';
-    if (internalSource.seriesLayoutBy !== SERIES_LAYOUT_BY_COLUMN) {
+    if (internalSource.layout !== SOURCE_LAYOUT_BY_COLUMN) {
         // For the logic simplicity in transformer, only 'culumn' is
         // supported in data transform. Otherwise, the `dimensionsDefine`
         // might be detected by 'row', which probably confuses users.
         if (__DEV__) {
-            errMsg = '`seriesLayoutBy` of upstream dataset can only be "column" in data transform.';
+            errMsg = '`sourceLayout` of upstream dataset can only be "column" in data transform.';
         }
         throwError(errMsg);
     }
@@ -224,7 +224,7 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
     }
 
     // Implement public methods:
-    const rawItemGetter = getRawSourceItemGetter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
+    const rawItemGetter = getRawSourceItemGetter(sourceFormat, SOURCE_LAYOUT_BY_COLUMN);
     if (externalTransform.__isBuiltIn) {
         extSource.getRawDataItem = function (dataIndex) {
             return rawItemGetter(data, sourceHeaderCount, dimensions, dataIndex) as DataTransformDataItem;
@@ -234,7 +234,7 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
 
     extSource.cloneRawData = bind(cloneRawData, null, internalSource);
 
-    const rawCounter = getRawSourceDataCounter(sourceFormat, SERIES_LAYOUT_BY_COLUMN);
+    const rawCounter = getRawSourceDataCounter(sourceFormat, SOURCE_LAYOUT_BY_COLUMN);
     extSource.count = bind(rawCounter, null, data, sourceHeaderCount, dimensions);
 
     const rawValueGetter = getRawSourceValueGetter(sourceFormat);
@@ -508,8 +508,8 @@ function applySingleDataTransform(
             // We copy the header of upstream to the result becuase:
             // (1) The returned data always does not contain header line and can not be used
             // as dimension-detection. In this case we can not use "detected dimensions" of
-            // upstream directly, because it might be detected based on different `seriesLayoutBy`.
-            // (2) We should support that the series read the upstream source in `seriesLayoutBy: 'row'`.
+            // upstream directly, because it might be detected based on different `sourceLayout`.
+            // (2) We should support that the series read the upstream source in `sourceLayout: 'row'`.
             // So the original detected header should be add to the result, otherwise they can not be read.
             if (startIndex) {
                 result.data = (firstUpSource.data as []).slice(0, startIndex)
@@ -517,14 +517,14 @@ function applySingleDataTransform(
             }
 
             resultMetaRawOption = {
-                seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
+                sourceLayout: SOURCE_LAYOUT_BY_COLUMN,
                 sourceHeader: startIndex,
                 dimensions: firstUpSource.metaRawOption.dimensions
             };
         }
         else {
             resultMetaRawOption = {
-                seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
+                sourceLayout: SOURCE_LAYOUT_BY_COLUMN,
                 sourceHeader: 0,
                 dimensions: result.dimensions
             };

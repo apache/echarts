@@ -185,11 +185,11 @@ export class SeriesDataSchema {
         }
 
         // Source from endpoint(usually series) will be read differently
-        // when seriesLayoutBy or startIndex(which is affected by sourceHeader) are different.
+        // when layout or startIndex(which is affected by sourceHeader) are different.
         // So we use this three props as key.
         const source = this.source;
         const hash = [
-            source.seriesLayoutBy,
+            source.layout,
             source.startIndex,
             dimHash
         ].join('$$');

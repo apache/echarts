@@ -22,10 +22,10 @@ import {
     hasOwn, assert, each, map, isNumber, isString
 } from 'zrender/src/core/util';
 import {
-    SourceFormat, SeriesLayoutBy, DimensionDefinition,
+    SourceFormat, SourceLayout as SourceLayout, DimensionDefinition,
     OptionEncodeValue, OptionSourceData,
     SOURCE_FORMAT_ORIGINAL,
-    SERIES_LAYOUT_BY_COLUMN,
+    SOURCE_LAYOUT_BY_COLUMN,
     SOURCE_FORMAT_UNKNOWN,
     SOURCE_FORMAT_KEYED_COLUMNS,
     SOURCE_FORMAT_TYPED_ARRAY,
@@ -38,7 +38,7 @@ import {
     OptionSourceDataObjectRows,
     OptionDataValue,
     OptionSourceDataArrayRows,
-    SERIES_LAYOUT_BY_ROW,
+    SOURCE_LAYOUT_BY_ROW,
     OptionSourceDataOriginal,
     OptionSourceDataKeyedColumns
 } from '../util/types';
@@ -83,7 +83,7 @@ import { BE_ORDINAL, guessOrdinal } from './helper/sourceHelper';
  */
 
 export interface SourceMetaRawOption {
-    seriesLayoutBy: SeriesLayoutBy;
+    sourceLayout: SourceLayout;
     sourceHeader: OptionSourceHeader;
     dimensions: DimensionDefinitionLoose[];
 }
@@ -108,7 +108,7 @@ class SourceImpl {
      * 'row' or 'column'
      * Not null/undefined.
      */
-    readonly seriesLayoutBy: SeriesLayoutBy;
+    readonly layout: SourceLayout;
 
     /**
      * dimensions definition from:
@@ -145,7 +145,7 @@ class SourceImpl {
         sourceFormat: SourceFormat, // default: SOURCE_FORMAT_UNKNOWN
 
         // Visit config are optional:
-        seriesLayoutBy?: SeriesLayoutBy, // default: 'column'
+        layout?: SourceLayout, // default: 'column'
         dimensionsDefine?: DimensionDefinition[],
         startIndex?: number, // default: 0
         dimensionsDetectedCount?: number,
@@ -165,23 +165,18 @@ class SourceImpl {
         this.sourceFormat = fields.sourceFormat || SOURCE_FORMAT_UNKNOWN;
 
         // Visit config
-        this.seriesLayoutBy = fields.seriesLayoutBy || SERIES_LAYOUT_BY_COLUMN;
+        this.layout = fields.layout || SOURCE_LAYOUT_BY_COLUMN;
         this.startIndex = fields.startIndex || 0;
         this.dimensionsDetectedCount = fields.dimensionsDetectedCount;
         this.metaRawOption = fields.metaRawOption;
 
-        const dimensionsDefine = this.dimensionsDefine = fields.dimensionsDefine;
-
-        if (dimensionsDefine) {
-            for (let i = 0; i < dimensionsDefine.length; i++) {
-                const dim = dimensionsDefine[i];
-                if (dim.type == null) {
-                    if (guessOrdinal(this, i) === BE_ORDINAL.Must) {
-                        dim.type = 'ordinal';
-                    }
+        each(this.dimensionsDefine = fields.dimensionsDefine, (dim, i) => {
+            if (dim.type == null) {
+                if (guessOrdinal(this, i) === BE_ORDINAL.Must) {
+                    dim.type = 'ordinal';
                 }
             }
-        }
+        });
     }
 
 }
@@ -201,11 +196,11 @@ export function createSource(
     sourceFormat: SourceFormat
 ): Source {
     sourceFormat = sourceFormat || detectSourceFormat(sourceData);
-    const seriesLayoutBy = thisMetaRawOption.seriesLayoutBy;
+    const layout = thisMetaRawOption.sourceLayout;
     const determined = determineSourceDimensions(
         sourceData,
         sourceFormat,
-        seriesLayoutBy,
+        layout,
         thisMetaRawOption.sourceHeader,
         thisMetaRawOption.dimensions
     );
@@ -213,7 +208,7 @@ export function createSource(
         data: sourceData,
         sourceFormat: sourceFormat,
 
-        seriesLayoutBy: seriesLayoutBy,
+        layout: layout,
         dimensionsDefine: determined.dimensionsDefine,
         startIndex: determined.startIndex,
         dimensionsDetectedCount: determined.dimensionsDetectedCount,
@@ -243,7 +238,7 @@ export function cloneSourceShallow(source: Source): Source {
         data: source.data,
         sourceFormat: source.sourceFormat,
 
-        seriesLayoutBy: source.seriesLayoutBy,
+        layout: source.layout,
         dimensionsDefine: clone(source.dimensionsDefine),
         startIndex: source.startIndex,
         dimensionsDetectedCount: source.dimensionsDetectedCount
@@ -300,7 +295,7 @@ export function detectSourceFormat(data: DatasetOption['source']): SourceFormat 
 function determineSourceDimensions(
     data: OptionSourceData,
     sourceFormat: SourceFormat,
-    seriesLayoutBy: SeriesLayoutBy,
+    layout: SourceLayout,
     sourceHeader: OptionSourceHeader,
     // standalone raw dimensions definition, like:
     // {
@@ -349,7 +344,7 @@ function determineSourceDimensions(
                     }
                 }
             // 10 is an experience number, avoid long loop.
-            }, seriesLayoutBy, dataArrayRows, 10);
+            }, layout, dataArrayRows, 10);
         }
         else {
             startIndex = isNumber(sourceHeader) ? sourceHeader : sourceHeader ? 1 : 0;
@@ -359,16 +354,16 @@ function determineSourceDimensions(
             dimensionsDefine = [];
             arrayRowsTravelFirst(function (val, index) {
                 dimensionsDefine[index] = (val != null ? val + '' : '') as DimensionName;
-            }, seriesLayoutBy, dataArrayRows, Infinity);
+            }, layout, dataArrayRows, Infinity);
         }
 
         dimensionsDetectedCount = dimensionsDefine
             ? dimensionsDefine.length
-            : seriesLayoutBy === SERIES_LAYOUT_BY_ROW
-            ? dataArrayRows.length
-            : dataArrayRows[0]
-            ? dataArrayRows[0].length
-            : null;
+            : layout === SOURCE_LAYOUT_BY_ROW
+                ? dataArrayRows.length
+                : dataArrayRows[0]
+                    ? dataArrayRows[0].length
+                    : null;
     }
     else if (sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
         if (!dimensionsDefine) {
@@ -463,11 +458,11 @@ function normalizeDimensionsOption(dimensionsDefine: DimensionDefinitionLoose[])
 
 function arrayRowsTravelFirst(
     cb: (val: OptionDataValue, idx: number) => void,
-    seriesLayoutBy: SeriesLayoutBy,
+    layout: SourceLayout,
     data: OptionSourceDataArrayRows,
     maxLoop: number
 ): void {
-    if (seriesLayoutBy === SERIES_LAYOUT_BY_ROW) {
+    if (layout === SOURCE_LAYOUT_BY_ROW) {
         for (let i = 0; i < data.length && i < maxLoop; i++) {
             cb(data[i] ? data[i][0] : null, i);
         }
