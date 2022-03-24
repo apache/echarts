@@ -163,6 +163,7 @@
   "scatter-single-axis": 2,
   "scatterMatrix": 3,
   "setOption": 1,
+  "splitLine": 1,
   "stackBar-dataZoom": 7,
   "sunburst-book": 1,
   "sunburst-canvas": 1,
