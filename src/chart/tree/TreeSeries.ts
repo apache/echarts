@@ -121,6 +121,7 @@ export interface TreeAncestors {
 }
 
 export interface TreeSeriesCallbackDataParams extends CallbackDataParams {
+    collapsed: boolean;
     treeAncestors?: TreeAncestors[]
 }
 
@@ -240,6 +241,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         const node = this.getData().tree.getNodeByDataIndex(dataIndex);
         params.treeAncestors = wrapTreePathInfo(node, this);
+        params.collapsed = !node.isExpand;
 
         return params;
     }

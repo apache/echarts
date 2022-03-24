@@ -61,6 +61,7 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import ComponentModel from '../model/Component';
 import { error } from './log';
+import type ComponentView from '../view/Component';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -427,18 +428,27 @@ function shouldSilent(el: Element, e: ElementEvent) {
 
 export function allLeaveBlur(api: ExtensionAPI) {
     const model = api.getModel();
+    const leaveBlurredSeries: SeriesModel[] = [];
+    const allComponentViews: ComponentView[] = [];
     model.eachComponent(function (componentType, componentModel) {
         const componentStates = getComponentStates(componentModel);
+        const isSeries = componentType === 'series';
+        const view = isSeries ? api.getViewOfSeriesModel(componentModel as SeriesModel)
+            : api.getViewOfComponentModel(componentModel);
+        !isSeries && allComponentViews.push(view as ComponentView);
         if (componentStates.isBlured) {
-            const view = componentType === 'series'
-                ? api.getViewOfSeriesModel(componentModel as SeriesModel)
-                : api.getViewOfComponentModel(componentModel);
             // Leave blur anyway
             view.group.traverse(function (child) {
                 singleLeaveBlur(child);
             });
+            isSeries && leaveBlurredSeries.push(componentModel as SeriesModel);
         }
         componentStates.isBlured = false;
+    });
+    each(allComponentViews, function (view) {
+        if (view && view.toggleBlurSeries) {
+            view.toggleBlurSeries(leaveBlurredSeries, false, model);
+        }
     });
 }
 
@@ -519,8 +529,8 @@ export function blurSeries(
             return;
         }
         const view = api.getViewOfComponentModel(componentModel);
-        if (view && view.blurSeries) {
-            view.blurSeries(blurredSeries, ecModel);
+        if (view && view.toggleBlurSeries) {
+            view.toggleBlurSeries(blurredSeries, true, ecModel);
         }
     });
 }

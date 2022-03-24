@@ -103,7 +103,7 @@ export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
     StatesOptionMixin<SymbolDrawStateOption, {
         emphasis?: {
             focus?: DefaultEmphasisFocus
-            scale?: boolean
+            scale?: boolean | number
         }
     }>,
     SymbolDrawStateOption {
@@ -127,7 +127,7 @@ export interface SymbolDrawSeriesScope {
 
     itemModel?: Model<SymbolDrawItemModelOption>
 
-    hoverScale?: boolean
+    hoverScale?: boolean | number
 
     cursorStyle?: string
     fadeIn?: boolean
