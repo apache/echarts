@@ -58,7 +58,6 @@ class PiePiece extends graphic.Sector {
         const seriesModel = data.hostModel as PieSeriesModel;
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const emphasisModel = itemModel.getModel('emphasis');
-        const selectModel = itemModel.getModel('select');
         const layout = data.getItemLayout(idx) as graphic.Sector['shape'];
         // cornerRadius & innerCornerRadius doesn't exist in the item layout. Use `0` if null value is specified.
         // see `setItemLayout` in `pieLayout.ts`.
@@ -155,20 +154,14 @@ class PiePiece extends graphic.Sector {
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
 
-        labelLine && extend(labelLine.ensureState('emphasis'), {
-            ignore: !emphasisModel.get(['labelLine', 'show'])
-        });
-        
         labelLine && extend(labelLine.ensureState('select'), {
             x: dx,
-            y: dy,
-            ignore: !selectModel.get(['labelLine', 'show'])
+            y: dy
         });
         // TODO: needs dx, dy in zrender?
         extend(labelText.ensureState('select'), {
             x: dx,
-            y: dy,
-            ignore: !selectModel.get(['label', 'show'])
+            y: dy
         });
 
         toggleHoverEmphasis(
