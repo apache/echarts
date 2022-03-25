@@ -71,13 +71,11 @@ export const idTransform: ExternalDataTransform<IdTransformOption> = {
     type: 'echarts:id',
 
     transform: function (params) {
-        const upstream = params.upstream;
-        const config = params.config;
-        const dimensionIndex = config.dimensionIndex;
-        const dimensionName = config.dimensionName;
+        const {upstream, config} = params;
+        const {dimensionIndex, dimensionName} = config;
 
-        const dimsDef = upstream.cloneAllDimensionInfo() as DimensionDefinitionLoose[];
-        dimsDef[dimensionIndex] = dimensionName;
+        const dimensions = upstream.cloneAllDimensionInfo() as DimensionDefinitionLoose[];
+        dimensions[dimensionIndex] = dimensionName;
 
         const data = upstream.cloneRawData() as OptionSourceDataArrayRows;
 
@@ -88,8 +86,8 @@ export const idTransform: ExternalDataTransform<IdTransformOption> = {
         }
 
         return {
-            dimensions: dimsDef,
-            data: data
+            dimensions,
+            data
         };
     }
 };

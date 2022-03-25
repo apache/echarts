@@ -369,7 +369,7 @@ const methods: {
     },
     COUNT: {
         init: () => 1,
-        add: (prev: number) => prev++
+        add: (prev: number) => prev + 1
     },
     FIRST: {
         init: identity,

@@ -473,7 +473,7 @@ class SeriesData<
     private _initGetDimensionInfo(needsHasOwn: boolean): void {
         const dimensionInfos = this._dimInfos;
         this._getDimInfo = needsHasOwn
-            ? dimName => (dimensionInfos.hasOwnProperty(dimName) ? dimensionInfos[dimName] : undefined)
+            ? dimName => ((zrUtil.hasOwn, dimName) ? dimensionInfos[dimName] : undefined)
             : dimName => dimensionInfos[dimName];
     }
 

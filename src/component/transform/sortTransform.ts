@@ -114,13 +114,6 @@ export const sortTransform: ExternalDataTransform<SortTransformOption> = {
                 throwError(errMsg);
             }
 
-            if (order !== 'asc' && order !== 'desc') {
-                if (__DEV__) {
-                    errMsg = 'Sort transform config must has "order" specified.' + sampleLog;
-                }
-                throwError(errMsg);
-            }
-
             if (incomparable && (incomparable !== 'min' && incomparable !== 'max')) {
                 let errMsg = '';
                 if (__DEV__) {
