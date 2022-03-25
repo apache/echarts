@@ -39,7 +39,6 @@ import {
 import { getUID } from '../../util/component';
 import Displayable from 'zrender/src/graphic/Displayable';
 import ZRText from 'zrender/src/graphic/Text';
-import { getECData } from '../../util/innerStore';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
@@ -70,6 +69,7 @@ class ToolboxView extends ComponentView {
         }
 
         const itemSize = +toolboxModel.get('itemSize');
+        const isVertical = toolboxModel.get('orient') === 'vertical';
         const featureOpts = toolboxModel.get('feature') || {};
         const features = this._features || (this._features = {});
 
@@ -238,15 +238,21 @@ class ToolboxView extends ComponentView {
                     }
                 });
 
-                // graphic.enableHoverEmphasis(path);
-
                 (path as ExtendedPath).__title = titlesMap[iconName];
                 (path as graphic.Path).on('mouseover', function () {
                     // Should not reuse above hoverStyle, which might be modified.
                     const hoverStyle = iconStyleEmphasisModel.getItemStyle();
-                    const defaultTextPosition = toolboxModel.get('orient') === 'vertical'
-                        ? (toolboxModel.get('right') == null ? 'right' as const : 'left' as const)
-                        : (toolboxModel.get('bottom') == null ? 'bottom' as const : 'top' as const);
+                    const defaultTextPosition = isVertical
+                        ? (
+                            toolboxModel.get('right') == null && toolboxModel.get('left') !== 'right'
+                                ? 'right' as const
+                                : 'left' as const
+                          )
+                        : (
+                            toolboxModel.get('bottom') == null && toolboxModel.get('top') !== 'bottom'
+                                ? 'bottom' as const
+                                : 'top' as const
+                          );
                     textContent.setStyle({
                         fill: (iconStyleEmphasisModel.get('textFill')
                             || hoverStyle.fill || hoverStyle.stroke || '#000') as string,
@@ -284,7 +290,7 @@ class ToolboxView extends ComponentView {
         group.add(listComponentHelper.makeBackground(group.getBoundingRect(), toolboxModel));
 
         // Adjust icon title positions to avoid them out of screen
-        group.eachChild(function (icon: IconPath) {
+        isVertical || group.eachChild(function (icon: IconPath) {
             const titleText = (icon as ExtendedPath).__title;
             // const hoverStyle = icon.hoverStyle;
 
@@ -292,7 +298,7 @@ class ToolboxView extends ComponentView {
             const emphasisState = icon.ensureState('emphasis');
             const emphasisTextConfig = emphasisState.textConfig || (emphasisState.textConfig = {});
             const textContent = icon.getTextContent();
-            const emphasisTextState = textContent && textContent.states.emphasis;
+            const emphasisTextState = textContent && textContent.ensureState('emphasis');
             // May be background element
             if (emphasisTextState && !zrUtil.isFunction(emphasisTextState) && titleText) {
                 const emphasisTextStyle = emphasisTextState.style || (emphasisTextState.style = {});
@@ -307,7 +313,7 @@ class ToolboxView extends ComponentView {
                     emphasisTextConfig.position = 'top';
                     needPutOnTop = true;
                 }
-                const topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 8);
+                const topOffset = needPutOnTop ? (-5 - rect.height) : (itemSize + 10);
                 if (offsetX + rect.width / 2 > api.getWidth()) {
                     emphasisTextConfig.position = ['100%', topOffset];
                     emphasisTextStyle.align = 'right';
