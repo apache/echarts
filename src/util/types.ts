@@ -1660,7 +1660,8 @@ export interface SeriesLargeOptionMixin {
     largeThreshold?: number
 }
 export interface SeriesStackOptionMixin {
-    stack?: string
+    stack?: string,
+    stackDim?: string
 }
 
 type SamplingFunc = (frame: ArrayLike<number>) => number;
