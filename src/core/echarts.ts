@@ -763,7 +763,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     getDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg' | 'svg',
+        type?: 'png' | 'jpeg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         // component type array
@@ -807,7 +807,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     getConnectedDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg' | 'svg',
+        type?: 'png' | 'jpeg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         connectedBackgroundColor?: ZRColor
