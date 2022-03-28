@@ -290,8 +290,10 @@ class DataStore {
         // Parse from previous data offset. len may be changed after appendData
         for (let i = offset; i < len; i++) {
             const val = (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
-            dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
-            dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+            if (!isNaN(val)) {
+                dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
+                dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+            }
         }
 
         dim.ordinalMeta = ordinalMeta;

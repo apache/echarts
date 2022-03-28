@@ -141,8 +141,6 @@ class TreeView extends ChartView {
     private _max: number[];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-
-
         this._controller = new RoamController(api.getZr());
 
         this._controllerHost = {

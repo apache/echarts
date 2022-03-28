@@ -175,12 +175,13 @@ class HeatmapView extends ChartView {
     ) {
 
         const coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar;
+        const isCartesian2d = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d');
         let width;
         let height;
         let xAxisExtent;
         let yAxisExtent;
 
-        if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
+        if (isCartesian2d) {
             const xAxis = coordSys.getAxis('x');
             const yAxis = coordSys.getAxis('y');
 
@@ -193,8 +194,9 @@ class HeatmapView extends ChartView {
                 }
             }
 
-            width = xAxis.getBandWidth();
-            height = yAxis.getBandWidth();
+            // add 0.5px to avoid the gaps
+            width = xAxis.getBandWidth() + .5;
+            height = yAxis.getBandWidth() + .5;
             xAxisExtent = xAxis.scale.getExtent();
             yAxisExtent = yAxis.scale.getExtent();
         }
@@ -212,7 +214,7 @@ class HeatmapView extends ChartView {
         let blurScope = emphasisModel.get('blurScope');
         let emphasisDisabled = emphasisModel.get('disabled');
 
-        const dataDims = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')
+        const dataDims = isCartesian2d
             ? [
                 data.mapDimension('x'),
                 data.mapDimension('y'),
@@ -227,7 +229,7 @@ class HeatmapView extends ChartView {
             let rect;
             const style = data.getItemVisual(idx, 'style');
 
-            if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
+            if (isCartesian2d) {
                 const dataDimX = data.get(dataDims[0], idx);
                 const dataDimY = data.get(dataDims[1], idx);
 
@@ -248,10 +250,10 @@ class HeatmapView extends ChartView {
 
                 rect = new graphic.Rect({
                     shape: {
-                        x: Math.floor(Math.round(point[0]) - width / 2),
-                        y: Math.floor(Math.round(point[1]) - height / 2),
-                        width: Math.ceil(width),
-                        height: Math.ceil(height)
+                        x: point[0] - width / 2,
+                        y: point[1] - height / 2,
+                        width,
+                        height
                     },
                     style
                 });

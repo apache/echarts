@@ -82,6 +82,7 @@ console.log('[Release Commit] ' + releaseCommit);
 console.log('[Release Name] ' + releaseFullName);
 
 const voteTpl = fse.readFileSync(pathTool.join(__dirname, './template/vote-release.tpl'), 'utf-8');
+const voteResultTpl = fse.readFileSync(pathTool.join(__dirname, './template/vote-result.tpl'), 'utf-8');
 const announceTpl = fse.readFileSync(pathTool.join(__dirname, './template/announce-release.tpl'), 'utf-8');
 const voteUntil = new Date(+new Date() + (72 + 12) * 3600 * 1000);   // 3.5 day.
 
@@ -92,6 +93,14 @@ fse.writeFileSync(
         .replace(/{{ECHARTS_RELEASE_VERSION_FULL_NAME}}/g, releaseFullName)
         .replace(/{{ECHARTS_RELEASE_COMMIT}}/g, releaseCommit)
         .replace(/{{VOTE_UNTIL}}/g, voteUntil.toISOString()),
+    'utf-8'
+);
+
+fse.ensureDirSync(outDir);
+fse.writeFileSync(
+    pathTool.resolve(outDir, 'vote-result.txt'),
+    voteResultTpl.replace(/{{ECHARTS_RELEASE_VERSION}}/g, rcVersion)
+        .replace(/{{ECHARTS_RELEASE_VERSION_FULL_NAME}}/g, releaseFullName),
     'utf-8'
 );
 

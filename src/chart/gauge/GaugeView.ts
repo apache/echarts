@@ -33,6 +33,7 @@ import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
 import {extend, isFunction, isString} from 'zrender/src/core/util';
 import {setCommonECData} from '../../util/innerStore';
+import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -71,8 +72,6 @@ function formatLabel(value: number, labelFormatter: string | ((value: number) =>
 
     return label;
 }
-
-const PI2 = Math.PI * 2;
 
 class GaugeView extends ChartView {
     static type = 'gauge' as const;
@@ -119,8 +118,12 @@ class GaugeView extends ChartView {
         const showAxis = axisLineModel.get('show');
         const lineStyleModel = axisLineModel.getModel('lineStyle');
         const axisLineWidth = lineStyleModel.get('width');
-        const angleRangeSpan = !((endAngle - startAngle) % PI2) && endAngle !== startAngle
-            ? PI2 : (endAngle - startAngle) % PI2;
+
+        const angles = [startAngle, endAngle];
+        normalizeArcAngles(angles, !clockwise);
+        startAngle = angles[0];
+        endAngle = angles[1];
+        const angleRangeSpan = endAngle - startAngle;
 
         let prevEndAngle = startAngle;
 
@@ -172,12 +175,6 @@ class GaugeView extends ChartView {
             // More than 1
             return colorList[i - 1][1];
         };
-
-        if (!clockwise) {
-            const tmp = startAngle;
-            startAngle = endAngle;
-            endAngle = tmp;
-        }
 
         this._renderTicks(
             seriesModel, ecModel, api, getColor, posInfo,
