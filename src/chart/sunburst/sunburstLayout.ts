@@ -124,7 +124,7 @@ export default function sunburstLayout(
                 if (levelModel) {
                     let r0 = levelModel.get('r0', true);
                     let r = levelModel.get('r', true);
-                    let radius = levelModel.get('radius', true);
+                    const radius = levelModel.get('radius', true);
 
                     if (radius != null) {
                         r0 = radius[0];
