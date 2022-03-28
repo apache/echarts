@@ -33,6 +33,7 @@ import GlobalModel from './Global';
 import { AnimationOptionMixin, ModelOption } from '../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import { mixin, clone, merge } from 'zrender/src/core/util';
+import { calculateColor } from '../chart/treemap/treemapVisual';
 
 // Since model.option can be not only `Dictionary` but also primary types,
 // we do this conditional type to avoid getting type 'never';
@@ -123,6 +124,9 @@ class Model<Opt = ModelOption> {    // TODO: TYPE use unknown instead of any?
         const option = this.option;
 
         let val = option == null ? option : option[key];
+        if (val && key === 'color' && ('colorAlpha' in option)){
+            val = ((calculateColor(option)) as unknown) as Opt[R];
+        }
         if (val == null && !ignoreParent) {
             const parentModel = this.parentModel;
             if (parentModel) {

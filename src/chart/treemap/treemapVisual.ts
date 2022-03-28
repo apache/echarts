@@ -137,7 +137,7 @@ function buildVisuals(
     return visuals;
 }
 
-function calculateColor(visuals: TreemapVisual) {
+export function calculateColor(visuals: TreemapVisual) {
     let color = getValueVisualDefine(visuals, 'color') as ColorString;
 
     if (color) {
