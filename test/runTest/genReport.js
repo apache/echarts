@@ -31,7 +31,7 @@ function resolveImagePath(imageUrl) {
     }
 
     // The original image path is relative to the client.
-    return imageUrl.replace(/\.\.\/tmp/g, './tmp');
+    return imageUrl.replace(/\\/g, '/').replace(/\.\.\/tmp/g, './tmp');
 }
 
 async function inlineImage(imageUrl) {
