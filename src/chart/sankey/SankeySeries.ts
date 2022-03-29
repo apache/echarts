@@ -85,6 +85,7 @@ export interface SankeyEdgeItemOption extends
         StatesOptionMixin<SankeyEdgeStateOption, ExtraStateOption>,
         GraphEdgeItemObject<OptionDataValueNumeric> {
     focusNodeAdjacency?: FocusNodeAdjacency
+    edgeLabel?: SeriesLabelOption
 }
 
 export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
@@ -137,6 +138,8 @@ export interface SankeySeriesOption
     links?: SankeyEdgeItemOption[]
 
     levels?: SankeyLevelOption[]
+
+    edgeLabel?: SeriesLabelOption
 }
 
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
@@ -295,6 +298,12 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         label: {
             show: true,
             position: 'right',
+            fontSize: 12
+        },
+
+        edgeLabel: {
+            show: false,
+            position: 'inside',
             fontSize: 12
         },
 
