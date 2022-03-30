@@ -40,6 +40,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
         <script>
@@ -154,6 +155,45 @@ under the License.
 
             });
 
+        </script>
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var option;
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                        data: [820, 932, 901, 934, 1290, 1330, 1320],
+                        type: 'line',
+                        areaStyle: {}
+                        }
+                    ]
+                };
+                chart = myChart = testHelper.create(echarts, 'main1', {
+                    title: 'Click the two buttons. Animation should be appropriate, and dataZoom state should be kept.',
+                    option: option,
+                    buttons: {
+                        text: 'setOption: with notMerge mode' ,
+                        onClick: function () {
+                            option.series.map(s => {
+                                s.step = 'end';
+                                delete s.areaStyle;
+                            });
+                            myChart.setOption(option,{ notMerge: true });
+                        }
+                    }
+                })
+            });
         </script>
     </body>
 </html>

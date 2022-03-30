@@ -730,6 +730,10 @@ class LineView extends ChartView {
                 polygon = this._newPolygon(
                     points, stackedOnPoints
                 );
+            }// If areaStyle is removed
+            else if(polygon){
+                lineGroup.remove(polygon);
+                polygon = this._polygon = null;
             }
 
             // NOTE: Must update _endLabel before setClipPath.
