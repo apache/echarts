@@ -131,7 +131,7 @@ class SankeyView extends ChartView {
         group.y = layoutInfo.y;
 
         // generate a bezire Curve for each edge
-        graph.eachEdge(function (edge, idx) {
+        graph.eachEdge(function (edge) {
             const curve = new SankeyPath();
             const ecData = getECData(curve);
             ecData.dataIndex = edge.dataIndex;
@@ -193,9 +193,7 @@ class SankeyView extends ChartView {
                 cpy2: cpy2
             });
 
-            const style = lineStyleModel.getItemStyle();
-            curve.useStyle(style);
-            edgeData.setItemVisual(idx, 'style', style);
+            curve.useStyle(lineStyleModel.getItemStyle());
             // Special color, use source node color or target node color
             switch (curve.style.fill) {
                 case 'source':
