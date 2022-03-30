@@ -731,7 +731,7 @@ class LineView extends ChartView {
                     points, stackedOnPoints
                 );
             }// If areaStyle is removed
-            else if(polygon){
+            else if (polygon) {
                 lineGroup.remove(polygon);
                 polygon = this._polygon = null;
             }
