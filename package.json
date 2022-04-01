@@ -18,7 +18,7 @@
   "module": "index.js",
   "jsdelivr": "dist/echarts.min.js",
   "types": "index.d.ts",
-  "homepage": "http://echarts.apache.org",
+  "homepage": "https://echarts.apache.org",
   "bugs": {
     "url": "https://github.com/apache/echarts/issues",
     "email": "dev@echarts.apache.org"
