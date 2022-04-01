@@ -128,15 +128,19 @@ class AxisBuilder {
 
     opt: AxisBuilderCfg;
 
+    labelGap: number;
+
     readonly group = new graphic.Group();
 
     private _transformGroup: graphic.Group;
 
-    constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg) {
+    constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg, labelGap?: number) {
 
         this.opt = opt;
 
         this.axisModel = axisModel;
+
+        this.labelGap = labelGap;
 
         // Default value
         defaults(
@@ -234,7 +238,8 @@ interface AxisElementsBuilder {
         opt: AxisBuilderCfg,
         axisModel: AxisBaseModel,
         group: graphic.Group,
-        transformGroup: graphic.Group
+        transformGroup: graphic.Group,
+        labelGap?: number
     ):void
 }
 
@@ -364,7 +369,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         }
     },
 
-    axisName(opt, axisModel, group, transformGroup) {
+    axisName(opt, axisModel, group, transformGroup, labelGap?) {
         const name = retrieve(opt.axisName, axisModel.get('name'));
 
         if (!name) {
@@ -374,7 +379,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const nameLocation = axisModel.get('nameLocation');
         const nameDirection = opt.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
-        const gap = axisModel.get('nameGap') || 0;
+        const gap = (axisModel.get('nameGap') || 0) + labelGap;
 
         const extent = axisModel.axis.getExtent();
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
