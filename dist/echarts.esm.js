@@ -12531,18 +12531,28 @@ function shouldSilent(el, e) {
 
 function allLeaveBlur(api) {
   var model = api.getModel();
+  var leaveBlurredSeries = [];
+  var allComponentViews = [];
   model.eachComponent(function (componentType, componentModel) {
     var componentStates = getComponentStates(componentModel);
+    var isSeries = componentType === 'series';
+    var view = isSeries ? api.getViewOfSeriesModel(componentModel) : api.getViewOfComponentModel(componentModel);
+    !isSeries && allComponentViews.push(view);
 
     if (componentStates.isBlured) {
-      var view = componentType === 'series' ? api.getViewOfSeriesModel(componentModel) : api.getViewOfComponentModel(componentModel); // Leave blur anyway
-
+      // Leave blur anyway
       view.group.traverse(function (child) {
         singleLeaveBlur(child);
       });
+      isSeries && leaveBlurredSeries.push(componentModel);
     }
 
     componentStates.isBlured = false;
+  });
+  each(allComponentViews, function (view) {
+    if (view && view.toggleBlurSeries) {
+      view.toggleBlurSeries(leaveBlurredSeries, false, model);
+    }
   });
 }
 function blurSeries(targetSeriesIndex, focus, blurScope, api) {
@@ -12613,8 +12623,8 @@ function blurSeries(targetSeriesIndex, focus, blurScope, api) {
 
     var view = api.getViewOfComponentModel(componentModel);
 
-    if (view && view.blurSeries) {
-      view.blurSeries(blurredSeries, ecModel);
+    if (view && view.toggleBlurSeries) {
+      view.toggleBlurSeries(blurredSeries, true, ecModel);
     }
   });
 }
@@ -22129,8 +22139,11 @@ function () {
 
     for (var i = offset; i < len; i++) {
       var val = chunk[i] = ordinalMeta.parseAndCollect(chunk[i]);
-      dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
-      dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+
+      if (!isNaN(val)) {
+        dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
+        dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+      }
     }
 
     dim.ordinalMeta = ordinalMeta;
@@ -24568,12 +24581,12 @@ function () {
   ComponentView.prototype.updateVisual = function (model, ecModel, api, payload) {// Do nothing;
   };
   /**
-   * Hook for blur target series.
-   * Can be used in marker for blur the markers
+   * Hook for toggle blur target series.
+   * Can be used in marker for blur or leave blur the markers
    */
 
 
-  ComponentView.prototype.blurSeries = function (seriesModels, ecModel) {// Do nothing;
+  ComponentView.prototype.toggleBlurSeries = function (seriesModels, isBlur, ecModel) {// Do nothing;
   };
   /**
    * Traverse the new rendered elements.
@@ -28003,7 +28016,7 @@ function getImpl(name) {
 }
 
 var hasWindow = typeof window !== 'undefined';
-var version$1 = '5.3.1';
+var version$1 = '5.3.2';
 var dependencies = {
   zrender: '5.3.1'
 };
@@ -33434,6 +33447,11 @@ function (_super) {
   }
 
   OrdinalScale.prototype.parse = function (val) {
+    // Caution: Math.round(null) will return `0` rather than `NaN`
+    if (val == null) {
+      return NaN;
+    }
+
     return isString(val) ? this._ordinalMeta.getOrdinal(val) // val might be float.
     : Math.round(val);
   };
@@ -37405,7 +37423,7 @@ function setLabelLineStyle(targetEl, statesModels, defaultStyle) {
       if (isLabelIgnored // Not show when label is not shown in this state.
       || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
       ) {
-          var stateObj = isNormal ? labelLine : labelLine && labelLine.states.normal;
+          var stateObj = isNormal ? labelLine : labelLine && labelLine.states[stateName];
 
           if (stateObj) {
             stateObj.ignore = true;
@@ -41009,7 +41027,7 @@ function (_super) {
     symbolPath.ensureState('blur').style = blurItemStyle;
 
     if (hoverScale) {
-      var scaleRatio = Math.max(1.1, 3 / this._sizeY);
+      var scaleRatio = Math.max(isNumber(hoverScale) ? hoverScale : 1.1, 3 / this._sizeY);
       emphasisState.scaleX = this._sizeX * scaleRatio;
       emphasisState.scaleY = this._sizeY * scaleRatio;
     }
@@ -41315,17 +41333,21 @@ function getValueStart(valueAxis, valueOrigin) {
     valueStart = extent[0];
   } else if (valueOrigin === 'end') {
     valueStart = extent[1];
-  } // auto
-  else {
-      // Both positive
-      if (extent[0] > 0) {
-        valueStart = extent[0];
-      } // Both negative
-      else if (extent[1] < 0) {
-          valueStart = extent[1];
-        } // If is one positive, and one negative, onZero shall be true
+  } // If origin is specified as a number, use it as
+  // valueStart directly
+  else if (isNumber(valueOrigin) && !isNaN(valueOrigin)) {
+      valueStart = valueOrigin;
+    } // auto
+    else {
+        // Both positive
+        if (extent[0] > 0) {
+          valueStart = extent[0];
+        } // Both negative
+        else if (extent[1] < 0) {
+            valueStart = extent[1];
+          } // If is one positive, and one negative, onZero shall be true
 
-    }
+      }
 
   return valueStart;
 }
@@ -55646,6 +55668,7 @@ function (_super) {
 
     var node = this.getData().tree.getNodeByDataIndex(dataIndex);
     params.treeAncestors = wrapTreePathInfo(node, this);
+    params.collapsed = !node.isExpand;
     return params;
   };
 
@@ -58019,7 +58042,13 @@ function setVisualToOption(thisOption, visualArr) {
 
   if (thisOption.type === 'color') {
     thisOption.parsedVisual = map(visualArr, function (item) {
-      return parse(item);
+      var color$1 = parse(item);
+
+      if (!color$1 && "development" !== 'production') {
+        warn("'" + item + "' is an illegal color, fallback to '#000000'", true);
+      }
+
+      return color$1 || [0, 0, 0, 1];
     });
   }
 
@@ -61578,8 +61607,6 @@ function formatLabel(value, labelFormatter) {
   return label;
 }
 
-var PI2$9 = Math.PI * 2;
-
 var GaugeView =
 /** @class */
 function (_super) {
@@ -61615,7 +61642,11 @@ function (_super) {
     var showAxis = axisLineModel.get('show');
     var lineStyleModel = axisLineModel.getModel('lineStyle');
     var axisLineWidth = lineStyleModel.get('width');
-    var angleRangeSpan = !((endAngle - startAngle) % PI2$9) && endAngle !== startAngle ? PI2$9 : (endAngle - startAngle) % PI2$9;
+    var angles = [startAngle, endAngle];
+    normalizeArcAngles(angles, !clockwise);
+    startAngle = angles[0];
+    endAngle = angles[1];
+    var angleRangeSpan = endAngle - startAngle;
     var prevEndAngle = startAngle;
 
     for (var i = 0; showAxis && i < colorList.length; i++) {
@@ -61661,12 +61692,6 @@ function (_super) {
 
       return colorList[i - 1][1];
     };
-
-    if (!clockwise) {
-      var tmp = startAngle;
-      startAngle = endAngle;
-      endAngle = tmp;
-    }
 
     this._renderTicks(seriesModel, ecModel, api, getColor, posInfo, startAngle, endAngle, clockwise, axisLineWidth);
 
@@ -69386,12 +69411,13 @@ function (_super) {
 
   HeatmapView.prototype._renderOnCartesianAndCalendar = function (seriesModel, api, start, end, incremental) {
     var coordSys = seriesModel.coordinateSystem;
+    var isCartesian2d = isCoordinateSystemType(coordSys, 'cartesian2d');
     var width;
     var height;
     var xAxisExtent;
     var yAxisExtent;
 
-    if (isCoordinateSystemType(coordSys, 'cartesian2d')) {
+    if (isCartesian2d) {
       var xAxis = coordSys.getAxis('x');
       var yAxis = coordSys.getAxis('y');
 
@@ -69403,10 +69429,11 @@ function (_super) {
         if (!(xAxis.onBand && yAxis.onBand)) {
           throw new Error('Heatmap on cartesian must have two axes with boundaryGap true');
         }
-      }
+      } // add 0.5px to avoid the gaps
 
-      width = xAxis.getBandWidth();
-      height = yAxis.getBandWidth();
+
+      width = xAxis.getBandWidth() + .5;
+      height = yAxis.getBandWidth() + .5;
       xAxisExtent = xAxis.scale.getExtent();
       yAxisExtent = yAxis.scale.getExtent();
     }
@@ -69422,13 +69449,13 @@ function (_super) {
     var focus = emphasisModel.get('focus');
     var blurScope = emphasisModel.get('blurScope');
     var emphasisDisabled = emphasisModel.get('disabled');
-    var dataDims = isCoordinateSystemType(coordSys, 'cartesian2d') ? [data.mapDimension('x'), data.mapDimension('y'), data.mapDimension('value')] : [data.mapDimension('time'), data.mapDimension('value')];
+    var dataDims = isCartesian2d ? [data.mapDimension('x'), data.mapDimension('y'), data.mapDimension('value')] : [data.mapDimension('time'), data.mapDimension('value')];
 
     for (var idx = start; idx < end; idx++) {
       var rect = void 0;
       var style = data.getItemVisual(idx, 'style');
 
-      if (isCoordinateSystemType(coordSys, 'cartesian2d')) {
+      if (isCartesian2d) {
         var dataDimX = data.get(dataDims[0], idx);
         var dataDimY = data.get(dataDims[1], idx); // Ignore empty data and out of extent data
 
@@ -69439,10 +69466,10 @@ function (_super) {
         var point = coordSys.dataToPoint([dataDimX, dataDimY]);
         rect = new Rect({
           shape: {
-            x: Math.floor(Math.round(point[0]) - width / 2),
-            y: Math.floor(Math.round(point[1]) - height / 2),
-            width: Math.ceil(width),
-            height: Math.ceil(height)
+            x: point[0] - width / 2,
+            y: point[1] - height / 2,
+            width: width,
+            height: height
           },
           style: style
         });
@@ -76155,7 +76182,8 @@ var axisElementBuilders$1 = {
         shape: {
           cx: polar.cx,
           cy: polar.cy,
-          r: ticksCoords[i].coord
+          // ensure circle radius >= 0
+          r: Math.max(ticksCoords[i].coord, 0)
         }
       }));
     } // Simple optimization
@@ -80003,6 +80031,7 @@ function (_super) {
     }
 
     var itemSize = +toolboxModel.get('itemSize');
+    var isVertical = toolboxModel.get('orient') === 'vertical';
     var featureOpts = toolboxModel.get('feature') || {};
     var features = this._features || (this._features = {});
     var featureNames = [];
@@ -80150,13 +80179,12 @@ function (_super) {
           formatterParamsExtra: {
             title: titlesMap[iconName]
           }
-        }); // graphic.enableHoverEmphasis(path);
-
+        });
         path.__title = titlesMap[iconName];
         path.on('mouseover', function () {
           // Should not reuse above hoverStyle, which might be modified.
           var hoverStyle = iconStyleEmphasisModel.getItemStyle();
-          var defaultTextPosition = toolboxModel.get('orient') === 'vertical' ? toolboxModel.get('right') == null ? 'right' : 'left' : toolboxModel.get('bottom') == null ? 'bottom' : 'top';
+          var defaultTextPosition = isVertical ? toolboxModel.get('right') == null && toolboxModel.get('left') !== 'right' ? 'right' : 'left' : toolboxModel.get('bottom') == null && toolboxModel.get('top') !== 'bottom' ? 'bottom' : 'top';
           textContent.setStyle({
             fill: iconStyleEmphasisModel.get('textFill') || hoverStyle.fill || hoverStyle.stroke || '#000',
             backgroundColor: iconStyleEmphasisModel.get('textBackgroundColor')
@@ -80167,10 +80195,10 @@ function (_super) {
           textContent.ignore = !toolboxModel.get('showTitle'); // Use enterEmphasis and leaveEmphasis provide by ec.
           // There are flags managed by the echarts.
 
-          enterEmphasis(this);
+          api.enterEmphasis(this);
         }).on('mouseout', function () {
           if (featureModel.get(['iconStatus', iconName]) !== 'emphasis') {
-            leaveEmphasis(this);
+            api.leaveEmphasis(this);
           }
 
           textContent.hide();
@@ -80187,14 +80215,14 @@ function (_super) {
 
     group.add(makeBackground(group.getBoundingRect(), toolboxModel)); // Adjust icon title positions to avoid them out of screen
 
-    group.eachChild(function (icon) {
+    isVertical || group.eachChild(function (icon) {
       var titleText = icon.__title; // const hoverStyle = icon.hoverStyle;
       // TODO simplify code?
 
       var emphasisState = icon.ensureState('emphasis');
       var emphasisTextConfig = emphasisState.textConfig || (emphasisState.textConfig = {});
       var textContent = icon.getTextContent();
-      var emphasisTextState = textContent && textContent.states.emphasis; // May be background element
+      var emphasisTextState = textContent && textContent.ensureState('emphasis'); // May be background element
 
       if (emphasisTextState && !isFunction(emphasisTextState) && titleText) {
         var emphasisTextStyle = emphasisTextState.style || (emphasisTextState.style = {});
@@ -80208,7 +80236,7 @@ function (_super) {
           needPutOnTop = true;
         }
 
-        var topOffset = needPutOnTop ? -5 - rect.height : itemSize + 8;
+        var topOffset = needPutOnTop ? -5 - rect.height : itemSize + 10;
 
         if (offsetX + rect.width / 2 > api.getWidth()) {
           emphasisTextConfig.position = ['100%', topOffset];
@@ -80841,7 +80869,7 @@ function (_super) {
       textarea.readOnly = model.get('readOnly');
       var style = textarea.style; // eslint-disable-next-line max-len
 
-      style.cssText = 'width:100%;height:100%;font-family:monospace;font-size:14px;line-height:1.6rem;resize:none';
+      style.cssText = 'display:block;width:100%;height:100%;font-family:monospace;font-size:14px;line-height:1.6rem;resize:none;box-sizing:border-box;outline:none';
       style.color = model.get('textColor');
       style.borderColor = model.get('textareaBorderColor');
       style.backgroundColor = model.get('textareaColor');
@@ -80870,7 +80898,7 @@ function (_super) {
       if (contentToOption == null && optionToContent != null || contentToOption != null && optionToContent == null) {
         if ("development" !== 'production') {
           // eslint-disable-next-line
-          console.warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.');
+          warn('It seems you have just provided one of `contentToOption` and `optionToContent` functions but missed the other one. Data change is ignored.');
         }
 
         close();
@@ -85932,7 +85960,7 @@ function (_super) {
     inner$h(drawGroup).keep = true;
   };
 
-  MarkerView.prototype.blurSeries = function (seriesModelList) {
+  MarkerView.prototype.toggleBlurSeries = function (seriesModelList, isBlur) {
     var _this = this;
 
     each(seriesModelList, function (seriesModel) {
@@ -85942,7 +85970,7 @@ function (_super) {
         var data = markerModel.getData();
         data.eachItemGraphicEl(function (el) {
           if (el) {
-            enterBlur(el);
+            isBlur ? enterBlur(el) : leaveBlur(el);
           }
         });
       }
@@ -90756,15 +90784,13 @@ function (_super) {
     var orient = this._orient;
     var textStyleModel = this.visualMapModel.textStyleModel;
     this.group.add(new ZRText({
-      style: {
+      style: createTextStyle(textStyleModel, {
         x: position[0],
         y: position[1],
         verticalAlign: orient === 'horizontal' ? 'middle' : align,
         align: orient === 'horizontal' ? align : 'center',
-        text: text,
-        font: textStyleModel.getFont(),
-        fill: textStyleModel.getTextColor()
-      }
+        text: text
+      })
     }));
   };
 
@@ -90850,13 +90876,11 @@ function (_super) {
         stop(e.event);
       },
       ondragend: onDragEnd,
-      style: {
+      style: createTextStyle(textStyleModel, {
         x: 0,
         y: 0,
-        text: '',
-        font: textStyleModel.getFont(),
-        fill: textStyleModel.getTextColor()
-      }
+        text: ''
+      })
     });
     handleLabel.ensureState('blur').style = {
       opacity: 0.1
@@ -90902,13 +90926,11 @@ function (_super) {
     var indicatorLabel = new ZRText({
       silent: true,
       invisible: true,
-      style: {
+      style: createTextStyle(textStyleModel, {
         x: 0,
         y: 0,
-        text: '',
-        font: textStyleModel.getFont(),
-        fill: textStyleModel.getTextColor()
-      }
+        text: ''
+      })
     });
     this.group.add(indicatorLabel);
     var indicatorLabelPoint = [(orient === 'horizontal' ? textSize / 2 : HOVER_LINK_OUT) + itemSize[0] / 2, 0];
@@ -92169,15 +92191,13 @@ function (_super) {
     var itemGroup = new Group();
     var textStyleModel = this.visualMapModel.textStyleModel;
     itemGroup.add(new ZRText({
-      style: {
+      style: createTextStyle(textStyleModel, {
         x: showLabel ? itemAlign === 'right' ? itemSize[0] : 0 : itemSize[0] / 2,
         y: itemSize[1] / 2,
         verticalAlign: 'middle',
         align: showLabel ? itemAlign : 'center',
-        text: text,
-        font: textStyleModel.getFont(),
-        fill: textStyleModel.getTextColor()
-      }
+        text: text
+      })
     }));
     group.add(itemGroup);
   };

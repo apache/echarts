@@ -12284,18 +12284,28 @@
 
     function allLeaveBlur(api) {
       var model = api.getModel();
+      var leaveBlurredSeries = [];
+      var allComponentViews = [];
       model.eachComponent(function (componentType, componentModel) {
         var componentStates = getComponentStates(componentModel);
+        var isSeries = componentType === 'series';
+        var view = isSeries ? api.getViewOfSeriesModel(componentModel) : api.getViewOfComponentModel(componentModel);
+        !isSeries && allComponentViews.push(view);
 
         if (componentStates.isBlured) {
-          var view = componentType === 'series' ? api.getViewOfSeriesModel(componentModel) : api.getViewOfComponentModel(componentModel); // Leave blur anyway
-
+          // Leave blur anyway
           view.group.traverse(function (child) {
             singleLeaveBlur(child);
           });
+          isSeries && leaveBlurredSeries.push(componentModel);
         }
 
         componentStates.isBlured = false;
+      });
+      each(allComponentViews, function (view) {
+        if (view && view.toggleBlurSeries) {
+          view.toggleBlurSeries(leaveBlurredSeries, false, model);
+        }
       });
     }
     function blurSeries(targetSeriesIndex, focus, blurScope, api) {
@@ -12366,8 +12376,8 @@
 
         var view = api.getViewOfComponentModel(componentModel);
 
-        if (view && view.blurSeries) {
-          view.blurSeries(blurredSeries, ecModel);
+        if (view && view.toggleBlurSeries) {
+          view.toggleBlurSeries(blurredSeries, true, ecModel);
         }
       });
     }
@@ -21201,8 +21211,11 @@
 
         for (var i = offset; i < len; i++) {
           var val = chunk[i] = ordinalMeta.parseAndCollect(chunk[i]);
-          dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
-          dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+
+          if (!isNaN(val)) {
+            dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
+            dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+          }
         }
 
         dim.ordinalMeta = ordinalMeta;
@@ -23339,12 +23352,12 @@
       ComponentView.prototype.updateVisual = function (model, ecModel, api, payload) {// Do nothing;
       };
       /**
-       * Hook for blur target series.
-       * Can be used in marker for blur the markers
+       * Hook for toggle blur target series.
+       * Can be used in marker for blur or leave blur the markers
        */
 
 
-      ComponentView.prototype.blurSeries = function (seriesModels, ecModel) {// Do nothing;
+      ComponentView.prototype.toggleBlurSeries = function (seriesModels, isBlur, ecModel) {// Do nothing;
       };
       /**
        * Traverse the new rendered elements.
@@ -26643,7 +26656,7 @@
     }
 
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.3.1';
+    var version$1 = '5.3.2';
     var dependencies = {
       zrender: '5.3.1'
     };
@@ -32074,6 +32087,11 @@
       }
 
       OrdinalScale.prototype.parse = function (val) {
+        // Caution: Math.round(null) will return `0` rather than `NaN`
+        if (val == null) {
+          return NaN;
+        }
+
         return isString(val) ? this._ordinalMeta.getOrdinal(val) // val might be float.
         : Math.round(val);
       };
@@ -35713,7 +35731,7 @@
           if (isLabelIgnored // Not show when label is not shown in this state.
           || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
           ) {
-              var stateObj = isNormal ? labelLine : labelLine && labelLine.states.normal;
+              var stateObj = isNormal ? labelLine : labelLine && labelLine.states[stateName];
 
               if (stateObj) {
                 stateObj.ignore = true;
@@ -37384,7 +37402,7 @@
         symbolPath.ensureState('blur').style = blurItemStyle;
 
         if (hoverScale) {
-          var scaleRatio = Math.max(1.1, 3 / this._sizeY);
+          var scaleRatio = Math.max(isNumber(hoverScale) ? hoverScale : 1.1, 3 / this._sizeY);
           emphasisState.scaleX = this._sizeX * scaleRatio;
           emphasisState.scaleY = this._sizeY * scaleRatio;
         }
@@ -37690,17 +37708,21 @@
         valueStart = extent[0];
       } else if (valueOrigin === 'end') {
         valueStart = extent[1];
-      } // auto
-      else {
-          // Both positive
-          if (extent[0] > 0) {
-            valueStart = extent[0];
-          } // Both negative
-          else if (extent[1] < 0) {
-              valueStart = extent[1];
-            } // If is one positive, and one negative, onZero shall be true
+      } // If origin is specified as a number, use it as
+      // valueStart directly
+      else if (isNumber(valueOrigin) && !isNaN(valueOrigin)) {
+          valueStart = valueOrigin;
+        } // auto
+        else {
+            // Both positive
+            if (extent[0] > 0) {
+              valueStart = extent[0];
+            } // Both negative
+            else if (extent[1] < 0) {
+                valueStart = extent[1];
+              } // If is one positive, and one negative, onZero shall be true
 
-        }
+          }
 
       return valueStart;
     }
