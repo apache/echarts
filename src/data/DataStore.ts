@@ -191,7 +191,7 @@ class DataStore {
         if (__DEV__) {
             assert(
                 isFunction(provider.getItem) && isFunction(provider.count),
-                'Inavlid data provider.'
+                'Invalid data provider.'
             );
         }
 
