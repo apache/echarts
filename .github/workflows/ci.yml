@@ -35,6 +35,9 @@ jobs:
       # - name: check type
       #   run: npm run checktype
 
+      - name: lint
+        run: npm run lint
+
       - name: build release
         run: npm run release
 
