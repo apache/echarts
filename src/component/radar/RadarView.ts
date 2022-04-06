@@ -47,7 +47,11 @@ class RadarView extends ComponentView {
         const radar = radarModel.coordinateSystem;
         const indicatorAxes = radar.getIndicatorAxes();
         const axisBuilders = zrUtil.map(indicatorAxes, function (indicatorAxis) {
+            const axisName = indicatorAxis.model.get('showName')
+                ? indicatorAxis.name
+                : ''; // hide name
             const axisBuilder = new AxisBuilder(indicatorAxis.model, {
+                axisName: axisName,
                 position: [radar.cx, radar.cy],
                 rotation: indicatorAxis.angle,
                 labelDirection: -1,

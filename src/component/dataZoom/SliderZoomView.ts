@@ -128,6 +128,7 @@ class SliderZoomView extends DataZoomView {
     // Cached raw data. Avoid rendering data shadow multiple times.
     private _shadowData: SeriesData;
     private _shadowDim: string;
+    private _shadowSize: number[];
     private _shadowPolygonPts: number[][];
     private _shadowPolylinePts: number[][];
 
@@ -355,6 +356,7 @@ class SliderZoomView extends DataZoomView {
         }
 
         const size = this._size;
+        const oldSize = this._shadowSize || [];
         const seriesModel = info.series;
         const data = seriesModel.getRawData();
         const otherDim: string = seriesModel.getShadowDim
@@ -368,7 +370,10 @@ class SliderZoomView extends DataZoomView {
         let polygonPts = this._shadowPolygonPts;
         let polylinePts = this._shadowPolylinePts;
         // Not re-render if data doesn't change.
-        if (data !== this._shadowData || otherDim !== this._shadowDim) {
+        if (
+            data !== this._shadowData || otherDim !== this._shadowDim
+            || size[0] !== oldSize[0] || size[1] !== oldSize[1]
+        ) {
             let otherDataExtent = data.getDataExtent(otherDim);
             // Nice extent.
             const otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
@@ -377,7 +382,6 @@ class SliderZoomView extends DataZoomView {
                 otherDataExtent[1] + otherOffset
             ];
             const otherShadowExtent = [0, size[1]];
-
             const thisShadowExtent = [0, size[0]];
 
             const areaPoints = [[size[0], 0], [0, 0]];
@@ -427,6 +431,7 @@ class SliderZoomView extends DataZoomView {
         }
         this._shadowData = data;
         this._shadowDim = otherDim;
+        this._shadowSize = [size[0], size[1]];
 
         const dataZoomModel = this.dataZoomModel;
 

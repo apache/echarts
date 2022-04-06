@@ -19,7 +19,7 @@
 
 import { OptionDataValue, DimensionLoose, Dictionary } from './types';
 import {
-    keys, isArray, map, isObject, isString, HashMap, isRegExp, isArrayLike, hasOwn
+    keys, isArray, map, isObject, isString, HashMap, isRegExp, isArrayLike, hasOwn, isNumber
 } from 'zrender/src/core/util';
 import { throwError, makePrintable } from './log';
 import {
@@ -189,8 +189,8 @@ class RegExpEvaluator implements FilterComparator {
 
     evaluate(lVal: unknown): boolean {
         const type = typeof lVal;
-        return type === 'string' ? this._condVal.test(lVal as string)
-            : type === 'number' ? this._condVal.test(lVal + '')
+        return isString(type) ? this._condVal.test(lVal as string)
+            : isNumber(type) ? this._condVal.test(lVal + '')
             : false;
     }
 }

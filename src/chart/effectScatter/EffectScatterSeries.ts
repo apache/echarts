@@ -45,7 +45,7 @@ type ScatterDataValue = OptionDataValue | OptionDataValue[];
 interface EffectScatterStatesOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
-        scale?: boolean
+        scale?: boolean | number
     }
 }
 export interface EffectScatterStateOption<TCbParams = never> {
@@ -107,7 +107,7 @@ class EffectScatterSeriesModel extends SeriesModel<EffectScatterSeriesOption> {
 
     static defaultOption: EffectScatterSeriesOption = {
         coordinateSystem: 'cartesian2d',
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
 

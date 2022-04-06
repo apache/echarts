@@ -75,7 +75,11 @@ export default function themeRiverLayout(ecModel: GlobalModel, api: ExtensionAPI
  * @param seriesModel  the model object of themeRiver series
  * @param height  value used to compute every series height
  */
-function doThemeRiverLayout(data: SeriesData<ThemeRiverSeriesModel>, seriesModel: ThemeRiverSeriesModel, height: number) {
+function doThemeRiverLayout(
+    data: SeriesData<ThemeRiverSeriesModel>,
+    seriesModel: ThemeRiverSeriesModel,
+    height: number
+) {
     if (!data.count()) {
         return;
     }

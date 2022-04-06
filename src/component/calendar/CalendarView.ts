@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isString, extend, map } from 'zrender/src/core/util';
+import { isString, extend, map, isFunction } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {createTextStyle} from '../../label/labelStyle';
 import { formatTplSimple } from '../../util/format';
@@ -229,11 +229,11 @@ class CalendarView extends ComponentView {
         params: T
     ) {
 
-        if (typeof formatter === 'string' && formatter) {
+        if (isString(formatter) && formatter) {
             return formatTplSimple(formatter, params);
         }
 
-        if (typeof formatter === 'function') {
+        if (isFunction(formatter)) {
             return formatter(params);
         }
 

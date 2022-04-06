@@ -22,7 +22,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
-import { GeoJSONRegion } from './Region';
+import { GeoJSONLineStringGeometry, GeoJSONPolygonGeometry, GeoJSONRegion } from './Region';
 import { GeoJSONCompressed, GeoJSON } from './geoTypes';
 
 
@@ -37,42 +37,56 @@ function decode(json: GeoJSONCompressed | GeoJSON): GeoJSON {
     }
 
     const features = jsonCompressed.features;
-
-    for (let f = 0; f < features.length; f++) {
-        const feature = features[f];
+    zrUtil.each(features, feature => {
         const geometry = feature.geometry;
+        const encodeOffsets = geometry.encodeOffsets;
+        const coordinates = geometry.coordinates;
 
-        if (geometry.type === 'Polygon') {
-            const coordinates = geometry.coordinates;
-            for (let c = 0; c < coordinates.length; c++) {
-                coordinates[c] = decodePolygon(
-                    coordinates[c],
-                    geometry.encodeOffsets[c],
-                    encodeScale
-                ) as any;
-            }
+        // Geometry may be appeded manually in the script after json loaded.
+        // In this case this geometry is usually not encoded.
+        if (!encodeOffsets) {
+            return;
         }
-        else if (geometry.type === 'MultiPolygon') {
-            const coordinates = geometry.coordinates;
-            for (let c = 0; c < coordinates.length; c++) {
-                const coordinate = coordinates[c];
-                for (let c2 = 0; c2 < coordinate.length; c2++) {
-                    coordinate[c2] = decodePolygon(
-                        coordinate[c2],
-                        geometry.encodeOffsets[c][c2],
-                        encodeScale
-                    ) as any;
-                }
-            }
+
+        switch (geometry.type) {
+            case 'LineString':
+                (geometry as any).coordinates =
+                    decodeRing(coordinates as string, encodeOffsets as number[], encodeScale);
+                break;
+            case 'Polygon':
+                decodeRings(coordinates as string[], encodeOffsets as number[][], encodeScale);
+                break;
+            case 'MultiLineString':
+                decodeRings(coordinates as string[], encodeOffsets as number[][], encodeScale);
+                break;
+            case 'MultiPolygon':
+                zrUtil.each(
+                    coordinates as string[][],
+                    (rings, idx) => decodeRings(rings, (encodeOffsets as number[][][])[idx], encodeScale)
+                );
         }
-    }
+    });
     // Has been decoded
     jsonCompressed.UTF8Encoding = false;
 
-    return jsonCompressed as GeoJSON;
+    return jsonCompressed as unknown as GeoJSON;
 }
 
-function decodePolygon(
+function decodeRings(
+    rings: string[],
+    encodeOffsets: number[][],
+    encodeScale: number
+) {
+    for (let c = 0; c < rings.length; c++) {
+        rings[c] = decodeRing(
+            rings[c],
+            encodeOffsets[c],
+            encodeScale
+        ) as any;
+    }
+}
+
+function decodeRing(
     coordinate: string,
     encodeOffsets: number[],
     encodeScale: number
@@ -114,27 +128,26 @@ export default function parseGeoJSON(geoJson: GeoJSON | GeoJSONCompressed, nameP
         const geo = featureObj.geometry;
 
         const geometries = [] as GeoJSONRegion['geometries'];
-        if (geo.type === 'Polygon') {
-            const coordinates = geo.coordinates;
-            geometries.push({
-                type: 'polygon',
+        switch (geo.type) {
+            case 'Polygon':
+                const coordinates = geo.coordinates;
                 // According to the GeoJSON specification.
                 // First must be exterior, and the rest are all interior(holes).
-                exterior: coordinates[0],
-                interiors: coordinates.slice(1)
-            });
-        }
-        if (geo.type === 'MultiPolygon') {
-            const coordinates = geo.coordinates;
-            zrUtil.each(coordinates, function (item) {
-                if (item[0]) {
-                    geometries.push({
-                        type: 'polygon',
-                        exterior: item[0],
-                        interiors: item.slice(1)
-                    });
-                }
-            });
+                geometries.push(new GeoJSONPolygonGeometry(coordinates[0], coordinates.slice(1)));
+                break;
+            case 'MultiPolygon':
+                zrUtil.each(geo.coordinates, function (item) {
+                    if (item[0]) {
+                        geometries.push(new GeoJSONPolygonGeometry(item[0], item.slice(1)));
+                    }
+                });
+                break;
+            case 'LineString':
+                geometries.push(new GeoJSONLineStringGeometry([geo.coordinates]));
+                break;
+            case 'MultiLineString':
+                geometries.push(new GeoJSONLineStringGeometry(geo.coordinates));
+
         }
 
         const region = new GeoJSONRegion(

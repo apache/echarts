@@ -149,14 +149,14 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
      * @param minInterval Optional.
      * @param maxInterval Optional.
      */
-    abstract niceTicks(
+    abstract calcNiceTicks(
         // FIXME:TS make them in a "opt", the same with `niceExtent`?
         splitNumber?: number,
         minInterval?: number,
         maxInterval?: number
     ): void;
 
-    abstract niceExtent(
+    abstract calcNiceExtent(
         opt?: {
             splitNumber?: number,
             fixMin?: boolean,
@@ -171,7 +171,7 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
      */
     abstract getLabel(tick: ScaleTick): string;
 
-    abstract getTicks(expandToNicedExtent?: boolean): ScaleTick[];
+    abstract getTicks(): ScaleTick[];
 
     abstract getMinorTicks(splitNumber: number): number[][];
 

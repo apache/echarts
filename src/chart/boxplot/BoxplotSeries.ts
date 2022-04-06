@@ -102,7 +102,7 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
     visualDrawType = 'stroke' as const;
 
     static defaultOption: BoxplotSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,

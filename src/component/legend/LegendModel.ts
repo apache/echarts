@@ -356,9 +356,9 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
 
         const legendData = zrUtil.map(rawData, function (dataItem) {
             // Can be string or number
-            if (typeof dataItem === 'string' || typeof dataItem === 'number') {
+            if (zrUtil.isString(dataItem) || zrUtil.isNumber(dataItem)) {
                 dataItem = {
-                    name: dataItem
+                    name: dataItem as string
                 };
             }
             return new Model(dataItem, this, this.ecModel);
@@ -438,7 +438,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     }
 
     static defaultOption: LegendOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 4,
         show: true,
 

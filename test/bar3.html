@@ -51,7 +51,7 @@ under the License.
                 var data4 = [];
 
                 for (var i = 0; i < 10; i++) {
-                    xAxisData.push('类目' + i);
+                    xAxisData.push(i + ' Long label should use ellipsis if width is set');
                     data0.push(-Math.random().toFixed(2));
                     data1.push((Math.random() * 5).toFixed(2));
                     data2.push(-Math.random().toFixed(2));
@@ -127,6 +127,10 @@ under the License.
                         },
                         splitArea: {
                             show: true
+                        },
+                        axisLabel: {
+                            width: 100,
+                            overflow: 'truncate',
                         }
                     },
                     xAxis: {

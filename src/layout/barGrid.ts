@@ -595,7 +595,6 @@ function doGetLayoutRenderItemInfo(
 export function createProgressiveLayout(seriesType: string): StageHandler {
     return {
         seriesType,
-
         plan: createRenderPlanner(),
 
         reset: function (seriesModel: BarSeriesModel) {

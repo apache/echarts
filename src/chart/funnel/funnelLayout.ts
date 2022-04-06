@@ -23,6 +23,7 @@ import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './F
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
+import { isFunction } from 'zrender/src/core/util';
 
 function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
@@ -45,8 +46,8 @@ function getSortedIndices(data: SeriesData, sort: FunnelSeriesOption['sort']) {
     }
 
     // Add custom sortable function & none sortable opetion by "options.sort"
-    if (typeof sort === 'function') {
-        indices.sort(sort);
+    if (isFunction(sort)) {
+        indices.sort(sort as any);
     }
     else if (sort !== 'none') {
         indices.sort(function (a, b) {

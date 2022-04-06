@@ -256,7 +256,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
     static defaultOption: MapSeriesOption = {
         // 一级层叠
-        zlevel: 0,
+        // zlevel: 0,
         // 二级层叠
         z: 2,
 

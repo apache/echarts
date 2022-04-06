@@ -183,8 +183,7 @@ function createSeriesData(
 function isNeedCompleteOrdinalData(source: Source) {
     if (source.sourceFormat === SOURCE_FORMAT_ORIGINAL) {
         const sampleItem = firstDataNotNull(source.data as ArrayLike<any> || []);
-        return sampleItem != null
-            && !zrUtil.isArray(getDataItemValue(sampleItem));
+        return !zrUtil.isArray(getDataItemValue(sampleItem));
     }
 }
 

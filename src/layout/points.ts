@@ -48,10 +48,10 @@ export default function pointsLayout(seriesType: string, forceStoreInTypedArray?
             const dimLen = dims.length;
 
             const stackResultDim = data.getCalculationInfo('stackResultDimension');
-            if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) {
+            if (isDimensionStacked(data, dims[0])) {
                 dims[0] = stackResultDim;
             }
-            if (isDimensionStacked(data, dims[1] /*, dims[0]*/)) {
+            if (isDimensionStacked(data, dims[1])) {
                 dims[1] = stackResultDim;
             }
 

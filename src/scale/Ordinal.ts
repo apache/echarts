@@ -37,7 +37,7 @@ import {
     ScaleTick
 } from '../util/types';
 import { CategoryAxisBaseOption } from '../coord/axisCommonTypes';
-import { isArray, map, isObject } from 'zrender/src/core/util';
+import { isArray, map, isObject, isString } from 'zrender/src/core/util';
 
 type OrdinalScaleSetting = {
     ordinalMeta?: OrdinalMeta | CategoryAxisBaseOption['data'];
@@ -130,7 +130,11 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     }
 
     parse(val: OrdinalRawValue | OrdinalNumber): OrdinalNumber {
-        return typeof val === 'string'
+        // Caution: Math.round(null) will return `0` rather than `NaN`
+        if (val == null) {
+            return NaN;
+        }
+        return isString(val)
             ? this._ordinalMeta.getOrdinal(val)
             // val might be float.
             : Math.round(val);
@@ -280,9 +284,9 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         return this._ordinalMeta;
     }
 
-    niceTicks() {}
+    calcNiceTicks() {}
 
-    niceExtent() {}
+    calcNiceExtent() {}
 
 }
 

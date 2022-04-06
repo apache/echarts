@@ -99,7 +99,7 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
     ];
 
     static defaultOption: CandlestickSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         coordinateSystem: 'cartesian2d',
         legendHoverLink: true,

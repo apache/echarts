@@ -29,6 +29,7 @@ import { AnimationEasing } from 'zrender/src/animation/easing';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
+    isFunction,
     isObject,
     retrieve2
 } from 'zrender/src/core/util';
@@ -55,7 +56,7 @@ type AnimateOrSetPropsOption = {
  * Return null if animation is disabled.
  */
 export function getAnimationConfig(
-    animationType: 'init' | 'update' | 'remove',
+    animationType: 'enter' | 'update' | 'leave',
     animatableModel: Model<AnimationOptionMixin>,
     dataIndex: number,
     // Extra opts can override the option in animatable model.
@@ -101,13 +102,13 @@ export function getAnimationConfig(
             animationPayload.easing != null && (easing = animationPayload.easing);
             animationPayload.delay != null && (delay = animationPayload.delay);
         }
-        if (typeof delay === 'function') {
+        if (isFunction(delay)) {
             delay = delay(
                 dataIndex as number,
                 extraDelayParams
             );
         }
-        if (typeof duration === 'function') {
+        if (isFunction(duration)) {
             duration = duration(dataIndex as number);
         }
         const config = {
@@ -124,7 +125,7 @@ export function getAnimationConfig(
 }
 
 function animateOrSetProps<Props>(
-    animationType: 'init' | 'update' | 'remove',
+    animationType: 'enter' | 'update' | 'leave',
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin> & {
@@ -136,7 +137,7 @@ function animateOrSetProps<Props>(
 ) {
     let isFrom = false;
     let removeOpt: AnimationOption;
-    if (typeof dataIndex === 'function') {
+    if (isFunction(dataIndex)) {
         during = cb;
         cb = dataIndex;
         dataIndex = null;
@@ -149,11 +150,11 @@ function animateOrSetProps<Props>(
         dataIndex = dataIndex.dataIndex;
     }
 
-    const isRemove = (animationType === 'remove');
+    const isRemove = (animationType === 'leave');
 
     if (!isRemove) {
         // Must stop the remove animation.
-        el.stopAnimation('remove');
+        el.stopAnimation('leave');
     }
 
     const animationConfig = getAnimationConfig(
@@ -245,7 +246,7 @@ export function initProps<Props>(
     cb?: AnimateOrSetPropsOption['cb'] | AnimateOrSetPropsOption['during'],
     during?: AnimateOrSetPropsOption['during']
 ) {
-    animateOrSetProps('init', el, props, animatableModel, dataIndex, cb, during);
+    animateOrSetProps('enter', el, props, animatableModel, dataIndex, cb, during);
 }
 
 /**
@@ -258,7 +259,7 @@ export function initProps<Props>(
     }
     for (let i = 0; i < el.animators.length; i++) {
         const animator = el.animators[i];
-        if (animator.scope === 'remove') {
+        if (animator.scope === 'leave') {
             return true;
         }
     }
@@ -281,7 +282,7 @@ export function removeElement<Props>(
         return;
     }
 
-    animateOrSetProps('remove', el, props, animatableModel, dataIndex, cb, during);
+    animateOrSetProps('leave', el, props, animatableModel, dataIndex, cb, during);
 }
 
 function fadeOutDisplayable(

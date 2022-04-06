@@ -28,6 +28,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
+import { isIntervalOrLogScale } from '../../scale/helper';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -69,8 +70,7 @@ class CartesianAxisView extends AxisView {
             handleAutoShown(elementType) {
                 const cartesians = gridModel.coordinateSystem.getCartesians();
                 for (let i = 0; i < cartesians.length; i++) {
-                    const otherAxisType = cartesians[i].getOtherAxis(axisModel.axis).type;
-                    if (otherAxisType === 'value' || otherAxisType === 'log') {
+                    if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {
                         // Still show axis tick or axisLine if other axis is value / log
                         return true;
                     }

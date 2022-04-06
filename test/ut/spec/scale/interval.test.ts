@@ -135,7 +135,7 @@ describe('scale_interval', function () {
 
             const interval = new IntervalScale();
             interval.setExtent(extent[0], extent[1]);
-            interval.niceExtent({
+            interval.calcNiceExtent({
                 fixMin: true,
                 fixMax: true,
                 splitNumber

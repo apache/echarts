@@ -26,13 +26,13 @@ import {
 } from '../../util/types';
 import { normalizeToArray } from '../../util/model';
 import {
-    createHashMap, bind, each, hasOwn, map, clone, isObject, extend
+    createHashMap, bind, each, hasOwn, map, clone, isObject, extend, isNumber
 } from 'zrender/src/core/util';
 import {
     getRawSourceItemGetter, getRawSourceDataCounter, getRawSourceValueGetter
 } from './dataProvider';
 import { parseDataValue } from './dataValueHelper';
-import { consoleLog, makePrintable, throwError } from '../../util/log';
+import { log, makePrintable, throwError } from '../../util/log';
 import { createSource, Source, SourceMetaRawOption, detectSourceFormat } from '../Source';
 
 
@@ -312,7 +312,7 @@ function getDimensionInfo(
         return;
     }
     // Keep the same logic as `List::getDimension` did.
-    if (typeof dim === 'number'
+    if (isNumber(dim)
         // If being a number-like string but not being defined a dimension name.
         || (!isNaN(dim as any) && !hasOwn(dimsByName, dim))
     ) {
@@ -443,7 +443,7 @@ function applySingleDataTransform(
                     makePrintable(extSource.dimensions)
                 ].join('\n');
             }).join('\n');
-            consoleLog(printStrArr);
+            log(printStrArr);
         }
     }
 

@@ -32,6 +32,7 @@ import {CandlestickItemLayout} from './candlestickLayout';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 import { saveOldStyle } from '../../animation/basicTrasition';
+import Element from 'zrender/src/Element';
 
 const SKIP_PROPS = ['color', 'borderColor'] as const;
 
@@ -44,9 +45,13 @@ class CandlestickView extends ChartView {
 
     private _data: SeriesData;
 
+    private _progressiveEls: Element[];
+
     render(seriesModel: CandlestickSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         // If there is clipPath created in large mode. Remove it.
         this.group.removeClipPath();
+        // Clear previously rendered progressive elements.
+        this._progressiveEls = null;
 
         this._updateDrawMode(seriesModel);
 
@@ -66,9 +71,14 @@ class CandlestickView extends ChartView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
+        this._progressiveEls = [];
         this._isLargeDraw
              ? this._incrementalRenderLarge(params, seriesModel)
              : this._incrementalRenderNormal(params, seriesModel);
+    }
+
+    eachRendered(cb: (el: Element) => boolean | void) {
+        graphic.traverseElements(this._progressiveEls || this.group, cb);
     }
 
     _updateDrawMode(seriesModel: CandlestickSeriesModel) {
@@ -185,11 +195,13 @@ class CandlestickView extends ChartView {
 
             el.incremental = true;
             this.group.add(el);
+
+            this._progressiveEls.push(el);
         }
     }
 
     _incrementalRenderLarge(params: StageHandlerProgressParams, seriesModel: CandlestickSeriesModel) {
-        createLarge(seriesModel, this.group, true);
+        createLarge(seriesModel, this.group, this._progressiveEls, true);
     }
 
     remove(ecModel: GlobalModel) {
@@ -335,7 +347,12 @@ class LargeBoxPath extends Path {
     }
 }
 
-function createLarge(seriesModel: CandlestickSeriesModel, group: graphic.Group, incremental?: boolean) {
+function createLarge(
+    seriesModel: CandlestickSeriesModel,
+    group: graphic.Group,
+    progressiveEls?: Element[],
+    incremental?: boolean
+) {
     const data = seriesModel.getData();
     const largePoints = data.getLayout('largePoints');
 
@@ -356,6 +373,10 @@ function createLarge(seriesModel: CandlestickSeriesModel, group: graphic.Group, 
     if (incremental) {
         elP.incremental = true;
         elN.incremental = true;
+    }
+
+    if (progressiveEls) {
+        progressiveEls.push(elP, elN);
     }
 }
 

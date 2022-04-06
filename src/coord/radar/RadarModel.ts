@@ -43,6 +43,9 @@ function defaultsShow(opt: object, show: boolean) {
 
 export interface RadarIndicatorOption {
     name?: string
+    /**
+     * @deprecated Use `name` instead.
+     */
     text?: string
     min?: number
     max?: number
@@ -88,6 +91,7 @@ export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
 export type InnerIndicatorAxisOption = AxisBaseOption & {
     // TODO Use type?
     // axisType?: 'value' | 'log'
+    showName?: boolean
 };
 
 class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystemHostModel {
@@ -137,20 +141,18 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 axisLabel: axisLabel,
                 // Compatible with 2 and use text
                 name: indicatorOpt.text,
+                showName: showName,
                 nameLocation: 'end',
                 nameGap: nameGap,
                 // min: 0,
                 nameTextStyle: iNameTextStyle,
                 triggerEvent: triggerEvent
             } as InnerIndicatorAxisOption, false);
-            if (!showName) {
-                innerIndicatorOpt.name = '';
-            }
-            if (typeof nameFormatter === 'string') {
+            if (zrUtil.isString(nameFormatter)) {
                 const indName = innerIndicatorOpt.name;
                 innerIndicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
             }
-            else if (typeof nameFormatter === 'function') {
+            else if (zrUtil.isFunction(nameFormatter)) {
                 innerIndicatorOpt.name = nameFormatter(
                     innerIndicatorOpt.name, innerIndicatorOpt
                 );
@@ -174,7 +176,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
     static defaultOption: RadarOption = {
 
-        zlevel: 0,
+        // zlevel: 0,
 
         z: 0,
 

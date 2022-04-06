@@ -20,17 +20,18 @@
 import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
-import { enterEmphasis, leaveEmphasis, enableHoverEmphasis } from '../../util/states';
+import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis } from '../../util/states';
 import {getDefaultLabel} from './labelHelper';
 import SeriesData from '../../data/SeriesData';
-import { ColorString, BlurScope, AnimationOption, ZRColor } from '../../util/types';
+import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
-import { extend } from 'zrender/src/core/util';
+import { extend, isNumber } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTrasition';
+import Model from '../../model/Model';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -42,8 +43,6 @@ interface SymbolOpts {
 }
 
 class Symbol extends graphic.Group {
-
-    private _seriesModel: SeriesModel;
 
     private _symbolType: string;
 
@@ -198,11 +197,9 @@ class Symbol extends graphic.Group {
         }
 
         if (disableAnimation) {
-            // Must stop remove animation manually if don't call initProps or updateProps.
-            this.childAt(0).stopAnimation('remove');
+            // Must stop leave transition manually if don't call initProps or updateProps.
+            this.childAt(0).stopAnimation('leave');
         }
-
-        this._seriesModel = seriesModel;
     }
 
     _updateCommon(
@@ -220,11 +217,12 @@ class Symbol extends graphic.Group {
         let selectItemStyle;
         let focus;
         let blurScope: BlurScope;
+        let emphasisDisabled: boolean;
 
         let labelStatesModels;
 
-        let hoverScale;
-        let cursorStyle;
+        let hoverScale: SymbolDrawSeriesScope['hoverScale'];
+        let cursorStyle: SymbolDrawSeriesScope['cursorStyle'];
 
         if (seriesScope) {
             emphasisItemStyle = seriesScope.emphasisItemStyle;
@@ -237,6 +235,7 @@ class Symbol extends graphic.Group {
 
             hoverScale = seriesScope.hoverScale;
             cursorStyle = seriesScope.cursorStyle;
+            emphasisDisabled = seriesScope.emphasisDisabled;
         }
 
         if (!seriesScope || data.hasItemOption) {
@@ -250,6 +249,7 @@ class Symbol extends graphic.Group {
 
             focus = emphasisModel.get('focus');
             blurScope = emphasisModel.get('blurScope');
+            emphasisDisabled = emphasisModel.get('disabled');
 
             labelStatesModels = getLabelStatesModels(itemModel);
 
@@ -337,25 +337,24 @@ class Symbol extends graphic.Group {
         symbolPath.ensureState('blur').style = blurItemStyle;
 
         if (hoverScale) {
-            const scaleRatio = Math.max(1.1, 3 / this._sizeY);
+            const scaleRatio = Math.max(isNumber(hoverScale) ? hoverScale : 1.1, 3 / this._sizeY);
             emphasisState.scaleX = this._sizeX * scaleRatio;
             emphasisState.scaleY = this._sizeY * scaleRatio;
         }
         this.setSymbolScale(1);
 
-        enableHoverEmphasis(this, focus, blurScope);
+        toggleHoverEmphasis(this, focus, blurScope, emphasisDisabled);
     }
 
     setSymbolScale(scale: number) {
         this.scaleX = this.scaleY = scale;
     }
 
-    fadeOut(cb: () => void, opt?: {
+    fadeOut(cb: () => void, seriesModel: Model<AnimationOptionMixin>, opt?: {
         fadeLabel: boolean,
         animation?: AnimationOption
     }) {
         const symbolPath = this.childAt(0) as ECSymbol;
-        const seriesModel = this._seriesModel;
         const dataIndex = getECData(this).dataIndex;
         const animationOpt = opt && opt.animation;
         // Avoid mistaken hover when fading out

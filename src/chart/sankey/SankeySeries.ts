@@ -273,7 +273,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     }
 
     static defaultOption: SankeySeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
 
         coordinateSystem: 'view',

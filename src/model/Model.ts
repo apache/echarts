@@ -168,47 +168,6 @@ class Model<Opt = ModelOption> {    // TODO: TYPE use unknown instead of any?
     }
 
     /**
-     * Squash option stack into one.
-     * parentModel will be removed after squashed.
-     *
-     * NOTE: resolveParentPath will not be applied here for simplicity. DON'T use this function
-     * if resolveParentPath is modified.
-     *
-     * @param deepMerge If do deep merge. Default to be false.
-     */
-    // squash(
-    //     deepMerge?: boolean,
-    //     handleCallback?: (func: () => object) => object
-    // ) {
-    //     const optionStack = [];
-    //     let model: Model = this;
-    //     while (model) {
-    //         if (model.option) {
-    //             optionStack.push(model.option);
-    //         }
-    //         model = model.parentModel;
-    //     }
-
-    //     const newOption = {} as Opt;
-    //     let option;
-    //     while (option = optionStack.pop()) {    // Top down merge
-    //         if (isFunction(option) && handleCallback) {
-    //             option = handleCallback(option);
-    //         }
-    //         if (deepMerge) {
-    //             merge(newOption, option);
-    //         }
-    //         else {
-    //             extend(newOption, option);
-    //         }
-    //     }
-
-    //     // Remove parentModel
-    //     this.option = newOption;
-    //     this.parentModel = null;
-    // }
-
-    /**
      * If model has option
      */
     isEmpty(): boolean {

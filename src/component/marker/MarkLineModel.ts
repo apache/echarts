@@ -112,7 +112,7 @@ class MarkLineModel extends MarkerModel<MarkLineOption> {
     }
 
     static defaultOption: MarkLineOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 5,
 
         symbol: ['circle', 'arrow'],

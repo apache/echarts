@@ -126,6 +126,11 @@ class GraphView extends ChartView {
             const idx = node.dataIndex;
             const el = node.getGraphicEl() as Symbol;
             const itemModel = node.getModel<GraphNodeItemOption>();
+
+            if (!el) {
+                return;
+            }
+
             // Update draggable
             el.off('drag').off('dragend');
             const draggable = itemModel.get('draggable');
@@ -157,6 +162,10 @@ class GraphView extends ChartView {
         data.graph.eachEdge(function (edge) {
             const el = edge.getGraphicEl() as Line;
             const focus = edge.getModel<GraphEdgeItemOption>().get(['emphasis', 'focus']);
+
+            if (!el) {
+                return;
+            }
 
             if (focus === 'adjacency') {
                 getECData(el).focus = {
@@ -288,7 +297,7 @@ class GraphView extends ChartView {
         const nodeScale = getNodeGlobalScale(seriesModel);
 
         data.eachItemGraphicEl(function (el: Symbol, idx) {
-            el.setSymbolScale(nodeScale);
+            el && el.setSymbolScale(nodeScale);
         });
     }
 

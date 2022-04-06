@@ -22,7 +22,7 @@ import Geo, { geo2DDimensions } from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
-import GeoModel, { GeoOption, RegoinOption } from './GeoModel';
+import GeoModel, { GeoCommonOptionMixin, GeoOption, RegoinOption } from './GeoModel';
 import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemCreator } from '../CoordinateSystem';
@@ -32,6 +32,8 @@ import { SeriesOption, SeriesOnGeoOptionMixin } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
 import ComponentModel from '../../model/Component';
+import { Model } from '../../echarts.all';
+import * as vector from 'zrender/src/core/vector';
 
 
 export type resizeGeoType = typeof resizeGeo;
@@ -43,14 +45,48 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
 
     const boundingCoords = geoModel.get('boundingCoords');
     if (boundingCoords != null) {
-        const leftTop = boundingCoords[0];
-        const rightBottom = boundingCoords[1];
-        if (isNaN(leftTop[0]) || isNaN(leftTop[1]) || isNaN(rightBottom[0]) || isNaN(rightBottom[1])) {
+        let leftTop = boundingCoords[0];
+        let rightBottom = boundingCoords[1];
+        if (!(
+            isFinite(leftTop[0]) && isFinite(leftTop[1])
+            && isFinite(rightBottom[0]) && isFinite(rightBottom[1])
+        )) {
             if (__DEV__) {
                 console.error('Invalid boundingCoords');
             }
         }
         else {
+            // Sample around the lng/lat rect and use projection to calculate actual bounding rect.
+            const projection = this.projection;
+            if (projection) {
+                const xMin = leftTop[0];
+                const yMin = leftTop[1];
+                const xMax = rightBottom[0];
+                const yMax = rightBottom[1];
+                leftTop = [Infinity, Infinity];
+                rightBottom = [-Infinity, -Infinity];
+
+                // TODO better way?
+                const sampleLine = (x0: number, y0: number, x1: number, y1: number) => {
+                    const dx = x1 - x0;
+                    const dy = y1 - y0;
+                    for (let i = 0; i <= 100; i++) {
+                        const p = i / 100;
+                        const pt = projection.project([x0 + dx * p, y0 + dy * p]);
+                        vector.min(leftTop, leftTop, pt);
+                        vector.max(rightBottom, rightBottom, pt);
+                    }
+                };
+                // Top
+                sampleLine(xMin, yMin, xMax, yMin);
+                // Right
+                sampleLine(xMax, yMin, xMax, yMax);
+                // Bottom
+                sampleLine(xMax, yMax, xMin, yMax);
+                // Left
+                sampleLine(xMin, yMax, xMax, yMin);
+            }
+
             this.setBoundingRect(leftTop[0], leftTop[1], rightBottom[0] - leftTop[0], rightBottom[1] - leftTop[1]);
         }
     }
@@ -135,15 +171,21 @@ class GeoCreator implements CoordinateSystemCreator {
     create(ecModel: GlobalModel, api: ExtensionAPI): Geo[] {
         const geoList = [] as Geo[];
 
+        function getCommonGeoProperties(model: Model<GeoCommonOptionMixin>) {
+            return {
+                nameProperty: model.get('nameProperty'),
+                aspectScale: model.get('aspectScale'),
+                projection: model.get('projection')
+            };
+        }
+
         // FIXME Create each time may be slow
         ecModel.eachComponent('geo', function (geoModel: GeoModel, idx) {
-            const name = geoModel.get('map');
+            const mapName = geoModel.get('map');
 
-            const geo = new Geo(name + idx, name, {
-                nameMap: geoModel.get('nameMap'),
-                nameProperty: geoModel.get('nameProperty'),
-                aspectScale: geoModel.get('aspectScale')
-            });
+            const geo = new Geo(mapName + idx, mapName, zrUtil.extend({
+                nameMap: geoModel.get('nameMap')
+            }, getCommonGeoProperties(geoModel)));
 
             geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
@@ -185,11 +227,9 @@ class GeoCreator implements CoordinateSystemCreator {
                 return singleMapSeries.get('nameMap');
             });
 
-            const geo = new Geo(mapType, mapType, {
-                nameMap: zrUtil.mergeAll(nameMapList),
-                nameProperty: mapSeries[0].get('nameProperty'),
-                aspectScale: mapSeries[0].get('aspectScale')
-            });
+            const geo = new Geo(mapType, mapType, zrUtil.extend({
+                nameMap: zrUtil.mergeAll(nameMapList)
+            }, getCommonGeoProperties(mapSeries[0])));
 
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('scaleLimit');
