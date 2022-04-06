@@ -163,7 +163,7 @@ const attachedTxInfoTmp = {
 const prepareCustoms: Dictionary<PrepareCustomInfo> = {
     cartesian2d: prepareCartesian2d,
     geo: prepareGeo,
-    singleAxis: prepareSingleAxis,
+    single: prepareSingleAxis,
     polar: preparePolar,
     calendar: prepareCalendar
 };
