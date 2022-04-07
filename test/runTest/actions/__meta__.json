@@ -113,6 +113,7 @@
   "label-animation": 3,
   "label-layout": 4,
   "label-position": 1,
+  "label-verticalAlign": 2,
   "largeLine-tooltip": 1,
   "legend": 11,
   "legend-visualMapColor": 2,
