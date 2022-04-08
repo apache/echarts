@@ -60,4 +60,8 @@ github:
         required_approving_review_count: 1
       required_linear_history: false
       required_signatures: false
-
+  notifications:
+    commits: commits@echarts.apache.org
+    issues: issues@echarts.apache.org
+    pullrequests: pr@echarts.apache.org
+    jobs: notifications@echarts.apache.org
