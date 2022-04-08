@@ -560,8 +560,8 @@ class SliderZoomView extends DataZoomView {
                 r: borderRadius
             },
             style: {
-                stroke: dataZoomModel.get('dataBackgroundColor' as any) // deprecated option
-                    || dataZoomModel.get('borderColor'),
+                stroke: dataZoomModel.get('dataBackgroundColor' as any)
+                    || dataZoomModel.get('borderColor'), // deprecated option
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
                 fill: 'rgba(0,0,0,0)'
             }
