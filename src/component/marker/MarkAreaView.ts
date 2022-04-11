@@ -123,6 +123,10 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
         ) {
             return true;
         }
+        
+        /*Another zone filter is applied, which might not be necessary.
+        Directly returning true means displaying markArea component permanently,
+        but it won't hurt performance much and can sometimes save the work of filtering*/
         return markerHelper.zoneFilter(coordSys, {
             coord: fromCoord,
             x: item.x0,

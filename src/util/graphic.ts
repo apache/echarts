@@ -503,15 +503,14 @@ export function createIcon(
     rect1: vector.VectorArray[],
     rect2: vector.VectorArray[]
 ): boolean {
-    let a1x, a2x, a1y, a2y, b1x, b2x, b1y, b2y: number = 0;
-    a1x = Math.min(rect1[0][0],rect1[1][0]);
-    a2x = Math.max(rect1[0][0],rect1[1][0]);
-    a1y = Math.min(rect1[0][1],rect1[1][1]);
-    a2y = Math.max(rect1[0][1],rect1[1][1]);
-    b1x = Math.min(rect2[0][0],rect2[1][0]);
-    b2x = Math.max(rect2[0][0],rect2[1][0]);
-    b1y = Math.min(rect2[0][1],rect2[1][1]);
-    b2y = Math.max(rect2[0][1],rect2[1][1]);
+    const a1x = Math.min(rect1[0][0], rect1[1][0]);
+    const a2x = Math.max(rect1[0][0], rect1[1][0]);
+    const a1y = Math.min(rect1[0][1], rect1[1][1]);
+    const a2y = Math.max(rect1[0][1], rect1[1][1]);
+    const b1x = Math.min(rect2[0][0], rect2[1][0]);
+    const b2x = Math.max(rect2[0][0], rect2[1][0]);
+    const b1y = Math.min(rect2[0][1], rect2[1][1]);
+    const b2y = Math.max(rect2[0][1], rect2[1][1]);
     return !((a2x < b1x) || (a1y > b2y) || (a1x > b2x) || (a2y < b1y));
 }
 
