@@ -28,6 +28,7 @@ import Grid from './Grid';
 import Scale from '../../scale/Scale';
 import { invert } from 'zrender/src/core/matrix';
 import { applyTransform } from 'zrender/src/core/vector';
+import {rectRectIntersect} from '../../util/graphic'
 
 export const cartesian2DDimensions = ['x', 'y'];
 
@@ -103,6 +104,18 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     containData(data: ScaleDataValue[]): boolean {
         return this.getAxis('x').containData(data[0])
             && this.getAxis('y').containData(data[1]);
+    }
+
+    containZone(data1: ScaleDataValue[], data2: ScaleDataValue[]): boolean {
+        const zoneCorner1 = this.dataToPoint(data1);
+        const zoneCorner2 = this.dataToPoint(data2);
+        const area = this.getArea();
+        return rectRectIntersect(
+            [zoneCorner1,zoneCorner2],
+            [
+                [area.x,area.y], [area.x + area.width, area.y + area.height]
+            ]
+        )
     }
 
     dataToPoint(data: ScaleDataValue[], clamp?: boolean, out?: number[]): number[] {

@@ -494,6 +494,28 @@ export function createIcon(
 }
 
 /**
+ * Return `true` if the given two polygons are intersect.
+ * Note that we do not count colinear as intersect here because no
+ * requirement for that. We could do that if required in future.
+ * Input takes in the coordinates of the two diagonal points
+ */
+ export function rectRectIntersect(
+    rect1: vector.VectorArray[],
+    rect2: vector.VectorArray[]
+): boolean {
+    let a1x, a2x, a1y, a2y, b1x, b2x, b1y, b2y: number = 0;
+    a1x = Math.min(rect1[0][0],rect1[1][0]);
+    a2x = Math.max(rect1[0][0],rect1[1][0]);
+    a1y = Math.min(rect1[0][1],rect1[1][1]);
+    a2y = Math.max(rect1[0][1],rect1[1][1]);
+    b1x = Math.min(rect2[0][0],rect2[1][0]);
+    b2x = Math.max(rect2[0][0],rect2[1][0]);
+    b1y = Math.min(rect2[0][1],rect2[1][1]);
+    b2y = Math.max(rect2[0][1],rect2[1][1]);
+    return !((a2x < b1x) || (a1y > b2y) || (a1x > b2x) || (a2y < b1y));
+}
+
+/**
  * Return `true` if the given line (line `a`) and the given polygon
  * are intersect.
  * Note that we do not count colinear as intersect here because no

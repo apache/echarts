@@ -123,6 +123,17 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
         ) {
             return true;
         }
+        return markerHelper.zoneFilter(coordSys, {
+            coord: fromCoord,
+            x: item.x0,
+            y: item.y0
+        },
+        {
+            coord: toCoord,
+            x: item.x1,
+            y: item.y1
+        }
+        )
     }
     return markerHelper.dataFilter(coordSys, {
             coord: fromCoord,
