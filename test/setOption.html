@@ -44,11 +44,6 @@ under the License.
 
 
         <script>
-
-            var chart;
-            var myChart;
-            var option;
-
             require([
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
@@ -137,7 +132,7 @@ under the License.
                     return option;
                 }
 
-                chart = myChart = testHelper.create(echarts, 'main0', {
+                var chart = testHelper.create(echarts, 'main0', {
                     title: 'Click the two buttons. Animation should be appropriate, and dataZoom state should be kept.',
                     option: createOption('3series'),
                     buttons: Object.keys(seriesMap).map(function (name) {
@@ -179,8 +174,8 @@ under the License.
                         }
                     ]
                 };
-                chart = myChart = testHelper.create(echarts, 'main1', {
-                    title: 'Click the two buttons. Animation should be appropriate, and dataZoom state should be kept.',
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: 'The area polygon should be removed after the button is clicked',
                     option: option,
                     buttons: {
                         text: 'setOption: with notMerge mode' ,
@@ -189,7 +184,7 @@ under the License.
                                 s.step = 'end';
                                 delete s.areaStyle;
                             });
-                            myChart.setOption(option,{ notMerge: true });
+                            chart.setOption(option, { notMerge: true });
                         }
                     }
                 })

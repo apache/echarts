@@ -162,7 +162,7 @@
   "scatter-random-stream-fix-axis": 1,
   "scatter-single-axis": 2,
   "scatterMatrix": 3,
-  "setOption": 1,
+  "setOption": 2,
   "splitLine": 1,
   "stackBar-dataZoom": 7,
   "sunburst-book": 1,
