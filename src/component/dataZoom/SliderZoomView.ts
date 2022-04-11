@@ -131,6 +131,7 @@ class SliderZoomView extends DataZoomView {
     private _shadowSize: number[];
     private _shadowPolygonPts: number[][];
     private _shadowPolylinePts: number[][];
+    private _valueRange: number[] = [];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -815,6 +816,7 @@ class SliderZoomView extends DataZoomView {
                         start: range[0], end: range[1]
                     }).valueWindow
                     : axisProxy.getDataValueWindow();
+                this._valueRange = dataInterval;
 
                 labelTexts = [
                     this._formatLabel(dataInterval[0], axis),
@@ -1048,7 +1050,9 @@ class SliderZoomView extends DataZoomView {
             dataZoomId: this.dataZoomModel.id,
             animation: realtime ? REALTIME_ANIMATION_CONFIG : null,
             start: range[0],
-            end: range[1]
+            end: range[1],
+            startValue: this._valueRange[0],
+            endValue: this._valueRange[1]
         });
     }
 
