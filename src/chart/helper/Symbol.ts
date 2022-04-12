@@ -144,7 +144,7 @@ class Symbol extends graphic.Group {
     setDraggable(draggable: boolean, hasCursorOption?: boolean) {
         const symbolPath = this.childAt(0) as ECSymbol;
         symbolPath.draggable = draggable;
-        symbolPath.cursor = hasCursorOption ? symbolPath.cursor : draggable ? 'move' : symbolPath.cursor;
+        symbolPath.cursor = !hasCursorOption && draggable ? 'move' : symbolPath.cursor;
     }
 
     /**
