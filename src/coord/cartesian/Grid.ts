@@ -24,12 +24,12 @@
  */
 
 import {isObject, each, indexOf, retrieve3, keys} from 'zrender/src/core/util';
-import {getLayoutRect, LayoutRect} from '../../util/layout';
+import {box, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
     ifAxisCrossZero,
     niceScaleExtent,
-    estimateLabelUnionRect,
+    estimateLabelRect,
     getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
@@ -188,7 +188,7 @@ class Grid implements CoordinateSystemMaster {
         if (isContainLabel) {
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
-                    const labelUnionRect = estimateLabelUnionRect(axis);
+                    const labelUnionRect = estimateLabelRect(axis).rect;
                     if (labelUnionRect) {
                         const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
                         const margin = axis.model.get(['axisLabel', 'margin']);
@@ -202,6 +202,35 @@ class Grid implements CoordinateSystemMaster {
                     }
                 }
             });
+            //Adjust grid.width to keep xAxis labels in dom
+            const [xAxis, yAxis] = axesList[0].isHorizontal() ? axesList : axesList.slice().reverse();
+            const {firstLabelRect, lastLabelRect} = estimateLabelRect(xAxis);
+            const labelUnionRect = estimateLabelRect(yAxis).rect;
+            const margin = xAxis.model.get(['axisLabel', 'margin']);
+            //When yAxis is on the right, check the left margin instead
+            if (yAxis.position === 'right') {
+                if (firstLabelRect.width/2 >= boxLayoutParams.left) {
+                    gridRect.width -= firstLabelRect.width/2 - Number(boxLayoutParams.left) + margin;
+                    gridRect.x += firstLabelRect.width/2 - Number(boxLayoutParams.left) + margin;
+                }
+            }
+            else {
+                //Long last label exceeds the right boundary
+                if (lastLabelRect.width/2 >= boxLayoutParams.right) {
+                    gridRect.width -= lastLabelRect.width/2 - Number(boxLayoutParams.right) + margin;
+                }
+                //Long first label still exceeds the left boundary even when yAxis on the left
+                if (firstLabelRect.width/2 >= Number(boxLayoutParams.left) + labelUnionRect.width) {
+                    gridRect.width -= firstLabelRect.width/2 
+                    - Number(boxLayoutParams.left) 
+                    - labelUnionRect.width 
+                    + margin;
+                    gridRect.x += firstLabelRect.width/2 
+                    - Number(boxLayoutParams.left) 
+                    - labelUnionRect.width 
+                    + margin;
+                }
+            }
 
             adjustAxes();
         }

@@ -292,9 +292,9 @@ export function getAxisRawValue(axis: Axis, tick: ScaleTick): number | string {
 
 /**
  * @param axis
- * @return Be null/undefined if no labels.
+ * @return Return the largest, first and the last label BoundingRects. Be null/undefined if no labels.
  */
-export function estimateLabelUnionRect(axis: Axis) {
+export function estimateLabelRect(axis: Axis) {
     const axisModel = axis.model;
     const scale = axis.scale;
 
@@ -319,6 +319,8 @@ export function estimateLabelUnionRect(axis: Axis) {
     const labelFormatter = makeLabelFormatter(axis);
 
     let rect;
+    let firstLabelRect;
+    let lastLabelRect;
     let step = 1;
     // Simple optimization for large amount of labels
     if (tickCount > 40) {
@@ -333,11 +335,16 @@ export function estimateLabelUnionRect(axis: Axis) {
         const label = labelFormatter(tick, i);
         const unrotatedSingleRect = axisLabelModel.getTextRect(label);
         const singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
-
+        if (i === 0) {
+            firstLabelRect = new BoundingRect(singleRect.x, singleRect.y, singleRect.width, singleRect.height);
+        }
+        if (i + step >= tickCount) {
+            lastLabelRect = new BoundingRect(singleRect.x, singleRect.y, singleRect.width, singleRect.height);
+        }
         rect ? rect.union(singleRect) : (rect = singleRect);
     }
 
-    return rect;
+    return {rect, firstLabelRect, lastLabelRect};
 }
 
 function rotateTextRect(textRect: RectLike, rotate: number) {
