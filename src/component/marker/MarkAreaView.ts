@@ -136,8 +136,8 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
             x: item.x1,
             y: item.y1
         }
-        )
-    };
+        );
+    }
     return markerHelper.dataFilter(coordSys, {
             coord: fromCoord,
             x: item.x0,
