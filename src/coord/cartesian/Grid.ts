@@ -179,9 +179,8 @@ class Grid implements CoordinateSystemMaster {
             });
 
         this._rect = gridRect;
-
+        
         const axesList = this._axesList;
-
         adjustAxes();
 
         // Minus label size
@@ -209,32 +208,30 @@ class Grid implements CoordinateSystemMaster {
             const margin = xAxis.model.get(['axisLabel', 'margin']);
             //When yAxis is on the right, check the left margin instead
             if (yAxis.position === 'right') {
-                if (firstLabelRect.width/2 >= boxLayoutParams.left) {
-                    gridRect.width -= firstLabelRect.width/2 - Number(boxLayoutParams.left) + margin;
-                    gridRect.x += firstLabelRect.width/2 - Number(boxLayoutParams.left) + margin;
+                if (firstLabelRect.width / 2 >= boxLayoutParams.left) {
+                    gridRect.width -= firstLabelRect.width / 2 - Number(boxLayoutParams.left) + margin;
+                    gridRect.x += firstLabelRect.width / 2 - Number(boxLayoutParams.left) + margin;
                 }
             }
             else {
                 //Long last label exceeds the right boundary
-                if (lastLabelRect.width/2 >= boxLayoutParams.right) {
-                    gridRect.width -= lastLabelRect.width/2 - Number(boxLayoutParams.right) + margin;
+                if (lastLabelRect.width / 2 >= boxLayoutParams.right) {
+                    gridRect.width -= lastLabelRect.width / 2 - Number(boxLayoutParams.right) + margin;
                 }
                 //Long first label still exceeds the left boundary even when yAxis on the left
-                if (firstLabelRect.width/2 >= Number(boxLayoutParams.left) + labelUnionRect.width) {
-                    gridRect.width -= firstLabelRect.width/2 
+                if (firstLabelRect.width / 2 >= Number(boxLayoutParams.left) + labelUnionRect.width) {
+                    gridRect.width -= firstLabelRect.width / 2 
                     - Number(boxLayoutParams.left) 
                     - labelUnionRect.width 
                     + margin;
-                    gridRect.x += firstLabelRect.width/2 
+                    gridRect.x += firstLabelRect.width / 2 
                     - Number(boxLayoutParams.left) 
                     - labelUnionRect.width 
                     + margin;
                 }
             }
-
             adjustAxes();
         }
-
         each(this._coordsList, function (coord) {
             // Calculate affine matrix to accelerate the data to point transform.
             // If all the axes scales are time or value.
