@@ -199,7 +199,7 @@ export function dataFilter(
 export function zoneFilter(
     // Currently only polar and cartesian has containData.
     coordSys: CoordinateSystem & {
-        containZone?(data1: ScaleDataValue[],data2: ScaleDataValue[]): boolean
+        containZone?(data1: ScaleDataValue[], data2: ScaleDataValue[]): boolean
     },
     item1: MarkerPositionOption,
     item2: MarkerPositionOption
