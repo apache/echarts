@@ -29,16 +29,16 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
+        id: cache-dep
         uses: actions/cache@v3
         env:
           cache-name: cache-node-modules
         with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
+          path: node_modules
           key: ${{ runner.os }}-lint-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache-dep.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Collect changed files
@@ -69,16 +69,16 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
+        id: cache-dep
         uses: actions/cache@v3
         env:
           cache-name: cache-node-modules
         with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
+          path: node_modules
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache-dep.outputs.cache-hit != 'true'
         run: npm ci
 
       - name: Build release
