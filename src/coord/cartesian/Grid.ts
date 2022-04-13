@@ -179,7 +179,6 @@ class Grid implements CoordinateSystemMaster {
             });
 
         this._rect = gridRect;
-        
         const axesList = this._axesList;
         adjustAxes();
 
@@ -220,14 +219,8 @@ class Grid implements CoordinateSystemMaster {
                 }
                 //Long first label still exceeds the left boundary even when yAxis on the left
                 if (firstLabelRect.width / 2 >= Number(boxLayoutParams.left) + labelUnionRect.width) {
-                    gridRect.width -= firstLabelRect.width / 2 
-                    - Number(boxLayoutParams.left) 
-                    - labelUnionRect.width 
-                    + margin;
-                    gridRect.x += firstLabelRect.width / 2 
-                    - Number(boxLayoutParams.left) 
-                    - labelUnionRect.width 
-                    + margin;
+                    gridRect.width -= firstLabelRect.width / 2 - Number(boxLayoutParams.left) - labelUnionRect.width + margin;
+                    gridRect.x += firstLabelRect.width / 2 - Number(boxLayoutParams.left) - labelUnionRect.width + margin;
                 }
             }
             adjustAxes();
