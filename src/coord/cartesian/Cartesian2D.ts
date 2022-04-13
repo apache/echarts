@@ -28,7 +28,6 @@ import Grid from './Grid';
 import Scale from '../../scale/Scale';
 import { invert } from 'zrender/src/core/matrix';
 import { applyTransform } from 'zrender/src/core/vector';
-import {rectRectIntersect} from '../../util/graphic'
 
 export const cartesian2DDimensions = ['x', 'y'];
 
@@ -107,15 +106,14 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     }
 
     containZone(data1: ScaleDataValue[], data2: ScaleDataValue[]): boolean {
-        const zoneCorner1 = this.dataToPoint(data1);
-        const zoneCorner2 = this.dataToPoint(data2);
+        const zoneDiag1 = this.dataToPoint(data1);
+        const zoneDiag2 = this.dataToPoint(data2);
         const area = this.getArea();
-        return rectRectIntersect(
-            [zoneCorner1,zoneCorner2],
-            [
-                [area.x,area.y], [area.x + area.width, area.y + area.height]
-            ]
-        )
+        const zoneX = Math.min(zoneDiag1[0],zoneDiag2[0]);
+        const zoneWidth = Math.max(zoneDiag1[0],zoneDiag2[0]) - zoneX;
+        const zoneY = Math.min(zoneDiag1[1],zoneDiag2[1]);
+        const zoneHeight = Math.max(zoneDiag1[1],zoneDiag2[1]) - zoneY;
+        return area.intersect(new BoundingRect(zoneX, zoneY, zoneWidth, zoneHeight));
     }
 
     dataToPoint(data: ScaleDataValue[], clamp?: boolean, out?: number[]): number[] {
