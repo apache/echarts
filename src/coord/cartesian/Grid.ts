@@ -218,9 +218,10 @@ class Grid implements CoordinateSystemMaster {
                     gridRect.width -= lastLabelRect.width / 2 - Number(boxLayoutParams.right) + margin;
                 }
                 //Long first label still exceeds the left boundary even when yAxis on the left
-                if (firstLabelRect.width / 2 >= Number(boxLayoutParams.left) + labelUnionRect.width) {
-                    gridRect.width -= firstLabelRect.width / 2 - Number(boxLayoutParams.left) - labelUnionRect.width + margin;
-                    gridRect.x += firstLabelRect.width / 2 - Number(boxLayoutParams.left) - labelUnionRect.width + margin;
+                let leftMargin = Number(boxLayoutParams.left);
+                if (firstLabelRect.width / 2 >= leftMargin + labelUnionRect.width) {
+                    gridRect.width -= firstLabelRect.width / 2 - leftMargin - labelUnionRect.width + margin;
+                    gridRect.x += firstLabelRect.width / 2 - leftMargin - labelUnionRect.width + margin;
                 }
             }
             adjustAxes();
