@@ -110,9 +110,9 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         const zoneDiag2 = this.dataToPoint(data2);
         const area = this.getArea();
         const zone = new BoundingRect(
-            zoneDiag1[0], 
-            zoneDiag1[1], 
-            zoneDiag2[0] - zoneDiag1[0], 
+            zoneDiag1[0],
+            zoneDiag1[1],
+            zoneDiag2[0] - zoneDiag1[0],
             zoneDiag2[1] - zoneDiag1[1]);
         return area.intersect(zone);
     }
