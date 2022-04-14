@@ -26,7 +26,8 @@ import {
     isString,
     isObject,
     isTypedArray,
-    HashMap
+    HashMap,
+    filter
 } from 'zrender/src/core/util';
 import { Source } from '../Source';
 
@@ -322,7 +323,7 @@ export function queryDatasetUpstreamDatasetModels(
         return [];
     }
 
-    return queryReferringComponents(
+    return filter(queryReferringComponents(
         datasetModel.ecModel,
         'dataset',
         {
@@ -330,7 +331,7 @@ export function queryDatasetUpstreamDatasetModels(
             id: datasetModel.get('fromDatasetId', true)
         },
         SINGLE_REFERRING
-    ).models as DatasetModel[];
+    ).models as DatasetModel[], model => model !== datasetModel);
 }
 
 /**
