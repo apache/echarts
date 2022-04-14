@@ -133,7 +133,7 @@
   "map-parallel": 1,
   "map-province": 1,
   "mapWorld": 1,
-  "markArea": 2,
+  "markArea": 3,
   "media-dataZoom": 1,
   "media-finance": 2,
   "media-pie": 1,
