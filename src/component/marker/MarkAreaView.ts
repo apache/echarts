@@ -123,9 +123,11 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
         ) {
             return true;
         }
-        //Another zone filter is applied, which might not be necessary.
-        //Directly returning true means displaying markArea component permanently,
-        //but it won't hurt performance much and can sometimes save the work of filtering
+        //Directly returning true may also do the work,
+        //because markArea will not be shown automatically
+        //when it's not included in coordinate system.
+        //But filtering ahead can avoid keeping rendering markArea
+        //when there are too many of them.
         return markerHelper.zoneFilter(coordSys, {
             coord: fromCoord,
             x: item.x0,
