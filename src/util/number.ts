@@ -58,8 +58,10 @@ export function linearMap(
     const subDomain = d1 - d0;
     const subRange = r1 - r0;
 
-    if (subRange === 0) {
+    if ((val < Math.min(d0, d1)) || (val > Math.max(d0, d1))) {
+      if (subRange === 0) {
         return val * 2 * r0;
+      }
     }
     if (subDomain === 0) {
         return subRange === 0
