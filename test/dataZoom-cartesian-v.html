@@ -23,6 +23,7 @@ under the License.
         <meta charset="utf-8">
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
     </head>
     <body>
         <style>
@@ -32,6 +33,8 @@ under the License.
             }
         </style>
         <div id="main"></div>
+        <div id="main1" style="width: 800px; height: 400px;"></div>
+        <div id="main2" style="width: 800px; height: 400px;"></div>
         <script>
 
             require([
@@ -90,6 +93,92 @@ under the License.
                         yAxisIndex: [0]
                     }
                 });
+            })
+
+        </script>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main1'), null, {});
+            chart.setOption( option={
+                    title:{
+                        text: 'Zoom(scrollbar) in to one column'
+                    },
+                    xAxis: { min: 0, max: 4, data: ["a", "b", "c"], type: "category" },
+                    yAxis: { min: 0, max: 70 },
+                    toolbox: {
+                        feature: {
+                        dataZoom: {
+                            brushStyle: { color: "rgba(0, 145, 255, 0.5)" },
+                            filterMode: "none" // prevents that lines disappear when zooming in
+                        },
+                        restore: {}
+                        }
+                    },
+                    series: [
+                        {
+                        name: "category 1",
+                        data: [
+                            ["a", 10],
+                            ["a", 40]
+                        ],
+                        type: "scatter"
+                        },
+                        {
+                        name: "category 2",
+                        data: [
+                            ["b", 20],
+                            ["b", 50]
+                        ],
+                        type: "line"
+                        },
+                        {
+                        name: "category 3",
+                        data: [
+                            ["c", 30],
+                            ["c", 60]
+                        ],
+                        type: "scatter"
+                        }
+                    ]
+                });
+                // chart = testHelper.create(echarts, 'main1', {
+                //     title: 'Zoom in to one category column',
+                //     option: option
+                // });
+            })
+
+        </script>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main2'), null, {});
+                chart.setOption( option = {
+                    title:{
+                        text: 'Zoom(inside) in to one column'
+                    },
+                    dataZoom: [
+                        { filterMode: 'none', type: 'inside', xAxisIndex: [0] },
+                        { filterMode: 'none', type: 'inside', yAxisIndex: [0] }
+                    ],
+                    xAxis: { type: 'category', data: ['Mon', 'Tue'] },
+                    yAxis: { type: 'value' },
+                    series: [
+                        {
+                        data: [
+                            { value: 20, itemStyle: { color: 'green' } },
+                            { value: 200, itemStyle: { color: 'red' } }
+                        ],
+                        type: 'bar'
+                        }
+                    ]
+                });
+                // chart = testHelper.create(echarts, 'main1', {
+                //     title: 'Zoom in to one category column',
+                //     option: option
+                // });
             })
 
         </script>
