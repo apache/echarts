@@ -45,7 +45,7 @@ export function updateCenterAndZoom(
     }
 ) {
     const previousZoom = view.getZoom();
-    const center = view.getCenter();
+    const center = view.getDefaultCenter();
     let zoom = payload.zoom;
 
     const point = (view as Geo).projectedToPoint
@@ -84,7 +84,7 @@ export function updateCenterAndZoom(
     }
 
     return {
-        center: view.getCenter(),
+        center: view.getDefaultCenter(),
         zoom: view.getZoom()
     };
 }
