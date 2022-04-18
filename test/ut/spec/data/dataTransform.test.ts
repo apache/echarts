@@ -58,12 +58,12 @@ describe('dataTransform', function () {
         };
     }
 
-    it('forbid_seriesLayoutBy_row', function () {
+    it('forbid_sourceLayout_row', function () {
         const option: EChartsOption = {
             dataset: [{
                 source: makeDatasetSourceDetection(),
                 // This config should cause error thrown.
-                seriesLayoutBy: 'row'
+                sourceLayout: 'row'
             }, {
                 transform: { type: 'filter', config: { dimension: 0, ne: '' } }
             }],
@@ -77,14 +77,14 @@ describe('dataTransform', function () {
         }).toThrowError(/column/);
     });
 
-    it('seriesLayoutBy_changed_no_transform', function () {
+    it('sourceLayout_changed_no_transform', function () {
         const option: EChartsOption = {
             dataset: {
                 source: makeDatasetSourceDetection()
             },
             xAxis: { type: 'category' },
             yAxis: {},
-            series: { type: 'bar', seriesLayoutBy: 'row' }
+            series: { type: 'bar', sourceLayout: 'row' }
         };
 
         chart.setOption(option);
@@ -103,14 +103,14 @@ describe('dataTransform', function () {
             { type: 'filter', config: { dimension: 'product', '!=': 'XXX' } }
         ]
     }].forEach((dataset1, itIdx) => {
-        it(`seriesLayoutBy_changed_transform_detection_${itIdx}`, function () {
+        it(`sourceLayout_changed_transform_detection_${itIdx}`, function () {
             const option: EChartsOption = {
                 dataset: [{
                     source: makeDatasetSourceDetection()
                 }, dataset1],
                 xAxis: { type: 'category' },
                 yAxis: {},
-                series: { type: 'bar', datasetIndex: 1, seriesLayoutBy: 'row' }
+                series: { type: 'bar', datasetIndex: 1, sourceLayout: 'row' }
             };
 
             chart.setOption(option);
@@ -134,7 +134,7 @@ describe('dataTransform', function () {
             { type: 'filter', config: { dimension: 0, '!=': 'XXX' } }
         ]
     }].forEach((dataset1, itIdx) => {
-        it(`seriesLayoutBy_changed_transform_non_detection_${itIdx}`, function () {
+        it(`sourceLayout_changed_transform_non_detection_${itIdx}`, function () {
             const sourceWrap = makeDatasetSourceNonDetectionByRow();
             const option: EChartsOption = {
                 dataset: [{
@@ -143,7 +143,7 @@ describe('dataTransform', function () {
                 }, dataset1],
                 xAxis: {},
                 yAxis: {},
-                series: { type: 'bar', datasetIndex: 1, seriesLayoutBy: 'row' }
+                series: { type: 'bar', datasetIndex: 1, sourceLayout: 'row' }
             };
 
             chart.setOption(option);
