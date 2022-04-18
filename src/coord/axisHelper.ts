@@ -336,10 +336,10 @@ export function estimateLabelRect(axis: Axis) {
         const unrotatedSingleRect = axisLabelModel.getTextRect(label);
         const singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
         if (i === 0) {
-            firstLabelRect = new BoundingRect(singleRect.x, singleRect.y, singleRect.width, singleRect.height);
+            firstLabelRect = singleRect.clone();
         }
         if (i + step >= tickCount) {
-            lastLabelRect = new BoundingRect(singleRect.x, singleRect.y, singleRect.width, singleRect.height);
+            lastLabelRect = singleRect.clone();
         }
         rect ? rect.union(singleRect) : (rect = singleRect);
     }
