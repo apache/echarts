@@ -209,11 +209,11 @@ class Grid implements CoordinateSystemMaster {
             const rightTick = xAxis.inverse ? tickCoord[0] : tickCoord[tickCoord.length - 1];
             const leftExceed = leftTick.coord
                              + gridRect.x
-                             - labelRects[leftTick.tickValue].width/2;
+                             - labelRects[leftTick.tickValue].width / 2;
             const rightExceed = rightTick.coord
-                              + labelRects[rightTick.tickValue].width/2
+                              + labelRects[rightTick.tickValue].width / 2
                               - Number(boxLayoutParams.right)
-                              -gridRect.width;
+                              - gridRect.width;
             //A buffer to complement the performance in different screen
             const MARGIN_BUFFER = 20;
             //Check left margin
