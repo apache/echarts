@@ -186,7 +186,7 @@ class Grid implements CoordinateSystemMaster {
         if (isContainLabel) {
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
-                    const labelUnionRect = estimateLabelRect(axis).rect;
+                    const {labelUnionRect} = estimateLabelRect(axis);
                     if (labelUnionRect) {
                         const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
                         const margin = axis.model.get(['axisLabel', 'margin']);
@@ -200,29 +200,29 @@ class Grid implements CoordinateSystemMaster {
                     }
                 }
             });
+            adjustAxes();
             //Adjust grid.width to keep xAxis labels in dom
-            const [xAxis, yAxis] = axesList[0].isHorizontal() ? axesList : axesList.slice().reverse();
-            const {firstLabelRect, lastLabelRect} = estimateLabelRect(xAxis);
-            const labelUnionRect = estimateLabelRect(yAxis).rect;
-            const margin = xAxis.model.get(['axisLabel', 'margin']);
-            //When yAxis is on the right, check the left margin instead
-            if (yAxis.position === 'right') {
-                if (firstLabelRect.width / 2 >= boxLayoutParams.left) {
-                    gridRect.width -= firstLabelRect.width / 2 - Number(boxLayoutParams.left) + margin;
-                    gridRect.x += firstLabelRect.width / 2 - Number(boxLayoutParams.left) + margin;
-                }
+            const xAxis = axesList[0].isHorizontal() ? axesList[0] : axesList[1];
+            const {labelRects} = estimateLabelRect(xAxis);
+            const tickCoord = xAxis.getTicksCoords();
+            const leftTick = xAxis.inverse ? tickCoord[tickCoord.length - 1] : tickCoord[0];
+            const rightTick = xAxis.inverse ? tickCoord[0] : tickCoord[tickCoord.length - 1];
+            const leftExceed = leftTick.coord
+                             + gridRect.x
+                             - labelRects[leftTick.tickValue].width/2;
+            const rightExceed = rightTick.coord
+                              + labelRects[rightTick.tickValue].width/2
+                              - Number(boxLayoutParams.right)
+                              -gridRect.width;
+            //A buffer to complement the performance in different screen
+            const MARGIN_BUFFER = 20;
+            //Check left margin
+            if (leftExceed < 0) {
+                gridRect.width -= -leftExceed + MARGIN_BUFFER;
+                gridRect.x += -leftExceed + MARGIN_BUFFER;
             }
-            else {
-                //Long last label exceeds the right boundary
-                if (lastLabelRect.width / 2 >= boxLayoutParams.right) {
-                    gridRect.width -= lastLabelRect.width / 2 - Number(boxLayoutParams.right) + margin;
-                }
-                //Long first label still exceeds the left boundary even when yAxis on the left
-                let leftMargin = Number(boxLayoutParams.left);
-                if (firstLabelRect.width / 2 >= leftMargin + labelUnionRect.width) {
-                    gridRect.width -= firstLabelRect.width / 2 - leftMargin - labelUnionRect.width + margin;
-                    gridRect.x += firstLabelRect.width / 2 - leftMargin - labelUnionRect.width + margin;
-                }
+            if (rightExceed > 0) {
+                gridRect.width -= rightExceed + MARGIN_BUFFER;
             }
             adjustAxes();
         }

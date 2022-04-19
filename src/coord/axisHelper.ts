@@ -318,9 +318,8 @@ export function estimateLabelRect(axis: Axis) {
     const axisLabelModel = axis.getLabelModel();
     const labelFormatter = makeLabelFormatter(axis);
 
-    let rect;
-    let firstLabelRect;
-    let lastLabelRect;
+    let labelUnionRect;
+    let labelRects = [];
     let step = 1;
     // Simple optimization for large amount of labels
     if (tickCount > 40) {
@@ -335,16 +334,11 @@ export function estimateLabelRect(axis: Axis) {
         const label = labelFormatter(tick, i);
         const unrotatedSingleRect = axisLabelModel.getTextRect(label);
         const singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
-        if (i === 0) {
-            firstLabelRect = singleRect.clone();
-        }
-        if (i + step >= tickCount) {
-            lastLabelRect = singleRect.clone();
-        }
-        rect ? rect.union(singleRect) : (rect = singleRect);
+        labelRects.push(singleRect.clone());
+        labelUnionRect ? labelUnionRect.union(singleRect) : (labelUnionRect = singleRect);
     }
 
-    return {rect, firstLabelRect, lastLabelRect};
+    return {labelUnionRect, labelRects};
 }
 
 function rotateTextRect(textRect: RectLike, rotate: number) {
