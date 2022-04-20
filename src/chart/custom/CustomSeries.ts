@@ -319,7 +319,7 @@ export type CustomSeriesRenderItem = (
     api: CustomSeriesRenderItemAPI
 ) => CustomSeriesRenderItemReturn;
 
-export interface CustomSeriesOption extends
+export interface CustomSeriesOption<TCbParams = never> extends
     SeriesOption<unknown>,    // don't support StateOption in custom series.
     SeriesEncodeOptionMixin,
     SeriesOnCartesianOptionMixin,
@@ -338,7 +338,7 @@ export interface CustomSeriesOption extends
     /**
      * @deprecated
      */
-    itemStyle?: ItemStyleOption;
+    itemStyle?: ItemStyleOption<TCbParams>;
     /**
      * @deprecated
      */
