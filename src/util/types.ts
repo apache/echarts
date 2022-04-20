@@ -873,7 +873,7 @@ export interface RoamOptionMixin {
     /**
      * Current center position.
      */
-    center?: number[]
+    center?: (number | string)[]
     /**
      * Current zoom level. Default is 1
      */

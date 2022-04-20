@@ -29,6 +29,7 @@ import Transformable from 'zrender/src/core/Transformable';
 import { CoordinateSystemMaster, CoordinateSystem } from './CoordinateSystem';
 import GlobalModel from '../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../util/model';
+import { parsePercent } from '../util/number';
 
 const v2ApplyTransform = vector.applyTransform;
 
@@ -127,11 +128,13 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     /**
      * Set center of view
      */
-    setCenter(centerCoord?: number[]): void {
+    setCenter(centerCoord?: (number | string)[]): void {
         if (!centerCoord) {
             return;
         }
-        this._center = centerCoord;
+        const rect = this.getBoundingRect();
+
+        this._center = [parsePercent(centerCoord[0], rect.width), parsePercent(centerCoord[1], rect.height)];
 
         this._updateCenterAndZoom();
     }
