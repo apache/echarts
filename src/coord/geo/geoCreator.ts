@@ -185,7 +185,7 @@ class GeoCreator implements CoordinateSystemCreator {
 
             const geo = new Geo(mapName + idx, mapName, zrUtil.extend({
                 nameMap: geoModel.get('nameMap')
-            }, getCommonGeoProperties(geoModel)));
+            }, getCommonGeoProperties(geoModel)), api);
 
             geo.zoomLimit = geoModel.get('scaleLimit');
             geoList.push(geo);
@@ -229,7 +229,7 @@ class GeoCreator implements CoordinateSystemCreator {
 
             const geo = new Geo(mapType, mapType, zrUtil.extend({
                 nameMap: zrUtil.mergeAll(nameMapList)
-            }, getCommonGeoProperties(mapSeries[0])));
+            }, getCommonGeoProperties(mapSeries[0])), api);
 
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
                 return singleMapSeries.get('scaleLimit');

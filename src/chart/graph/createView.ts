@@ -77,7 +77,7 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             const viewWidth = viewRect.width;
             const viewHeight = viewRect.height;
 
-            const viewCoordSys = seriesModel.coordinateSystem = new View();
+            const viewCoordSys = seriesModel.coordinateSystem = new View(undefined, api);
             viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
             viewCoordSys.setBoundingRect(

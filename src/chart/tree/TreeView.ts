@@ -252,7 +252,7 @@ class TreeView extends ChartView {
             max[1] = oldMax ? oldMax[1] : max[1] + 1;
         }
 
-        const viewCoordSys = seriesModel.coordinateSystem = new View();
+        const viewCoordSys = seriesModel.coordinateSystem = new View(undefined, api);
         viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
         viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);

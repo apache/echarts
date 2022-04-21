@@ -30,6 +30,7 @@ import { CoordinateSystemMaster, CoordinateSystem } from './CoordinateSystem';
 import GlobalModel from '../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../util/model';
 import { parsePercent } from '../util/number';
+import type ExtensionAPI from '../core/ExtensionAPI';
 
 const v2ApplyTransform = vector.applyTransform;
 
@@ -82,11 +83,12 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * The unit of `View['_viewRect']` is pixel of the canvas.
      */
     private _viewRect: BoundingRect;
+    private api: ExtensionAPI;
 
-
-    constructor(name?: string) {
+    constructor(name?: string, api?: ExtensionAPI) {
         super();
         this.name = name;
+        this.api = api;
     }
 
     setBoundingRect(x: number, y: number, width: number, height: number): BoundingRect {
@@ -132,10 +134,10 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         if (!centerCoord) {
             return;
         }
-        const rect = this.getBoundingRect();
-
-        this._center = [parsePercent(centerCoord[0], rect.width), parsePercent(centerCoord[1], rect.height)];
-
+        this._center = [
+            parsePercent(centerCoord[0], this.api.getWidth()),
+            parsePercent(centerCoord[1], this.api.getHeight())
+        ];
         this._updateCenterAndZoom();
     }
 

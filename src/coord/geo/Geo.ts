@@ -28,6 +28,7 @@ import { ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING } from '../
 import GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
 import { warn } from '../../util/log';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 
 const GEO_DEFAULT_PARAMS: {
     [type in GeoResource['type']]: {
@@ -79,9 +80,10 @@ class Geo extends View {
             nameMap?: NameMap;
             nameProperty?: string;
             aspectScale?: number;
-        }
+        },
+        api: ExtensionAPI
     ) {
-        super(name);
+        super(name, api);
 
         this.map = map;
 
