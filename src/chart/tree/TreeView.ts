@@ -172,7 +172,7 @@ class TreeView extends ChartView {
             group.y = layoutInfo.y;
         }
 
-        this._updateViewCoordSys(seriesModel);
+        this._updateViewCoordSys(seriesModel, api);
         this._updateController(seriesModel, ecModel, api);
 
         const oldData = this._data;
@@ -224,7 +224,7 @@ class TreeView extends ChartView {
         this._data = data;
     }
 
-    _updateViewCoordSys(seriesModel: TreeSeriesModel) {
+    _updateViewCoordSys(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const points: number[][] = [];
         data.each(function (idx) {
