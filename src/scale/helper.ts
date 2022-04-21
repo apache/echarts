@@ -128,7 +128,15 @@ export function contain(val: number, extent: [number, number]): boolean {
 
 export function normalize(val: number, extent: [number, number]): number {
     if (extent[1] === extent[0]) {
-        return val - extent[0] + 0.5;
+        if (val < extent[0]) {
+            return -0.5
+        }
+        else if (val > extent[0]) {
+            return 1.5
+        }
+        else {
+            return 0.5
+        }
     }
     return (val - extent[0]) / (extent[1] - extent[0]);
 }

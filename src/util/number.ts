@@ -63,12 +63,6 @@ export function linearMap(
             ? r0
             : (r0 + r1) / 2;
     }
-    if ((val < Math.min(d0, d1)) || (val > Math.max(d0, d1))) {
-        if (subRange === 0) {
-          return (val - d0) / subDomain * 2 * r0;
-        }
-    }
-
     // Avoid accuracy problem in edge, such as
     // 146.39 - 62.83 === 83.55999999999999.
     // See echarts/test/ut/spec/util/number.js#linearMap#accuracyError
