@@ -566,13 +566,13 @@ function getLegendStyle(
     const itemStyle = legendItemModel.getItemStyle();
     const iconBrushType = iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke';
     const decalStyle = legendItemModel.getShallow('decal', false);
-    if (decalStyle === 'inherit') {
+    if (!decalStyle || decalStyle === 'inherit') {
         itemStyle.decal = itemVisualStyle.decal;
-    } 
+    }
     else {
         itemStyle.decal = createOrUpdatePatternFromDecal(decalStyle, legendItemModel.ecModel.scheduler.api);
     }
-    
+
     if (itemStyle.fill === 'inherit') {
         /**
          * Series with visualDrawType as 'stroke' should have
