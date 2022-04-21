@@ -319,8 +319,8 @@ export function estimateLabelRect(axis: Axis) {
     const labelFormatter = makeLabelFormatter(axis);
 
     let labelUnionRect;
-    let labelRects = [];
     let step = 1;
+    const labelRects = [];
     // Simple optimization for large amount of labels
     if (tickCount > 40) {
         step = Math.ceil(tickCount / 40);

@@ -208,10 +208,10 @@ class Grid implements CoordinateSystemMaster {
             //Find all displayed labels and create the union rect of them
             const labelViews = xAxis.getViewLabels();
             let labelUnionRects: BoundingRect;
-            each(labelViews, function(label, index) {
-                let labelWidth = labelRects[label.tickValue].width;
-                let labelX = xAxis.dataToCoord(label.tickValue) + gridRect.x - labelWidth / 2;
-                let labelrect = new BoundingRect(labelX, 0, labelWidth, 1);
+            each(labelViews, function (label, index) {
+                const labelWidth = labelRects[label.tickValue].width;
+                const labelX = xAxis.dataToCoord(label.tickValue) + gridRect.x - labelWidth / 2;
+                const labelrect = new BoundingRect(labelX, 0, labelWidth, 1);
                 labelUnionRects ? labelUnionRects.union(labelrect) : labelUnionRects = labelrect;
             });
             const leftExceed = labelUnionRects.x;
