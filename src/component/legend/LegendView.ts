@@ -218,7 +218,7 @@ class LegendView extends ComponentView {
                 const itemGroup = this._createItem(
                     seriesModel, name, dataIndex,
                     legendItemModel, legendModel, itemAlign,
-                    lineVisualStyle, style, legendIcon, selectMode
+                    lineVisualStyle, style, legendIcon, selectMode, api
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -259,7 +259,7 @@ class LegendView extends ComponentView {
                         const itemGroup = this._createItem(
                             seriesModel, name, dataIndex,
                             legendItemModel, legendModel, itemAlign,
-                            {}, style, legendIcon, selectMode
+                            {}, style, legendIcon, selectMode, api
                         );
 
                         // FIXME: consider different series has items with the same name.
@@ -340,7 +340,8 @@ class LegendView extends ComponentView {
         lineVisualStyle: LineStyleProps,
         itemVisualStyle: PathStyleProps,
         legendIcon: string,
-        selectMode: LegendOption['selectedMode']
+        selectMode: LegendOption['selectedMode'],
+        api: ExtensionAPI
     ) {
         const drawType = seriesModel.visualDrawType;
         const itemWidth = legendModel.get('itemWidth');
@@ -359,7 +360,8 @@ class LegendView extends ComponentView {
             lineVisualStyle,
             itemVisualStyle,
             drawType,
-            isSelected
+            isSelected,
+            api
         );
 
         const itemGroup = new Group();
@@ -544,7 +546,8 @@ function getLegendStyle(
     lineVisualStyle: PathStyleProps,
     itemVisualStyle: PathStyleProps,
     drawType: 'fill' | 'stroke',
-    isSelected: boolean
+    isSelected: boolean,
+    api: ExtensionAPI
 ) {
     /**
      * Use series style if is inherit;
@@ -570,7 +573,7 @@ function getLegendStyle(
         itemStyle.decal = itemVisualStyle.decal;
     }
     else {
-        itemStyle.decal = createOrUpdatePatternFromDecal(decalStyle, legendItemModel.ecModel.scheduler.api);
+        itemStyle.decal = createOrUpdatePatternFromDecal(decalStyle, api);
     }
 
     if (itemStyle.fill === 'inherit') {
