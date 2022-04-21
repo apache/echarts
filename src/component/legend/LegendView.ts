@@ -49,6 +49,7 @@ import Model from '../../model/Model';
 import {LineStyleProps} from '../../model/mixin/lineStyle';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
+import { createOrUpdatePatternFromDecal } from '../../util/decal';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -564,10 +565,14 @@ function getLegendStyle(
     const legendItemModel = legendModel.getModel('itemStyle') as Model<LegendItemStyleOption>;
     const itemStyle = legendItemModel.getItemStyle();
     const iconBrushType = iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke';
-
-    if (itemStyle.decal !== 'none') {
+    const decalStyle = legendItemModel.getShallow('decal', false);
+    if (decalStyle === 'inherit') {
         itemStyle.decal = itemVisualStyle.decal;
+    } 
+    else {
+        itemStyle.decal = createOrUpdatePatternFromDecal(decalStyle, legendItemModel.ecModel.scheduler.api);
     }
+    
     if (itemStyle.fill === 'inherit') {
         /**
          * Series with visualDrawType as 'stroke' should have
