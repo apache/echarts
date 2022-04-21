@@ -130,8 +130,8 @@ class Axis {
         }
 
         if ((extent[0] === extent[1]) && (data < 0 || data > 1)) {
-            return data * extent[0] * 2
-        } 
+            return data * extent[0] * 2;
+        }
         else {
             return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
         }
