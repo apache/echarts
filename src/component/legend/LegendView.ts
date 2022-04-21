@@ -565,7 +565,9 @@ function getLegendStyle(
     const itemStyle = legendItemModel.getItemStyle();
     const iconBrushType = iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke';
 
-    itemStyle.decal = itemVisualStyle.decal;
+    if (itemStyle.decal !== 'none') {
+        itemStyle.decal = itemVisualStyle.decal;
+    }
     if (itemStyle.fill === 'inherit') {
         /**
          * Series with visualDrawType as 'stroke' should have
