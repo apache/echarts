@@ -53,6 +53,7 @@ import { isIntervalOrLogScale } from '../../scale/helper';
 import { alignScaleTicks } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -204,25 +205,25 @@ class Grid implements CoordinateSystemMaster {
             //Adjust grid.width to keep xAxis labels in dom
             const xAxis = axesList[0].isHorizontal() ? axesList[0] : axesList[1];
             const {labelRects} = estimateLabelRect(xAxis);
-            const tickCoord = xAxis.getTicksCoords();
-            const leftTick = xAxis.inverse ? tickCoord[tickCoord.length - 1] : tickCoord[0];
-            const rightTick = xAxis.inverse ? tickCoord[0] : tickCoord[tickCoord.length - 1];
-            const leftExceed = leftTick.coord
-                             + gridRect.x
-                             - labelRects[leftTick.tickValue].width / 2;
-            const rightExceed = rightTick.coord
-                              + labelRects[rightTick.tickValue].width / 2
-                              - Number(boxLayoutParams.right)
-                              - gridRect.width;
-            //A buffer to complement the performance in different screen
-            const MARGIN_BUFFER = 20;
+            //Find all displayed labels and create the union rect of them
+            const labelViews = xAxis.getViewLabels();
+            let labelUnionRects: BoundingRect;
+            each(labelViews, function(label, index) {
+                let labelWidth = labelRects[label.tickValue].width;
+                let labelX = xAxis.dataToCoord(label.tickValue) + gridRect.x - labelWidth / 2;
+                let labelrect = new BoundingRect(labelX, 0, labelWidth, 1);
+                labelUnionRects ? labelUnionRects.union(labelrect) : labelUnionRects = labelrect;
+            });
+            const leftExceed = labelUnionRects.x;
+            const rightExceed = labelUnionRects.x + labelUnionRects.width - api.getWidth();
+
             //Check left margin
             if (leftExceed < 0) {
-                gridRect.width -= -leftExceed + MARGIN_BUFFER;
-                gridRect.x += -leftExceed + MARGIN_BUFFER;
+                gridRect.width -= -leftExceed;
+                gridRect.x += -leftExceed;
             }
             if (rightExceed > 0) {
-                gridRect.width -= rightExceed + MARGIN_BUFFER;
+                gridRect.width -= rightExceed;
             }
             adjustAxes();
         }
