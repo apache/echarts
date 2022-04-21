@@ -35,8 +35,7 @@ export const ITEM_STYLE_KEY_MAP = [
     ['lineDashOffset', 'borderDashOffset'],
     ['lineCap', 'borderCap'],
     ['lineJoin', 'borderJoin'],
-    ['miterLimit', 'borderMiterLimit'],
-    ['decal']
+    ['miterLimit', 'borderMiterLimit']
     // Option decal is in `DecalObject` but style.decal is in `PatternObject`.
     // So do not transfer decal directly.
 ];
