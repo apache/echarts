@@ -568,7 +568,7 @@ function getLegendStyle(
     const itemStyleModel = legendItemModel.getModel('itemStyle') as Model<LegendItemStyleOption>;
     const itemStyle = itemStyleModel.getItemStyle();
     const iconBrushType = iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke';
-    const decalStyle = itemStyleModel.getShallow('decal', false);
+    const decalStyle = itemStyleModel.getShallow('decal');
     itemStyle.decal = (!decalStyle || decalStyle === 'inherit')
                     ? itemVisualStyle.decal
                     : createOrUpdatePatternFromDecal(decalStyle, api);
