@@ -542,7 +542,7 @@ class LegendView extends ComponentView {
 
 function getLegendStyle(
     iconType: string,
-    legendModel: LegendModel['_data'][number],
+    legendItemModel: LegendModel['_data'][number],
     lineVisualStyle: PathStyleProps,
     itemVisualStyle: PathStyleProps,
     drawType: 'fill' | 'stroke',
@@ -565,10 +565,10 @@ function getLegendStyle(
     }
 
     // itemStyle
-    const legendItemModel = legendModel.getModel('itemStyle') as Model<LegendItemStyleOption>;
-    const itemStyle = legendItemModel.getItemStyle();
+    const itemStyleModel = legendItemModel.getModel('itemStyle') as Model<LegendItemStyleOption>;
+    const itemStyle = itemStyleModel.getItemStyle();
     const iconBrushType = iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke';
-    const decalStyle = legendItemModel.getShallow('decal', false);
+    const decalStyle = itemStyleModel.getShallow('decal', false);
     itemStyle.decal = (!decalStyle || decalStyle === 'inherit')
                     ? itemVisualStyle.decal
                     : createOrUpdatePatternFromDecal(decalStyle, api);
@@ -596,7 +596,7 @@ function getLegendStyle(
     handleCommonProps(itemStyle, itemVisualStyle);
 
     // lineStyle
-    const legendLineModel = legendModel.getModel('lineStyle') as Model<LegendLineStyleOption>;
+    const legendLineModel = legendItemModel.getModel('lineStyle') as Model<LegendLineStyleOption>;
     const lineStyle: LineStyleProps = legendLineModel.getLineStyle();
     handleCommonProps(lineStyle, lineVisualStyle);
 
@@ -606,7 +606,7 @@ function getLegendStyle(
     (lineStyle.stroke === 'auto') && (lineStyle.stroke = itemVisualStyle.fill);
 
     if (!isSelected) {
-        const borderWidth = legendModel.get('inactiveBorderWidth');
+        const borderWidth = legendItemModel.get('inactiveBorderWidth');
         /**
          * Since stroke is set to be inactiveBorderColor, it may occur that
          * there is no border in series but border in legend, so we need to
@@ -616,8 +616,8 @@ function getLegendStyle(
         itemStyle.lineWidth = borderWidth === 'auto'
             ? (itemVisualStyle.lineWidth > 0 && visualHasBorder ? 2 : 0)
             : itemStyle.lineWidth;
-        itemStyle.fill = legendModel.get('inactiveColor');
-        itemStyle.stroke = legendModel.get('inactiveBorderColor');
+        itemStyle.fill = legendItemModel.get('inactiveColor');
+        itemStyle.stroke = legendItemModel.get('inactiveBorderColor');
         lineStyle.stroke = legendLineModel.get('inactiveColor');
         lineStyle.lineWidth = legendLineModel.get('inactiveWidth');
     }
