@@ -257,6 +257,7 @@ class TooltipView extends ComponentView {
             // self.manuallyShowTip({x, y}) might cause tooltip hide,
             // which is not expected.
             && tooltipModel.get('triggerOn') !== 'none'
+            && tooltipModel.get('triggerOn') !== 'click'
         ) {
             const self = this;
             clearTimeout(this._refreshUpdateTimeout);
