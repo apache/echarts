@@ -252,12 +252,12 @@ class TreeView extends ChartView {
             max[1] = oldMax ? oldMax[1] : max[1] + 1;
         }
 
-        const viewCoordSys = seriesModel.coordinateSystem = new View(undefined, api);
+        const viewCoordSys = seriesModel.coordinateSystem = new View();
         viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
         viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
-        viewCoordSys.setCenter(seriesModel.get('center'));
+        viewCoordSys.setCenter(seriesModel.get('center'), api);
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
         // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group

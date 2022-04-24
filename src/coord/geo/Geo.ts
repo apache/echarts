@@ -80,10 +80,9 @@ class Geo extends View {
             nameMap?: NameMap;
             nameProperty?: string;
             aspectScale?: number;
-        },
-        api: ExtensionAPI
+        }
     ) {
-        super(name, api);
+        super(name);
 
         this.map = map;
 

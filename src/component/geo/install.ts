@@ -27,6 +27,7 @@ import { updateCenterAndZoom, RoamPaylod } from '../../action/roamHelper';
 import MapSeries from '../../chart/map/MapSeries';
 import GeoView from './GeoView';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 
 type RegisterMapParams = Parameters<typeof geoSourceManager.registerMap>;
 function registerMap(
@@ -114,7 +115,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         type: 'geoRoam',
         event: 'geoRoam',
         update: 'updateTransform'
-    }, function (payload: RoamPaylod, ecModel: GlobalModel) {
+    }, function (payload: RoamPaylod, ecModel: GlobalModel, api: ExtensionAPI) {
         const componentType = payload.componentType || 'series';
 
         ecModel.eachComponent(
@@ -126,7 +127,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
                 }
 
                 const res = updateCenterAndZoom(
-                    geo, payload, (componentModel as GeoModel).get('scaleLimit')
+                    geo, payload, (componentModel as GeoModel).get('scaleLimit'), api
                 );
 
                 componentModel.setCenter

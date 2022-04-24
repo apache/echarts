@@ -77,7 +77,7 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             const viewWidth = viewRect.width;
             const viewHeight = viewRect.height;
 
-            const viewCoordSys = seriesModel.coordinateSystem = new View(undefined, api);
+            const viewCoordSys = seriesModel.coordinateSystem = new View();
             viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
             viewCoordSys.setBoundingRect(
@@ -88,7 +88,7 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             );
 
             // Update roam info
-            viewCoordSys.setCenter(seriesModel.get('center'));
+            viewCoordSys.setCenter(seriesModel.get('center'), api);
             viewCoordSys.setZoom(seriesModel.get('zoom'));
 
             viewList.push(viewCoordSys);

@@ -83,12 +83,10 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * The unit of `View['_viewRect']` is pixel of the canvas.
      */
     private _viewRect: BoundingRect;
-    private api: ExtensionAPI;
 
-    constructor(name?: string, api?: ExtensionAPI) {
+    constructor(name?: string) {
         super();
         this.name = name;
-        this.api = api;
     }
 
     setBoundingRect(x: number, y: number, width: number, height: number): BoundingRect {
@@ -130,13 +128,13 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     /**
      * Set center of view
      */
-    setCenter(centerCoord?: (number | string)[]): void {
+    setCenter(centerCoord?: (number | string)[], api?: ExtensionAPI): void {
         if (!centerCoord) {
             return;
         }
         this._center = [
-            parsePercent(centerCoord[0], this.api.getWidth()),
-            parsePercent(centerCoord[1], this.api.getHeight())
+            parsePercent(centerCoord[0], api.getWidth()),
+            parsePercent(centerCoord[1], api.getHeight())
         ];
         this._updateCenterAndZoom();
     }
