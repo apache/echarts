@@ -209,7 +209,14 @@ class Grid implements CoordinateSystemMaster {
             const labelViews = xAxis.getViewLabels();
             let labelUnionRects: BoundingRect;
             each(labelViews, function (label, index) {
-                const labelWidth = labelRects[label.tickValue].width;
+                //Only when axis type is 'category' or 'time' can 'tickValue'
+                //correctly point to the index of label.
+                //When axis type is 'value', tickValue is the exact value of that tick.
+                //In this case 'interval' would not work so 'index' is the correct index of label
+                const labelIdx = xAxis.type === 'category' || xAxis.type === 'time'
+                               ? label.tickValue
+                               : index;
+                const labelWidth = labelRects[labelIdx].width;
                 const labelX = xAxis.dataToCoord(label.tickValue) + gridRect.x - labelWidth / 2;
                 const labelrect = new BoundingRect(labelX, 0, labelWidth, 1);
                 labelUnionRects ? labelUnionRects.union(labelrect) : labelUnionRects = labelrect;
