@@ -418,7 +418,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             }
         }
 
-        !axisNameAvailableWidth && (axisNameAvailableWidth = textStyleModel.get('width',true));
+        !axisNameAvailableWidth && (axisNameAvailableWidth = textStyleModel.get('width', true));
         const textFont = textStyleModel.getFont();
 
         const truncateOpt = axisModel.get('nameTruncate', true) || {};
