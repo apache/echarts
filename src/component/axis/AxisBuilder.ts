@@ -418,6 +418,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             }
         }
 
+        !axisNameAvailableWidth && (axisNameAvailableWidth = textStyleModel.get('width',true));
         const textFont = textStyleModel.getFont();
 
         const truncateOpt = axisModel.get('nameTruncate', true) || {};
@@ -435,7 +436,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                 text: name,
                 font: textFont,
                 overflow: 'truncate',
-                width: maxWidth,
+                width: Number(maxWidth),
                 ellipsis,
                 fill: textStyleModel.getTextColor()
                     || axisModel.get(['axisLine', 'lineStyle', 'color']) as ColorString,
