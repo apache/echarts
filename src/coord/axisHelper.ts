@@ -321,10 +321,7 @@ export function estimateLabelRect(axis: Axis) {
     let labelUnionRect;
     let step = 1;
     const labelRects = [];
-    // Simple optimization for large amount of labels
-    if (tickCount > 40) {
-        step = Math.ceil(tickCount / 40);
-    }
+
     for (let i = 0; i < tickCount; i += step) {
         const tick = realNumberScaleTicks
             ? realNumberScaleTicks[i]
