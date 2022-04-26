@@ -73,7 +73,7 @@ export interface LineDrawModelOption extends LineDrawStateOption,
         symbol?: string
         symbolSize?: number | number[]
         loop?: boolean
-        goback?: boolean
+        roundTrip?: boolean
         /**
          * Length of trail, 0 - 1
          */

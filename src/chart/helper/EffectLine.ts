@@ -47,7 +47,7 @@ class EffectLine extends graphic.Group {
 
     private _loop: boolean;
 
-    private _goback: boolean;
+    private _roundTrip: boolean;
 
     private _symbolScale: number[];
 
@@ -123,7 +123,7 @@ class EffectLine extends graphic.Group {
 
         let period = effectModel.get('period') * 1000;
         const loop = effectModel.get('loop');
-        const goback = effectModel.get('goback');
+        const roundTrip = effectModel.get('roundTrip');
         const constantSpeed = effectModel.get('constantSpeed');
         const delayExpr = zrUtil.retrieve(effectModel.get('delay'), function (idx) {
             return idx / lineData.count() * period / 3;
@@ -138,7 +138,7 @@ class EffectLine extends graphic.Group {
             period = this._getLineLength(symbol) / constantSpeed * 1000;
         }
 
-        if (period !== this._period || loop !== this._loop || goback !== this._goback) {
+        if (period !== this._period || loop !== this._loop || roundTrip !== this._roundTrip) {
             symbol.stopAnimation();
             let delayNum: number;
             if (zrUtil.isFunction(delayExpr)) {
@@ -152,23 +152,23 @@ class EffectLine extends graphic.Group {
             }
 
             this._animateSymbol(
-                symbol, period, delayNum, loop, goback
+                symbol, period, delayNum, loop, roundTrip
             );
         }
 
         this._period = period;
         this._loop = loop;
-        this._goback = goback;
+        this._roundTrip = roundTrip;
     }
 
     private _animateSymbol(
-        symbol: ECSymbolOnEffectLine, period: number, delayNum: number, loop: boolean, goback: boolean) {
+        symbol: ECSymbolOnEffectLine, period: number, delayNum: number, loop: boolean, roundTrip: boolean) {
         if (period > 0) {
             symbol.__t = 0;
             const self = this;
             const animator = symbol.animate('', loop)
-                .when(goback ? period * 2 : period, {
-                    __t: goback ? 2 : 1
+                .when(roundTrip ? period * 2 : period, {
+                    __t: roundTrip ? 2 : 1
                 })
                 .delay(delayNum)
                 .during(function () {
