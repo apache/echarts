@@ -43,7 +43,7 @@ under the License.
         <div id="specified_axis_second_setOption_normal_dz"></div>
         <div id="remove_dz"></div>
         <div id="duplicated_dataZoom_ref"></div>
-
+        <div id="main0"></div>
 
 
 
@@ -745,6 +745,116 @@ under the License.
             });
         });
         </script>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    dataZoom: [{
+                        id: 'dataZoomX',
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        filterMode: 'filter'
+                    }],
+                    legend: {
+                        data: ['语文'],
+                        top: '0'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: '{b0}<br />',
+                        axisPointer: {
+                            animation: true,
+                            type: 'line',
+                            lineStyle: {
+                                type: 'dashed'
+                            }
+                        }
+                    },
+                    grid: {
+                        left: 20,
+                        top: 38,
+                        right: 20,
+                        bottom: 65
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: [
+                        '第1周',
+                        '第2周',
+                        '第3周',
+                        '第4周',
+                        '第5周',
+                        '第6周',
+                        '第7周',
+                        '第8周',
+                        '第9周',
+                        '第10周',
+                        '第11周',
+                        '第12周',
+                        '第13周',
+                        '第14周',
+                        '第15周',
+                        '第16周',
+                        '第17周',
+                        '第18周',
+                        '第19周',
+                        '第20周',
+                        '第21周',
+                        '第22周'
+                        ],
+                        boundaryGap: false
+                    },
+                    yAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        name: '等级',
+                        data: ['0', 'D', 'C', 'B', 'A'],
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    series: [{
+                        labelLine: { show: true },
+                        symbolSize: 16,
+                        type: 'line',
+                        smooth: true,
+                        name: '语文',
+                        data: [
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            'D',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-',
+                            '-'
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'The dataZoom should be displayed at bottom',
+                    ],
+                    option: option,
+                    height: 350
+                });
+            });
+            </script>
 
 
 

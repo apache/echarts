@@ -61,3 +61,7 @@ github:
       required_linear_history: false
       required_signatures: false
 
+notifications:
+    commits: commits@echarts.apache.org
+    pullrequests: commits@echarts.apache.org
+    issues: commits@echarts.apache.org
