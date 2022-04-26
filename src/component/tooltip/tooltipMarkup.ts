@@ -141,7 +141,9 @@ export interface TooltipMarkupSection extends TooltipMarkupBlock {
     // Enable to sort blocks when making final html or richText.
     sortBlocks?: boolean;
 
-    valueFormatter?: CommonTooltipOption<unknown>['valueFormatter']
+    valueFormatter?: CommonTooltipOption<unknown>['valueFormatter'];
+    nameFormatter?: CommonTooltipOption<unknown>['nameFormatter'];
+    headerFormatter?: CommonTooltipOption<unknown>['headerFormatter']
 }
 
 export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
@@ -163,7 +165,11 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     noName?: boolean;
     noValue?: boolean;
 
-    valueFormatter?: CommonTooltipOption<unknown>['valueFormatter']
+    valueFormatter?: CommonTooltipOption<unknown>['valueFormatter'];
+    nameFormatter?: CommonTooltipOption<unknown>['nameFormatter'];
+    headerFormatter?: CommonTooltipOption<unknown>['headerFormatter']
+
+
 }
 
 /**
@@ -258,9 +264,21 @@ function buildSection(
 
     each(subBlocks, function (subBlock, idx) {
         const valueFormatter = fragment.valueFormatter;
+        const nameFormatter = fragment.nameFormatter;
+        const headerFormatter = fragment.headerFormatter;
+        let newCtx = extend({}, ctx);
+        valueFormatter && extend(newCtx, {
+            valueFormatter: valueFormatter
+        });
+        nameFormatter && extend(newCtx, {
+            nameFormatter: nameFormatter
+        });
+        headerFormatter && extend(newCtx, {
+            headerFormatter: headerFormatter
+        });
         const subMarkupText = getBuilder(subBlock)(
-            // Inherit valueFormatter
-            valueFormatter ? extend(extend({}, ctx), { valueFormatter }) : ctx,
+            // Inherit special Formatters
+            newCtx,
             subBlock,
             idx > 0 ? gaps.html : 0,
             toolTipTextStyle
@@ -278,8 +296,10 @@ function buildSection(
     if (noHeader) {
         return subMarkupText;
     }
-
-    const displayableHeader = makeValueReadable(fragment.header, 'ordinal', ctx.useUTC);
+    const headerFormatter = fragment.headerFormatter || ctx.headerFormatter || subBlocks[0].headerFormatter || ((header) => {
+        return makeValueReadable(header, 'ordinal', ctx.useUTC);
+    })
+    const displayableHeader = String(headerFormatter(fragment.header as any));
     const {nameStyle} = getTooltipTextStyle(toolTipTextStyle, ctx.renderMode);
     if (ctx.renderMode === 'richText') {
         return wrapInlineNameRichText(ctx, displayableHeader, nameStyle as RichTextStyle) + gaps.richText
@@ -315,6 +335,10 @@ function buildNameValue(
         ));
     });
 
+    const nameFormatter = fragment.nameFormatter || ctx.nameFormatter || ((name) => {
+        return makeValueReadable(name, 'ordinal', useUTC);
+    });
+
     if (noName && noValue) {
         return;
     }
@@ -328,7 +352,7 @@ function buildNameValue(
         );
     const readableName = noName
         ? ''
-        : makeValueReadable(name, 'ordinal', useUTC);
+        : nameFormatter(name);
     const valueTypeOption = fragment.valueType;
     const readableValueList = noValue ? [] : valueFormatter(fragment.value as OptionDataValue);
     const valueAlignRight = !noMarker || !noName;
@@ -362,7 +386,9 @@ interface TooltipMarkupBuildContext {
     orderMode: TooltipOrderMode;
     markupStyleCreator: TooltipMarkupStyleCreator;
 
-    valueFormatter: CommonTooltipOption<unknown>['valueFormatter']
+    valueFormatter: CommonTooltipOption<unknown>['valueFormatter'];
+    nameFormatter?: CommonTooltipOption<unknown>['nameFormatter'];
+    headerFormatter?: CommonTooltipOption<unknown>['headerFormatter']
 }
 
 /**
@@ -386,7 +412,9 @@ export function buildTooltipMarkup(
         renderMode: renderMode,
         orderMode: orderMode,
         markupStyleCreator: markupStyleCreator,
-        valueFormatter: fragment.valueFormatter
+        valueFormatter: fragment.valueFormatter,
+        nameFormatter: fragment.nameFormatter,
+        headerFormatter: fragment.headerFormatter
     };
     return builder(ctx, fragment, 0, toolTipTextStyle);
 }
