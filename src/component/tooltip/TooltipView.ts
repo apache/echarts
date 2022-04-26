@@ -599,7 +599,7 @@ class TooltipView extends ComponentView {
                             [series as Model<TooltipableOption>],
                             globalTooltipModel
                         ).get('headerFormatter');
-                        let newFrag = extend({}, frag);
+                        const newFrag = extend({}, frag);
                         valueFormatter && extend(newFrag, {
                             valueFormatter: valueFormatter
                         });
@@ -711,7 +711,7 @@ class TooltipView extends ComponentView {
         const frag = seriesTooltipResult.frag;
         let markupText = seriesTooltipResult.text;
         if (frag) {
-            let newFrag = extend({}, frag);
+            const newFrag = extend({}, frag);
             valueFormatter && extend(newFrag, {valueFormatter: valueFormatter});
             nameFormatter && extend(newFrag, {nameFormatter: nameFormatter});
             headerFormatter && extend(newFrag, {headerFormatter: headerFormatter});
@@ -722,7 +722,7 @@ class TooltipView extends ComponentView {
                 orderMode,
                 ecModel.get('useUTC'),
                 tooltipModel.get('textStyle')
-            )
+            );
         }
         const asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
 

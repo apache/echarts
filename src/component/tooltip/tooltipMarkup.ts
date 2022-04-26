@@ -266,7 +266,7 @@ function buildSection(
         const valueFormatter = fragment.valueFormatter;
         const nameFormatter = fragment.nameFormatter;
         const headerFormatter = fragment.headerFormatter;
-        let newCtx = extend({}, ctx);
+        const newCtx = extend({}, ctx);
         valueFormatter && extend(newCtx, {
             valueFormatter: valueFormatter
         });
@@ -296,9 +296,12 @@ function buildSection(
     if (noHeader) {
         return subMarkupText;
     }
-    const headerFormatter = fragment.headerFormatter || ctx.headerFormatter || subBlocks[0].headerFormatter || ((header) => {
+    const headerFormatter = fragment.headerFormatter 
+                          || ctx.headerFormatter 
+                          || subBlocks[0].headerFormatter 
+                          || ((header) => {
         return makeValueReadable(header, 'ordinal', ctx.useUTC);
-    })
+    });
     const displayableHeader = String(headerFormatter(fragment.header as any));
     const {nameStyle} = getTooltipTextStyle(toolTipTextStyle, ctx.renderMode);
     if (ctx.renderMode === 'richText') {
