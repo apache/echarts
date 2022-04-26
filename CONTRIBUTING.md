@@ -11,7 +11,7 @@ Contributions can be made in varied ways:
 - Help others in the issues
     - Help solve problems with the issues
     - Remind the authors to provide a demo if they are reporting for a bug
-    - Try to reproduce the problem as describe in the issues
+    - Try to reproduce the problem as described in the issues
 - Make pull requests to fix bugs or implement new features
 - Improve or translate the documents
 - Discuss in the [mailing list](https://echarts.apache.org/en/maillist.html)
@@ -29,11 +29,11 @@ Any questions in the form of *how can I use echarts to* or *how to use echarts x
 
 ## Release Milestone Discussion
 
-We will start the discussion about the bugs to fix and features of each release in the [mailing list](https://echarts.apache.org/en/maillist.html). You may subscribe to our [mailing list](https://echarts.apache.org/en/maillist.html) to give your valuable advice in milestone dicussions.
+We will start the discussion about the bugs to fix and the features of each release in the [mailing list](https://echarts.apache.org/en/maillist.html). You may subscribe to our [mailing list](https://echarts.apache.org/en/maillist.html) to give your valuable advice in milestone discussions.
 
-Regarding the release plan, we will release a mior version at the end of every month. Here is some detail.
+Regarding the release plan, we will release a minor version at the end of every month. Here is some detail.
 
-1. Assume our current stable release is 4.3.0. We will start the discussion of milestone of the release two versions ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the developing of the next release, which is 4.4.0.
+1. Assume our current stable release is 4.3.0. We will start the discussion of the milestone of the release two versions ahead, which is 4.5.0 at the beginning of each month. At this time we should also kickoff the development of the next release, which is 4.4.0.
 2. Finish 4.4.0 developing at about 22th of this month and start the testing. And the 4.5.0 milestone discussion is frozen and published on the [GitHub](https://github.com/apache/echarts/milestone/14)
 3. Vote in the mailing list for the 4.4.0 release at the end of this month.
 
@@ -48,7 +48,7 @@ Wiki: [How to setup the dev environment](https://github.com/apache/echarts/wiki/
 ## Some hints about using code from other authors
 
 + About using some algorithms/formulas or inspired by other's work:
-    + We can be inspired from other people’s work. There is no problem with copying ideas and no problems associated with that so long as the code is entirely yours and you aren’t violating the license of the inspirational work. You can just follow "normal" source code rules.
+    + We can be inspired by other people’s work. There is no problem with copying ideas and no problems associated with that so long as the code is entirely yours and you aren’t violating the license of the inspirational work. You can just follow "normal" source code rules.
     + But when you copy the code, even parts of files, it must remain under the copyright of the original authors.
     + What's the right thing to do for the public good here? I'll go with:
         + Be transparent when implementing an existing idea/algorithm.
@@ -62,7 +62,7 @@ Wiki: [How to setup the dev environment](https://github.com/apache/echarts/wiki/
 + Licenses that are compatible with the Apache license:
     + BSD and MIT are compatible with the Apache license but CC_BY_SA is not (https://apache.org/legal/resolved.html#cc-sa).
 + Stack Overflow:
-    + before intending to copy code from Stack Overlow, we must check:
+    + before intending to copy code from Stack Overflow, we must check:
     + https://apache.org/legal/resolved.html#stackoverflow
     + https://issues.apache.org/jira/browse/LEGAL-471
 + Wikipedia (and most Wikimedia Foundation projects):

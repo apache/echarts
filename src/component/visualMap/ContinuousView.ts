@@ -38,6 +38,7 @@ import { setAsHighDownDispatcher } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
+import { createTextStyle } from '../../label/labelStyle';
 
 const linearMap = numberUtil.linearMap;
 const each = zrUtil.each;
@@ -184,15 +185,13 @@ class ContinuousView extends VisualMapView {
         const textStyleModel = this.visualMapModel.textStyleModel;
 
         this.group.add(new graphic.Text({
-            style: {
+            style: createTextStyle(textStyleModel, {
                 x: position[0],
                 y: position[1],
                 verticalAlign: orient === 'horizontal' ? 'middle' : align as TextVerticalAlign,
                 align: orient === 'horizontal' ? align as TextAlign : 'center',
-                text: text,
-                font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor()
-            }
+                text
+            })
         }));
     }
 
@@ -300,11 +299,11 @@ class ContinuousView extends VisualMapView {
                 eventTool.stop(e.event);
             },
             ondragend: onDragEnd,
-            style: {
-                x: 0, y: 0, text: '',
-                font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor()
-            }
+            style: createTextStyle(textStyleModel, {
+                x: 0,
+                y: 0,
+                text: ''
+            })
         });
         handleLabel.ensureState('blur').style = {
             opacity: 0.1
@@ -360,11 +359,11 @@ class ContinuousView extends VisualMapView {
         const indicatorLabel = new graphic.Text({
             silent: true,
             invisible: true,
-            style: {
-                x: 0, y: 0, text: '',
-                font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor()
-            }
+            style: createTextStyle(textStyleModel, {
+                x: 0,
+                y: 0,
+                text: ''
+            })
         });
         this.group.add(indicatorLabel);
 

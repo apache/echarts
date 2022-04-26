@@ -148,9 +148,6 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 nameTextStyle: iNameTextStyle,
                 triggerEvent: triggerEvent
             } as InnerIndicatorAxisOption, false);
-            if (!showName) {
-                innerIndicatorOpt.name = '';
-            }
             if (zrUtil.isString(nameFormatter)) {
                 const indName = innerIndicatorOpt.name;
                 innerIndicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');

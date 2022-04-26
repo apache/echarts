@@ -172,7 +172,7 @@ class GraphView extends ChartView {
                     }
                 });
             }
-            el.setDraggable(draggable);
+            el.setDraggable(draggable && !!forceLayout, !!itemModel.get('cursor'));
 
             const focus = itemModel.get(['emphasis', 'focus']);
 

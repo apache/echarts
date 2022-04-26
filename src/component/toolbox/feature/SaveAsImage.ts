@@ -29,7 +29,7 @@ import { isFunction } from 'zrender/src/core/util';
 export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     icon?: string
     title?: string
-    type?: 'png' | 'jpg'
+    type?: 'png' | 'jpeg'
 
     backgroundColor?: ZRColor
     connectedBackgroundColor?: ZRColor
