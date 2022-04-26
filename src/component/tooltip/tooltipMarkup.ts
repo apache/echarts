@@ -296,9 +296,9 @@ function buildSection(
     if (noHeader) {
         return subMarkupText;
     }
-    const headerFormatter = fragment.headerFormatter 
-                          || ctx.headerFormatter 
-                          || subBlocks[0].headerFormatter 
+    const headerFormatter = fragment.headerFormatter
+                          || ctx.headerFormatter
+                          || subBlocks[0].headerFormatter
                           || ((header) => {
         return makeValueReadable(header, 'ordinal', ctx.useUTC);
     });
