@@ -433,7 +433,7 @@ function updateNode(
         let rad;
         let isLeft;
 
-        if (targetLayout.x === rootLayout.x && node.isExpand === true) {
+        if (targetLayout.x === rootLayout.x && node.isExpand === true && realRoot.children.length) {
             const center = {
                 x: (realRoot.children[0].getLayout().x + realRoot.children[length - 1].getLayout().x) / 2,
                 y: (realRoot.children[0].getLayout().y + realRoot.children[length - 1].getLayout().y) / 2
