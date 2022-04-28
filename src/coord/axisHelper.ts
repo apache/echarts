@@ -299,7 +299,10 @@ export function estimateLabelRect(axis: Axis) {
     const scale = axis.scale;
 
     if (!axisModel.get(['axisLabel', 'show']) || scale.isBlank()) {
-        return;
+        return {
+            labelUnionRect: null,
+            labelRects: []
+        };
     }
 
     let realNumberScaleTicks: ScaleTick[];
