@@ -128,7 +128,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     /**
      * Set center of view
      */
-    setCenter(centerCoord?: (number | string)[], api?: ExtensionAPI): void {
+    setCenter(centerCoord: (number | string)[], api: ExtensionAPI): void {
         if (!centerCoord) {
             return;
         }

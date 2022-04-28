@@ -28,7 +28,6 @@ import { ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING } from '../
 import GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
 import { warn } from '../../util/log';
-import type ExtensionAPI from '../../core/ExtensionAPI';
 
 const GEO_DEFAULT_PARAMS: {
     [type in GeoResource['type']]: {
