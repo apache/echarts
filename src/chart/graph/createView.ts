@@ -88,7 +88,7 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             );
 
             // Update roam info
-            viewCoordSys.setCenter(seriesModel.get('center'));
+            viewCoordSys.setCenter(seriesModel.get('center'), api);
             viewCoordSys.setZoom(seriesModel.get('zoom'));
 
             viewList.push(viewCoordSys);

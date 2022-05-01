@@ -172,7 +172,7 @@ class TreeView extends ChartView {
             group.y = layoutInfo.y;
         }
 
-        this._updateViewCoordSys(seriesModel);
+        this._updateViewCoordSys(seriesModel, api);
         this._updateController(seriesModel, ecModel, api);
 
         const oldData = this._data;
@@ -224,7 +224,7 @@ class TreeView extends ChartView {
         this._data = data;
     }
 
-    _updateViewCoordSys(seriesModel: TreeSeriesModel) {
+    _updateViewCoordSys(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const points: number[][] = [];
         data.each(function (idx) {
@@ -257,7 +257,7 @@ class TreeView extends ChartView {
 
         viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
-        viewCoordSys.setCenter(seriesModel.get('center'));
+        viewCoordSys.setCenter(seriesModel.get('center'), api);
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
         // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group

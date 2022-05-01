@@ -19,6 +19,7 @@
 
 import type Geo from '../coord/geo/Geo';
 import type View from '../coord/View';
+import type ExtensionAPI from '../core/ExtensionAPI';
 import type { Payload } from '../util/types';
 
 export interface RoamPaylod extends Payload {
@@ -42,7 +43,8 @@ export function updateCenterAndZoom(
     zoomLimit?: {
         min?: number,
         max?: number
-    }
+    },
+    api?: ExtensionAPI
 ) {
     const previousZoom = view.getZoom();
     const center = view.getCenter();
@@ -56,7 +58,7 @@ export function updateCenterAndZoom(
         point[0] -= payload.dx;
         point[1] -= payload.dy;
 
-        view.setCenter(getCenterCoord(view, point));
+        view.setCenter(getCenterCoord(view, point), api);
     }
     if (zoom != null) {
         if (zoomLimit) {
@@ -79,7 +81,7 @@ export function updateCenterAndZoom(
 
         view.updateTransform();
         // Get the new center
-        view.setCenter(getCenterCoord(view, point));
+        view.setCenter(getCenterCoord(view, point), api);
         view.setZoom(zoom * previousZoom);
     }
 
