@@ -31,7 +31,7 @@ You may choose one of the following methods:
 
 + [GitHub Issues](https://github.com/apache/echarts/issues) for bug report and feature requests
 + Email [dev@echarts.apache.org](mailto:dev@echarts.apache.org) for general questions
-+ Subscribe to the [mailing list](https://echarts.apache.org/en/maillist.html) to get updated with the project
++ Subscribe to the [mailing list](https://echarts.apache.org/maillist.html) to get updated with the project
 
 ## Build
 
@@ -55,8 +55,6 @@ npm run release
 ```
 
 Then the "production" files are generated in the `dist` directory.
-
-More custom build approaches can be checked in this tutorial: [Create Custom Build of ECharts](https://echarts.apache.org/en/tutorial.html#Create%20Custom%20Build%20of%20ECharts) please.
 
 ## Contribution
 

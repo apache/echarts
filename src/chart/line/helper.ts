@@ -92,7 +92,7 @@ function getValueStart(valueAxis: Axis, valueOrigin: LineSeriesOption['areaStyle
     }
     // If origin is specified as a number, use it as
     // valueStart directly
-    else if (isNumber(valueOrigin) && !isNaN(valueOrigin)){
+    else if (isNumber(valueOrigin) && !isNaN(valueOrigin)) {
         valueStart = valueOrigin;
     }
     // auto

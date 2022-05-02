@@ -105,6 +105,18 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
             && this.getAxis('y').containData(data[1]);
     }
 
+    containZone(data1: ScaleDataValue[], data2: ScaleDataValue[]): boolean {
+        const zoneDiag1 = this.dataToPoint(data1);
+        const zoneDiag2 = this.dataToPoint(data2);
+        const area = this.getArea();
+        const zone = new BoundingRect(
+            zoneDiag1[0],
+            zoneDiag1[1],
+            zoneDiag2[0] - zoneDiag1[0],
+            zoneDiag2[1] - zoneDiag1[1]);
+        return area.intersect(zone);
+    }
+
     dataToPoint(data: ScaleDataValue[], clamp?: boolean, out?: number[]): number[] {
         out = out || [];
         const xVal = data[0];

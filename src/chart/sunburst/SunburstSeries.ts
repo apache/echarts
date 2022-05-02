@@ -171,8 +171,8 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
 
         completeTreeValue(root);
 
-        const levelModels = this._levelModels
-            = zrUtil.map(option.levels || [], function (levelDefine) {
+        const levelModels = this._levelModels =
+            zrUtil.map(option.levels || [], function (levelDefine) {
                 return new Model(levelDefine, this, ecModel);
             }, this);
 

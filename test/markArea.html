@@ -31,14 +31,15 @@ under the License.
                 height: 100%;
             }
         </style>
-        <div id="main"></div>
+        <div id="main0" style="height:500px"></div>
+        <div id="main1" style="height:500px"></div>
         <script>
 
             require([
                 'echarts'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
+                var chart = echarts.init(document.getElementById('main0'));
 
                 var xAxisData = [];
                 var data1 = [];
@@ -135,6 +136,94 @@ under the License.
                         right: 300
                     }
                 });
+
+            });
+
+        </script>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                let option = {
+                    title: {
+                        text: 'Distribution of Electricity',
+                        subtext: 'Fake Data'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                        type: 'cross'
+                        }
+                    },
+                    toolbox: {
+                        show: true,
+                        feature: {
+                        saveAsImage: {}
+                        }
+                    },
+                    dataZoom: [{}], // WITH ZOOMING
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        // prettier-ignore
+                        data: ['00:00', '01:15', '02:30', '03:45', '05:00', '06:15', '07:30', '08:45', '10:00', '11:15', '12:30', '13:45', '15:00', '16:15', '17:30', '18:45', '20:00', '21:15', '22:30', '23:45']
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                        formatter: '{value} W'
+                        },
+                        axisPointer: {
+                        snap: true
+                        },
+                    },
+                    series: [
+                        {
+                        name: 'Electricity',
+                        type: 'line',
+                        smooth: true,
+                        // prettier-ignore
+                        data: [300, 280, 250, 260, 270, 300, 550, 500, 400, 390, 380, 390, 400, 500, 600, 750, 800, 700, 600, 400],
+                        markArea: {
+                            itemStyle: {
+                            color: 'rgba(255, 173, 177, 0.4)'
+                            },
+                            data: [
+                            [
+                                {
+                                name: 'Morning Peak',
+                                xAxis: '07:30',
+                                yAxis: -100
+                                },
+                                {
+                                xAxis: '10:00',
+                                yAxis: 900 // EXACT LIMIT HERE
+                                }
+                            ],
+                            [
+                                {
+                                name: 'Evening Peak',
+                                xAxis: '17:30'
+                                },
+                                {
+                                xAxis: '21:15'
+                                }
+                            ],
+                            [
+                            {yAxis: 200}, {yAxis: 600, xAxis: '22:30'}, // EXACT LIMIT HERE
+                                ]
+                            ]
+                        }
+                        }
+                    ]
+                };
+
+                var chartDom = document.getElementById('main1');
+                var myChart = echarts.init(chartDom);
+
+                option && myChart.setOption(option);
 
             });
 
