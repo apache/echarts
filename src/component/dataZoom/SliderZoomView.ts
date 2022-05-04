@@ -396,14 +396,17 @@ class SliderZoomView extends DataZoomView {
             let lastIsEmpty: boolean;
 
             data.each([info.thisDim, otherDim], function (thisValue: ParsedValue, otherValue: ParsedValue, index) {
-                if (stride > 0 && (index % stride) && info.thisAxis.type != 'time') {
+                if (stride > 0 && (index % stride) && info.thisAxis.type !== 'time') {
                     thisCoord += step;
                     return;
-                } else if (stride > 0 && (index % stride)) {
+                }
+                else if (stride > 0 && (index % stride)) {
                     return;
                 }
 
-                thisCoord = info.thisAxis.type == 'time' ? (+thisValue - thisDataExtent[0]) * normalizationConstant : thisCoord + step;
+                thisCoord = info.thisAxis.type === 'time'
+                ? (+thisValue - thisDataExtent[0]) * normalizationConstant
+                : thisCoord + step;
 
                 // FIXME
                 // Should consider axis.min/axis.max when drawing dataShadow.
