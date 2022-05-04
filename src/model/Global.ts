@@ -61,7 +61,7 @@ import Scheduler from '../core/Scheduler';
 import { concatInternalOptions } from './internalComponentCreator';
 import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
-import { error } from '../util/log';
+import { error, warn } from '../util/log';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -192,6 +192,9 @@ class GlobalModel extends Model<ECUnitOption> {
     // Injectable properties:
     scheduler: Scheduler;
 
+    // If in ssr mode.
+    // TODO put in a better place?
+    ssr: boolean;
 
     init(
         option: ECBasicOption,
@@ -386,6 +389,9 @@ class GlobalModel extends Model<ECUnitOption> {
             const cmptsByMainType = [] as ComponentModel[];
             let cmptsCountByMainType = 0;
 
+            let tooltipExists: boolean;
+            let tooltipWarningLogged: boolean;
+
             each(mappingResult, function (resultItem, index) {
                 let componentModel = resultItem.existing;
                 const newCmptOption = resultItem.newOption;
@@ -426,6 +432,20 @@ echarts.use([${seriesImportName}]);`);
                             }
                         }
                         return;
+                    }
+
+                    // TODO Before multiple tooltips get supported, we do this check to avoid unexpected exception.
+                    if (mainType === 'tooltip') {
+                        if (tooltipExists) {
+                            if (__DEV__) {
+                                if (!tooltipWarningLogged) {
+                                    warn('Currently only one tooltip component is allowed.');
+                                    tooltipWarningLogged = true;
+                                }
+                            }
+                            return;
+                        }
+                        tooltipExists = true;
                     }
 
                     if (componentModel && componentModel.constructor === ComponentModelClass) {

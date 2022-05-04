@@ -40,6 +40,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
         <script>
@@ -97,7 +98,7 @@ under the License.
 
                 var chart1 = testHelper.create(echarts, 'main0', {
                     title: [
-                        'Tooltip shouldn\'t shake or lag',
+                        'Tooltip shouldn\'t shake or be laggy',
                         '1) Chrome with the devtools open',
                         '2) Firefox'
                     ],
@@ -106,11 +107,32 @@ under the License.
 
                 var chart2 = testHelper.create(echarts, 'main1', {
                     title: [
-                        'Tooltip shouldn\'t shake or lag',
+                        'Tooltip shouldn\'t shake or be laggy',
                         '1) Chrome with the devtools open',
                         '2) Firefox'
                     ],
                     option: option
+                });
+
+                var chart3 = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Tooltip shouldn\'t be laggy when transition is disabled',
+                        'https://github.com/apache/echarts/issues/16101'
+                    ],
+                    option: option,
+                    buttons: [{
+                        text: 'Disable transition',
+                        onclick: function () {
+                            var enabled = chart3._transitionEnabled;
+                            chart3.setOption({
+                                tooltip: {
+                                    transitionDuration: enabled && .4
+                                }
+                            });
+                            chart3._transitionEnabled = !enabled;
+                            this.innerText = (enabled ? 'Disable' : 'Enable') + ' transition';
+                        }
+                    }]
                 });
 
                 echarts.connect([chart1, chart2]);

@@ -41,6 +41,7 @@ under the License.
         <div id="main1"></div>
         <div id="main2"></div>
         <div id="main3"></div>
+        <div id="main4"></div>
 
 
 
@@ -494,6 +495,46 @@ under the License.
                 });
             })
 
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                const option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+
+                    visualMap: {
+                        type: "piecewise",
+                        pieces: [{
+                                    gte: -1,
+                                    lte: 1,
+                                    color: '#000'
+                                }],
+                        outOfRange: { color: '#F43915' }
+                    },
+                    series: [
+                        {
+                        data: [0.2, 0.24, 0.18, 0.15, 0.18, 0.27, 0.25],
+                        type: 'line'
+                        }
+                    ]
+                };
+                const myChart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'Gradient should be black.',
+                        'https://github.com/apache/echarts/issues/15885'
+                    ],
+                    option: option
+                });
+            })
         </script>
     </body>
 </html>

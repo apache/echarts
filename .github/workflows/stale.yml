@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Close Stale Issues
-        uses: actions/stale@v4.0.0
+        uses: actions/stale@v4
         with:
           days-before-stale: 730
           days-before-close: 7

@@ -106,6 +106,7 @@ export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOp
     category?: number | string
 
     draggable?: boolean
+    cursor?: string
 }
 
 export interface GraphEdgeStateOption {
@@ -223,6 +224,11 @@ export interface GraphSeriesOption
 
         layoutAnimation?: boolean
     }
+
+    /**
+     * auto curveness for multiple edge, invalid when `lineStyle.curveness` is set
+     */
+    autoCurveness?: boolean | number | number[]
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
@@ -406,7 +412,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
     }
 
     static defaultOption: GraphSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
 
         coordinateSystem: 'view',

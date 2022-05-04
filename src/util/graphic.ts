@@ -62,7 +62,8 @@ import {
     isString,
     keys,
     each,
-    hasOwn
+    hasOwn,
+    isArray
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import ComponentModel from '../model/Component';
@@ -608,6 +609,31 @@ export function setTooltipConfig(opt: {
             formatterParams: formatterParams
         }, itemTooltipOptionObj)
     };
+}
+
+function traverseElement(el: Element, cb: (el: Element) => boolean | void) {
+    let stopped;
+    // TODO
+    // Polyfill for fixing zrender group traverse don't visit it's root issue.
+    if (el.isGroup) {
+        stopped = cb(el);
+    }
+    if (!stopped) {
+        el.traverse(cb);
+    }
+}
+
+export function traverseElements(els: Element | Element[] | undefined | null, cb: (el: Element) => boolean | void) {
+    if (els) {
+        if (isArray(els)) {
+            for (let i = 0; i < els.length; i++) {
+                traverseElement(els[i], cb);
+            }
+        }
+        else {
+            traverseElement(els, cb);
+        }
+    }
 }
 
 // Register built-in shapes. These shapes might be overwirtten

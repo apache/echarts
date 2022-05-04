@@ -173,7 +173,8 @@ class MapView extends ChartView {
                         getFormattedLabel(idx: number, state: DisplayState) {
                             return mapModel.getFormattedLabel(fullIndex, state);
                         }
-                    }
+                    },
+                    defaultText: name
                 });
                 (circle as ECElement).disableLabelAnimation = true;
                 if (!labelModel.get('position')) {

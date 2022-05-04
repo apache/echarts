@@ -202,7 +202,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     }
 
     static defaultOption: Omit<PieSeriesOption, 'type'> = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         legendHoverLink: true,
         colorBy: 'data',

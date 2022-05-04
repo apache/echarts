@@ -27,50 +27,41 @@ const hasConsole = typeof console !== 'undefined'
     // eslint-disable-next-line
     && console.warn && console.log;
 
-export function log(str: string) {
+function outputLog(type: 'log' | 'warn' | 'error', str: string, onlyOnce?: boolean) {
     if (hasConsole) {
+        if (onlyOnce) {
+            if (storedLogs[str]) {
+                return;
+            }
+            storedLogs[str] = true;
+        }
         // eslint-disable-next-line
-        console.log(ECHARTS_PREFIX + str);
+        console[type](ECHARTS_PREFIX + str);
     }
 }
 
-export function warn(str: string) {
-    if (hasConsole) {
-        console.warn(ECHARTS_PREFIX + str);
-    }
+export function log(str: string, onlyOnce?: boolean) {
+    outputLog('log', str, onlyOnce);
 }
 
-export function error(str: string) {
-    if (hasConsole) {
-        console.error(ECHARTS_PREFIX + str);
-    }
+export function warn(str: string, onlyOnce?: boolean) {
+    outputLog('warn', str, onlyOnce);
+}
+
+export function error(str: string, onlyOnce?: boolean) {
+    outputLog('error', str, onlyOnce);
 }
 
 export function deprecateLog(str: string) {
     if (__DEV__) {
-        if (storedLogs[str]) {  // Not display duplicate message.
-            return;
-        }
-        if (hasConsole) {
-            storedLogs[str] = true;
-            console.warn(ECHARTS_PREFIX + 'DEPRECATED: ' + str);
-        }
+        // Not display duplicate message.
+        outputLog('warn', 'DEPRECATED: ' + str, true);
     }
 }
 
 export function deprecateReplaceLog(oldOpt: string, newOpt: string, scope?: string) {
     if (__DEV__) {
         deprecateLog((scope ? `[${scope}]` : '') + `${oldOpt} is deprecated, use ${newOpt} instead.`);
-    }
-}
-
-export function consoleLog(...args: unknown[]) {
-    if (__DEV__) {
-        /* eslint-disable no-console */
-        if (typeof console !== 'undefined' && console.log) {
-            console.log.apply(console, args);
-        }
-        /* eslint-enable no-console */
     }
 }
 

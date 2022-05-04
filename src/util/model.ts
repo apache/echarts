@@ -27,7 +27,8 @@ import {
     assert,
     isString,
     indexOf,
-    isStringSafe
+    isStringSafe,
+    isNumber
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -51,8 +52,11 @@ import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
-import { interpolateNumber } from 'zrender/src/animation/Animator';
 import { warn } from './log';
+
+function interpolateNumber(p0: number, p1: number, percent: number): number {
+    return (p1 - p0) * percent + p0;
+}
 
 /**
  * Make the name displayable. But we should
@@ -540,10 +544,9 @@ export function convertOptionIdName(idOrName: unknown, defaultValue: string): st
     if (idOrName == null) {
         return defaultValue;
     }
-    const type = typeof idOrName;
-    return type === 'string'
-        ? idOrName as string
-        : (type === 'number' || isStringSafe(idOrName))
+    return isString(idOrName)
+        ? idOrName
+        : (isNumber(idOrName) || isStringSafe(idOrName))
         ? idOrName + ''
         : defaultValue;
 }
@@ -1044,7 +1047,7 @@ export function interpolateRawValues(
         return targetValue;
     }
 
-    if (typeof targetValue === 'number') {
+    if (isNumber(targetValue)) {
         const value = interpolateNumber(
             sourceValue as number || 0,
             targetValue as number,
@@ -1059,7 +1062,7 @@ export function interpolateRawValues(
             : precision as number
         );
     }
-    else if (typeof targetValue === 'string') {
+    else if (isString(targetValue)) {
         return percent < 1 ? sourceValue : targetValue;
     }
     else {

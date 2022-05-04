@@ -20,7 +20,7 @@
 // Universal transitions that can animate between any shapes(series) and any properties in any amounts.
 
 import SeriesModel, { SERIES_UNIVERSAL_TRANSITION_PROP } from '../model/Series';
-import {createHashMap, each, map, filter, isArray} from 'zrender/src/core/util';
+import {createHashMap, each, map, filter, isArray, extend} from 'zrender/src/core/util';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { applyMorphAnimation, getPathList } from './morphTransitionHelper';
 import Path from 'zrender/src/graphic/Path';
@@ -173,7 +173,11 @@ function transitionBetween(
     ) {
         if (rawFrom || from) {
             to.animateFrom({
-                style: (rawFrom || from).style
+                style: (rawFrom && rawFrom !== from)
+                    // dividingMethod like clone may override the style(opacity)
+                    // So extend it to raw style.
+                    ? extend(extend({}, rawFrom.style), from.style)
+                    : from.style
             }, animationCfg);
         }
     }

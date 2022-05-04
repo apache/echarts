@@ -158,14 +158,16 @@ function createCoordSysRecord(api: ExtensionAPI, coordSysModel: CoordinateSystem
  * This action will be throttled.
  */
 function dispatchAction(api: ExtensionAPI, batch: DataZoomPayloadBatchItem[]) {
-    api.dispatchAction({
-        type: 'dataZoom',
-        animation: {
-            easing: 'cubicOut',
-            duration: 100
-        },
-        batch: batch
-    });
+    if (!api.isDisposed()) {
+        api.dispatchAction({
+            type: 'dataZoom',
+            animation: {
+                easing: 'cubicOut',
+                duration: 100
+            },
+            batch: batch
+        });
+    }
 }
 
 function containsPoint(

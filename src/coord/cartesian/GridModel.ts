@@ -50,7 +50,7 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
 
     static defaultOption: GridOption = {
         show: false,
-        zlevel: 0,
+        // zlevel: 0,
         z: 0,
         left: '10%',
         top: 60,

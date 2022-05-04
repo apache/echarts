@@ -17,4 +17,4 @@
 * under the License.
 */
 
-export * from './lib/export/core';
+export * from './lib/export/core.js';

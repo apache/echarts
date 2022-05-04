@@ -20,7 +20,7 @@
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import { Dictionary, ColorString } from '../../util/types';
-import { extend } from 'zrender/src/core/util';
+import { extend, isString } from 'zrender/src/core/util';
 
 export default function categoryVisual(ecModel: GlobalModel) {
 
@@ -60,7 +60,7 @@ export default function categoryVisual(ecModel: GlobalModel) {
                 const model = data.getItemModel<GraphNodeItemOption>(idx);
                 let categoryIdx = model.getShallow('category');
                 if (categoryIdx != null) {
-                    if (typeof categoryIdx === 'string') {
+                    if (isString(categoryIdx)) {
                         categoryIdx = categoryNameIdxMap['ec-' + categoryIdx];
                     }
 

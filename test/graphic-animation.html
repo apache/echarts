@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/perlin.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option = {
+                graphic: {
+                    elements: [{
+                        type: 'circle',
+                        x: 100,
+                        y: 100,
+                        shape: {
+                            cx: 0,
+                            cy: 0,
+                            r: 50
+                        },
+                        keyframeAnimation: {
+                            duration: 1000,
+                            loop: true,
+                            keyframes: [{
+                                percent: 0,
+                                x: 100
+                            }, {
+                                percent: 0.5,
+                                easing: 'sinusoidalInOut',
+                                x: 500
+                            }, {
+                                percent: 1,
+                                easing: 'sinusoidalInOut',
+                                x: 100
+                            }]
+                        },
+                        style: {
+                            fill: 'orange'
+                        }
+                    }]
+                }
+            }
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Basic Keyframe Animation'
+                ],
+                option: option
+            });
+
+        });
+        </script>
+
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                let greenCirclePosition = 100;
+                var option = {
+                    graphic: {
+                        elements: [{
+                            type: 'circle',
+                            x: greenCirclePosition,
+                            y: 50,
+                            transition: 'all',
+                            updateAnimation: {
+                                duration: 2000
+                            },
+                            shape: {
+                                cx: 0,
+                                cy: 0,
+                                r: 50
+                            },
+                            style: {
+                                fill: 'green'
+                            },
+                        }, {
+                            type: 'circle',
+                            x: 100,
+                            y: 200,
+                            shape: {
+                                cx: 0,
+                                cy: 0,
+                                r: 50
+                            },
+                            keyframeAnimation: {
+                                duration: 1000,
+                                loop: true,
+                                keyframes: [{
+                                    percent: 0,
+                                    x: 100
+                                }, {
+                                    percent: 0.5,
+                                    easing: 'sinusoidalInOut',
+                                    x: 500
+                                }, {
+                                    percent: 1,
+                                    easing: 'sinusoidalInOut',
+                                    x: 100
+                                }]
+                            },
+                            style: {
+                                fill: 'orange'
+                            }
+                        }]
+                    }
+                }
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Update on other elements should not affect the keyframe animation'
+                    ],
+                    buttons: [{
+                        text: 'Move Green Circle',
+                        onclick() {
+                            greenCirclePosition = 500 - greenCirclePosition;
+                            chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        x: greenCirclePosition
+                                    }]
+                                }
+                            });
+                        }
+                    }],
+                    option: option
+                });
+
+            });
+        </script>
+
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                var option = {
+                    graphic: {
+                        elements: [{
+                            type: 'text',
+                            x: 100,
+                            y: 100,
+                            style: {
+                                text: 'Apache ECharts',
+                                fontSize: 50,
+                                fontWeight: 'bold',
+                                lineDash: [0, 200],
+                                lineDashOffset: 0,
+                                fill: 'transparent',
+                                stroke: '#000',
+                                lineWidth: 1
+                            },
+                            keyframeAnimation: {
+                                duration: 3000,
+                                loop: true,
+                                keyframes: [{
+                                    percent: 0.7,
+                                    style: {
+                                        fill: 'transparent',
+                                        lineDashOffset: 200,
+                                        lineDash: [200, 0]
+                                    }
+                                }, {
+                                    // Hold a bit.
+                                    percent: 0.8,
+                                    style: {
+                                        fill: 'transparent'
+                                    }
+                                }, {
+                                    percent: 1,
+                                    style: {
+                                        fill: 'black'
+                                    }
+                                }]
+                            },
+                        }]
+                    }
+                }
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Text Stroke Animation'
+                    ],
+                    option: option
+                });
+
+            });
+        </script>
+    </body>
+</html>
+

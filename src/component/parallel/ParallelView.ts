@@ -25,7 +25,7 @@ import { ElementEventName } from 'zrender/src/core/types';
 import { ElementEvent } from 'zrender/src/Element';
 import { ParallelAxisExpandPayload } from '../axis/parallelAxisAction';
 import { each, bind, extend } from 'zrender/src/core/util';
-import { ThrottleController, createOrUpdate } from '../../util/throttle';
+import { ThrottleController, createOrUpdate, clear } from '../../util/throttle';
 
 const CLICK_THRESHOLD = 5; // > 4
 
@@ -50,6 +50,7 @@ class ParallelView extends ComponentView {
         createOrUpdate(this, '_throttledDispatchExpand', parallelModel.get('axisExpandRate'), 'fixRate');
     }
     dispose(ecModel: GlobalModel, api: ExtensionAPI): void {
+        clear(this, '_throttledDispatchExpand');
         each(this._handlers, function (handler: ElementEventHandler, eventName) {
             api.getZr().off(eventName, handler);
         });

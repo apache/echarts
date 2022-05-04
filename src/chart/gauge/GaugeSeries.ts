@@ -29,7 +29,7 @@ import {
     OptionDataValueNumeric,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -105,7 +105,7 @@ interface DetailOption extends LabelOption {
 }
 
 interface GaugeStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 export interface GaugeStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
@@ -195,7 +195,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     }
 
     static defaultOption: GaugeSeriesOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 2,
         colorBy: 'data',
         // 默认全局居中

@@ -77,7 +77,7 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
     static layoutMode = 'box' as const;
 
     static defaultOption: ParallelCoordinateSystemOption = {
-        zlevel: 0,
+        // zlevel: 0,
         z: 0,
         left: 80,
         top: 60,

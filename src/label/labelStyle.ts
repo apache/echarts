@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
+import ZRText, { TextProps, TextStyleProps } from 'zrender/src/graphic/Text';
 import { Dictionary } from 'zrender/src/core/types';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import Model from '../model/Model';
@@ -691,9 +691,11 @@ export function animateLabelValue(
     labelFetcher: SetLabelStyleOpt<number>['labelFetcher']
 ) {
     const labelInnerStore = labelInner(textEl);
-    if (!labelInnerStore.valueAnimation) {
+    if (!labelInnerStore.valueAnimation || labelInnerStore.prevValue === labelInnerStore.value) {
+        // Value not changed, no new label animation
         return;
     }
+
     const defaultInterpolatedText = labelInnerStore.defaultInterpolatedText;
     // Consider the case that being animating, do not use the `obj.value`,
     // Otherwise it will jump to the `obj.value` when this new animation started.
@@ -722,8 +724,12 @@ export function animateLabelValue(
         setLabelText(textEl, labelText);
     }
 
+    (textEl as ZRText & {percent?: number}).percent = 0;
     (labelInnerStore.prevValue == null
         ? initProps
         : updateProps
-    )(textEl, {}, animatableModel, dataIndex, null, during);
+    )<TextProps & {percent?: number}>(textEl, {
+        // percent is used to prevent animation from being aborted #15916
+        percent: 1
+    }, animatableModel, dataIndex, null, during);
 }

@@ -17,15 +17,30 @@
 * under the License.
 */
 
-import * as numberUtil from '../util/number';
-
-const roundNumber = numberUtil.round;
+import {getPrecision, round, nice, quantityExponent} from '../util/number';
+import IntervalScale from './Interval';
+import LogScale from './Log';
+import Scale from './Scale';
 
 type intervalScaleNiceTicksResult = {
     interval: number,
     intervalPrecision: number,
     niceTickExtent: [number, number]
 };
+
+export function isValueNice(val: number) {
+    const exp10 = Math.pow(10, quantityExponent(Math.abs(val)));
+    const f = Math.abs(val / exp10);
+    return f === 0
+        || f === 1
+        || f === 2
+        || f === 3
+        || f === 5;
+}
+
+export function isIntervalOrLogScale(scale: Scale): scale is LogScale | IntervalScale {
+    return scale.type === 'interval' || scale.type === 'log';
+}
 /**
  * @param extent Both extent[0] and extent[1] should be valid number.
  *               Should be extent[0] < extent[1].
@@ -41,7 +56,7 @@ export function intervalScaleNiceTicks(
     const result = {} as intervalScaleNiceTicksResult;
 
     const span = extent[1] - extent[0];
-    let interval = result.interval = numberUtil.nice(span / splitNumber, true);
+    let interval = result.interval = nice(span / splitNumber, true);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
     }
@@ -52,8 +67,8 @@ export function intervalScaleNiceTicks(
     const precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
     const niceTickExtent = result.niceTickExtent = [
-        roundNumber(Math.ceil(extent[0] / interval) * interval, precision),
-        roundNumber(Math.floor(extent[1] / interval) * interval, precision)
+        round(Math.ceil(extent[0] / interval) * interval, precision),
+        round(Math.floor(extent[1] / interval) * interval, precision)
     ];
 
     fixExtent(niceTickExtent, extent);
@@ -61,12 +76,31 @@ export function intervalScaleNiceTicks(
     return result;
 }
 
+export function increaseInterval(interval: number) {
+    const exp10 = Math.pow(10, quantityExponent(interval));
+    // Increase interval
+    let f = interval / exp10;
+    if (!f) {
+        f = 1;
+    }
+    else if (f === 2) {
+        f = 3;
+    }
+    else if (f === 3) {
+        f = 5;
+    }
+    else { // f is 1 or 5
+        f *= 2;
+    }
+    return round(f * exp10);
+}
+
 /**
  * @return interval precision
  */
 export function getIntervalPrecision(interval: number): number {
     // Tow more digital for tick.
-    return numberUtil.getPrecision(interval) + 2;
+    return getPrecision(interval) + 2;
 }
 
 function clamp(

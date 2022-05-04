@@ -56,8 +56,8 @@ function drawSegment(
     let k = 0;
     for (; k < segLen; k++) {
 
-        const x = points[idx * 2];
-        const y = points[idx * 2 + 1];
+        let x = points[idx * 2];
+        let y = points[idx * 2 + 1];
 
         if (idx >= allLen || idx < 0) {
             break;
@@ -76,8 +76,8 @@ function drawSegment(
             cpy0 = y;
         }
         else {
-            const dx = x - prevX;
-            const dy = y - prevY;
+            let dx = x - prevX;
+            let dy = y - prevY;
 
             // Ignore tiny segment.
             if ((dx * dx + dy * dy) < 0.5) {
@@ -89,6 +89,19 @@ function drawSegment(
                 let nextIdx = idx + dir;
                 let nextX = points[nextIdx * 2];
                 let nextY = points[nextIdx * 2 + 1];
+                // Ignore duplicate point
+                while (nextX === x && nextY === y && k < segLen) {
+                    k++;
+                    nextIdx += dir;
+                    idx += dir;
+                    nextX = points[nextIdx * 2];
+                    nextY = points[nextIdx * 2 + 1];
+                    x = points[idx * 2];
+                    y = points[idx * 2 + 1];
+                    dx = x - prevX;
+                    dy = y - prevY;
+                }
+
                 let tmpK = k + 1;
                 if (connectNulls) {
                     // Find next point not null
@@ -123,18 +136,20 @@ function drawSegment(
                     if (smoothMonotone === 'x') {
                         lenPrevSeg = Math.abs(dx0);
                         lenNextSeg = Math.abs(dx1);
-                        cpx1 = x - lenPrevSeg * smooth;
+                        const dir = vx > 0 ? 1 : -1;
+                        cpx1 = x - dir * lenPrevSeg * smooth;
                         cpy1 = y;
-                        nextCpx0 = x + lenPrevSeg * smooth;
+                        nextCpx0 = x + dir * lenNextSeg * smooth;
                         nextCpy0 = y;
                     }
                     else if (smoothMonotone === 'y') {
                         lenPrevSeg = Math.abs(dy0);
                         lenNextSeg = Math.abs(dy1);
+                        const dir = vy > 0 ? 1 : -1;
                         cpx1 = x;
-                        cpy1 = y - lenPrevSeg * smooth;
+                        cpy1 = y - dir * lenPrevSeg * smooth;
                         nextCpx0 = x;
-                        nextCpy0 = y + lenPrevSeg * smooth;
+                        nextCpy0 = y + dir * lenNextSeg * smooth;
                     }
                     else {
                         lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);

@@ -50,7 +50,7 @@ class PolarModel extends ComponentModel<PolarOption> {
 
     static defaultOption: PolarOption = {
 
-        zlevel: 0,
+        // zlevel: 0,
 
         z: 0,
 

@@ -78,7 +78,7 @@ export default {
         },
         saveAsImage: {
             title: 'Salva come immagine',
-            lang: ['Tasto destro per salvare l'immagine']
+            lang: ['Tasto destro per salvare l\'immagine']
         }
     },
     series: {

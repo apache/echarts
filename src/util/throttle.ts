@@ -176,6 +176,8 @@ export function createOrUpdate<T, S extends keyof T, P = T[S]>(
 export function clear<T, S extends keyof T>(obj: T, fnAttr: S): void {
     const fn = obj[fnAttr];
     if (fn && (fn as any)[ORIGIN_METHOD]) {
+        // Clear throttle
+        (fn as any).clear && (fn as any).clear();
         obj[fnAttr] = (fn as any)[ORIGIN_METHOD];
     }
 }

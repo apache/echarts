@@ -91,18 +91,9 @@ class TooltipRichContent {
                 rich: markupStyleCreator.richTextStyles,
                 text: content as string,
                 lineHeight: 22,
-                backgroundColor: tooltipModel.get('backgroundColor'),
-                borderRadius: tooltipModel.get('borderRadius'),
                 borderWidth: 1,
                 borderColor: borderColor as string,
-                shadowColor: tooltipModel.get('shadowColor'),
-                shadowBlur: tooltipModel.get('shadowBlur'),
-                shadowOffsetX: tooltipModel.get('shadowOffsetX'),
-                shadowOffsetY: tooltipModel.get('shadowOffsetY'),
                 textShadowColor: textStyleModel.get('textShadowColor'),
-                textShadowBlur: textStyleModel.get('textShadowBlur') || 0,
-                textShadowOffsetX: textStyleModel.get('textShadowOffsetX') || 0,
-                textShadowOffsetY: textStyleModel.get('textShadowOffsetY') || 0,
                 fill: tooltipModel.get(['textStyle', 'color']),
                 padding: getPaddingFromTooltipModel(tooltipModel, 'richText'),
                 verticalAlign: 'top',
@@ -110,6 +101,17 @@ class TooltipRichContent {
             },
             z: tooltipModel.get('z')
         });
+        zrUtil.each([
+            'backgroundColor', 'borderRadius', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
+        ] as const, propName => {
+            (this.el.style as any)[propName] = tooltipModel.get(propName);
+        });
+        zrUtil.each([
+            'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
+        ] as const, propName => {
+            this.el.style[propName] = textStyleModel.get(propName) || 0;
+        });
+
         this._zr.add(this.el);
 
         const self = this;

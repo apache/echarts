@@ -34,6 +34,7 @@ under the License.
 
         <div id="main"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
 
 
         <script>
@@ -331,7 +332,7 @@ under the License.
                     },
                     series: {
                         type: 'pie',
-                        selectedMode: 'multiply'
+                        selectedMode: 'multiple'
                     }
                 };
 
@@ -343,7 +344,48 @@ under the License.
             });
         </script>
 
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var clockwise = true;
 
+                var option = {
+                    series: [
+                        {
+                            type: "pie",
+                            radius: ["40.625%", "100%"],
+                            startAngle: 320,
+                            clockwise,
+                            data: [
+                                { value: 0, name: "Search Engine" },
+                                { value: 0, name: "Direct" },
+                                { value: 0, name: "Email" },
+                                { value: 0, name: "Union Ads" }
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Shouldn\'t be fully annular',
+                        'from https://github.com/apache/echarts/issues/16363'
+                    ],
+                    option
+                });
+
+                setTimeout(function () {
+                    option.series[0].data = [
+                        { value: 21, name: "Search Engine" },
+                        { value: 8, name: "Direct" },
+                        { value: 1, name: "Email" },
+                        { value: 0, name: "Union Ads" }
+                    ];
+                    chart.setOption(option);
+                }, 1e3);
+            });
+        </script>
 
 
 

@@ -107,7 +107,7 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
 
         z: 6,
 
-        zlevel: 0,
+        // zlevel: 0,
 
         orient: 'horizontal',
 

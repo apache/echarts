@@ -20,14 +20,10 @@
 
 const path = require('path');
 const {build} = require('esbuild');
-
+const commander = require('commander');
 const outFilePath = path.resolve(__dirname, '../dist/echarts.js');
 
-const umdMark = '// ------------- WRAPPED UMD --------------- //';
-const umdWrapperHead = `
-${umdMark}
-(function (root, factory) {
-    window.__DEV__ = true;
+const umdWrapperHead = `(function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['exports'], factory);
@@ -52,15 +48,20 @@ build({
     bundle: true,
     banner: umdWrapperHead,
     footer: umdWrapperTail,
+    define: {
+        'process.env.NODE_ENV': '"development"',
+        '__DEV__': 'true'
+    },
     watch: {
         async onRebuild(error) {
             if (error) {
                 console.error('watch build failed:', error)
-            } else {
-                console.log('build done')
+            }
+            else {
+                console.log('Bundled with esbuild')
             }
         },
     },
 }).then(async () => {
-    console.log('build done')
+    console.log('Bundled with esbuild')
 }).catch(e => console.error(e.toString()))

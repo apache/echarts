@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                const data = [
+                    ["2021-03-03T15:30:00.000Z", 48.1],
+                    ["2021-03-03T15:45:00.000Z", 47.9],
+                    ["2021-03-03T16:00:00.000Z", 47.7],
+                    ["2021-03-03T16:15:00.000Z", 47.6],
+                    ["2021-03-03T16:30:00.000Z", 47.8],
+                    ["2021-03-03T16:45:00.000Z", 48.2],
+                    ["2021-03-03T17:00:00.000Z", 48.3],
+                    ["2021-03-03T17:45:00.000Z", 48.3],
+                    ["2021-03-03T18:00:00.000Z", 48.3],
+                    ["2021-03-03T18:15:00.000Z", 48.6],
+                    ["2021-03-03T18:30:00.000Z", 48.3],
+                    ["2021-03-03T18:45:00.000Z", 48.3],
+                    ["2021-03-03T19:00:00.000Z", 48.8],
+                    ["2021-03-03T19:15:00.000Z", 48.3],
+                    ["2021-03-03T19:30:00.000Z", 48.3],
+                    ["2021-03-03T19:45:00.000Z", 48.3],
+                    ["2021-03-03T20:00:00.000Z", 48.3],
+                    ["2021-03-03T20:15:00.000Z", 48.3],
+                    ["2021-03-03T20:30:00.000Z", 48.3],
+                    ["2021-03-03T20:45:00.000Z", 48.7],
+                    ["2021-03-03T21:00:00.000Z", 46.3],
+                    ["2021-03-03T21:15:00.000Z", 42.3],
+                    ["2021-03-03T21:30:00.000Z", 44.3],
+                    ["2021-03-03T21:45:00.000Z", 48.9],
+                    ["2021-03-03T22:00:00.000Z", 48.1],
+                    ["2021-03-03T22:15:00.000Z", 48.3],
+                    ["2021-03-03T22:30:00.000Z", 49.7],
+                    ["2021-03-03T22:45:00.000Z", 49.1],
+                    ["2021-03-03T23:00:00.000Z", 48.3],
+                    ["2021-03-03T23:15:00.000Z", 46.8],
+                    ["2021-03-03T23:30:00.000Z", 48.3],
+                    ["2021-03-03T23:45:00.000Z", null],
+                    ["2021-03-04T00:00:00.000Z", 48.3],
+                    ["2021-03-04T00:15:00.000Z", 51],
+                    ["2021-03-04T00:30:00.000Z", 51.5],
+                    ["2021-03-04T00:45:00.000Z", 51.9],
+                    ["2021-03-04T01:00:00.000Z", 52.4],
+                    ["2021-03-04T01:15:00.000Z", 52.7],
+                    ["2021-03-04T01:30:00.000Z", 52.9],
+                    ["2021-03-04T01:45:00.000Z", 53],
+                    ["2021-03-04T02:00:00.000Z", 53.2],
+                    ["2021-03-04T02:15:00.000Z", 53.3],
+                    ["2021-03-04T05:15:00.000Z", null],
+                    ["2021-03-04T02:30:00.000Z", null],
+                    ["2021-03-04T02:45:00.000Z", null],
+                    ["2021-03-04T03:00:00.000Z", null],
+                    ["2021-03-04T03:15:00.000Z", null],
+                    ["2021-03-04T03:30:00.000Z", null],
+                    ["2021-03-04T03:45:00.000Z", null],
+                    ["2021-03-04T04:00:00.000Z", null],
+                    ["2021-03-04T04:15:00.000Z", null],
+                    ["2021-03-04T04:30:00.000Z", null],
+                    ["2021-03-04T04:45:00.000Z", null],
+                    ["2021-03-04T05:00:00.000Z", null],
+                    ["2021-03-04T05:15:00.000Z", null],
+                    ["2021-03-04T05:30:00.000Z", null],
+                    ["2021-03-04T05:45:00.000Z", 53.3],
+                    ["2021-03-04T06:00:00.000Z", 53.3],
+                    ["2021-03-04T06:15:00.000Z", 53.5],
+                    ["2021-03-04T06:30:00.000Z", 53.6],
+                    ["2021-03-04T06:45:00.000Z", 53.7],
+                    ["2021-03-04T07:00:00.000Z", 53.7],
+                    ["2021-03-04T07:15:00.000Z", 53.7],
+                    ["2021-03-04T07:30:00.000Z", 53.7],
+                    ["2021-03-04T07:45:00.000Z", 53.6],
+                    ["2021-03-04T08:00:00.000Z", 53.5],
+                    ["2021-03-04T08:15:00.000Z", 53.4],
+                    ["2021-03-04T08:30:00.000Z", 53.1],
+                    ["2021-03-04T08:45:00.000Z", 52.8],
+                    ["2021-03-04T09:00:00.000Z", 52.5]
+                ];
+                const start = new Date('2021-03-04T09:15:00.000Z');
+                for (let i = 0; i < 1560; i++) {
+                    const date = new Date(start.getTime() + i * 15 * 60 * 1000);
+                    const value = 40 + Number((Math.random() * (3 + Math.ceil(i / 100))).toFixed(1));
+                    data.push([date.toISOString(), value]);
+                }
+
+                const option = {
+                    title: { text: "Data" },
+                    tooltip: { trigger: "axis", axisPointer: { animation: true } },
+                    legend: {
+                        data: ["relative humidity"],
+                    },
+                    dataZoom: [
+                        { realtime: true, xAxisIndex: [0, 1], filterMode: "weakFilter", id: 'dz-s' },
+                        { type: "inside", realtime: true, xAxisIndex: [0, 1] },
+                    ],
+                    toolbox: { feature: { saveAsImage: {}, restore: {} } },
+                    xAxis: {
+                        min: '2021-03-03T15:00:00.000Z',
+                        type: "time"
+                    },
+                    yAxis: [
+                        {
+                            type: "value",
+                            position: "left",
+                            name: "%",
+                            min: 0,
+                            max: 100,
+                            _medium: "relative humidity"
+                        },
+                    ],
+                    series: [
+                        {
+                            name: "relative humidity",
+                            type: "line",
+                            step: "start",
+                            showSymbol: false,
+                            yAxisIndex: 0,
+                            sampling: "lttb",
+                            connectNulls: false,
+                            data: data
+                        },
+                    ],
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Sampling with lttb, test **connectNulls**',
+                        'NaN point should not be filtered, toggle connectNulls value, compare it.',
+                    ],
+                    option,
+                    width: 600,
+                    height: 300,
+                    buttons: [
+                        {
+                            text: 'find null series',
+                            onclick: function () {
+                                chart.dispatchAction({
+                                    type: 'dataZoom',
+                                    batch: [
+                                        {id: 'dz-s', start: 0, end: 10}
+                                    ]
+                                });
+                            }
+                        },
+                        {
+                            text: 'toggle connectNulls value',
+                            onclick: function () {
+                                const flag = option.series[0].connectNulls;
+                                option.series[0].connectNulls = !flag;
+                                chart.setOption(option);
+                            }
+                        },
+                        {
+                            text: 'switch sampling between lttb and none',
+                            onclick: function () {
+                                const sampling = option.series[0].sampling;
+                                option.series[0].sampling = sampling === 'lttb' ? 'none' : 'lttb';
+                                console.log('current setting:', option.series[0].sampling);
+                                chart.setOption(option);
+                            }
+                        }
+                    ]
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                const data = [];
+                let operator = 1;
+                let value = 50;
+                const start = new Date('2021-03-03T15:30:00.000Z');
+                for (let i = 0; i < 1950; i++) {
+                    if (i % 100 === 0) {
+                        operator = Math.random() > 0.5 ? 1 : -1;
+                    }
+                    const date = new Date(start.getTime() + i * 15 * 60 * 1000);
+                    if (i < 639 || i > 943) {
+                        value += operator * Number((Math.random() * 2 - 1));
+                        value = Math.max(Math.min(100, value), 0);
+                        data.push([date.toISOString(), value.toFixed(1)]);
+                    }
+                    else if (i === 934) {
+                        data.push([date.toISOString(), null]);
+                    }
+                }
+
+                const option = {
+                    title: { text: "Data" },
+                    tooltip: { trigger: "axis", axisPointer: { animation: true } },
+                    legend: {
+                        data: ["relative humidity"],
+                    },
+                    dataZoom: [
+                        { realtime: true, xAxisIndex: [0, 1], filterMode: "weakFilter" },
+                        { type: "inside", realtime: true, xAxisIndex: [0, 1] },
+                    ],
+                    toolbox: { feature: { saveAsImage: {}, restore: {} } },
+                    xAxis: { type: "time" },
+                    yAxis: [
+                        {
+                            type: "value",
+                            position: "left",
+                            name: "%",
+                            min: 0,
+                            max: 100,
+                            _medium: "relative humidity"
+                        },
+                    ],
+                    series: [
+                        {
+                            name: "relative humidity",
+                            type: "line",
+                            step: "start",
+                            showSymbol: false,
+                            yAxisIndex: 0,
+                            sampling: "lttb",
+                            connectNulls: false,
+                            data
+                        },
+                    ]
+                };
+
+                var chart1 = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Sampling with lttb, test **connectNulls**',
+                        'toggle connectNulls value or switch setting, check it.'
+                    ],
+                    option,
+                    width: 600,
+                    height: 400,
+                    buttons: [
+                        {
+                            text: 'toggle connectNulls value',
+                            onclick: function () {
+                                const flag = option.series[0].connectNulls;
+                                option.series[0].connectNulls = !flag;
+                                chart1.setOption(option);
+                            }
+                        },
+                        {
+                            text: 'switch sampling between lttb and none',
+                            onclick: function () {
+                                const sampling = option.series[0].sampling;
+                                option.series[0].sampling = sampling === 'lttb' ? 'none' : 'lttb';
+                                console.log('current setting:', option.series[0].sampling);
+                                chart1.setOption(option);
+                            }
+                        }
+                    ]
+                });
+            });
+        </script>
+    </body>
+</html>

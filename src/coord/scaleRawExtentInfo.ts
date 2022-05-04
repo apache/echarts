@@ -96,7 +96,7 @@ export class ScaleRawExtentInfo {
         this._dataMax = dataExtent[1];
 
         const isOrdinal = this._isOrdinal = scale.type === 'ordinal';
-        this._needCrossZero = model.getNeedCrossZero && model.getNeedCrossZero();
+        this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
 
         const modelMinRaw = this._modelMinRaw = model.get('min', true);
         if (isFunction(modelMinRaw)) {
@@ -200,11 +200,6 @@ export class ScaleRawExtentInfo {
 
         (min == null || !isFinite(min)) && (min = NaN);
         (max == null || !isFinite(max)) && (max = NaN);
-
-        if (min > max) {
-            min = NaN;
-            max = NaN;
-        }
 
         const isBlank = eqNaN(min)
             || eqNaN(max)

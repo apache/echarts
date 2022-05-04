@@ -42,6 +42,7 @@ import { deprecateLog } from '../../util/log';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
+import SeriesData from '../../data/SeriesData';
 
 const Rect = graphic.Rect;
 
@@ -123,6 +124,13 @@ class SliderZoomView extends DataZoomView {
         otherDim: string
         otherAxisInverse: boolean
     };
+
+    // Cached raw data. Avoid rendering data shadow multiple times.
+    private _shadowData: SeriesData;
+    private _shadowDim: string;
+    private _shadowSize: number[];
+    private _shadowPolygonPts: number[][];
+    private _shadowPolylinePts: number[][];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -348,9 +356,9 @@ class SliderZoomView extends DataZoomView {
         }
 
         const size = this._size;
+        const oldSize = this._shadowSize || [];
         const seriesModel = info.series;
         const data = seriesModel.getRawData();
-
         const otherDim: string = seriesModel.getShadowDim
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
@@ -359,57 +367,71 @@ class SliderZoomView extends DataZoomView {
             return;
         }
 
-        let otherDataExtent = data.getDataExtent(otherDim);
-        // Nice extent.
-        const otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
-        otherDataExtent = [
-            otherDataExtent[0] - otherOffset,
-            otherDataExtent[1] + otherOffset
-        ];
-        const otherShadowExtent = [0, size[1]];
+        let polygonPts = this._shadowPolygonPts;
+        let polylinePts = this._shadowPolylinePts;
+        // Not re-render if data doesn't change.
+        if (
+            data !== this._shadowData || otherDim !== this._shadowDim
+            || size[0] !== oldSize[0] || size[1] !== oldSize[1]
+        ) {
+            let otherDataExtent = data.getDataExtent(otherDim);
+            // Nice extent.
+            const otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
+            otherDataExtent = [
+                otherDataExtent[0] - otherOffset,
+                otherDataExtent[1] + otherOffset
+            ];
+            const otherShadowExtent = [0, size[1]];
+            const thisShadowExtent = [0, size[0]];
 
-        const thisShadowExtent = [0, size[0]];
+            const areaPoints = [[size[0], 0], [0, 0]];
+            const linePoints: number[][] = [];
+            const step = thisShadowExtent[1] / (data.count() - 1);
+            let thisCoord = 0;
 
-        const areaPoints = [[size[0], 0], [0, 0]];
-        const linePoints: number[][] = [];
-        const step = thisShadowExtent[1] / (data.count() - 1);
-        let thisCoord = 0;
+            // Optimize for large data shadow
+            const stride = Math.round(data.count() / size[0]);
+            let lastIsEmpty: boolean;
+            data.each([otherDim], function (value: ParsedValue, index) {
+                if (stride > 0 && (index % stride)) {
+                    thisCoord += step;
+                    return;
+                }
 
-        // Optimize for large data shadow
-        const stride = Math.round(data.count() / size[0]);
-        let lastIsEmpty: boolean;
-        data.each([otherDim], function (value: ParsedValue, index) {
-            if (stride > 0 && (index % stride)) {
+                // FIXME
+                // Should consider axis.min/axis.max when drawing dataShadow.
+
+                // FIXME
+                // 应该使用统一的空判断？还是在list里进行空判断？
+                const isEmpty = value == null || isNaN(value as number) || value === '';
+                // See #4235.
+                const otherCoord = isEmpty
+                    ? 0 : linearMap(value as number, otherDataExtent, otherShadowExtent, true);
+
+                // Attempt to draw data shadow precisely when there are empty value.
+                if (isEmpty && !lastIsEmpty && index) {
+                    areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
+                    linePoints.push([linePoints[linePoints.length - 1][0], 0]);
+                }
+                else if (!isEmpty && lastIsEmpty) {
+                    areaPoints.push([thisCoord, 0]);
+                    linePoints.push([thisCoord, 0]);
+                }
+
+                areaPoints.push([thisCoord, otherCoord]);
+                linePoints.push([thisCoord, otherCoord]);
+
                 thisCoord += step;
-                return;
-            }
+                lastIsEmpty = isEmpty;
+            });
 
-            // FIXME
-            // Should consider axis.min/axis.max when drawing dataShadow.
+            polygonPts = this._shadowPolygonPts = areaPoints;
+            polylinePts = this._shadowPolylinePts = linePoints;
 
-            // FIXME
-            // 应该使用统一的空判断？还是在list里进行空判断？
-            const isEmpty = value == null || isNaN(value as number) || value === '';
-            // See #4235.
-            const otherCoord = isEmpty
-                ? 0 : linearMap(value as number, otherDataExtent, otherShadowExtent, true);
-
-            // Attempt to draw data shadow precisely when there are empty value.
-            if (isEmpty && !lastIsEmpty && index) {
-                areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
-                linePoints.push([linePoints[linePoints.length - 1][0], 0]);
-            }
-            else if (!isEmpty && lastIsEmpty) {
-                areaPoints.push([thisCoord, 0]);
-                linePoints.push([thisCoord, 0]);
-            }
-
-            areaPoints.push([thisCoord, otherCoord]);
-            linePoints.push([thisCoord, otherCoord]);
-
-            thisCoord += step;
-            lastIsEmpty = isEmpty;
-        });
+        }
+        this._shadowData = data;
+        this._shadowDim = otherDim;
+        this._shadowSize = [size[0], size[1]];
 
         const dataZoomModel = this.dataZoomModel;
 
@@ -417,14 +439,14 @@ class SliderZoomView extends DataZoomView {
             const model = dataZoomModel.getModel(isSelectedArea ? 'selectedDataBackground' : 'dataBackground');
             const group = new graphic.Group();
             const polygon = new graphic.Polygon({
-                shape: {points: areaPoints},
+                shape: {points: polygonPts},
                 segmentIgnoreThreshold: 1,
                 style: model.getModel('areaStyle').getAreaStyle(),
                 silent: true,
                 z2: -20
             });
             const polyline = new graphic.Polyline({
-                shape: {points: linePoints},
+                shape: {points: polylinePts},
                 segmentIgnoreThreshold: 1,
                 style: model.getModel('lineStyle').getLineStyle(),
                 silent: true,
@@ -538,7 +560,8 @@ class SliderZoomView extends DataZoomView {
                 r: borderRadius
             },
             style: {
-                stroke: dataZoomModel.get('dataBackgroundColor' as any) // deprecated option
+                // deprecated option
+                stroke: dataZoomModel.get('dataBackgroundColor' as any)
                     || dataZoomModel.get('borderColor'),
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
                 fill: 'rgba(0,0,0,0)'

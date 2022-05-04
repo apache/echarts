@@ -26,6 +26,7 @@ import * as helper from './helper';
 import PiecewiseModel from './PiecewiseModel';
 import { TextAlign } from 'zrender/src/core/types';
 import { VisualMappingOption } from '../../visual/VisualMapping';
+import { createTextStyle } from '../../label/labelStyle';
 
 class PiecewiseVisualMapView extends VisualMapView {
 
@@ -101,8 +102,6 @@ class PiecewiseVisualMapView extends VisualMapView {
         this.renderBackground(thisGroup);
 
         this.positionGroup(thisGroup);
-
-
     }
 
     private _enableHoverLink(itemGroup: graphic.Group, pieceIndex: number) {
@@ -157,15 +156,13 @@ class PiecewiseVisualMapView extends VisualMapView {
         const textStyleModel = this.visualMapModel.textStyleModel;
 
         itemGroup.add(new graphic.Text({
-            style: {
+            style: createTextStyle(textStyleModel, {
                 x: showLabel ? (itemAlign === 'right' ? itemSize[0] : 0) : itemSize[0] / 2,
                 y: itemSize[1] / 2,
                 verticalAlign: 'middle',
                 align: showLabel ? (itemAlign as TextAlign) : 'center',
-                text: text,
-                font: textStyleModel.getFont(),
-                fill: textStyleModel.getTextColor()
-            }
+                text
+            })
         }));
 
         group.add(itemGroup);
@@ -218,10 +215,14 @@ class PiecewiseVisualMapView extends VisualMapView {
     ) {
         const visualMapModel = this.visualMapModel;
         const option = visualMapModel.option;
+        const selectedMode = option.selectedMode;
+        if (!selectedMode) {
+            return;
+        }
         const selected = zrUtil.clone(option.selected);
         const newKey = visualMapModel.getSelectedMapKey(piece);
 
-        if (option.selectedMode === 'single') {
+        if (selectedMode === 'single' || selectedMode === true) {
             selected[newKey] = true;
             zrUtil.each(selected, function (o, key) {
                 selected[key] = key === newKey;

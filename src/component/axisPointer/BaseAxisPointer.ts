@@ -493,6 +493,8 @@ class BaseAxisPointer implements AxisPointer {
             this._handle = null;
             this._payloadInfo = null;
         }
+
+        throttleUtil.clear(this, '_doDispatchAxisPointer');
     }
 
     /**

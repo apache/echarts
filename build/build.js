@@ -26,7 +26,6 @@ const chalk = require('chalk');
 const rollup = require('rollup');
 const prePublish = require('./pre-publish');
 const transformDEV = require('./transform-dev');
-const preamble = require('./preamble');
 
 async function run() {
 
