@@ -17,12 +17,12 @@
 * under the License.
 */
 
-import {bind, each, isFunction, isString, indexOf} from 'zrender/src/core/util';
+import { bind, each, isFunction, isString, indexOf } from 'zrender/src/core/util';
 import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
 import * as throttle from '../../util/throttle';
 import DataZoomView from './DataZoomView';
-import {linearMap, asc, parsePercent} from '../../util/number';
+import { linearMap, asc, parsePercent } from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
@@ -41,7 +41,7 @@ import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
-import {createTextStyle} from '../../label/labelStyle';
+import { createTextStyle } from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
 
 const Rect = graphic.Rect;
@@ -227,7 +227,7 @@ class SliderZoomView extends DataZoomView {
         // If some of x/y/width/height are not specified,
         // auto-adapt according to target grid.
         const coordRect = this._findCoordRect();
-        const ecSize = {width: api.getWidth(), height: api.getHeight()};
+        const ecSize = { width: api.getWidth(), height: api.getHeight() };
         // Default align by coordinate system rect.
         const positionInfo = this._orient === HORIZONTAL
             ? {
@@ -261,7 +261,7 @@ class SliderZoomView extends DataZoomView {
             ecSize
         );
 
-        this._location = {x: layoutRect.x, y: layoutRect.y};
+        this._location = { x: layoutRect.x, y: layoutRect.y };
         this._size = [layoutRect.width, layoutRect.height];
         this._orient === VERTICAL && this._size.reverse();
     }
@@ -281,13 +281,13 @@ class SliderZoomView extends DataZoomView {
         // Transform barGroup.
         sliderGroup.attr(
             (orient === HORIZONTAL && !inverse)
-            ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: 1 }
-            : (orient === HORIZONTAL && inverse)
-            ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: -1 }
-            : (orient === VERTICAL && !inverse)
-            ? {scaleY: otherAxisInverse ? -1 : 1, scaleX: 1, rotation: Math.PI / 2}
-            // Dont use Math.PI, considering shadow direction.
-            : {scaleY: otherAxisInverse ? -1 : 1, scaleX: -1, rotation: Math.PI / 2}
+                ? { scaleY: otherAxisInverse ? 1 : -1, scaleX: 1 }
+                : (orient === HORIZONTAL && inverse)
+                    ? { scaleY: otherAxisInverse ? 1 : -1, scaleX: -1 }
+                    : (orient === VERTICAL && !inverse)
+                        ? { scaleY: otherAxisInverse ? -1 : 1, scaleX: 1, rotation: Math.PI / 2 }
+                        // Dont use Math.PI, considering shadow direction.
+                        : { scaleY: otherAxisInverse ? -1 : 1, scaleX: -1, rotation: Math.PI / 2 }
         );
 
         // Position barGroup
@@ -389,6 +389,7 @@ class SliderZoomView extends DataZoomView {
             const linePoints: number[][] = [];
             const step = thisShadowExtent[1] / (data.count() - 1);
             const normalizationConstant = size[0] / (thisDataExtent[1] - thisDataExtent[0]);
+            const isTimeAxis = info.thisAxis.type === 'time';
             let thisCoord = -step;
 
             // Optimize for large data shadow
@@ -396,17 +397,16 @@ class SliderZoomView extends DataZoomView {
             let lastIsEmpty: boolean;
 
             data.each([info.thisDim, otherDim], function (thisValue: ParsedValue, otherValue: ParsedValue, index) {
-                if (stride > 0 && (index % stride) && info.thisAxis.type !== 'time') {
-                    thisCoord += step;
-                    return;
-                }
-                else if (stride > 0 && (index % stride)) {
+                if (stride > 0 && (index % stride)) {
+                    if (!isTimeAxis) {
+                        thisCoord += step;
+                    }
                     return;
                 }
 
-                thisCoord = info.thisAxis.type === 'time'
-                ? (+thisValue - thisDataExtent[0]) * normalizationConstant
-                : thisCoord + step;
+                thisCoord = isTimeAxis
+                    ? (+thisValue - thisDataExtent[0]) * normalizationConstant
+                    : thisCoord + step;
 
                 // FIXME
                 // Should consider axis.min/axis.max when drawing dataShadow.
@@ -497,8 +497,8 @@ class SliderZoomView extends DataZoomView {
                 }
 
                 if (showDataShadow !== true && indexOf(
-                        SHOW_DATA_SHADOW_SERIES_TYPE, seriesModel.get('type')
-                    ) < 0
+                    SHOW_DATA_SHADOW_SERIES_TYPE, seriesModel.get('type')
+                ) < 0
                 ) {
                     return;
                 }
@@ -630,17 +630,17 @@ class SliderZoomView extends DataZoomView {
 
             thisGroup.add(
                 handleLabels[handleIndex] = new graphic.Text({
-                silent: true,
-                invisible: true,
-                style: createTextStyle(textStyleModel, {
-                    x: 0, y: 0, text: '',
-                    verticalAlign: 'middle',
-                    align: 'center',
-                    fill: textStyleModel.getTextColor(),
-                    font: textStyleModel.getFont()
-                }),
-                z2: 10
-            }));
+                    silent: true,
+                    invisible: true,
+                    style: createTextStyle(textStyleModel, {
+                        x: 0, y: 0, text: '',
+                        verticalAlign: 'middle',
+                        align: 'center',
+                        fill: textStyleModel.getTextColor(),
+                        font: textStyleModel.getFont()
+                    }),
+                    z2: 10
+                }));
 
         }, this);
 
@@ -681,8 +681,8 @@ class SliderZoomView extends DataZoomView {
             });
 
             actualMoveZone.on('mouseover', () => {
-                    api.enterEmphasis(moveHandle);
-                })
+                api.enterEmphasis(moveHandle);
+            })
                 .on('mouseout', () => {
                     api.leaveEmphasis(moveHandle);
                 });
@@ -888,8 +888,8 @@ class SliderZoomView extends DataZoomView {
         return isFunction(labelFormatter)
             ? labelFormatter(value as number, valueStr)
             : isString(labelFormatter)
-            ? labelFormatter.replace('{value}', valueStr)
-            : valueStr;
+                ? labelFormatter.replace('{value}', valueStr)
+                : valueStr;
     }
 
     /**
@@ -1091,7 +1091,7 @@ class SliderZoomView extends DataZoomView {
 function getOtherDim(thisDim: 'x' | 'y' | 'radius' | 'angle' | 'single' | 'z') {
     // FIXME
     // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
-    const map = {x: 'y', y: 'x', radius: 'angle', angle: 'radius'};
+    const map = { x: 'y', y: 'x', radius: 'angle', angle: 'radius' };
     return map[thisDim as 'x' | 'y' | 'radius' | 'angle'];
 }
 
