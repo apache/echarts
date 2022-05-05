@@ -228,6 +228,7 @@ class SankeyView extends ChartView {
                     defaultText: `${edgeModel.get('value')}`
                 }
             );
+            curve.setTextConfig({ position: 'inside' });
 
             const emphasisModel = edgeModel.getModel('emphasis');
 
