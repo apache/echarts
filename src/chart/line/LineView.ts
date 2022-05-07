@@ -503,6 +503,62 @@ interface EndLabelAnimationRecord {
     originalY?: number
 }
 
+function getEndlabelDuring(
+    lineView: LineView,
+    coordSys: Cartesian2D,
+    seriesModel: LineSeriesModel,
+    labelAnimationRecord: EndLabelAnimationRecord
+) {
+    const endLabelModel = seriesModel.getModel('endLabel');
+    const valueAnimation = endLabelModel.get('valueAnimation');
+    const data = seriesModel.getData();
+
+    const during = anyStateShowEndLabel(seriesModel)
+        ? (percent: number, clipRect: graphic.Rect) => {
+            lineView._endLabelOnDuring(
+                percent,
+                clipRect,
+                data,
+                labelAnimationRecord,
+                valueAnimation,
+                endLabelModel,
+                coordSys
+            );
+        }
+        : null;
+    // const during = (percent: number, clipRect: graphic.Rect) => {
+    //     lineView._endLabelOnDuring(
+    //         percent,
+    //         clipRect,
+    //         data,
+    //         labelAnimationRecord,
+    //         valueAnimation,
+    //         endLabelModel,
+    //         coordSys
+    //     );
+    // };
+    return during;
+}
+
+function _endLabelOnDone(
+    lineView: LineView,
+    hasAnimation: boolean,
+    labelAnimationRecord: EndLabelAnimationRecord
+) {
+    const done = () => {
+        const endLabel = lineView._endLabel;
+        if (endLabel && hasAnimation) {
+            if (labelAnimationRecord.originalX != null) {
+                endLabel.attr({
+                    x: labelAnimationRecord.originalX,
+                    y: labelAnimationRecord.originalY
+                });
+            }
+        }
+    };
+    return done;
+}
+
 function createLineClipPath(
     lineView: LineView,
     coordSys: Cartesian2D | Polar,
@@ -510,38 +566,14 @@ function createLineClipPath(
     seriesModel: LineSeriesModel
 ) {
     if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
-        const endLabelModel = seriesModel.getModel('endLabel');
-        const valueAnimation = endLabelModel.get('valueAnimation');
-        const data = seriesModel.getData();
-
         const labelAnimationRecord: EndLabelAnimationRecord = { lastFrameIndex: 0 };
 
-        const during = anyStateShowEndLabel(seriesModel)
-            ? (percent: number, clipRect: graphic.Rect) => {
-                lineView._endLabelOnDuring(
-                    percent,
-                    clipRect,
-                    data,
-                    labelAnimationRecord,
-                    valueAnimation,
-                    endLabelModel,
-                    coordSys
-                );
-            }
-            : null;
+        const during = getEndlabelDuring(lineView, coordSys, seriesModel, labelAnimationRecord);
+        const done = _endLabelOnDone(lineView, hasAnimation, labelAnimationRecord);
 
         const isHorizontal = coordSys.getBaseAxis().isHorizontal();
-        const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, () => {
-            const endLabel = lineView._endLabel;
-            if (endLabel && hasAnimation) {
-                if (labelAnimationRecord.originalX != null) {
-                    endLabel.attr({
-                        x: labelAnimationRecord.originalX,
-                        y: labelAnimationRecord.originalY
-                    });
-                }
-            }
-        }, during);
+        const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, done, during);
+
         // Expand clip shape to avoid clipping when line value exceeds axis
         if (!seriesModel.get('clip', true)) {
             const rectShape = clipPath.shape;
@@ -766,10 +798,26 @@ class LineView extends ChartView {
             // Update clipPath
             const oldClipPath = lineGroup.getClipPath();
             if (oldClipPath) {
+                let cb = null;
+                let during = null;
+
+                if (!isCoordSysPolar) {
+                    const labelAnimationRecord: EndLabelAnimationRecord = { lastFrameIndex: 0 };
+                    cb = _endLabelOnDone(this, hasAnimation, labelAnimationRecord);
+                    const duringCb =
+                        getEndlabelDuring(this, coordSys as Cartesian2D, seriesModel, labelAnimationRecord);
+
+                    during = zrUtil.isFunction(duringCb)
+                        ? (percent: number) => {
+                            duringCb(percent, oldClipPath as graphic.Rect);
+                        }
+                        : null;
+                }
+
                 const newClipPath = createLineClipPath(this, coordSys, false, seriesModel);
                 graphic.initProps(oldClipPath, {
                     shape: newClipPath.shape
-                }, seriesModel);
+                }, seriesModel, null, cb, during);
             }
             else {
                 lineGroup.setClipPath(
