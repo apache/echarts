@@ -430,7 +430,6 @@ function canShowAllSymbolForCategory(
     return true;
 }
 
-
 function isPointNull(x: number, y: number) {
     return isNaN(x) || isNaN(y);
 }
@@ -496,7 +495,6 @@ function anyStateShowEndLabel(
     return false;
 }
 
-
 interface EndLabelAnimationRecord {
     lastFrameIndex: number
     originalX?: number
@@ -526,17 +524,6 @@ function getEndlabelDuring(
             );
         }
         : null;
-    // const during = (percent: number, clipRect: graphic.Rect) => {
-    //     lineView._endLabelOnDuring(
-    //         percent,
-    //         clipRect,
-    //         data,
-    //         labelAnimationRecord,
-    //         valueAnimation,
-    //         endLabelModel,
-    //         coordSys
-    //     );
-    // };
     return during;
 }
 
