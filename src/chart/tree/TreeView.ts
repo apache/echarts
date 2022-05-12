@@ -485,9 +485,11 @@ function updateNode(
 
     // Handle status
     const focus = itemModel.get(['emphasis', 'focus']);
-    const focusDataIndices: number[] = focus === 'ancestor'
-        ? node.getAncestorsIndices()
-        : focus === 'descendant' ? node.getDescendantIndices() : null;
+    const focusDataIndices: number[] = focus === 'relative'
+        ? zrUtil.concatArray(node.getAncestorsIndices(), node.getDescendantIndices()) as number[]
+        : focus === 'ancestor'
+            ? node.getAncestorsIndices()
+            : focus === 'descendant' ? node.getDescendantIndices() : null;
 
     if (focusDataIndices) {
         // Modify the focus to data indices.
