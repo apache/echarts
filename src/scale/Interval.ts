@@ -86,7 +86,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
 
         this._intervalPrecision = helper.getIntervalPrecision(interval);
     }
-    
+
     intervalSetByUser(): void {
         this._isIntervalSetByUser = true;
     }

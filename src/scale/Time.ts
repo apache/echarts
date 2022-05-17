@@ -523,14 +523,18 @@ function getIntervalTicks(
                 case 'quarter':
                 case 'month':
                     //Use interval set by user if specified
-                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_DAY / 30)) : getMonthInterval(approxInterval);
+                    interval = isIntervalSetByUser
+                        ? Math.max(1, Math.round(approxInterval / ONE_DAY / 30))
+                        : getMonthInterval(approxInterval);
                     getterName = monthGetterName(isUTC);
                     setterName = monthSetterName(isUTC);
                     break;
                 case 'week':    // PENDING If week is added. Ignore day.
                 case 'half-week':
                 case 'day':
-                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_DAY)) : getDateInterval(approxInterval, 31); // Use 32 days and let interval been 16
+                    interval = isIntervalSetByUser
+                        ? Math.max(1, Math.round(approxInterval / ONE_DAY))
+                        : getDateInterval(approxInterval, 31); // Use 32 days and let interval been 16
                     getterName = dateGetterName(isUTC);
                     setterName = dateSetterName(isUTC);
                     isDate = true;
@@ -538,17 +542,23 @@ function getIntervalTicks(
                 case 'half-day':
                 case 'quarter-day':
                 case 'hour':
-                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_HOUR)) : getHourInterval(approxInterval);
+                    interval = isIntervalSetByUser
+                        ? Math.max(1, Math.round(approxInterval / ONE_HOUR))
+                        : getHourInterval(approxInterval);
                     getterName = hoursGetterName(isUTC);
                     setterName = hoursSetterName(isUTC);
                     break;
                 case 'minute':
-                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_MINUTE)) : getMinutesAndSecondsInterval(approxInterval, true);
+                    interval = isIntervalSetByUser
+                        ? Math.max(1, Math.round(approxInterval / ONE_MINUTE))
+                        : getMinutesAndSecondsInterval(approxInterval, true);
                     getterName = minutesGetterName(isUTC);
                     setterName = minutesSetterName(isUTC);
                     break;
                 case 'second':
-                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_SECOND)) : getMinutesAndSecondsInterval(approxInterval, false);
+                    interval = isIntervalSetByUser
+                        ? Math.max(1, Math.round(approxInterval / ONE_SECOND))
+                        : getMinutesAndSecondsInterval(approxInterval, false);
                     getterName = secondsGetterName(isUTC);
                     setterName = secondsSetterName(isUTC);
                     break;
