@@ -67,7 +67,8 @@ export function linearMap(
     //Solving issue #16746, #16852, #17014
     //Check if the mapped-to subRange is a point r0 and val is outside the domain to map
     //If so, val should not exist and never equal to the point r0, returning NaN
-    //However somewhere this function is applied would not accept NaN like returning as index
+    //However somewhere this function is applied would not accept NaN 
+    //For example visualMapping.ts line 637 the result returned is used as index
     //So an option `canBeNaN` is added to toggle if the result can be NaN, by default false
     if ((subRange === 0) && ((val < Math.min(d0, d1)) || (val > Math.max(d0, d1)))) {
         return canBeNaN ? NaN : r0;
