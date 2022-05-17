@@ -166,7 +166,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             this._minLevelUnit,
             this._approxInterval,
             useUTC,
-            extent
+            extent,
+            this._isIntervalSetByUser
         );
 
         ticks = ticks.concat(innerTicks);
@@ -185,7 +186,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             fixMin?: boolean,
             fixMax?: boolean,
             minInterval?: number,
-            maxInterval?: number
+            maxInterval?: number,
+            interval?: number
         }
     ): void {
         const extent = this._extent;
@@ -202,15 +204,16 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             extent[0] = extent[1] - ONE_DAY;
         }
 
-        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
+        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval, opt.interval);
     }
 
-    calcNiceTicks(approxTickNum: number, minInterval: number, maxInterval: number): void {
+    calcNiceTicks(approxTickNum: number, minInterval: number, maxInterval: number, interval: number): void {
         approxTickNum = approxTickNum || 10;
 
         const extent = this._extent;
         const span = extent[1] - extent[0];
-        this._approxInterval = span / approxTickNum;
+        //Use set interval if specified by user
+        this._approxInterval = interval || (span / approxTickNum);
 
         if (minInterval != null && this._approxInterval < minInterval) {
             this._approxInterval = minInterval;
@@ -430,7 +433,8 @@ function getIntervalTicks(
     bottomUnitName: TimeUnit,
     approxInterval: number,
     isUTC: boolean,
-    extent: number[]
+    extent: number[],
+    isIntervalSetByUser: boolean
 ): TimeScaleTick[] {
     const safeLimit = 10000;
     const unitNames = timeUnits;
@@ -478,7 +482,8 @@ function getIntervalTicks(
     function addLevelTicks(
         unitName: TimeUnit,
         lastLevelTicks: InnerTimeTick[],
-        levelTicks: InnerTimeTick[]
+        levelTicks: InnerTimeTick[],
+        isIntervalSetByUser: boolean
     ) {
         const newAddedTicks: ScaleTick[] = [];
         const isFirstLevel = !lastLevelTicks.length;
@@ -517,14 +522,15 @@ function getIntervalTicks(
                 case 'half-year':
                 case 'quarter':
                 case 'month':
-                    interval = getMonthInterval(approxInterval);
+                    //Use interval set by user if specified
+                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_DAY / 30)) : getMonthInterval(approxInterval);
                     getterName = monthGetterName(isUTC);
                     setterName = monthSetterName(isUTC);
                     break;
                 case 'week':    // PENDING If week is added. Ignore day.
                 case 'half-week':
                 case 'day':
-                    interval = getDateInterval(approxInterval, 31); // Use 32 days and let interval been 16
+                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_DAY)) : getDateInterval(approxInterval, 31); // Use 32 days and let interval been 16
                     getterName = dateGetterName(isUTC);
                     setterName = dateSetterName(isUTC);
                     isDate = true;
@@ -532,17 +538,17 @@ function getIntervalTicks(
                 case 'half-day':
                 case 'quarter-day':
                 case 'hour':
-                    interval = getHourInterval(approxInterval);
+                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_HOUR)) : getHourInterval(approxInterval);
                     getterName = hoursGetterName(isUTC);
                     setterName = hoursSetterName(isUTC);
                     break;
                 case 'minute':
-                    interval = getMinutesAndSecondsInterval(approxInterval, true);
+                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_MINUTE)) : getMinutesAndSecondsInterval(approxInterval, true);
                     getterName = minutesGetterName(isUTC);
                     setterName = minutesSetterName(isUTC);
                     break;
                 case 'second':
-                    interval = getMinutesAndSecondsInterval(approxInterval, false);
+                    interval = isIntervalSetByUser ? Math.max(1, Math.round(approxInterval / ONE_SECOND)) : getMinutesAndSecondsInterval(approxInterval, false);
                     getterName = secondsGetterName(isUTC);
                     setterName = secondsSetterName(isUTC);
                     break;
@@ -582,7 +588,7 @@ function getIntervalTicks(
         if (!isPrimaryTimeUnit(unitNames[i])) { // TODO
             continue;
         }
-        addLevelTicks(unitNames[i], levelsTicks[levelsTicks.length - 1] || [], currentLevelTicks);
+        addLevelTicks(unitNames[i], levelsTicks[levelsTicks.length - 1] || [], currentLevelTicks, isIntervalSetByUser);
 
         const nextPrimaryTimeUnit: PrimaryTimeUnit = unitNames[i + 1] ? getPrimaryTimeUnit(unitNames[i + 1]) : null;
         if (primaryTimeUnit !== nextPrimaryTimeUnit) {

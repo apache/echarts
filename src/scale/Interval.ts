@@ -35,6 +35,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     protected _interval: number = 0;
     protected _niceExtent: [number, number];
     private _intervalPrecision: number = 2;
+    protected _isIntervalSetByUser: boolean = false;
 
 
     parse(val: number): number {
@@ -84,6 +85,10 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         this._niceExtent = this._extent.slice() as [number, number];
 
         this._intervalPrecision = helper.getIntervalPrecision(interval);
+    }
+    
+    intervalSetByUser(): void {
+        this._isIntervalSetByUser = true;
     }
 
     /**
@@ -214,8 +219,9 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
 
     /**
      * @param splitNumber By default `5`.
+     * @param interval Interval Set by user, not used here but inheritated by TimeScale
      */
-    calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
+    calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number, interval?: number): void {
         splitNumber = splitNumber || 5;
         const extent = this._extent;
         let span = extent[1] - extent[0];
