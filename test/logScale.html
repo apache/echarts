@@ -31,7 +31,9 @@ under the License.
                 height: 100%;
             }
         </style>
-        <div id='main'></div>
+        <div id='main' style = "width:100%; height: 500px"></div>
+        <div id='main1' style = "width:100%; height: 500px"></div>
+        <div id='main2' style = "width:100%; height: 500px"></div>
         <script>
 
             require([
@@ -80,6 +82,218 @@ under the License.
                     }]
                 });
             });
+
+        </script>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+            var chart = echarts.init(document.getElementById('main1'));
+            var data = [
+                    ['2000-06-05', 116],
+                    ['2000-06-06', 129],
+                    ['2000-06-07', 135],
+                    ['2000-06-08', 86],
+                    ['2000-06-09', 73],
+                    ['2000-06-10', 85],
+                    ['2000-06-11', 73],
+                    ['2000-06-12', 68],
+                    ['2000-06-13', 92],
+                    ['2000-06-14', 130],
+                    ['2000-06-15', 245],
+                    ['2000-06-16', 139],
+                    ['2000-06-17', 115],
+                    ['2000-06-18', 111],
+                    ['2000-06-19', 309],
+                    ['2000-06-20', 206],
+                    ['2000-06-21', 137],
+                    ['2000-06-22', 128],
+                    ['2000-06-23', 85],
+                    ['2000-06-24', 94],
+                    ['2000-06-25', 71],
+                    ['2000-06-26', 106],
+                    ['2000-06-27', 84],
+                    ['2000-06-28', 93],
+                    ['2000-06-29', 85],
+                    ['2000-06-30', 73],
+                    ['2000-07-01', 83],
+                    ['2000-07-02', 125],
+                    ['2000-07-03', 107],
+                    ['2000-07-04', 82],
+                    ['2000-07-05', 44],
+                    ['2000-07-06', 72],
+                    ['2000-07-07', 106],
+                    ['2000-07-08', 107],
+                    ['2000-07-09', 66],
+                    ['2000-07-10', 91],
+                    ['2000-07-11', 92],
+                    ['2000-07-12', 113],
+                    ['2000-07-13', 107],
+                    ['2000-07-14', 131],
+                    ['2000-07-15', 111],
+                    ['2000-07-16', 64],
+                    ['2000-07-17', 69],
+                    ['2000-07-18', 88],
+                    ['2000-07-19', 77],
+                    ['2000-07-20', 83],
+                    ['2000-07-21', 111],
+                    ['2000-07-22', 57],
+                    ['2000-07-23', 55],
+                    ['2000-07-24', 60]
+                ];
+                const dateList = data.map((item) => item[0]);
+                const valueList = data.map((item) => item[1]);
+                chart.setOption(
+                    option = {
+                    title: [
+                        {
+                        left: 'center',
+                        text: 'Gradient along the y axis'
+                        },
+                        {
+                        top: '55%',
+                        left: 'center',
+                        text: 'Gradient along the x axis\nTick label 0.1 should exist'
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: [
+                        {
+                        data: dateList
+                        },
+                        {
+                        data: dateList,
+                        gridIndex: 1
+                        }
+                    ],
+                    yAxis: [
+                        {
+                        type: 'log',
+                        min: 0.01
+                        },
+                        {
+                        type: 'log',
+                        gridIndex: 1,
+                        min: 0.1,
+                        axisLabel: {
+                            fontSize: '10'
+                        }
+                        }
+                    ],
+                    grid: [
+                        {
+                        bottom: '60%'
+                        },
+                        {
+                        top: '60%'
+                        }
+                    ],
+                    series: [
+                        {
+                        type: 'line',
+                        showSymbol: false,
+                        data: valueList
+                        },
+                        {
+                        type: 'line',
+                        showSymbol: false,
+                        data: valueList,
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                        }
+                    ]
+                    });
+            });
+
+        </script>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+            var chart = echarts.init(document.getElementById('main2'));
+                chart.setOption(option = {
+                    title: {
+                        text: '堆叠区域图\nMax value should show 2000000000000000'
+                    },
+                    tooltip : {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data:['邮件营销','联盟广告','视频广告','直接访问','搜索引擎']
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    yAxis : [
+                        {
+                            type : 'category',
+                            boundaryGap : false,
+                            data : ['周一','周二','周三','周四','周五','周六','周日']
+                        }
+                    ],
+                    xAxis : [
+                        {
+                            type : 'log',
+                            min:'dataMin',
+                            max:'dataMax'
+                        }
+                    ],
+                    series : [
+                        {
+                            name:'邮件营销',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            data:[100, 100, 100, 100, 100, 1000,2000000000000000]
+                        },
+                        {
+                            name:'联盟广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            data:[100, 100, 100, 100, 100, 100, 0]
+                        },
+                        {
+                            name:'视频广告',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            data:[100, 100, 100, 100, 100, 100, 0]
+                        },
+                        {
+                            name:'直接访问',
+                            type:'line',
+                            stack: '总量',
+                            areaStyle: {normal: {}},
+                            data:[100, 100, 100, 100, 100, 100, 0]
+                        },
+                        {
+                            name:'搜索引擎',
+                            type:'line',
+                            stack: '总量',
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'top'
+                                }
+                            },
+                            areaStyle: {normal: {}},
+                            data:[100, 100, 100, 100, 100, 100, 0]
+                        }
+                    ]
+                })
+            })
 
         </script>
     </body>
