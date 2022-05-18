@@ -114,10 +114,10 @@ class LogScale extends Scale {
         const originalScale = this._originalScale;
         const originalExtent = originalScale.getExtent();
         // To get extent without precision problem, get the original extent directly
-        extent[0] = (extent[0] === mathLog(originalExtent[0])/mathLog(base))
+        extent[0] = (extent[0] === mathLog(originalExtent[0]) / mathLog(base))
             ? originalExtent[0]
             : mathPow(base, extent[0]);
-        extent[1] = (extent[1] === mathLog(originalExtent[1])/mathLog(base))
+        extent[1] = (extent[1] === mathLog(originalExtent[1]) / mathLog(base))
             ? originalExtent[1]
             : mathPow(base, extent[1]);
         return extent;
