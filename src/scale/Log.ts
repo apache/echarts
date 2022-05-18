@@ -70,12 +70,24 @@ class LogScale extends Scale {
             const val = tick.value;
             let powVal = numberUtil.round(mathPow(this.base, val));
 
-            // Fix #4158
-            powVal = (val === extent[0] && this._fixMin)
-                ? fixRoundingError(powVal, originalExtent[0])
+            // Fix #4158 & #16992
+            // Get the max and min of tick,
+            // rawMax/rawMin can get user-set max/min if they exist
+            let rawMax = this.rawExtentInfo.getModelMaxRaw();
+            let rawMin = this.rawExtentInfo.getModelMinRaw();
+            rawMax = rawMax === 'dataMax'
+                ? this.rawExtentInfo.getDataMax()
+                : rawMax as number;
+            rawMin = rawMin === 'dataMin'
+                ? this.rawExtentInfo.getDataMin()
+                : rawMin as number;
+            //If the min/max is set by user, use the user-set min/max
+            //If not set, then return the originalExtent directly
+            powVal = (val === extent[0] && this._fixMax)
+                ? (rawMax ? rawMax : originalExtent[1])
                 : powVal;
-            powVal = (val === extent[1] && this._fixMax)
-                ? fixRoundingError(powVal, originalExtent[1])
+            powVal = (val === extent[1] && this._fixMin)
+                ? (rawMin ? rawMin : originalExtent[0])
                 : powVal;
 
             return {
@@ -97,15 +109,17 @@ class LogScale extends Scale {
     getExtent() {
         const base = this.base;
         const extent = scaleProto.getExtent.call(this);
-        extent[0] = mathPow(base, extent[0]);
-        extent[1] = mathPow(base, extent[1]);
 
         // Fix #4158
         const originalScale = this._originalScale;
         const originalExtent = originalScale.getExtent();
-        this._fixMin && (extent[0] = fixRoundingError(extent[0], originalExtent[0]));
-        this._fixMax && (extent[1] = fixRoundingError(extent[1], originalExtent[1]));
-
+        // To get extent without precision problem, get the original extent directly
+        extent[0] = (extent[0] === mathLog(originalExtent[0])/mathLog(base))
+            ? originalExtent[0]
+            : mathPow(base, extent[0]);
+        extent[1] = (extent[1] === mathLog(originalExtent[1])/mathLog(base))
+            ? originalExtent[1]
+            : mathPow(base, extent[1]);
         return extent;
     }
 
@@ -197,11 +211,6 @@ class LogScale extends Scale {
 const proto = LogScale.prototype;
 proto.getMinorTicks = intervalScaleProto.getMinorTicks;
 proto.getLabel = intervalScaleProto.getLabel;
-
-function fixRoundingError(val: number, originalVal: number): number {
-    return roundingErrorFix(val, numberUtil.getPrecision(originalVal));
-}
-
 
 Scale.registerClass(LogScale);
 

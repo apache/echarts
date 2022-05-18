@@ -79,6 +79,18 @@ export class ScaleRawExtentInfo {
         this._prepareParams(scale, model, originalExtent);
     }
 
+    getModelMinRaw() {
+        return this._modelMinRaw;
+    }
+    getModelMaxRaw() {
+        return this._modelMaxRaw;
+    }
+    getDataMin() {
+        return this._dataMin;
+    }
+    getDataMax() {
+        return this._dataMax;
+    }
     /**
      * Parameters depending on ouside (like model, user callback)
      * are prepared and fixed here.
