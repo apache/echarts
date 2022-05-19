@@ -289,7 +289,7 @@ export function formatTime(tpl: string, value: unknown, isUTC?: boolean) {
     tpl = tpl.replace('MM', pad(M, 2))
         .replace('M', M)
         .replace('yyyy', y)
-        .replace('yy', y % 100 + '')
+        .replace('yy', pad(y % 100 + '', 2))
         .replace('dd', pad(d, 2))
         .replace('d', d)
         .replace('hh', pad(h, 2))
