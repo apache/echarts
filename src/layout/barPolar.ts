@@ -104,7 +104,14 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
         const clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
-        const valueAxisStart = valueAxis.dataToCoord(0);
+        const startValue = seriesModel.get('startValue');
+        const valueAxisStart = valueAxis.dataToCoord(startValue || 0);
+        //If user specifies the starting value of bars, use it to adjust coordsys and update ticks
+        if (startValue) {
+            valueAxis.scale.unionExtent([startValue, startValue]);
+            valueAxis.scale.calcNiceTicks();
+        }
+
         for (let idx = 0, len = data.count(); idx < len; idx++) {
             const value = data.get(valueDim, idx) as number;
             const baseValue = data.get(baseDim, idx) as number;
