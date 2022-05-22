@@ -102,6 +102,11 @@ export function enableDataStack(
         }
 
         if (mayStack && !dimensionInfo.isExtraCoord) {
+            //If a dimension is specified by user, use it as stack dimension
+            let stackDim = seriesModel && seriesModel.get('stackDim');
+            if (dimensionInfo && stackDim === dimensionInfo.name) {
+                stackedDimInfo = dimensionInfo;
+            }
             // Find the first ordinal dimension as the stackedByDimInfo.
             if (!byIndex && !stackedByDimInfo && dimensionInfo.ordinalMeta) {
                 stackedByDimInfo = dimensionInfo;

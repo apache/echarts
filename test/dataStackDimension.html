@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                "xAxis": {
+                    "type": "log",
+                },
+                "yAxis": {
+                    "type": "log",
+                    
+                },
+                "series": [
+                    {
+                        "name": null,
+                        "type": "line",
+                        "smooth": true,
+                        "symbol": "none",
+                        "lineStyle": {
+                            "type": "solid"
+                        },
+                        "itemStyle": {
+                            "color": "#E3000B"
+                        },
+                        "areaStyle": {
+                            "color": ""
+                        },
+                        "stack": "0",
+                        "data": [
+                            [
+                                0,
+                                0.0000014737799999999998
+                            ],
+                            [
+                                0.225,
+                                0.0000014682600000000002
+                            ],
+                            [
+                                0.45,
+                                0.0000014636399999999999
+                            ],
+                            [
+                                0.675,
+                                0.00000145296
+                            ],
+                            [
+                                0.9,
+                                0.0000014407
+                            ],
+                            [
+                                1.125,
+                                0.0000014275999999999999
+                            ],
+                            [
+                                1.35,
+                                0.00000140994
+                            ],
+                            [
+                                1.575,
+                                0.0000013875399999999999
+                            ],
+                            [
+                                1.8,
+                                0.00000135424
+                            ],
+                            [
+                                2.025,
+                                0.0000013085399999999999
+                            ],
+                            [
+                                2.25,
+                                0.00000123032
+                            ],
+                            [
+                                2.475,
+                                0.0000011012000000000001
+                            ],
+                            [
+                                2.7,
+                                8.937799999999999e-7
+                            ],
+                            [
+                                2.925,
+                                6.304e-7
+                            ],
+                            [
+                                3.15,
+                                4.467e-7
+                            ],
+                            [
+                                3.375,
+                                3.6019999999999996e-7
+                            ],
+                            [
+                                3.6,
+                                3.1755e-7
+                            ],
+                            [
+                                3.825,
+                                2.93e-7
+                            ],
+                            [
+                                4.05,
+                                2.7654999999999997e-7
+                            ],
+                            [
+                                4.275,
+                                2.6430000000000006e-7
+                            ],
+                            [
+                                4.5,
+                                2.5445000000000006e-7
+                            ]
+                        ]
+                    },
+                    {
+                        "name": null,
+                        "type": "line",
+                        "smooth": true,
+                        "symbol": "none",
+                        "lineStyle": {
+                            "type": "solid"
+                        },
+                        "itemStyle": {
+                            "color": "#FE9F9B"
+                        },
+                        "areaStyle": {
+                            "color": ""
+                        },
+                        "stack": "1",
+                        "stackDim": 'y',
+                        "data": [
+                            [
+                                0,
+                                0.0000014094
+                            ],
+                            [
+                                0.225,
+                                0.0000014048
+                            ],
+                            [
+                                0.45,
+                                0.0000014004
+                            ],
+                            [
+                                0.675,
+                                0.0000013934
+                            ],
+                            [
+                                0.9,
+                                0.0000013839999999999998
+                            ],
+                            [
+                                1.125,
+                                0.0000013724
+                            ],
+                            [
+                                1.35,
+                                0.0000013586
+                            ],
+                            [
+                                1.575,
+                                0.0000013416
+                            ],
+                            [
+                                1.8,
+                                0.0000012916
+                            ],
+                            [
+                                2.025,
+                                0.0000012564
+                            ],
+                            [
+                                2.25,
+                                0.0000011756
+                            ],
+                            [
+                                2.475,
+                                0.0000010336
+                            ],
+                            [
+                                2.7,
+                                7.895e-7
+                            ],
+                            [
+                                2.925,
+                                5.1e-7
+                            ],
+                            [
+                                3.15,
+                                3.74e-7
+                            ],
+                            [
+                                3.375,
+                                3.1750000000000003e-7
+                            ],
+                            [
+                                3.6,
+                                2.87e-7
+                            ],
+                            [
+                                3.825,
+                                2.67e-7
+                            ],
+                            [
+                                4.05,
+                                2.545e-7
+                            ],
+                            [
+                                4.275,
+                                2.435e-7
+                            ],
+                            [
+                                4.5,
+                                2.3499999999999997e-7
+                            ]
+                        ]
+                    },
+                    {
+                        "name": null,
+                        "type": "line",
+                        "smooth": true,
+                        "symbol": "none",
+                        "lineStyle": {
+                            "type": "solid"
+                        },
+                        "itemStyle": {
+                            "color": "#FE9F9B"
+                        },
+                        "areaStyle": {
+                            "color": "#FE9F9B"
+                        },
+                        "stack": "1",
+                        "stackDim": 'y',
+                        "data": [
+                            [
+                                0,
+                                1.6039999999999998e-7
+                            ],
+                            [
+                                0.225,
+                                1.608e-7
+                            ],
+                            [
+                                0.45,
+                                1.5840000000000004e-7
+                            ],
+                            [
+                                0.675,
+                                1.5419999999999994e-7
+                            ],
+                            [
+                                0.9,
+                                1.478000000000003e-7
+                            ],
+                            [
+                                1.125,
+                                1.3999999999999993e-7
+                            ],
+                            [
+                                1.35,
+                                1.298e-7
+                            ],
+                            [
+                                1.575,
+                                1.1600000000000003e-7
+                            ],
+                            [
+                                1.8,
+                                1.225999999999999e-7
+                            ],
+                            [
+                                2.025,
+                                8.820000000000006e-8
+                            ],
+                            [
+                                2.25,
+                                9.02e-8
+                            ],
+                            [
+                                2.475,
+                                1.352e-7
+                            ],
+                            [
+                                2.7,
+                                2.2610000000000005e-7
+                            ],
+                            [
+                                2.925,
+                                2.565e-7
+                            ],
+                            [
+                                3.15,
+                                1.5450000000000001e-7
+                            ],
+                            [
+                                3.375,
+                                9.449999999999995e-8
+                            ],
+                            [
+                                3.6,
+                                7.05e-8
+                            ],
+                            [
+                                3.825,
+                                6.049999999999999e-8
+                            ],
+                            [
+                                4.05,
+                                5.3499999999999996e-8
+                            ],
+                            [
+                                4.275,
+                                5.050000000000009e-8
+                            ],
+                            [
+                                4.5,
+                                4.8000000000000006e-8
+                            ]
+                        ]
+                    }
+                ],
+                
+                }
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Stack data on line chart'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+    
+                option = {
+                    xAxis: {
+                        type: 'value',
+                        data: [1, 2, 3, 4, 5, 6, 7]
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                        data: [120, 200, 150, 80, 70, 110, 130],
+                        type: 'bar',
+                        stack: '1',
+                        stackDim: 'y',
+                        showBackground: true,
+                        backgroundStyle: {
+                            color: 'rgba(180, 180, 180, 0.2)'
+                        }
+                        },
+                        {
+                        data: [120, 200, 150, 80, 70, 110, 130],
+                        type: 'bar',
+                        stack: '1',
+                        stackDim: 'y',
+                        showBackground: true,
+                        backgroundStyle: {
+                            color: 'rgba(180, 180, 180, 0.2)'
+                        }
+                        }
+                    ]
+                    };
+    
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Stack data on line chart'
+                    ],
+                    option: option
+                    // height: 300,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+            });
+        </script>
+
+
+    </body>
+</html>
+
