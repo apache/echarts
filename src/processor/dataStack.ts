@@ -87,7 +87,7 @@ function calculateStack(stackInfoList: StackInfo[]) {
         const dims: [string, string] = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
         const targetData = targetStackInfo.data;
         const isStackedByIndex = targetStackInfo.isStackedByIndex;
-        const stackStrategy = targetStackInfo.seriesModel.get('stackStrategy');
+        const stackStrategy = targetStackInfo.seriesModel.get('stackStrategy') || 'samesign';
 
         // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
@@ -131,8 +131,8 @@ function calculateStack(stackInfoList: StackInfo[]) {
                         stackStrategy === 'all' // single stack group
                         || (stackStrategy === 'positive' && val > 0)
                         || (stackStrategy === 'negative' && val < 0)
-                        || (!stackStrategy && sum >= 0 && val > 0) // Positive stack
-                        || (!stackStrategy && sum <= 0 && val < 0) // Negative stack
+                        || (stackStrategy === 'samesign' && sum >= 0 && val > 0) // All positive stack
+                        || (stackStrategy === 'samesign' && sum <= 0 && val < 0) // All negative stack
                     ) {
                         // The sum has to be very small to be affected by the
                         // floating arithmetic problem. An incorrect result will probably
