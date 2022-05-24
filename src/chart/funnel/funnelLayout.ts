@@ -281,7 +281,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         const viewSize = orient === 'horizontal' ? viewWidth : viewHeight;
         let itemSize = (viewSize - gap * (data.count() - 1)) / data.count();
 
-        const getLinePoints = function (idx: number, offset: number) {
+        const getLinePoints = function (idx: number, offset: number, len?: number) {
             // End point index is data.count() and we assign it 0
             if (orient === 'horizontal') {
                 const val = data.get(valueDim, idx) as number || 0;
@@ -304,7 +304,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     [offset, y0 + itemHeight]
                 ];
             }
-            const val = data.get(valueDim, idx) as number || 0;
+            const val = data.get(valueDim, idx == null ? len - 1 : idx) as number || 0;
             const itemWidth = linearMap(val, [min, max], sizeExtent, true);
             let x0;
             switch (funnelAlign) {
@@ -355,7 +355,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 }
 
                 const start = getLinePoints(idx, x);
-                const end = getLinePoints(nextIdx, x + width);
+                const end = getLinePoints(nextIdx, x + width, indices.length);
 
                 x += width + gap;
 
@@ -376,7 +376,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 }
 
                 const start = getLinePoints(idx, y);
-                const end = getLinePoints(nextIdx, y + height);
+                const end = getLinePoints(nextIdx, y + height, indices.length);
 
                 y += height + gap;
 
