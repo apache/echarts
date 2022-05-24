@@ -166,19 +166,21 @@ function getSingleMarkerEndPoint(
         if (seriesModel.getMarkerPosition) {
             //Consider the case that user input the right-bottom point first
             //Pick the larger x and y as 'x1' and 'y1'
-            const pointValue0 = data.getValues(['x0','y0'], idx);
-            const pointValue1 = data.getValues(['x1','y1'], idx);
-            var clampPointValue0 = coordSys.clampData(pointValue0);
-            var clampPointValue1 = coordSys.clampData(pointValue1);
-            let pointValue = [];
+            const pointValue0 = data.getValues(['x0', 'y0'], idx);
+            const pointValue1 = data.getValues(['x1', 'y1'], idx);
+            const clampPointValue0 = coordSys.clampData(pointValue0);
+            const clampPointValue1 = coordSys.clampData(pointValue1);
+            const pointValue = [];
             if (dims[0] === 'x0') {
                 pointValue[0] = (clampPointValue0[0] > clampPointValue1[0]) ? pointValue1[0] : pointValue0[0];
-            } else {
+            }
+            else {
                 pointValue[0] = (clampPointValue0[0] > clampPointValue1[0]) ? pointValue0[0] : pointValue1[0];
             }
             if (dims[1] === 'y0') {
                 pointValue[1] = (clampPointValue0[1] > clampPointValue1[1]) ? pointValue1[1] : pointValue0[1];
-            } else {
+            }
+            else {
                 pointValue[1] = (clampPointValue0[1] > clampPointValue1[1]) ? pointValue0[1] : pointValue1[1];
             }
             // Use the getMarkerPoisition

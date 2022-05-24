@@ -90,7 +90,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
         if (coordSys && coordSys.clampData) {
             // PENDING if clamp ?
             const pt = coordSys.dataToPoint(coordSys.clampData(value));
-            each(coordSys.getAxes(), function(axis: Axis2D, idx: number) {
+            each(coordSys.getAxes(), function (axis: Axis2D, idx: number) {
                 //If axis type is category, use tick coords instead
                 if (axis.type === 'category') {
                     const tickCoords = axis.getTicksCoords();
@@ -103,7 +103,7 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
                     (tickIdx < 0) && (tickIdx = 0);
                     tickCoords[tickIdx] && (pt[idx] = axis.toGlobalCoord(tickCoords[tickIdx].coord));
                 }
-            })
+            });
             return pt;
         }
         return [NaN, NaN];
