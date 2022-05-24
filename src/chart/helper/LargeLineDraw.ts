@@ -293,7 +293,8 @@ class LargeLineDraw {
 
     private _create() {
         const lineEl = new LargeLinesPath({
-            cursor: 'default'
+            cursor: 'default',
+            ignoreTargetSize: true
         });
         this._newAdded.push(lineEl);
         this.group.add(lineEl);
