@@ -324,6 +324,8 @@ type EChartsInitOpts = {
     renderer?: RendererType,
     devicePixelRatio?: number,
     useDirtyRect?: boolean,
+    useTargetSize?: boolean,
+    targetSize?: number,
     ssr?: boolean,
     width?: number,
     height?: number
@@ -430,7 +432,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             width: opts.width,
             height: opts.height,
             ssr: opts.ssr,
-            useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect
+            useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect,
+            useTargetSize: opts.useTargetSize,
+            targetSize: opts.targetSize
         });
         this._ssr = opts.ssr;
 
