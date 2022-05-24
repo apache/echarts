@@ -57,6 +57,7 @@ import { defaultSeriesFormatTooltip } from '../component/tooltip/seriesFormatToo
 import {ECSymbol} from '../util/symbol';
 import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
+import {dimPermutations} from '../component/marker/MarkAreaView';
 
 const inner = modelUtil.makeInner<{
     data: SeriesData
@@ -99,7 +100,7 @@ interface SeriesModel {
     /**
      * Get position for marker
      */
-    getMarkerPosition(value: ScaleDataValue[]): number[];
+    getMarkerPosition(value: ScaleDataValue[], dims?: typeof dimPermutations[number]): number[];
 
     /**
      * Get legend icon symbol according to each series type

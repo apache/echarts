@@ -29,6 +29,9 @@ import {
 import GlobalModel from '../../model/Global';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import SeriesData from '../../data/SeriesData';
+import {dimPermutations} from '../../component/marker/MarkAreaView';
+import { each } from 'zrender/src/core/util';
+import type Axis2D from '../../coord/cartesian/Axis2D';
 
 
 export interface BaseBarSeriesOption<StateOption, ExtraStateOption = DefaultStatesMixin>
@@ -82,16 +85,25 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
         return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
-    getMarkerPosition(value: ScaleDataValue[]) {
+    getMarkerPosition(value: ScaleDataValue[], dims?: typeof dimPermutations[number]) {
         const coordSys = this.coordinateSystem;
         if (coordSys && coordSys.clampData) {
             // PENDING if clamp ?
             const pt = coordSys.dataToPoint(coordSys.clampData(value));
-            const data = this.getData();
-            const offset = data.getLayout('offset');
-            const size = data.getLayout('size');
-            const offsetIndex = (coordSys as Cartesian2D).getBaseAxis().isHorizontal() ? 0 : 1;
-            pt[offsetIndex] += offset + size / 2;
+            each(coordSys.getAxes(), function(axis: Axis2D, idx: number) {
+                //If axis type is category, use tick coords instead
+                if (axis.type === 'category') {
+                    const tickCoords = axis.getTicksCoords();
+                    let tickIdx = coordSys.clampData(value)[idx];
+                    //The index of rightmost tick of markArea is 1 larger than x1/y1 index
+                    if (dims && (dims[idx] === 'x1' || dims[idx] === 'y1')) {
+                        tickIdx += 1;
+                    }
+                    (tickIdx > tickCoords.length - 1) && (tickIdx = tickCoords.length - 1);
+                    (tickIdx < 0) && (tickIdx = 0);
+                    tickCoords[tickIdx] && (pt[idx] = axis.toGlobalCoord(tickCoords[tickIdx].coord));
+                }
+            })
             return pt;
         }
         return [NaN, NaN];
