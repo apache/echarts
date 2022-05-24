@@ -19,7 +19,7 @@ Contributions can be made in varied ways:
 
 ## Issues
 
-When opening new issues, please use the [echarts issue helper](https://ecomfe.github.io/echarts-issue-helper/), opening issues in any other way will cause our bot to close them automatically.
+We have already prepared issue templates for bug report and feature request. If you want to fire an issue, just entering [New issue](https://github.com/apache/echarts/issues/new/choose) page and select either of them to get started.
 
 Additionally, before doing so, please search for similar questions in our [issues list](https://github.com/apache/echarts/issues?utf8=%E2%9C%93&q=is%3Aissue). If you are able to reproduce an issue found in a closed issue, please create a new issue and reference the closed one.
 
