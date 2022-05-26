@@ -294,7 +294,7 @@ class LargeLineDraw {
     private _create() {
         const lineEl = new LargeLinesPath({
             cursor: 'default',
-            ignoreTargetSize: true
+            ignoreCoarsePointer: true
         });
         this._newAdded.push(lineEl);
         this.group.add(lineEl);

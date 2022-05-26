@@ -56,7 +56,9 @@ under the License.
                 yAxis: {},
                 series: {
                     type: 'scatter',
-                    data: [[11, 22], [33, 44]]
+                    data: [[11, 22], [33, 44]],
+                    symbol: 'pin',
+                    symbolSize: 100
                 },
                 tooltip: {
                     show: true
@@ -65,7 +67,7 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'By default, targe size feature is turned **off** for non-mobile devices.',
+                    'By default, pointer size feature is turned **off** for non-mobile devices.',
                     'So in this tese case, tooltip should **not show** if mouse position is near by but not on the data point.'
                 ],
                 option: option
@@ -86,7 +88,9 @@ under the License.
                 yAxis: {},
                 series: {
                     type: 'scatter',
-                    data: [[11, 22], [33, 44]]
+                    data: [[11, 22], [33, 44]],
+                    symbol: 'pin',
+                    symbolSize: 100
                 },
                 tooltip: {
                     show: true
@@ -95,11 +99,11 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
-                    'If targe size feature is turned **on** for non-mobile devices,',
+                    'If pointer size feature is turned **on** for non-mobile devices,',
                     'like in this tese case, tooltip should **show** if mouse position is near by but not on the data point.'
                 ],
                 option: option,
-                useTargetSize: true
+                useCoarsePointer: true
             });
         });
         </script>
@@ -117,7 +121,9 @@ under the License.
                 yAxis: {},
                 series: {
                     type: 'scatter',
-                    data: [[11, 22], [33, 44]]
+                    data: [[11, 22], [33, 44]],
+                    symbol: 'pin',
+                    symbolSize: 100
                 },
                 tooltip: {
                     show: true
@@ -126,11 +132,11 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main2', {
                 title: [
-                    'In this case, the target size is set to be 200 so it should have a larger responsive area.'
+                    'In this case, the pointer size is set to be 200 so it should have a larger responsive area.'
                 ],
                 option: option,
-                useTargetSize: true,
-                targetSize: 200
+                useCoarsePointer: true,
+                pointerSize: 200
             });
         });
         </script>

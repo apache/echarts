@@ -262,8 +262,8 @@
      * @param {boolean|number} opt If number, means height
      * @param {boolean} opt.lazyUpdate
      * @param {boolean} opt.notMerge
-     * @param {boolean} opt.useTargetSize
-     * @param {boolean} opt.targetSize
+     * @param {boolean} opt.useCoarsePointer
+     * @param {boolean} opt.pointerSize
      * @param {number} opt.width
      * @param {number} opt.height
      * @param {boolean} opt.draggable
@@ -287,8 +287,8 @@
             }
 
             var chart = echarts.init(dom, null, {
-                useTargetSize: opt.useTargetSize,
-                targetSize: opt.targetSize
+                useCoarsePointer: opt.useCoarsePointer,
+                pointerSize: opt.pointerSize
             });
 
             if (opt.draggable) {

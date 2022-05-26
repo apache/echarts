@@ -359,13 +359,13 @@ function createLarge(
     const elP = new LargeBoxPath({
         shape: {points: largePoints},
         __sign: 1,
-        ignoreTargetSize: true
+        ignoreCoarsePointer: true
     });
     group.add(elP);
     const elN = new LargeBoxPath({
         shape: {points: largePoints},
         __sign: -1,
-        ignoreTargetSize: true
+        ignoreCoarsePointer: true
     });
     group.add(elN);
 
