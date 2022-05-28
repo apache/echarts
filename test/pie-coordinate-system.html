@@ -85,11 +85,16 @@ under the License.
                     ]
                 };
 
-                testHelper.create(echarts, 'main0', {
+                var chart = testHelper.create(echarts, 'main0', {
                     title: ['Pie series on BMap'],
-                    option: option
-                })
-
+                    option: option,
+                    buttons: [{
+                        text: 'Convert point [120, 30] to pixel',
+                        onclick: function () {
+                            alert(chart.convertToPixel('bmap', [120, 30]));
+                        }
+                    }]
+                });
             });
         </script>
 
