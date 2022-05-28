@@ -43,11 +43,13 @@ under the License.
                 var data1 = [];
                 var data2 = [];
                 var data3 = [];
+                var data4 = [];
 
                 var names = [
                     'diamond, red, show inside label only on hover',
                     'green, show top label only on hover',
-                    'indigo, show inside label on normal'
+                    'indigo, show inside label on normal',
+                    'square'
                 ];
 
                 var random = function (max) {
@@ -58,6 +60,7 @@ under the License.
                     data1.push([random(5), random(5), random(2)]);
                     data2.push([random(10), random(10), random(2)]);
                     data3.push([random(15), random(10), random(2)]);
+                    data4.push([random(20), random(10), random(2)]);
                 }
 
                 chart.setOption({
@@ -142,6 +145,13 @@ under the License.
                             return val[2] * 40;
                         },
                         data: data3
+                    },
+                    {
+                        name: names[3],
+                        type: 'scatter',
+                        symbol: 'square',
+                        symbolSize: [50, 20],
+                        data: data4
                     }],
                     animationDelay: function (idx) {
                         return idx * 20;

@@ -395,7 +395,12 @@ class Symbol extends graphic.Group {
     }
 
     static getSymbolSize(data: SeriesData, idx: number) {
-        return normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+        const symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+        const symbolType = data.getItemVisual(idx, 'symbol');
+        if (symbolType === 'square') {
+            symbolSize[0] = symbolSize[1] = Math.min(symbolSize[0], symbolSize[1]);
+        }
+        return symbolSize;
     }
 }
 
