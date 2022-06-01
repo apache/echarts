@@ -231,6 +231,10 @@ class AxisProxy {
         };
     }
 
+    getDataExtent() {
+        return this._dataExtent;
+    }
+
     /**
      * Notice: reset should not be called before series.restoreData() called,
      * so it is recommanded to be called in "process stage" but not "model init

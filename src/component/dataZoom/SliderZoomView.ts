@@ -374,6 +374,9 @@ class SliderZoomView extends DataZoomView {
             data !== this._shadowData || otherDim !== this._shadowDim
             || size[0] !== oldSize[0] || size[1] !== oldSize[1]
         ) {
+            const axisProxy = this.dataZoomModel.findRepresentativeAxisProxy();
+            const thisDataExtent = axisProxy.getDataExtent();
+
             let otherDataExtent = data.getDataExtent(otherDim);
             // Nice extent.
             const otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
@@ -384,17 +387,15 @@ class SliderZoomView extends DataZoomView {
             const otherShadowExtent = [0, size[1]];
             const thisShadowExtent = [0, size[0]];
 
-            const areaPoints = [[size[0], 0], [0, 0]];
+            const areaPoints: number[][] = [];
             const linePoints: number[][] = [];
-            const step = thisShadowExtent[1] / (data.count() - 1);
-            let thisCoord = 0;
 
             // Optimize for large data shadow
             const stride = Math.round(data.count() / size[0]);
             let lastIsEmpty: boolean;
-            data.each([otherDim], function (value: ParsedValue, index) {
+            data.each([info.thisDim, otherDim], function (thisValue: ParsedValue, thatValue: ParsedValue, index) {
                 if (stride > 0 && (index % stride)) {
-                    thisCoord += step;
+                    // thisCoord += step;
                     return;
                 }
 
@@ -403,10 +404,12 @@ class SliderZoomView extends DataZoomView {
 
                 // FIXME
                 // 应该使用统一的空判断？还是在list里进行空判断？
-                const isEmpty = value == null || isNaN(value as number) || value === '';
+                const isEmpty = thatValue == null || isNaN(thatValue as number) || thatValue === '';
                 // See #4235.
                 const otherCoord = isEmpty
-                    ? 0 : linearMap(value as number, otherDataExtent, otherShadowExtent, true);
+                    ? 0 : linearMap(thatValue as number, otherDataExtent, otherShadowExtent, true);
+                const thisCoord = isEmpty
+                    ? 0 : linearMap(thisValue as number, thisDataExtent, thisShadowExtent, true);
 
                 // Attempt to draw data shadow precisely when there are empty value.
                 if (isEmpty && !lastIsEmpty && index) {
@@ -418,10 +421,16 @@ class SliderZoomView extends DataZoomView {
                     linePoints.push([thisCoord, 0]);
                 }
 
+                if (index === 0) {
+                    areaPoints.push([thisCoord, 0]);
+                }
                 areaPoints.push([thisCoord, otherCoord]);
+                if (index === data.count() - 1) {
+                    areaPoints.push([thisCoord, 0]);
+                }
+
                 linePoints.push([thisCoord, otherCoord]);
 
-                thisCoord += step;
                 lastIsEmpty = isEmpty;
             });
 
