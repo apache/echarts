@@ -211,7 +211,7 @@ class Geo extends View {
                 // projection may return null point.
                 data = projection.project(data);
             }
-            return data && this.projectedToPoint(data);
+            return data && this.projectedToPoint(data, noRoam, out);
         }
     }
 
