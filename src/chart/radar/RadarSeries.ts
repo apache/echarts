@@ -33,7 +33,7 @@ import {
     OptionDataItemObject,
     SeriesEncodeOptionMixin,
     CallbackDataParams,
-    DefaultStatesMixinEmpasis
+    DefaultStatesMixinEmphasis
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -45,7 +45,7 @@ import {
 type RadarSeriesDataValue = OptionDataValue[];
 
 interface RadarStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 export interface RadarSeriesStateOption<TCbParams = never> {
     lineStyle?: LineStyleOption

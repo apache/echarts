@@ -229,7 +229,7 @@ export class SourceManager {
             const newMetaRawOption = this._getSourceMetaRawOption() || {} as SourceMetaRawOption;
             const upMetaRawOption = upSource && upSource.metaRawOption || {} as SourceMetaRawOption;
             const seriesLayoutBy = retrieve2(newMetaRawOption.seriesLayoutBy, upMetaRawOption.seriesLayoutBy) || null;
-            const sourceHeader = retrieve2(newMetaRawOption.sourceHeader, upMetaRawOption.sourceHeader) || null;
+            const sourceHeader = retrieve2(newMetaRawOption.sourceHeader, upMetaRawOption.sourceHeader);
             // Note here we should not use `upSource.dimensionsDefine`. Consider the case:
             // `upSource.dimensionsDefine` is detected by `seriesLayoutBy: 'column'`,
             // but series need `seriesLayoutBy: 'row'`.

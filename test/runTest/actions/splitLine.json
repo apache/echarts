@@ -1,0 +1,1 @@
+[{"name":"Action 1","ops":[{"type":"mousedown","time":660,"x":50,"y":175},{"type":"mouseup","time":802,"x":50,"y":175},{"time":803,"delay":400,"type":"screenshot-auto"}],"scrollY":797.2000122070312,"scrollX":0,"timestamp":1648092272395}]

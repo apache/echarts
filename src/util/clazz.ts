@@ -128,7 +128,7 @@ export function enableClassExtend(rootClz: ExtendableConstructor, mandatoryMetho
 }
 
 function isESClass(fn: unknown): boolean {
-    return typeof fn === 'function'
+    return zrUtil.isFunction(fn)
         && /^class\s/.test(Function.prototype.toString.call(fn));
 }
 

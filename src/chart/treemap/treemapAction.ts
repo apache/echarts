@@ -23,8 +23,7 @@ import TreemapSeriesModel from './TreemapSeries';
 import { TreeNode } from '../../data/Tree';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { EChartsExtensionInstallRegisters } from '../../extension';
-
-const noop = function () {};
+import { noop } from 'zrender/src/core/util';
 
 const actionTypes = [
     'treemapZoomToNode',

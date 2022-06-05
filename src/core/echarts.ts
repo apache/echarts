@@ -33,7 +33,8 @@ import {
     defaults,
     isDom,
     isArray,
-    noop
+    noop,
+    isString
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import timsort from 'zrender/src/core/timsort';
@@ -77,7 +78,7 @@ import {
     findComponentHighDownDispatchers,
     blurComponent,
     handleGlobalMouseOverForHighDown,
-    handleGlboalMouseOutForHighDown
+    handleGlobalMouseOutForHighDown
 } from '../util/states';
 import * as modelUtil from '../util/model';
 import {throttle} from '../util/throttle';
@@ -110,7 +111,7 @@ import {
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
-import { deprecateLog, deprecateReplaceLog } from '../util/log';
+import { deprecateLog, deprecateReplaceLog, error } from '../util/log';
 import { handleLegacySelectEvents } from '../legacy/dataSelectAction';
 
 import { registerExternalTransform } from '../data/helper/transform';
@@ -121,7 +122,6 @@ import { findEventDispatcher } from '../util/event';
 import decal from '../visual/decal';
 import CanvasPainter from 'zrender/src/canvas/Painter';
 import SVGPainter from 'zrender/src/svg/Painter';
-import geoSourceManager from '../coord/geo/geoSourceManager';
 import lifecycle, {
     LifecycleEvents,
     UpdateLifecycleTransitionItem,
@@ -129,6 +129,8 @@ import lifecycle, {
     UpdateLifecycleTransitionOpt
 } from './lifecycle';
 import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
+import { getImpl } from './impl';
+import type geoSourceManager from '../coord/geo/geoSourceManager';
 
 declare let global: any;
 
@@ -136,10 +138,10 @@ type ModelFinder = modelUtil.ModelFinder;
 
 const hasWindow = typeof window !== 'undefined';
 
-export const version = '5.2.2';
+export const version = '5.3.2';
 
 export const dependencies = {
-    zrender: '5.2.1'
+    zrender: '5.3.1'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -400,7 +402,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         opts = opts || {};
 
         // Get theme by name
-        if (typeof theme === 'string') {
+        if (isString(theme)) {
             theme = themeStorage[theme] as object;
         }
 
@@ -488,8 +490,15 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             this[IN_MAIN_PROCESS_KEY] = true;
 
-            prepare(this);
-            updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams);
+            try {
+                prepare(this);
+                updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams);
+            }
+            catch (e) {
+                this[IN_MAIN_PROCESS_KEY] = false;
+                this[PENDING_UPDATE] = null;
+                throw e;
+            }
 
             // At present, in each frame, zrender performs:
             //   (1) animation step forward.
@@ -500,11 +509,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             this._zr.flush();
 
             this[IN_MAIN_PROCESS_KEY] = false;
-
             this[PENDING_UPDATE] = null;
 
             flushPendingActions.call(this, silent);
-
             triggerUpdatedEvent.call(this, silent);
         }
         // Avoid do both lazy update and progress in one frame.
@@ -584,9 +591,13 @@ class ECharts extends Eventful<ECEventDefinition> {
     setOption<Opt extends ECBasicOption>(option: Opt, opts?: SetOptionOpts): void;
     /* eslint-disable-next-line */
     setOption<Opt extends ECBasicOption>(option: Opt, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
-        if (__DEV__) {
-            assert(!this[IN_MAIN_PROCESS_KEY], '`setOption` should not be called during main process.');
+        if (this[IN_MAIN_PROCESS_KEY]) {
+            if (__DEV__) {
+                error('`setOption` should not be called during main process.');
+            }
+            return;
         }
+
         if (this._disposed) {
             disposedWarning(this.id);
             return;
@@ -633,9 +644,16 @@ class ECharts extends Eventful<ECEventDefinition> {
             this.getZr().wakeUp();
         }
         else {
-            prepare(this);
+            try {
+                prepare(this);
+                updateMethods.update.call(this, null, updateParams);
+            }
+            catch (e) {
+                this[PENDING_UPDATE] = null;
+                this[IN_MAIN_PROCESS_KEY] = false;
 
-            updateMethods.update.call(this, null, updateParams);
+                throw e;
+            }
 
             // Ensure zr refresh sychronously, and then pixel in canvas can be
             // fetched after `setOption`.
@@ -710,14 +728,19 @@ class ECharts extends Eventful<ECEventDefinition> {
         });
     }
 
-    renderToSVGString(): string {
+    renderToSVGString(opts?: {
+        useViewBox?: boolean
+    }): string {
+        opts = opts || {};
         const painter = this._zr.painter;
         if (__DEV__) {
             if (painter.type !== 'svg') {
                 throw new Error('renderToSVGString can only be used in the svg renderer.');
             }
         }
-        return painter.renderToString();
+        return (painter as SVGPainter).renderToString({
+            useViewBox: opts.useViewBox
+        });
     }
 
     /**
@@ -740,7 +763,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     getDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg' | 'svg',
+        type?: 'png' | 'jpeg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         // component type array
@@ -784,7 +807,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     getConnectedDataURL(opts?: {
         // file type 'png' by default
-        type?: 'png' | 'jpg' | 'svg',
+        type?: 'png' | 'jpeg' | 'svg',
         pixelRatio?: number,
         backgroundColor?: ZRColor,
         connectedBackgroundColor?: ZRColor
@@ -1189,9 +1212,13 @@ class ECharts extends Eventful<ECEventDefinition> {
      * Resize the chart
      */
     resize(opts?: ResizeOpts): void {
-        if (__DEV__) {
-            assert(!this[IN_MAIN_PROCESS_KEY], '`resize` should not be called during main process.');
+        if (this[IN_MAIN_PROCESS_KEY]) {
+            if (__DEV__) {
+                error('`resize` should not be called during main process.');
+            }
+            return;
         }
+
         if (this._disposed) {
             disposedWarning(this.id);
             return;
@@ -1225,15 +1252,20 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         this[IN_MAIN_PROCESS_KEY] = true;
 
-        needPrepare && prepare(this);
-
-        updateMethods.update.call(this, {
-            type: 'resize',
-            animation: extend({
-                // Disable animation
-                duration: 0
-            }, opts && opts.animation)
-        });
+        try {
+            needPrepare && prepare(this);
+            updateMethods.update.call(this, {
+                type: 'resize',
+                animation: extend({
+                    // Disable animation
+                    duration: 0
+                }, opts && opts.animation)
+            });
+        }
+        catch (e) {
+            this[IN_MAIN_PROCESS_KEY] = false;
+            throw e;
+        }
 
         this[IN_MAIN_PROCESS_KEY] = false;
 
@@ -1540,10 +1572,6 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             }
 
-            if (isHighDownPayload(payload)) {
-                allLeaveBlur(ecIns._api);
-            }
-
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
                 const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
@@ -1552,7 +1580,10 @@ class ECharts extends Eventful<ECEventDefinition> {
                 };
                 if (isHighDownPayload(payload)) {
                     if (model instanceof SeriesModel) {
-                        if (payload.type === HIGHLIGHT_ACTION_TYPE && !payload.notBlur) {
+                        if (
+                            payload.type === HIGHLIGHT_ACTION_TYPE
+                            && !payload.notBlur && !model.get(['emphasis', 'disabled'])
+                        ) {
                             blurSeriesFromHighlightPayload(model, payload, ecIns._api);
                         }
                     }
@@ -1869,6 +1900,11 @@ class ECharts extends Eventful<ECEventDefinition> {
             const isSelectChange = isSelectChangePayload(payload);
             const isHighDown = isHighDownPayload(payload);
 
+            // Only leave blur once if there are multiple batches.
+            if (isHighDown) {
+                allLeaveBlur(this._api);
+            }
+
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
                 eventObj = actionWrap.action(batchItem, this._model, this._api) as ECActionEvent;
@@ -1897,14 +1933,20 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
 
             if (updateMethod !== 'none' && !isHighDown && !isSelectChange && !cptType) {
-                // Still dirty
-                if (this[PENDING_UPDATE]) {
-                    prepare(this);
-                    updateMethods.update.call(this, payload);
-                    this[PENDING_UPDATE] = null;
+                try {
+                    // Still dirty
+                    if (this[PENDING_UPDATE]) {
+                        prepare(this);
+                        updateMethods.update.call(this, payload);
+                        this[PENDING_UPDATE] = null;
+                    }
+                    else {
+                        updateMethods[updateMethod as keyof typeof updateMethods].call(this, payload);
+                    }
                 }
-                else {
-                    updateMethods[updateMethod as keyof typeof updateMethods].call(this, payload);
+                catch (e) {
+                    this[IN_MAIN_PROCESS_KEY] = false;
+                    throw e;
                 }
             }
 
@@ -1999,7 +2041,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 const el = e.target;
                 const dispatcher = findEventDispatcher(el, isHighDownDispatcher);
                 if (dispatcher) {
-                    handleGlboalMouseOutForHighDown(dispatcher, e, ecIns._api);
+                    handleGlobalMouseOutForHighDown(dispatcher, e, ecIns._api);
                     markStatusToUpdate(ecIns);
                 }
             }).on('click', function (e) {
@@ -2150,7 +2192,6 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // TODO progressive?
             lifecycle.trigger('series:beforeupdate', ecModel, api, updateParams);
-
 
             let unfinished: boolean = false;
             ecModel.eachSeries(function (seriesModel) {
@@ -2693,7 +2734,7 @@ export const disconnect = disConnect;
  * Dispose a chart instance
  */
 export function dispose(chart: EChartsType | HTMLElement | string): void {
-    if (typeof chart === 'string') {
+    if (isString(chart)) {
         chart = instances[chart];
     }
     else if (!(chart instanceof ECharts)) {
@@ -2783,7 +2824,7 @@ export function registerAction(
     eventName: string | ActionHandler,
     action?: ActionHandler
 ): void {
-    if (typeof eventName === 'function') {
+    if (isFunction(eventName)) {
         action = eventName;
         eventName = '';
     }
@@ -2930,20 +2971,23 @@ export function setCanvasCreator(creator: () => HTMLCanvasElement): void {
     });
 }
 
+type RegisterMapParams = Parameters<typeof geoSourceManager.registerMap>;
 /**
  * The parameters and usage: see `geoSourceManager.registerMap`.
  * Compatible with previous `echarts.registerMap`.
  */
 export function registerMap(
-    mapName: Parameters<typeof geoSourceManager.registerMap>[0],
-    geoJson: Parameters<typeof geoSourceManager.registerMap>[1],
-    specialAreas?: Parameters<typeof geoSourceManager.registerMap>[2]
+    mapName: RegisterMapParams[0],
+    geoJson: RegisterMapParams[1],
+    specialAreas?: RegisterMapParams[2]
 ): void {
-    geoSourceManager.registerMap(mapName, geoJson, specialAreas);
+    const registerMap = getImpl('registerMap');
+    registerMap && registerMap(mapName, geoJson, specialAreas);
 }
 
 export function getMap(mapName: string) {
-    return geoSourceManager.getMapForUser(mapName);
+    const getMap = getImpl('getMap');
+    return getMap && getMap(mapName);
 }
 
 export const registerTransform = registerExternalTransform;

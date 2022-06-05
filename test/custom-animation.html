@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/perlin.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+
+
+        <script>
+        require([
+            'echarts',
+            'data/svg/Map_of_Iceland.svg'
+        ], function (echarts, svg) {
+            var option;
+            echarts.registerMap('iceland_svg', {
+                svg: svg
+            });
+
+            option = {
+                tooltip: {},
+                geo: {
+                    tooltip: {
+                        show: true
+                    },
+                    map: 'iceland_svg',
+                    top: 0,
+                    bottom: 0,
+                    roam: true
+                },
+                series: {
+                    type: 'custom',
+                    coordinateSystem: 'geo',
+                    geoIndex: 0,
+                    zlevel: 1,
+                    data: [
+                        [488.2358421078053, 459.70913833075736, 100],
+                        [770.3415644319939, 757.9672194986475, 30],
+                        [1180.0329284196291, 743.6141808346214, 80],
+                        [894.03790632245, 1188.1985153835008, 61],
+                        [1372.98925630313, 477.3839988649537, 70],
+                        [1378.62251255796, 935.6708486282843, 81]
+                    ],
+                    renderItem(params, api) {
+                        const coord = api.coord([api.value(0, params.dataIndex), api.value(1, params.dataIndex)]);
+
+                        const circles = [];
+                        for (let i = 0; i < 5; i++) {
+                            circles.push({
+                                type: 'circle',
+                                shape: {
+                                    cx: 0,
+                                    cy: 0,
+                                    r: 30
+                                },
+                                style: {
+                                    stroke: 'red',
+                                    fill: 'none',
+                                    lineWidth: 2
+                                },
+                                // Ripple animation
+                                keyframeAnimation: {
+                                    duration: 4000,
+                                    loop: true,
+                                    delay: -i / 4 * 4000,
+                                    keyframes: [{
+                                        percent: 0,
+                                        scaleX: 0,
+                                        scaleY: 0,
+                                        style: {
+                                            opacity: 1
+                                        }
+                                    }, {
+                                        percent: 1,
+                                        scaleX: 1,
+                                        scaleY: 0.4,
+                                        style: {
+                                            opacity: 0
+                                        }
+                                    }]
+                                }
+                            });
+                        }
+                        return {
+                            type: 'group',
+                            x: coord[0],
+                            y: coord[1],
+                            children: [
+                                ...circles,
+                                {
+                                    type: 'path',
+                                    shape: {
+                                        d: 'M16 0c-5.523 0-10 4.477-10 10 0 10 10 22 10 22s10-12 10-22c0-5.523-4.477-10-10-10zM16 16c-3.314 0-6-2.686-6-6s2.686-6 6-6 6 2.686 6 6-2.686 6-6 6z',
+                                        x: -10,
+                                        y: -35,
+                                        width: 20,
+                                        height: 40
+                                    },
+                                    style: {
+                                        fill: 'red'
+                                    },
+                                    // Jump animation.
+                                    keyframeAnimation: {
+                                        duration: 1000,
+                                        loop: true,
+                                        delay: Math.random() * 1000,
+                                        keyframes: [{
+                                            y: -10,
+                                            percent: 0.5,
+                                            easing: 'cubicOut'
+                                        }, {
+                                            y: 0,
+                                            percent: 1,
+                                            easing: 'bounceOut'
+                                        }]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Custom animation effect'
+                ],
+                height: 500,
+                option: option
+            });
+
+        });
+
+        </script>
+    </body>
+</html>
+

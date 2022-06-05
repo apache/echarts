@@ -37,7 +37,7 @@ import {
     VerticalAlign,
     SeriesLabelOption,
     SeriesEncodeOptionMixin,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -49,7 +49,7 @@ type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
 };
 
 interface FunnelStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 
 export interface FunnelCallbackDataParams extends CallbackDataParams {

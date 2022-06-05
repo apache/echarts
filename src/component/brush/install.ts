@@ -29,6 +29,8 @@ import GlobalModel from '../../model/Global';
 import BrushFeature from '../toolbox/feature/Brush';
 import { registerFeature } from '../toolbox/featureManager';
 
+import { noop } from 'zrender/src/core/util';
+
 interface BrushPayload extends Payload {
     // If "areas" is empty, all of the select-boxes will be deleted
     areas?: BrushAreaParam[];
@@ -78,12 +80,12 @@ export function install(registers: EChartsExtensionInstallRegisters) {
      */
     registers.registerAction(
         {type: 'brushSelect', event: 'brushSelected', update: 'none'},
-        function () {}
+        noop
     );
 
     registers.registerAction(
         {type: 'brushEnd', event: 'brushEnd', update: 'none'},
-        function () {}
+        noop
     );
 
     registerFeature('brush', BrushFeature);

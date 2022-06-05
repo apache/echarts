@@ -29,7 +29,7 @@ chart.setOption({
         {
             name: 'Nightingale Chart',
             type: 'pie',
-            radius: [25, 250],
+            radius: [50, 250],
             center: ['50%', '50%'],
             roseType: 'radius',
             label: {
@@ -49,18 +49,18 @@ chart.setOption({
                 return (1 - idx / 8) * 500;
             },
             data: [
-                { value: 40, name: 'rose 1', itemStyle: { borderRadius: [0, 20] } },
-                { value: 32, name: 'rose 2', itemStyle: { borderRadius: [0, 18] } },
-                { value: 28, name: 'rose 3', itemStyle: { borderRadius: [0, 16] } },
-                { value: 24, name: 'rose 4', itemStyle: { borderRadius: [0, 14] } },
-                { value: 19, name: 'rose 5', itemStyle: { borderRadius: [0, 12] } },
-                { value: 15, name: 'rose 6', itemStyle: { borderRadius: [0, 10] } },
-                { value: 12, name: 'rose 7', itemStyle: { borderRadius: [0, 8] } },
-                { value: 10, name: 'rose 8', itemStyle: { borderRadius: [0, 6] } },
+                { value: 40, name: 'rose 1', itemStyle: { borderRadius: [5, 20] } },
+                { value: 32, name: 'rose 2', itemStyle: { borderRadius: [5, 18] } },
+                { value: 28, name: 'rose 3', itemStyle: { borderRadius: [5, 16] } },
+                { value: 24, name: 'rose 4', itemStyle: { borderRadius: [5, 14] } },
+                { value: 19, name: 'rose 5', itemStyle: { borderRadius: [5, 12] } },
+                { value: 15, name: 'rose 6', itemStyle: { borderRadius: [5, 10] } },
+                { value: 12, name: 'rose 7', itemStyle: { borderRadius: [5, 8] } },
+                { value: 10, name: 'rose 8', itemStyle: { borderRadius: [5, 6] } },
             ],
         },
     ],
 });
-const str = chart.renderToString();
+const str = chart.renderToSVGString();
 console.log(str);
 chart.dispose();

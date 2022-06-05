@@ -21,7 +21,7 @@
 
 import SeriesModel from '../../model/Series';
 import SeriesData from '../../data/SeriesData';
-import { concatArray, mergeAll, map } from 'zrender/src/core/util';
+import { concatArray, mergeAll, map, isNumber } from 'zrender/src/core/util';
 import CoordinateSystem from '../../core/CoordinateSystem';
 import {
     SeriesOption,
@@ -35,7 +35,7 @@ import {
     StatesOptionMixin,
     SeriesLineLabelOption,
     DimensionDefinitionLoose,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     ZRColor,
     CallbackDataParams
 } from '../../util/types';
@@ -86,7 +86,7 @@ interface LegacyDataItemOption {
 }
 
 interface LinesStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 export interface LinesStateOption<TCbParams = never> {
     lineStyle?: LinesLineStyleOption<(TCbParams extends never ? never : (params: TCbParams) => ZRColor) | ZRColor>
@@ -259,7 +259,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         }
         // Stored as a typed array. In format
         // Points Count(2) | x | y | x | y | Points Count(3) | x |  y | x | y | x | y |
-        if (typeof data[0] === 'number') {
+        if (isNumber(data[0])) {
             const len = data.length;
             // Store offset and len of each segment
             const coordsOffsetAndLenStorage = new Uint32Arr(len) as Uint32Array;

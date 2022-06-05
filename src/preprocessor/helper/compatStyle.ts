@@ -307,6 +307,13 @@ export default function globalCompatStyle(option: any, isTheme?: boolean) {
                 deprecateLog('nameGap property in radar component has been changed to axisNameGap');
             }
         }
+        if (__DEV__) {
+            each(radarOpt.indicator, function (indicatorOpt: any) {
+                if (indicatorOpt.text) {
+                    deprecateReplaceLog('text', 'name', 'radar.indicator');
+                }
+            });
+        }
     });
 
     each(toArr(option.geo), function (geoOpt) {

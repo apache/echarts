@@ -23,6 +23,7 @@ under the License.
         <meta charset='utf-8'>
         <script src='../dist/echarts.js'></script>
         <script src="../../echarts-gl/dist/echarts-gl.js"></script>
+        <!-- <script src="https://fastly.jsdelivr.net/npm/echarts-gl@2/dist/echarts-gl.min.js"></script> -->
         <script src='./data/map/js/world.js'></script>
         <meta name='viewport' content='width=device-width, initial-scale=1' />
     </head>
@@ -51,6 +52,7 @@ under the License.
                     return;
                 }
                 var dataURL = `../../echarts-examples/public/data/asset/data/links-ny/links_ny_${idx}.bin`;
+                // var dataURL = `https://fastly.jsdelivr.net/gh/apache/echarts-website@asf-site/examples/data/asset/data/links-ny/links_ny_${idx}.bin`;
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', dataURL, true);
                 xhr.responseType = 'arraybuffer';
@@ -109,7 +111,7 @@ under the License.
                         }
                     },
                     series: [{
-                        type: 'lines',
+                        type: 'linesGL',
 
                         coordinateSystem: 'geo',
 

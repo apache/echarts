@@ -1,0 +1,101 @@
+name: Bug Report
+description: Report a bug to Apache ECharts
+title: "[Bug] "
+labels: [bug]
+body:
+- type: markdown
+  attributes:
+    value: |
+      The issue list is reserved exclusively for bug reports and feature requests.
+
+      For usage questions, please use the following resources:
+
+      - Read the [docs](https://echarts.apache.org/option.html)
+      - Find in [examples](https://echarts.apache.org/examples/)
+      - Look for / ask questions on [Stack Overflow](https://stackoverflow.com/questions/tagged/echarts)
+
+      For non-technical support or general questions, you can email [dev@echarts.apache.org](mailto:dev@echarts.apache.org). And don't forget to subscribe to our [mailing list](https://echarts.apache.org/maillist.html) to get updated with the project.
+
+      Also try to search for your issue - it may have already been answered or even fixed in the development branch. However, if you find that an old, closed issue still persists in the latest version, you should open a new issue using the form below instead of commenting on the old issue.
+
+# - type: checkboxes
+#   attributes:
+#     label: Is there an existing issue for this?
+#     description: Please search to see if an issue already exists for the bug you encountered.
+#     options:
+#     - label: I have searched the existing issues
+#       required: true
+
+- type: input
+  attributes:
+    label: Version
+    description: |
+      Check if the issue is reproducible with the latest stable version of Apache ECharts.
+    placeholder: |
+      e.g. 5.2.2
+
+  validations:
+    required: true
+
+- type: input
+  attributes:
+    label: Link to Minimal Reproduction
+    description: |
+      If the reproduction does not need a build setup, please provide a link to [JSFiddle](https://jsfiddle.net/plainheart/e46ozpqj/7/), [JSBin](https://jsbin.com/) or [CodePen](https://codepen.io/Ovilia/pen/dyYWXWM). If it requires a build setup, you can use [CodeSandbox](https://codesandbox.io/s/echarts-basic-example-template-mpfz1s) or provide a GitHub repo.
+
+  validations:
+    required: false
+
+- type: textarea
+  attributes:
+    label: Steps to Reproduce
+    description: |
+      What do we need to do after opening your repo in order to make the bug happen? Clear and concise reproduction instructions are important for us to be able to triage your issue in a timely manner. Note that you can use [Markdown](https://guides.github.com/features/mastering-markdown/) to format lists and code.
+
+    placeholder: |
+      1. How do you create the chart.
+      2. What's the chart option
+      3. User interactions before the error happens.
+
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Current Behavior
+    description: A concise description of what you're experiencing.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Expected Behavior
+    description: A concise description of what you expected to happen.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Environment
+    description: |
+      e.g.
+        - **OS**: macOS Monterey
+        - **Browser**: Chrome 96.0.4664.55
+        - **Framework** Vue@3
+    value: |
+        - OS:
+        - Browser:
+        - Framework:
+    render: markdown
+
+  validations:
+    required: false
+
+- type: textarea
+  attributes:
+    label: Any additional comments?
+    description: |
+      e.g. some background/context of how you ran into this bug.
+
+  validations:
+    required: false

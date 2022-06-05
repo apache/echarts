@@ -206,8 +206,7 @@ class TreemapView extends ChartView {
 
         const renderResult = this._doRender(containerGroup, seriesModel, reRoot);
         (
-            hasAnimation &&
-            !isInit && (
+            hasAnimation && !isInit && (
                 !payloadType
                 || payloadType === 'treemapZoomToNode'
                 || payloadType === 'treemapRootToNode'
@@ -800,8 +799,10 @@ function renderNode(
     const bg = giveGraphic('background', Rect, depth, Z2_BG);
     bg && renderBackground(group, bg, isParent && thisLayout.upperLabelHeight);
 
-    const focus = nodeModel.get(['emphasis', 'focus']);
-    const blurScope = nodeModel.get(['emphasis', 'blurScope']);
+    const emphasisModel = nodeModel.getModel('emphasis');
+    const focus = emphasisModel.get('focus');
+    const blurScope = emphasisModel.get('blurScope');
+    const isDisabled = emphasisModel.get('disabled');
 
     const focusOrIndices =
         focus === 'ancestor' ? thisNode.getAncestorsIndices()
@@ -817,7 +818,7 @@ function renderNode(
             setAsHighDownDispatcher(group, false);
         }
         if (bg) {
-            setAsHighDownDispatcher(bg, true);
+            setAsHighDownDispatcher(bg, !isDisabled);
             // Only for enabling highlight/downplay.
             data.setItemGraphicEl(thisNode.dataIndex, bg);
 
@@ -833,7 +834,7 @@ function renderNode(
         if (bg && isHighDownDispatcher(bg)) {
             setAsHighDownDispatcher(bg, false);
         }
-        setAsHighDownDispatcher(group, true);
+        setAsHighDownDispatcher(group, !isDisabled);
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
 

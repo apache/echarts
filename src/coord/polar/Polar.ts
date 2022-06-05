@@ -228,7 +228,8 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
                 // Start angle and end angle don't matter
                 const dx = x - this.cx;
                 const dy = y - this.cy;
-                const d2 = dx * dx + dy * dy;
+                // minus a tiny value 1e-4 to avoid being clipped unexpectedly
+                const d2 = dx * dx + dy * dy - 1e-4;
                 const r = this.r;
                 const r0 = this.r0;
 

@@ -23,11 +23,11 @@ import * as colorUtil from 'zrender/src/tool/color';
 import SeriesData from '../../data/SeriesData';
 import * as numberUtil from '../../util/number';
 import * as graphic from '../../util/graphic';
-import { enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
+import { toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import { retrieve, mergeAll, map, curry, filter, HashMap, extend } from 'zrender/src/core/util';
-import { ParsedValue, ScaleDataValue, ZRColor } from '../../util/types';
+import { retrieve, mergeAll, map, curry, filter, HashMap, extend, isString } from 'zrender/src/core/util';
+import { ScaleDataValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
 import SeriesModel from '../../model/Series';
@@ -109,6 +109,16 @@ function ifMarkAreaHasOnlyDim(
 function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOption) {
     const fromCoord = item.coord[0];
     const toCoord = item.coord[1];
+    const item0 = {
+        coord: fromCoord,
+        x: item.x0,
+        y: item.y0
+    };
+    const item1 = {
+        coord: toCoord,
+        x: item.x1,
+        y: item.y1
+    };
     if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
         // In case
         // {
@@ -123,17 +133,15 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
         ) {
             return true;
         }
+        //Directly returning true may also do the work,
+        //because markArea will not be shown automatically
+        //when it's not included in coordinate system.
+        //But filtering ahead can avoid keeping rendering markArea
+        //when there are too many of them.
+        return markerHelper.zoneFilter(coordSys, item0, item1);
     }
-    return markerHelper.dataFilter(coordSys, {
-            coord: fromCoord,
-            x: item.x0,
-            y: item.y0
-        })
-        || markerHelper.dataFilter(coordSys, {
-            coord: toCoord,
-            x: item.x1,
-            y: item.y1
-        });
+    return markerHelper.dataFilter(coordSys, item0)
+        || markerHelper.dataFilter(coordSys, item1);
 }
 
 // dims can be ['x0', 'y0'], ['x1', 'y1'], ['x0', 'y1'], ['x1', 'y0']
@@ -272,7 +280,7 @@ class MarkAreaView extends MarkerView {
             const color = getVisualFromData(seriesData, 'color') as ZRColor;
             if (!style.fill) {
                 style.fill = color;
-                if (typeof style.fill === 'string') {
+                if (isString(style.fill)) {
                     style.fill = colorUtil.modifyAlpha(style.fill, 0.4);
                 }
             }
@@ -339,14 +347,14 @@ class MarkAreaView extends MarkerView {
                     labelFetcher: maModel,
                     labelDataIndex: idx,
                     defaultText: areaData.getName(idx) || '',
-                    inheritColor: typeof style.fill === 'string'
+                    inheritColor: isString(style.fill)
                         ? colorUtil.modifyAlpha(style.fill, 1) : '#000'
                 }
             );
 
             setStatesStylesFromModel(polygon, itemModel);
 
-            enableHoverEmphasis(polygon);
+            toggleHoverEmphasis(polygon, null, null, itemModel.get(['emphasis', 'disabled']));
 
             getECData(polygon).dataModel = maModel;
         });

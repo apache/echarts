@@ -35,7 +35,7 @@ import {
     Dictionary,
     SeriesLabelOption,
     CallbackDataParams,
-    DefaultStatesMixinEmpasis
+    DefaultStatesMixinEmphasis
 } from '../../util/types';
 import SingleAxis from '../../coord/single/SingleAxis';
 import GlobalModel from '../../model/Global';
@@ -51,7 +51,7 @@ interface ThemeRiverSeriesLabelOption extends SeriesLabelOption {
 type ThemerRiverDataItem = [OptionDataValueDate, OptionDataValueNumeric, string];
 
 interface ThemeRiverStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 export interface ThemeRiverStateOption<TCbParams = never> {
     label?: ThemeRiverSeriesLabelOption

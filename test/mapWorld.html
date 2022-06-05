@@ -41,6 +41,12 @@ under the License.
                 './data/map/json/world.json'
             ], function (echarts, worldJson) {
 
+
+                // Test for label calculation.
+                worldJson.features.forEach(feature => {
+                    feature.properties && (feature.properties.cp = null);
+                });
+
                 echarts.registerMap('world', worldJson);
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -94,6 +100,11 @@ under the License.
                             roam: true,
                             top: 60,
                             width: '80%',
+                            label: {
+                                show: true,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 1
+                            },
                             itemStyle: itemStyle,
                             data:[
                                 {name : 'Afghanistan', value : 28397.812},

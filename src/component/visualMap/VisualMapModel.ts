@@ -18,7 +18,6 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import env from 'zrender/src/core/env';
 import visualDefault from '../../visual/visualDefault';
 import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';
 import * as visualSolution from '../../visual/visualSolution';

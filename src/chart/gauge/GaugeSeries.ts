@@ -29,7 +29,7 @@ import {
     OptionDataValueNumeric,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    DefaultStatesMixinEmpasis,
+    DefaultStatesMixinEmphasis,
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
@@ -105,7 +105,7 @@ interface DetailOption extends LabelOption {
 }
 
 interface GaugeStatesMixin {
-    emphasis?: DefaultStatesMixinEmpasis
+    emphasis?: DefaultStatesMixinEmphasis
 }
 export interface GaugeStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>

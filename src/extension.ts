@@ -39,6 +39,7 @@ import SeriesModel from './model/Series';
 import { isFunction, indexOf, isArray, each } from 'zrender/src/core/util';
 import { Constructor } from './util/clazz';
 import { SubTypeDefaulter } from './util/component';
+import { registerImpl } from './core/impl';
 import { registerPainter } from 'zrender/src/zrender';
 
 const extensions: (EChartsExtensionInstaller | EChartsExtension)[] = [];
@@ -56,6 +57,8 @@ const extensionRegisters = {
     registerTransform,
     registerLoading,
     registerMap,
+    registerImpl,
+
     PRIORITY,
 
     ComponentModel,

@@ -17,8 +17,10 @@
 * under the License.
 */
 
-import View from '../coord/View';
-import { Payload } from '../util/types';
+import type Geo from '../coord/geo/Geo';
+import type View from '../coord/View';
+import type ExtensionAPI from '../core/ExtensionAPI';
+import type { Payload } from '../util/types';
 
 export interface RoamPaylod extends Payload {
     dx: number
@@ -28,25 +30,35 @@ export interface RoamPaylod extends Payload {
     originY: number
 }
 
+function getCenterCoord(view: View, point: number[]) {
+    // Use projected coord as center because it's linear.
+    return (view as Geo).pointToProjected
+        ? (view as Geo).pointToProjected(point)
+        : view.pointToData(point);
+}
+
 export function updateCenterAndZoom(
     view: View,
     payload: RoamPaylod,
     zoomLimit?: {
         min?: number,
         max?: number
-    }
+    },
+    api?: ExtensionAPI
 ) {
     const previousZoom = view.getZoom();
     const center = view.getCenter();
     let zoom = payload.zoom;
 
-    const point = view.dataToPoint(center);
+    const point = (view as Geo).projectedToPoint
+        ? (view as Geo).projectedToPoint(center)
+        : view.dataToPoint(center);
 
     if (payload.dx != null && payload.dy != null) {
         point[0] -= payload.dx;
         point[1] -= payload.dy;
 
-        view.setCenter(view.pointToData(point));
+        view.setCenter(getCenterCoord(view, point), api);
     }
     if (zoom != null) {
         if (zoomLimit) {
@@ -69,7 +81,7 @@ export function updateCenterAndZoom(
 
         view.updateTransform();
         // Get the new center
-        view.setCenter(view.pointToData(point));
+        view.setCenter(getCenterCoord(view, point), api);
         view.setZoom(zoom * previousZoom);
     }
 

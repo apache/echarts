@@ -17,10 +17,11 @@
 * under the License.
 */
 
-import {install as installAxisPointer} from '../axisPointer/install';
+import { install as installAxisPointer } from '../axisPointer/install';
 import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import TooltipModel from './TooltipModel';
 import TooltipView from './TooltipView';
+import { noop } from 'zrender/src/core/util';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     use(installAxisPointer);
@@ -41,8 +42,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
             event: 'showTip',
             update: 'tooltip:manuallyShowTip'
         },
-        // noop
-        function () {}
+        noop
     );
 
     registers.registerAction(
@@ -51,7 +51,6 @@ export function install(registers: EChartsExtensionInstallRegisters) {
             event: 'hideTip',
             update: 'tooltip:manuallyHideTip'
         },
-        // noop
-        function () {}
+        noop
     );
 }

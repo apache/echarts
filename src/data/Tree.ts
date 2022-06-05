@@ -106,7 +106,7 @@ export class TreeNode {
         cb?: TreeTraverseCallback<Ctx> | Ctx,
         context?: Ctx
     ) {
-        if (typeof options === 'function') {
+        if (zrUtil.isFunction(options)) {
             context = cb as Ctx;
             cb = options;
             options = null;

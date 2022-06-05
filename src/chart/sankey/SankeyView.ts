@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import { enterEmphasis, leaveEmphasis, enableHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
+import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { LayoutOrient, ECElement } from '../../util/types';
 import { PathProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
@@ -29,6 +29,7 @@ import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
+import { isString } from 'zrender/src/core/util';
 
 class SankeyPathShape {
     x1 = 0;
@@ -206,14 +207,16 @@ class SankeyView extends ChartView {
                 case 'gradient':
                     const sourceColor = edge.node1.getVisual('color');
                     const targetColor = edge.node2.getVisual('color');
-                    if (typeof sourceColor === 'string' && typeof targetColor === 'string') {
-                        curve.style.fill = new graphic.LinearGradient(0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
-                            color: sourceColor,
-                            offset: 0
-                        }, {
-                            color: targetColor,
-                            offset: 1
-                        }]);
+                    if (isString(sourceColor) && isString(targetColor)) {
+                        curve.style.fill = new graphic.LinearGradient(
+                            0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
+                                color: sourceColor,
+                                offset: 0
+                            }, {
+                                color: targetColor,
+                                offset: 1
+                            }]
+                        );
                     }
             }
 
@@ -226,10 +229,11 @@ class SankeyView extends ChartView {
             edgeData.setItemGraphicEl(edge.dataIndex, curve);
 
             const focus = emphasisModel.get('focus');
-            enableHoverEmphasis(
+            toggleHoverEmphasis(
                 curve,
                 focus === 'adjacency' ? edge.getAdjacentDataIndices() : focus,
-                emphasisModel.get('blurScope')
+                emphasisModel.get('blurScope'),
+                emphasisModel.get('disabled')
             );
 
             getECData(curve).dataType = 'edge';
@@ -277,10 +281,11 @@ class SankeyView extends ChartView {
             getECData(rect).dataType = 'node';
 
             const focus = emphasisModel.get('focus');
-            enableHoverEmphasis(
+            toggleHoverEmphasis(
                 rect,
                 focus === 'adjacency' ? node.getAdjacentDataIndices() : focus,
-                emphasisModel.get('blurScope')
+                emphasisModel.get('blurScope'),
+                emphasisModel.get('disabled')
             );
         });
 

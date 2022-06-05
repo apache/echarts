@@ -54,7 +54,6 @@ interface BreadcrumbItemStyleOption extends ItemStyleOption {
 }
 
 interface TreemapSeriesLabelOption extends SeriesLabelOption {
-    ellipsis?: boolean
     formatter?: string | ((params: CallbackDataParams) => string)
 }
 
@@ -305,7 +304,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             upperLabel: {
                 show: true,
                 position: [0, '50%'],
-                ellipsis: true,
+                overflow: 'truncate',
                 verticalAlign: 'middle'
             }
         },

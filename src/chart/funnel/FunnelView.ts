@@ -18,7 +18,7 @@
 */
 
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel, enableHoverEmphasis } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
@@ -92,7 +92,12 @@ class FunnelPiece extends graphic.Polygon {
 
         this._updateLabel(data, idx);
 
-        enableHoverEmphasis(this, emphasisModel.get('focus'), emphasisModel.get('blurScope'));
+        toggleHoverEmphasis(
+            this,
+            emphasisModel.get('focus'),
+            emphasisModel.get('blurScope'),
+            emphasisModel.get('disabled')
+        );
     }
 
     _updateLabel(data: SeriesData, idx: number) {

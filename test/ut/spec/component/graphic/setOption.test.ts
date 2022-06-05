@@ -23,8 +23,9 @@ import { EChartsType } from '../../../../../src/echarts';
 import Element from 'zrender/src/Element';
 import { EChartsOption } from '../../../../../src/export/option';
 import {
-    GraphicComponentOption, GraphicComponentImageOption
-} from '../../../../../src/component/graphic/install';
+    GraphicComponentOption,
+    GraphicComponentImageOption
+} from '../../../../../src/component/graphic/GraphicModel';
 import Group from 'zrender/src/graphic/Group';
 import { Dictionary } from 'zrender/src/core/types';
 

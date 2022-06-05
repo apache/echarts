@@ -40,6 +40,7 @@ import Model from '../../model/Model';
 import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
+import SeriesModel from '../../model/Series';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -51,7 +52,7 @@ interface UpdateOpt {
 
 interface SymbolLike extends graphic.Group {
     updateData(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): void
-    fadeOut?(cb: () => void): void
+    fadeOut?(cb: () => void, seriesModel: SeriesModel): void
 }
 
 interface SymbolLikeCtor {
@@ -102,7 +103,7 @@ export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
     StatesOptionMixin<SymbolDrawStateOption, {
         emphasis?: {
             focus?: DefaultEmphasisFocus
-            scale?: boolean
+            scale?: boolean | number
         }
     }>,
     SymbolDrawStateOption {
@@ -120,12 +121,13 @@ export interface SymbolDrawSeriesScope {
 
     focus?: DefaultEmphasisFocus
     blurScope?: BlurScope
+    emphasisDisabled?: boolean
 
     labelStatesModels: Record<DisplayState, Model<LabelOption>>
 
     itemModel?: Model<SymbolDrawItemModelOption>
 
-    hoverScale?: boolean
+    hoverScale?: boolean | number
 
     cursorStyle?: string
     fadeIn?: boolean
@@ -141,6 +143,7 @@ function makeSeriesScope(data: SeriesData): SymbolDrawSeriesScope {
 
         focus: emphasisModel.get('focus'),
         blurScope: emphasisModel.get('blurScope'),
+        emphasisDisabled: emphasisModel.get('disabled'),
 
         hoverScale: emphasisModel.get('scale'),
 
@@ -250,7 +253,7 @@ class SymbolDraw {
                 const el = oldData.getItemGraphicEl(oldIdx) as SymbolLike;
                 el && el.fadeOut(function () {
                     group.remove(el);
-                });
+                }, seriesModel as SeriesModel);
             })
             .execute();
 
@@ -317,7 +320,7 @@ class SymbolDraw {
             data.eachItemGraphicEl(function (el: SymbolLike) {
                 el.fadeOut(function () {
                     group.remove(el);
-                });
+                }, data.hostModel as SeriesModel);
             });
         }
         else {

@@ -113,7 +113,7 @@ export function format(
     const date = numberUtil.parseDate(time);
     const y = date[fullYearGetterName(isUTC)]();
     const M = date[monthGetterName(isUTC)]() + 1;
-    const q = Math.floor((M - 1) / 4) + 1;
+    const q = Math.floor((M - 1) / 3) + 1;
     const d = date[dateGetterName(isUTC)]();
     const e = date['get' + (isUTC ? 'UTC' : '') + 'Day' as 'getDay' | 'getUTCDay']();
     const H = date[hoursGetterName(isUTC)]();
@@ -164,11 +164,11 @@ export function leveledFormat(
     isUTC: boolean
 ) {
     let template = null;
-    if (typeof formatter === 'string') {
+    if (zrUtil.isString(formatter)) {
         // Single formatter for all units at all levels
         template = formatter;
     }
-    else if (typeof formatter === 'function') {
+    else if (zrUtil.isFunction(formatter)) {
         // Callback formatter
         template = formatter(tick.value, idx, {
             level: tick.level
@@ -264,7 +264,7 @@ export function getUnitValue(
     unit: TimeUnit,
     isUTC: boolean
 ) : number {
-    const date = typeof value === 'number'
+    const date = zrUtil.isNumber(value)
         ? numberUtil.parseDate(value)
         : value;
     unit = unit || getUnitFromValue(value, isUTC);

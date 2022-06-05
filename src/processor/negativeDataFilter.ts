@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import { isNumber } from 'zrender/src/core/util';
 import { StageHandler } from '../util/types';
 
 export default function negativeDataFilter(seriesType: string): StageHandler {
@@ -28,7 +29,7 @@ export default function negativeDataFilter(seriesType: string): StageHandler {
                 // handle negative value condition
                 const valueDim = data.mapDimension('value');
                 const curValue = data.get(valueDim, idx);
-                if (typeof curValue === 'number' && !isNaN(curValue) && curValue < 0) {
+                if (isNumber(curValue) && !isNaN(curValue) && curValue < 0) {
                     return false;
                 }
                 return true;

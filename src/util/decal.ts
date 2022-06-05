@@ -21,7 +21,7 @@
 import WeakMap from 'zrender/src/core/WeakMap';
 import { ImagePatternObject, PatternObject, SVGPatternObject } from 'zrender/src/graphic/Pattern';
 import LRU from 'zrender/src/core/LRU';
-import {defaults, map, isArray} from 'zrender/src/core/util';
+import {defaults, map, isArray, isString, isNumber} from 'zrender/src/core/util';
 import {getLeastCommonMultiple} from './number';
 import {createSymbol} from './symbol';
 import ExtensionAPI from '../core/ExtensionAPI';
@@ -101,12 +101,11 @@ export function createOrUpdatePatternFromDecal(
         let isValidKey = true;
         for (let i = 0; i < decalKeys.length; ++i) {
             const value = (decalOpt as any)[decalKeys[i]];
-            const valueType = typeof value;
             if (value != null
                 && !isArray(value)
-                && valueType !== 'string'
-                && valueType !== 'number'
-                && valueType !== 'boolean'
+                && !isString(value)
+                && !isNumber(value)
+                && typeof value !== 'boolean'
             ) {
                 isValidKey = false;
                 break;
@@ -316,13 +315,13 @@ function normalizeSymbolArray(symbol: string | (string | string[])[]): string[][
     if (!symbol || (symbol as string[]).length === 0) {
         return [['rect']];
     }
-    if (typeof symbol === 'string') {
+    if (isString(symbol)) {
         return [[symbol]];
     }
 
     let isAllString = true;
     for (let i = 0; i < symbol.length; ++i) {
-        if (typeof symbol[i] !== 'string') {
+        if (!isString(symbol[i])) {
             isAllString = false;
             break;
         }
@@ -333,7 +332,7 @@ function normalizeSymbolArray(symbol: string | (string | string[])[]): string[][
 
     const result: string[][] = [];
     for (let i = 0; i < symbol.length; ++i) {
-        if (typeof symbol[i] === 'string') {
+        if (isString(symbol[i])) {
             result.push([symbol[i] as string]);
         }
         else {
@@ -353,7 +352,7 @@ function normalizeDashArrayX(dash: DecalDashArrayX): number[][] {
     if (!dash || (dash as number[]).length === 0) {
         return [[0, 0]];
     }
-    if (typeof dash === 'number') {
+    if (isNumber(dash)) {
         const dashValue = Math.ceil(dash);
         return [[dashValue, dashValue]];
     }
@@ -364,7 +363,7 @@ function normalizeDashArrayX(dash: DecalDashArrayX): number[][] {
      */
     let isAllNumber = true;
     for (let i = 0; i < dash.length; ++i) {
-        if (typeof dash[i] !== 'number') {
+        if (!isNumber(dash[i])) {
             isAllNumber = false;
             break;
         }
@@ -375,7 +374,7 @@ function normalizeDashArrayX(dash: DecalDashArrayX): number[][] {
 
     const result: number[][] = [];
     for (let i = 0; i < dash.length; ++i) {
-        if (typeof dash[i] === 'number') {
+        if (isNumber(dash[i])) {
             const dashValue = Math.ceil(dash[i] as number);
             result.push([dashValue, dashValue]);
         }
@@ -404,7 +403,7 @@ function normalizeDashArrayY(dash: DecalDashArrayY): number[] {
     if (!dash || typeof dash === 'object' && dash.length === 0) {
         return [0, 0];
     }
-    if (typeof dash === 'number') {
+    if (isNumber(dash)) {
         const dashValue = Math.ceil(dash);
         return [dashValue, dashValue];
     }
