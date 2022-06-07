@@ -336,12 +336,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         levels: []                  // Each item: {
                                     //     visibleMin, itemStyle, visualDimension, label
                                     // }
-        // data: {
-        //      value: [],
-        //      children: [],
-        //      link: 'http://xxx.xxx.xxx',
-        //      target: 'blank' or 'self'
-        // }
     };
 
     /**

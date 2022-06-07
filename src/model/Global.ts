@@ -682,7 +682,7 @@ echarts.use([${seriesImportName}]);`);
      * });
      * eachComponent(function (componentType, model, index) {
      *     // componentType does not include subType
-     *     // (componentType is 'xxx' but not 'xxx.aa')
+     *     // (componentType is 'a' but not 'a.b')
      * });
      * eachComponent(
      *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}},
