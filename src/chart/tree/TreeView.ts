@@ -586,7 +586,7 @@ function drawEdge(
     }
 
     // show all edge when edgeShape is 'curve', filter node `isExpand` is false when edgeShape is 'polyline'
-    if (edge && (node.isExpand === true || (edgeShape !== 'polyline'))) {
+    if (edge && !(edgeShape === 'polyline' && !node.isExpand)) {
         edge.useStyle(zrUtil.defaults({
             strokeNoScale: true, fill: null
         }, lineStyle));
