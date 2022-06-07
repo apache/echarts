@@ -38,10 +38,7 @@ under the License.
 
 
         <div id="main0"></div>
-
-
-
-
+        <div id="main1"></div>
 
 
         <script>
@@ -110,6 +107,76 @@ under the License.
             });
         });
         </script>
+
+<script>
+    require([
+        'echarts',
+        // 'map/js/china',
+        // './data/nutrients.json'
+    ], function (echarts) {
+        var option;
+
+        option = {
+            xAxis: {
+            type: 'category',
+            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            },
+            yAxis: {
+            type: 'category',
+            data: ['Sleep', 'Exercise', 'Gardening', 'Gaming', 'Work']
+            },
+            series: [
+            {
+                data: ['Work', 'Exercise', 'Work', 'Gardening', 'Gaming' ],
+                type: 'bar',
+                markArea: {
+                    data: [
+                        [
+                        {
+                            name: 'Dual Axes specified Emphasis',
+                            xAxis: 'Fri',
+                            yAxis: 'Work'
+                        },
+                        {
+                            xAxis: 'Mon',
+                            yAxis: 'Gardening'
+                        }
+                        ]
+                    ]
+                }
+            },
+            {
+                data: ['Gardening', 'Work', 'Exercise', 'Exercise', 'Gardening'],
+                type: 'bar',
+                markArea: {
+                    data: [
+                        [
+                        {
+                            name: 'Coord specified Emphasis',
+                            coord:['Mon', 'Exercise']
+                        },
+                        {
+                            coord:['Tue', 'Gardening']
+                        }
+                        ]
+                    ]
+                }
+            }
+            ]
+        };
+
+        var chart = testHelper.create(echarts, 'main1', {
+            title: [
+                `MarkArea should be covering the 'Mon' to 'Fri' area and 'Exercise' to 'Gaming' area`,
+                `rather than area between bars inside. (Dual category axes for bar chart is rare)`
+            ],
+            option: option
+            // height: 300,
+            // buttons: [{text: 'btn-txt', onclick: function () {}}],
+            // recordCanvas: true,
+        });
+    });
+    </script>
 
 
     </body>
