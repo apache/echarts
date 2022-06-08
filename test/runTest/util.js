@@ -76,8 +76,9 @@ module.exports.prepareEChartsLib = function (version) {
             const isNightly = version.includes('-dev');
             const packageName = isNightly ? 'echarts-nightly' : 'echarts'
 
-            console.log(`Downloading ${packageName}@${version} from `, `https://cdn.jsdelivr.net/npm/${packageName}@${version}/dist/echarts.js`);
-            https.get(`https://cdn.jsdelivr.net/npm/${packageName}@${version}/dist/echarts.js`, response => {
+            const url = `https://unpkg.com/${packageName}@${version}/dist/echarts.js`;
+            console.log(`Downloading ${packageName}@${version} from ${url}`, );
+            https.get(url, response => {
                 response.pipe(file);
 
                 file.on('finish', () => {
