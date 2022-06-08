@@ -172,7 +172,7 @@ class TreeView extends ChartView {
             group.y = layoutInfo.y;
         }
 
-        this._updateViewCoordSys(seriesModel);
+        this._updateViewCoordSys(seriesModel, api);
         this._updateController(seriesModel, ecModel, api);
 
         const oldData = this._data;
@@ -224,7 +224,7 @@ class TreeView extends ChartView {
         this._data = data;
     }
 
-    _updateViewCoordSys(seriesModel: TreeSeriesModel) {
+    _updateViewCoordSys(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const points: number[][] = [];
         data.each(function (idx) {
@@ -257,7 +257,7 @@ class TreeView extends ChartView {
 
         viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
-        viewCoordSys.setCenter(seriesModel.get('center'));
+        viewCoordSys.setCenter(seriesModel.get('center'), api);
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
         // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group
@@ -433,7 +433,7 @@ function updateNode(
         let rad;
         let isLeft;
 
-        if (targetLayout.x === rootLayout.x && node.isExpand === true) {
+        if (targetLayout.x === rootLayout.x && node.isExpand === true && realRoot.children.length) {
             const center = {
                 x: (realRoot.children[0].getLayout().x + realRoot.children[length - 1].getLayout().x) / 2,
                 y: (realRoot.children[0].getLayout().y + realRoot.children[length - 1].getLayout().y) / 2
@@ -485,9 +485,11 @@ function updateNode(
 
     // Handle status
     const focus = itemModel.get(['emphasis', 'focus']);
-    const focusDataIndices: number[] = focus === 'ancestor'
-        ? node.getAncestorsIndices()
-        : focus === 'descendant' ? node.getDescendantIndices() : null;
+    const focusDataIndices: number[] = focus === 'relative'
+        ? zrUtil.concatArray(node.getAncestorsIndices(), node.getDescendantIndices()) as number[]
+        : focus === 'ancestor'
+            ? node.getAncestorsIndices()
+            : focus === 'descendant' ? node.getDescendantIndices() : null;
 
     if (focusDataIndices) {
         // Modify the focus to data indices.
@@ -533,6 +535,8 @@ function drawEdge(
     const edgeForkPosition = seriesModel.get('edgeForkPosition');
     const lineStyle = itemModel.getModel('lineStyle').getLineStyle();
     let edge = symbolEl.__edge;
+    // curve edge from node -> parent
+    // polyline edge from node -> children
     if (edgeShape === 'curve') {
         if (node.parentNode && node.parentNode !== virtualRoot) {
             if (!edge) {
@@ -581,7 +585,8 @@ function drawEdge(
         }
     }
 
-    if (edge) {
+    // show all edge when edgeShape is 'curve', filter node `isExpand` is false when edgeShape is 'polyline'
+    if (edge && !(edgeShape === 'polyline' && !node.isExpand)) {
         edge.useStyle(zrUtil.defaults({
             strokeNoScale: true, fill: null
         }, lineStyle));

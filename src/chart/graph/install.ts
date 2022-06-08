@@ -32,6 +32,7 @@ import GraphSeriesModel from './GraphSeries';
 import { RoamPaylod, updateCenterAndZoom } from '../../action/roamHelper';
 import GlobalModel from '../../model/Global';
 import { noop } from 'zrender/src/core/util';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 
 const actionInfo = {
     type: 'graphRoam',
@@ -72,13 +73,13 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     }, noop);
 
     // Register roam action.
-    registers.registerAction(actionInfo, function (payload: RoamPaylod, ecModel: GlobalModel) {
+    registers.registerAction(actionInfo, function (payload: RoamPaylod, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachComponent({
             mainType: 'series', query: payload
         }, function (seriesModel: GraphSeriesModel) {
             const coordSys = seriesModel.coordinateSystem as View;
 
-            const res = updateCenterAndZoom(coordSys, payload);
+            const res = updateCenterAndZoom(coordSys, payload, undefined, api);
 
             seriesModel.setCenter
                 && seriesModel.setCenter(res.center);

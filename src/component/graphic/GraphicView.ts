@@ -440,40 +440,43 @@ function updateCommonAttrs(
     defaultZlevel: number
 ) {
     if (!el.isGroup) {
-        const elDisplayable = el as Displayable;
-        elDisplayable.cursor = zrUtil.retrieve2(
-            (elOption as GraphicComponentDisplayableOption).cursor,
-            Displayable.prototype.cursor
-        );
-        // We should not support configure z and zlevel in the element level.
-        // But seems we didn't limit it previously. So here still use it to avoid breaking.
-        elDisplayable.z = zrUtil.retrieve2(
-            (elOption as GraphicComponentDisplayableOption).z,
-            defaultZ || 0
-        );
-        elDisplayable.zlevel = zrUtil.retrieve2(
-            (elOption as GraphicComponentDisplayableOption).zlevel,
-            defaultZlevel || 0
-        );
-        // z2 must not be null/undefined, otherwise sort error may occur.
-        const optZ2 = (elOption as GraphicComponentDisplayableOption).z2;
-        optZ2 != null && (elDisplayable.z2 = optZ2 || 0);
+        zrUtil.each([
+            ['cursor', Displayable.prototype.cursor],
+            // We should not support configure z and zlevel in the element level.
+            // But seems we didn't limit it previously. So here still use it to avoid breaking.
+            ['zlevel', defaultZlevel || 0],
+            ['z', defaultZ || 0],
+            // z2 must not be null/undefined, otherwise sort error may occur.
+            ['z2', 0]
+        ], item => {
+            const prop = item[0] as any;
+            if (zrUtil.hasOwn(elOption, prop)) {
+                (el as any)[prop] = zrUtil.retrieve2(
+                    (elOption as any)[prop],
+                    item[1]
+                );
+            }
+            else if ((el as any)[prop] == null) {
+                (el as any)[prop] = item[1];
+            }
+        });
     }
 
     zrUtil.each(zrUtil.keys(elOption), key => {
-        const val = (elOption as any)[key];
         // Assign event handlers.
         // PENDING: should enumerate all event names or use pattern matching?
-        if (key.indexOf('on') === 0 && zrUtil.isFunction(val)) {
-            (el as any)[key] = val;
+        if (key.indexOf('on') === 0) {
+            const val = (elOption as any)[key];
+            (el as any)[key] = zrUtil.isFunction(val) ? val : null;
         }
     });
-    el.draggable = elOption.draggable;
+    if (zrUtil.hasOwn(elOption, 'draggable')) {
+        el.draggable = elOption.draggable;
+    }
 
     // Other attributes
     elOption.name != null && (el.name = elOption.name);
     elOption.id != null && ((el as any).id = elOption.id);
-
 }
 // Remove unnecessary props to avoid potential problems.
 function getCleanedElOption(

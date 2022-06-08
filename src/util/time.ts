@@ -113,7 +113,7 @@ export function format(
     const date = numberUtil.parseDate(time);
     const y = date[fullYearGetterName(isUTC)]();
     const M = date[monthGetterName(isUTC)]() + 1;
-    const q = Math.floor((M - 1) / 4) + 1;
+    const q = Math.floor((M - 1) / 3) + 1;
     const d = date[dateGetterName(isUTC)]();
     const e = date['get' + (isUTC ? 'UTC' : '') + 'Day' as 'getDay' | 'getUTCDay']();
     const H = date[hoursGetterName(isUTC)]();
