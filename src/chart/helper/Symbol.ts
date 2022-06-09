@@ -30,7 +30,7 @@ import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 import { extend, isNumber } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 import Model from '../../model/Model';
 
 type ECSymbol = ReturnType<typeof createSymbol>;

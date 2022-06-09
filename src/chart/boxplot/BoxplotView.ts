@@ -27,7 +27,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import { BoxplotItemLayout } from './boxplotLayout';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 
 class BoxplotView extends ChartView {
     static type = 'boxplot';
