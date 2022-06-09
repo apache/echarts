@@ -7021,7 +7021,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.3.0';
+    var version = '5.3.2';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -8505,8 +8505,8 @@
        * Component model classes
        * key: componentType,
        * value:
-       *     componentClass, when componentType is 'xxx'
-       *     or Object.<subKey, componentClass>, when componentType is 'xxx.yy'
+       *     componentClass, when componentType is 'a'
+       *     or Object.<subKey, componentClass>, when componentType is 'a.b'
        */
       var storage = {};
 
@@ -8702,10 +8702,10 @@
                 !isImageReady(image) && cachedImgObj.pending.push(pendingWrap);
             }
             else {
-                var image_1 = platformApi.loadImage(newImageOrSrc, imageOnLoad, imageOnLoad);
-                image_1.__zrImageSrc = newImageOrSrc;
-                globalImageCache.put(newImageOrSrc, image_1.__cachedImgObj = {
-                    image: image_1,
+                image = platformApi.loadImage(newImageOrSrc, imageOnLoad, imageOnLoad);
+                image.__zrImageSrc = newImageOrSrc;
+                globalImageCache.put(newImageOrSrc, image.__cachedImgObj = {
+                    image: image,
                     pending: [pendingWrap]
                 });
             }
@@ -15338,7 +15338,7 @@
 
       Model.prototype.mergeOption = function (option, ecModel) {
         merge(this.option, option, true);
-      }; // `path` can be 'xxx.yyy.zzz', so the return value type have to be `ModelOption`
+      }; // `path` can be 'a.b.c', so the return value type have to be `ModelOption`
       // TODO: TYPE strict key check?
       // get(path: string | string[], ignoreParent?: boolean): ModelOption;
 
@@ -15365,9 +15365,9 @@
         }
 
         return val;
-      }; // `path` can be 'xxx.yyy.zzz', so the return value type have to be `Model<ModelOption>`
+      }; // `path` can be 'a.b.c', so the return value type have to be `Model<ModelOption>`
       // getModel(path: string | string[], parentModel?: Model): Model;
-      // TODO 'xxx.yyy.zzz' is deprecated
+      // TODO 'a.b.c' is deprecated
 
 
       Model.prototype.getModel = function (path, parentModel) {
@@ -16051,7 +16051,7 @@
       var date = parseDate(time);
       var y = date[fullYearGetterName(isUTC)]();
       var M = date[monthGetterName(isUTC)]() + 1;
-      var q = Math.floor((M - 1) / 4) + 1;
+      var q = Math.floor((M - 1) / 3) + 1;
       var d = date[dateGetterName(isUTC)]();
       var e = date['get' + (isUTC ? 'UTC' : '') + 'Day']();
       var H = date[hoursGetterName(isUTC)]();
@@ -16386,7 +16386,7 @@
       var m = date[getUTC + 'Minutes']();
       var s = date[getUTC + 'Seconds']();
       var S = date[getUTC + 'Milliseconds']();
-      tpl = tpl.replace('MM', pad(M, 2)).replace('M', M).replace('yyyy', y).replace('yy', y % 100 + '').replace('dd', pad(d, 2)).replace('d', d).replace('hh', pad(h, 2)).replace('h', h).replace('mm', pad(m, 2)).replace('m', m).replace('ss', pad(s, 2)).replace('s', s).replace('SSS', pad(S, 3));
+      tpl = tpl.replace('MM', pad(M, 2)).replace('M', M).replace('yyyy', y).replace('yy', pad(y % 100 + '', 2)).replace('dd', pad(d, 2)).replace('d', d).replace('hh', pad(h, 2)).replace('h', h).replace('mm', pad(m, 2)).replace('m', m).replace('ss', pad(s, 2)).replace('s', s).replace('SSS', pad(S, 3));
       return tpl;
     }
     /**
@@ -19321,13 +19321,13 @@
 
     //     data processing stage is blocked in stream.
     //     See <module:echarts/stream/Scheduler#performDataProcessorTasks>
-    // (2) Only register once when import repeatly.
-    //     Should be executed after series filtered and before stack calculation.
+    // (2) Only register once when import repeatedly.
+    //     Should be executed after series is filtered and before stack calculation.
 
     function dataStack(ecModel) {
       var stackInfoMap = createHashMap();
       ecModel.eachSeries(function (seriesModel) {
-        var stack = seriesModel.get('stack'); // Compatibal: when `stack` is set as '', do not stack.
+        var stack = seriesModel.get('stack'); // Compatible: when `stack` is set as '', do not stack.
 
         if (stack) {
           var stackInfoList = stackInfoMap.get(stack) || stackInfoMap.set(stack, []);
@@ -19361,7 +19361,8 @@
         var resultNaN = [NaN, NaN];
         var dims = [targetStackInfo.stackResultDimension, targetStackInfo.stackedOverDimension];
         var targetData = targetStackInfo.data;
-        var isStackedByIndex = targetStackInfo.isStackedByIndex; // Should not write on raw data, because stack series model list changes
+        var isStackedByIndex = targetStackInfo.isStackedByIndex;
+        var stackStrategy = targetStackInfo.seriesModel.get('stackStrategy') || 'samesign'; // Should not write on raw data, because stack series model list changes
         // depending on legend selection.
 
         targetData.modify(dims, function (v0, v1, dataIndex) {
@@ -19394,12 +19395,13 @@
             if (stackedDataRawIndex >= 0) {
               var val = stackInfo.data.getByRawIndex(stackInfo.stackResultDimension, stackedDataRawIndex); // Considering positive stack, negative stack and empty data
 
-              if (sum >= 0 && val > 0 || // Positive stack
-              sum <= 0 && val < 0 // Negative stack
+              if (stackStrategy === 'all' // single stack group
+              || stackStrategy === 'positive' && val > 0 || stackStrategy === 'negative' && val < 0 || stackStrategy === 'samesign' && sum >= 0 && val > 0 // All positive stack
+              || stackStrategy === 'samesign' && sum <= 0 && val < 0 // All negative stack
               ) {
-                  // The sum should be as less as possible to be effected
-                  // by floating arithmetic problem. A wrong result probably
-                  // filtered incorrectly by axis min/max.
+                  // The sum has to be very small to be affected by the
+                  // floating arithmetic problem. An incorrect result will probably
+                  // cause axis min/max to be filtered incorrectly.
                   sum = addSafe(sum, val);
                   stackedOver = val;
                   break;
@@ -21120,7 +21122,7 @@
 
       DataStore.prototype.initData = function (provider, inputDimensions, dimValueGetter) {
         if ("development" !== 'production') {
-          assert(isFunction(provider.getItem) && isFunction(provider.count), 'Inavlid data provider.');
+          assert(isFunction(provider.getItem) && isFunction(provider.count), 'Invalid data provider.');
         }
 
         this._provider = provider; // Clear
@@ -25531,6 +25533,9 @@
       return [parsePercent$1(symbolOffset[0], symbolSize[0]) || 0, parsePercent$1(retrieve2(symbolOffset[1], symbolOffset[0]), symbolSize[1]) || 0];
     }
 
+    function isSafeNum(num) {
+        return isFinite(num);
+    }
     function createLinearGradient(ctx, obj, rect) {
         var x = obj.x == null ? 0 : obj.x;
         var x2 = obj.x2 == null ? 1 : obj.x2;
@@ -25542,10 +25547,10 @@
             y = y * rect.height + rect.y;
             y2 = y2 * rect.height + rect.y;
         }
-        x = isNaN(x) ? 0 : x;
-        x2 = isNaN(x2) ? 1 : x2;
-        y = isNaN(y) ? 0 : y;
-        y2 = isNaN(y2) ? 0 : y2;
+        x = isSafeNum(x) ? x : 0;
+        x2 = isSafeNum(x2) ? x2 : 1;
+        y = isSafeNum(y) ? y : 0;
+        y2 = isSafeNum(y2) ? y2 : 0;
         var canvasGradient = ctx.createLinearGradient(x, y, x2, y2);
         return canvasGradient;
     }
@@ -25561,6 +25566,9 @@
             y = y * height + rect.y;
             r = r * min;
         }
+        x = isSafeNum(x) ? x : 0.5;
+        y = isSafeNum(y) ? y : 0.5;
+        r = r >= 0 && isSafeNum(r) ? r : 0.5;
         var canvasGradient = ctx.createRadialGradient(x, y, 0, x, y, r);
         return canvasGradient;
     }
@@ -26656,7 +26664,7 @@
     }
 
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.3.2';
+    var version$1 = '5.3.3';
     var dependencies = {
       zrender: '5.3.1'
     };
@@ -37231,10 +37239,10 @@
         symbolPath.z = z;
       };
 
-      Symbol.prototype.setDraggable = function (draggable) {
+      Symbol.prototype.setDraggable = function (draggable, hasCursorOption) {
         var symbolPath = this.childAt(0);
         symbolPath.draggable = draggable;
-        symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
+        symbolPath.cursor = !hasCursorOption && draggable ? 'move' : symbolPath.cursor;
       };
       /**
        * Update symbol properties
@@ -38967,7 +38975,11 @@
 
           if (isAreaChart) {
             polygon = this._newPolygon(points, stackedOnPoints);
-          } // NOTE: Must update _endLabel before setClipPath.
+          } // If areaStyle is removed
+          else if (polygon) {
+              lineGroup.remove(polygon);
+              polygon = this._polygon = null;
+            } // NOTE: Must update _endLabel before setClipPath.
 
 
           if (!isCoordSysPolar) {
@@ -42934,6 +42946,14 @@
 
       Cartesian2D.prototype.containData = function (data) {
         return this.getAxis('x').containData(data[0]) && this.getAxis('y').containData(data[1]);
+      };
+
+      Cartesian2D.prototype.containZone = function (data1, data2) {
+        var zoneDiag1 = this.dataToPoint(data1);
+        var zoneDiag2 = this.dataToPoint(data2);
+        var area = this.getArea();
+        var zone = new BoundingRect(zoneDiag1[0], zoneDiag1[1], zoneDiag2[0] - zoneDiag1[0], zoneDiag2[1] - zoneDiag1[1]);
+        return area.intersect(zone);
       };
 
       Cartesian2D.prototype.dataToPoint = function (data, clamp, out) {
