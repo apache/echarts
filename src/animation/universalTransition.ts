@@ -37,7 +37,7 @@ import {
 import { makeInner, normalizeToArray } from '../util/model';
 import { warn } from '../util/log';
 import ExtensionAPI from '../core/ExtensionAPI';
-import { getAnimationConfig, getOldStyle } from './basicTrasition';
+import { getAnimationConfig, getOldStyle } from './basicTransition';
 import Model from '../model/Model';
 import Displayable from 'zrender/src/graphic/Displayable';
 
