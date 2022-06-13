@@ -185,7 +185,7 @@ function getSingleMarkerEndPoint(
             }
             // Use the getMarkerPoisition
             point = seriesModel.getMarkerPosition(
-                pointValue, dims
+                pointValue, dims, true
             );
         }
         else {

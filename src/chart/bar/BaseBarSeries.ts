@@ -85,25 +85,34 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
         return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
-    getMarkerPosition(value: ScaleDataValue[], dims?: typeof dimPermutations[number]) {
+    getMarkerPosition(value: ScaleDataValue[], dims?: typeof dimPermutations[number], startingAtTick: boolean = false) {
         const coordSys = this.coordinateSystem;
         if (coordSys && coordSys.clampData) {
             // PENDING if clamp ?
             const pt = coordSys.dataToPoint(coordSys.clampData(value));
-            each(coordSys.getAxes(), function (axis: Axis2D, idx: number) {
-                //If axis type is category, use tick coords instead
-                if (axis.type === 'category') {
-                    const tickCoords = axis.getTicksCoords();
-                    let tickIdx = coordSys.clampData(value)[idx];
-                    //The index of rightmost tick of markArea is 1 larger than x1/y1 index
-                    if (dims && (dims[idx] === 'x1' || dims[idx] === 'y1')) {
-                        tickIdx += 1;
+            if (startingAtTick) {
+                each(coordSys.getAxes(), function (axis: Axis2D, idx: number) {
+                    //If axis type is category, use tick coords instead
+                    if (axis.type === 'category') {
+                        const tickCoords = axis.getTicksCoords();
+                        let tickIdx = coordSys.clampData(value)[idx];
+                        //The index of rightmost tick of markArea is 1 larger than x1/y1 index
+                        if (dims && (dims[idx] === 'x1' || dims[idx] === 'y1')) {
+                            tickIdx += 1;
+                        }
+                        (tickIdx > tickCoords.length - 1) && (tickIdx = tickCoords.length - 1);
+                        (tickIdx < 0) && (tickIdx = 0);
+                        tickCoords[tickIdx] && (pt[idx] = axis.toGlobalCoord(tickCoords[tickIdx].coord));
                     }
-                    (tickIdx > tickCoords.length - 1) && (tickIdx = tickCoords.length - 1);
-                    (tickIdx < 0) && (tickIdx = 0);
-                    tickCoords[tickIdx] && (pt[idx] = axis.toGlobalCoord(tickCoords[tickIdx].coord));
-                }
-            });
+                });
+            }
+            else {
+                const data = this.getData();
+                const offset = data.getLayout('offset');
+                const size = data.getLayout('size');
+                const offsetIndex = (coordSys as Cartesian2D).getBaseAxis().isHorizontal() ? 0 : 1;
+                pt[offsetIndex] += offset + size / 2;
+            }
             return pt;
         }
         return [NaN, NaN];
