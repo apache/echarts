@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html, body, #main0 {
+                width: 100%;
+            }
+        </style>
+
+
+
+        <div class="chart" id="main0"></div>
+        <div class="chart" id="main1"></div>
+        <div class="chart" id="main2"></div>
+        <div class="chart" id="main3"></div>
+
+
+        <script>
+        require([
+            'echarts', 'data/life-expectancy-table.json'
+        ], function (echarts,data) {
+            var option;
+            var sizeValue = '57%';
+            var symbolSize = 2.5;
+            option = {
+                legend: {},
+                tooltip: {},
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                grid: [
+                    {right: sizeValue, bottom: sizeValue},
+                    {left: sizeValue, bottom: sizeValue},
+                    {right: sizeValue, top: sizeValue},
+                ],
+                xAxis: [
+                    {
+                        type: 'value',
+                        gridIndex: 0,
+                        name: 'nameLocation: \'end\'',
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                    {
+                        type: 'category',
+                        gridIndex: 1,
+                        name: 'nameLocation: \'middle\'',
+                        boundaryGap: false,
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                    {
+                        type: 'value',
+                        gridIndex: 2,
+                        name: 'nameLocation: \'start\'',
+                        axisLabel: {rotate: 50, interval: 0}
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        gridIndex: 0,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
+                        nameLocation: 'end',
+                        nameTextStyle: {
+                            align:'left',
+                            overflow: 'truncate',
+                        }
+                    },
+                    {
+                        type: 'value',
+                        nameLocation: 'middle',
+                        nameGap: 50,
+                        nameTextStyle: {
+                            overflow: 'truncate',
+                        },
+                        gridIndex: 1,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
+                    },
+                    {
+                        type: 'value',
+                        nameLocation: 'start',
+                        nameTextStyle: {
+                            overflow: 'truncate',
+                        },
+                        nameGap: 35,
+                        gridIndex: 2,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
+                    }
+                ],
+                dataset: {
+                    dimensions: [
+                        'Income',
+                        'Life Expectancy',
+                        'Population',
+                        'Country',
+                        {name: 'Year', type: 'ordinal'}
+                    ],
+                    source: data
+                },
+                series: [
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 0,
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'Income',
+                            y: 'Life Expectancy',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'Country',
+                            y: 'Income',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        encode: {
+                            x: 'Income',
+                            y: 'Population',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    }
+                ]
+            };
+
+            var chart0 = testHelper.create(echarts, 'main0', {
+                title: [
+                    '**overflow: \'truncate\'**',
+                ],
+                option: option,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+                height: 800,
+            });
+        });
+        </script>
+        <script>
+        require([
+            'echarts', 'data/life-expectancy-table.json'
+        ], function (echarts,data) {
+            var option;
+            var sizeValue = '57%';
+            var symbolSize = 2.5;
+            option = {
+                legend: {},
+                tooltip: {},
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                grid: [
+                    {right: sizeValue, bottom: sizeValue},
+                    {left: sizeValue, bottom: sizeValue},
+                    {right: sizeValue, top: sizeValue},
+                ],
+                xAxis: [
+                    {
+                        type: 'value',
+                        gridIndex: 0,
+                        name: 'nameLocation: \'end\'',
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                    {
+                        type: 'category',
+                        gridIndex: 1,
+                        name: 'nameLocation: \'middle\'',
+                        boundaryGap: false,
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                    {
+                        type: 'value',
+                        gridIndex: 2,
+                        name: 'nameLocation: \'start\'',
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        gridIndex: 0,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
+                        nameLocation: 'end',
+                        nameTextStyle: {
+                            align:'left',
+                            overflow: 'break',
+                        }
+                    },
+                    {
+                        type: 'value',
+                        nameLocation: 'middle',
+                        nameGap: 50,
+                        nameTextStyle: {
+                            overflow: 'break',
+                        },
+                        gridIndex: 1,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
+                    },
+                    {
+                        type: 'value',
+                        nameLocation: 'start',
+                        nameTextStyle: {
+                            overflow: 'break',
+                        },
+                        nameGap: 35,
+                        gridIndex: 2,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
+                    },
+                ],
+                dataset: {
+                    dimensions: [
+                        'Income',
+                        'Life Expectancy',
+                        'Population',
+                        'Country',
+                        {name: 'Year', type: 'ordinal'}
+                    ],
+                    source: data
+                },
+                series: [
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 0,
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'Income',
+                            y: 'Life Expectancy',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'Country',
+                            y: 'Income',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        encode: {
+                            x: 'Income',
+                            y: 'Population',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                ]
+            };
+
+            var chart1 = testHelper.create(echarts, 'main1', {
+                title: [
+                    '**overflow: \'break\'**',
+                ],
+                option: option,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+                height: 800,
+            });
+        });
+        </script>
+
+        <script>
+        require([
+            'echarts', 'data/life-expectancy-table.json'
+        ], function (echarts,data) {
+            var option;
+            var sizeValue = '57%';
+            var symbolSize = 2.5;
+            option = {
+                legend: {},
+                tooltip: {},
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                grid: [
+                    {right: sizeValue, bottom: sizeValue},
+                    {left: sizeValue, bottom: sizeValue},
+                    {right: sizeValue, top: sizeValue},
+                ],
+                xAxis: [
+                    {
+                        type: 'value',
+                        gridIndex: 0,
+                        name: 'nameLocation: \'end\'',
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                    {
+                        type: 'category',
+                        gridIndex: 1,
+                        name: 'nameLocation: \'middle\'',
+                        boundaryGap: false,
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                    {
+                        type: 'value',
+                        gridIndex: 2,
+                        name: 'nameLocation: \'start\'',
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        gridIndex: 0,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
+                        nameLocation: 'end',
+                        nameTextStyle: {
+                            align:'left',
+                            overflow: 'breakAll',
+                        }
+                    },
+                    {
+                        type: 'value',
+                        nameLocation: 'middle',
+                        nameGap: 50,
+                        nameTextStyle: {
+                            overflow: 'breakAll',
+                        },
+                        gridIndex: 1,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
+                    },
+                    {
+                        type: 'value',
+                        nameLocation: 'start',
+                        nameTextStyle: {
+                            overflow: 'breakAll',
+                        },
+                        nameGap: 35,
+                        gridIndex: 2,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
+                    },
+                ],
+                dataset: {
+                    dimensions: [
+                        'Income',
+                        'Life Expectancy',
+                        'Population',
+                        'Country',
+                        {name: 'Year', type: 'ordinal'}
+                    ],
+                    source: data
+                },
+                series: [
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 0,
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'Income',
+                            y: 'Life Expectancy',
+                            tooltip: [0, 1, 2, 3, 4]
+                        },
+                    },
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'Country',
+                            y: 'Income',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        encode: {
+                            x: 'Income',
+                            y: 'Population',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                ]
+            };
+
+            var chart2 = testHelper.create(echarts, 'main2', {
+                title: [
+                    '**overflow: \'breakAll\'**',
+                ],
+                option: option,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+                height: 800,
+            });
+        });
+        </script>
+
+        <script>
+        require([
+            'echarts', 'data/life-expectancy-table.json'
+        ], function (echarts,data) {
+            var option;
+            var sizeValue = '57%';
+            var symbolSize = 2.5;
+            option = {
+                legend: {},
+                tooltip: {},
+                toolbox: {
+                    left: 'center',
+                    feature: {
+                        dataZoom: {}
+                    }
+                },
+                grid: [
+                    {right: sizeValue, bottom: sizeValue},
+                    {left: sizeValue, bottom: sizeValue},
+                    {right: sizeValue, top: sizeValue},
+                ],
+                xAxis: [
+                    {
+                        type: 'value',
+                        gridIndex: 0,
+                        name: 'nameLocation: \'end\'',
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                    {
+                        type: 'category',
+                        gridIndex: 1,
+                        name: 'nameLocation: \'middle\'',
+                        boundaryGap: false,
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                    {
+                        type: 'value',
+                        gridIndex: 2,
+                        name: 'nameLocation: \'start\'',
+                        axisLabel: {rotate: 50, interval: 0}
+                    },
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        gridIndex: 0,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
+                        nameLocation: 'end',
+                        nameTextStyle: {
+                            align:'left',
+                            overflow: 'none',
+                        }
+                    },
+                    {
+                        type: 'value',
+                        nameLocation: 'middle',
+                        nameGap: 50,
+                        nameTextStyle: {
+                            overflow: 'none',
+                        },
+                        gridIndex: 1,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
+                    },
+                    {
+                        type: 'value',
+                        nameLocation: 'start',
+                        nameTextStyle: {
+                            overflow: 'none',
+                        },
+                        nameGap: 35,
+                        gridIndex: 2,
+                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
+                    },
+                ],
+                dataset: {
+                    dimensions: [
+                        'Income',
+                        'Life Expectancy',
+                        'Population',
+                        'Country',
+                        {name: 'Year', type: 'ordinal'}
+                    ],
+                    source: data
+                },
+                series: [
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 0,
+                        yAxisIndex: 0,
+                        encode: {
+                            x: 'Income',
+                            y: 'Life Expectancy',
+                            tooltip: [0, 1, 2, 3, 4]
+                        },
+                    },
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 1,
+                        yAxisIndex: 1,
+                        encode: {
+                            x: 'Country',
+                            y: 'Income',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                    {
+                        type: 'scatter',
+                        symbolSize: symbolSize,
+                        xAxisIndex: 2,
+                        yAxisIndex: 2,
+                        encode: {
+                            x: 'Income',
+                            y: 'Population',
+                            tooltip: [0, 1, 2, 3, 4]
+                        }
+                    },
+                ]
+            };
+
+            var chart3 = testHelper.create(echarts, 'main3', {
+                title: [
+                    '**overflow: \'none\'**',
+                ],
+                option: option,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+                height: 800,
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

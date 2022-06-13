@@ -22,6 +22,7 @@ import {
     AreaStyleOption, ComponentOption, ColorString,
     AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption
 } from '../util/types';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
@@ -162,7 +163,7 @@ export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'time';
     axisLabel?: AxisLabelOption<'time'>;
 }
-interface AxisNameTextStyleOption extends TextCommonOption {
+interface AxisNameTextStyleOption extends TextCommonOption, Pick<TextStyleProps, 'overflow'| 'ellipsis'> {
     rich?: Dictionary<TextCommonOption>
 }
 
