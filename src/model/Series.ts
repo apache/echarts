@@ -100,7 +100,10 @@ interface SeriesModel {
     /**
      * Get position for marker
      */
-    getMarkerPosition(value: ScaleDataValue[], dims?: typeof dimPermutations[number], startingAtTick?:boolean): number[];
+    getMarkerPosition(
+        value: ScaleDataValue[],
+        dims?: typeof dimPermutations[number],
+        startingAtTick?:boolean): number[];
 
     /**
      * Get legend icon symbol according to each series type
