@@ -425,7 +425,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const overflow = textStyleModel.get('overflow') || 'none';
         const maxWidth = retrieve(
             opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth,
-            Math.abs(extent[1] - extent[0]) // Current axis length.
+            overflow === 'none' ? null : Math.abs(extent[1] - extent[0]) // Current axis length.
         );
 
         const textEl = new graphic.Text({
