@@ -163,7 +163,7 @@ export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'time';
     axisLabel?: AxisLabelOption<'time'>;
 }
-interface AxisNameTextStyleOption extends TextCommonOption, Pick<TextStyleProps, 'overflow'| 'ellipsis'> {
+interface AxisNameTextStyleOption extends TextCommonOption, Partial<Pick<TextStyleProps, 'overflow' | 'ellipsis'>> {
     rich?: Dictionary<TextCommonOption>
 }
 
