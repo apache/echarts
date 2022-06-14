@@ -36,548 +36,1017 @@ under the License.
             html, body, #main0 {
                 width: 100%;
             }
+            .chart {
+                height: 700px;
+            }
         </style>
 
 
 
         <div class="chart" id="main0"></div>
+        <div class="chart" id="main0-1"></div>
+        <div class="chart" id="main0-2"></div>
         <div class="chart" id="main1"></div>
+        <div class="chart" id="main1-1"></div>
+        <div class="chart" id="main1-2"></div>
         <div class="chart" id="main2"></div>
+        <div class="chart" id="main2-1"></div>
+        <div class="chart" id="main2-2"></div>
         <div class="chart" id="main3"></div>
+        <div class="chart" id="main3-1"></div>
+        <div class="chart" id="main3-2"></div>
 
 
         <script>
-        require([
-            'echarts', 'data/life-expectancy-table.json'
-        ], function (echarts,data) {
-            var option;
-            var sizeValue = '57%';
-            var symbolSize = 2.5;
-            option = {
-                legend: {},
-                tooltip: {},
-                toolbox: {
-                    left: 'center',
-                    feature: {
-                        dataZoom: {}
-                    }
-                },
-                grid: [
-                    {right: sizeValue, bottom: sizeValue},
-                    {left: sizeValue, bottom: sizeValue},
-                    {right: sizeValue, top: sizeValue},
-                ],
-                xAxis: [
-                    {
-                        type: 'value',
-                        gridIndex: 0,
-                        name: 'nameLocation: \'end\'',
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                    {
-                        type: 'category',
-                        gridIndex: 1,
-                        name: 'nameLocation: \'middle\'',
-                        boundaryGap: false,
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                    {
-                        type: 'value',
-                        gridIndex: 2,
-                        name: 'nameLocation: \'start\'',
-                        axisLabel: {rotate: 50, interval: 0}
-                    }
-                ],
-                yAxis: [
-                    {
-                        type: 'value',
-                        gridIndex: 0,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
-                        nameLocation: 'end',
-                        nameTextStyle: {
-                            align:'left',
-                            overflow: 'truncate',
-                        }
-                    },
-                    {
-                        type: 'value',
-                        nameLocation: 'middle',
-                        nameGap: 50,
-                        nameTextStyle: {
-                            overflow: 'truncate',
+            require(["echarts", "data/life-expectancy-table.json"], function (
+                echarts,
+                data
+            ) {
+                var option;
+                var sizeValue = "57%";
+                var symbolSize = 2.5;
+                option = {
+                    title: { text: "Grid" },
+                    legend: {},
+                    tooltip: {},
+                    toolbox: {
+                        left: "center",
+                        feature: {
+                            dataZoom: {},
                         },
-                        gridIndex: 1,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
                     },
-                    {
-                        type: 'value',
-                        nameLocation: 'start',
-                        nameTextStyle: {
-                            overflow: 'truncate',
-                        },
-                        nameGap: 35,
-                        gridIndex: 2,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
-                    }
-                ],
-                dataset: {
-                    dimensions: [
-                        'Income',
-                        'Life Expectancy',
-                        'Population',
-                        'Country',
-                        {name: 'Year', type: 'ordinal'}
+                    grid: [
+                        { right: sizeValue, bottom: sizeValue },
+                        { left: sizeValue, bottom: sizeValue },
+                        { right: sizeValue, top: sizeValue },
                     ],
-                    source: data
-                },
-                series: [
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 0,
-                        yAxisIndex: 0,
-                        encode: {
-                            x: 'Income',
-                            y: 'Life Expectancy',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
+                    xAxis: [
+                        {
+                            type: "value",
+                            gridIndex: 0,
+                            name: "nameLocation: 'end'",
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                        {
+                            type: "category",
+                            gridIndex: 1,
+                            name: "nameLocation: 'middle'",
+                            boundaryGap: false,
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                        {
+                            type: "value",
+                            gridIndex: 2,
+                            name: "nameLocation: 'start'",
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                    ],
+                    yAxis: [
+                        {
+                            type: "value",
+                            gridIndex: 0,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                            nameLocation: "end",
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "truncate",
+                            },
+                        },
+                        {
+                            type: "value",
+                            nameLocation: "middle",
+                            nameGap: 50,
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "truncate",
+                            },
+                            gridIndex: 1,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                        },
+                        {
+                            type: "value",
+                            nameLocation: "start",
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "truncate",
+                            },
+                            nameGap: 35,
+                            gridIndex: 2,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                        },
+                    ],
+                    dataset: {
+                        dimensions: [
+                            "Income",
+                            "Life Expectancy",
+                            "Population",
+                            "Country",
+                            { name: "Year", type: "ordinal" },
+                        ],
+                        source: data,
                     },
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 1,
-                        yAxisIndex: 1,
-                        encode: {
-                            x: 'Country',
-                            y: 'Income',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    },
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 2,
-                        yAxisIndex: 2,
-                        encode: {
-                            x: 'Income',
-                            y: 'Population',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    }
-                ]
-            };
+                    series: [
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                            encode: {
+                                x: "Income",
+                                y: "Life Expectancy",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            encode: {
+                                x: "Country",
+                                y: "Income",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 2,
+                            yAxisIndex: 2,
+                            encode: {
+                                x: "Income",
+                                y: "Population",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                    ],
+                };
 
-            var chart0 = testHelper.create(echarts, 'main0', {
-                title: [
-                    '**overflow: \'truncate\'**',
-                ],
-                option: option,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
-                height: 800,
+                var chart0 = testHelper.create(echarts, "main0", {
+                    title: ["**overflow: 'truncate'**"],
+                    option: option,
+                    height: 800,
+                });
             });
-        });
         </script>
         <script>
-        require([
-            'echarts', 'data/life-expectancy-table.json'
-        ], function (echarts,data) {
-            var option;
-            var sizeValue = '57%';
-            var symbolSize = 2.5;
-            option = {
-                legend: {},
-                tooltip: {},
-                toolbox: {
-                    left: 'center',
-                    feature: {
-                        dataZoom: {}
-                    }
-                },
-                grid: [
-                    {right: sizeValue, bottom: sizeValue},
-                    {left: sizeValue, bottom: sizeValue},
-                    {right: sizeValue, top: sizeValue},
-                ],
-                xAxis: [
-                    {
-                        type: 'value',
-                        gridIndex: 0,
-                        name: 'nameLocation: \'end\'',
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                    {
-                        type: 'category',
-                        gridIndex: 1,
-                        name: 'nameLocation: \'middle\'',
-                        boundaryGap: false,
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                    {
-                        type: 'value',
-                        gridIndex: 2,
-                        name: 'nameLocation: \'start\'',
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                ],
-                yAxis: [
-                    {
-                        type: 'value',
-                        gridIndex: 0,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
-                        nameLocation: 'end',
-                        nameTextStyle: {
-                            align:'left',
-                            overflow: 'break',
-                        }
-                    },
-                    {
-                        type: 'value',
-                        nameLocation: 'middle',
-                        nameGap: 50,
-                        nameTextStyle: {
-                            overflow: 'break',
+            require(["echarts"], function (echarts) {
+                var chart01 = echarts.init(document.getElementById("main0-1"));
+                chart01.setOption({
+                    title: { text: "Radar" },
+                    legend: { data: ["Allocated Budget", "Actual Spending"] },
+                    radar: {
+                        indicator: [
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 6500,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 16000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 30000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 38000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 52000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 25000,
+                            },
+                        ],
+                        axisName: {
+                            color: "red",
+                            overflow: "truncate",
                         },
-                        gridIndex: 1,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
                     },
-                    {
-                        type: 'value',
-                        nameLocation: 'start',
-                        nameTextStyle: {
-                            overflow: 'break',
+                    series: [
+                        {
+                            name: "Budget vs spending",
+                            type: "radar",
+                            data: [
+                                {
+                                    value: [4200, 3000, 20000, 35000, 50000, 18000],
+                                    name: "Allocated Budget",
+                                },
+                                {
+                                    value: [5000, 14000, 28000, 26000, 42000, 21000],
+                                    name: "Actual Spending",
+                                },
+                            ],
                         },
-                        nameGap: 35,
-                        gridIndex: 2,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
-                    },
-                ],
-                dataset: {
-                    dimensions: [
-                        'Income',
-                        'Life Expectancy',
-                        'Population',
-                        'Country',
-                        {name: 'Year', type: 'ordinal'}
                     ],
-                    source: data
-                },
-                series: [
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 0,
-                        yAxisIndex: 0,
-                        encode: {
-                            x: 'Income',
-                            y: 'Life Expectancy',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    },
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 1,
-                        yAxisIndex: 1,
-                        encode: {
-                            x: 'Country',
-                            y: 'Income',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    },
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 2,
-                        yAxisIndex: 2,
-                        encode: {
-                            x: 'Income',
-                            y: 'Population',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    },
-                ]
-            };
-
-            var chart1 = testHelper.create(echarts, 'main1', {
-                title: [
-                    '**overflow: \'break\'**',
-                ],
-                option: option,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
-                height: 800,
+                });
             });
-        });
+        </script>
+        <script>
+            require(['echarts'], function (echarts) {
+                var chart02 = echarts.init(document.getElementById('main0-2'));
+                chart02.setOption({
+                    title: { text: "Polar" },
+                    angleAxis: {},
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu'],
+                        z: 10,
+                        name:'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
+                        nameTextStyle:{
+                            color:'red',
+                            overflow:'truncate',
+                        },
+                    },
+                    polar: {},
+                    series: [
+                        {
+                            type: 'bar',
+                            data: [1, 2, 3, 4],
+                            coordinateSystem: 'polar',
+                            name: 'A',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            data: [2, 4, 6, 8],
+                            coordinateSystem: 'polar',
+                            name: 'B',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            data: [1, 2, 3, 4],
+                            coordinateSystem: 'polar',
+                            name: 'C',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        }
+                    ],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+            });
         </script>
 
         <script>
-        require([
-            'echarts', 'data/life-expectancy-table.json'
-        ], function (echarts,data) {
-            var option;
-            var sizeValue = '57%';
-            var symbolSize = 2.5;
-            option = {
-                legend: {},
-                tooltip: {},
-                toolbox: {
-                    left: 'center',
-                    feature: {
-                        dataZoom: {}
-                    }
-                },
-                grid: [
-                    {right: sizeValue, bottom: sizeValue},
-                    {left: sizeValue, bottom: sizeValue},
-                    {right: sizeValue, top: sizeValue},
-                ],
-                xAxis: [
-                    {
-                        type: 'value',
-                        gridIndex: 0,
-                        name: 'nameLocation: \'end\'',
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                    {
-                        type: 'category',
-                        gridIndex: 1,
-                        name: 'nameLocation: \'middle\'',
-                        boundaryGap: false,
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                    {
-                        type: 'value',
-                        gridIndex: 2,
-                        name: 'nameLocation: \'start\'',
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                ],
-                yAxis: [
-                    {
-                        type: 'value',
-                        gridIndex: 0,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
-                        nameLocation: 'end',
-                        nameTextStyle: {
-                            align:'left',
-                            overflow: 'breakAll',
-                        }
-                    },
-                    {
-                        type: 'value',
-                        nameLocation: 'middle',
-                        nameGap: 50,
-                        nameTextStyle: {
-                            overflow: 'breakAll',
+            require(["echarts", "data/life-expectancy-table.json"], function (
+                echarts,
+                data
+            ) {
+                var option;
+                var sizeValue = "57%";
+                var symbolSize = 2.5;
+                option = {
+                    title: { text: "Grid" },
+                    legend: {},
+                    tooltip: {},
+                    toolbox: {
+                        left: "center",
+                        feature: {
+                            dataZoom: {},
                         },
-                        gridIndex: 1,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
                     },
-                    {
-                        type: 'value',
-                        nameLocation: 'start',
-                        nameTextStyle: {
-                            overflow: 'breakAll',
-                        },
-                        nameGap: 35,
-                        gridIndex: 2,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
-                    },
-                ],
-                dataset: {
-                    dimensions: [
-                        'Income',
-                        'Life Expectancy',
-                        'Population',
-                        'Country',
-                        {name: 'Year', type: 'ordinal'}
+                    grid: [
+                        { right: sizeValue, bottom: sizeValue },
+                        { left: sizeValue, bottom: sizeValue },
+                        { right: sizeValue, top: sizeValue },
                     ],
-                    source: data
-                },
-                series: [
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 0,
-                        yAxisIndex: 0,
-                        encode: {
-                            x: 'Income',
-                            y: 'Life Expectancy',
-                            tooltip: [0, 1, 2, 3, 4]
+                    xAxis: [
+                        {
+                            type: "value",
+                            gridIndex: 0,
+                            name: "nameLocation: 'end'",
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                        {
+                            type: "category",
+                            gridIndex: 1,
+                            name: "nameLocation: 'middle'",
+                            boundaryGap: false,
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                        {
+                            type: "value",
+                            gridIndex: 2,
+                            name: "nameLocation: 'start'",
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                    ],
+                    yAxis: [
+                        {
+                            type: "value",
+                            gridIndex: 0,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                            nameLocation: "end",
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "break",
+                            },
+                        },
+                        {
+                            type: "value",
+                            nameLocation: "middle",
+                            nameGap: 50,
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "break",
+                            },
+                            gridIndex: 1,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                        },
+                        {
+                            type: "value",
+                            nameLocation: "start",
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "break",
+                            },
+                            nameGap: 35,
+                            gridIndex: 2,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                        },
+                    ],
+                    dataset: {
+                        dimensions: [
+                            "Income",
+                            "Life Expectancy",
+                            "Population",
+                            "Country",
+                            { name: "Year", type: "ordinal" },
+                        ],
+                        source: data,
+                    },
+                    series: [
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                            encode: {
+                                x: "Income",
+                                y: "Life Expectancy",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            encode: {
+                                x: "Country",
+                                y: "Income",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 2,
+                            yAxisIndex: 2,
+                            encode: {
+                                x: "Income",
+                                y: "Population",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                    ],
+                };
+
+                var chart1 = testHelper.create(echarts, "main1", {
+                    title: ["**overflow: 'break'**"],
+                    option: option,
+                    height: 800,
+                });
+            });
+        </script>
+        <script>
+            require(["echarts"], function (echarts) {
+                var option;
+                option = {
+                    title: { text: "Radar" },
+                    legend: { data: ["Allocated Budget", "Actual Spending"] },
+                    radar: {
+                        indicator: [
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 6500,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 16000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 30000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 38000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 52000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 25000,
+                            },
+                        ],
+                        axisName: {
+                            color: "red",
+                            overflow: "break",
                         },
                     },
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 1,
-                        yAxisIndex: 1,
-                        encode: {
-                            x: 'Country',
-                            y: 'Income',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    },
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 2,
-                        yAxisIndex: 2,
-                        encode: {
-                            x: 'Income',
-                            y: 'Population',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    },
-                ]
-            };
+                    series: [
+                        {
+                            name: "Budget vs spending",
+                            type: "radar",
+                            data: [
+                                {
+                                    value: [4200, 3000, 20000, 35000, 50000, 18000],
+                                    name: "Allocated Budget",
+                                },
+                                {
+                                    value: [5000, 14000, 28000, 26000, 42000, 21000],
+                                    name: "Actual Spending",
+                                },
+                            ],
+                        },
+                    ],
+                };
 
-            var chart2 = testHelper.create(echarts, 'main2', {
-                title: [
-                    '**overflow: \'breakAll\'**',
-                ],
-                option: option,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
-                height: 800,
+                var chart11 = echarts.init(document.getElementById("main1-1"));
+                chart11.setOption(option);
             });
-        });
+        </script>
+        <script>
+            require(['echarts'], function (echarts) {
+                var chart12 = echarts.init(document.getElementById('main1-2'));
+                chart12.setOption({
+                    title: { text: "Polar" },
+                    angleAxis: {},
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu'],
+                        z: 10,
+                        name:'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
+                        nameTextStyle:{
+                            color:'red',
+                            overflow:'break',
+                        }
+                    },
+                    polar: {},
+                    series: [
+                        {
+                            type: 'bar',
+                            data: [1, 2, 3, 4],
+                            coordinateSystem: 'polar',
+                            name: 'A',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            data: [2, 4, 6, 8],
+                            coordinateSystem: 'polar',
+                            name: 'B',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            data: [1, 2, 3, 4],
+                            coordinateSystem: 'polar',
+                            name: 'C',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        }
+                    ],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+            });
         </script>
 
         <script>
-        require([
-            'echarts', 'data/life-expectancy-table.json'
-        ], function (echarts,data) {
-            var option;
-            var sizeValue = '57%';
-            var symbolSize = 2.5;
-            option = {
-                legend: {},
-                tooltip: {},
-                toolbox: {
-                    left: 'center',
-                    feature: {
-                        dataZoom: {}
-                    }
-                },
-                grid: [
-                    {right: sizeValue, bottom: sizeValue},
-                    {left: sizeValue, bottom: sizeValue},
-                    {right: sizeValue, top: sizeValue},
-                ],
-                xAxis: [
-                    {
-                        type: 'value',
-                        gridIndex: 0,
-                        name: 'nameLocation: \'end\'',
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                    {
-                        type: 'category',
-                        gridIndex: 1,
-                        name: 'nameLocation: \'middle\'',
-                        boundaryGap: false,
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                    {
-                        type: 'value',
-                        gridIndex: 2,
-                        name: 'nameLocation: \'start\'',
-                        axisLabel: {rotate: 50, interval: 0}
-                    },
-                ],
-                yAxis: [
-                    {
-                        type: 'value',
-                        gridIndex: 0,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
-                        nameLocation: 'end',
-                        nameTextStyle: {
-                            align:'left',
-                            overflow: 'none',
-                        }
-                    },
-                    {
-                        type: 'value',
-                        nameLocation: 'middle',
-                        nameGap: 50,
-                        nameTextStyle: {
-                            overflow: 'none',
+            require(["echarts", "data/life-expectancy-table.json"], function (
+                echarts,
+                data
+            ) {
+                var option;
+                var sizeValue = "57%";
+                var symbolSize = 2.5;
+                option = {
+                    legend: {},
+                    tooltip: {},
+                    toolbox: {
+                        left: "center",
+                        feature: {
+                            dataZoom: {},
                         },
-                        gridIndex: 1,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
                     },
-                    {
-                        type: 'value',
-                        nameLocation: 'start',
-                        nameTextStyle: {
-                            overflow: 'none',
-                        },
-                        nameGap: 35,
-                        gridIndex: 2,
-                        name: 'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name'
-                    },
-                ],
-                dataset: {
-                    dimensions: [
-                        'Income',
-                        'Life Expectancy',
-                        'Population',
-                        'Country',
-                        {name: 'Year', type: 'ordinal'}
+                    grid: [
+                        { right: sizeValue, bottom: sizeValue },
+                        { left: sizeValue, bottom: sizeValue },
+                        { right: sizeValue, top: sizeValue },
                     ],
-                    source: data
-                },
-                series: [
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 0,
-                        yAxisIndex: 0,
-                        encode: {
-                            x: 'Income',
-                            y: 'Life Expectancy',
-                            tooltip: [0, 1, 2, 3, 4]
+                    xAxis: [
+                        {
+                            type: "value",
+                            gridIndex: 0,
+                            name: "nameLocation: 'end'",
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                        {
+                            type: "category",
+                            gridIndex: 1,
+                            name: "nameLocation: 'middle'",
+                            boundaryGap: false,
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                        {
+                            type: "value",
+                            gridIndex: 2,
+                            name: "nameLocation: 'start'",
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                    ],
+                    yAxis: [
+                        {
+                            type: "value",
+                            gridIndex: 0,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                            nameLocation: "end",
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "breakAll",
+                            },
+                        },
+                        {
+                            type: "value",
+                            nameLocation: "middle",
+                            nameGap: 50,
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "breakAll",
+                            },
+                            gridIndex: 1,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                        },
+                        {
+                            type: "value",
+                            nameLocation: "start",
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "breakAll",
+                            },
+                            nameGap: 35,
+                            gridIndex: 2,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                        },
+                    ],
+                    dataset: {
+                        dimensions: [
+                            "Income",
+                            "Life Expectancy",
+                            "Population",
+                            "Country",
+                            { name: "Year", type: "ordinal" },
+                        ],
+                        source: data,
+                    },
+                    series: [
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                            encode: {
+                                x: "Income",
+                                y: "Life Expectancy",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            encode: {
+                                x: "Country",
+                                y: "Income",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 2,
+                            yAxisIndex: 2,
+                            encode: {
+                                x: "Income",
+                                y: "Population",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                    ],
+                };
+
+                var chart2 = testHelper.create(echarts, "main2", {
+                    title: ["**overflow: 'breakAll'**"],
+                    option: option,
+                    height: 800,
+                });
+            });
+        </script>
+        <script>
+            require(["echarts"], function (echarts) {
+                var option;
+                option = {
+                    title: { text: "Radar" },
+                    legend: { data: ["Allocated Budget", "Actual Spending"] },
+                    radar: {
+                        indicator: [
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 6500,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 16000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 30000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 38000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 52000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 25000,
+                            },
+                        ],
+                        axisName: {
+                            color: "red",
+                            overflow: "breakAll",
                         },
                     },
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 1,
-                        yAxisIndex: 1,
-                        encode: {
-                            x: 'Country',
-                            y: 'Income',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    },
-                    {
-                        type: 'scatter',
-                        symbolSize: symbolSize,
-                        xAxisIndex: 2,
-                        yAxisIndex: 2,
-                        encode: {
-                            x: 'Income',
-                            y: 'Population',
-                            tooltip: [0, 1, 2, 3, 4]
-                        }
-                    },
-                ]
-            };
+                    series: [
+                        {
+                            name: "Budget vs spending",
+                            type: "radar",
+                            data: [
+                                {
+                                    value: [4200, 3000, 20000, 35000, 50000, 18000],
+                                    name: "Allocated Budget",
+                                },
+                                {
+                                    value: [5000, 14000, 28000, 26000, 42000, 21000],
+                                    name: "Actual Spending",
+                                },
+                            ],
+                        },
+                    ],
+                };
 
-            var chart3 = testHelper.create(echarts, 'main3', {
-                title: [
-                    '**overflow: \'none\'**',
-                ],
-                option: option,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
-                height: 800,
+                var chart21 = echarts.init(document.getElementById("main2-1"));
+                chart21.setOption(option);
             });
-        });
+        </script>
+        <script>
+            require(['echarts'], function (echarts) {
+                var chart22 = echarts.init(document.getElementById('main2-2'));
+                chart22.setOption({
+                    title: { text: "Polar" },
+                    angleAxis: {},
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu'],
+                        z: 10,
+                        name:'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
+                        nameTextStyle:{
+                            color:'red',
+                            overflow:'breakAll',
+                        }
+                    },
+                    polar: {},
+                    series: [
+                        {
+                            type: 'bar',
+                            data: [1, 2, 3, 4],
+                            coordinateSystem: 'polar',
+                            name: 'A',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            data: [2, 4, 6, 8],
+                            coordinateSystem: 'polar',
+                            name: 'B',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            data: [1, 2, 3, 4],
+                            coordinateSystem: 'polar',
+                            name: 'C',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        }
+                    ],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+            });
         </script>
 
+        <script>
+            require(["echarts", "data/life-expectancy-table.json"], function (
+                echarts,
+                data
+            ) {
+                var option;
+                var sizeValue = "57%";
+                var symbolSize = 2.5;
+                option = {
+                    legend: {},
+                    tooltip: {},
+                    toolbox: {
+                        left: "center",
+                        feature: {
+                            dataZoom: {},
+                        },
+                    },
+                    grid: [
+                        { right: sizeValue, bottom: sizeValue },
+                        { left: sizeValue, bottom: sizeValue },
+                        { right: sizeValue, top: sizeValue },
+                    ],
+                    xAxis: [
+                        {
+                            type: "value",
+                            gridIndex: 0,
+                            name: "nameLocation: 'end'",
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                        {
+                            type: "category",
+                            gridIndex: 1,
+                            name: "nameLocation: 'middle'",
+                            boundaryGap: false,
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                        {
+                            type: "value",
+                            gridIndex: 2,
+                            name: "nameLocation: 'start'",
+                            axisLabel: { rotate: 50, interval: 0 },
+                        },
+                    ],
+                    yAxis: [
+                        {
+                            type: "value",
+                            gridIndex: 0,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                            nameLocation: "end",
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "none",
+                            },
+                        },
+                        {
+                            type: "value",
+                            nameLocation: "middle",
+                            nameGap: 50,
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "none",
+                            },
+                            gridIndex: 1,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                        },
+                        {
+                            type: "value",
+                            nameLocation: "start",
+                            nameTextStyle: {
+                                color: "red",
+                                overflow: "none",
+                            },
+                            nameGap: 35,
+                            gridIndex: 2,
+                            name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                        },
+                    ],
+                    dataset: {
+                        dimensions: [
+                            "Income",
+                            "Life Expectancy",
+                            "Population",
+                            "Country",
+                            { name: "Year", type: "ordinal" },
+                        ],
+                        source: data,
+                    },
+                    series: [
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                            encode: {
+                                x: "Income",
+                                y: "Life Expectancy",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 1,
+                            yAxisIndex: 1,
+                            encode: {
+                                x: "Country",
+                                y: "Income",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                        {
+                            type: "scatter",
+                            symbolSize: symbolSize,
+                            xAxisIndex: 2,
+                            yAxisIndex: 2,
+                            encode: {
+                                x: "Income",
+                                y: "Population",
+                                tooltip: [0, 1, 2, 3, 4],
+                            },
+                        },
+                    ],
+                };
 
+                var chart3 = testHelper.create(echarts, "main3", {
+                    title: ["**overflow: 'none'**"],
+                    option: option,
+                    height: 800,
+                });
+            });
+        </script>
+        <script>
+            require(["echarts"], function (echarts) {
+                var option;
+                option = {
+                    title: { text: "Radar" },
+                    legend: { data: ["Allocated Budget", "Actual Spending"] },
+                    radar: {
+                        indicator: [
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 6500,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 16000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 30000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 38000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 52000,
+                            },
+                            {
+                                name: "Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name",
+                                max: 25000,
+                            },
+                        ],
+                        axisName: {
+                            color: "red",
+                            overflow: "none",
+                        },
+                    },
+                    series: [
+                        {
+                            name: "Budget vs spending",
+                            type: "radar",
+                            data: [
+                                {
+                                    value: [4200, 3000, 20000, 35000, 50000, 18000],
+                                    name: "Allocated Budget",
+                                },
+                                {
+                                    value: [5000, 14000, 28000, 26000, 42000, 21000],
+                                    name: "Actual Spending",
+                                },
+                            ],
+                        },
+                    ],
+                };
+
+                var chart31 = echarts.init(document.getElementById("main3-1"));
+                chart31.setOption(option);
+            });
+        </script>
+        <script>
+            require(['echarts'], function (echarts) {
+                var chart32 = echarts.init(document.getElementById('main3-2'));
+                chart32.setOption({
+                    title: { text: "Polar" },
+                    angleAxis: {},
+                    radiusAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu'],
+                        z: 10,
+                        name:'Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name Very Long Name',
+                        nameTextStyle:{
+                            color:'red',
+                            overflow:'none',
+                        }
+                    },
+                    polar: {},
+                    series: [
+                        {
+                            type: 'bar',
+                            data: [1, 2, 3, 4],
+                            coordinateSystem: 'polar',
+                            name: 'A',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            data: [2, 4, 6, 8],
+                            coordinateSystem: 'polar',
+                            name: 'B',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        },
+                        {
+                            type: 'bar',
+                            data: [1, 2, 3, 4],
+                            coordinateSystem: 'polar',
+                            name: 'C',
+                            stack: 'a',
+                            emphasis: {
+                                focus: 'series'
+                            }
+                        }
+                    ],
+                    legend: {
+                        show: true,
+                        data: ['A', 'B', 'C']
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
 
