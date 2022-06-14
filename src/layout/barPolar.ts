@@ -27,6 +27,7 @@ import RadiusAxis from '../coord/polar/RadiusAxis';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import { Dictionary } from '../util/types';
+import { PolarAxisModel, AngleAxisModel, RadiusAxisModel } from '../coord/polar/AxisModel';
 
 type PolarAxis = AngleAxis | RadiusAxis;
 
@@ -104,13 +105,9 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
         const clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
-        const startValue = seriesModel.get('startValue');
+        const valueAxisModel = valueAxis.model as PolarAxisModel;
+        const startValue = valueAxisModel.get('startValue');
         const valueAxisStart = valueAxis.dataToCoord(startValue || 0);
-        //If user specifies the starting value of bars, use it to adjust coordsys and update ticks
-        if (startValue) {
-            valueAxis.scale.unionExtent([startValue, startValue]);
-            valueAxis.scale.calcNiceTicks();
-        }
 
         for (let idx = 0, len = data.count(); idx < len; idx++) {
             const value = data.get(valueDim, idx) as number;

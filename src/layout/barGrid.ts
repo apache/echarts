@@ -512,16 +512,9 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                     while ((dataIndex = params.next()) != null) {
                         const value = store.get(stacked ? stackedDimIdx : valueDimIdx, dataIndex);
                         const baseValue = store.get(baseDimIdx, dataIndex) as number;
-                        const startValue = seriesModel.get('startValue');
                         let baseCoord = valueAxisStart;
                         let stackStartValue;
 
-                        //If user specifies the starting value of bars, use it to adjust coordsys and update ticks
-                        if (startValue) {
-                            baseCoord = valueAxis.toGlobalCoord(valueAxis.dataToCoord(startValue));
-                            valueAxis.scale.unionExtent([startValue, startValue]);
-                            valueAxis.scale.calcNiceTicks();
-                        }
                         // Because of the barMinHeight, we can not use the value in
                         // stackResultDimension directly.
                         if (stacked) {
@@ -609,5 +602,13 @@ function isInLargeMode(seriesModel: BarSeriesModel) {
 
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D) {
-    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
+    let startValue = valueAxis.model.get('startValue');
+    if (!startValue) {
+        startValue = 0;
+    }
+    return valueAxis.toGlobalCoord(
+        valueAxis.dataToCoord(
+            valueAxis.type === 'log'
+            ? (startValue > 0 ? startValue : 1)
+            : startValue));
 }

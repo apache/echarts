@@ -61,24 +61,24 @@ under the License.
                     type: 'category',
                     data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                     axisLine: {
-                    onZero: false
+                        onZero: false
                     }
                 },
                 yAxis: {
                     type: 'value',
-                    min: ymin
+                    min: ymin,
+                    startValue: startValue0
                 },
                 series: [{
                     data: [-120, 200, 150, 80, 70, 110, 130],
                     type: 'bar',
-                    startValue: startValue0
                 }]
             };
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    `startValue has higher priority over min/max of axis,here startValue = ${startValue0}, yAxis.min = ${ymin}`,
-                    `The starting value of bars should be ${startValue0}`,
+                    `min/max of axis has higher priority over startValue,here startValue = ${startValue0}, yAxis.min = ${ymin}`,
+                    `The starting value of bars should be ${ymin}`,
                 ],
                 option: option
                 // height: 300,
@@ -96,30 +96,35 @@ under the License.
             var option;
             var startValue0 = -200;
             var ymin = -300;
-            var ymax = 100;
+            var ymax = 300;
             option = {
+                dataZoom:[{
+                    type: 'slider',
+                    yAxisIndex:[0],
+                    right:100
+                }],
                 xAxis: {
                     type: 'category',
                     data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                     axisLine: {
-                    onZero: false
+                        onZero: false
                     }
                 },
                 yAxis: {
                     type: 'value',
+                    startValue: startValue0,
                     min: ymin,
                     max: ymax
                 },
                 series: [{
                     data: [-120, 200, 150, 80, 70, 110, 130],
                     type: 'bar',
-                    startValue: startValue0
                 }]
             };
 
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
-                    `startValue should work well with min/max of axis,`,
+                    `startValue should work well with dataZoom,`,
                     `here startValue = ${startValue0}, yAxis.min = ${ymin}, yAxis.max = ${ymax}`,
                 ],
                 option: option
@@ -136,7 +141,8 @@ under the License.
                 // './data/nutrients.json'
             ], function (echarts) {
                 var option;
-                var startValue0 = -180;
+                var startValue0 = -140;
+                var radiusMin = -120;
                 option = {
                     angleAxis: {
                         type: "category",
@@ -144,14 +150,14 @@ under the License.
                     },
                     radiusAxis: {
                         scale: true,
-                        min: -120,
+                        startValue: startValue0,
+                        min: radiusMin,
                         max: -90,
                     },
                     polar: {},
                     series: [{
                         type: 'bar',
                         color: "#F53700",
-                        startValue: startValue0,
                         coordinateSystem: "polar",
                         data: [-95,-110,-105,-115,-110,-120,-90,-98,-100,-110,-92,-107]
                     }]
@@ -159,7 +165,7 @@ under the License.
     
                 var chart = testHelper.create(echarts, 'main2', {
                     title: [
-                        `The starting value of polar bars should be ${startValue0}`,
+                        `The starting value of polar bars should be ${radiusMin}`,
                     ],
                     option: option
                     // height: 300,
@@ -177,16 +183,12 @@ under the License.
             var option;
             var startValue0 = -3;
             option = {
-                title: [
-                    {
-                    text: 'Radial Polar Bar Label Position (middle)'
-                    }
-                ],
                 polar: {
                     radius: [30, '80%']
                 },
                 radiusAxis: {
-                    max: 4
+                    max: 4,
+                    startValue: startValue0,
                 },
                 angleAxis: {
                     type: 'category',
@@ -198,7 +200,6 @@ under the License.
                     type: 'bar',
                     data: [2, 1.2, 2.4, 3.6],
                     coordinateSystem: 'polar',
-                    startValue: startValue0,
                     label: {
                         show: true,
                         position: 'middle',
@@ -206,7 +207,6 @@ under the License.
                     }
                 },
                 backgroundColor: '#fff',
-                animation: false
             };
 
             var chart = testHelper.create(echarts, 'main3', {
