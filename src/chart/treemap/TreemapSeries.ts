@@ -192,7 +192,7 @@ export interface TreemapSeriesOption
      * be on left depth, the behaviour would be changing root. Otherwise
      * use behavious defined above.
      */
-    nodeClick?: 'zoomToNode' | 'link'
+    nodeClick?: 'zoomToNode' | 'link' | false
 
     breadcrumb?: BoxLayoutOptionMixin & {
         show?: boolean
