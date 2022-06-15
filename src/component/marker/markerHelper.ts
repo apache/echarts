@@ -147,6 +147,9 @@ export function dataTransform(
             item.coord = coord;
         }
     }
+    if (item.coord == null) {
+        item.coord = [];
+    }
     return item;
 }
 
