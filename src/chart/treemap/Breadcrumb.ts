@@ -29,7 +29,7 @@ import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/type
 import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
 import { convertOptionIdName } from '../../util/model';
-import { Z2_EMPHASIS_LIFT } from '../../util/states';
+import { toggleHoverEmphasis, Z2_EMPHASIS_LIFT } from '../../util/states';
 
 const TEXT_PADDING = 8;
 const ITEM_GAP = 8;
@@ -55,6 +55,7 @@ interface LayoutParam {
 }
 
 type BreadcrumbItemStyleModel = Model<TreemapSeriesOption['breadcrumb']['itemStyle']>;
+type BreadcrumbEmphasisItemStyleModel = Model<TreemapSeriesOption['breadcrumb']['emphasis']>;
 type BreadcrumbTextStyleModel = Model<TreemapSeriesOption['breadcrumb']['itemStyle']['textStyle']>;
 
 class Breadcrumb {
@@ -81,8 +82,9 @@ class Breadcrumb {
         }
 
         const normalStyleModel = model.getModel('itemStyle');
-        // let emphasisStyleModel = model.getModel('emphasis.itemStyle');
+        const emphasisModel = model.getModel('emphasis');
         const textStyleModel = normalStyleModel.getModel('textStyle');
+        const emphasisTextStyleModel = emphasisModel.getModel(['itemStyle', 'textStyle']);
 
         const layoutParam: LayoutParam = {
             pos: {
@@ -101,7 +103,10 @@ class Breadcrumb {
         };
 
         this._prepare(targetNode, layoutParam, textStyleModel);
-        this._renderContent(seriesModel, layoutParam, normalStyleModel, textStyleModel, onSelect);
+        this._renderContent(
+            seriesModel, layoutParam, normalStyleModel,
+            emphasisModel, textStyleModel, emphasisTextStyleModel, onSelect
+        );
 
         layout.positionElement(thisGroup, layoutParam.pos, layoutParam.box);
     }
@@ -134,7 +139,9 @@ class Breadcrumb {
         seriesModel: TreemapSeriesModel,
         layoutParam: LayoutParam,
         normalStyleModel: BreadcrumbItemStyleModel,
+        emphasisModel: BreadcrumbEmphasisItemStyleModel,
         textStyleModel: BreadcrumbTextStyleModel,
+        emphasisTextStyleModel: BreadcrumbTextStyleModel,
         onSelect: OnSelectCallback
     ) {
         // Start rendering.
@@ -185,7 +192,18 @@ class Breadcrumb {
                 onclick: curry(onSelect, itemNode)
             });
             (el as ECElement).disableLabelAnimation = true;
-
+            const textContent = el.getTextContent();
+            const stateObj = textContent.ensureState('emphasis');
+            stateObj.style = {
+                fill: emphasisTextStyleModel.getTextColor(),
+                font: emphasisTextStyleModel.getFont(),
+                text
+            };
+            const emphasisState = el.ensureState('emphasis');
+            emphasisState.style = emphasisModel.getModel('itemStyle').getItemStyle();
+            toggleHoverEmphasis(
+                el, 'self', 'global', emphasisModel.get('disabled')
+            );
             this.group.add(el);
 
             packEventData(el, seriesModel, itemNode);

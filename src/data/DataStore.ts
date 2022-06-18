@@ -448,7 +448,7 @@ class DataStore {
     }
 
     getValues(idx: number): ParsedValue[];
-    getValues(dimensions: readonly DimensionIndex[], idx?: number): ParsedValue[]
+    getValues(dimensions: readonly DimensionIndex[], idx?: number): ParsedValue[];
     getValues(dimensions: readonly DimensionIndex[] | number, idx?: number): ParsedValue[] {
         const values = [];
         let dimArr: DimensionIndex[] = [];

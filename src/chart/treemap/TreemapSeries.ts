@@ -202,6 +202,7 @@ export interface TreemapSeriesOption
         itemStyle?: BreadcrumbItemStyleOption
 
         emphasis?: {
+            disabled?: boolean
             itemStyle?: BreadcrumbItemStyleOption
         }
     }
@@ -265,6 +266,9 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
                 textStyle: {
                     color: '#fff'
                 }
+            },
+            emphasis: {
+                disabled: true
             }
         },
         label: {

@@ -696,17 +696,17 @@ echarts.use([${seriesImportName}]);`);
     eachComponent<T>(
         cb: EachComponentAllCallback,
         context?: T
-    ): void
+    ): void;
     eachComponent<T>(
         mainType: string,
         cb: EachComponentInMainTypeCallback,
         context?: T
-    ): void
+    ): void;
     eachComponent<T>(
         mainType: QueryConditionKindA,
         cb: EachComponentInMainTypeCallback,
         context?: T
-    ): void
+    ): void;
     eachComponent<T>(
         mainType: string | QueryConditionKindA | EachComponentAllCallback,
         cb?: EachComponentInMainTypeCallback | T,
