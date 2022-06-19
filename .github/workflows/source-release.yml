@@ -6,6 +6,7 @@ on:
 
 jobs:
   materials:
+    if: github.repository_owner == 'apache'
     runs-on: ubuntu-latest
 
     strategy:
@@ -50,6 +51,7 @@ jobs:
             tmp/materials/*
 
   source:
+    if: github.repository_owner == 'apache'
     runs-on: ubuntu-latest
     needs: materials
 
@@ -103,6 +105,7 @@ jobs:
 
 
   validate-source:
+    if: github.repository_owner == 'apache'
     runs-on: ubuntu-latest
     needs: source
 
