@@ -272,10 +272,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             },
             emphasis: {
                 itemStyle: {
-                    color: 'rgba(0,0,0,0.9)', //'#5793f3',
-                    textStyle: {
-                        color: '#fff'
-                    }
+                    color: 'rgba(0,0,0,0.9)' //'#5793f3',
                 }
             }
         },
