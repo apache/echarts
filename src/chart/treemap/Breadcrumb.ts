@@ -30,6 +30,7 @@ import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
 import { convertOptionIdName } from '../../util/model';
 import { toggleHoverEmphasis, Z2_EMPHASIS_LIFT } from '../../util/states';
+import { createTextStyle } from '../../label/labelStyle';
 
 const TEXT_PADDING = 8;
 const ITEM_GAP = 8;
@@ -179,11 +180,7 @@ class Breadcrumb {
                     }
                 ),
                 textContent: new graphic.Text({
-                    style: {
-                        text,
-                        fill: textStyleModel.getTextColor(),
-                        font: textStyleModel.getFont()
-                    }
+                    style: {text, ...createTextStyle(textStyleModel)}
                 }),
                 textConfig: {
                     position: 'inside'
@@ -192,17 +189,10 @@ class Breadcrumb {
                 onclick: curry(onSelect, itemNode)
             });
             (el as ECElement).disableLabelAnimation = true;
-            const textContent = el.getTextContent();
-            const stateObj = textContent.ensureState('emphasis');
-            stateObj.style = {
-                fill: emphasisTextStyleModel.getTextColor(),
-                font: emphasisTextStyleModel.getFont(),
-                text
-            };
-            const emphasisState = el.ensureState('emphasis');
-            emphasisState.style = emphasisModel.getModel('itemStyle').getItemStyle();
+            el.getTextContent().ensureState('emphasis').style = {text, ...createTextStyle(emphasisTextStyleModel)};
+            el.ensureState('emphasis').style = emphasisModel.getModel('itemStyle').getItemStyle();
             toggleHoverEmphasis(
-                el, 'self', 'global', emphasisModel.get('disabled')
+                el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
             );
             this.group.add(el);
 
