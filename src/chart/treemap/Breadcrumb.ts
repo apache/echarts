@@ -180,7 +180,7 @@ class Breadcrumb {
                     }
                 ),
                 textContent: new graphic.Text({
-                    style: {text, ...createTextStyle(textStyleModel)}
+                    style: createTextStyle(textStyleModel, { text })
                 }),
                 textConfig: {
                     position: 'inside'
@@ -189,7 +189,7 @@ class Breadcrumb {
                 onclick: curry(onSelect, itemNode)
             });
             (el as ECElement).disableLabelAnimation = true;
-            el.getTextContent().ensureState('emphasis').style = {text, ...createTextStyle(emphasisTextStyleModel)};
+            el.getTextContent().ensureState('emphasis').style = createTextStyle(emphasisTextStyleModel, { text });
             el.ensureState('emphasis').style = emphasisModel.getModel('itemStyle').getItemStyle();
             toggleHoverEmphasis(
                 el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
