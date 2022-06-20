@@ -109,6 +109,9 @@ class ContinuousView extends VisualMapView {
 
     private _api: ExtensionAPI;
 
+    private _ownHoverLinkFromSeriesMouseOver = (e: ElementEvent) => this._hoverLinkFromSeriesMouseOver(e);
+
+    private _ownHideIndicator = () => this._hideIndicator();
 
     doRender(
         visualMapModel: ContinuousModel,
@@ -749,8 +752,8 @@ class ContinuousView extends VisualMapView {
         const zr = this.api.getZr();
 
         if (this.visualMapModel.option.hoverLink) {
-            zr.on('mouseover', this._hoverLinkFromSeriesMouseOver, this);
-            zr.on('mouseout', this._hideIndicator, this);
+            zr.on('mouseover', this._ownHoverLinkFromSeriesMouseOver, this);
+            zr.on('mouseout', this._ownHideIndicator, this);
         }
         else {
             this._clearHoverLinkFromSeries();
@@ -866,8 +869,8 @@ class ContinuousView extends VisualMapView {
         this._hideIndicator();
 
         const zr = this.api.getZr();
-        zr.off('mouseover', this._hoverLinkFromSeriesMouseOver);
-        zr.off('mouseout', this._hideIndicator);
+        zr.off('mouseover', this._ownHoverLinkFromSeriesMouseOver);
+        zr.off('mouseout', this._ownHideIndicator);
     }
     private _applyTransform(vertex: number[], element: Element, inverse?: boolean, global?: boolean): number[]
     private _applyTransform(vertex: Direction, element: Element, inverse?: boolean, global?: boolean): Direction
