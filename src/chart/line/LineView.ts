@@ -947,8 +947,8 @@ class LineView extends ChartView {
                 if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(x, y)) {
                     return;
                 }
-                const zlevel = seriesModel.get('zlevel');
-                const z = seriesModel.get('z');
+                const zlevel = seriesModel.get('zlevel') || 0;
+                const z = seriesModel.get('z') || 0;
                 symbol = new SymbolClz(data, dataIndex);
                 symbol.x = x;
                 symbol.y = y;
