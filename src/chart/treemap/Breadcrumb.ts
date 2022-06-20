@@ -152,6 +152,7 @@ class Breadcrumb {
         const availableSize = layout.getAvailableSize(layoutParam.pos, layoutParam.box);
         let totalWidth = layoutParam.totalWidth;
         const renderList = layoutParam.renderList;
+        const emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();
 
         for (let i = renderList.length - 1; i >= 0; i--) {
             const item = renderList[i];
@@ -190,7 +191,7 @@ class Breadcrumb {
             });
             (el as ECElement).disableLabelAnimation = true;
             el.getTextContent().ensureState('emphasis').style = createTextStyle(emphasisTextStyleModel, { text });
-            el.ensureState('emphasis').style = emphasisModel.getModel('itemStyle').getItemStyle();
+            el.ensureState('emphasis').style = emphasisItemStyle;
             toggleHoverEmphasis(
                 el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
             );
