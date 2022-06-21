@@ -1,0 +1,68 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="chart1" style="position: relative; overflow: hidden; width: 380px; height: 200px; cursor: default;"></div> <div id="chart2" style="position: relative; overflow: hidden; width: 380px; height: 200px; cursor: default;"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                function makeChartBars(chartDom) {
+                    const volumes = [];
+
+                    const option = {
+                        xAxis: {
+                            type: "category",
+                            data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                        },
+                        yAxis: {},
+                        series: [{
+                            data: [820, 932, 901, 934, 1290, 1330, 1320],
+                            type: "line",
+                            markPoint: {
+                                data: [{
+                                    value: 3000,
+                                    xAxis: 3,
+                                    yAxis: 3000,
+                                    isAlwaysShow: true // set this option to show the point constantly.
+                                }]
+                            }
+                        }]
+                    };
+                    const barChart = echarts.init(chartDom, null)
+                    barChart.setOption(option)
+                }
+                makeChartBars(document.getElementById('chart1'));
+            });
+        </script>
+    </body>
+</html>
