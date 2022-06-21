@@ -377,13 +377,13 @@ class VisualMapping {
         }
     }
 
-    static mapVisual<Ctx, T>(visual: T, callback: (visual: T, key?: string | number) => T, context?: Ctx): T
-    static mapVisual<Ctx, T>(visual: T[], callback: (visual: T, key?: string | number) => T[], context?: Ctx): T[]
+    static mapVisual<Ctx, T>(visual: T, callback: (visual: T, key?: string | number) => T, context?: Ctx): T;
+    static mapVisual<Ctx, T>(visual: T[], callback: (visual: T, key?: string | number) => T[], context?: Ctx): T[];
     static mapVisual<Ctx, T>(
         visual: Dictionary<T>,
         callback: (visual: T, key?: string | number) => Dictionary<T>,
         context?: Ctx
-    ): Dictionary<T>
+    ): Dictionary<T>;
     static mapVisual<Ctx, T>(
         visual: T | T[] | Dictionary<T>,
         callback: (visual: T, key?: string | number) => T | T[] | Dictionary<T>,

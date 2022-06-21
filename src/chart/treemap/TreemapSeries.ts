@@ -36,7 +36,8 @@ import {
     DecalObject,
     SeriesLabelOption,
     DefaultEmphasisFocus,
-    AriaOptionMixin
+    AriaOptionMixin,
+    BlurScope
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -202,6 +203,9 @@ export interface TreemapSeriesOption
         itemStyle?: BreadcrumbItemStyleOption
 
         emphasis?: {
+            disabled?: boolean
+            focus?: DefaultEmphasisFocus
+            blurScope?: BlurScope
             itemStyle?: BreadcrumbItemStyleOption
         }
     }
@@ -264,6 +268,11 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
                 color: 'rgba(0,0,0,0.7)', //'#5793f3',
                 textStyle: {
                     color: '#fff'
+                }
+            },
+            emphasis: {
+                itemStyle: {
+                    color: 'rgba(0,0,0,0.9)' //'#5793f3',
                 }
             }
         },
