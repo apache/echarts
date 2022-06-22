@@ -18,12 +18,13 @@
 * under the License.
 */
 
-import { createChart, getECModel } from '../../../core/utHelper';
+import { createChart, getECModel, getEventHandle } from '../../../core/utHelper';
 import { EChartsType } from '../../../../../src/echarts';
 import { EChartsOption } from '../../../../../src/export/option';
 import { ContinousVisualMapOption } from '../../../../../src/component/visualMap/ContinuousModel';
 import { PiecewiseVisualMapOption } from '../../../../../src/component/visualMap/PiecewiseModel';
 import VisualMapModel from '../../../../../src/component/visualMap/VisualMapModel';
+import ContinuousView from '../../../../../src/component/visualMap/ContinuousView';
 
 
 describe('vsiaulMap_setOption', function () {
@@ -283,6 +284,27 @@ describe('vsiaulMap_setOption', function () {
         expect(getVisual(5, 'color')).toEqual(makeCategoryVisual('red'));
         expect(getVisual(6, 'color')).toEqual(makeCategoryVisual(null, 'red'));
         expect(getVisual(7, 'opacity')).toEqual(makeCategoryVisual(0.4));
+        done();
+    });
+
+    it('registerHoverLinkHandle', function (done) {
+        chart.setOption({
+            xAxis: {},
+            yAxis: {},
+            series: [{type: 'scatter', data: [[12, 223]]}],
+            visualMap: [
+                {type: 'continuous', hoverLink: true},
+                {type: 'continuous', hoverLink: true},
+                {type: 'continuous', hoverLink: false}
+            ]
+        });
+
+        const mouseoverHandlers = getEventHandle(chart, 'mouseover', ContinuousView);
+        const mouseoutHandlers = getEventHandle(chart, 'mouseout', ContinuousView);
+
+        expect(mouseoverHandlers.length).toBe(2);
+        expect(mouseoutHandlers.length).toBe(2);
+
         done();
     });
 

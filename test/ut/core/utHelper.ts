@@ -27,6 +27,7 @@ import {
 import { ComponentMainType } from '../../../src/util/types';
 import Group from 'zrender/src/graphic/Group';
 import Element from 'zrender/src/Element';
+import Handler from 'zrender/src/Handler';
 import GlobalModel from '../../../src/model/Global';
 
 
@@ -153,4 +154,25 @@ export function getViewGroup(
 export function getECModel(chart: EChartsType): GlobalModel {
     // @ts-ignore
     return chart.getModel();
+}
+
+type EventHandlersMap = Handler['_$handlers'];
+
+type EventHandlers<T extends EventHandlersMap = EventHandlersMap> = T[keyof T];
+
+export function getEventHandle<T extends Function>(chart: EChartsType, eventName: string, ctx?: T): EventHandlers {
+    const zr = chart.getZr();
+    const handler = zr.handler;
+    // @ts-ignore
+    const allHandlers = handler._$handlers;
+    const eventHandlers = allHandlers[eventName];
+
+    if (!eventHandlers) {
+        return [];
+    }
+
+    if (ctx) {
+        return eventHandlers.filter(handler => handler.ctx instanceof ctx);
+    }
+    return eventHandlers;
 }
