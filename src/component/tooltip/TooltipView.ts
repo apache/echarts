@@ -249,6 +249,7 @@ class TooltipView extends ComponentView {
         const tooltipModel = this._tooltipModel;
         const ecModel = this._ecModel;
         const api = this._api;
+        const triggerOn = tooltipModel.get('triggerOn');
 
         // Try to keep the tooltip show when refreshing
         if (this._lastX != null
@@ -256,7 +257,8 @@ class TooltipView extends ComponentView {
             // When user is willing to control tooltip totally using API,
             // self.manuallyShowTip({x, y}) might cause tooltip hide,
             // which is not expected.
-            && tooltipModel.get('triggerOn') !== 'none'
+            && triggerOn !== 'none'
+            && triggerOn !== 'click'
         ) {
             const self = this;
             clearTimeout(this._refreshUpdateTimeout);

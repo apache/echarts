@@ -55,7 +55,7 @@ export interface TreeSeriesStateOption<TCbParams = never> {
 
 interface TreeStatesMixin {
     emphasis?: {
-        focus?: DefaultEmphasisFocus | 'ancestor' | 'descendant'
+        focus?: DefaultEmphasisFocus | 'ancestor' | 'descendant' | 'relative'
         scale?: boolean
     }
 }

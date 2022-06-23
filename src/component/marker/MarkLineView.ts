@@ -382,7 +382,9 @@ class MarkLineView extends MarkerView {
 
         // Set host model for tooltip
         // FIXME
-        mlData.line.eachItemGraphicEl(function (el, idx) {
+        mlData.line.eachItemGraphicEl(function (el) {
+            getECData(el).dataModel = mlModel;
+
             el.traverse(function (child) {
                 getECData(child).dataModel = mlModel;
             });

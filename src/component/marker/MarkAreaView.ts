@@ -109,6 +109,16 @@ function ifMarkAreaHasOnlyDim(
 function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOption) {
     const fromCoord = item.coord[0];
     const toCoord = item.coord[1];
+    const item0 = {
+        coord: fromCoord,
+        x: item.x0,
+        y: item.y0
+    };
+    const item1 = {
+        coord: toCoord,
+        x: item.x1,
+        y: item.y1
+    };
     if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
         // In case
         // {
@@ -123,17 +133,15 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
         ) {
             return true;
         }
+        //Directly returning true may also do the work,
+        //because markArea will not be shown automatically
+        //when it's not included in coordinate system.
+        //But filtering ahead can avoid keeping rendering markArea
+        //when there are too many of them.
+        return markerHelper.zoneFilter(coordSys, item0, item1);
     }
-    return markerHelper.dataFilter(coordSys, {
-            coord: fromCoord,
-            x: item.x0,
-            y: item.y0
-        })
-        || markerHelper.dataFilter(coordSys, {
-            coord: toCoord,
-            x: item.x1,
-            y: item.y1
-        });
+    return markerHelper.dataFilter(coordSys, item0)
+        || markerHelper.dataFilter(coordSys, item1);
 }
 
 // dims can be ['x0', 'y0'], ['x1', 'y1'], ['x0', 'y1'], ['x1', 'y0']
