@@ -804,21 +804,21 @@ class SliderZoomView extends DataZoomView {
 
         // FIXME
         // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
-        if (dataZoomModel.get('showDetail')) {
-            const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
+        const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
 
-            if (axisProxy) {
-                const axis = axisProxy.getAxisModel().axis;
-                const range = this._range;
+        if (axisProxy) {
+            const axis = axisProxy.getAxisModel().axis;
+            const range = this._range;
 
-                const dataInterval = nonRealtime
-                    // See #4434, data and axis are not processed and reset yet in non-realtime mode.
-                    ? axisProxy.calculateDataWindow({
-                        start: range[0], end: range[1]
-                    }).valueWindow
-                    : axisProxy.getDataValueWindow();
-                this._valueRange = dataInterval;
+            const dataInterval = nonRealtime
+                // See #4434, data and axis are not processed and reset yet in non-realtime mode.
+                ? axisProxy.calculateDataWindow({
+                    start: range[0], end: range[1]
+                }).valueWindow
+                : axisProxy.getDataValueWindow();
+            this._valueRange = dataInterval;
 
+            if (dataZoomModel.get('showDetail')) {
                 labelTexts = [
                     this._formatLabel(dataInterval[0], axis),
                     this._formatLabel(dataInterval[1], axis)
