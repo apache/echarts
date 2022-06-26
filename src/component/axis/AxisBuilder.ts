@@ -420,12 +420,26 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
         const textFont = textStyleModel.getFont();
 
+        const coordSysModel = axisModel.getCoordSysModel();
+        const coordSys = coordSysModel ? coordSysModel.coordinateSystem : null;
+
         const truncateOpt = axisModel.get('nameTruncate', true) || {};
         const ellipsis = textStyleModel.get('ellipsis') || truncateOpt.ellipsis;
         const overflow = textStyleModel.get('overflow') || 'none';
+
+        let nameTruncateDefaultWidth;
+
+        if (overflow !== 'none') {
+            nameTruncateDefaultWidth = Math.abs(extent[1] - extent[0]); // Current axis length.
+            if (!isNameLocationCenter(nameLocation)) {
+                const rect = coordSys && coordSys.getRect && coordSys.getRect();
+                nameTruncateDefaultWidth = rect ? rect.width : nameTruncateDefaultWidth * 2;
+            }
+        }
+
         const maxWidth = retrieve(
             opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth,
-            overflow === 'none' ? null : Math.abs(extent[1] - extent[0]) // Current axis length.
+            nameTruncateDefaultWidth
         );
 
         const textEl = new graphic.Text({
