@@ -191,9 +191,10 @@ function mergeControllerParams(dataZoomInfoMap: HashMap<{ model: InsideZoomModel
         'type_undefined': -1
     };
     let preventDefaultMouseMove = true;
-
+    let gestureOnTouchPad = false;
     dataZoomInfoMap.each(function (dataZoomInfo) {
         const dataZoomModel = dataZoomInfo.model;
+        gestureOnTouchPad = gestureOnTouchPad || !!dataZoomModel.get('gestureOnTouchPad')
         const oneType = dataZoomModel.get('disabled', true)
             ? false
             : dataZoomModel.get('zoomLock', true)
@@ -218,7 +219,8 @@ function mergeControllerParams(dataZoomInfoMap: HashMap<{ model: InsideZoomModel
             zoomOnMouseWheel: true,
             moveOnMouseMove: true,
             moveOnMouseWheel: true,
-            preventDefaultMouseMove: !!preventDefaultMouseMove
+            preventDefaultMouseMove: !!preventDefaultMouseMove,
+            gestureOnTouchPad
         }
     };
 }

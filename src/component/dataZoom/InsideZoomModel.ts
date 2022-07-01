@@ -38,6 +38,12 @@ export interface InsideDataZoomOption extends DataZoomOption {
 
     moveOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
 
+    /**
+     * Whether enable touchpad, if open this,
+     * other options such as `zoomOnMouseWheel` `moveOnMouseMove` will be ignored.
+     */
+    gestureOnTouchPad?: boolean
+
     preventDefaultMouseMove?: boolean
 
     /**
