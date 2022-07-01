@@ -194,7 +194,7 @@ function mergeControllerParams(dataZoomInfoMap: HashMap<{ model: InsideZoomModel
     let gestureOnTouchPad = false;
     dataZoomInfoMap.each(function (dataZoomInfo) {
         const dataZoomModel = dataZoomInfo.model;
-        gestureOnTouchPad = gestureOnTouchPad || !!dataZoomModel.get('gestureOnTouchPad')
+        gestureOnTouchPad = gestureOnTouchPad || !!dataZoomModel.get('gestureOnTouchPad');
         const oneType = dataZoomModel.get('disabled', true)
             ? false
             : dataZoomModel.get('zoomLock', true)

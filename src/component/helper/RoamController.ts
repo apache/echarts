@@ -249,7 +249,7 @@ class RoamController extends Eventful<{
         const absWheelDeltaDelta = Math.abs(wheelDelta);
         const originX = e.offsetX;
         const originY = e.offsetY;
-        
+
         // wheelDelta maybe -0 in chrome mac.
         if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
             return;
@@ -264,10 +264,13 @@ class RoamController extends Eventful<{
           const zoomFactor = 1.1;
           const wheelZoomSpeed = 1 / 23;
           // FIXME zrender type error
-          let wheelEvent = e.event as unknown as WheelEvent;
+          const wheelEvent = e.event as unknown as WheelEvent;
           if (wheelEvent.ctrlKey) {
             shouldZoom && checkPointerAndTrigger(this, 'zoom', 'zoomOnMouseWheel', e, {
-              scale: 1 / Math.pow(zoomFactor, wheelEvent.deltaY * wheelZoomSpeed), originX, originY, isAvailableBehavior: null
+              scale: 1 / Math.pow(zoomFactor, wheelEvent.deltaY * wheelZoomSpeed),
+              originX,
+              originY,
+              isAvailableBehavior: null
             });
           }
           else {
@@ -281,7 +284,15 @@ class RoamController extends Eventful<{
             }
             shouldMove && checkPointerAndTrigger(this, 'pan', 'moveOnMouseMove', e, {
               // @ts-nocheck
-              originX, originY, oldX: originX, oldY: originY, dx: - offsetX, dy: - offsetY, newX: originX - offsetX, newY: originY - offsetY, isAvailableBehavior: null
+              originX,
+              originY,
+              oldX: originX,
+              oldY: originY,
+              dx: -offsetX,
+              dy: -offsetY,
+              newX: originX - offsetX,
+              newY: originY - offsetY,
+              isAvailableBehavior: null
             } as RoamEventParams['pan']);
           }
           return;
