@@ -46,7 +46,31 @@ under the License.
 
 
 
-
+        <script>
+            function getDataZoom(opt) {
+                const dataZoom = {
+                    borderColor: 'blue',
+                    fillerColor: 'rgba(0, 255, 0, 0.2)',
+                    dataBackground: {
+                        lineStyle: {
+                        color: 'blue'
+                        },
+                        areaStyle: {
+                        color: 'rgba(0, 0, 255, 0.6)'
+                        }
+                    },
+                    selectedDataBackground: {
+                        lineStyle: {
+                        color: 'blue'
+                        },
+                        areaStyle: {
+                        color: 'rgba(0, 0, 255, 0.6)'
+                        }
+                    }
+                };
+                return Object.assign(opt, dataZoom);
+            }
+        </script>
 
 
         <script>
@@ -75,9 +99,9 @@ under the License.
                         type: 'line'
                         }
                     ],
-                    dataZoom: {
-                        startValue: 15
-                    }
+                    dataZoom: getDataZoom({
+                        startValue: 15,
+                    })
                 };
 
                 var chart = testHelper.create(echarts, 'main0', {
@@ -117,12 +141,12 @@ under the License.
                         type: 'line'
                         }
                     ],
-                    dataZoom: [{
+                    dataZoom: [getDataZoom({
                         xAxisIndex: 0
-                    }, {
+                    }), getDataZoom({
                         yAxisIndex: 0,
                         filterMode: 'none'
-                    }]
+                    })]
                 };
 
                 var chart = testHelper.create(echarts, 'main01', {
@@ -162,9 +186,9 @@ under the License.
                         type: 'line'
                         }
                     ],
-                    dataZoom: {
+                    dataZoom: getDataZoom({
                         startValue: 18
-                    }
+                    })
                 };
 
                 var chart = testHelper.create(echarts, 'main1', {
@@ -205,9 +229,9 @@ under the License.
                         type: 'line'
                         }
                     ],
-                    dataZoom: {
+                    dataZoom: getDataZoom({
                         startValue: 12
-                    }
+                    })
                 };
 
                 var chart = testHelper.create(echarts, 'main2', {
@@ -248,9 +272,9 @@ under the License.
                         type: 'line'
                         }
                     ],
-                    dataZoom: {
+                    dataZoom: getDataZoom({
                         startValue: 12
-                    }
+                    })
                 };
 
                 var chart = testHelper.create(echarts, 'main3', {
@@ -290,8 +314,8 @@ under the License.
                         type: 'line'
                         }
                     ],
-                    dataZoom: {
-                    }
+                    dataZoom: getDataZoom({
+                    })
                 };
 
                 var chart = testHelper.create(echarts, 'main4', {
