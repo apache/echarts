@@ -87,8 +87,8 @@ export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | 
 export type ZRElementEventName = ElementEventName | 'globalout';
 
 // ComponentFullType can be:
-//     'xxx.yyy': means ComponentMainType.ComponentSubType.
-//     'xxx': means ComponentMainType.
+//     'a.b': means ComponentMainType.ComponentSubType.
+//     'a': means ComponentMainType.
 // See `checkClassType` check the restict definition.
 export type ComponentFullType = string;
 export type ComponentMainType = keyof ECUnitOption & string;
@@ -96,7 +96,7 @@ export type ComponentSubType = Exclude<ComponentOption['type'], undefined>;
 /**
  * Use `parseClassType` to parse componentType declaration to componentTypeInfo.
  * For example:
- * componentType declaration: 'xxx.yyy', get componentTypeInfo {main: 'xxx', sub: 'yyy'}.
+ * componentType declaration: 'a.b', get componentTypeInfo {main: 'a', sub: 'b'}.
  * componentType declaration: '', get componentTypeInfo {main: '', sub: ''}.
  */
 export interface ComponentTypeInfo {

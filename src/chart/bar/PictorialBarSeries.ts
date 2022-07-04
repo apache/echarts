@@ -26,7 +26,8 @@ import {
     SeriesStackOptionMixin,
     StatesOptionMixin,
     OptionDataItemObject,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    SeriesEncodeOptionMixin
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
@@ -111,7 +112,7 @@ export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOpti
 export interface PictorialBarSeriesOption
     extends BaseBarSeriesOption<PictorialBarStateOption, ExtraStateOption>, PictorialBarStateOption,
     PictorialBarSeriesSymbolOption,
-    SeriesStackOptionMixin {
+    SeriesStackOptionMixin, SeriesEncodeOptionMixin {
 
     type?: 'pictorialBar'
 

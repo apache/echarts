@@ -25,7 +25,7 @@ import { assert, bind, each, eqNaN, extend, hasOwn, indexOf, isArrayLike, keys, 
 import { cloneValue } from 'zrender/src/animation/Animator';
 import Displayable, { DisplayableProps } from 'zrender/src/graphic/Displayable';
 import Model from '../model/Model';
-import { getAnimationConfig } from './basicTrasition';
+import { getAnimationConfig } from './basicTransition';
 import { Path } from '../util/graphic';
 import { warn } from '../util/log';
 import { AnimationOption, AnimationOptionMixin, ZRStyleProps } from '../util/types';

@@ -98,9 +98,9 @@ export class TreeNode {
      * @param cb If in preorder and return false,
      *                      its subtree will not be visited.
      */
-    eachNode<Ctx>(options: TreeTraverseOrder, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
-    eachNode<Ctx>(options: TreeTraverseOption, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
-    eachNode<Ctx>(cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
+    eachNode<Ctx>(options: TreeTraverseOrder, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void;
+    eachNode<Ctx>(options: TreeTraverseOption, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void;
+    eachNode<Ctx>(cb: TreeTraverseCallback<Ctx>, context?: Ctx): void;
     eachNode<Ctx>(
         options: TreeTraverseOrder | TreeTraverseOption | TreeTraverseCallback<Ctx>,
         cb?: TreeTraverseCallback<Ctx> | Ctx,
@@ -225,7 +225,7 @@ export class TreeNode {
         return this.hostTree.data.getItemLayout(this.dataIndex);
     }
 
-    getModel<T = unknown>(): Model<T>
+    getModel<T = unknown>(): Model<T>;
     // @depcrecated
     // getModel<T = unknown, S extends keyof T = keyof T>(path: S): Model<T[S]>
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -251,8 +251,8 @@ export class TreeNode {
      *  });
      */
     // TODO: TYPE
-    setVisual(key: string, value: any): void
-    setVisual(obj: Dictionary<any>): void
+    setVisual(key: string, value: any): void;
+    setVisual(obj: Dictionary<any>): void;
     setVisual(key: string | Dictionary<any>, value?: any) {
         this.dataIndex >= 0
             && this.hostTree.data.setItemVisual(this.dataIndex, key as any, value);
@@ -353,9 +353,9 @@ class Tree<HostModel extends Model = Model, LevelOption = any> {
      * @param cb
      * @param context
      */
-    eachNode<Ctx>(options: TreeTraverseOrder, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
-    eachNode<Ctx>(options: TreeTraverseOption, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
-    eachNode<Ctx>(cb: TreeTraverseCallback<Ctx>, context?: Ctx): void
+    eachNode<Ctx>(options: TreeTraverseOrder, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void;
+    eachNode<Ctx>(options: TreeTraverseOption, cb: TreeTraverseCallback<Ctx>, context?: Ctx): void;
+    eachNode<Ctx>(cb: TreeTraverseCallback<Ctx>, context?: Ctx): void;
     eachNode<Ctx>(
         options: TreeTraverseOrder | TreeTraverseOption | TreeTraverseCallback<Ctx>,
         cb?: TreeTraverseCallback<Ctx> | Ctx,
