@@ -193,7 +193,6 @@ class Axis {
             this, ticksCoords, alignWithLabel, opt.clamp
         );
 
-        console.log('ticksCoords', ticksCoords);
         return ticksCoords;
     }
 
@@ -222,7 +221,8 @@ class Axis {
     }
 
     getViewLabels(): ReturnType<typeof createAxisLabels>['labels'] {
-        return createAxisLabels(this).labels;
+        const labels = createAxisLabels(this).labels;
+        return labels;
     }
 
     getLabelModel(): Model<AxisBaseOption['axisLabel']> {

@@ -32,6 +32,7 @@ import OrdinalScale from '../scale/Ordinal';
 import { AxisBaseModel } from './AxisBaseModel';
 import type Axis2D from './cartesian/Axis2D';
 import { TimeScaleTick } from '../util/types';
+import { BoundingRect } from 'zrender';
 
 type CacheKey = string | number;
 
@@ -167,23 +168,46 @@ function makeNonOverlappedTimeLabels(axis: Axis, onlyTick?: boolean) {
     const ticks = axis.scale.getTicks() as TimeScaleTick[];
     const ordinalScale = axis.scale as OrdinalScale;
     const labelFormatter = makeLabelFormatter(axis);
+    const font = axis.getLabelModel().getFont();
 
     const result: (MakeLabelsResultObj | number)[] = [];
+    const boundingRects: BoundingRect[] = [];
 
-    function addItem(tickValue: number) {
-        const tickObj = { value: tickValue };
+    function isOverlap(rect: BoundingRect) {
+        /**
+         * `rotate` is not considered because for time axis,
+         * the interval is a suggestion value, not a precise value.
+         * So if there is no overlap without rotate, there should be
+         * no overlap with rotate and we don't have to make tick labels
+         * as condense as possible as in the case of category axes.
+         */
+        for (let i = 0; i < boundingRects.length; i++) {
+            if (rect.intersect(boundingRects[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function addItem(tickValue: number, tickLevel: number) {
+        const tickObj = { value: tickValue, level: tickLevel };
         result.push(onlyTick
             ? tickValue
             : {
                 formattedLabel: labelFormatter(tickObj),
                 rawLabel: ordinalScale.getLabel(tickObj),  // TODO: ?
-                tickValue: tickValue
+                tickValue: tickValue,
+                level: tickLevel
             }
         );
     }
 
     let lastMaxLevel = Number.MAX_VALUE;
     let maxLevel;
+    /**
+     * Loop through the ticks with larger levels to smaller levels so that if
+     * the ticks are overlapped, we can use the level of the higher level.
+     */
     while (true) {
         maxLevel = -1;
 
@@ -200,9 +224,25 @@ function makeNonOverlappedTimeLabels(axis: Axis, onlyTick?: boolean) {
         for (let i = 0; i < ticks.length; i++) {
             const tick = ticks[i];
             if (tick.level === maxLevel) {
-                // Add the tick only if it has no overlap with current ones
-                 // TODO:
-                addItem(tick.value);
+                // Check if this tick is overlapped with added ticks
+                const rect = textContain.getBoundingRect(
+                    labelFormatter({
+                        value: tick.value,
+                        level: tick.level
+                    }),
+                    font,
+                    'center',
+                    'top'
+                );
+                // The same magic number as in calculateCategoryInterval
+                const padding = 0.15;
+                rect.x += axis.dataToCoord(tick.value) - rect.width * padding;
+                rect.width *= (1 + padding * 2);
+                if (!isOverlap(rect)) {
+                    // Add the tick only if it has no overlap with current ones
+                    addItem(tick.value, tick.level);
+                    boundingRects.push(rect);
+                }
             }
         }
 
@@ -443,6 +483,7 @@ interface MakeLabelsResultObj {
     formattedLabel: string
     rawLabel: string
     tickValue: number
+    level?: number
 }
 
 function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: number): MakeLabelsResultObj[];
