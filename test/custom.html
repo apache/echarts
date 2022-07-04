@@ -90,29 +90,37 @@ under the License.
                     {name: 'GPU', color: '#72b362'}
                 ];
 
+                var renderCount = 0;
                 // Generate mock data
-                echarts.util.each(categories, function (category, index) {
-                    var baseTime = startTime;
-                    for (var i = 0; i < dataCount; i++) {
-                        var typeItem = types[Math.round(Math.random() * (types.length - 1))];
-                        var duration = Math.round(Math.random() * 10000);
-                        data.push({
-                            name: typeItem.name,
-                            value: [
-                                index,
-                                baseTime,
-                                baseTime += duration,
-                                duration
-                            ],
-                            itemStyle: {
-                                normal: {
-                                    color: typeItem.color
+                function updateData() {
+                    data = [];
+                    echarts.util.each(categories, function (category, index) {
+                        var baseTime = startTime;
+                        for (var i = 0; i < dataCount; i++) {
+                            var typeItem = types[Math.round(Math.random() * (types.length - 1))];
+                            var duration = Math.round(Math.random() * 10000);
+                            var isEven = renderCount % 2 === 0;
+                            data.push({
+                                name: typeItem.name,
+                                value: [
+                                    index,
+                                    baseTime,
+                                    isEven ? (baseTime += duration) : NaN,
+                                    duration
+                                ],
+                                itemStyle: {
+                                    normal: {
+                                        color: typeItem.color
+                                    }
                                 }
-                            }
-                        });
-                        baseTime += Math.round(Math.random() * 2000);
-                    }
-                });
+                            });
+                            isEven && (baseTime += Math.round(Math.random() * 2000));
+                        }
+                    });
+                    renderCount++;
+                }
+
+                updateData();
 
                 console.log(JSON.stringify({
                     startTime: startTime,
@@ -211,7 +219,26 @@ under the License.
                     }]
                 };
 
-                testHelper.createChart(echarts, 'profile', option);
+                var chart = testHelper.create(echarts, 'profile', {
+                    option: option,
+                    title: [
+                        'The data should be cleared when clicking the **updateData** button firstly',
+                        'Should have no errors when clicking the **updateData** button once again'
+                    ],
+                    buttons: [
+                        {
+                            text: 'updateData',
+                            onclick: function () {
+                                updateData();
+                                chart.setOption({
+                                    series: [{
+                                        data: data
+                                    }]
+                                });
+                            }
+                        }
+                    ]
+                });
             });
         </script>
 
