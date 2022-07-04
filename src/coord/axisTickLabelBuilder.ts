@@ -31,6 +31,7 @@ import { AxisBaseOption } from './axisCommonTypes';
 import OrdinalScale from '../scale/Ordinal';
 import { AxisBaseModel } from './AxisBaseModel';
 import type Axis2D from './cartesian/Axis2D';
+import { TimeScaleTick } from '../util/types';
 
 type CacheKey = string | number;
 
@@ -72,6 +73,8 @@ export function createAxisLabels(axis: Axis): {
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryLabels(axis)
+        : axis.type === 'time'
+        ? makeTimeLabels(axis)
         : makeRealNumberLabels(axis);
 }
 
@@ -90,6 +93,8 @@ export function createAxisTicks(axis: Axis, tickModel: AxisBaseModel): {
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryTicks(axis, tickModel)
+        : axis.type === 'time'
+        ? makeTimeTicks(axis, tickModel)
         : {ticks: zrUtil.map(axis.scale.getTicks(), tick => tick.value) };
 }
 
@@ -99,6 +104,15 @@ function makeCategoryLabels(axis: Axis) {
 
     return (!labelModel.get('show') || axis.scale.isBlank())
         ? {labels: [], labelCategoryInterval: result.labelCategoryInterval}
+        : result;
+}
+
+function makeTimeLabels(axis: Axis) {
+    const labelModel = axis.getLabelModel();
+    const result = makeTimeLabelsActually(axis, labelModel);
+
+    return (!labelModel.get('show') || axis.scale.isBlank())
+        ? {labels: []}
         : result;
 }
 
@@ -126,6 +140,104 @@ function makeCategoryLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption
     // Cache to avoid calling interval function repeatly.
     return listCacheSet(labelsCache, optionLabelInterval as CacheKey, {
         labels: labels, labelCategoryInterval: numericLabelInterval
+    });
+}
+
+function makeTimeLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption['axisLabel']>) {
+    const labelsCache = getListCache(axis, 'labels');
+    const timeKey = 'time'; // TODO: change key name
+    const result = listCacheGet(labelsCache, timeKey);
+
+    if (result) {
+        return result;
+    }
+
+    const labels = makeNonOverlappedTimeLabels(axis);
+
+    // Cache to avoid calling interval function repeatly.
+    return listCacheSet(labelsCache, timeKey, {
+        labels: labels
+    });
+}
+
+function makeNonOverlappedTimeLabels(axis: Axis): MakeLabelsResultObj[];
+function makeNonOverlappedTimeLabels(axis: Axis, onlyTick: false): MakeLabelsResultObj[];
+function makeNonOverlappedTimeLabels(axis: Axis, onlyTick: true): number[];
+function makeNonOverlappedTimeLabels(axis: Axis, onlyTick?: boolean) {
+    const ticks = axis.scale.getTicks() as TimeScaleTick[];
+    const ordinalScale = axis.scale as OrdinalScale;
+    const labelFormatter = makeLabelFormatter(axis);
+
+    const result: (MakeLabelsResultObj | number)[] = [];
+
+    function addItem(tickValue: number) {
+        const tickObj = { value: tickValue };
+        result.push(onlyTick
+            ? tickValue
+            : {
+                formattedLabel: labelFormatter(tickObj),
+                rawLabel: ordinalScale.getLabel(tickObj),  // TODO: ?
+                tickValue: tickValue
+            }
+        );
+    }
+
+    let lastMaxLevel = Number.MAX_VALUE;
+    let maxLevel;
+    while (true) {
+        maxLevel = -1;
+
+        for (let i = 0; i < ticks.length; i++) {
+            if (ticks[i].level > maxLevel && ticks[i].level < lastMaxLevel) {
+                maxLevel = ticks[i].level;
+            }
+        }
+
+        if (maxLevel < 0) {
+            break;
+        }
+
+        for (let i = 0; i < ticks.length; i++) {
+            const tick = ticks[i];
+            if (tick.level === maxLevel) {
+                // Add the tick only if it has no overlap with current ones
+                 // TODO:
+                addItem(tick.value);
+            }
+        }
+
+        if (maxLevel <= 0) {
+            break;
+        }
+        lastMaxLevel = maxLevel;
+    }
+    return result;
+}
+
+function makeTimeTicks(axis: Axis, tickModel: AxisBaseModel) {
+    const ticksCache = getListCache(axis, 'ticks');
+    const result = listCacheGet(ticksCache, 'time');
+
+    if (result) {
+        return result;
+    }
+
+    let ticks: number[];
+
+    // Optimize for the case that large category data and no label displayed,
+    // we should not return all ticks.
+    if (!tickModel.get('show') || axis.scale.isBlank()) {
+        ticks = [];
+    }
+
+    const labelsResult = makeTimeLabelsActually(axis, axis.getLabelModel());
+    ticks = zrUtil.map(labelsResult.labels, function (labelItem) {
+        return labelItem.tickValue;
+    });
+
+    // Cache to avoid calling interval function repeatly.
+    return listCacheSet(ticksCache, 'time', {
+        ticks: ticks
     });
 }
 

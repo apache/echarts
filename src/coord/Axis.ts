@@ -193,6 +193,7 @@ class Axis {
             this, ticksCoords, alignWithLabel, opt.clamp
         );
 
+        console.log('ticksCoords', ticksCoords);
         return ticksCoords;
     }
 
