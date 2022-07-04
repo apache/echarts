@@ -228,7 +228,7 @@ export default class CustomChartView extends ChartView {
             })
             .remove(function (oldIdx) {
                 const el = oldData.getItemGraphicEl(oldIdx);
-                applyLeaveTransition(el, customInnerStore(el).option, customSeries);
+                el && applyLeaveTransition(el, customInnerStore(el).option, customSeries);
             })
             .update(function (newIdx, oldIdx) {
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
@@ -1326,11 +1326,11 @@ function mergeChildren(
         );
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
-        // Do not supprot leave elements that are not mentioned in the latest
+        // Do not support leave elements that are not mentioned in the latest
         // `renderItem` return. Otherwise users may not have a clear and simple
-        // concept that how to contorl all of the elements.
+        // concept that how to control all of the elements.
         const child = el.childAt(i);
-        applyLeaveTransition(child, customInnerStore(el).option, seriesModel);
+        child && applyLeaveTransition(child, customInnerStore(el).option, seriesModel);
     }
 }
 
@@ -1383,7 +1383,7 @@ function processAddUpdate(
 function processRemove(this: DataDiffer<DiffGroupContext>, oldIndex: number): void {
     const context = this.context;
     const child = context.oldChildren[oldIndex];
-    applyLeaveTransition(child, customInnerStore(child).option, context.seriesModel);
+    child && applyLeaveTransition(child, customInnerStore(child).option, context.seriesModel);
 }
 
 /**
