@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.repository_owner == 'apache' }}
     steps:
       - name: Close Stale Issues
-        uses: actions/stale@v4
+        uses: actions/stale@v5
         with:
           days-before-stale: 730
           days-before-close: 7
