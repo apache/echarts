@@ -85,10 +85,10 @@ class LogScale extends Scale {
     }
 
     setExtent(start: number, end: number): void {
-        const base = this.base;
+        const base = mathLog(this.base);
         // log(-Infinity) is NaN, so safe guard here
-        start = mathLog(Math.max(0, start)) / mathLog(base);
-        end = mathLog(Math.max(0, end)) / mathLog(base);
+        start = mathLog(Math.max(0, start)) / base;
+        end = mathLog(Math.max(0, end)) / base;
         intervalScaleProto.setExtent.call(this, start, end);
     }
 
