@@ -215,10 +215,14 @@ class PiecewiseVisualMapView extends VisualMapView {
     ) {
         const visualMapModel = this.visualMapModel;
         const option = visualMapModel.option;
+        const selectedMode = option.selectedMode;
+        if (!selectedMode) {
+            return;
+        }
         const selected = zrUtil.clone(option.selected);
         const newKey = visualMapModel.getSelectedMapKey(piece);
 
-        if (option.selectedMode === 'single') {
+        if (selectedMode === 'single' || selectedMode === true) {
             selected[newKey] = true;
             zrUtil.each(selected, function (o, key) {
                 selected[key] = key === newKey;

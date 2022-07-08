@@ -730,6 +730,10 @@ class LineView extends ChartView {
                 polygon = this._newPolygon(
                     points, stackedOnPoints
                 );
+            }// If areaStyle is removed
+            else if (polygon) {
+                lineGroup.remove(polygon);
+                polygon = this._polygon = null;
             }
 
             // NOTE: Must update _endLabel before setClipPath.
@@ -943,8 +947,8 @@ class LineView extends ChartView {
                 if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(x, y)) {
                     return;
                 }
-                const zlevel = seriesModel.get('zlevel');
-                const z = seriesModel.get('z');
+                const zlevel = seriesModel.get('zlevel') || 0;
+                const z = seriesModel.get('z') || 0;
                 symbol = new SymbolClz(data, dataIndex);
                 symbol.x = x;
                 symbol.y = y;

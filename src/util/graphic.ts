@@ -75,7 +75,7 @@ import {
     removeElement,
     removeElementWithFadeOut,
     isElementRemoved
-} from '../animation/basicTrasition';
+} from '../animation/basicTransition';
 
 /**
  * @deprecated export for compatitable reason

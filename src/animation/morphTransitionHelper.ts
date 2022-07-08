@@ -29,7 +29,7 @@ import { Path } from '../util/graphic';
 import SeriesModel from '../model/Series';
 import Element, { ElementAnimateConfig } from 'zrender/src/Element';
 import { defaults, isArray} from 'zrender/src/core/util';
-import { getAnimationConfig } from './basicTrasition';
+import { getAnimationConfig } from './basicTransition';
 import { ECElement, UniversalTransitionOption } from '../util/types';
 import { clonePath } from 'zrender/src/tool/path';
 import Model from '../model/Model';

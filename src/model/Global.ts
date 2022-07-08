@@ -682,7 +682,7 @@ echarts.use([${seriesImportName}]);`);
      * });
      * eachComponent(function (componentType, model, index) {
      *     // componentType does not include subType
-     *     // (componentType is 'xxx' but not 'xxx.aa')
+     *     // (componentType is 'a' but not 'a.b')
      * });
      * eachComponent(
      *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}},
@@ -696,17 +696,17 @@ echarts.use([${seriesImportName}]);`);
     eachComponent<T>(
         cb: EachComponentAllCallback,
         context?: T
-    ): void
+    ): void;
     eachComponent<T>(
         mainType: string,
         cb: EachComponentInMainTypeCallback,
         context?: T
-    ): void
+    ): void;
     eachComponent<T>(
         mainType: QueryConditionKindA,
         cb: EachComponentInMainTypeCallback,
         context?: T
-    ): void
+    ): void;
     eachComponent<T>(
         mainType: string | QueryConditionKindA | EachComponentAllCallback,
         cb?: EachComponentInMainTypeCallback | T,

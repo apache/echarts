@@ -5,8 +5,7 @@ on:
     types: [opened, synchronize]
 
 jobs:
-  build:
-
+  lint:
     runs-on: ubuntu-latest
 
     strategy:
@@ -14,28 +13,75 @@ jobs:
         node-version: [12.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Fetch commit count
+        env:
+          PR_COMMIT_COUNT: ${{ github.event.pull_request.commits }}
+        run: |
+          echo "FETCH_DEPTH=$(($PR_COMMIT_COUNT + 1))" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
-        uses: actions/cache@v2
+        id: cache-dep
+        uses: actions/cache@v3
         env:
           cache-name: cache-node-modules
         with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-lint-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: npm install
+      - name: Install dependencies
+        if: steps.cache-dep.outputs.cache-hit != 'true'
         run: npm ci
 
-      # - name: check type
-      #   run: npm run checktype
+      - name: Collect changed files
+        run: |
+          mkdir ~/tmp/
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} --name-only --relative '*src/**/*.ts' > ~/tmp/changed_files
+          echo -e "Changed files: \n$(cat ~/tmp/changed_files)"
 
-      - name: build release
+      - name: Lint
+        run: npx eslint $(cat ~/tmp/changed_files)
+
+      - name: Check types
+        run: npm run checktype
+
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache node modules
+        id: cache-dep
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.cache-dep.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Build release
         run: npm run release
 
       - name: Test generated DTS
