@@ -32,12 +32,12 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
-import { ColorString, ECEventData, Payload } from '../../util/types';
+import { ColorString, Payload } from '../../util/types';
 import { parsePercent } from 'zrender/src/contain/text';
 import { setAsHighDownDispatcher } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
-import { getECData } from '../../util/innerStore';
+import { ECData, getECData } from '../../util/innerStore';
 import { createTextStyle } from '../../label/labelStyle';
 import { findEventDispatcher } from '../../util/event';
 
@@ -817,7 +817,7 @@ class ContinuousView extends VisualMapView {
     }
 
     private _hoverLinkFromSeriesMouseOver(e: ElementEvent) {
-        let ecData: ECEventData;
+        let ecData: ECData;
 
         findEventDispatcher(e.target, target => {
             const currECData = getECData(target);
