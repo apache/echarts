@@ -1316,14 +1316,21 @@ function mergeChildren(
     // might be better performance.
     let index = 0;
     for (; index < newLen; index++) {
-        newChildren[index] && doCreateOrUpdateEl(
-            api,
-            el.childAt(index),
-            dataIndex,
-            newChildren[index] as CustomElementOption,
-            seriesModel,
-            el
-        );
+        const newChild = newChildren[index];
+        if (newChild) {
+            doCreateOrUpdateEl(
+                api,
+                el.childAt(index),
+                dataIndex,
+                newChild as CustomElementOption,
+                seriesModel,
+                el
+            );
+        }
+        else {
+            // The element is being null after updating, remove the old element
+            el.remove(el.childAt(index));
+        }
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
         // Do not support leave elements that are not mentioned in the latest
