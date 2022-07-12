@@ -51,6 +51,8 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { getVisualFromData } from '../../visual/helper';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
+import { createClipPath } from '../../chart/helper/createClipPathFromCoordSys';
+import { linePolygonIntersect } from '../../util/graphic';
 
 // Item option for configuring line and each end of symbol.
 // Line option. be merged from configuration of two ends.
@@ -162,13 +164,11 @@ function isInifinity(val: ScaleDataValue) {
 function ifMarkLineHasOnlyDim(
     dimIndex: number,
     fromCoord: ScaleDataValue[],
-    toCoord: ScaleDataValue[],
-    coordSys: CoordinateSystem
+    toCoord: ScaleDataValue[]
 ) {
     const otherDimIndex = 1 - dimIndex;
-    const dimName = coordSys.dimensions[dimIndex];
     return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex])
-        && fromCoord[dimIndex] === toCoord[dimIndex] && coordSys.getAxis(dimName).containData(fromCoord[dimIndex]);
+        && fromCoord[dimIndex] === toCoord[dimIndex];
 }
 
 function markLineFilter(
@@ -186,14 +186,28 @@ function markLineFilter(
         // }
         if (
             fromCoord && toCoord
-            && (ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
-            || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys))
+            && (ifMarkLineHasOnlyDim(1, fromCoord, toCoord)
+            || ifMarkLineHasOnlyDim(0, fromCoord, toCoord))
         ) {
-            return true;
+            return coordSys.getAxis('y').containData(fromCoord[1]) || coordSys.getAxis('x').containData(fromCoord[0]);
+        }
+        const lineStart = coordSys.dataToPoint(item[0].coord);
+        const lineEnd = coordSys.dataToPoint(item[1].coord);
+        const area = (coordSys as Cartesian2D).getArea();
+        const isIntersect = linePolygonIntersect(
+            lineStart[0], lineStart[1], lineEnd[0], lineEnd[1],
+            [
+                [area.x, area.y], [area.width + area.x, area.y],
+                [area.width + area.x, area.height + area.y], [area.x, area.height + area.y]
+            ]
+        );
+        if (isIntersect) {
+            return isIntersect;
         }
     }
+
     return markerHelper.dataFilter(coordSys, item[0])
-        && markerHelper.dataFilter(coordSys, item[1]);
+        || markerHelper.dataFilter(coordSys, item[1]);
 }
 
 function updateSingleMarkerEndLayout(
@@ -306,9 +320,19 @@ class MarkLineView extends MarkerView {
         const lineDrawMap = this.markerGroupMap;
         const lineDraw = lineDrawMap.get(seriesId)
             || lineDrawMap.set(seriesId, new LineDraw());
+
         this.group.add(lineDraw.group);
 
         const mlData = createList(coordSys, seriesModel, mlModel);
+        if (mlData.filteredMarkLineNum) {
+            const clipPath = createClipPath(
+                (seriesModel.coordinateSystem as Cartesian2D), false, seriesModel
+            );
+            this.group.setClipPath(clipPath);
+        }
+        else {
+            this.group.removeClipPath();
+        }
 
         const fromData = mlData.from;
         const toData = mlData.to;
@@ -499,7 +523,8 @@ function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlMode
     return {
         from: fromData,
         to: toData,
-        line: lineData
+        line: lineData,
+        filteredMarkLineNum: optData.length
     };
 }
 
