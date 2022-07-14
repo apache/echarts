@@ -1321,9 +1321,14 @@ function mergeChildren(
     // Mapping children of a group simply by index, which
     // might be better performance.
     let index = 0;
+    let oldRemovedCount = 0;
     for (; index < newLen; index++) {
         const newChild = newChildren[index];
-        const oldChild = el.childAt(index);
+        // The index of oldChild may change if previous child not exists
+        // in newChildren and have no leave animation. By subtracting
+        // oldRemovedCount, we make sure to compare the children before
+        // removing from the parent.
+        const oldChild = el.childAt(index - oldRemovedCount);
         if (newChild) {
             doCreateOrUpdateEl(
                 api,
@@ -1335,7 +1340,11 @@ function mergeChildren(
             );
         }
         else {
+            const childCount = el.childCount();
             removeChildFromGroup(el, oldChild, seriesModel);
+            // If there is not leave animation, the child is removed from
+            // the parent directly, so we should update the index.
+            oldRemovedCount += childCount - el.childCount();
         }
     }
     for (let i = el.childCount() - 1; i >= index; i--) {

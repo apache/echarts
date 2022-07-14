@@ -39,6 +39,8 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
 
 
 
@@ -51,7 +53,7 @@ under the License.
             // 'map/js/china',
             // './data/nutrients.json'
         ], function (echarts) {
-            function createCase(isTestingNull) {
+            function createCase(isTestingNull, hasAnimation) {
                 var option;
                 var cellSize = [50, 51];
                 var isFirst = true;
@@ -78,7 +80,7 @@ under the License.
                             },
                             name: 'a',
                             coordinateSystem: 'calendar',
-                            animation: 0,
+                            animation: hasAnimation ? 1000 : 0,
                             data: [
                                 ['2022-01-16', 'e', false]
                             ],
@@ -136,9 +138,36 @@ under the License.
                                         name: 'bar'
                                     };
 
+                                const right = api.value(2)
+                                    ? {
+                                    type: 'rect',
+                                    shape: {
+                                        x: cellWidth,
+                                        y: 0,
+                                        width: 20,
+                                        height: 15
+                                    },
+                                    position,
+                                    style: {
+                                        fill: 'blue'
+                                    }
+                                }
+                                : {
+                                    type: 'circle',
+                                    shape: {
+                                        cx: cellWidth + 20,
+                                        cy: 20,
+                                        r: 15
+                                    },
+                                    position,
+                                    style: {
+                                        fill: 'red'
+                                    }
+                                };
+
                                 const group = {
                                     type: 'group',
-                                    children: [rect, borderLeft]
+                                    children: [rect, borderLeft, right]
                                 };
                                 return group;
                             },
@@ -153,10 +182,12 @@ under the License.
                 };
 
                 var rendered = isTestingNull ? ' NOT' : '';
-                var chart = testHelper.create(echarts, 'main' + (isTestingNull ? '1' : '0'), {
+                var chartId = (isTestingNull ? 2 : 0) + (hasAnimation ? 1 : 0);
+                var chart = testHelper.create(echarts, 'main' + chartId, {
                     title: [
                         'Update group with ' + (isTestingNull ? 'null' : '{}') + ' as new child',
-                        'The red bar should be' + rendered + ' rendered after "Update"'
+                        'Animation: ' + (hasAnimation ? 'true' : 'false'),
+                        'The red shapes should be' + rendered + ' rendered after "Update"'
                     ],
                     option: option,
                     // height: 300,
@@ -179,8 +210,10 @@ under the License.
                 });
             }
 
-            createCase(false);
-            createCase(true);
+            createCase(false, false);
+            createCase(true, false);
+            createCase(false, true);
+            createCase(true, true);
         });
         </script>
 
