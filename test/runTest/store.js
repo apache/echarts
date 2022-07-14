@@ -80,7 +80,8 @@ function getRunHash(params) {
     return [
         params.expectedVersion,
         params.actualVersion,
-        params.renderer
+        params.renderer,
+        params.useCoarsePointer
     ].join(TEST_HASH_SPLITTER);
 }
 
@@ -92,7 +93,8 @@ function parseRunHash(str) {
     return {
         expectedVersion: parts[0],
         actualVersion: parts[1],
-        renderer: parts[2]
+        renderer: parts[2],
+        useCoarsePointer: parts[3]
     };
 }
 

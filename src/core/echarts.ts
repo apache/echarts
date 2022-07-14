@@ -411,6 +411,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         this._dom = dom;
 
         let defaultRenderer = 'canvas';
+        let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
         if (__DEV__) {
             const root = (
@@ -419,6 +420,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             ) as any;
 
             defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+
+            defaultCoarsePointer = root.__ECHARTS__DEFAULT__COARSE_POINTER || defaultCoarsePointer;
 
             const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
             defaultUseDirtyRect = devUseDirtyRect == null
@@ -433,7 +436,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             height: opts.height,
             ssr: opts.ssr,
             useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect,
-            useCoarsePointer: opts.useCoarsePointer,
+            useCoarsePointer: opts.useCoarsePointer == null ? defaultCoarsePointer : opts.useCoarsePointer,
             pointerSize: opts.pointerSize
         });
         this._ssr = opts.ssr;

@@ -35,7 +35,7 @@ under the License.
         <style>
         </style>
 
-
+        <h3>__ECHARTS__DEFAULT__COARSE_POINTER: <span id="debug"></span></h3>
 
         <div id="main0"></div>
         <div id="main1"></div>
@@ -49,6 +49,9 @@ under the License.
             // 'map/js/china',
             // './data/nutrients.json'
         ], function (echarts) {
+            var debug = document.getElementById('debug');
+            debug.innerText = window.__ECHARTS__DEFAULT__COARSE_POINTER;
+
             var option;
 
             option = {
@@ -58,7 +61,12 @@ under the License.
                     type: 'scatter',
                     data: [[11, 22], [33, 44]],
                     symbol: 'pin',
-                    symbolSize: 100
+                    symbolSize: 100,
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
                 },
                 tooltip: {
                     show: true
@@ -90,7 +98,12 @@ under the License.
                     type: 'scatter',
                     data: [[11, 22], [33, 44]],
                     symbol: 'pin',
-                    symbolSize: 100
+                    symbolSize: 100,
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
                 },
                 tooltip: {
                     show: true
@@ -123,7 +136,12 @@ under the License.
                     type: 'scatter',
                     data: [[11, 22], [33, 44]],
                     symbol: 'pin',
-                    symbolSize: 100
+                    symbolSize: 100,
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
                 },
                 tooltip: {
                     show: true
