@@ -215,7 +215,7 @@ function updateSingleMarkerEndLayout(
     else {
         // Chart like bar may have there own marker positioning logic
         if (seriesModel.getMarkerPosition) {
-            // Use the getMarkerPoisition
+            // Use the getMarkerPosition
             point = seriesModel.getMarkerPosition(
                 data.getValues(data.dimensions, idx)
             );
