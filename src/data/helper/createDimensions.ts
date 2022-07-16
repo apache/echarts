@@ -39,7 +39,7 @@ import { BE_ORDINAL, guessOrdinal } from './sourceHelper';
 import {
     createDimNameMap, ensureSourceDimNameMap, SeriesDataSchema, shouldOmitUnusedDimensions
 } from './SeriesDataSchema';
-
+import { DIMENSIONS_LIMIT } from '../../util/constant';
 
 export interface CoordDimensionDefinition extends DimensionDefinition {
     dimsDef?: (DimensionName | { name: DimensionName, defaultTooltip?: boolean })[];
@@ -112,11 +112,17 @@ export default function prepareSeriesDataSchema(
     const dimsDef = opt.dimensionsDefine || source.dimensionsDefine || [];
     const coordDimNameMap = createHashMap<true, DimensionName>();
     const resultList: SeriesDimensionDefine[] = [];
-    const dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount);
+    let dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount);
+    const dimensionsLimit = source.dimensionsLimit;
+    if (!dimensionsLimit && dimCount > DIMENSIONS_LIMIT) {
+        dimCount = DIMENSIONS_LIMIT;
+    }
 
     // Try to ignore unsed dimensions if sharing a high dimension datastore
     // 30 is an experience value.
-    const omitUnusedDimensions = opt.canOmitUnusedDimensions && shouldOmitUnusedDimensions(dimCount);
+    // but you can use the key of dimensionsLimit can expand it.
+    const omitUnusedDimensions = opt.canOmitUnusedDimensions
+        && shouldOmitUnusedDimensions(dimCount, dimensionsLimit);
 
     const isUsingSourceDimensionsDef = dimsDef === source.dimensionsDefine;
     const dataDimNameMap = isUsingSourceDimensionsDef

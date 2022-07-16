@@ -164,7 +164,7 @@ class SeriesData<
      */
     readonly dimensions: SeriesDimensionName[];
 
-    // Infomation of each data dimension, like data type.
+    // Information of each data dimension, like data type.
     private _dimInfos: Record<SeriesDimensionName, SeriesDimensionDefine>;
 
     private _dimOmitted = false;

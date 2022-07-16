@@ -47,6 +47,7 @@ export interface DatasetOption extends
     seriesLayoutBy?: SeriesLayoutBy;
     sourceHeader?: OptionSourceHeader;
     source?: OptionSourceData;
+    dimensionsLimit?: number;
 
     fromDatasetIndex?: number;
     fromDatasetId?: string;

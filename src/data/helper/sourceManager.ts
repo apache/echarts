@@ -234,6 +234,7 @@ export class SourceManager {
             // `upSource.dimensionsDefine` is detected by `seriesLayoutBy: 'column'`,
             // but series need `seriesLayoutBy: 'row'`.
             const dimensions = retrieve2(newMetaRawOption.dimensions, upMetaRawOption.dimensions);
+            const dimensionsLimit = retrieve2(newMetaRawOption.dimensionsLimit, upMetaRawOption.dimensionsLimit);
 
             // We share source with dataset as much as possible
             // to avoid extra memroy cost of high dimensional data.
@@ -242,7 +243,7 @@ export class SourceManager {
                 || dimensions;
             resultSourceList = needsCreateSource ? [createSource(
                 data,
-                { seriesLayoutBy, sourceHeader, dimensions },
+                { seriesLayoutBy, sourceHeader, dimensions, dimensionsLimit },
                 sourceFormat
             )] : [];
         }
@@ -449,10 +450,13 @@ export class SourceManager {
         let seriesLayoutBy: SeriesLayoutBy;
         let sourceHeader: OptionSourceHeader;
         let dimensions: DimensionDefinitionLoose[];
+        let dimensionsLimit: number | undefined;
+
         if (isSeries(sourceHost)) {
             seriesLayoutBy = sourceHost.get('seriesLayoutBy', true);
             sourceHeader = sourceHost.get('sourceHeader', true);
             dimensions = sourceHost.get('dimensions', true);
+            dimensionsLimit = sourceHost.get('dimensionsLimit', true);
         }
         // See [REQUIREMENT_MEMO], `non-root-dataset` do not support them.
         else if (!this._getUpstreamSourceManagers().length) {
@@ -460,8 +464,10 @@ export class SourceManager {
             seriesLayoutBy = model.get('seriesLayoutBy', true);
             sourceHeader = model.get('sourceHeader', true);
             dimensions = model.get('dimensions', true);
+            dimensionsLimit = model.get('dimensionsLimit', true);
         }
-        return { seriesLayoutBy, sourceHeader, dimensions };
+
+        return { seriesLayoutBy, sourceHeader, dimensions, dimensionsLimit };
     }
 
 }

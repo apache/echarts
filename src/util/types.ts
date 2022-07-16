@@ -1675,6 +1675,7 @@ export interface SeriesEncodeOptionMixin {
     seriesLayoutBy?: SeriesLayoutBy;
     sourceHeader?: OptionSourceHeader;
     dimensions?: DimensionDefinitionLoose[];
+    dimensionsLimit?: number;
     encode?: OptionEncode
 }
 
