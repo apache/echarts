@@ -29,7 +29,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { ColorString } from '../../util/types';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 
 type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>;
 
