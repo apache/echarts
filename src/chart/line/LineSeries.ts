@@ -48,7 +48,7 @@ type LineDataValue = OptionDataValue | OptionDataValue[];
 interface LineStateOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
-        scale?: boolean
+        scale?: boolean | number
     }
 }
 

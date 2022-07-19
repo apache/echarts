@@ -184,7 +184,7 @@ export interface GraphSeriesOption
 
     emphasis?: {
         focus?: Exclude<GraphNodeItemOption['emphasis'], undefined>['focus']
-        scale?: boolean
+        scale?: boolean | number
         label?: SeriesLabelOption
         edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
