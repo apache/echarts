@@ -67,20 +67,6 @@ class CartesianAxisView extends AxisView {
 
         const layout = cartesianAxisHelper.layout(gridModel, axisModel);
 
-        function calcDistanceToAxis() {
-            const axis = axisModel.axis;
-            if (axis.grid.model.get('containLabel') && !axis.model.get('axisLabel').inside) {
-                const labelUnionRect = estimateLabelUnionRect(axis);
-                if (!labelUnionRect) {
-                    return 0;
-                }
-                const dim = axis.isHorizontal() ? 'height' : 'width';
-                const margin = axisModel.getModel('axisLabel').get('margin');
-                return labelUnionRect[dim] + margin;
-            }
-            return 0;
-        }
-
         const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
             handleAutoShown(elementType) {
                 const cartesians = gridModel.coordinateSystem.getCartesians();
@@ -93,7 +79,7 @@ class CartesianAxisView extends AxisView {
                 // Not show axisTick or axisLine if other axis is category / time
                 return false;
             }
-        } as AxisBuilderCfg, layout), calcDistanceToAxis());
+        } as AxisBuilderCfg, layout));
 
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
 

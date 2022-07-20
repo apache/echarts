@@ -24,6 +24,7 @@ import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
+import { estimateLabelUnionRect } from '../../coord/axisHelper';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {shouldShowAllLabels} from '../../coord/axisHelper';
@@ -128,19 +129,15 @@ class AxisBuilder {
 
     opt: AxisBuilderCfg;
 
-    labelGap: number;
-
     readonly group = new graphic.Group();
 
     private _transformGroup: graphic.Group;
 
-    constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg, labelGap?: number) {
+    constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg) {
 
         this.opt = opt;
 
         this.axisModel = axisModel;
-
-        this.labelGap = labelGap;
 
         // Default value
         defaults(
@@ -355,7 +352,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
 
         // This bit fixes the label overlap issue for the time chart.
-        // See https://github.com/apache/echarts/issues/14266 for more.
+        // See https://github.com/apache/echarts/issues/142156 for more.
         if (axisModel.get(['axisLabel', 'hideOverlap'])) {
             const labelList = prepareLayoutList(map(labelEls, label => ({
                 label,
@@ -369,30 +366,46 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         }
     },
 
-    axisName(opt, axisModel, group, transformGroup, labelGap?) {
+    axisName(opt, axisModel, group, transformGroup) {
+        function calcDistanceToAxis() {
+            const defaultMargin = 10;
+            const axis = axisModel.axis;
+            // const isHorizontal = axis.getRotate() === 0 || axis.getRotate() === 180;
+            const isHorizontal = true;
+            const labelUnionRect = estimateLabelUnionRect(axis);
+            if (!labelUnionRect) {
+                return 0;
+            }
+            const dim = isHorizontal ? 'height' : 'width';
+            const margin = axisModel.getModel('axisLabel').get('margin');
+            return labelUnionRect[dim] + margin + defaultMargin;
+        }
         const name = retrieve(opt.axisName, axisModel.get('name'));
 
         if (!name) {
             return;
         }
-
+        const labelGap = calcDistanceToAxis();
         const nameLocation = axisModel.get('nameLocation');
         const nameDirection = opt.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
-        const gap = (axisModel.get('nameGap') || 0) + labelGap;
-
+        const gap = (axisModel.get('nameGap') || 0);
         const extent = axisModel.axis.getExtent();
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
+
         const pos = [
             nameLocation === 'start'
                 ? extent[0] - gapSignal * gap
+                : nameLocation === 'outsideStart'
+                ? extent[0] + gapSignal * (gap) + (nameDirection * labelGap)
                 : nameLocation === 'end'
                 ? extent[1] + gapSignal * gap
-                : (extent[0] + extent[1]) / 2, // 'middle'
-            // Reuse labelOffset.
-            isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
-        ];
-
+                : nameLocation === 'outsideEnd'
+                ? extent[1] - gapSignal * (gap) - (nameDirection * labelGap)
+                : (extent[0] + extent[1]) / 2, // 'middle' or 'outsideMiddle'
+            // Resuse labelOffset.
+            isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * (gap + (isNameLocationOutside(nameLocation) ? labelGap : 0)) : isNameLocationOutside(nameLocation) ? nameDirection * (gap + labelGap) : 0
+        ]
         let labelLayout;
 
         let nameRotation = axisModel.get('nameRotate');
@@ -481,14 +494,15 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 };
 
 function endTextLayout(
-    rotation: number, textPosition: 'start' | 'middle' | 'end', textRotate: number, extent: number[]
+    rotation: number, textPosition: 'start' | 'middle' | 'end' | 'outsideStart' | 'outsideMiddle' | 'outsideEnd', textRotate: number, extent: number[]
 ) {
     const rotationDiff = remRadian(textRotate - rotation);
     let textAlign: ZRTextAlign;
     let textVerticalAlign: ZRTextVerticalAlign;
     const inverse = extent[0] > extent[1];
-    const onLeft = (textPosition === 'start' && !inverse)
-        || (textPosition !== 'start' && inverse);
+    const textIsStart = textPosition.toLocaleLowerCase().includes('start');
+    const onLeft = ((textIsStart) && !inverse)
+        || (!textIsStart && inverse);
 
     if (isRadianAroundZero(rotationDiff - PI / 2)) {
         textVerticalAlign = onLeft ? 'bottom' : 'top';
@@ -605,9 +619,12 @@ function isTwoLabelOverlapped(
 }
 
 function isNameLocationCenter(nameLocation: string) {
-    return nameLocation === 'middle' || nameLocation === 'center';
+    return nameLocation === 'middle' || nameLocation === 'center' || nameLocation === 'outsideMiddle';
 }
 
+function isNameLocationOutside(nameLocation: string) {
+    return nameLocation.toLowerCase().includes('outside')
+}
 
 function createTicks(
     ticksCoords: TickCoord[],
