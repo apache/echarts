@@ -27,7 +27,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
-import { estimateLabelUnionRect } from '../../coord/axisHelper';
 import { Payload } from '../../util/types';
 import { isIntervalOrLogScale } from '../../scale/helper';
 

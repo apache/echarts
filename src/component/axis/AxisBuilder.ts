@@ -24,10 +24,9 @@ import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
-import { estimateLabelUnionRect } from '../../coord/axisHelper';
+import { estimateLabelUnionRect, shouldShowAllLabels } from '../../coord/axisHelper';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
@@ -404,8 +403,10 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                 ? extent[1] - gapSignal * (gap) - (nameDirection * labelGap)
                 : (extent[0] + extent[1]) / 2, // 'middle' or 'outsideMiddle'
             // Resuse labelOffset.
-            isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * (gap + (isNameLocationOutside(nameLocation) ? labelGap : 0)) : isNameLocationOutside(nameLocation) ? nameDirection * (gap + labelGap) : 0
-        ]
+            isNameLocationCenter(nameLocation)
+            ? opt.labelOffset + nameDirection * (gap + (isNameLocationOutside(nameLocation) ? labelGap : 0))
+            : isNameLocationOutside(nameLocation) ? nameDirection * (gap + labelGap) : 0
+        ];
         let labelLayout;
 
         let nameRotation = axisModel.get('nameRotate');
@@ -493,9 +494,9 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
 };
 
-function endTextLayout(
-    rotation: number, textPosition: 'start' | 'middle' | 'end' | 'outsideStart' | 'outsideMiddle' | 'outsideEnd', textRotate: number, extent: number[]
-) {
+function endTextLayout(rotation: number,
+    textPosition: 'start' | 'middle' | 'end' | 'outsideStart' | 'outsideMiddle' | 'outsideEnd',
+    textRotate: number, extent: number[]) {
     const rotationDiff = remRadian(textRotate - rotation);
     let textAlign: ZRTextAlign;
     let textVerticalAlign: ZRTextVerticalAlign;
@@ -623,7 +624,7 @@ function isNameLocationCenter(nameLocation: string) {
 }
 
 function isNameLocationOutside(nameLocation: string) {
-    return nameLocation.toLowerCase().includes('outside')
+    return nameLocation.toLowerCase().includes('outside');
 }
 
 function createTicks(
