@@ -191,7 +191,7 @@ export function dataFilter(
     },
     item: MarkerPositionOption
 ) {
-    // Alwalys return true if there is no coordSys
+    // Always return true if there is no coordSys
     return (coordSys && coordSys.containData && item.coord && !hasXOrY(item))
         ? coordSys.containData(item.coord) : true;
 }
@@ -204,7 +204,7 @@ export function zoneFilter(
     item1: MarkerPositionOption,
     item2: MarkerPositionOption
 ) {
-    // Alwalys return true if there is no coordSys
+    // Always return true if there is no coordSys
     return (coordSys && coordSys.containZone && item1.coord && item2.coord && !hasXOrY(item1) && !hasXOrY(item2))
         ? coordSys.containZone(item1.coord, item2.coord) : true;
 }
