@@ -154,7 +154,7 @@ const markLineTransform = function (
     return normalizedItem;
 };
 
-function isInifinity(val: ScaleDataValue) {
+function isInfinity(val: ScaleDataValue) {
     return !isNaN(val as number) && !isFinite(val as number);
 }
 
@@ -167,7 +167,7 @@ function ifMarkLineHasOnlyDim(
 ) {
     const otherDimIndex = 1 - dimIndex;
     const dimName = coordSys.dimensions[dimIndex];
-    return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex])
+    return isInfinity(fromCoord[otherDimIndex]) && isInfinity(toCoord[otherDimIndex])
         && fromCoord[dimIndex] === toCoord[dimIndex] && coordSys.getAxis(dimName).containData(fromCoord[dimIndex]);
 }
 
@@ -215,7 +215,7 @@ function updateSingleMarkerEndLayout(
     else {
         // Chart like bar may have there own marker positioning logic
         if (seriesModel.getMarkerPosition) {
-            // Use the getMarkerPoisition
+            // Use the getMarkerPosition
             point = seriesModel.getMarkerPosition(
                 data.getValues(data.dimensions, idx)
             );
@@ -240,10 +240,10 @@ function updateSingleMarkerEndLayout(
             const xAxis = coordSys.getAxis('x') as Axis2D;
             const yAxis = coordSys.getAxis('y') as Axis2D;
             const dims = coordSys.dimensions;
-            if (isInifinity(data.get(dims[0], idx))) {
+            if (isInfinity(data.get(dims[0], idx))) {
                 point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[isFrom ? 0 : 1]);
             }
-            else if (isInifinity(data.get(dims[1], idx))) {
+            else if (isInfinity(data.get(dims[1], idx))) {
                 point[1] = yAxis.toGlobalCoord(yAxis.getExtent()[isFrom ? 0 : 1]);
             }
         }

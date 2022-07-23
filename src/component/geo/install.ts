@@ -23,7 +23,7 @@ import geoCreator from '../../coord/geo/geoCreator';
 import { ActionInfo } from '../../util/types';
 import { each } from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import { updateCenterAndZoom, RoamPaylod } from '../../action/roamHelper';
+import { updateCenterAndZoom, RoamPayload } from '../../action/roamHelper';
 import MapSeries from '../../chart/map/MapSeries';
 import GeoView from './GeoView';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
@@ -115,7 +115,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         type: 'geoRoam',
         event: 'geoRoam',
         update: 'updateTransform'
-    }, function (payload: RoamPaylod, ecModel: GlobalModel, api: ExtensionAPI) {
+    }, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
         const componentType = payload.componentType || 'series';
 
         ecModel.eachComponent(
