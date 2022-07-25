@@ -57,6 +57,7 @@ under the License.
                 var option;
                 var cellSize = [50, 51];
                 var isFirst = true;
+                var clickTimes = 0;
 
                 option = {
                     calendar: [
@@ -80,7 +81,7 @@ under the License.
                             },
                             name: 'a',
                             coordinateSystem: 'calendar',
-                            animation: hasAnimation ? 1000 : 0,
+                            animation: hasAnimation ? 3000 : 0,
                             data: [
                                 ['2022-01-16', 'e', false]
                             ],
@@ -102,7 +103,7 @@ under the License.
                                     },
                                     position,
                                     style: {
-                                        fill: isFirst ? '#eee' : '#6ee'
+                                        fill: api.value(2) ? '#eee' : '#6ee'
                                     },
                                     textContent: {
                                         style: {
@@ -140,16 +141,16 @@ under the License.
 
                                 const right = api.value(2)
                                     ? {
-                                    type: 'rect',
+                                    type: 'circle',
                                     shape: {
-                                        x: cellWidth,
-                                        y: 0,
-                                        width: 20,
-                                        height: 15
+                                        cx: cellWidth + 20,
+                                        cy: 20,
+                                        r: 30
                                     },
                                     position,
                                     style: {
-                                        fill: 'blue'
+                                        fill: 'transparent',
+                                        stroke: 'blue',
                                     }
                                 }
                                 : {
@@ -193,19 +194,25 @@ under the License.
                     // height: 300,
                     buttons: [{text: 'Update', onclick: function () {
                         isFirst = false;
+                        var testId = clickTimes % 2;
                         chart.setOption({
                             calendar: {
-                            range: ['2022-02']
-                        },
+                                range: testId === 0 ? ['2022-02'] : ['2022-01']
+                            },
                             series: [
                             {
                                 type: 'custom',
                                 data: [
-                                    ['2022-02-13', 'e', true]
+                                    [
+                                        testId === 0 ? '2022-02-13' : '2022-01-16' ,
+                                        'e',
+                                        testId === 0
+                                    ]
                                 ]
                             }
                             ]
                         });
+                        ++clickTimes;
                     }}]
                 });
             }
