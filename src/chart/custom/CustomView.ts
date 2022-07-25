@@ -1321,15 +1321,15 @@ function mergeChildren(
     // Mapping children of a group simply by index, which
     // might be better performance.
     let index = 0;
-    let oldRemovedCount = 0;
     for (; index < newLen; index++) {
         const newChild = newChildren[index];
-        // The index of oldChild may change if previous child not exists
-        // in newChildren and have no leave animation. By subtracting
-        // oldRemovedCount, we make sure to compare the children before
-        // removing from the parent.
-        const oldChild = el.childAt(index - oldRemovedCount);
+        const oldChild = el.childAt(index);
         if (newChild) {
+            if (newChild.ignore == null) {
+                // The old child is set to be ignored if null (see comments
+                // below). So we need to set ignore to be false back.
+                newChild.ignore = false;
+            }
             doCreateOrUpdateEl(
                 api,
                 oldChild,
@@ -1340,11 +1340,11 @@ function mergeChildren(
             );
         }
         else {
-            const childCount = el.childCount();
-            removeChildFromGroup(el, oldChild, seriesModel);
-            // If there is not leave animation, the child is removed from
-            // the parent directly, so we should update the index.
-            oldRemovedCount += childCount - el.childCount();
+            // If the new element option is null, it means to remove the old
+            // element. But we cannot really remove the element from the group
+            // directly, because the element order may not be stable when this
+            // element is added back. So we set the element to be ignored.
+            oldChild.ignore = true;
         }
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
