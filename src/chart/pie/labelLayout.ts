@@ -394,7 +394,8 @@ export default function pieLabelLayout(
 
         if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
             each(label.states, setNotShow);
-            label.ignore = true;
+            each(labelLine.states, setNotShow);
+            label.ignore = labelLine.ignore = true;
             return;
         }
 

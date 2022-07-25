@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {updateCenterAndZoom, RoamPaylod} from '../../action/roamHelper';
+import {updateCenterAndZoom, RoamPayload} from '../../action/roamHelper';
 import { Payload } from '../../util/types';
 import TreeSeriesModel from './TreeSeries';
 import GlobalModel from '../../model/Global';
@@ -52,7 +52,7 @@ export function installTreeAction(registers: EChartsExtensionInstallRegisters) {
         // the layout. So don't need to go through the whole update process, such
         // as 'dataPrcocess', 'coordSystemUpdate', 'layout' and so on.
         update: 'none'
-    }, function (payload: RoamPaylod, ecModel: GlobalModel, api: ExtensionAPI) {
+    }, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachComponent({
             mainType: 'series', subType: 'tree', query: payload
         }, function (seriesModel: TreeSeriesModel) {
