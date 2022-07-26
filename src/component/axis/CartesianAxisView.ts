@@ -139,6 +139,12 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const p2 = [];
 
         const lineStyle = lineStyleModel.getLineStyle();
+
+        let subPixelOptimize = axisModel.get('subPixelOptimize');
+        if (subPixelOptimize == null) {
+            subPixelOptimize = true;
+        }
+
         for (let i = 0; i < ticksCoords.length; i++) {
             const tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
@@ -159,7 +165,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             const tickValue = ticksCoords[i].tickValue;
             axisGroup.add(new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
-                subPixelOptimize: true,
+                subPixelOptimize,
                 autoBatch: true,
                 shape: {
                     x1: p1[0],
@@ -193,6 +199,10 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         const lineStyle = lineStyleModel.getLineStyle();
 
+        let subPixelOptimize = axisModel.get('subPixelOptimize');
+        if (subPixelOptimize == null) {
+            subPixelOptimize = true;
+        }
 
         for (let i = 0; i < minorTicksCoords.length; i++) {
             for (let k = 0; k < minorTicksCoords[i].length; k++) {
@@ -213,7 +223,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
                 axisGroup.add(new graphic.Line({
                     anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
-                    subPixelOptimize: true,
+                    subPixelOptimize,
                     autoBatch: true,
                     shape: {
                         x1: p1[0],

@@ -109,6 +109,11 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const p1 = [];
         const p2 = [];
 
+        let subPixelOptimize = axisModel.get('subPixelOptimize');
+        if (subPixelOptimize == null) {
+            subPixelOptimize = true;
+        }
+
         for (let i = 0; i < ticksCoords.length; ++i) {
             const tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
             if (isHorizontal) {
@@ -126,7 +131,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             const colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Line({
-                subPixelOptimize: true,
+                subPixelOptimize,
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
