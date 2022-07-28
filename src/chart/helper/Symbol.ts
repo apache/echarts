@@ -27,7 +27,7 @@ import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin 
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
-import { extend, isNumber } from 'zrender/src/core/util';
+import { extend } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTransition';
