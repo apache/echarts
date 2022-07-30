@@ -186,7 +186,10 @@ export class ActionPlayback {
                 screenshotTaken = true;
                 break;
             case 'valuechange':
-                document.querySelector(op.selector).value = op.value;
+                const selector = document.querySelector(op.selector);
+                selector.value = op.value;
+                // changing value via js won't trigger `change` event, so trigger it manually
+                selector.dispatchEvent(new Event('change'));
                 break;
         }
 

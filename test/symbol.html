@@ -23,6 +23,8 @@ under the License.
         <meta charset="utf-8">
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
@@ -35,12 +37,12 @@ under the License.
         <script>
 
             require([
-                'echarts'
-            ], function (echarts) {
+                '../node_modules/seedrandom/seedrandom.js',
+                'echarts',
+            ], function (seedrandom, echarts) {
+                Math.random = new seedrandom('echarts-random');
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 var symbolList = [
                     'circle',
@@ -86,12 +88,6 @@ under the License.
                     legend: {
                         data: series.map(function (series) {return series.name;})
                     },
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'cross'
-                        }
-                    },
                     xAxis: {
                         type: 'value',
                         splitLine: {
@@ -106,6 +102,58 @@ under the License.
                     },
                     series: series
                 });
+
+                window.addEventListener('resize', chart.resize);
+
+                var symbolScaleValueMap = {
+                    'undefined': undefined,
+                    'null': null,
+                    'true': true,
+                    'false': false,
+                    '0': 0,
+                    '0.5': 0.5,
+                    '1': 1,
+                    '1.1': 1.1,
+                    '2': 2,
+                    'NaN': NaN,
+                    'Infinity': Infinity,
+                    'Negative(-1)': -1,
+                    'Empty String': '',
+                    'String(\'abc\')': 'abc'
+                }
+
+                var config = {
+                    hoverScale: 'false',
+                    tooltipTrigger: 'item'
+                };
+
+                var gui = new dat.GUI();
+                gui.add(config, 'hoverScale', Object.keys(symbolScaleValueMap))
+                    .onChange(update);
+                gui.add(config, 'tooltipTrigger', ['axis', 'item'])
+                    .onChange(update);
+
+                update();
+
+                function update() {
+                    var activeHoverScale = symbolScaleValueMap[config.hoverScale];
+                    console.log('active hoverScale', activeHoverScale);
+                    series.forEach(function (series) {
+                        series.emphasis = series.emphasis || {};
+                        series.emphasis.scale = activeHoverScale;
+                    });
+                    var tooltip = {
+                        trigger: config.tooltipTrigger,
+                        axisPointer: config.tooltipTrigger === 'axis'
+                            ? { type: 'cross' }
+                            : null
+                    };
+                    console.log(tooltip);
+                    chart.setOption({
+                        tooltip: tooltip,
+                        series: series
+                    });
+                }
             });
 
         </script>
