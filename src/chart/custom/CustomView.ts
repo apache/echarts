@@ -1339,7 +1339,7 @@ function mergeChildren(
                 el
             );
         }
-        else {
+        else if (oldChild) {
             // If the new element option is null, it means to remove the old
             // element. But we cannot really remove the element from the group
             // directly, because the element order may not be stable when this
