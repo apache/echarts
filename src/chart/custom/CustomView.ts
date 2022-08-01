@@ -1341,7 +1341,11 @@ function mergeChildren(
         }
         else {
             if (__DEV__) {
-                assert(oldChild, 'renderItem should not return a group containing elements as null/undefined/{} if they do not exist before.');
+                assert(
+                    oldChild,
+                    'renderItem should not return a group containing elements'
+                    + ' as null/undefined/{} if they do not exist before.'
+                );
             }
             // If the new element option is null, it means to remove the old
             // element. But we cannot really remove the element from the group
