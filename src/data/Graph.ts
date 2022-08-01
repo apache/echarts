@@ -387,6 +387,49 @@ class GraphNode {
         }
         return dataIndices;
     }
+
+    getFullPathDataIndices(): {node: number[], edge: number[]} {
+        const dataIndices = {
+            edge: [] as number[],
+            node: [] as number[]
+        };
+
+        for (let i = 0; i < this.edges.length; i++) {
+            const adjacentEdge = this.edges[i];
+            if (adjacentEdge.dataIndex < 0) {
+              continue;
+            }
+
+            dataIndices.edge.indexOf(adjacentEdge.dataIndex) === -1
+            ? dataIndices.edge.push(adjacentEdge.dataIndex) : null;
+            const sourceNodesQueue = [adjacentEdge.node1];
+            const targetNodesQueue = [adjacentEdge.node2];
+
+            while (sourceNodesQueue.length > 0) {
+              const sourceNode = sourceNodesQueue.shift();
+              dataIndices.node.indexOf(sourceNode.dataIndex) === -1
+              ? dataIndices.node.push(sourceNode.dataIndex) : null;
+              for (let j = 0; j < sourceNode.inEdges.length; j++) {
+                dataIndices.edge.indexOf(sourceNode.inEdges[j].dataIndex) === -1
+                ? dataIndices.edge.push(sourceNode.inEdges[j].dataIndex) : null;
+                sourceNodesQueue.push(sourceNode.inEdges[j].node1);
+              }
+            }
+
+            while (targetNodesQueue.length > 0) {
+              const targetNode = targetNodesQueue.shift();
+              dataIndices.node.indexOf(targetNode.dataIndex) === -1
+              ? dataIndices.node.push(targetNode.dataIndex) : null;
+              for (let j = 0; j < targetNode.outEdges.length; j++) {
+                dataIndices.edge.indexOf(targetNode.outEdges[j].dataIndex) === -1
+                ? dataIndices.edge.push(targetNode.outEdges[j].dataIndex) : null;
+                targetNodesQueue.push(targetNode.outEdges[j].node2);
+              }
+            }
+        }
+
+        return dataIndices;
+    }
 }
 
 
@@ -428,6 +471,40 @@ class GraphEdge {
             edge: [this.dataIndex],
             node: [this.node1.dataIndex, this.node2.dataIndex]
         };
+    }
+
+    getFullPathDataIndices(): {node: number[], edge: number[]} {
+        const dataIndices = {
+          edge: [] as number[],
+          node: [] as number[]
+        };
+
+        dataIndices.edge.push(this.dataIndex);
+        const sourceNodes = [this.node1];
+        const targetNodes = [this.node2];
+
+        while (sourceNodes.length > 0) {
+          const sourceNode = sourceNodes.shift();
+          dataIndices.node.indexOf(sourceNode.dataIndex) === -1 ? dataIndices.node.push(sourceNode.dataIndex) : null;
+          for (let j = 0; j < sourceNode.inEdges.length; j++) {
+            dataIndices.edge.indexOf(sourceNode.inEdges[j].dataIndex) === -1
+            ? dataIndices.edge.push(sourceNode.inEdges[j].dataIndex) : null;
+            sourceNodes.push(sourceNode.inEdges[j].node1);
+          }
+        }
+
+        while (targetNodes.length > 0) {
+          const targetNode = targetNodes.shift();
+          dataIndices.node.indexOf(targetNode.dataIndex) === -1
+          ? dataIndices.node.push(targetNode.dataIndex) : null;
+          for (let j = 0; j < targetNode.outEdges.length; j++) {
+            dataIndices.edge.indexOf(targetNode.outEdges[j].dataIndex) === -1
+            ? dataIndices.edge.push(targetNode.outEdges[j].dataIndex) : null;
+            targetNodes.push(targetNode.outEdges[j].node2);
+          }
+        }
+
+      return dataIndices;
     }
 }
 

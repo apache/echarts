@@ -69,7 +69,7 @@ export interface GraphNodeStateOption<TCbParams = never> {
 
 
 interface ExtraEmphasisState {
-    focus?: DefaultEmphasisFocus | 'adjacency'
+    focus?: DefaultEmphasisFocus | 'adjacency' | 'fullPath'
 }
 interface GraphNodeStatesMixin {
     emphasis?: ExtraEmphasisState
