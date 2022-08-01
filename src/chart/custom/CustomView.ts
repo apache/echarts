@@ -99,7 +99,7 @@ import {
     applyKeyframeAnimation,
     stopPreviousKeyframeAnimationAndRestore
 } from '../../animation/customGraphicKeyframeAnimation';
-import { SeriesModel } from '../../echarts.all';
+import type SeriesModel from '../../model/Series';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
