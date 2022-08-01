@@ -24,6 +24,8 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, Dictionary } from '../../util/types';
 import type BaseAxisPointer from '../axisPointer/BaseAxisPointer';
+import Element from 'zrender/src/Element';
+import * as graphic from '../../util/graphic';
 
 const axisPointerClazz: Dictionary<AxisPointerConstructor> = {};
 

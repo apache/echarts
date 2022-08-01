@@ -102,7 +102,9 @@ class ParallelAxisView extends ComponentView {
             builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api
         );
 
-        graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+        graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel, () => {
+            graphic.setGroupSubPixelOptimize(this._axisGroup, true);
+        });
     }
 
     // /**

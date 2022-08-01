@@ -96,7 +96,9 @@ class CartesianAxisView extends AxisView {
         const isInitialSortFromBarRacing = payload && payload.type === 'changeAxisOrder' && payload.isInitSort;
 
         if (!isInitialSortFromBarRacing) {
-            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
+            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel, () => {
+                graphic.setGroupSubPixelOptimize(this._axisGroup, true);
+            });
         }
 
         super.render(axisModel, ecModel, api, payload);
@@ -140,11 +142,6 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         const lineStyle = lineStyleModel.getLineStyle();
 
-        let subPixelOptimize = axisModel.get('subPixelOptimize');
-        if (subPixelOptimize == null) {
-            subPixelOptimize = true;
-        }
-
         for (let i = 0; i < ticksCoords.length; i++) {
             const tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
@@ -165,7 +162,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             const tickValue = ticksCoords[i].tickValue;
             axisGroup.add(new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
-                subPixelOptimize,
+                subPixelOptimize: false,
                 autoBatch: true,
                 shape: {
                     x1: p1[0],
@@ -199,11 +196,6 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         const lineStyle = lineStyleModel.getLineStyle();
 
-        let subPixelOptimize = axisModel.get('subPixelOptimize');
-        if (subPixelOptimize == null) {
-            subPixelOptimize = true;
-        }
-
         for (let i = 0; i < minorTicksCoords.length; i++) {
             for (let k = 0; k < minorTicksCoords[i].length; k++) {
                 const tickCoord = axis.toGlobalCoord(minorTicksCoords[i][k].coord);
@@ -223,7 +215,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
                 axisGroup.add(new graphic.Line({
                     anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
-                    subPixelOptimize,
+                    subPixelOptimize: false,
                     autoBatch: true,
                     shape: {
                         x1: p1[0],

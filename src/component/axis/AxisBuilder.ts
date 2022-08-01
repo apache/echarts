@@ -270,7 +270,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
         const line = new graphic.Line({
             // Id for animation
-            subPixelOptimize: true,
+            subPixelOptimize: false,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -343,17 +343,12 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
     },
 
     axisTickLabel(opt, axisModel, group, transformGroup) {
-        let subPixelOptimize = axisModel.get('subPixelOptimize');
-        if (subPixelOptimize == null) {
-            subPixelOptimize = true;
-        }
-
-        const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt, subPixelOptimize);
+        const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt);
         const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt);
 
         fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
 
-        buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection, subPixelOptimize);
+        buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
 
         // This bit fixes the label overlap issue for the time chart.
         // See https://github.com/apache/echarts/issues/14266 for more.
@@ -615,8 +610,7 @@ function createTicks(
     tickTransform: matrixUtil.MatrixArray,
     tickEndCoord: number,
     tickLineStyle: PathStyleProps,
-    anidPrefix: string,
-    subPixelOptimize: boolean
+    anidPrefix: string
 ) {
     const tickEls = [];
     const pt1: number[] = [];
@@ -635,7 +629,7 @@ function createTicks(
         }
         // Tick line, Not use group transform to have better line draw
         const tickEl = new graphic.Line({
-            subPixelOptimize,
+            subPixelOptimize: false,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -657,8 +651,7 @@ function buildAxisMajorTicks(
     group: graphic.Group,
     transformGroup: graphic.Group,
     axisModel: AxisBaseModel,
-    opt: AxisBuilderCfg,
-    subPixelOptimize: boolean
+    opt: AxisBuilderCfg
 ) {
     const axis = axisModel.axis;
 
@@ -682,7 +675,7 @@ function buildAxisMajorTicks(
         {
             stroke: axisModel.get(['axisLine', 'lineStyle', 'color'])
         }
-    ), 'ticks', subPixelOptimize);
+    ), 'ticks');
 
     for (let i = 0; i < ticksEls.length; i++) {
         group.add(ticksEls[i]);
@@ -695,8 +688,7 @@ function buildAxisMinorTicks(
     group: graphic.Group,
     transformGroup: graphic.Group,
     axisModel: AxisBaseModel,
-    tickDirection: number,
-    subPixelOptimize: boolean
+    tickDirection: number
 ) {
     const axis = axisModel.axis;
 
@@ -726,8 +718,7 @@ function buildAxisMinorTicks(
 
     for (let i = 0; i < minorTicksCoords.length; i++) {
         const minorTicksEls = createTicks(
-            minorTicksCoords[i], transformGroup.transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i,
-            subPixelOptimize
+            minorTicksCoords[i], transformGroup.transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i
         );
         for (let k = 0; k < minorTicksEls.length; k++) {
             group.add(minorTicksEls[k]);

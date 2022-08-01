@@ -280,6 +280,14 @@ export function subPixelOptimizeLine(param: {
     return param;
 }
 
+export function setGroupSubPixelOptimize(group: Group, useSubPixelOptimize: boolean) {
+    group.traverse((el: Element) => {
+        if (el.type === 'line') {
+            (el as Line).attr('subPixelOptimize', useSubPixelOptimize);
+        }
+    });
+}
+
 /**
  * Sub pixel optimize rect for canvas
  */
@@ -391,7 +399,8 @@ function isPath(el: Displayable): el is Path {
 export function groupTransition(
     g1: Group,
     g2: Group,
-    animatableModel: Model<AnimationOptionMixin>
+    animatableModel: Model<AnimationOptionMixin>,
+    done?: () => void
 ) {
     if (!g1 || !g2) {
         return;
@@ -419,13 +428,15 @@ export function groupTransition(
     }
     const elMap1 = getElMap(g1);
 
+    let isFirstElement = true;
     g2.traverse(function (el) {
         if (isNotGroup(el) && el.anid) {
             const oldEl = elMap1[el.anid];
             if (oldEl) {
                 const newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
-                updateProps(el, newProp, animatableModel, getECData(el).dataIndex);
+                updateProps(el, newProp, animatableModel, getECData(el).dataIndex, isFirstElement ? done : null);
+                isFirstElement = false;
             }
         }
     });

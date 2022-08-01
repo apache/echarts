@@ -63,7 +63,6 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     splitLine?: SplitLineOption;
     minorSplitLine?: MinorSplitLineOption;
     splitArea?: SplitAreaOption;
-    subPixelOptimize?: boolean;
 
     /**
      * Min value of the axis. can be:
