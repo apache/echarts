@@ -18,7 +18,7 @@
 */
 
 import * as layout from '../../util/layout';
-import {parsePercent, linearMap} from '../../util/number';
+import { parsePercent, linearMap } from '../../util/number';
 import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -28,9 +28,9 @@ import { isFunction } from 'zrender/src/core/util';
 function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
+        width: api.getWidth(),
+        height: api.getHeight()
+    }
     );
 }
 
@@ -263,9 +263,9 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             parsePercent(seriesModel.get('minSize'), viewHeight),
             parsePercent(seriesModel.get('maxSize'), viewHeight)
         ] : [
-                parsePercent(seriesModel.get('minSize'), viewWidth),
-                parsePercent(seriesModel.get('maxSize'), viewWidth)
-            ];
+            parsePercent(seriesModel.get('minSize'), viewWidth),
+            parsePercent(seriesModel.get('maxSize'), viewWidth)
+        ];
         const dataExtent = data.getDataExtent(valueDim);
         let min = seriesModel.get('min');
         let max = seriesModel.get('max');
@@ -337,52 +337,69 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             indices = indices.reverse();
         }
 
+        const getSideLen = function (sideLen: number | string): number {
+
+            if (sideLen == null) {
+                sideLen = itemSize;
+            }
+            else {
+                if (orient === 'horizontal') {
+                    sideLen = parsePercent(sideLen, viewWidth);
+                } else {
+                    sideLen = parsePercent(sideLen, viewHeight);
+                }
+
+                if (sort === 'ascending') {
+                    sideLen = -sideLen;
+                }
+            }
+            return sideLen;
+
+        }
+
+        const exitShape = seriesModel.get('exitShape');
+        const setLayoutPoints =
+            // The subsequent funnel shape modification will be done in this func.
+            // We don’t need to concern direction when we use this function to set points.
+            function (
+                index: number,
+                idx: number,
+                nextIdx: number,
+                sideLen: number,
+                pos: number,
+            ): void {
+                const start = getLinePoints(idx, pos);
+                let end;
+
+                if (index === indices.length - 1 && exitShape === 'rect') {
+                    end = getLinePoints(idx, pos + sideLen);
+                } else {
+                    end = getLinePoints(nextIdx, pos + sideLen);
+                }
+
+                data.setItemLayout(idx, {
+                    points: start.concat(end.slice().reverse())
+                });
+            }
+
         for (let i = 0; i < indices.length; i++) {
             const idx = indices[i];
             const nextIdx = indices[i + 1];
             const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
 
             if (orient === 'horizontal') {
-                let width = itemModel.get(['itemStyle', 'width']);
-                if (width == null) {
-                    width = itemSize;
-                }
-                else {
-                    width = parsePercent(width, viewWidth);
-                    if (sort === 'ascending') {
-                        width = -width;
-                    }
-                }
+                let width = getSideLen(itemModel.get(['itemStyle', 'width']));
 
-                const start = getLinePoints(idx, x);
-                const end = getLinePoints(nextIdx, x + width);
+                setLayoutPoints(i, idx, nextIdx, width, x);
 
                 x += width + gap;
-
-                data.setItemLayout(idx, {
-                    points: start.concat(end.slice().reverse())
-                });
             }
             else {
-                let height = itemModel.get(['itemStyle', 'height']);
-                if (height == null) {
-                    height = itemSize;
-                }
-                else {
-                    height = parsePercent(height, viewHeight);
-                    if (sort === 'ascending') {
-                        height = -height;
-                    }
-                }
+                let height = getSideLen(itemModel.get(['itemStyle', 'height']));
 
-                const start = getLinePoints(idx, y);
-                const end = getLinePoints(nextIdx, y + height);
+                setLayoutPoints(i, idx, nextIdx, height, y);
 
                 y += height + gap;
-
-                data.setItemLayout(idx, {
-                    points: start.concat(end.slice().reverse())
-                });
             }
         }
 
