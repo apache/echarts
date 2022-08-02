@@ -179,6 +179,8 @@ interface AxisLineOption {
 
 interface AxisTickOption {
     show?: boolean | 'auto',
+    alignWithLabel?: boolean,
+    interval?: 'auto' | number | ((index:number, value: string) => boolean),
     // Whether axisTick is inside the grid or outside the grid.
     inside?: boolean,
     // The length of axisTick.
