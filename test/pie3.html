@@ -74,7 +74,7 @@ under the License.
                         formatter: function (params) {
                             return '<div class="tooltip-content">\
                                 <h4>' + params.name + '</h4>\
-                                <h5>' + (params.percent).toFixed(1) + '%</h5>\
+                                <h5>' + params.percent.toFixed(1) + '%</h5>\
                                 </div><script>console.log(1111)<\/script>\
                             ';
                         },
@@ -125,7 +125,7 @@ under the License.
                         formatter: function (params) {
                             return '<div class="tooltip-content">\
                                 <h4>' + params.name + '</h4>\
-                                <h5>' + (params.percent * 100).toFixed(1) + '%</h5>\
+                                <h5>' + params.percent.toFixed(1) + '%</h5>\
                                 </div>\
                             ';
                         },
