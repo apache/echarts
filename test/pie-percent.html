@@ -46,9 +46,7 @@ under the License.
 
         <script>
         require([
-            'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
+            'echarts'
         ], function (echarts) {
             var option;
             var data = [];
@@ -62,17 +60,27 @@ under the License.
                 series: {
                     type: 'pie',
                     data: data,
+                    percentPrecision: 5,
+                    label: {
+                        formatter: '{b} {d}%'
+                    }
                 }
             };
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
                     'Test Pie performance'
-                ],
-                option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
+                ]
+            });
+
+            var startTs = performance.now();
+            chart.setOption(option);
+
+            chart.on('finished', function () {
+                var endTs = performance.now();
+                var time = endTs - startTs;
+                console.log('Finished in ' + time + 'ms');
+                startTs = endTs;
             });
         });
         </script>
