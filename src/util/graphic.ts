@@ -403,6 +403,9 @@ export function groupTransition(
     done?: () => void
 ) {
     if (!g1 || !g2) {
+        if (typeof done === 'function') {
+            done();
+        }
         return;
     }
 
