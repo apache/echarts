@@ -49,6 +49,7 @@ const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>()
 interface DiffItem {
     data: SeriesData
     dim: DimensionLoose
+    childGroupDim: DimensionLoose
     divide: UniversalTransitionOption['divideShape']
     dataIndex: number
 }
@@ -68,6 +69,16 @@ function getGroupIdDimension(data: SeriesData) {
     }
 }
 
+function getChildGroupIdDimension(data: SeriesData) {
+    const dimensions = data.dimensions;
+    for (let i = 0; i < dimensions.length; i++) {
+        const dimInfo = data.getDimensionInfo(dimensions[i]);
+        if (dimInfo && dimInfo.otherDims.childGroupId === 0) {
+            return dimensions[i];
+        }
+    }
+}
+
 function flattenDataDiffItems(list: TransitionSeries[]) {
     const items: DiffItem[] = [];
 
@@ -81,10 +92,12 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
         }
         const indices = data.getIndices();
         const groupDim = getGroupIdDimension(data);
+        const childGroupDim = getChildGroupIdDimension(data);
         for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
             items.push({
                 data,
                 dim: seriesInfo.dim || groupDim,
+                childGroupDim,
                 divide: seriesInfo.divide,
                 dataIndex
             });
@@ -190,8 +203,20 @@ function transitionBetween(
             }
         }
     }
+
+    function findChildGroupDim(items: DiffItem[]) {
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].childGroupDim) {
+                return items[i].childGroupDim;
+            }
+        }
+    }
+
     const oldKeyDim = findKeyDim(oldDiffItems);
     const newKeyDim = findKeyDim(newDiffItems);
+
+    const oldChildGroupDim = findChildGroupDim(oldDiffItems);
+    const newChildGroupDim = findChildGroupDim(newDiffItems);
 
     let hasMorphAnimation = false;
 
@@ -200,7 +225,7 @@ function transitionBetween(
             const data = diffItem.data;
             const dataIndex = diffItem.dataIndex;
             // TODO if specified dim
-            if (onlyGetId) {
+            if (onlyGetId) { // 猜测之前所有需要key的地方用的其实就是dataItem.id, onlyGetId若为true其实就是之前的情况
                 return data.getId(dataIndex);
             }
 
@@ -227,10 +252,30 @@ function transitionBetween(
                 return key + '';
             }
 
+            const childGroupDim = isOld
+                ? (oldChildGroupDim || newChildGroupDim)
+                : (newChildGroupDim || oldChildGroupDim);
+
+            const childGroupDimInfo = childGroupDim && data.getDimensionInfo(childGroupDim);
+            const childGroupDimOrdinalMeta = childGroupDimInfo && childGroupDimInfo.ordinalMeta;
+
+            if (childGroupDimInfo) {
+                // Get from encode.childGroupId.
+                const key = data.get(childGroupDimInfo.name, dataIndex);
+                if (childGroupDimOrdinalMeta) {
+                    return childGroupDimOrdinalMeta.categories[key as number] as string || (key + '');
+                }
+                //console.log(key);
+                return key + '';
+            }
+
             // Get groupId from raw item. { groupId: '' }
             const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
             if (itemVal && itemVal.groupId) {
-                return itemVal.groupId + '';
+              if (itemVal.childGroupId) {
+                //console.log(itemVal.childGroupId);
+              }
+                return itemVal.groupId + '';  // 注意这个item的return --tyn
             }
             return (dataGroupId || data.getId(dataIndex));
         };

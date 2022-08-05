@@ -430,7 +430,7 @@ export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = DataStoreDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
-    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'childGroupId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
 export interface DataVisualDimensions {
@@ -442,6 +442,7 @@ export interface DataVisualDimensions {
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
     itemGroupId?: DimensionIndex;
+    childGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
@@ -616,6 +617,7 @@ export type OptionDataItemObject<T> = {
     id?: OptionId;
     name?: OptionName;
     groupId?: OptionId;
+    childGroupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
 };
@@ -665,6 +667,7 @@ export interface OptionEncodeVisualDimensions {
     // Which is useful in prepresenting the transition key of drilldown/up animation.
     // Or hover linking.
     itemGroupId?: OptionEncodeValue;
+    childGroupdId?: OptionEncodeValue;
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue | undefined
