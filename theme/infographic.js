@@ -76,9 +76,7 @@
 
         toolbox: {
             iconStyle: {
-                normal: {
-                    borderColor: colorPalette[0]
-                }
+                borderColor: colorPalette[0]
             }
         },
 

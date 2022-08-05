@@ -29,17 +29,13 @@ export default {
             radius : [20, 80],
             center : ['25%', 110],
             label: {
-                normal: {
-                    show: false
-                },
+                show: false,
                 emphasis: {
                     show: true
                 }
             },
             lableLine: {
-                normal: {
-                    show: false
-                },
+                show: false,
                 emphasis: {
                     show: true
                 }
@@ -62,9 +58,7 @@ export default {
             center : ['75%', 110],
             roseType : 'area',
             labelLine: {
-                normal: {
-                    length: 5
-                }
+                length: 5
             },
             data:[
                 {value:10, name:'rose1'},

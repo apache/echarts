@@ -35,9 +35,7 @@ export default {
             map: 'china',
             showLegendSymbol: true,
             label: {
-                normal: {
-                    show: false
-                },
+                show: false,
                 emphasis: {
                     show: false
                 }
@@ -85,9 +83,7 @@ export default {
             mapType: 'china',
             showLegendSymbol: true,
             label: {
-                normal: {
-                    show: false
-                },
+                show: false,
                 emphasis: {
                     show: false
                 }
@@ -120,9 +116,7 @@ export default {
             mapType: 'china',
             showLegendSymbol: true,
             label: {
-                normal: {
-                    show: false
-                },
+                show: false,
                 emphasis: {
                     show: false
                 }
