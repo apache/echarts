@@ -1,4 +1,4 @@
 import { use } from '../extension';
-import { install } from './thumbnails/install';
+import { install } from './thumbnail/install';
 
 use(install);
