@@ -220,6 +220,45 @@ function transitionBetween(
 
     let hasMorphAnimation = false;
 
+    // 在createKeyGetter之前先要确定"父->子"还是"子->父"
+    const oldGroupIds: string[] = [];
+    const oldChildGroupIds: string[] = [];
+
+    oldDiffItems.forEach((item) => {
+        item.dim && oldGroupIds.push('' + item.data.get(item.data.getDimensionInfo(item.dim).name, item.dataIndex));
+        item.childGroupDim
+            && oldChildGroupIds.push(
+                '' + item.data.get(item.data.getDimensionInfo(item.childGroupDim).name, item.dataIndex)
+            );
+    });
+
+    // 若o.childGroupIds中的任意一个等于n.groupIds中的任意一个，则判断为“父->子”方向
+    // 若o.groupIds中的任意一个等于n.childGroupIds的任意一个，则判断为“子->父”方向
+
+    let direction = 'whatever';
+    for (let i = 0; i < newDiffItems.length; i++) {
+        const newGroupId =
+            newDiffItems[i].data.get(
+                newDiffItems[i].data.getDimensionInfo(newDiffItems[i].dim).name,
+                newDiffItems[i].dataIndex
+            ) + '';
+        if (oldChildGroupIds.includes(newGroupId)) {
+            direction = 'parent2child';
+            break;
+        }
+        const newChildGroupId =
+            newDiffItems[i].data.get(
+                newDiffItems[i].data.getDimensionInfo(newDiffItems[i].childGroupDim).name,
+                newDiffItems[i].dataIndex
+            ) + '';
+        if (oldGroupIds.includes(newChildGroupId)) {
+            direction = 'child2parent';
+            break;
+        }
+    }
+
+    // console.log(direction);
+
     function createKeyGetter(isOld: boolean, onlyGetId: boolean) {
         return function (diffItem: DiffItem): string {
             const data = diffItem.data;
