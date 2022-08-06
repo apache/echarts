@@ -94,9 +94,11 @@ export interface FunnelSeriesOption
 
     funnelAlign?: HorizontalAlign | VerticalAlign
 
-    exitShape?: 'rect' | 'default'
+    exitShape?: 'rect' | 'none'
 
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | FunnelDataItemOption)[]
+
+    dynamicHeight?: boolean
 }
 
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
@@ -196,7 +198,8 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
             itemStyle: {
                 borderColor: '#212121'
             }
-        }
+        },
+        dynamicHeight: false,
     };
 
 }
