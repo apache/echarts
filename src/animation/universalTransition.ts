@@ -224,40 +224,43 @@ function transitionBetween(
     const oldGroupIds: string[] = [];
     const oldChildGroupIds: string[] = [];
 
-    oldDiffItems.forEach((item) => {
-        item.dim && oldGroupIds.push('' + item.data.get(item.data.getDimensionInfo(item.dim).name, item.dataIndex));
-        item.childGroupDim
-            && oldChildGroupIds.push(
-                '' + item.data.get(item.data.getDimensionInfo(item.childGroupDim).name, item.dataIndex)
-            );
-    });
+    if (oldKeyDim || oldChildGroupDim) {
+        oldDiffItems.forEach((item) => {
+            item.dim && oldGroupIds.push('' + item.data.get(item.data.getDimensionInfo(item.dim).name, item.dataIndex));
+            item.childGroupDim
+                && oldChildGroupIds.push(
+                    '' + item.data.get(item.data.getDimensionInfo(item.childGroupDim).name, item.dataIndex)
+                );
+        });
+    }
 
     // 若o.childGroupIds中的任意一个等于n.groupIds中的任意一个，则判断为“父->子”方向
     // 若o.groupIds中的任意一个等于n.childGroupIds的任意一个，则判断为“子->父”方向
 
-    let direction = 'whatever';
-    for (let i = 0; i < newDiffItems.length; i++) {
-        const newGroupId =
-            newDiffItems[i].data.get(
-                newDiffItems[i].data.getDimensionInfo(newDiffItems[i].dim).name,
-                newDiffItems[i].dataIndex
-            ) + '';
-        if (oldChildGroupIds.includes(newGroupId)) {
-            direction = 'parent2child';
-            break;
-        }
-        const newChildGroupId =
-            newDiffItems[i].data.get(
-                newDiffItems[i].data.getDimensionInfo(newDiffItems[i].childGroupDim).name,
-                newDiffItems[i].dataIndex
-            ) + '';
-        if (oldGroupIds.includes(newChildGroupId)) {
-            direction = 'child2parent';
-            break;
+    let direction = 'nodirection';
+
+    if (newKeyDim || newChildGroupDim) {
+        for (let i = 0; i < newDiffItems.length; i++) {
+            const newGroupId =
+                newDiffItems[i].data.get(
+                    newDiffItems[i].data.getDimensionInfo(newDiffItems[i].dim).name,
+                    newDiffItems[i].dataIndex
+                ) + '';
+            if (oldChildGroupIds.includes(newGroupId)) {
+                direction = 'parent2child';
+                break;
+            }
+            const newChildGroupId =
+                newDiffItems[i].data.get(
+                    newDiffItems[i].data.getDimensionInfo(newDiffItems[i].childGroupDim).name,
+                    newDiffItems[i].dataIndex
+                ) + '';
+            if (oldGroupIds.includes(newChildGroupId)) {
+                direction = 'child2parent';
+                break;
+            }
         }
     }
-
-    // console.log(direction);
 
     function createKeyGetterForNew(onlyGetId: boolean) {
         return function (diffItem: DiffItem): string {
@@ -273,7 +276,7 @@ function transitionBetween(
             // If group id not exits. Use id instead. If so, only one to one transition will be applied.
             const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
 
-            if (direction === 'parent2child') {
+            if (direction === 'parent2child' || direction === 'nodirection') {
                 // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
                 // PENDING: If only use key dimension of newData.
                 const keyDim = newKeyDim || oldKeyDim;
@@ -334,7 +337,7 @@ function transitionBetween(
             // If group id not exits. Use id instead. If so, only one to one transition will be applied.
             const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
 
-            if (direction === 'child2parent') {
+            if (direction === 'child2parent' || direction === 'nodirection') {
                 // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
                 // PENDING: If only use key dimension of newData.
                 const keyDim = oldKeyDim || newKeyDim;
