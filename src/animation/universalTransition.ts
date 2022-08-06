@@ -259,7 +259,7 @@ function transitionBetween(
 
     // console.log(direction);
 
-    function createKeyGetter(isOld: boolean, onlyGetId: boolean) {
+    function createKeyGetterForNew(onlyGetId: boolean) {
         return function (diffItem: DiffItem): string {
             const data = diffItem.data;
             const dataIndex = diffItem.dataIndex;
@@ -273,39 +273,100 @@ function transitionBetween(
             // If group id not exits. Use id instead. If so, only one to one transition will be applied.
             const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
 
-            // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
-            // PENDING: If only use key dimension of newData.
-            const keyDim = isOld
-                ? (oldKeyDim || newKeyDim)
-                : (newKeyDim || oldKeyDim);
+            if (direction === 'parent2child') {
+                // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
+                // PENDING: If only use key dimension of newData.
+                const keyDim = newKeyDim || oldKeyDim;
 
-            const dimInfo = keyDim && data.getDimensionInfo(keyDim);
-            const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
+                const dimInfo = keyDim && data.getDimensionInfo(keyDim);
+                const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
 
-            if (dimInfo) {
-                // Get from encode.itemGroupId.
-                const key = data.get(dimInfo.name, dataIndex);
-                if (dimOrdinalMeta) {
-                    return dimOrdinalMeta.categories[key as number] as string || (key + '');
+                if (dimInfo) {
+                    // Get from encode.itemGroupId.
+                    const key = data.get(dimInfo.name, dataIndex);
+                    if (dimOrdinalMeta) {
+                        return (dimOrdinalMeta.categories[key as number] as string) || key + '';
+                    }
+                    return key + '';
                 }
-                return key + '';
             }
 
-            const childGroupDim = isOld
-                ? (oldChildGroupDim || newChildGroupDim)
-                : (newChildGroupDim || oldChildGroupDim);
+            if (direction === 'child2parent') {
+                const childGroupDim = newChildGroupDim || oldChildGroupDim;
 
-            const childGroupDimInfo = childGroupDim && data.getDimensionInfo(childGroupDim);
-            const childGroupDimOrdinalMeta = childGroupDimInfo && childGroupDimInfo.ordinalMeta;
+                const childGroupDimInfo = childGroupDim && data.getDimensionInfo(childGroupDim);
+                const childGroupDimOrdinalMeta = childGroupDimInfo && childGroupDimInfo.ordinalMeta;
 
-            if (childGroupDimInfo) {
-                // Get from encode.childGroupId.
-                const key = data.get(childGroupDimInfo.name, dataIndex);
-                if (childGroupDimOrdinalMeta) {
-                    return childGroupDimOrdinalMeta.categories[key as number] as string || (key + '');
+                if (childGroupDimInfo) {
+                    // Get from encode.childGroupId.
+                    const key = data.get(childGroupDimInfo.name, dataIndex);
+                    if (childGroupDimOrdinalMeta) {
+                        return (childGroupDimOrdinalMeta.categories[key as number] as string) || key + '';
+                    }
+                    //console.log(key);
+                    return key + '';
                 }
-                //console.log(key);
-                return key + '';
+            }
+
+            // Get groupId from raw item. { groupId: '' }
+            const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
+            if (itemVal && itemVal.groupId) {
+              if (itemVal.childGroupId) {
+                //console.log(itemVal.childGroupId);
+              }
+                return itemVal.groupId + '';  // 注意这个item的return --tyn
+            }
+            return (dataGroupId || data.getId(dataIndex));
+        };
+    }
+
+    function createKeyGetterForOld(onlyGetId: boolean) {
+        return function (diffItem: DiffItem): string {
+            const data = diffItem.data;
+            const dataIndex = diffItem.dataIndex;
+            // TODO if specified dim
+            if (onlyGetId) { // 猜测之前所有需要key的地方用的其实就是dataItem.id, onlyGetId若为true其实就是之前的情况
+                return data.getId(dataIndex);
+            }
+
+            // Use group id as transition key by default.
+            // So we can achieve multiple to multiple animation like drilldown / up naturally.
+            // If group id not exits. Use id instead. If so, only one to one transition will be applied.
+            const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
+
+            if (direction === 'child2parent') {
+                // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
+                // PENDING: If only use key dimension of newData.
+                const keyDim = oldKeyDim || newKeyDim;
+
+                const dimInfo = keyDim && data.getDimensionInfo(keyDim);
+                const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
+
+                if (dimInfo) {
+                    // Get from encode.itemGroupId.
+                    const key = data.get(dimInfo.name, dataIndex);
+                    if (dimOrdinalMeta) {
+                        return (dimOrdinalMeta.categories[key as number] as string) || key + '';
+                    }
+                    return key + '';
+                }
+            }
+
+            if (direction === 'parent2child') {
+                const childGroupDim = oldChildGroupDim || newChildGroupDim;
+
+                const childGroupDimInfo = childGroupDim && data.getDimensionInfo(childGroupDim);
+                const childGroupDimOrdinalMeta = childGroupDimInfo && childGroupDimInfo.ordinalMeta;
+
+                if (childGroupDimInfo) {
+                    // Get from encode.childGroupId.
+                    const key = data.get(childGroupDimInfo.name, dataIndex);
+                    if (childGroupDimOrdinalMeta) {
+                        return (childGroupDimOrdinalMeta.categories[key as number] as string) || key + '';
+                    }
+                    //console.log(key);
+                    return key + '';
+                }
             }
 
             // Get groupId from raw item. { groupId: '' }
@@ -395,8 +456,8 @@ function transitionBetween(
     (new DataDiffer(
         oldDiffItems,
         newDiffItems,
-        createKeyGetter(true, useId),
-        createKeyGetter(false, useId),
+        createKeyGetterForOld(useId),
+        createKeyGetterForNew(useId),
         null,
         'multiple'
     ))
