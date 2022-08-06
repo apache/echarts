@@ -403,7 +403,9 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             if (dynamicHeight) {
                 // in dy height, user can't set itemHeight or itemWidth
                 const val = data.get(valueDim, idx) as number || 0;
-                sideLen = -linearMap(val, [0, valueArr.reduce((pre, cur) => pre + cur)], sizeExtent, true);
+                sideLen = sort === 'ascending' ?
+                    -linearMap(val, [0, valueArr.reduce((pre, cur) => pre + cur)], sizeExtent, true) :
+                    linearMap(val, [0, valueArr.reduce((pre, cur) => pre + cur)], sizeExtent, true);
                 return sideLen;
             }
 
@@ -447,7 +449,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     if (index === indices.length - 1 && exitShape === 'rect') {
                         end = getLinePointsInDyHeight(pos + sideLen, resSize / maxSize * viewSize);
                     } else {
-                        resSize += sideLen;
+                        resSize += sort === 'ascending' ? sideLen : -sideLen;
                         end = getLinePointsInDyHeight(pos + sideLen, resSize / maxSize * viewSize);
                     }
 
