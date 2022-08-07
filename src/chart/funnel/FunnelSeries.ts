@@ -199,7 +199,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
                 borderColor: '#212121'
             }
         },
-        dynamicHeight: false,
+        dynamicHeight: false
     };
 
 }
