@@ -34,7 +34,8 @@ import {
     isDom,
     isArray,
     noop,
-    isString
+    isString,
+    retrieve2
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import timsort from 'zrender/src/core/timsort';
@@ -435,8 +436,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             width: opts.width,
             height: opts.height,
             ssr: opts.ssr,
-            useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect,
-            useCoarsePointer: opts.useCoarsePointer == null ? defaultCoarsePointer : opts.useCoarsePointer,
+            useDirtyRect: retrieve2(opts.useDirtyRect, defaultUseDirtyRect),
+            useCoarsePointer: retrieve2(opts.useCoarsePointer, defaultCoarsePointer),
             pointerSize: opts.pointerSize
         });
         this._ssr = opts.ssr;
