@@ -29,6 +29,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
 import { isIntervalOrLogScale } from '../../scale/helper';
+import IntervalScale from '../../scale/Interval';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -134,6 +135,30 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const ticksCoords = axis.getTicksCoords({
             tickModel: splitLineModel
         });
+
+        const axisScale = axis.scale as IntervalScale;
+        if (ticksCoords.length > 2 && axisScale.getInterval) {
+            const interval = axisScale.getInterval() || null;
+
+            const showMinLine = splitLineModel.get('showMinLine');
+            if (showMinLine === false
+                || (showMinLine === 'auto'
+                    && ticksCoords[1].tickValue - ticksCoords[0].tickValue < interval
+                )
+            ) {
+                ticksCoords.shift();
+            }
+
+            const showMaxLine = splitLineModel.get('showMaxLine');
+            if (showMaxLine === false
+                || (showMaxLine === 'auto'
+                    && ticksCoords[ticksCoords.length - 1].tickValue
+                        - ticksCoords[ticksCoords.length - 2].tickValue < interval
+                )
+            ) {
+                ticksCoords.pop();
+            }
+        }
 
         const p1 = [];
         const p2 = [];

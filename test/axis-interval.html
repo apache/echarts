@@ -69,6 +69,7 @@ under the License.
     </div>
 
     <div class="chart" id="main5"></div>
+    <div class="chart" id="main6"></div>
 
 
     <script>
@@ -110,8 +111,13 @@ under the License.
                 xAxis: {
                     type: 'time',
                     minInterval: 3600 * 1000,
-                    maxInterval: 3600 * 1000
-                    // splitNumber: 7
+                    maxInterval: 3600 * 1000,
+                    // splitNumber: 7,
+                    splitLine: {
+                        show: true,
+                        showMinLine: 'auto',
+                        showMaxLine: 'auto'
+                    }
                 },
                 yAxis: {},
                 series: [
@@ -534,7 +540,67 @@ under the License.
 
 
 
+    <script>
 
+        require([
+            'echarts'
+        ], function (echarts) {
+            function func(x) {
+                x /= 10;
+                return Math.sin(x) * Math.cos(x * 2 + 1) * Math.sin(x * 3 + 2) * 50;
+            }
+            function generateData() {
+                let data = [];
+                for (let i = -20; i <= 20; i += 0.1) {
+                    data.push([i, func(i)]);
+                }
+                return data;
+            }
+            const option = {
+                animation: false,
+                grid: {
+                    top: 40,
+                    left: 50,
+                    right: 40,
+                    bottom: 50
+                },
+                xAxis: {
+                    name: 'x',
+                    min: -22,
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            color: 'red'
+                        },
+                        showMinLine: 'auto',
+                        showMaxLine: 'auto'
+                    }
+                },
+                yAxis: {
+                    name: 'y',
+                    max: 45,
+                    splitLine: {
+                        show: true,
+                        showMinLine: 'auto',
+                        showMaxLine: 'auto'
+                    }
+                },
+                series: [
+                    {
+                        type: 'line',
+                        showSymbol: false,
+                        clip: true,
+                        data: generateData()
+                    }
+                ]
+            };
+            testHelper.create(echarts, 'main6', {
+                title: 'xAxis (type: value) should work with showMinLine and showMaxLine',
+                option: option
+            });
+        });
+
+    </script>
 
 </body>
 
