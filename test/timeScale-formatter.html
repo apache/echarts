@@ -55,6 +55,9 @@ under the License.
         <div id="main5"></div>
 
 
+        <div id="main6"></div>
+
+
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
             var option;
@@ -359,6 +362,76 @@ under the License.
         });
         </script>
 
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                let base = +new Date(1988, 9, 3);
+                let oneDay = 24 * 3600 * 1000;
+                let data = [[base, Math.random() * 50]];
+                for (let i = 1; i < 20000; i++) {
+                    let now = new Date((base += oneDay));
+                    data.push([+now, Math.round((Math.random() - 0.5) * 20 + data[i - 1][1])]);
+                }
+
+                option = {
+                    backgroundColor: '#eee',
+                    grid: {
+                        containLabel: true,
+                    },
+                    xAxis: {
+                        type: 'time',
+                        boundaryGap: false,
+
+                        axisLabel: {
+                            showMinLabel: false,
+                            showMaxLabel: true,
+                            hideOverlap: true,
+                            formatter: '{yyyy}-{MM}-{dd}'
+                        },
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: 'Series1',
+                            type: 'line',
+                            smooth: false,
+                            symbol: 'circle', //'none',
+                            symbolSize: 7,
+                            lineStyle: {
+                                width: 1,
+                            },
+                            data: data.slice(0, 10),
+                            stack: 'Total',
+                        },
+                    ],
+                };
+
+                var chart = testHelper.create(echarts, 'main6', {
+                    title: [
+                        'axisLabel[type=time]: showMinLabel and showMaxLabel should work'
+                    ],
+                    option: option
+                });
+
+                let showMinAndMaxLabel = false;
+                chart.setOption(option);
+                setInterval(function () {
+                    showMinAndMaxLabel = !showMinAndMaxLabel;
+                    chart.setOption({
+                        xAxis: {
+                            axisLabel: {
+                                showMinLabel: showMinAndMaxLabel,
+                                showMaxLabel: showMinAndMaxLabel,
+                            }
+                        }
+                    });
+                }, 1000);
+            });
+
+        </script>
 
     </body>
 </html>
