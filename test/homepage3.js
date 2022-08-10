@@ -554,7 +554,9 @@ function renderHomepage3Demo(echarts) {
                 type: 'dataZoom',
                 dataZoomIndex: 0,
                 start: payload.start,
-                end: payload.end
+                end: payload.end,
+                startValue: payload.startValue,
+                endValue: payload.endValue
             }, true);
         });
 
