@@ -698,6 +698,7 @@ class SliderZoomView extends DataZoomView {
 
     private _resetInterval() {
         const range = this._range = this.dataZoomModel.getPercentRange();
+        this.setValueRange(range);
         const viewExtent = this._getViewExtent();
 
         this._handleEnds = [
@@ -729,6 +730,7 @@ class SliderZoomView extends DataZoomView {
             linearMap(handleEnds[0], viewExtend, percentExtent, true),
             linearMap(handleEnds[1], viewExtend, percentExtent, true)
         ]);
+        this.setValueRange(range);
 
         return !lastRange || lastRange[0] !== range[0] || lastRange[1] !== range[1];
     }
@@ -805,21 +807,13 @@ class SliderZoomView extends DataZoomView {
 
         // FIXME
         // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
-        const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
+        if (dataZoomModel.get('showDetail')) {
+            const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
 
-        if (axisProxy) {
-            const axis = axisProxy.getAxisModel().axis;
-            const range = this._range;
+            if (axisProxy) {
+                const axis = axisProxy.getAxisModel().axis;
+                const dataInterval = this._valueRange;
 
-            const dataInterval = nonRealtime
-                // See #4434, data and axis are not processed and reset yet in non-realtime mode.
-                ? axisProxy.calculateDataWindow({
-                    start: range[0], end: range[1]
-                }).valueWindow
-                : axisProxy.getDataValueWindow();
-            this._valueRange = dataInterval;
-
-            if (dataZoomModel.get('showDetail')) {
                 labelTexts = [
                     this._formatLabel(dataInterval[0], axis),
                     this._formatLabel(dataInterval[1], axis)
@@ -993,11 +987,26 @@ class SliderZoomView extends DataZoomView {
             linearMap(brushShape.x + brushShape.width, viewExtend, percentExtent, true)
         ]);
 
+        this.setValueRange(this._range);
+
         this._handleEnds = [brushShape.x, brushShape.x + brushShape.width];
 
         this._updateView();
 
         this._dispatchZoomAction(false);
+    }
+
+    private setValueRange(range: number[]) {
+        const axisProxy = this.dataZoomModel.findRepresentativeAxisProxy();
+        if (axisProxy) {
+            const dataInterval = this.dataZoomModel.get('realtime')
+                // See #4434, data and axis are not processed and reset yet in non-realtime mode.
+                ? axisProxy.calculateDataWindow({
+                    start: range[0], end: range[1]
+                }).valueWindow
+                : axisProxy.getDataValueWindow();
+            this._valueRange = dataInterval;
+        }
     }
 
     private _onBrush(e: ZRElementEvent) {
