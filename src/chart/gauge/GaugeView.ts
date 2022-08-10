@@ -31,7 +31,7 @@ import SeriesData from '../../data/SeriesData';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
-import {extend, isFunction, isString} from 'zrender/src/core/util';
+import {extend, isFunction, isString, isNumber} from 'zrender/src/core/util';
 import {setCommonECData} from '../../util/innerStore';
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 
@@ -272,19 +272,55 @@ class GaugeView extends ChartView {
                     labelModel.get('formatter')
                 );
                 const autoColor = getColor(i / splitNumber);
+                const textStyleX = unitX * (r - splitLineLen - distance) + cx;
+                const textStyleY = unitY * (r - splitLineLen - distance) + cy;
 
-                group.add(new graphic.Text({
-                    style: createTextStyle(labelModel, {
-                        text: label,
-                        x: unitX * (r - splitLineLen - distance) + cx,
-                        y: unitY * (r - splitLineLen - distance) + cy,
-                        verticalAlign: unitY < -0.8 ? 'top' : (unitY > 0.8 ? 'bottom' : 'middle'),
-                        align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
-                    }, {
-                        inheritColor: autoColor
-                    }),
-                    silent: true
-                }));
+                const rotateType = labelModel.get('rotate');
+                let rotate = 0;
+                if (rotateType === 'radial') {
+                    rotate = -angle + 2 * Math.PI;
+                    if (rotate > Math.PI / 2) {
+                        rotate += Math.PI;
+                    }
+                }
+                else if (rotateType === 'tangential') {
+                    rotate = -angle - Math.PI / 2;
+                }
+                else if (isNumber(rotateType)) {
+                    rotate = rotateType * Math.PI / 180;
+                }
+
+                if (rotate === 0) {
+                    group.add(new graphic.Text({
+                        style: createTextStyle(labelModel, {
+                            text: label,
+                            x: textStyleX,
+                            y: textStyleY,
+                            verticalAlign: unitY < -0.8 ? 'top' : (unitY > 0.8 ? 'bottom' : 'middle'),
+                            align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
+                        }, {
+                            inheritColor: autoColor
+                        }),
+                        silent: true
+                    }));
+                }
+                else {
+                    group.add(new graphic.Text({
+                        style: createTextStyle(labelModel, {
+                            text: label,
+                            x: textStyleX,
+                            y: textStyleY,
+                            verticalAlign: 'middle',
+                            align: 'center'
+                        }, {
+                            inheritColor: autoColor
+                        }),
+                        silent: true,
+                        originX: textStyleX,
+                        originY: textStyleY,
+                        rotation: rotate
+                    }));
+                }
             }
 
             // Axis tick

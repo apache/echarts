@@ -50,7 +50,7 @@ interface ScatterStateOption<TCbParams = never> {
 interface ScatterStatesOptionMixin {
     emphasis?: {
         focus?: DefaultEmphasisFocus
-        scale?: boolean
+        scale?: boolean | number
     }
 }
 

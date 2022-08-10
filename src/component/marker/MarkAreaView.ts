@@ -91,7 +91,7 @@ const markAreaTransform = function (
     return result;
 };
 
-function isInifinity(val: ScaleDataValue) {
+function isInfinity(val: ScaleDataValue) {
     return !isNaN(val as number) && !isFinite(val as number);
 }
 
@@ -103,7 +103,7 @@ function ifMarkAreaHasOnlyDim(
     coordSys: CoordinateSystem
 ) {
     const otherDimIndex = 1 - dimIndex;
-    return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex]);
+    return isInfinity(fromCoord[otherDimIndex]) && isInfinity(toCoord[otherDimIndex]);
 }
 
 function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOption) {
@@ -164,7 +164,7 @@ function getSingleMarkerEndPoint(
     else {
         // Chart like bar may have there own marker positioning logic
         if (seriesModel.getMarkerPosition) {
-            // Use the getMarkerPoisition
+            // Use the getMarkerPosition
             point = seriesModel.getMarkerPosition(
                 data.getValues(dims, idx)
             );
@@ -182,10 +182,10 @@ function getSingleMarkerEndPoint(
             const yAxis = coordSys.getAxis('y') as Axis2D;
             const x = data.get(dims[0], idx) as number;
             const y = data.get(dims[1], idx) as number;
-            if (isInifinity(x)) {
+            if (isInfinity(x)) {
                 point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[dims[0] === 'x0' ? 0 : 1]);
             }
-            else if (isInifinity(y)) {
+            else if (isInfinity(y)) {
                 point[1] = yAxis.toGlobalCoord(yAxis.getExtent()[dims[1] === 'y0' ? 0 : 1]);
             }
         }

@@ -255,6 +255,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const matrix = transformGroup.transform;
         const pt1 = [extent[0], 0];
         const pt2 = [extent[1], 0];
+        const inverse = pt1[0] > pt2[0];
         if (matrix) {
             v2ApplyTransform(pt1, pt1, matrix);
             v2ApplyTransform(pt2, pt2, matrix);
@@ -327,10 +328,11 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                     // Calculate arrow position with offset
                     const r = point.r + point.offset;
 
+                    const pt = inverse ? pt2 : pt1;
                     symbol.attr({
                         rotation: point.rotate,
-                        x: pt1[0] + r * Math.cos(opt.rotation),
-                        y: pt1[1] - r * Math.sin(opt.rotation),
+                        x: pt[0] + r * Math.cos(opt.rotation),
+                        y: pt[1] - r * Math.sin(opt.rotation),
                         silent: true,
                         z2: 11
                     });
