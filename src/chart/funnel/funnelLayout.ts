@@ -432,7 +432,19 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
         const exitShape = seriesModel.get('exitShape');
         let resSize = sizeExtent[1];
-        const maxSize = sizeExtent[1];
+        let maxSize = sizeExtent[1];
+        let exitWidth: string | number = seriesModel.get('exitWidth');
+        if (exitWidth) {
+            const percentReg = /^\w{1,2}\.{0,}\w{0,}%$/;
+            if (percentReg.test(exitWidth)) {
+                exitWidth = parseInt(exitWidth, 10);
+                resSize = maxSize = 100 * maxSize / (100 - exitWidth);
+            }
+            else {
+                throw new Error(`the exitWidth must be in percentage format and cannot be greater than 99%, 
+                but you set it as '${exitWidth}'`);
+            }
+        }
         const setLayoutPoints =
             // The subsequent funnel shape modification will be done in this func.
             // We don’t need to concern direction when we use this function to set points.

@@ -99,6 +99,8 @@ export interface FunnelSeriesOption
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | FunnelDataItemOption)[]
 
     dynamicHeight?: boolean
+
+    exitWidth?: string
 }
 
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {

@@ -87,6 +87,7 @@ under the License.
                         orient: 'vertical',
                         exitShape: 'rect',
                         dynamicHeight: true,
+                        exitWidth: '33%',
                         label: {
                             normal: {
                                 position: 'leftTop'
@@ -128,6 +129,7 @@ under the License.
                 labelLineLen: 20,
                 exitShape: 'rect',
                 dynamicHeight: 'true',
+                exitWidth: 33,
             };
 
             function update() {
@@ -148,6 +150,7 @@ under the License.
                         },
                         exitShape: config.exitShape,
                         dynamicHeight: config.dynamicHeight === 'true' ? true : false,
+                        exitWidth: `${config.exitWidth}%`
                     }]
                 });
             }
@@ -164,6 +167,8 @@ under the License.
             gui.add(config, 'exitShape', ['rect', 'default'])
                 .onChange(update);
             gui.add(config, 'dynamicHeight', ['true', 'false'])
+                .onChange(update);
+            gui.add(config, 'exitWidth', 0, 100)
                 .onChange(update);
         });
 
