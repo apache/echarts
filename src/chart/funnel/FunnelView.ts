@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
+import FunnelSeriesModel, { FunnelDataItemOption } from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -122,10 +122,142 @@ class FunnelPiece extends graphic.Polygon {
                 defaultOpacity: style.opacity,
                 defaultText: data.getName(idx)
             },
-            { normal: {
-                align: labelLayout.textAlign,
-                verticalAlign: labelLayout.verticalAlign
-            } }
+            {
+                normal: {
+                    align: labelLayout.textAlign,
+                    verticalAlign: labelLayout.verticalAlign
+                }
+            }
+        );
+
+        polygon.setTextConfig({
+            local: true,
+            inside: !!labelLayout.inside,
+            insideStroke: visualColor,
+            // insideFill: 'auto',
+            outsideFill: visualColor
+        });
+
+        const linePoints = labelLayout.linePoints;
+
+        labelLine.setShape({
+            points: linePoints
+        });
+
+        polygon.textGuideLineConfig = {
+            anchor: linePoints ? new graphic.Point(linePoints[0][0], linePoints[0][1]) : null
+        };
+
+        // Make sure update style on labelText after setLabelStyle.
+        // Because setLabelStyle will replace a new style on it.
+        graphic.updateProps(labelText, {
+            style: {
+                x: labelLayout.x,
+                y: labelLayout.y
+            }
+        }, seriesModel, idx);
+
+        labelText.attr({
+            rotation: labelLayout.rotation,
+            originX: labelLayout.x,
+            originY: labelLayout.y,
+            z2: 10
+        });
+
+        setLabelLineStyle(polygon, getLabelLineStatesModels(itemModel), {
+            // Default use item visual color
+            stroke: visualColor
+        });
+    }
+
+    ratePiece: RatePiece
+}
+
+class RatePiece extends graphic.Polygon {
+
+    constructor(data: SeriesData, idx: number) {
+        super();
+
+        const polygon = this;
+        const labelLine = new graphic.Polyline();
+        const text = new graphic.Text();
+        polygon.setTextContent(text);
+        this.setTextGuideLine(labelLine);
+
+        this.updateData(data, idx, true);
+    }
+    updateData(data: SeriesData, idx: number, firstCreate?: boolean) {
+        const polygon = this;
+        const layout = data.getItemLayout(idx);
+        const seriesModel = data.hostModel;
+        let opacity: number;
+        if (layout.isLastPiece) {
+            opacity = 1
+        } else {
+            opacity = 0.5;
+        }
+
+        if (!firstCreate) {
+            saveOldStyle(polygon);
+        }
+
+        if (layout.isLastPiece) {
+            polygon.useStyle(Object.assign(data.getItemVisual(idx, 'style'), { fill: 'rgba(0,0,0,0)' }));
+        } else {
+            polygon.useStyle(data.getItemVisual(idx, 'style'));
+        }
+
+        if (firstCreate) {
+            polygon.setShape({
+                points: layout.ratePoints
+            });
+            polygon.style.opacity = 0;
+            graphic.initProps(polygon, {
+                style: {
+                    opacity,
+                }
+            }, seriesModel, idx);
+        }
+        else {
+            graphic.updateProps(polygon, {
+                style: {
+                    opacity
+                },
+                shape: {
+                    points: layout.ratePoints
+                }
+            }, seriesModel, idx);
+        }
+        this._updateLabel(data, idx);
+    }
+    _updateLabel(data: SeriesData, idx: number) {
+        const polygon = this;
+        const labelLine = this.getTextGuideLine();
+        const labelText = polygon.getTextContent();
+
+        const seriesModel = data.hostModel;
+        const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
+        const layout = data.getItemLayout(idx);
+        const labelLayout = layout.rateLabel;
+        const style = data.getItemVisual(idx, 'style');
+        const visualColor = style.fill as ColorString;
+
+        setLabelStyle(
+            // position will not be used in setLabelStyle
+            labelText,
+            getLabelStatesModels(itemModel),
+            {
+                labelFetcher: data.hostModel as FunnelSeriesModel,
+                labelDataIndex: idx,
+                defaultOpacity: style.opacity,
+                defaultText: layout.rate
+            },
+            {
+                normal: {
+                    align: labelLayout.textAlign,
+                    verticalAlign: labelLayout.verticalAlign
+                }
+            }
         );
 
         polygon.setTextConfig({
@@ -169,6 +301,7 @@ class FunnelPiece extends graphic.Polygon {
     }
 }
 
+
 class FunnelView extends ChartView {
     static type = 'funnel' as const;
     type = FunnelView.type;
@@ -183,6 +316,8 @@ class FunnelView extends ChartView {
 
         const group = this.group;
 
+        const showRate = seriesModel.get('showRate') && !seriesModel.get('dynamicHeight');
+
         data.diff(oldData)
             .add(function (idx) {
                 const funnelPiece = new FunnelPiece(data, idx);
@@ -190,6 +325,12 @@ class FunnelView extends ChartView {
                 data.setItemGraphicEl(idx, funnelPiece);
 
                 group.add(funnelPiece);
+
+                if (showRate) {
+                    const ratePiece = new RatePiece(data, idx);
+                    group.add(ratePiece);
+                    funnelPiece.ratePiece = ratePiece;
+                }
             })
             .update(function (newIdx, oldIdx) {
                 const piece = oldData.getItemGraphicEl(oldIdx) as FunnelPiece;
@@ -198,10 +339,32 @@ class FunnelView extends ChartView {
 
                 group.add(piece);
                 data.setItemGraphicEl(newIdx, piece);
+
+                const ratePiece = piece.ratePiece;
+                if (showRate) {
+                    if (ratePiece) {
+                        ratePiece.updateData(data, newIdx);
+                        group.add(ratePiece);
+                    } else {
+                        const ratePiece = new RatePiece(data, newIdx);
+                        group.add(ratePiece);
+                        piece.ratePiece = ratePiece;
+                    }
+                }
+                else {
+                    if (ratePiece) {
+                        graphic.removeElementWithFadeOut(ratePiece, seriesModel, oldIdx);
+                        piece.ratePiece = null;
+                    }
+                }
             })
             .remove(function (idx) {
-                const piece = oldData.getItemGraphicEl(idx);
+                const piece = oldData.getItemGraphicEl(idx) as FunnelPiece;
                 graphic.removeElementWithFadeOut(piece, seriesModel, idx);
+                if (showRate) {
+                    const ratePiece = piece.ratePiece;
+                    graphic.removeElementWithFadeOut(ratePiece, seriesModel, idx);
+                }
             })
             .execute();
 
@@ -213,7 +376,7 @@ class FunnelView extends ChartView {
         this._data = null;
     }
 
-    dispose() {}
+    dispose() { }
 }
 
 

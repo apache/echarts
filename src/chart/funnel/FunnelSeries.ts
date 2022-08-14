@@ -101,6 +101,8 @@ export interface FunnelSeriesOption
     dynamicHeight?: boolean
 
     exitWidth?: string
+
+    showRate?: boolean
 }
 
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {

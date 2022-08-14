@@ -85,9 +85,10 @@ under the License.
                         right: 300,
                         sort: 'ascending',
                         orient: 'vertical',
-                        exitShape: 'rect',
-                        dynamicHeight: true,
+                        exitShape: 'default',
+                        dynamicHeight: false,
                         exitWidth: '33%',
+                        showRate: true,
                         label: {
                             normal: {
                                 position: 'leftTop'
@@ -127,9 +128,15 @@ under the License.
                 orient: 'vertical',
                 labelPosition: 'leftTop',
                 labelLineLen: 20,
-                exitShape: 'rect',
-                dynamicHeight: 'true',
+                exitShape: 'default',
+                dynamicHeight: 'false',
                 exitWidth: 33,
+                showRate: 'true',
+                data1: 60,
+                data2: 40,
+                data3: 20,
+                data4: 80,
+                data5: 100
             };
 
             function update() {
@@ -150,7 +157,23 @@ under the License.
                         },
                         exitShape: config.exitShape,
                         dynamicHeight: config.dynamicHeight === 'true' ? true : false,
-                        exitWidth: `${config.exitWidth}%`
+                        exitWidth: `${config.exitWidth}%`,
+                        showRate: config.showRate === 'true',
+                        data: [
+                            { value: config.data1, name: '访问' },
+                            { value: config.data2, name: '咨询' },
+                            { value: config.data3, name: '订单' },
+                            {
+                                value: config.data4,
+                                name: '点击',
+
+                            },
+                            {
+                                value: config.data5,
+                                name: '展现',
+                            },
+
+                        ]
                     }]
                 });
             }
@@ -169,6 +192,18 @@ under the License.
             gui.add(config, 'dynamicHeight', ['true', 'false'])
                 .onChange(update);
             gui.add(config, 'exitWidth', 0, 100)
+                .onChange(update);
+            gui.add(config, 'showRate', ['true', 'false'])
+                .onChange(update);
+            gui.add(config, 'data1', 0, 100)
+                .onChange(update);
+            gui.add(config, 'data2', 0, 100)
+                .onChange(update);
+            gui.add(config, 'data3', 0, 100)
+                .onChange(update);
+            gui.add(config, 'data4', 0, 100)
+                .onChange(update);
+            gui.add(config, 'data5', 0, 100)
                 .onChange(update);
         });
 

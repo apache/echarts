@@ -246,6 +246,37 @@ function labelLayout(data: SeriesData) {
     });
 }
 
+function rateLabelLayout(data: SeriesData) {
+    data.each(function (idx) {
+        const layout = data.getItemLayout(idx);
+        const points = layout.ratePoints;
+
+        const isLabelInside = true;
+
+        let textAlign;
+        let textX;
+        let textY;
+        let linePoints;
+
+        textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
+        textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
+        textAlign = 'center';
+
+        linePoints = [
+            [textX, textY], [textX, textY]
+        ];
+
+        layout.rateLabel = {
+            linePoints: linePoints,
+            x: textX,
+            y: textY,
+            verticalAlign: 'middle',
+            textAlign: textAlign,
+            inside: isLabelInside
+        };
+    });
+}
+
 export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('funnel', function (seriesModel: FunnelSeriesModel) {
         const data = seriesModel.getData();
@@ -348,7 +379,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             ];
         };
 
-        const getLinePointsInDyHeight = function (offset: number, itemSize: number) {
+        const getLinePointsBySize = function (offset: number, itemSize: number) {
             if (orient === 'horizontal') {
                 const itemHeight = itemSize;
                 let y0;
@@ -434,6 +465,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         let resSize = sizeExtent[1];
         let maxSize = sizeExtent[1];
         let exitWidth: string | number = seriesModel.get('exitWidth');
+
         if (exitWidth) {
             const percentReg = /^\w{1,2}\.{0,}\w{0,}%$/;
             if (percentReg.test(exitWidth)) {
@@ -445,6 +477,9 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 but you set it as '${exitWidth}'`);
             }
         }
+
+        const showRate = seriesModel.get('showRate');
+        let firstVal: number;
         const setLayoutPoints =
             // The subsequent funnel shape modification will be done in this func.
             // We don’t need to concern direction when we use this function to set points.
@@ -456,20 +491,54 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 pos: number
             ): void {
                 if (dynamicHeight) {
-                    const start = getLinePointsInDyHeight(pos, resSize / maxSize * viewSize);
+                    const start = getLinePointsBySize(pos, resSize / maxSize * viewSize);
                     let end;
 
                     if (index === indices.length - 1 && exitShape === 'rect') {
-                        end = getLinePointsInDyHeight(pos + sideLen, resSize / maxSize * viewSize);
+                        end = getLinePointsBySize(pos + sideLen, resSize / maxSize * viewSize);
                     }
                     else {
                         resSize += sort === 'ascending' ? sideLen : -sideLen;
-                        end = getLinePointsInDyHeight(pos + sideLen, resSize / maxSize * viewSize);
+                        end = getLinePointsBySize(pos + sideLen, resSize / maxSize * viewSize);
                     }
 
                     data.setItemLayout(idx, {
                         points: start.concat(end.slice().reverse())
                     });
+                    return;
+                }
+                else if (showRate) {
+                    const dataStart = getLinePoints(idx, pos);
+                    let dataEnd;
+                    if (exitWidth !== undefined && index === indices.length - 1) {
+                        const val = data.get(valueDim, idx) as number || 0;
+                        const itemSize = linearMap(val, [min, max], sizeExtent, true);
+                        const exitSize = itemSize * (exitWidth as number) / 100;
+                        dataEnd = getLinePointsBySize(pos + sideLen / 2, exitSize);
+                    } else {
+                        dataEnd = getLinePoints(idx, pos + sideLen / 2);
+                    }
+                    const rateStart = getLinePoints(idx, pos + sideLen / 2);
+                    const rateEnd = getLinePoints(nextIdx, pos + sideLen);
+
+                    const val = data.get(valueDim, idx) as number || 0;
+                    const nextVal = data.get(valueDim, nextIdx) as number || 0;
+                    let rate: number | string = nextVal / val;
+                    rate = 'Rate ' + (rate * 100).toFixed(0) + '%';
+                    if (index === 0) {
+                        firstVal = val;
+                    } else if (index === indices.length - 1) {
+                        const lastVal = val;
+                        rate = lastVal / firstVal;
+                        rate = 'Overall rate ' + (rate * 100).toFixed(0) + '%';
+                    }
+
+                    data.setItemLayout(idx, {
+                        points: dataStart.concat(dataEnd.slice().reverse()),
+                        ratePoints: rateStart.concat(rateEnd.slice().reverse()),
+                        isLastPiece: index === indices.length - 1,
+                        rate
+                    })
                     return;
                 }
                 const start = getLinePoints(idx, pos);
@@ -509,5 +578,8 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         }
 
         labelLayout(data);
+        if (showRate && !dynamicHeight) {
+            rateLabelLayout(data);
+        }
     });
 }
