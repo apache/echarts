@@ -170,7 +170,7 @@ class FunnelPiece extends graphic.Polygon {
         });
     }
 
-    ratePiece: RatePiece
+    ratePiece: RatePiece;
 }
 
 class RatePiece extends graphic.Polygon {
@@ -192,8 +192,9 @@ class RatePiece extends graphic.Polygon {
         const seriesModel = data.hostModel;
         let opacity: number;
         if (layout.isLastPiece) {
-            opacity = 1
-        } else {
+            opacity = 1;
+        }
+        else {
             opacity = 0.5;
         }
 
@@ -203,7 +204,8 @@ class RatePiece extends graphic.Polygon {
 
         if (layout.isLastPiece) {
             polygon.useStyle(Object.assign(data.getItemVisual(idx, 'style'), { fill: 'rgba(0,0,0,0)' }));
-        } else {
+        }
+        else {
             polygon.useStyle(data.getItemVisual(idx, 'style'));
         }
 
@@ -214,7 +216,7 @@ class RatePiece extends graphic.Polygon {
             polygon.style.opacity = 0;
             graphic.initProps(polygon, {
                 style: {
-                    opacity,
+                    opacity
                 }
             }, seriesModel, idx);
         }
@@ -345,7 +347,8 @@ class FunnelView extends ChartView {
                     if (ratePiece) {
                         ratePiece.updateData(data, newIdx);
                         group.add(ratePiece);
-                    } else {
+                    }
+                    else {
                         const ratePiece = new RatePiece(data, newIdx);
                         group.add(ratePiece);
                         piece.ratePiece = ratePiece;

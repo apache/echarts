@@ -253,16 +253,11 @@ function rateLabelLayout(data: SeriesData) {
 
         const isLabelInside = true;
 
-        let textAlign;
-        let textX;
-        let textY;
-        let linePoints;
+        const textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
+        const textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
+        const textAlign = 'center';
 
-        textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
-        textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
-        textAlign = 'center';
-
-        linePoints = [
+        const linePoints = [
             [textX, textY], [textX, textY]
         ];
 
@@ -515,7 +510,8 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                         const itemSize = linearMap(val, [min, max], sizeExtent, true);
                         const exitSize = itemSize * (exitWidth as number) / 100;
                         dataEnd = getLinePointsBySize(pos + sideLen / 2, exitSize);
-                    } else {
+                    }
+                    else {
                         dataEnd = getLinePoints(idx, pos + sideLen / 2);
                     }
                     const rateStart = getLinePoints(idx, pos + sideLen / 2);
@@ -527,7 +523,8 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     rate = 'Rate ' + (rate * 100).toFixed(0) + '%';
                     if (index === 0) {
                         firstVal = val;
-                    } else if (index === indices.length - 1) {
+                    }
+                    else if (index === indices.length - 1) {
                         const lastVal = val;
                         rate = lastVal / firstVal;
                         rate = 'Overall rate ' + (rate * 100).toFixed(0) + '%';
@@ -538,7 +535,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                         ratePoints: rateStart.concat(rateEnd.slice().reverse()),
                         isLastPiece: index === indices.length - 1,
                         rate
-                    })
+                    });
                     return;
                 }
                 const start = getLinePoints(idx, pos);
