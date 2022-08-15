@@ -67,9 +67,7 @@ class RadiusAxisView extends AxisView {
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
         newAxisGroup.add(axisBuilder.getGroup());
 
-        graphic.groupTransition(oldAxisGroup, newAxisGroup, radiusAxisModel, () => {
-            graphic.setGroupSubPixelOptimize(this._axisGroup, true);
-        });
+        graphic.groupTransition(oldAxisGroup, newAxisGroup, radiusAxisModel);
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (radiusAxisModel.get([name, 'show']) && !radiusAxis.scale.isBlank()) {

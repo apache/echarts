@@ -269,8 +269,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         );
 
         const line = new graphic.Line({
-            // Id for animation
-            subPixelOptimize: false,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -282,6 +280,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             silent: true,
             z2: 1
         });
+        graphic.setSubPixelOptimizeLine(line);
         line.anid = 'line';
         group.add(line);
 
@@ -629,7 +628,6 @@ function createTicks(
         }
         // Tick line, Not use group transform to have better line draw
         const tickEl = new graphic.Line({
-            subPixelOptimize: false,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -641,6 +639,7 @@ function createTicks(
             autoBatch: true,
             silent: true
         });
+        graphic.setSubPixelOptimizeLine(tickEl);
         tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;
         tickEls.push(tickEl);
     }

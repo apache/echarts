@@ -66,6 +66,7 @@ class CartesianAxisView extends AxisView {
 
         const layout = cartesianAxisHelper.layout(gridModel, axisModel);
 
+
         const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
             handleAutoShown(elementType) {
                 const cartesians = gridModel.coordinateSystem.getCartesians();
@@ -96,9 +97,7 @@ class CartesianAxisView extends AxisView {
         const isInitialSortFromBarRacing = payload && payload.type === 'changeAxisOrder' && payload.isInitSort;
 
         if (!isInitialSortFromBarRacing) {
-            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel, () => {
-                graphic.setGroupSubPixelOptimize(this._axisGroup, true);
-            });
+            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
         }
 
         super.render(axisModel, ecModel, api, payload);
@@ -160,9 +159,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
             const colorIndex = (lineCount++) % lineColors.length;
             const tickValue = ticksCoords[i].tickValue;
-            axisGroup.add(new graphic.Line({
+            const line = new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
-                subPixelOptimize: false,
                 autoBatch: true,
                 shape: {
                     x1: p1[0],
@@ -174,7 +172,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     stroke: lineColors[colorIndex]
                 }, lineStyle),
                 silent: true
-            }));
+            });
+            graphic.setSubPixelOptimizeLine(line);
+            axisGroup.add(line);
         }
     },
 
@@ -213,9 +213,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     p2[1] = tickCoord;
                 }
 
-                axisGroup.add(new graphic.Line({
+                const line = new graphic.Line({
                     anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
-                    subPixelOptimize: false,
                     autoBatch: true,
                     shape: {
                         x1: p1[0],
@@ -225,7 +224,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     },
                     style: lineStyle,
                     silent: true
-                }));
+                });
+                graphic.setSubPixelOptimizeLine(line);
+                axisGroup.add(line);
             }
         }
     },

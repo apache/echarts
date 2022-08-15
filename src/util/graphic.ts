@@ -63,7 +63,8 @@ import {
     keys,
     each,
     hasOwn,
-    isArray
+    isArray,
+    retrieve2
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import ComponentModel from '../model/Component';
@@ -280,12 +281,25 @@ export function subPixelOptimizeLine(param: {
     return param;
 }
 
-export function setGroupSubPixelOptimize(group: Group, useSubPixelOptimize: boolean) {
-    group.traverse((el: Element) => {
-        if (el.type === 'line') {
-            (el as Line).attr('subPixelOptimize', useSubPixelOptimize);
+/**
+ * Set the line with the optimized shape.
+ *
+ * @param line the line shape to set
+ * @param lineWidth the line width, if not given, line.style.lineWidth is used
+ */
+ export function setSubPixelOptimizeLine(line: Line, lineWidth?: number) {
+    const lineSubpixelParams = subPixelOptimizeLine({
+        shape: line.shape,
+        style: {
+            lineWidth: retrieve2(lineWidth, line.style.lineWidth)
         }
     });
+    const lineShape = line.shape;
+    const subPixelShape = lineSubpixelParams.shape;
+    lineShape.x1 = subPixelShape.x1;
+    lineShape.y1 = subPixelShape.y1;
+    lineShape.x2 = subPixelShape.x2;
+    lineShape.y2 = subPixelShape.y2;
 }
 
 /**
@@ -399,13 +413,9 @@ function isPath(el: Displayable): el is Path {
 export function groupTransition(
     g1: Group,
     g2: Group,
-    animatableModel: Model<AnimationOptionMixin>,
-    done?: () => void
+    animatableModel: Model<AnimationOptionMixin>
 ) {
     if (!g1 || !g2) {
-        if (typeof done === 'function') {
-            done();
-        }
         return;
     }
 
@@ -431,15 +441,13 @@ export function groupTransition(
     }
     const elMap1 = getElMap(g1);
 
-    let isFirstElement = true;
     g2.traverse(function (el) {
         if (isNotGroup(el) && el.anid) {
             const oldEl = elMap1[el.anid];
             if (oldEl) {
                 const newProp = getAnimatableProps(el);
                 el.attr(getAnimatableProps(oldEl));
-                updateProps(el, newProp, animatableModel, getECData(el).dataIndex, isFirstElement ? done : null);
-                isFirstElement = false;
+                updateProps(el, newProp, animatableModel, getECData(el).dataIndex);
             }
         }
     });
