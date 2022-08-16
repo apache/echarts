@@ -282,27 +282,6 @@ export function subPixelOptimizeLine(param: {
 }
 
 /**
- * Set the line with the optimized shape.
- *
- * @param line the line shape to set
- * @param lineWidth the line width, if not given, line.style.lineWidth is used
- */
- export function setSubPixelOptimizeLine(line: Line, lineWidth?: number) {
-    const lineSubpixelParams = subPixelOptimizeLine({
-        shape: line.shape,
-        style: {
-            lineWidth: retrieve2(lineWidth, line.style.lineWidth)
-        }
-    });
-    const lineShape = line.shape;
-    const subPixelShape = lineSubpixelParams.shape;
-    lineShape.x1 = subPixelShape.x1;
-    lineShape.y1 = subPixelShape.y1;
-    lineShape.x2 = subPixelShape.x2;
-    lineShape.y2 = subPixelShape.y2;
-}
-
-/**
  * Sub pixel optimize rect for canvas
  */
 export function subPixelOptimizeRect(param: {

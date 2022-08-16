@@ -162,18 +162,22 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             const line = new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 autoBatch: true,
-                shape: {
-                    x1: p1[0],
-                    y1: p1[1],
-                    x2: p2[0],
-                    y2: p2[1]
-                },
+                shape: graphic.subPixelOptimizeLine({
+                    shape: {
+                        x1: p1[0],
+                        y1: p1[1],
+                        x2: p2[0],
+                        y2: p2[1]
+                    },
+                    style: {
+                        lineWidth: lineStyle.lineWidth
+                    }
+                }).shape,
                 style: zrUtil.defaults({
                     stroke: lineColors[colorIndex]
                 }, lineStyle),
                 silent: true
             });
-            graphic.setSubPixelOptimizeLine(line);
             axisGroup.add(line);
         }
     },
@@ -216,16 +220,20 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                 const line = new graphic.Line({
                     anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
                     autoBatch: true,
-                    shape: {
-                        x1: p1[0],
-                        y1: p1[1],
-                        x2: p2[0],
-                        y2: p2[1]
-                    },
+                    shape: graphic.subPixelOptimizeLine({
+                        shape: {
+                            x1: p1[0],
+                            y1: p1[1],
+                            x2: p2[0],
+                            y2: p2[1]
+                        },
+                        style: {
+                            lineWidth: lineStyle.lineWidth
+                        }
+                    }).shape,
                     style: lineStyle,
                     silent: true
                 });
-                graphic.setSubPixelOptimizeLine(line);
                 axisGroup.add(line);
             }
         }

@@ -125,16 +125,19 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             }
 
             const line = new graphic.Line({
-                subPixelOptimize: false,
-                shape: {
-                    x1: p1[0],
-                    y1: p1[1],
-                    x2: p2[0],
-                    y2: p2[1]
-                },
+                shape: graphic.subPixelOptimizeLine({
+                    shape: {
+                        x1: p1[0],
+                        y1: p1[1],
+                        x2: p2[0],
+                        y2: p2[1]
+                    },
+                    style: {
+                        lineWidth: lineWidth
+                    }
+                }).shape,
                 silent: true
             });
-            graphic.setSubPixelOptimizeLine(line, lineWidth);
 
             const colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
