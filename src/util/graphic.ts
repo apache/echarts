@@ -63,8 +63,7 @@ import {
     keys,
     each,
     hasOwn,
-    isArray,
-    retrieve2
+    isArray
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import ComponentModel from '../model/Component';

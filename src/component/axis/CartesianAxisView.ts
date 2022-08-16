@@ -66,7 +66,6 @@ class CartesianAxisView extends AxisView {
 
         const layout = cartesianAxisHelper.layout(gridModel, axisModel);
 
-
         const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
             handleAutoShown(elementType) {
                 const cartesians = gridModel.coordinateSystem.getCartesians();
@@ -140,7 +139,6 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const p2 = [];
 
         const lineStyle = lineStyleModel.getLineStyle();
-
         for (let i = 0; i < ticksCoords.length; i++) {
             const tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
@@ -159,7 +157,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
             const colorIndex = (lineCount++) % lineColors.length;
             const tickValue = ticksCoords[i].tickValue;
-            const line = new graphic.Line({
+            axisGroup.add(new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
                 autoBatch: true,
                 shape: graphic.subPixelOptimizeLine({
@@ -177,8 +175,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     stroke: lineColors[colorIndex]
                 }, lineStyle),
                 silent: true
-            });
-            axisGroup.add(line);
+            }));
         }
     },
 
@@ -217,7 +214,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     p2[1] = tickCoord;
                 }
 
-                const line = new graphic.Line({
+                axisGroup.add(new graphic.Line({
                     anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
                     autoBatch: true,
                     shape: graphic.subPixelOptimizeLine({
@@ -233,8 +230,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     }).shape,
                     style: lineStyle,
                     silent: true
-                });
-                axisGroup.add(line);
+                }));
             }
         }
     },
