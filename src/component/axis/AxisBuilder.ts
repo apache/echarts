@@ -269,22 +269,18 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         );
 
         const line = new graphic.Line({
-            shape: graphic.subPixelOptimizeLine({
-                shape: {
-                    x1: pt1[0],
-                    y1: pt1[1],
-                    x2: pt2[0],
-                    y2: pt2[1]
-                },
-                style: {
-                    lineWidth: lineStyle.lineWidth
-                }
-            }).shape,
+            shape: {
+                x1: pt1[0],
+                y1: pt1[1],
+                x2: pt2[0],
+                y2: pt2[1]
+            },
             style: lineStyle,
             strokeContainThreshold: opt.strokeContainThreshold || 5,
             silent: true,
             z2: 1
         });
+        graphic.subPixelOptimizeLine(line.shape, line.style.lineWidth);
         line.anid = 'line';
         group.add(line);
 
@@ -632,7 +628,7 @@ function createTicks(
         }
         // Tick line, Not use group transform to have better line draw
         const tickEl = new graphic.Line({
-            shape: graphic.subPixelOptimizeLine({
+            shape: new graphic.Line({
                 shape: {
                     x1: pt1[0],
                     y1: pt1[1],
@@ -648,6 +644,7 @@ function createTicks(
             autoBatch: true,
             silent: true
         });
+        graphic.subPixelOptimizeLine(tickEl.shape, tickEl.style.lineWidth);
         tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;
         tickEls.push(tickEl);
     }
