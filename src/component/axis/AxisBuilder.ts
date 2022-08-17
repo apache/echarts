@@ -628,17 +628,12 @@ function createTicks(
         }
         // Tick line, Not use group transform to have better line draw
         const tickEl = new graphic.Line({
-            shape: new graphic.Line({
-                shape: {
-                    x1: pt1[0],
-                    y1: pt1[1],
-                    x2: pt2[0],
-                    y2: pt2[1]
-                },
-                style: {
-                    lineWidth: tickLineStyle.lineWidth
-                }
-            }).shape,
+            shape: {
+                x1: pt1[0],
+                y1: pt1[1],
+                x2: pt2[0],
+                y2: pt2[1]
+            },
             style: tickLineStyle,
             z2: 2,
             autoBatch: true,
