@@ -88,7 +88,7 @@ const extensionRegisters = {
 
 export type EChartsExtensionInstallRegisters = typeof extensionRegisters;
 
-export type EChartsExtensionInstaller = (ec: EChartsExtensionInstallRegisters) => void;
+export type EChartsExtensionInstaller = (registers: EChartsExtensionInstallRegisters) => void;
 export interface EChartsExtension {
     install: EChartsExtensionInstaller
 }
@@ -119,5 +119,12 @@ export function use(
 
 // A simpler use type for exporting to reduce exported inner modules.
 export type EChartsExtensionInstallerSimple = (registers: any) => void;
-type SimpleEChartsExtensionType = EChartsExtensionInstallerSimple | { install: EChartsExtensionInstallerSimple };
-export declare function useSimple(ext: SimpleEChartsExtensionType | (SimpleEChartsExtensionType)[]): void;
+export interface EChartsExtensionSimple {
+    install: EChartsExtensionInstallerSimple
+};
+export function useSimple(
+    ext: EChartsExtensionInstallerSimple | EChartsExtensionSimple
+        | (EChartsExtensionInstallerSimple | EChartsExtensionSimple)[]
+) {
+    use(ext);
+};

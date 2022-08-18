@@ -205,4 +205,6 @@ todo
 /renderers.d.ts
 /features.js
 /features.d.ts
+/extensionHelper.js
+/extensionHelper.d.ts
 *.tgz
