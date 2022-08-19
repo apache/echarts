@@ -116,15 +116,3 @@ export function use(
     }
     ext.install(extensionRegisters);
 }
-
-// A simpler use type for exporting to reduce exported inner modules.
-export type EChartsExtensionInstallerSimple = (registers: any) => void;
-export interface EChartsExtensionSimple {
-    install: EChartsExtensionInstallerSimple
-};
-export function useSimple(
-    ext: EChartsExtensionInstallerSimple | EChartsExtensionSimple
-        | (EChartsExtensionInstallerSimple | EChartsExtensionSimple)[]
-) {
-    use(ext);
-};
