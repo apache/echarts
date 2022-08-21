@@ -113,7 +113,8 @@ module.exports.checkStoreVersion = function (runParams) {
     console.log('Store ', _runHash);
     return storeParams.expectedVersion === runParams.expectedVersion
         && storeParams.actualVersion === runParams.actualVersion
-        && storeParams.renderer === runParams.renderer;
+        && storeParams.renderer === runParams.renderer
+        && storeParams.useCoarsePointer === runParams.useCoarsePointer;
 }
 
 function getResultFilePath() {
