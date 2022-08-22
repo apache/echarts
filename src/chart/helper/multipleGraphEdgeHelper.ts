@@ -199,7 +199,6 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse?: bool
     const curvenessList = seriesModel.__curvenessList;
     // if pass array no need parity
     const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
-
     if (!edgeArray.isForward) {
         // the opposite edge show outside
         const oppositeKey = getOppositeKey(curKey);

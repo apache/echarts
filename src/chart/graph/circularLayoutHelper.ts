@@ -26,6 +26,7 @@ import Symbol from '../helper/Symbol';
 import SeriesData from '../../data/SeriesData';
 import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
+import { isSelfLoopEdge } from './layoutHelper';
 
 const PI = Math.PI;
 
@@ -104,7 +105,11 @@ export function circularLayout(
         let cp1;
         const x12 = (p1[0] + p2[0]) / 2;
         const y12 = (p1[1] + p2[1]) / 2;
-        if (+curveness) {
+        if (isSelfLoopEdge(edge)) {
+            // Self-loop edge will be layout later in `layoutSelfLoopEdges`.
+            return;
+        }
+        else if (+curveness) {
             curveness *= 3;
             cp1 = [
                 cx * curveness + x12 * (1 - curveness),

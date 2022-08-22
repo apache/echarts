@@ -21,6 +21,12 @@ import GraphSeriesModel from './GraphSeries';
 import View from '../../coord/View';
 import { GraphNode } from '../../data/Graph';
 
+/**
+ * @return scale based on `View` coordinate system.
+ *         The final displayed pixel size is
+ *         `option.symbolSize * scale * view.getGlobalScale()`,
+ *         which will be changed when zooming.
+ */
 export function getNodeGlobalScale(seriesModel: GraphSeriesModel) {
     const coordSys = seriesModel.coordinateSystem as View;
     if (coordSys.type !== 'view') {

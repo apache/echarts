@@ -97,7 +97,6 @@ function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: 
     (symbolPath as LineECSymbol).__specifiedRotation = symbolRotate == null || isNaN(symbolRotate)
         ? void 0
         : +symbolRotate * Math.PI / 180 || 0;
-
     symbolPath.name = name;
 
     return symbolPath;
@@ -116,6 +115,8 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     type CurveShape = ECLinePath['shape'] & {
         cpx1: number
         cpy1: number
+        cpx2?: number
+        cpy2?: number
     };
 
     targetShape.x1 = points[0][0];
@@ -125,6 +126,8 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     targetShape.percent = 1;
 
     const cp1 = points[2];
+    const cp2 = points[3];
+
     if (cp1) {
         (targetShape as CurveShape).cpx1 = cp1[0];
         (targetShape as CurveShape).cpy1 = cp1[1];
@@ -132,6 +135,10 @@ function setLinePoints(targetShape: ECLinePath['shape'], points: number[][]) {
     else {
         (targetShape as CurveShape).cpx1 = NaN;
         (targetShape as CurveShape).cpy1 = NaN;
+    }
+    if (cp2) {
+        (targetShape as CurveShape).cpx2 = cp2[0];
+        (targetShape as CurveShape).cpy2 = cp2[1];
     }
 }
 
@@ -339,7 +346,7 @@ class Line extends graphic.Group {
         const label = lineGroup.getTextContent() as InnerLineLabel;
         // Quick reject
         if (!symbolFrom && !symbolTo && (!label || label.ignore)) {
-            return;
+            return ;
         }
 
         let invScale = 1;

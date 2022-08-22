@@ -21,7 +21,8 @@ import * as vec2 from 'zrender/src/core/vector';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 import Graph from '../../data/Graph';
 import * as zrUtil from 'zrender/src/core/util';
-import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
+import { getCurvenessForEdge } from '../helper/multipleGraphEdgeHelper';
+import { isSelfLoopEdge } from './layoutHelper';
 
 
 export function simpleLayout(seriesModel: GraphSeriesModel) {
@@ -41,6 +42,12 @@ export function simpleLayout(seriesModel: GraphSeriesModel) {
 
 export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
     graph.eachEdge(function (edge, index) {
+
+        if (isSelfLoopEdge(edge)) {
+            // Self-loop edge will be layout later in `layoutSelfLoopEdges`.
+            return;
+        }
+
         const curveness = zrUtil.retrieve3(
             edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'curveness']),
             -getCurvenessForEdge(edge, seriesModel, index, true),
