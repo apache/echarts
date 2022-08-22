@@ -32,12 +32,10 @@
     }
     if (params.__COARSE__POINTER__) {
         switch (params.__COARSE__POINTER__) {
-            case true:
             case 'true':
                 window.__ECHARTS__COARSE__POINTER__ = true;
                 break;
 
-            case false:
             case 'false':
                 window.__ECHARTS__COARSE__POINTER__ = false;
                 break;
