@@ -151,7 +151,7 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
 
     this.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
 
-    this.setCenter(geoModel.get('center'));
+    this.setCenter(geoModel.get('center'), api);
     this.setZoom(geoModel.get('zoom'));
 }
 

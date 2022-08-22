@@ -31,7 +31,7 @@ import SeriesData from '../../data/SeriesData';
 import {CandlestickItemLayout} from './candlestickLayout';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 
 const SKIP_PROPS = ['color', 'borderColor'] as const;

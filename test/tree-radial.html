@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -20,64 +20,92 @@ under the License.
 
 <html>
     <head>
-        <meta charset="utf-8" />
+        <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                padding: 0;
-                margin: 0;
-                height: 100%;
-            }
         </style>
-        <div id="main"></div>
+
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+        <script>
+        require([
+            'echarts',
+            './data/flare.json'
+        ], function (echarts, data) {
+            const option1 = {
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove'
+                },
+                series:[
+                    {
+                        type: 'tree',
+                        data: [data],
+                        top: '18%',
+                        bottom: '14%',
+                        roam: true,
+                        layout: 'radial',
+                        symbol: 'emptyCircle',
+                        symbolSize: 7,
+                        initialTreeDepth: 3,
+                        animationDurationUpdate: 750
+                    }
+                ]
+            };
+
+            const chart1 = testHelper.create(echarts, 'main1', {
+                title: [
+                    'test the radial tree',
+                ],
+                option: option1
+            });
+        });
+        </script>
+
         <script>
             require([
                 'echarts',
-                './data/flare.json'
-            ], function (echarts, data) {
-                var chart = echarts.init(document.getElementById('main'));
-
-                window.onresize = function () {
-                    chart.resize();
-                };
-
-                chart.setOption({
-
+            ], function (echarts) {
+                const option2 = {
                     tooltip: {
-                        trigger: 'item',
-                        triggerOn: 'mousemove'
+                        trigger: 'item'
                     },
-
                     series:[
                         {
                             type: 'tree',
-
-                            data: [data],
-
+                            data: [{
+                                name: 'root'
+                            }],
                             top: '18%',
                             bottom: '14%',
                             roam: true,
-
                             layout: 'radial',
-
                             symbol: 'emptyCircle',
-
-                            symbolSize: 7,
-
+                            symbolSize: 50,
                             initialTreeDepth: 3,
-
                             animationDurationUpdate: 750
-
                         }
                     ]
+                };
+
+                const chart2 = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Only root with the radial tree',
+                    ],
+                    option: option2
                 });
             });
-        </script>
+            </script>
     </body>
 </html>
+

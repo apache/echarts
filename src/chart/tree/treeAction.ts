@@ -17,11 +17,12 @@
 * under the License.
 */
 
-import {updateCenterAndZoom, RoamPaylod} from '../../action/roamHelper';
+import {updateCenterAndZoom, RoamPayload} from '../../action/roamHelper';
 import { Payload } from '../../util/types';
 import TreeSeriesModel from './TreeSeries';
 import GlobalModel from '../../model/Global';
 import { EChartsExtensionInstallRegisters } from '../../extension';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 
 export interface TreeExpandAndCollapsePayload extends Payload {
     dataIndex: number
@@ -51,12 +52,12 @@ export function installTreeAction(registers: EChartsExtensionInstallRegisters) {
         // the layout. So don't need to go through the whole update process, such
         // as 'dataPrcocess', 'coordSystemUpdate', 'layout' and so on.
         update: 'none'
-    }, function (payload: RoamPaylod, ecModel: GlobalModel) {
+    }, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachComponent({
             mainType: 'series', subType: 'tree', query: payload
         }, function (seriesModel: TreeSeriesModel) {
             const coordSys = seriesModel.coordinateSystem;
-            const res = updateCenterAndZoom(coordSys, payload);
+            const res = updateCenterAndZoom(coordSys, payload, undefined, api);
 
             seriesModel.setCenter
                 && seriesModel.setCenter(res.center);

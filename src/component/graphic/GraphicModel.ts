@@ -435,7 +435,9 @@ export class GraphicComponentModel extends ComponentModel<GraphicComponentOption
             result.push(option);
 
             const children = option.children;
-            if (option.type === 'group' && children) {
+            // here we don't judge if option.type is `group`
+            // when new option doesn't provide `type`, it will cause that the children can't be updated.
+            if (children && children.length) {
                 this._flatten(children, result, option);
             }
             // Deleting for JSON output, and for not affecting group creation.

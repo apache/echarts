@@ -804,16 +804,16 @@ function removeBar(
     const labelRect = bar.__pictorialBarRect;
     labelRect && (labelRect.removeTextContent());
 
-    const pathes = [];
+    const paths = [];
     eachPath(bar, function (path) {
-        pathes.push(path);
+        paths.push(path);
     });
-    bar.__pictorialMainPath && pathes.push(bar.__pictorialMainPath);
+    bar.__pictorialMainPath && paths.push(bar.__pictorialMainPath);
 
     // I do not find proper remove animation for clip yet.
     bar.__pictorialClipPath && (animationModel = null);
 
-    zrUtil.each(pathes, function (path) {
+    zrUtil.each(paths, function (path) {
         graphic.removeElement(
             path, { scaleX: 0, scaleY: 0 }, animationModel, dataIndex,
             function () {
