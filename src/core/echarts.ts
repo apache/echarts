@@ -34,7 +34,8 @@ import {
     isDom,
     isArray,
     noop,
-    isString
+    isString,
+    retrieve2
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import timsort from 'zrender/src/core/timsort';
@@ -324,6 +325,8 @@ type EChartsInitOpts = {
     renderer?: RendererType,
     devicePixelRatio?: number,
     useDirtyRect?: boolean,
+    useCoarsePointer?: boolean,
+    pointerSize?: number,
     ssr?: boolean,
     width?: number,
     height?: number
@@ -409,6 +412,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         this._dom = dom;
 
         let defaultRenderer = 'canvas';
+        let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
         if (__DEV__) {
             const root = (
@@ -417,6 +421,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             ) as any;
 
             defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+
+            defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
 
             const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
             defaultUseDirtyRect = devUseDirtyRect == null
@@ -430,7 +436,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             width: opts.width,
             height: opts.height,
             ssr: opts.ssr,
-            useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect
+            useDirtyRect: retrieve2(opts.useDirtyRect, defaultUseDirtyRect),
+            useCoarsePointer: retrieve2(opts.useCoarsePointer, defaultCoarsePointer),
+            pointerSize: opts.pointerSize
         });
         this._ssr = opts.ssr;
 
