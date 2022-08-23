@@ -43,10 +43,11 @@ import Displayable from 'zrender/src/graphic/Displayable';
 
 const DATA_COUNT_THRESHOLD = 1e4;
 
-interface GlobalStore { oldSeries: SeriesModel[], oldData: SeriesData[] };
+interface GlobalStore { oldSeries: SeriesModel[], oldDataGroupIds: string[], oldData: SeriesData[] };
 const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>();
 
 interface DiffItem {
+    dataGroupId: string
     data: SeriesData
     groupIdDim: DimensionLoose
     childGroupIdDim: DimensionLoose
@@ -54,6 +55,7 @@ interface DiffItem {
     dataIndex: number
 }
 interface TransitionSeries {
+    dataGroupId: string
     data: SeriesData
     divide: UniversalTransitionOption['divideShape']
     groupIdDim?: DimensionLoose
@@ -96,6 +98,7 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
         const childGroupIdDim = getChildGroupIdDimension(data);
         for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
             items.push({
+                dataGroupId: seriesInfo.dataGroupId,
                 data,
                 groupIdDim: seriesInfo.groupIdDim || groupIdDim,
                 childGroupIdDim,
@@ -281,7 +284,7 @@ function transitionBetween(
             // Use group id as transition key by default.
             // So we can achieve multiple to multiple animation like drilldown / up naturally.
             // If group id not exits. Use id instead. If so, only one to one transition will be applied.
-            const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
+            const dataGroupId = diffItem.dataGroupId;
 
             if (direction === 'parent2child' || direction === 'nodirection') {
                 // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
@@ -342,7 +345,7 @@ function transitionBetween(
             // Use group id as transition key by default.
             // So we can achieve multiple to multiple animation like drilldown / up naturally.
             // If group id not exits. Use id instead. If so, only one to one transition will be applied.
-            const dataGroupId = data.hostModel && (data.hostModel as SeriesModel).get('dataGroupId') as string;
+            const dataGroupId = diffItem.dataGroupId;
 
             if (direction === 'child2parent' || direction === 'nodirection') {
                 // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
@@ -625,27 +628,36 @@ function findTransitionSeriesBatches(
 ) {
     const updateBatches = createHashMap<SeriesTransitionBatch>();
 
-    const oldDataMap = createHashMap<SeriesData>();
+    const oldDataMap = createHashMap<{
+        dataGroupId: string,
+        data: SeriesData
+    }>();
     // Map that only store key in array seriesKey.
     // Which is used to query the old data when transition from one to multiple series.
     const oldDataMapForSplit = createHashMap<{
         key: string,
+        dataGroupId: string,
         data: SeriesData
     }>();
 
     // 处理oldSerieses
     each(globalStore.oldSeries, (series, idx) => {
+        const oldDataGroupId = globalStore.oldDataGroupIds[idx] as string;
         const oldData = globalStore.oldData[idx];
         const transitionKey = getSeriesTransitionKey(series);
         const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
-        oldDataMap.set(transitionKeyStr, oldData);
+        oldDataMap.set(transitionKeyStr, {
+            dataGroupId: oldDataGroupId,
+            data: oldData
+        });
 
         if (isArray(transitionKey)) {
             // Same key can't in different array seriesKey.
             each(transitionKey, key => {
                 oldDataMapForSplit.set(key, {
-                    data: oldData,
-                    key: transitionKeyStr
+                    key: transitionKeyStr,
+                    dataGroupId: oldDataGroupId,
+                    data: oldData
                 });
             });
         }
@@ -659,6 +671,7 @@ function findTransitionSeriesBatches(
     // 处理newSerieses
     each(params.updatedSeries, series => {
         if (series.isUniversalTransitionEnabled() && series.isAnimationEnabled()) {
+            const newDataGroupId = series.get('dataGroupId') as string;
             const newData = series.getData();
             // TODO rename "transitionKey" to "seriesKey"
             const transitionKey = getSeriesTransitionKey(series);
@@ -673,16 +686,18 @@ function findTransitionSeriesBatches(
                 // TODO check if data is same?
                 updateBatches.set(transitionKeyStr, {
                     oldSeries: [{
-                        divide: getDivideShapeFromData(oldData),
-                        data: oldData
+                        dataGroupId: oldData.dataGroupId,
+                        divide: getDivideShapeFromData(oldData.data),
+                        data: oldData.data
                     }],
                     newSeries: [{
+                        dataGroupId: newDataGroupId,
                         divide: getDivideShapeFromData(newData),
                         data: newData
                     }]
                 });
             }
-           else {
+            else {
                 // Transition from multiple series.
                 // e.g. 'female', 'male' -> ['female', 'male']
                 if (isArray(transitionKey)) {
@@ -692,10 +707,11 @@ function findTransitionSeriesBatches(
                     const oldSeries: TransitionSeries[] = [];
                     each(transitionKey, key => {
                         const oldData = oldDataMap.get(key);
-                        if (oldData) {
+                        if (oldData.data) {
                             oldSeries.push({
-                                divide: getDivideShapeFromData(oldData),
-                                data: oldData
+                                dataGroupId: oldData.dataGroupId,
+                                divide: getDivideShapeFromData(oldData.data),
+                                data: oldData.data
                             });
                         }
                     });
@@ -703,6 +719,7 @@ function findTransitionSeriesBatches(
                         updateBatches.set(transitionKeyStr, {
                             oldSeries,
                             newSeries: [{
+                                dataGroupId: newDataGroupId,
                                 data: newData,
                                 divide: getDivideShapeFromData(newData)
                             }]
@@ -718,6 +735,7 @@ function findTransitionSeriesBatches(
                         if (!batch) {
                             batch = {
                                 oldSeries: [{
+                                    dataGroupId: oldData.dataGroupId,
                                     data: oldData.data,
                                     divide: getDivideShapeFromData(oldData.data)
                                 }],
@@ -726,6 +744,7 @@ function findTransitionSeriesBatches(
                             updateBatches.set(oldData.key, batch);
                         }
                         batch.newSeries.push({
+                            dataGroupId: newDataGroupId,
                             data: newData,
                             divide: getDivideShapeFromData(newData)
                         });
@@ -760,6 +779,7 @@ function transitionSeriesFromOpt(
         const idx = querySeries(globalStore.oldSeries, finder);
         if (idx >= 0) {
             from.push({
+                dataGroupId: globalStore.oldDataGroupIds[idx],
                 data: globalStore.oldData[idx],
                 // TODO can specify divideShape in transition.
                 divide: getDivideShapeFromData(globalStore.oldData[idx]),
@@ -772,6 +792,7 @@ function transitionSeriesFromOpt(
         if (idx >= 0) {
             const data = params.updatedSeries[idx].getData();
             to.push({
+                dataGroupId: globalStore.oldDataGroupIds[idx],
                 data,
                 divide: getDivideShapeFromData(data),
                 groupIdDim: finder.dimension
@@ -832,6 +853,7 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
         // Save all series of current update. Not only the updated one.
         const allSeries = ecModel.getSeries();
         const savedSeries: SeriesModel[] = globalStore.oldSeries = [];
+        const savedDataGroupIds: string[] = globalStore.oldDataGroupIds = [];
         const savedData: SeriesData[] = globalStore.oldData = [];
         for (let i = 0; i < allSeries.length; i++) {
             const data = allSeries[i].getData();
@@ -839,6 +861,7 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
             // Avoid large data costing too much extra memory
             if (data.count() < DATA_COUNT_THRESHOLD) {
                 savedSeries.push(allSeries[i]);
+                savedDataGroupIds.push(allSeries[i].get('dataGroupId') as string);
                 savedData.push(data);
             }
         }
