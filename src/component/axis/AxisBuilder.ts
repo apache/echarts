@@ -353,7 +353,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
 
         // This bit fixes the label overlap issue for the time chart.
-        // See https://github.com/apache/echarts/issues/142156 for more.
+        // See https://github.com/apache/echarts/issues/14266 for more.
         if (axisModel.get(['axisLabel', 'hideOverlap'])) {
             const labelList = prepareLayoutList(map(labelEls, label => ({
                 label,
@@ -371,8 +371,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         function calcDistanceToAxis() {
             const defaultMargin = 10;
             const axis = axisModel.axis;
-            // const isHorizontal = axis.getRotate() === 0 || axis.getRotate() === 180;
-            const isHorizontal = true;
+            const isHorizontal = axis.isHorizontal();
             const labelUnionRect = estimateLabelUnionRect(axis);
             if (!labelUnionRect) {
                 return 0;
@@ -386,7 +385,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         if (!name) {
             return;
         }
-        const labelGap = calcDistanceToAxis();
+        const isOutside = name === 'outsideStart' || name === 'outsideMiddle' || name === 'outsideEnd';
+        const labelGap =  isOutside ? calcDistanceToAxis() : 0;
         const nameLocation = axisModel.get('nameLocation');
         const nameDirection = opt.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
@@ -503,7 +503,7 @@ function endTextLayout(rotation: number,
     let textAlign: ZRTextAlign;
     let textVerticalAlign: ZRTextVerticalAlign;
     const inverse = extent[0] > extent[1];
-    const textIsStart = textPosition.toLocaleLowerCase().includes('start');
+    const textIsStart = textPosition === 'start' || textPosition === 'outsideStart';
     const onLeft = ((textIsStart) && !inverse)
         || (!textIsStart && inverse);
 
@@ -626,7 +626,7 @@ function isNameLocationCenter(nameLocation: string) {
 }
 
 function isNameLocationOutside(nameLocation: string) {
-    return nameLocation.toLowerCase().includes('outside');
+    return nameLocation === 'outsideStart' || nameLocation === 'outsideMiddle' || nameLocation === 'outsideEnd';
 }
 
 function createTicks(
