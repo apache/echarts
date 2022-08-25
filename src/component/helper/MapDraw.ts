@@ -820,7 +820,7 @@ function resetEventTriggerForRegion(
     dataIdx: number
 ): void {
     // setItemGraphicEl, setHoverStyle after all polygons and labels
-    // are added to the rigionGroup
+    // are added to the regionGroup
     if (viewBuildCtx.data) {
         // FIXME: when series-map use a SVG map, and there are duplicated name specified
         // on different SVG elements, after `data.setItemGraphicEl(...)`:
@@ -832,7 +832,7 @@ function resetEventTriggerForRegion(
         viewBuildCtx.data.setItemGraphicEl(dataIdx, eventTrigger);
     }
     // series-map will not trigger "geoselectchange" no matter it is
-    // based on a declared geo component. Becuause series-map will
+    // based on a declared geo component. Because series-map will
     // trigger "selectchange". If it trigger both the two events,
     // If users call `chart.dispatchAction({type: 'toggleSelect'})`,
     // it not easy to also fire event "geoselectchanged".

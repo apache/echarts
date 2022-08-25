@@ -31,7 +31,7 @@ import SeriesData from '../../data/SeriesData';
 import {CandlestickItemLayout} from './candlestickLayout';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 
 const SKIP_PROPS = ['color', 'borderColor'] as const;
@@ -358,12 +358,14 @@ function createLarge(
 
     const elP = new LargeBoxPath({
         shape: {points: largePoints},
-        __sign: 1
+        __sign: 1,
+        ignoreCoarsePointer: true
     });
     group.add(elP);
     const elN = new LargeBoxPath({
         shape: {points: largePoints},
-        __sign: -1
+        __sign: -1,
+        ignoreCoarsePointer: true
     });
     group.add(elN);
 
@@ -397,4 +399,3 @@ function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickS
 
 
 export default CandlestickView;
-

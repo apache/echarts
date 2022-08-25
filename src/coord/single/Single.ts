@@ -140,7 +140,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
 
         const isHorizontal = axis.isHorizontal();
         const extent = isHorizontal ? [0, rect.width] : [0, rect.height];
-        const idx = axis.reverse ? 1 : 0;
+        const idx = axis.inverse ? 1 : 0;
 
         axis.setExtent(extent[idx], extent[1 - idx]);
 

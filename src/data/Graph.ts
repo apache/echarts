@@ -360,8 +360,8 @@ class GraphNode {
     }
 
     // TODO: TYPE Same type with Model#getModel
-    getModel<T = unknown>(): Model<T>
-    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    getModel<T = unknown>(): Model<T>;
+    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>;
     getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {
             return;
@@ -410,8 +410,8 @@ class GraphEdge {
         this.dataIndex = dataIndex == null ? -1 : dataIndex;
     }
 
-    getModel<T = unknown>(): Model<T>
-    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>
+    getModel<T = unknown>(): Model<T>;
+    getModel<T = unknown, S extends keyof T= keyof T>(path: S): Model<T[S]>;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getModel<T = unknown>(path?: string): Model {
         if (this.dataIndex < 0) {

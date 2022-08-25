@@ -41,6 +41,7 @@ program
     .option('--expected <expected>', 'Expected version')
     .option('--actual <actual>', 'Actual version')
     .option('--renderer <renderer>', 'svg/canvas renderer')
+    .option('--use-coarse-pointer <useCoarsePointer>', '"auto" (by default) or "true" or "false"')
     .option('--threads <threads>', 'How many threads to run concurrently')
     .option('--no-save', 'Don\'t save result')
     .option('--dir <dir>', 'Out dir');
@@ -51,6 +52,7 @@ program.speed = +program.speed || 1;
 program.actual = program.actual || 'local';
 program.threads = +program.threads || 1;
 program.renderer = (program.renderer || 'canvas').toLowerCase();
+program.useCoarsePointer = (program.useCoarsePointer || 'auto').toLowerCase();
 program.dir = program.dir || (__dirname + '/tmp');
 
 if (!program.tests) {
@@ -265,7 +267,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             width: 800,
             height: 600
         });
-        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}`, {
+        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`, {
             waitUntil: 'networkidle2',
             timeout: 10000
         });
@@ -384,6 +386,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
         testOpt.actualVersion = actualVersion;
         testOpt.expectedVersion = expectedVersion;
         testOpt.useSVG = program.renderer === 'svg';
+        testOpt.useCoarsePointer = program.useCoarsePointer;
         testOpt.lastRun = Date.now();
     }
     else {
@@ -407,7 +410,7 @@ async function runTests(pendingTests) {
     });
 
     async function eachTask(testOpt) {
-        console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
+        console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}, useCoarsePointer: ${program.useCoarsePointer}`);
         try {
             await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
         }

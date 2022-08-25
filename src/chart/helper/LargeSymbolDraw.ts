@@ -315,6 +315,7 @@ class LargeSymbolDraw {
         const symbolEl = new LargeSymbolPath({
             cursor: 'default'
         });
+        symbolEl.ignoreCoarsePointer = true;
         this.group.add(symbolEl);
         this._newAdded.push(symbolEl);
         return symbolEl;
