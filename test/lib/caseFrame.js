@@ -207,6 +207,17 @@
             var matchResult = (pageURL || '').match(/[?&]__RENDERER__=(canvas|svg)(&|$)/);
             return matchResult && matchResult[1] || 'canvas';
         },
+        // true, false, 'auto'
+        useCoarsePointer: function (pageURL) {
+            var matchResult = (pageURL || '').match(/[?&]__USE_COARSE_POINTER__=(true|false|auto)(&|$)/);
+            return matchResult && matchResult[1]
+                ? matchResult[1] === 'true'
+                    ? true
+                    : matchResult[1] === 'false'
+                        ? false
+                        : 'auto'
+                : 'auto';
+        },
         // true, false
         useDirtyRect: function (pageURL) {
             var matchResult = (pageURL || '').match(/[?&]__USE_DIRTY_RECT__=(true|false)(&|$)/);
