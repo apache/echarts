@@ -19,15 +19,18 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
+import Model from '../../model/Model';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import BoxplotSeriesModel, { BoxplotDataItemOption } from './BoxplotSeries';
+import { getDefaultInterpolatedLabel, getDefaultLabel } from '../helper/labelHelper';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import { BoxplotItemLayout } from './boxplotLayout';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { ViewRootGroup } from '../../util/types';
 
 class BoxplotView extends ChartView {
     static type = 'boxplot';
@@ -52,7 +55,7 @@ class BoxplotView extends ChartView {
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
                     const itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
-                    const symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
+                    const symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, group, true);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
@@ -68,11 +71,11 @@ class BoxplotView extends ChartView {
 
                 const itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
                 if (!symbolEl) {
-                    symbolEl = createNormalBox(itemLayout, data, newIdx, constDim);
+                    symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, group);
                 }
                 else {
                     saveOldStyle(symbolEl);
-                    updateNormalBoxData(itemLayout, symbolEl, data, newIdx);
+                    updateNormalBoxData(itemLayout, symbolEl, data, newIdx, group);
                 }
 
                 group.add(symbolEl);
@@ -144,7 +147,8 @@ function createNormalBox(
     data: SeriesData,
     dataIndex: number,
     constDim: number,
-    isInit?: boolean
+    group: ViewRootGroup,
+    isInit?: boolean,
 ) {
     const ends = itemLayout.ends;
 
@@ -156,7 +160,7 @@ function createNormalBox(
         }
     });
 
-    updateNormalBoxData(itemLayout, el, data, dataIndex, isInit);
+    updateNormalBoxData(itemLayout, el, data, dataIndex, group, isInit);
 
     return el;
 }
@@ -166,7 +170,8 @@ function updateNormalBoxData(
     el: BoxPath,
     data: SeriesData,
     dataIndex: number,
-    isInit?: boolean
+    group: ViewRootGroup,
+    isInit?: boolean,
 ) {
     const seriesModel = data.hostModel;
     const updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
@@ -180,15 +185,53 @@ function updateNormalBoxData(
 
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.strokeNoScale = true;
-
     el.z2 = 100;
 
     const itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
     const emphasisModel = itemModel.getModel('emphasis');
 
+    if (seriesModel.option.label.show) {
+        const formattedLabels =
+            seriesModel.getRawValue(dataIndex)
+            .splice(1).map((value: number) => seriesModel.option.label.formatter(value).toString());
+
+        setBoxLabels(itemLayout, formattedLabels, seriesModel.option.label, group);
+    }
     setStatesStylesFromModel(el, itemModel);
 
     toggleHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
+}
+
+function setBoxLabels(itemLayout: BoxplotItemLayout, formattedLabels: Array<string>, labelOption: any, group: ViewRootGroup) {
+    const uniqueYPositions = Array.from(new Set(itemLayout.ends.map((pos: number[]) => pos[1])));
+    uniqueYPositions.sort(function(a: number, b: number) {
+        return a - b;
+    });
+    itemLayout.ends.sort(function(a: number[], b: number[]) {
+        return a[0] - b[0];
+    });
+    const uniqueAlternatingPositions =
+        uniqueYPositions.map((posY: number, ind: number) => {
+            const matchingPositions = itemLayout.ends.filter((orgPos: number[]) => orgPos[1] == posY);
+            const index = (ind % 2 == 0) ? 0 : matchingPositions.length - 1;
+            return matchingPositions[index]
+        });
+
+    formattedLabels.forEach((label: string, ind: number) => {
+        const textEl = new graphic.Text({
+            style: {
+                text: label
+            },
+            z2: 1000
+        });
+        const defaultOffset = 5;
+        const defaultXOffset = (ind % 2) === 0 ? (- (textEl.getBoundingRect().width + defaultOffset)) : defaultOffset;
+        const defaultYOffset = - defaultOffset;
+        const customOffset = labelOption.offset ? labelOption.offset : [0, 0];
+        textEl.x = uniqueAlternatingPositions[ind][0] + defaultXOffset + customOffset[0],
+        textEl.y = uniqueAlternatingPositions[ind][1] + defaultYOffset + customOffset[1],
+        group.add(textEl)
+    });
 }
 
 function transInit(points: number[][], dim: number, itemLayout: BoxplotItemLayout) {
