@@ -87,7 +87,7 @@ export function installSunburstAction(registers: EChartsExtensionInstallRegister
             }
 
             if (__DEV__) {
-                deprecateReplaceLog('highlight', 'sunburstHighlight');
+                deprecateReplaceLog('sunburstHighlight', 'highlight');
             }
 
             // Fast forward action
