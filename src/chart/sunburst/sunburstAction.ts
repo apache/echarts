@@ -103,7 +103,7 @@ export function installSunburstAction(registers: EChartsExtensionInstallRegister
             payload = extend({}, payload);
 
             if (__DEV__) {
-                deprecateReplaceLog('downplay', 'sunburstUnhighlight');
+                deprecateReplaceLog('sunburstUnhighlight', 'downplay');
             }
 
             api.dispatchAction(extend(payload, {
