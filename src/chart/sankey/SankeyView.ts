@@ -232,7 +232,7 @@ class SankeyView extends ChartView {
             toggleHoverEmphasis(
                 curve,
                 focus === 'adjacency' ? edge.getAdjacentDataIndices()
-                : focus === 'fullPath' ? edge.getFullPathDataIndices()
+                : focus === 'trajectory' ? edge.getFullPathDataIndices()
                 : focus,
                 emphasisModel.get('blurScope'),
                 emphasisModel.get('disabled')
@@ -286,7 +286,7 @@ class SankeyView extends ChartView {
             toggleHoverEmphasis(
                 rect,
                 focus === 'adjacency' ? node.getAdjacentDataIndices()
-                : focus === 'fullPath' ? node.getFullPathDataIndices()
+                : focus === 'trajectory' ? node.getFullPathDataIndices()
                 : focus,
                 emphasisModel.get('blurScope'),
                 emphasisModel.get('disabled')

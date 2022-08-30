@@ -400,7 +400,7 @@ class GraphNode {
               continue;
             }
 
-            dataIndices.edge.indexOf(adjacentEdge.dataIndex) === -1
+            zrUtil.indexOf(dataIndices.edge, adjacentEdge.dataIndex) < 0
             ? dataIndices.edge.push(adjacentEdge.dataIndex) : null;
             const sourceNodesQueue = [adjacentEdge.node1];
             const targetNodesQueue = [adjacentEdge.node2];

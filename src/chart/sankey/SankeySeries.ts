@@ -61,7 +61,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultEmphasisFocus | 'adjacency' | 'fullPath'
+        focus?: DefaultEmphasisFocus | 'adjacency' | 'trajectory'
     }
 }
 
