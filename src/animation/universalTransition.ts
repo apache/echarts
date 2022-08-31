@@ -48,15 +48,15 @@ const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>()
 
 interface DiffItem {
     data: SeriesData
-    dim: DimensionLoose
-    childGroupDim: DimensionLoose
+    groupIdDim: DimensionLoose
+    childGroupIdDim: DimensionLoose
     divide: UniversalTransitionOption['divideShape']
     dataIndex: number
 }
 interface TransitionSeries {
     data: SeriesData
     divide: UniversalTransitionOption['divideShape']
-    dim?: DimensionLoose
+    groupIdDim?: DimensionLoose
 }
 
 function getGroupIdDimension(data: SeriesData) {
@@ -91,13 +91,13 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
             return;
         }
         const indices = data.getIndices();
-        const groupDim = getGroupIdDimension(data);
-        const childGroupDim = getChildGroupIdDimension(data);
+        const groupIdDim = getGroupIdDimension(data);
+        const childGroupIdDim = getChildGroupIdDimension(data);
         for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
             items.push({
                 data,
-                dim: seriesInfo.dim || groupDim,
-                childGroupDim,
+                groupIdDim: seriesInfo.groupIdDim || groupIdDim,
+                childGroupIdDim,
                 divide: seriesInfo.divide,
                 dataIndex
             });
@@ -196,27 +196,27 @@ function transitionBetween(
     }
 
 
-    function findKeyDim(items: DiffItem[]) {
+    function findGroupIdDim(items: DiffItem[]) {
         for (let i = 0; i < items.length; i++) {
-            if (items[i].dim) {
-                return items[i].dim;
+            if (items[i].groupIdDim) {
+                return items[i].groupIdDim;
             }
         }
     }
 
-    function findChildGroupDim(items: DiffItem[]) {
+    function findChildGroupIdDim(items: DiffItem[]) {
         for (let i = 0; i < items.length; i++) {
-            if (items[i].childGroupDim) {
-                return items[i].childGroupDim;
+            if (items[i].childGroupIdDim) {
+                return items[i].childGroupIdDim;
             }
         }
     }
 
-    const oldKeyDim = findKeyDim(oldDiffItems);
-    const newKeyDim = findKeyDim(newDiffItems);
+    const oldGroupIdDim = findGroupIdDim(oldDiffItems);
+    const newGroupIdDim = findGroupIdDim(newDiffItems);
 
-    const oldChildGroupDim = findChildGroupDim(oldDiffItems);
-    const newChildGroupDim = findChildGroupDim(newDiffItems);
+    const oldChildGroupIdDim = findChildGroupIdDim(oldDiffItems);
+    const newChildGroupIdDim = findChildGroupIdDim(newDiffItems);
 
     let hasMorphAnimation = false;
 
@@ -224,12 +224,15 @@ function transitionBetween(
     const oldGroupIds: string[] = [];
     const oldChildGroupIds: string[] = [];
 
-    if (oldKeyDim || oldChildGroupDim) {
+    if (oldGroupIdDim || oldChildGroupIdDim) {
         oldDiffItems.forEach((item) => {
-            item.dim && oldGroupIds.push('' + item.data.get(item.data.getDimensionInfo(item.dim).name, item.dataIndex));
-            item.childGroupDim
+            item.groupIdDim
+                && oldGroupIds.push(
+                    '' + item.data.get(item.data.getDimensionInfo(item.groupIdDim).name, item.dataIndex)
+                );
+            item.childGroupIdDim
                 && oldChildGroupIds.push(
-                    '' + item.data.get(item.data.getDimensionInfo(item.childGroupDim).name, item.dataIndex)
+                    '' + item.data.get(item.data.getDimensionInfo(item.childGroupIdDim).name, item.dataIndex)
                 );
         });
     }
@@ -239,11 +242,13 @@ function transitionBetween(
 
     let direction = 'nodirection';
 
-    if (newKeyDim || newChildGroupDim) {
+    // TODO 下面的判断方向没有考虑itemGroupId缺失，需要dataGroupId作为groupId的情形
+    // 同时也没有考虑没有encode，而是从rawItem拿到groupId和childGroupId的情况
+    if (newGroupIdDim || newChildGroupIdDim) {
         for (let i = 0; i < newDiffItems.length; i++) {
             const newGroupId =
                 newDiffItems[i].data.get(
-                    newDiffItems[i].data.getDimensionInfo(newDiffItems[i].dim).name,
+                    newDiffItems[i].data.getDimensionInfo(newDiffItems[i].groupIdDim).name,
                     newDiffItems[i].dataIndex
                 ) + '';
             if (oldChildGroupIds.includes(newGroupId)) {
@@ -252,7 +257,7 @@ function transitionBetween(
             }
             const newChildGroupId =
                 newDiffItems[i].data.get(
-                    newDiffItems[i].data.getDimensionInfo(newDiffItems[i].childGroupDim).name,
+                    newDiffItems[i].data.getDimensionInfo(newDiffItems[i].childGroupIdDim).name,
                     newDiffItems[i].dataIndex
                 ) + '';
             if (oldGroupIds.includes(newChildGroupId)) {
@@ -279,9 +284,9 @@ function transitionBetween(
             if (direction === 'parent2child' || direction === 'nodirection') {
                 // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
                 // PENDING: If only use key dimension of newData.
-                const keyDim = newKeyDim || oldKeyDim;
+                const groupIdDim = newGroupIdDim || oldGroupIdDim;
 
-                const dimInfo = keyDim && data.getDimensionInfo(keyDim);
+                const dimInfo = groupIdDim && data.getDimensionInfo(groupIdDim);
                 const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
 
                 if (dimInfo) {
@@ -295,16 +300,16 @@ function transitionBetween(
             }
 
             if (direction === 'child2parent') {
-                const childGroupDim = newChildGroupDim || oldChildGroupDim;
+                const childGroupIdDim = newChildGroupIdDim || oldChildGroupIdDim;
 
-                const childGroupDimInfo = childGroupDim && data.getDimensionInfo(childGroupDim);
-                const childGroupDimOrdinalMeta = childGroupDimInfo && childGroupDimInfo.ordinalMeta;
+                const childGroupIdDimInfo = childGroupIdDim && data.getDimensionInfo(childGroupIdDim);
+                const childGroupIdDimOrdinalMeta = childGroupIdDimInfo && childGroupIdDimInfo.ordinalMeta;
 
-                if (childGroupDimInfo) {
+                if (childGroupIdDimInfo) {
                     // Get from encode.childGroupId.
-                    const key = data.get(childGroupDimInfo.name, dataIndex);
-                    if (childGroupDimOrdinalMeta) {
-                        return (childGroupDimOrdinalMeta.categories[key as number] as string) || key + '';
+                    const key = data.get(childGroupIdDimInfo.name, dataIndex);
+                    if (childGroupIdDimOrdinalMeta) {
+                        return (childGroupIdDimOrdinalMeta.categories[key as number] as string) || key + '';
                     }
                     //console.log(key);
                     return key + '';
@@ -340,9 +345,9 @@ function transitionBetween(
             if (direction === 'child2parent' || direction === 'nodirection') {
                 // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
                 // PENDING: If only use key dimension of newData.
-                const keyDim = oldKeyDim || newKeyDim;
+                const groupIdDim = oldGroupIdDim || newGroupIdDim;
 
-                const dimInfo = keyDim && data.getDimensionInfo(keyDim);
+                const dimInfo = groupIdDim && data.getDimensionInfo(groupIdDim);
                 const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
 
                 if (dimInfo) {
@@ -356,16 +361,16 @@ function transitionBetween(
             }
 
             if (direction === 'parent2child') {
-                const childGroupDim = oldChildGroupDim || newChildGroupDim;
+                const childGroupIdDim = oldChildGroupIdDim || newChildGroupIdDim;
 
-                const childGroupDimInfo = childGroupDim && data.getDimensionInfo(childGroupDim);
-                const childGroupDimOrdinalMeta = childGroupDimInfo && childGroupDimInfo.ordinalMeta;
+                const childGroupIdDimInfo = childGroupIdDim && data.getDimensionInfo(childGroupIdDim);
+                const childGroupIdDimOrdinalMeta = childGroupIdDimInfo && childGroupIdDimInfo.ordinalMeta;
 
-                if (childGroupDimInfo) {
+                if (childGroupIdDimInfo) {
                     // Get from encode.childGroupId.
-                    const key = data.get(childGroupDimInfo.name, dataIndex);
-                    if (childGroupDimOrdinalMeta) {
-                        return (childGroupDimOrdinalMeta.categories[key as number] as string) || key + '';
+                    const key = data.get(childGroupIdDimInfo.name, dataIndex);
+                    if (childGroupIdDimOrdinalMeta) {
+                        return (childGroupIdDimOrdinalMeta.categories[key as number] as string) || key + '';
                     }
                     //console.log(key);
                     return key + '';
@@ -751,7 +756,7 @@ function transitionSeriesFromOpt(
                 data: globalStore.oldData[idx],
                 // TODO can specify divideShape in transition.
                 divide: getDivideShapeFromData(globalStore.oldData[idx]),
-                dim: finder.dimension
+                groupIdDim: finder.dimension
             });
         }
     });
@@ -762,7 +767,7 @@ function transitionSeriesFromOpt(
             to.push({
                 data,
                 divide: getDivideShapeFromData(data),
-                dim: finder.dimension
+                groupIdDim: finder.dimension
             });
         }
     });
@@ -792,6 +797,7 @@ export function installUniversalTransition(registers: EChartsExtensionInstallReg
 
         // TODO multiple to multiple series.
         if (globalStore.oldSeries && params.updatedSeries && params.optionChanged) {
+            // TODO transitionOpt was used in an old implementation and can be removed now
             // Use give transition config if its' give;
             const transitionOpt = params.seriesTransition;
             if (transitionOpt) {
