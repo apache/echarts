@@ -250,6 +250,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
                                             // to align specialized icon. ▷▶❒❐▼✚
 
         zoomToNodeRatio: 0.32 * 0.32,
+        scaleLimit: null,
 
         roam: true,
         nodeClick: 'zoomToNode',

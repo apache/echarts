@@ -160,6 +160,8 @@ class TreemapView extends ChartView {
 
     private _storage = createStorage() as RenderElementStorage;
 
+    private _zoom = 1;;
+
     seriesModel: TreemapSeriesModel;
     api: ExtensionAPI;
     ecModel: GlobalModel;
@@ -528,6 +530,12 @@ class TreemapView extends ChartView {
         let mouseY = e.originY;
 
         if (this._state !== 'animating') {
+            let newZoom = this._zoom * e.scale;
+            const scaleLimit = this.seriesModel.get('scaleLimit');
+            if (newZoom > scaleLimit.max || newZoom < scaleLimit.min) {
+              return;
+            }
+            this._zoom = newZoom;
             // These param must not be cached.
             const root = this.seriesModel.getData().tree.root;
 
