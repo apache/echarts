@@ -79,6 +79,7 @@ function getChildGroupIdDimension(data: SeriesData) {
     }
 }
 
+// flatten all data items from different serieses into one arrary
 function flattenDataDiffItems(list: TransitionSeries[]) {
     const items: DiffItem[] = [];
 
@@ -244,6 +245,7 @@ function transitionBetween(
 
     // TODO 下面的判断方向没有考虑itemGroupId缺失，需要dataGroupId作为groupId的情形
     // 同时也没有考虑没有encode，而是从rawItem拿到groupId和childGroupId的情况
+    // 还没考虑nodirection也就是没有childGroupId的情况(undefined)
     if (newGroupIdDim || newChildGroupIdDim) {
         for (let i = 0; i < newDiffItems.length; i++) {
             const newGroupId =
@@ -631,6 +633,7 @@ function findTransitionSeriesBatches(
         data: SeriesData
     }>();
 
+    // 处理oldSerieses
     each(globalStore.oldSeries, (series, idx) => {
         const oldData = globalStore.oldData[idx];
         const transitionKey = getSeriesTransitionKey(series);
@@ -653,12 +656,14 @@ function findTransitionSeriesBatches(
             warn(`Duplicated seriesKey in universalTransition ${transitionKeyStr}`);
         }
     }
+    // 处理newSerieses
     each(params.updatedSeries, series => {
         if (series.isUniversalTransitionEnabled() && series.isAnimationEnabled()) {
             const newData = series.getData();
+            // TODO rename "transitionKey" to "seriesKey"
             const transitionKey = getSeriesTransitionKey(series);
             const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
-            // Only transition between series with same id.
+            // Only transition between series with same seriesKey.
             const oldData = oldDataMap.get(transitionKeyStr);
             // string transition key is the best match.
             if (oldData) {
@@ -679,6 +684,7 @@ function findTransitionSeriesBatches(
             }
            else {
                 // Transition from multiple series.
+                // e.g. 'female', 'male' -> ['female', 'male']
                 if (isArray(transitionKey)) {
                     if (__DEV__) {
                         checkTransitionSeriesKeyDuplicated(transitionKeyStr);
@@ -705,6 +711,7 @@ function findTransitionSeriesBatches(
                 }
                 else {
                     // Try transition to multiple series.
+                    // e.g. ['female', 'male'] -> 'female', 'male'
                     const oldData = oldDataMapForSplit.get(transitionKey);
                     if (oldData) {
                         let batch = updateBatches.get(oldData.key);
