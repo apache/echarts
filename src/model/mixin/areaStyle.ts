@@ -34,7 +34,7 @@ export const AREA_STYLE_KEY_MAP = [
 ];
 const getAreaStyle = makeStyleMapper(AREA_STYLE_KEY_MAP);
 
-type AreaStyleProps = Pick<PathStyleProps,
+export type AreaStyleProps = Pick<PathStyleProps,
     'fill'
     | 'shadowBlur'
     | 'shadowOffsetX'

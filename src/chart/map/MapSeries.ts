@@ -45,6 +45,9 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
+import { Color } from '../../echarts.all';
+import { LineStyleProps } from './../../model/mixin/lineStyle';
+import { AreaStyleProps } from '../../model/mixin/areaStyle';
 
 export interface MapStateOption<TCbParams = never> {
     itemStyle?: GeoItemStyleOption<TCbParams>
@@ -89,6 +92,34 @@ export interface MapSeriesOption extends
 
 
     nameProperty?: string;
+
+    thumbnail?: {
+        show?: boolean,
+
+        top?: number | string,
+
+        bottom?: number | string,
+
+        left?: number | string,
+
+        right?: number | string,
+
+        width?: number,
+
+        height?: number,
+
+        borderColor?: Color,
+
+        backgroundColor?: Color,
+
+        overlayBackgroundColor?: Color,
+
+        selectedDataBackground?: {
+            lineStyle: LineStyleProps,
+
+            areaStyle: AreaStyleProps
+        }
+     }
 }
 
 class MapSeries extends SeriesModel<MapSeriesOption> {
@@ -339,7 +370,35 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             }
         },
 
-        nameProperty: 'name'
+        nameProperty: 'name',
+
+        thumbnail: {
+            show: true,
+
+            right: 0,
+            bottom: 0,
+
+            width: 0,
+            height: 0,
+
+            backgroundColor: 'white',
+
+            borderColor: 'black',
+
+            overlayBackgroundColor: 'white',
+
+            selectedDataBackground: {
+                lineStyle: {
+                    lineWidth: 10,
+                    stroke: 'black'
+                },
+
+                areaStyle: {
+                    fill: 'white',
+                    opacity: 0.2
+                }
+            }
+        }
     };
 
 }

@@ -34,8 +34,12 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     DefaultEmphasisFocus,
-    CallbackDataParams
+    CallbackDataParams,
+    RoamOptionMixin
 } from '../../util/types';
+import { Color } from '../../echarts.all';
+import { LineStyleProps } from './../../model/mixin/lineStyle';
+import { AreaStyleProps } from '../../model/mixin/areaStyle';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
@@ -94,7 +98,7 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
 export interface SankeySeriesOption
     extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
     SankeyBothStateOption<CallbackDataParams>,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'sankey'
 
     /**
@@ -137,6 +141,34 @@ export interface SankeySeriesOption
     links?: SankeyEdgeItemOption[]
 
     levels?: SankeyLevelOption[]
+
+    thumbnail?: {
+        show?: boolean,
+
+        top?: number | string,
+
+        bottom?: number | string,
+
+        left?: number | string,
+
+        right?: number | string,
+
+        width?: number,
+
+        height?: number,
+
+        borderColor?: Color,
+
+        backgroundColor?: Color,
+
+        overlayBackgroundColor?: Color,
+
+        selectedDataBackground?: {
+            lineStyle: LineStyleProps,
+
+            areaStyle: AreaStyleProps
+        }
+    }
 }
 
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
@@ -272,6 +304,10 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         return params;
     }
 
+    setZoom(zoom: number) {
+        this.option.zoom = zoom;
+    }
+
     static defaultOption: SankeySeriesOption = {
         // zlevel: 0,
         z: 2,
@@ -291,6 +327,13 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         draggable: true,
 
         layoutIterations: 32,
+
+        roam: false,
+
+        // Default on center of graph
+        center: null,
+
+        zoom: 1,
 
         label: {
             show: true,
@@ -325,7 +368,35 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         animationEasing: 'linear',
 
-        animationDuration: 1000
+        animationDuration: 1000,
+
+        thumbnail: {
+            show: true,
+
+            right: 0,
+            bottom: 0,
+
+            width: 0,
+            height: 0,
+
+            backgroundColor: 'white',
+
+            borderColor: 'black',
+
+            overlayBackgroundColor: 'white',
+
+            selectedDataBackground: {
+                lineStyle: {
+                    lineWidth: 10,
+                    stroke: 'black'
+                },
+
+                areaStyle: {
+                    fill: 'white',
+                    opacity: 0.2
+                }
+            }
+        }
     };
 }
 

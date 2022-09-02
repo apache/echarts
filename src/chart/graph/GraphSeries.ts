@@ -54,6 +54,9 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
+import { Color } from '../../echarts.all';
+import { LineStyleProps } from './../../model/mixin/lineStyle';
+import { AreaStyleProps } from '../../model/mixin/areaStyle';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -229,6 +232,34 @@ export interface GraphSeriesOption
      * auto curveness for multiple edge, invalid when `lineStyle.curveness` is set
      */
     autoCurveness?: boolean | number | number[]
+
+    thumbnail?: {
+        show?: boolean,
+
+        top?: number | string,
+
+        bottom?: number | string,
+
+        left?: number | string,
+
+        right?: number | string,
+
+        width?: number,
+
+        height?: number,
+
+        borderColor?: Color,
+
+        backgroundColor?: Color,
+
+        overlayBackgroundColor?: Color,
+
+        selectedDataBackground?: {
+            lineStyle: LineStyleProps,
+
+            areaStyle: AreaStyleProps
+        }
+     }
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
@@ -508,6 +539,34 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         select: {
             itemStyle: {
                 borderColor: '#212121'
+            }
+        },
+
+        thumbnail: {
+            show: true,
+
+            right: 0,
+            bottom: 0,
+
+            width: 0,
+            height: 0,
+
+            backgroundColor: 'white',
+
+            borderColor: 'black',
+
+            overlayBackgroundColor: 'white',
+
+            selectedDataBackground: {
+                lineStyle: {
+                    lineWidth: 10,
+                    stroke: 'black'
+                },
+
+                areaStyle: {
+                    fill: 'white',
+                    opacity: 0.2
+                }
             }
         }
     };

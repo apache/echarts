@@ -36,6 +36,7 @@ import Symbol from '../helper/Symbol';
 import SeriesData from '../../data/SeriesData';
 import Line from '../helper/Line';
 import { getECData } from '../../util/innerStore';
+import Thumbnail from './Thumbnail';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -60,19 +61,21 @@ class GraphView extends ChartView {
 
     private _layouting: boolean;
 
+    private _thumbanil: Thumbnail;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const symbolDraw = new SymbolDraw();
         const lineDraw = new LineDraw();
         const group = this.group;
-
+        const roamGroup = new graphic.Group();
         this._controller = new RoamController(api.getZr());
         this._controllerHost = {
-            target: group
+            target: roamGroup
         } as RoamControllerHost;
 
-        group.add(symbolDraw.group);
-        group.add(lineDraw.group);
-
+        roamGroup.add(symbolDraw.group);
+        roamGroup.add(lineDraw.group);
+        group.add(roamGroup);
         this._symbolDraw = symbolDraw;
         this._lineDraw = lineDraw;
 
@@ -81,7 +84,6 @@ class GraphView extends ChartView {
 
     render(seriesModel: GraphSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const coordSys = seriesModel.coordinateSystem;
-
         this._model = seriesModel;
 
         const symbolDraw = this._symbolDraw;
@@ -106,11 +108,9 @@ class GraphView extends ChartView {
 
         const data = seriesModel.getData();
         symbolDraw.updateData(data as ListForSymbolDraw);
-
         const edgeData = seriesModel.getEdgeData();
         // TODO: TYPE
         lineDraw.updateData(edgeData as SeriesData);
-
         this._updateNodeAndLinkScale();
 
         this._updateController(seriesModel, ecModel, api);
@@ -213,6 +213,7 @@ class GraphView extends ChartView {
         });
 
         this._firstRender = false;
+        this._renderThumbnail(seriesModel, api);
     }
 
     dispose() {
@@ -272,6 +273,7 @@ class GraphView extends ChartView {
                     dx: e.dx,
                     dy: e.dy
                 });
+                this._thumbanil._updatePan(e);
             })
             .on('zoom', (e) => {
                 roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
@@ -287,6 +289,7 @@ class GraphView extends ChartView {
                 this._lineDraw.updateLayout();
                 // Only update label layout on zoom
                 api.updateLabelLayout();
+                this._thumbanil._updateZoom(e);
             });
     }
 
@@ -311,6 +314,10 @@ class GraphView extends ChartView {
     remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
+    }
+
+    private _renderThumbnail(seriesModel: GraphSeriesModel, api: ExtensionAPI) {
+        this._thumbanil || (this._thumbanil = new Thumbnail(this.group)).render(seriesModel, api);
     }
 }
 

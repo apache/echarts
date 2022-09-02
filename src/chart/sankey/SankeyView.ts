@@ -20,6 +20,8 @@
 import * as graphic from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { LayoutOrient, ECElement } from '../../util/types';
+import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
+import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import { PathProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
 import ChartView from '../../view/Chart';
@@ -30,8 +32,12 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { isString } from 'zrender/src/core/util';
+import Thumbnail from './Thumbnail';
+import * as roamHelper from '../../component/helper/roamHelper';
 
-class SankeyPathShape {
+
+
+export class SankeyPathShape {
     x1 = 0;
     y1 = 0;
 
@@ -48,11 +54,12 @@ class SankeyPathShape {
     orient: LayoutOrient;
 }
 
+
 interface SankeyPathProps extends PathProps {
     shape?: Partial<SankeyPathShape>
 }
 
-class SankeyPath extends graphic.Path<SankeyPathProps> {
+export class SankeyPath extends graphic.Path<SankeyPathProps> {
     shape: SankeyPathShape;
 
     constructor(opts?: SankeyPathProps) {
@@ -108,7 +115,23 @@ class SankeyView extends ChartView {
 
     private _focusAdjacencyDisabled = false;
 
+    private _controller: RoamController;
+    private _controllerHost: RoamControllerHost;
+
+
     private _data: SeriesData;
+
+    private _thumbanil: Thumbnail;
+
+    private _roamGroup: graphic.Group;
+
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
+        // this._roamGroup = new graphic.Group();
+        this._controller = new RoamController(api.getZr());
+        this._controllerHost = {
+            target: this.group
+        } as RoamControllerHost;
+    }
 
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const sankeyView = this;
@@ -129,7 +152,6 @@ class SankeyView extends ChartView {
 
         group.x = layoutInfo.x;
         group.y = layoutInfo.y;
-
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
             const curve = new SankeyPath();
@@ -288,6 +310,8 @@ class SankeyView extends ChartView {
                 emphasisModel.get('disabled')
             );
         });
+        this._renderThumbnail(seriesModel, api);
+
 
         nodeData.eachItemGraphicEl(function (el: graphic.Rect, dataIndex: number) {
             const itemModel = nodeData.getItemModel<SankeyNodeItemOption>(dataIndex);
@@ -320,6 +344,19 @@ class SankeyView extends ChartView {
         }
 
         this._data = seriesModel.getData();
+    }
+
+    private _renderThumbnail(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
+        if (this._thumbanil) {
+            this.group.add(this._thumbanil.group);
+            this._thumbanil.render(seriesModel, api);
+        }
+        else {
+           this._thumbanil = new Thumbnail(this.group);
+           this._thumbanil.render(seriesModel, api);
+        };
+
+
     }
 
     dispose() {
