@@ -67,6 +67,12 @@ interface TransitionSeries {
     groupIdDim?: DimensionLoose
 }
 
+enum TransitionDirection {
+    None = 'none',
+    P2C = 'parent -> child',
+    C2P = 'child -> parent'
+}
+
 function getDimension(data: SeriesData, visualDimension: string) {
     const dimensions = data.dimensions;
     for (let i = 0; i < dimensions.length; i++) {
@@ -77,7 +83,7 @@ function getDimension(data: SeriesData, visualDimension: string) {
     }
 }
 
-// 这个函数是为获取groupId和childGroupId服务的，所以这个value得转成string类型
+// get value by dimension. (only get value of itemGroupId or childGroupId, so convert it to string)
 function getValueByDimension(data: SeriesData, dataIndex: number, dimension: DimensionName) {
     const dimInfo = data.getDimensionInfo(dimension);
     const dimOrdinalMeta = dimInfo && dimInfo.ordinalMeta;
@@ -91,42 +97,39 @@ function getValueByDimension(data: SeriesData, dataIndex: number, dimension: Dim
 }
 
 function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string) {
-    // 根据encode获取itemGroupID，若有则return
+    // try to get groupId from encode
     const groupIdDim = getDimension(data, 'itemGroupId');
     if (groupIdDim) {
-        // TODO 这个“容错”不知道还有没有必要保留
-        // const groupIdDim = newGroupIdDim || oldGroupIdDim;
         const groupId = getValueByDimension(data, dataIndex, groupIdDim);
         if (groupId) {
             return groupId;
         }
     }
-    // 根据raw获取groupId，若有则return
+    // try to get groupId from raw data item
     const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
     if (itemVal && itemVal.groupId) {
         return itemVal.groupId + '';
     }
-    // 获取series.dataGroupId，若有则return
-    // 获取dataItem.id
+    // try to use series.dataGroupId as groupId
+    // if failing to get groupId by all 3 ways above, fallback to data.getId(dataIndex)
     return (dataGroupId || data.getId(dataIndex));
 }
 
 function getChildGroupId(data: SeriesData, dataIndex: number) {
-    // 根据encode获取childGroupID，若有则return
+    // try to get childGroupId from encode
     const childGroupIdDim = getDimension(data, 'childGroupId');
     if (childGroupIdDim) {
-        // TODO 这个“容错”不知道还有没有必要保留
-        // const childGroupIdDim = newChildGroupIdDim || oldChildGroupIdDim;
         const childGroupId = getValueByDimension(data, dataIndex, childGroupIdDim);
         if (childGroupId) {
             return childGroupId;
         }
     }
-    // 根据raw获取childGroupId，若有则return
+    // try to get groupId from raw data item
     const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
     if (itemVal && itemVal.childGroupId) {
         return itemVal.childGroupId + '';
     }
+    // if no childGroupId specified, return undefined
     return undefined;
 }
 
@@ -147,8 +150,8 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
         for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
             items.push({
                 data,
-                groupId: getGroupId(data, dataIndex, dataGroupId),
-                childGroupId: getChildGroupId(data, dataIndex),
+                groupId: getGroupId(data, dataIndex, dataGroupId), // either of groupId or childGroupId will be used as diffItem's key,
+                childGroupId: getChildGroupId(data, dataIndex),    // depending on the transition direction (see below)
                 divide: seriesInfo.divide,
                 dataIndex
             });
@@ -248,27 +251,61 @@ function transitionBetween(
 
     let hasMorphAnimation = false;
 
-    // 在createKeyGetter之前先要确定"父->子"还是"子->父"
+    /**
+     * With groupId and childGroupId, we can build parent-child relationships between dataItems.
+     * However, we should mind the parent-child "direction" between old and new options.
+     *
+     * For example, suppose we have two dataItems from two series.data:
+     *
+     * dataA: [                          dataB: [
+     *   {                                 {
+     *     value: 5,                         value: 3,
+     *     groupId: 'creatures',             groupId: 'animals',
+     *     childGroupId: 'animals'           childGroupId: 'dogs'
+     *   },                                },
+     *   ...                               ...
+     * ]                                 ]
+     *
+     * where dataA is belong to optionA and dataB is belong to optionB.
+     *
+     * When we `setOption(optionB)` from optionA, we choose childGroupId of dataItemA and groupId of
+     * dataItemB as keys so the two keys are matched (both are 'animals'), then universalTransition
+     * will work. This derection is "parent -> child".
+     *
+     * If we `setOption(optionA)` from optionB, we also choose groupId of dataItemB and childGroupId
+     * of dataItemA as keys and universalTransition will work. This derection is "child -> parent".
+     *
+     * If there is no childGroupId specified, which means no multiLevelDrillDown/Up is needed and no
+     * parent-child relationship exists too. This direction is "none".
+     *
+     * So basiclly we need to know whether using groupId or childGroupId as key when we get key from
+     * the keyGetter function. Thus, we need to decide the direction first.
+     *
+     * The rule is:
+     *
+     * if (all childGroupIds in oldDiffItems and all groupIds in newDiffItems have common value) {
+     *   direction = 'parent -> child';
+     * } else if (all groupIds in oldDiffItems and all childGroupIds in newDiffItems have common value) {
+     *   direction = 'child -> parent';
+     * } else {
+     *   direction = 'none';
+     * }
+     */
+    let direction = TransitionDirection.None;
+
     const oldGroupIds = oldDiffItems.filter((item) => item.groupId !== undefined).map((item) => item.groupId);
     const oldChildGroupIds = oldDiffItems
         .filter((item) => item.childGroupId !== undefined)
         .map((item) => item.childGroupId);
-
-
-    // 若o.childGroupIds中的任意一个等于n.groupIds中的任意一个，则判断为“父->子”方向
-    // 若o.groupIds中的任意一个等于n.childGroupIds的任意一个，则判断为“子->父”方向
-
-    let direction = 'nodirection';
-
     for (let i = 0; i < newDiffItems.length; i++) {
         const newGroupId = newDiffItems[i].groupId;
         if (oldChildGroupIds.includes(newGroupId)) {
-            direction = 'parent2child';
+            direction = TransitionDirection.P2C;
             break;
         }
         const newChildGroupId = newDiffItems[i].childGroupId;
         if (newChildGroupId && oldGroupIds.includes(newChildGroupId)) {
-            direction = 'child2parent';
+            direction = TransitionDirection.C2P;
             break;
         }
     }
@@ -282,18 +319,18 @@ function transitionBetween(
                 return data.getId(dataIndex);
             }
             if (isOld) {
-                if (direction === 'child2parent' || direction === 'nodirection') {
+                if (direction === TransitionDirection.C2P || direction === TransitionDirection.None) {
                     return diffItem.groupId;
                 }
-                if (direction === 'parent2child') {
+                if (direction === TransitionDirection.P2C) {
                     return diffItem.childGroupId;
                 }
             }
             else {
-                if (direction === 'parent2child' || direction === 'nodirection') {
+                if (direction === TransitionDirection.P2C || direction === TransitionDirection.None) {
                     return diffItem.groupId;
                 }
-                if (direction === 'child2parent') {
+                if (direction === TransitionDirection.C2P) {
                     return diffItem.childGroupId;
                 }
             }
@@ -546,7 +583,6 @@ function findTransitionSeriesBatches(
         data: SeriesData
     }>();
 
-    // 处理oldSerieses
     each(globalStore.oldSeries, (series, idx) => {
         const oldDataGroupId = globalStore.oldDataGroupIds[idx] as string;
         const oldData = globalStore.oldData[idx];
@@ -574,15 +610,13 @@ function findTransitionSeriesBatches(
             warn(`Duplicated seriesKey in universalTransition ${transitionKeyStr}`);
         }
     }
-    // 处理newSerieses
     each(params.updatedSeries, series => {
         if (series.isUniversalTransitionEnabled() && series.isAnimationEnabled()) {
             const newDataGroupId = series.get('dataGroupId') as string;
             const newData = series.getData();
-            // TODO rename "transitionKey" to "seriesKey"
             const transitionKey = getSeriesTransitionKey(series);
             const transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
-            // Only transition between series with same seriesKey.
+            // Only transition between series with same id.
             const oldData = oldDataMap.get(transitionKeyStr);
             // string transition key is the best match.
             if (oldData) {
