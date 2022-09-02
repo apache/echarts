@@ -41,81 +41,56 @@ under the License.
 
         <script>
             require(['echarts'], function (echarts) {
-                var myChart = echarts.init(document.getElementById('main'));
+                var chart = testHelper.create(echarts, 'main', {
+                    title: [
+                        'Multiple levels of drilldown for bar charts',
+                        '(1) 1 old series --> 1 new series each `setOption()`',
+                        '(2) Get groupId from encode (by dimension)'
+                    ],
+                    height: 300
+                });
 
                 // level 1 (root)
-                const data_1 = {
-                    dataGroupId: '1',
-                    data: [
-                        ['1_1', 5, '1', '1_1'], // x, y, groupId, childGroupId
-                        ['1_2', 2, '1', '1_2']
-                    ]
-                };
-
+                const data_1 = [
+                    ['1_1', 5, '1', '1_1'],
+                    ['1_2', 2, '1', '1_2']
+                ];
                 // level 2
-                const data_1_1 = {
-                    dataGroupId: '1_1',
-                    data: [
-                        ['1_1_1', 2, '1_1', '1_1_1'],
-                        ['1_1_2', 2, '1_1', '1_1_2'],
-                        ['1_1_3', 3, '1_1', '1_1_3']
-                    ]
-                };
-
-                const data_1_2 = {
-                    dataGroupId: '1_2',
-                    data: [
-                        ['1_2_1', 6, '1_2', '1_2_1'],
-                        ['1_2_2', 7, '1_2', '1_2_2']
-                    ]
-                };
-
+                const data_1_1 = [
+                    ['1_1_1', 2, '1_1', '1_1_1'],
+                    ['1_1_2', 2, '1_1', '1_1_2'],
+                    ['1_1_3', 3, '1_1', '1_1_3']
+                ];
+                const data_1_2 = [
+                    ['1_2_1', 6, '1_2', '1_2_1'],
+                    ['1_2_2', 7, '1_2', '1_2_2']
+                ];
                 // level 3
-                const data_1_1_1 = {
-                    dataGroupId: '1_1_1',
-                    data: [
-                        ['1_1_1_A', 5, '1_1_1'],
-                        ['1_1_1_B', 6, '1_1_1'],
-                        ['1_1_1_C', 7, '1_1_1'],
-                        ['1_1_1_D', 8, '1_1_1']
-                    ]
-                };
-
-                const data_1_1_2 = {
-                    dataGroupId: '1_1_2',
-                    data: [
-                        ['1_1_2_A', 2, '1_1_2'],
-                        ['1_1_2_B', 9, '1_1_2']
-                    ]
-                };
-
-                const data_1_1_3 = {
-                    dataGroupId: '1_1_3',
-                    data: [
-                        ['1_1_3_A', 1, '1_1_3'],
-                        ['1_1_3_B', 2, '1_1_3'],
-                        ['1_1_3_C', 8, '1_1_3']
-                    ]
-                };
-
-                const data_1_2_1 = {
-                    dataGroupId: '1_2_1',
-                    data: [
-                        ['1_2_1_A', 9, '1_2_1'],
-                        ['1_2_1_B', 2, '1_2_1'],
-                        ['1_2_1_C', 1, '1_2_1']
-                    ]
-                };
-
-                const data_1_2_2 = {
-                    dataGroupId: '1_2_2',
-                    data: [
-                        ['1_2_2_A', 7, '1_2_2'],
-                        ['1_2_2_B', 7, '1_2_2']
-                    ]
-                };
-
-                const allDataGroups = [
+                const data_1_1_1 = [
+                    ['1_1_1_A', 5, '1_1_1'], // the "childest" data need not to be specified a `childGroupId`
+                    ['1_1_1_B', 6, '1_1_1'],
+                    ['1_1_1_C', 7, '1_1_1'],
+                    ['1_1_1_D', 8, '1_1_1']
+                ];
+                const data_1_1_2 = [
+                    ['1_1_2_A', 2, '1_1_2'],
+                    ['1_1_2_B', 9, '1_1_2']
+                ];
+                const data_1_1_3 = [
+                    ['1_1_3_A', 1, '1_1_3'],
+                    ['1_1_3_B', 2, '1_1_3'],
+                    ['1_1_3_C', 8, '1_1_3']
+                ];
+                const data_1_2_1 = [
+                    ['1_2_1_A', 9, '1_2_1'],
+                    ['1_2_1_B', 2, '1_2_1'],
+                    ['1_2_1_C', 1, '1_2_1']
+                ];
+                const data_1_2_2 = [
+                    ['1_2_2_A', 7, '1_2_2'],
+                    ['1_2_2_B', 7, '1_2_2']
+                ];
+                const allLevelData = [
                     data_1,
                     data_1_1,
                     data_1_2,
@@ -126,28 +101,30 @@ under the License.
                     data_1_2_2
                 ];
 
-                const allOptionsWithItemGroupId = {};
+                const allOptions = {};
 
-                allDataGroups.forEach((dataGroup, index) => {
-                    const { dataGroupId, data } = dataGroup;
-                    const optionWithItemGroupId = {
+                allLevelData.forEach((data) => {
+                    // since this dataItems of all level data in this example has same groupId,
+                    // we can use groupId as optionId for optionStack.
+                    const optionId = data[0][2];
+
+                    const option = {
+                        id: optionId, // option.id is not a property of echarts option model, but can be accessed if we provide it
                         xAxis: {
                             type: 'category'
                         },
                         yAxis: {},
-                        dataGroupId: dataGroupId,
                         animationDurationUpdate: 500,
                         series: {
                             type: 'bar',
-                            // id: "sales",
-                            // dataGroupId: dataGroupId,
+                            dimensions: ['x', 'y', 'groupId', 'childGroupId'],
                             encode: {
-                                x: 0,
-                                y: 1,
-                                itemGroupId: 2,
-                                childGroupId: 3
+                                x: 'x',
+                                y: 'y',
+                                itemGroupId: 'groupId',
+                                childGroupId: 'childGroupId'
                             },
-                            data: data,
+                            data,
                             universalTransition: {
                                 enabled: true,
                                 divideShape: 'clone'
@@ -168,40 +145,42 @@ under the License.
                             }
                         ]
                     };
-                    allOptionsWithItemGroupId[dataGroupId] = optionWithItemGroupId;
+                    allOptions[optionId] = option;
                 });
 
-                // A stack to remember previous dataGroupsId
-                const dataGroupIdStack = [];
+                // A stack to remember previous option id
+                const optionStack = [];
 
-                const goForward = (dataGroupId) => {
-                    dataGroupIdStack.push(myChart.getOption().dataGroupId); // push current dataGroupId into stack.
-                    myChart.setOption(allOptionsWithItemGroupId[dataGroupId], false); // setOption twice? Yeah, it is dirty.
+                const goForward = (optionId) => {
+                    optionStack.push(chart.getOption().id); // push current option id into stack.
+                    chart.setOption(allOptions[optionId], false);
                 };
 
                 const goBack = () => {
-                    if (dataGroupIdStack.length === 0) {
-                        console.log('Already in root dataGroup!');
+                    if (optionStack.length === 0) {
+                        console.log('Already in root level!');
                     } else {
                         console.log('Go back to previous level');
-                        // myChart.setOption(allOptionsWithItemGroupId[dataGroupIdStack.pop()], false); // Note: the parameter notMerge is set true
-                        myChart.setOption(allOptionsWithItemGroupId[dataGroupIdStack.pop()]); // Note: the parameter notMerge is set true
+                        chart.setOption(allOptions[optionStack.pop()]);
                     }
                 };
 
-                option = allOptionsWithItemGroupId['1']; // The initial option is the root data option
+                option = allOptions['1']; // The initial option is the root data option
 
-                myChart.on('click', 'series.bar', (params) => {
+                chart.on('click', 'series.bar', (params) => {
                     if (params.data[3]) {
-                        // If current params is not belong to the "childest" data, then it has data[3]
+                        // If current params is not belong to the "childest" data, it has data[3]
                         const childGroupId = params.data[3];
-                        goForward(childGroupId);
+                        // since we use groupId as optionId in this example,
+                        // we use childGroupId as the next level optionId.
+                        const nextOptionId = childGroupId;
+                        goForward(nextOptionId);
                     }
                 });
 
-                option && myChart.setOption(option);
+                option && chart.setOption(option);
 
-                window.onresize = myChart.resize;
+                window.onresize = chart.resize;
             });
         </script>
     </body>
