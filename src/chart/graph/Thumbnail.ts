@@ -124,13 +124,6 @@ class Thumbnail {
 
       this._wrapper = thumbnailWrapper;
 
-      // const content = thumbnailGroup.getBoundingRect();
-      // const offectX = (<number>thumbnailWrapper.shape.width - content.width) / 2;
-      // const offectY = (<number>thumbnailWrapper.shape.height - content.height) / 2;
-
-      // thumbnailGroup.x = offectX;
-      // thumbnailGroup.y = offectY;
-
       const areaStyle = selectedDataBackground.get('areaStyle');
       const lineStyle = selectedDataBackground.get('lineStyle');
 

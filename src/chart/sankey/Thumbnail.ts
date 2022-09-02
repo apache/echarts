@@ -133,7 +133,7 @@ class Thumbnail {
       group.add(thumbnailWrapper);
       group.add(thumbnailGroup);
 
-      // layout.positionElement(group, layoutParams.pos, layoutParams.box);
+      layout.positionElement(group, layoutParams.pos, layoutParams.box);
 
   }
 

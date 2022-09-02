@@ -112,13 +112,6 @@ class Thumbnail {
 
       this._wrapper = thumbnailWrapper;
 
-      // const content = thumbnailGroup.getBoundingRect();
-      // const offectX = (<number>thumbnailWrapper.shape.width - content.width) / 2;
-      // const offectY = (<number>thumbnailWrapper.shape.height - content.height) / 2;
-
-      // thumbnailGroup.x = offectX;
-      // thumbnailGroup.y = offectY;
-
       const areaStyle = selectedDataBackground.get('areaStyle');
       const lineStyle = selectedDataBackground.get('lineStyle');
 
@@ -129,25 +122,6 @@ class Thumbnail {
         z2: 150,
         draggable: true,
         ignore: true
-        // ondrag: (e) => {
-        //   const {x, y} = e.target;
-        //   const Y = <number>thumbnailWrapper.shape.height * (1 - this._selectedRect.scaleY);
-        //   const X = <number>thumbnailWrapper.shape.width * (1 - this._selectedRect.scaleX);
-        //       if (x < 0 || x > X || y < 0 || y > Y) {
-        //           if (x < 0) {
-        //               e.target.x = 0;
-        //           }
-        //           if (y < 0) {
-        //               e.target.y = 0;
-        //           }
-        //           if (x > X) {
-        //               e.target.x = X;
-        //           }
-        //           if (y > Y) {
-        //             e.target.y = Y;
-        //           }
-        //       }
-        // }
       });
 
       group.add(thumbnailWrapper);
@@ -259,8 +233,8 @@ class Thumbnail {
     const wrapper = this._wrapper.getBoundingRect();
     const {height, width} = this._layoutParams.box;
     const rect = this._selectedRect;
-    const origin = [0, 0];
-    const end = [width, height];
+    const origin = this._treeModel.coordinateSystem.pointToData([0, 0]);
+    const end = this._treeModel.coordinateSystem.pointToData([width, height]);
     const originData = this._treeModel.coordinateSystem.pointToData(origin);
     const endData = this._treeModel.coordinateSystem.pointToData(end);
     const x0 = (originData as number[])[0] / width;
@@ -272,17 +246,17 @@ class Thumbnail {
     const offectX = x0 * rect.shape.width;
     const offectY = y0 * rect.shape.height;
 
-    if (x1 - x0 >= 1 || !wrapper.contain(offectX, offectY)) {
-        this._selectedRect.hide();
-        return;
-    }
+    // if (x1 - x0 >= 1 || !wrapper.contain(offectX, offectY)) {
+    //     this._selectedRect.hide();
+    //     return;
+    // }
 
-    if (x1 - x0 < 0.08) {
-      return;
-    };
-    if (this._selectedRect.ignore) {
-        this._selectedRect.show();
-    }
+    // if (x1 - x0 < 0.08) {
+    //   return;
+    // };
+    // if (this._selectedRect.ignore) {
+    //     this._selectedRect.show();
+    // }
     rect.x = offectX;
     rect.y = offectY;
 
