@@ -184,7 +184,7 @@ under the License.
                         console.log('Already in root dataGroup!');
                     } else {
                         console.log('Go back to previous level');
-                        // myChart.setOption(allOptionsWithItemGroupId[dataGroupIdStack.pop()], true); // Note: the parameter notMerge is set true
+                        // myChart.setOption(allOptionsWithItemGroupId[dataGroupIdStack.pop()], false); // Note: the parameter notMerge is set true
                         myChart.setOption(allOptionsWithItemGroupId[dataGroupIdStack.pop()]); // Note: the parameter notMerge is set true
                     }
                 };
