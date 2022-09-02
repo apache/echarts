@@ -77,7 +77,7 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
     // (4) Consider other chart types using `barGrid`?
     // See #6728, #4862, `test/bar-overflow-time-plot.html`
     const ecModel = model.ecModel;
-    if (ecModel && (scaleType === 'time' /*|| scaleType === 'interval' */)) {
+    if (ecModel && (scaleType === 'time' /* || scaleType === 'interval' */)) {
         const barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
         let isBaseAxisAndHasBarSeries = false;
 

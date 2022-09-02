@@ -163,7 +163,7 @@ rules:
         - 2
         - "never"
     space-unary-ops: 2
-    spaced-comment: 0
+    spaced-comment: "error"
 
     max-nested-callbacks:
         - 1
