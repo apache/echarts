@@ -127,7 +127,6 @@ class Thumbnail {
       group.add(thumbnailWrapper);
       group.add(thumbnailGroup);
       group.add(this._selectedRect);
-
       //     if (node instanceof graphic.BezierCurve) {
       //       const edgethumbnail = new graphic.BezierCurve({
       //         style: (node as graphic.BezierCurve).style,
