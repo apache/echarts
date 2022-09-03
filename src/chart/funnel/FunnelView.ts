@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import FunnelSeriesModel, { FunnelDataItemOption } from './FunnelSeries';
+import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -122,12 +122,10 @@ class FunnelPiece extends graphic.Polygon {
                 defaultOpacity: style.opacity,
                 defaultText: data.getName(idx)
             },
-            {
-                normal: {
-                    align: labelLayout.textAlign,
-                    verticalAlign: labelLayout.verticalAlign
-                }
-            }
+            { normal: {
+                align: labelLayout.textAlign,
+                verticalAlign: labelLayout.verticalAlign
+            } }
         );
 
         polygon.setTextConfig({
@@ -186,11 +184,13 @@ class RatePiece extends graphic.Polygon {
 
         this.updateData(data, idx, true);
     }
+
     updateData(data: SeriesData, idx: number, firstCreate?: boolean) {
         const polygon = this;
         const layout = data.getItemLayout(idx);
         const seriesModel = data.hostModel;
         let opacity: number;
+
         if (layout.isLastPiece) {
             opacity = 1;
         }
@@ -232,6 +232,7 @@ class RatePiece extends graphic.Polygon {
         }
         this._updateLabel(data, idx);
     }
+
     _updateLabel(data: SeriesData, idx: number) {
         const polygon = this;
         const labelLine = this.getTextGuideLine();
@@ -249,7 +250,7 @@ class RatePiece extends graphic.Polygon {
             labelText,
             getLabelStatesModels(itemModel),
             {
-                labelFetcher: data.hostModel as FunnelSeriesModel,
+                // labelFetcher: data.hostModel as FunnelSeriesModel,
                 labelDataIndex: idx,
                 defaultOpacity: style.opacity,
                 defaultText: layout.rate
@@ -303,7 +304,6 @@ class RatePiece extends graphic.Polygon {
     }
 }
 
-
 class FunnelView extends ChartView {
     static type = 'funnel' as const;
     type = FunnelView.type;
@@ -317,8 +317,9 @@ class FunnelView extends ChartView {
         const oldData = this._data;
 
         const group = this.group;
-
-        const showRate = seriesModel.get('showRate') && !seriesModel.get('dynamicHeight');
+        const dynamicHeight = seriesModel.get('dynamicHeight');
+        const dynamicSize = seriesModel.get('dynamicSize');
+        const showRate = seriesModel.get('showRate') && !(dynamicHeight || dynamicSize);
 
         data.diff(oldData)
             .add(function (idx) {
@@ -342,6 +343,7 @@ class FunnelView extends ChartView {
                 group.add(piece);
                 data.setItemGraphicEl(newIdx, piece);
 
+                // rate funnel piece may remove in this mount func
                 const ratePiece = piece.ratePiece;
                 if (showRate) {
                     if (ratePiece) {
@@ -364,6 +366,7 @@ class FunnelView extends ChartView {
             .remove(function (idx) {
                 const piece = oldData.getItemGraphicEl(idx) as FunnelPiece;
                 graphic.removeElementWithFadeOut(piece, seriesModel, idx);
+
                 if (showRate) {
                     const ratePiece = piece.ratePiece;
                     graphic.removeElementWithFadeOut(ratePiece, seriesModel, idx);
@@ -379,7 +382,7 @@ class FunnelView extends ChartView {
         this._data = null;
     }
 
-    dispose() { }
+    dispose() {}
 }
 
 

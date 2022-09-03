@@ -18,196 +18,199 @@ under the License.
 -->
 
 <html>
-
-<head>
-    <meta charset="utf-8">
-    <script src="lib/simpleRequire.js"></script>
-    <script src="lib/config.js"></script>
-    <script src="lib/dat.gui.min.js"></script>
-</head>
-
-<body>
-    <style>
-        html,
-        body,
-        #main {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-        }
-    </style>
-    <div id="main"></div>
-    <script>
-
-        require([
-            'echarts'
-        ], function (echarts) {
-
-            var chart = echarts.init(document.getElementById('main'), null, {
-
-            });
-
-            var itemStyle = {
-                normal: {
-                    borderWidth: 0
-                },
-                emphasis: {
-                    shadowBlur: 40,
-                    shadowOffsetX: 0,
-                    shadowOffsetY: 0,
-                    shadowColor: 'rgba(0, 0, 0, 0.4)',
-                    borderWidth: 2
-                }
-            };
-
-            chart.setOption({
-                aria: {
-                    show: true
-                },
-                title: {
-                    text: '漏斗图',
-                    subtext: '纯属虚构'
-                },
-                tooltip: {
-                    trigger: 'item',
-                    formatter: '{a} <br/>{b} : {c}%'
-                },
-                legend: {
-                    data: ['展现', '点击', '访问', '咨询', '订单']
-                },
-                series: [
-                    {
-                        name: '漏斗图',
-                        type: 'funnel',
-                        gap: 3,
-                        itemStyle: itemStyle,
-                        left: 300,
-                        right: 300,
-                        sort: 'ascending',
-                        orient: 'vertical',
-                        exitShape: 'default',
-                        dynamicHeight: false,
-                        exitWidth: '33%',
-                        showRate: true,
-                        label: {
-                            normal: {
-                                position: 'leftTop'
-                            }
-                        },
-                        data: [
-                            { value: 60, name: '访问' },
-                            { value: 40, name: '咨询' },
-                            { value: 20, name: '订单' },
-                            {
-                                value: 80,
-                                name: '点击',
-                                // itemStyle: {
-                                //     height: '10%'
-                                // },
-                                label: {
-                                    position: 'insideLeft'
-                                }
-                            },
-                            {
-                                value: 100,
-                                name: '展现',
-                                itemStyle: {
-                                    width: '20%'
-                                },
-                                label: {
-                                    position: 'insideRight'
-                                }
-                            }
-                        ]
-                    }
-                ]
-            });
-
-            var config = {
-                sort: 'ascending',
-                orient: 'vertical',
-                labelPosition: 'leftTop',
-                labelLineLen: 20,
-                exitShape: 'default',
-                dynamicHeight: 'false',
-                exitWidth: 33,
-                showRate: 'true',
-                data1: 60,
-                data2: 40,
-                data3: 20,
-                data4: 80,
-                data5: 100
-            };
-
-            function update() {
-                chart.setOption({
-                    series: [{
-                        name: '漏斗图',
-                        sort: config.sort,
-                        orient: config.orient,
-                        label: {
-                            normal: {
-                                position: config.labelPosition
-                            }
-                        },
-                        labelLine: {
-                            normal: {
-                                length: config.labelLineLen
-                            }
-                        },
-                        exitShape: config.exitShape,
-                        dynamicHeight: config.dynamicHeight === 'true' ? true : false,
-                        exitWidth: `${config.exitWidth}%`,
-                        showRate: config.showRate === 'true',
-                        data: [
-                            { value: config.data1, name: '访问' },
-                            { value: config.data2, name: '咨询' },
-                            { value: config.data3, name: '订单' },
-                            {
-                                value: config.data4,
-                                name: '点击',
-
-                            },
-                            {
-                                value: config.data5,
-                                name: '展现',
-                            },
-
-                        ]
-                    }]
-                });
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html,body,#main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
             }
+        </style>
+        <div id="main"></div>
+        <script>
 
-            var gui = new dat.GUI();
-            gui.add(config, 'sort', ['descending', 'ascending', 'none'])
-                .onChange(update);
-            gui.add(config, 'orient', ['vertical', 'horizontal'])
-                .onChange(update);
-            gui.add(config, 'labelPosition', ['inside', 'center', 'insideLeft', 'insideRight', 'left', 'right', 'top', 'bottom', 'leftTop', 'leftBottom', 'rightTop', 'rightBottom'])
-                .onChange(update);
-            gui.add(config, 'labelLineLen', 0, 100)
-                .onChange(update);
-            gui.add(config, 'exitShape', ['rect', 'default'])
-                .onChange(update);
-            gui.add(config, 'dynamicHeight', ['true', 'false'])
-                .onChange(update);
-            gui.add(config, 'exitWidth', 0, 100)
-                .onChange(update);
-            gui.add(config, 'showRate', ['true', 'false'])
-                .onChange(update);
-            gui.add(config, 'data1', 0, 100)
-                .onChange(update);
-            gui.add(config, 'data2', 0, 100)
-                .onChange(update);
-            gui.add(config, 'data3', 0, 100)
-                .onChange(update);
-            gui.add(config, 'data4', 0, 100)
-                .onChange(update);
-            gui.add(config, 'data5', 0, 100)
-                .onChange(update);
-        });
+            require([
+                'echarts'
+            ], function (echarts) {
 
-    </script>
-</body>
+                var chart = echarts.init(document.getElementById('main'), null, {
+
+                });
+
+                var itemStyle = {
+                    normal: {
+                        borderWidth: 0
+                    },
+                    emphasis: {
+                        shadowBlur: 40,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.4)',
+                        borderWidth: 2
+                    }
+                };
+
+                chart.setOption({
+                    aria: {
+                        show: true
+                    },
+                    title: {
+                        text: '漏斗图',
+                        subtext: '纯属虚构'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b} : {c}%'
+                    },
+                    legend: {
+                        data: ['展现', '点击', '访问', '咨询', '订单']
+                    },
+                    series: [
+                        {
+                            name: '漏斗图',
+                            type: 'funnel',
+                            gap: 3,
+                            itemStyle: itemStyle,
+                            left: 300,
+                            right: 300,
+                            sort: 'ascending',
+                            orient: 'vertical',
+                            exitShape: 'default',
+                            dynamicHeight:false,
+                            dynamicSize:true,
+                            exitWidth: '33%',
+                            lastWidth: '33%',
+                            showRate: true,
+                            label: {
+                                normal: {
+                                    position: 'leftTop'
+                                },
+                                formatter:'{b}|{d}'
+                            },
+                            data: [
+                                { value: 60, name: '访问' },
+                                { value: 40, name: '咨询' },
+                                { value: 20, name: '订单' },
+                                {
+                                    value: 80,
+                                    name: '点击',
+                                    // itemStyle: {
+                                    //     height: '10%'
+                                    // },
+                                    label: {
+                                        position: 'insideLeft'
+                                    }
+                                },
+                                {
+                                    value: 100,
+                                    name: '展现',
+                                    itemStyle: {
+                                        width: '20%'
+                                    },
+                                    label: {
+                                        position: 'insideRight'
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                });
+
+                var config = {
+                    sort: 'ascending',
+                    orient: 'vertical',
+                    labelPosition: 'leftTop',
+                    labelLineLen: 20,
+                    dynamicHeight: 'false',
+                    dynamicSize: 'true',
+                    exitWidth: 33,
+                    lastWidth: 33,
+                    showRate: 'true',
+                    data1: 60,
+                    data2: 40,
+                    data3: 20,
+                    data4: 80,
+                    data5: 100
+                };
+
+                function update() {
+                    chart.setOption({
+                        series: [{
+                            name: '漏斗图',
+                            sort: config.sort,
+                            orient: config.orient,
+                            label: {
+                                normal: {
+                                    position: config.labelPosition
+                                }
+                            },
+                            labelLine: {
+                                normal: {
+                                    length: config.labelLineLen
+                                }
+                            },
+                            dynamicHeight: config.dynamicHeight === 'true',
+                            dynamicSize: config.dynamicSize ==='true',
+                            exitWidth: `${config.exitWidth}%`,
+                            lastWidth: `${config.lastWidth}%`,
+                            showRate: config.showRate === 'true',
+                            data: [
+                                { value: config.data1, name: '访问' },
+                                { value: config.data2, name: '咨询' },
+                                { value: config.data3, name: '订单' },
+                                {
+                                    value: config.data4,
+                                    name: '点击',
+
+                                },
+                                {
+                                    value: config.data5,
+                                    name: '展现',
+                                },
+
+                            ]
+                        }]
+                    });
+                }
+
+                var gui = new dat.GUI();
+                gui.add(config, 'sort', ['descending', 'ascending', 'none'])
+                    .onChange(update);
+                gui.add(config, 'orient', ['vertical', 'horizontal'])
+                    .onChange(update);
+                gui.add(config, 'labelPosition', ['inside', 'center', 'insideLeft', 'insideRight', 'left', 'right', 'top', 'bottom', 'leftTop', 'leftBottom', 'rightTop', 'rightBottom'])
+                    .onChange(update);
+                gui.add(config, 'labelLineLen', 0, 100)
+                    .onChange(update);
+                gui.add(config, 'dynamicHeight', ['true', 'false'])
+                    .onChange(update);
+                gui.add(config, 'dynamicSize', ['true', 'false'])
+                    .onChange(update);
+                gui.add(config, 'exitWidth', 0, 100)
+                    .onChange(update);
+                gui.add(config, 'lastWidth', 0, 100)
+                    .onChange(update);
+                gui.add(config, 'showRate', ['true', 'false'])
+                    .onChange(update);
+                gui.add(config, 'data1', 0, 100)
+                    .onChange(update);
+                gui.add(config, 'data2', 0, 100)
+                    .onChange(update);
+                gui.add(config, 'data3', 0, 100)
+                    .onChange(update);
+                gui.add(config, 'data4', 0, 100)
+                    .onChange(update);
+                gui.add(config, 'data5', 0, 100)
+                    .onChange(update);
+            });
+
+        </script>
+    </body>
 
 </html>

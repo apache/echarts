@@ -18,7 +18,7 @@
 */
 
 import * as layout from '../../util/layout';
-import { parsePercent, linearMap } from '../../util/number';
+import {parsePercent, linearMap} from '../../util/number';
 import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -28,9 +28,9 @@ import { isFunction } from 'zrender/src/core/util';
 function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
-        width: api.getWidth(),
-        height: api.getHeight()
-    }
+            width: api.getWidth(),
+            height: api.getHeight()
+        }
     );
 }
 
@@ -274,43 +274,48 @@ function rateLabelLayout(data: SeriesData) {
 
 export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('funnel', function (seriesModel: FunnelSeriesModel) {
+        // data about
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
         const valueArr = data.mapArray(valueDim, function (val: number) {
             return val;
         });
+
+        // direction about
         const sort = seriesModel.get('sort');
-        const viewRect = getViewRect(seriesModel, api);
         const orient = seriesModel.get('orient');
-        const dynamicHeight = seriesModel.get('dynamicHeight');
+
+        // size and pos about
+        const viewRect = getViewRect(seriesModel, api);
         const viewWidth = viewRect.width;
         const viewHeight = viewRect.height;
-        let indices = getSortedIndices(data, sort);
         let x = viewRect.x;
         let y = viewRect.y;
 
+        let indices = getSortedIndices(data, sort);
+
         let gap = seriesModel.get('gap');
         const gapSum = gap * (data.count() - 1);
-        let sizeExtent: Array<number> = null;
-        if (dynamicHeight) {
-            sizeExtent = orient === 'horizontal' ? [
-                parsePercent(seriesModel.get('minSize'), viewWidth - gapSum),
-                parsePercent(seriesModel.get('maxSize'), viewWidth - gapSum)
-            ] : [
-                parsePercent(seriesModel.get('minSize'), viewHeight - gapSum),
-                parsePercent(seriesModel.get('maxSize'), viewHeight - gapSum)
-            ];
-        }
-        else {
-            sizeExtent = orient === 'horizontal' ? [
-                parsePercent(seriesModel.get('minSize'), viewHeight),
-                parsePercent(seriesModel.get('maxSize'), viewHeight)
-            ] : [
-                parsePercent(seriesModel.get('minSize'), viewWidth),
-                parsePercent(seriesModel.get('maxSize'), viewWidth)
-            ];
-        }
 
+        // mapping mode about
+        const dynamicHeight = seriesModel.get('dynamicHeight');
+        const dynamicSize = seriesModel.get('dynamicSize');
+
+        // size extent based on orient and mapping mode
+        // determine the width extent of the funnel piece  when dynamicHeight is false
+        // determine the height extent of the funnel piece when dynamicHeight if true
+        const isHorizontal = orient === 'horizontal';
+        const size = dynamicHeight ? (
+            isHorizontal ? viewWidth - gapSum : viewHeight - gapSum
+        ) : (
+            isHorizontal ? viewHeight : viewWidth
+        );
+        const sizeExtent = [
+            parsePercent(seriesModel.get('minSize'), size),
+            parsePercent(seriesModel.get('maxSize'), size)
+        ];
+
+        // data extent
         const dataExtent = data.getDataExtent(valueDim);
         let min = seriesModel.get('min');
         let max = seriesModel.get('max');
@@ -321,15 +326,13 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             max = dataExtent[1];
         }
 
-        const funnelAlign = seriesModel.get('funnelAlign');
-        let viewSize: number;
-        if (dynamicHeight) {
-            viewSize = orient === 'vertical' ? viewWidth : viewHeight;
-        }
-        else {
-            viewSize = orient === 'horizontal' ? viewWidth : viewHeight;
-        }
+        // determine the height of the funnel
+        const viewSize = dynamicHeight ? (isHorizontal ? viewHeight : viewWidth
+            ) : (
+        isHorizontal ? viewWidth : viewHeight);
         let itemSize = (viewSize - gapSum) / data.count();
+
+        const funnelAlign = seriesModel.get('funnelAlign');
 
         const getLinePoints = function (idx: number, offset: number) {
             // End point index is data.count() and we assign it 0
@@ -375,6 +378,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         };
 
         const getLinePointsBySize = function (offset: number, itemSize: number) {
+            // do not caculate line width in this func
             if (orient === 'horizontal') {
                 const itemHeight = itemSize;
                 let y0;
@@ -414,67 +418,94 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             ];
         };
 
+        // adjust related param
         if (sort === 'ascending') {
             // From bottom to top
             itemSize = -itemSize;
-            gap = -gap;
+            const symbol = !dynamicHeight && dynamicSize ? 1 : -1;
+            gap = gap * symbol;
             if (orient === 'horizontal') {
-                x += viewWidth;
+                x += symbol === 1 ? 0 : viewWidth;
             }
             else {
-                y += viewHeight;
+                y += symbol === 1 ? 0 : viewHeight;
             }
             indices = indices.reverse();
         }
-
-        const valueSum = valueArr.reduce((pre, cur) => pre + cur);
-
-        const getSideLen = function (sideLen: number | string, idx?: number): number {
-            if (dynamicHeight) {
-                // in dy height, user can't set itemHeight or itemWidth
-                const val = data.get(valueDim, idx) as number || 0;
-                sideLen = linearMap(val, [0, valueSum], sizeExtent, true);
-                sideLen = sort === 'ascending' ? -sideLen : sideLen;
-                return sideLen;
-            }
-
-            if (sideLen == null) {
-                sideLen = itemSize;
-            }
-            else {
+        else {
+            if (dynamicSize && !dynamicHeight) {
+                gap = -gap;
                 if (orient === 'horizontal') {
-                    sideLen = parsePercent(sideLen, viewWidth);
+                    x += viewWidth;
                 }
                 else {
-                    sideLen = parsePercent(sideLen, viewHeight);
+                    y += viewHeight;
                 }
-
-                if (sort === 'ascending') {
-                    sideLen = -sideLen;
-                }
-            }
-            return sideLen;
-        };
-
-        const exitShape = seriesModel.get('exitShape');
-        let resSize = sizeExtent[1];
-        let maxSize = sizeExtent[1];
-        let exitWidth: string | number = seriesModel.get('exitWidth');
-
-        if (exitWidth) {
-            const percentReg = /^\w{1,2}\.{0,}\w{0,}%$/;
-            if (percentReg.test(exitWidth)) {
-                exitWidth = parseInt(exitWidth, 10);
-                resSize = maxSize = 100 * maxSize / (100 - exitWidth);
-            }
-            else {
-                throw new Error(`the exitWidth must be in percentage format and cannot be greater than 99%, 
-                but you set it as '${exitWidth}'`);
             }
         }
 
+        // dynamicSize about
+        const areaExtent = [0, viewHeight * viewWidth / 2];
+        // auxiliary variable
+        let cumulativeArea = 0;
+        let cumulativeHeight = 0;
+        // piece top and bottom
+        let pieceAreaBottom = 0;
+        let pieceAreaTop = 0;
+
+        const valueSum = valueArr.reduce((pre, cur) => pre + cur);
+
+        const getPieceHeight = function (pieceHeight: number | string, idx?: number): number {
+            // get funnel piece height pass to getLinePoints func based on data value
+            const val = data.get(valueDim, idx) as number || 0;
+
+            if (dynamicHeight) {
+                // in dy height, user can't set itemHeight or itemWidth
+                pieceHeight = linearMap(val, [0, valueSum], [0, size], true);
+
+                pieceHeight = sort === 'ascending' ? -pieceHeight : pieceHeight;
+                return pieceHeight;
+            }
+            else if (dynamicSize) {
+                // in dy size, user can't set itemHeight or itemWidth too
+                const pieceArea = linearMap(val, [0, valueSum], areaExtent, true);
+
+                cumulativeArea += pieceArea;
+                pieceAreaTop = pieceAreaBottom;
+
+                // calculate bottom line length and top line length
+                pieceAreaBottom = Math.sqrt(2 * cumulativeArea * size / viewSize);
+                pieceHeight = pieceAreaBottom * viewSize / size - cumulativeHeight;
+
+                cumulativeHeight += pieceHeight;
+                pieceHeight = sort === 'ascending' ? pieceHeight : -pieceHeight;
+                return pieceHeight;
+            }
+
+            // default mapping
+            if (pieceHeight == null) {
+                pieceHeight = itemSize;
+            }
+            else {
+                pieceHeight = parsePercent(pieceHeight, orient === 'horizontal' ? viewWidth : viewHeight);
+                pieceHeight = sort === 'ascending' ? -pieceHeight : pieceHeight;
+            }
+            return pieceHeight;
+        };
+
+        // dy height funnel size about
+        const lastWidth = parsePercent(seriesModel.get('lastWidth'), 100);
+        lastWidth >= 100 && console.warn('lastWidth shouldn\'t be greater than or equal to 100');
+        const maxSize = lastWidth < 100 ? sizeExtent[1] * 100 / (100 - lastWidth) : sizeExtent[1];
+        let resSize = maxSize;
+
+        // rate funnel about
         const showRate = seriesModel.get('showRate');
         let firstVal: number;
+
+        // exit shape control
+        const exitWidth = parsePercent(seriesModel.get('exitWidth'), 100);
+
         const setLayoutPoints =
             // The subsequent funnel shape modification will be done in this func.
             // We don’t need to concern direction when we use this function to set points.
@@ -482,20 +513,25 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 index: number,
                 idx: number,
                 nextIdx: number,
-                sideLen: number,
+                pieceHeight: number,
                 pos: number
             ): void {
                 if (dynamicHeight) {
                     const start = getLinePointsBySize(pos, resSize / maxSize * viewSize);
-                    let end;
+                    index === indices.length - 1 && exitWidth === 100
+                        || (
+                            resSize += sort === 'ascending' ? pieceHeight : -pieceHeight
+                        );
+                    const end = getLinePointsBySize(pos + pieceHeight, resSize / maxSize * viewSize);
 
-                    if (index === indices.length - 1 && exitShape === 'rect') {
-                        end = getLinePointsBySize(pos + sideLen, resSize / maxSize * viewSize);
-                    }
-                    else {
-                        resSize += sort === 'ascending' ? sideLen : -sideLen;
-                        end = getLinePointsBySize(pos + sideLen, resSize / maxSize * viewSize);
-                    }
+                    data.setItemLayout(idx, {
+                        points: start.concat(end.slice().reverse())
+                    });
+                    return;
+                }
+                else if (dynamicSize) {
+                    const start = getLinePointsBySize(pos, pieceAreaTop);
+                    const end = getLinePointsBySize(pos + pieceHeight, pieceAreaBottom);
 
                     data.setItemLayout(idx, {
                         points: start.concat(end.slice().reverse())
@@ -503,21 +539,24 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     return;
                 }
                 else if (showRate) {
+                    // data piece
                     const dataStart = getLinePoints(idx, pos);
                     let dataEnd;
+                    const val = data.get(valueDim, idx) as number || 0;
                     if (exitWidth !== undefined && index === indices.length - 1) {
-                        const val = data.get(valueDim, idx) as number || 0;
                         const itemSize = linearMap(val, [min, max], sizeExtent, true);
-                        const exitSize = itemSize * (exitWidth as number) / 100;
-                        dataEnd = getLinePointsBySize(pos + sideLen / 2, exitSize);
+                        const exitSize = itemSize * exitWidth / 100;
+                        dataEnd = getLinePointsBySize(pos + pieceHeight / 2, exitSize);
                     }
                     else {
-                        dataEnd = getLinePoints(idx, pos + sideLen / 2);
+                        dataEnd = getLinePoints(idx, pos + pieceHeight / 2);
                     }
-                    const rateStart = getLinePoints(idx, pos + sideLen / 2);
-                    const rateEnd = getLinePoints(nextIdx, pos + sideLen);
 
-                    const val = data.get(valueDim, idx) as number || 0;
+                    // rate piece
+                    const rateStart = getLinePoints(idx, pos + pieceHeight / 2);
+                    const rateEnd = getLinePoints(nextIdx, pos + pieceHeight);
+
+                    // rate label text about
                     const nextVal = data.get(valueDim, nextIdx) as number || 0;
                     let rate: number | string = nextVal / val;
                     rate = 'Rate ' + (rate * 100).toFixed(0) + '%';
@@ -538,15 +577,12 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     });
                     return;
                 }
-                const start = getLinePoints(idx, pos);
-                let end;
 
-                if (index === indices.length - 1 && exitShape === 'rect') {
-                    end = getLinePoints(idx, pos + sideLen);
-                }
-                else {
-                    end = getLinePoints(nextIdx, pos + sideLen);
-                }
+                const start = getLinePoints(idx, pos);
+                const end = getLinePoints(
+                    index === indices.length - 1 && exitWidth === 100 ? idx : nextIdx,
+                    pos + pieceHeight
+                );
 
                 data.setItemLayout(idx, {
                     points: start.concat(end.slice().reverse())
@@ -559,14 +595,14 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
 
             if (orient === 'horizontal') {
-                const width = getSideLen(itemModel.get(['itemStyle', 'width']), idx);
+                const width = getPieceHeight(itemModel.get(['itemStyle', 'width']), idx);
 
                 setLayoutPoints(i, idx, nextIdx, width, x);
 
                 x += width + gap;
             }
             else {
-                const height = getSideLen(itemModel.get(['itemStyle', 'height']), idx);
+                const height = getPieceHeight(itemModel.get(['itemStyle', 'height']), idx);
 
                 setLayoutPoints(i, idx, nextIdx, height, y);
 
@@ -575,7 +611,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         }
 
         labelLayout(data);
-        if (showRate && !dynamicHeight) {
+        if (showRate && !dynamicHeight && !dynamicSize) {
             rateLabelLayout(data);
         }
     });
