@@ -494,9 +494,9 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         };
 
         // dy height funnel size about
-        const lastWidth = parsePercent(seriesModel.get('lastWidth'), 100);
-        lastWidth >= 100 && console.warn('lastWidth shouldn\'t be greater than or equal to 100');
-        const maxSize = lastWidth < 100 ? sizeExtent[1] * 100 / (100 - lastWidth) : sizeExtent[1];
+        const thickDegree = parsePercent(seriesModel.get('thickDegree'), 100);
+        thickDegree >= 100 && console.warn('thickDegree shouldn\'t be greater than or equal to 100');
+        const maxSize = thickDegree < 100 ? sizeExtent[1] * 100 / (100 - thickDegree) : sizeExtent[1];
         let resSize = maxSize;
 
         // rate funnel about

@@ -100,7 +100,7 @@ export interface FunnelSeriesOption
 
     showRate?: boolean
 
-    lastWidth?: string
+    thickDegree?: string
 
     dynamicSize?: boolean
 

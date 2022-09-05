@@ -85,7 +85,7 @@ under the License.
                             dynamicHeight:false,
                             dynamicSize:true,
                             exitWidth: '33%',
-                            lastWidth: '33%',
+                            thickDegree: '33%',
                             showRate: true,
                             label: {
                                 normal: {
@@ -130,7 +130,7 @@ under the License.
                     dynamicHeight: 'false',
                     dynamicSize: 'true',
                     exitWidth: 33,
-                    lastWidth: 33,
+                    thickDegree: 33,
                     showRate: 'true',
                     data1: 60,
                     data2: 40,
@@ -158,7 +158,7 @@ under the License.
                             dynamicHeight: config.dynamicHeight === 'true',
                             dynamicSize: config.dynamicSize ==='true',
                             exitWidth: `${config.exitWidth}%`,
-                            lastWidth: `${config.lastWidth}%`,
+                            thickDegree: `${config.thickDegree}%`,
                             showRate: config.showRate === 'true',
                             data: [
                                 { value: config.data1, name: '访问' },
@@ -194,7 +194,7 @@ under the License.
                     .onChange(update);
                 gui.add(config, 'exitWidth', 0, 100)
                     .onChange(update);
-                gui.add(config, 'lastWidth', 0, 100)
+                gui.add(config, 'thickDegree', 0, 100)
                     .onChange(update);
                 gui.add(config, 'showRate', ['true', 'false'])
                     .onChange(update);
