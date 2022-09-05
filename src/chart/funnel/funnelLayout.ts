@@ -545,7 +545,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     const val = data.get(valueDim, idx) as number || 0;
                     if (exitWidth !== undefined && index === indices.length - 1) {
                         const itemSize = linearMap(val, [min, max], sizeExtent, true);
-                        const exitSize = itemSize * exitWidth / 100;
+                        const exitSize = itemSize * (exitWidth > 100 ? 100 : exitWidth) / 100;
                         dataEnd = getLinePointsBySize(pos + pieceHeight / 2, exitSize);
                     }
                     else {
