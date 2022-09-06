@@ -138,10 +138,12 @@ export function round(x: number | string, precision: number, returnStr: false): 
 export function round(x: number | string, precision: number, returnStr: true): string;
 export function round(x: number | string, precision?: number, returnStr?: boolean): string | number {
     if (precision == null) {
-        precision = 10;
+        precision = ROUND_SUPPORTED_PRECISION_MAX;
     }
-    // Avoid range error
-    precision = Math.min(Math.max(0, precision), ROUND_SUPPORTED_PRECISION_MAX);
+    else {
+        // Avoid range error
+        precision = Math.min(Math.max(0, precision), ROUND_SUPPORTED_PRECISION_MAX);
+    }
     // PENDING: 1.005.toFixed(2) is '1.00' rather than '1.01'
     x = (+x).toFixed(precision);
     return (returnStr ? x : +x);
