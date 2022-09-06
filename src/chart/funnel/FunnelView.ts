@@ -318,8 +318,8 @@ class FunnelView extends ChartView {
 
         const group = this.group;
         const dynamicHeight = seriesModel.get('dynamicHeight');
-        const dynamicSize = seriesModel.get('dynamicSize');
-        const showRate = seriesModel.get('showRate') && !(dynamicHeight || dynamicSize);
+        const dynamicArea = seriesModel.get('dynamicArea');
+        const showRate = seriesModel.get('showRate') && !(dynamicHeight || dynamicArea);
 
         data.diff(oldData)
             .add(function (idx) {

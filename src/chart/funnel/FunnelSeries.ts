@@ -102,7 +102,7 @@ export interface FunnelSeriesOption
 
     thickDegree?: string
 
-    dynamicSize?: boolean
+    dynamicArea?: boolean
 
     dynamicHeight?: boolean
 }

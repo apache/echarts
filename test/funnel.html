@@ -1,3 +1,5 @@
+
+
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -6,9 +8,7 @@ regarding copyright ownership.  The ASF licenses this file
 to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
-
    http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
 "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -23,16 +23,24 @@ under the License.
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/dat.gui.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
     </head>
     <body>
         <style>
-            html,body,#main {
+            html, body, #main {
                 width: 100%;
                 height: 100%;
                 margin: 0;
             }
+            #main,#main0{
+                position: relative;
+            }
         </style>
         <div id="main"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
         <script>
 
             require([
@@ -60,58 +68,51 @@ under the License.
                     aria: {
                         show: true
                     },
-                    title: {
+                    title : {
                         text: '漏斗图',
                         subtext: '纯属虚构'
                     },
-                    tooltip: {
+                    tooltip : {
                         trigger: 'item',
                         formatter: '{a} <br/>{b} : {c}%'
                     },
                     legend: {
-                        data: ['展现', '点击', '访问', '咨询', '订单']
+                        data : ['展现','点击','访问','咨询','订单']
                     },
                     series: [
                         {
-                            name: '漏斗图',
-                            type: 'funnel',
+                            name:'漏斗图',
+                            type:'funnel',
                             gap: 3,
                             itemStyle: itemStyle,
                             left: 300,
                             right: 300,
                             sort: 'ascending',
-                            orient: 'vertical',
-                            exitShape: 'default',
-                            dynamicHeight:false,
-                            dynamicSize:true,
-                            exitWidth: '33%',
-                            thickDegree: '33%',
-                            showRate: true,
+                            orient: 'horizontal',
                             label: {
                                 normal: {
                                     position: 'leftTop'
-                                },
-                                formatter:'{b}|{d}'
+                                }
                             },
-                            data: [
-                                { value: 60, name: '访问' },
-                                { value: 40, name: '咨询' },
-                                { value: 20, name: '订单' },
+                            data:[
+                                {value:60, name:'访问'},
+                                {value:40, name:'咨询'},
+                                {value:20, name:'订单'},
                                 {
-                                    value: 80,
-                                    name: '点击',
-                                    // itemStyle: {
-                                    //     height: '10%'
-                                    // },
+                                    value:80,
+                                    name:'点击',
+                                    itemStyle: {
+                                        height: '10%'
+                                    },
                                     label: {
                                         position: 'insideLeft'
                                     }
                                 },
                                 {
-                                    value: 100,
-                                    name: '展现',
+                                    value:100,
+                                    name:'展现',
                                     itemStyle: {
-                                        width: '20%'
+                                        height: '30%'
                                     },
                                     label: {
                                         position: 'insideRight'
@@ -124,19 +125,9 @@ under the License.
 
                 var config = {
                     sort: 'ascending',
-                    orient: 'vertical',
-                    labelPosition: 'leftTop',
-                    labelLineLen: 20,
-                    dynamicHeight: 'false',
-                    dynamicSize: 'true',
-                    exitWidth: 33,
-                    thickDegree: 33,
-                    showRate: 'true',
-                    data1: 60,
-                    data2: 40,
-                    data3: 20,
-                    data4: 80,
-                    data5: 100
+                    orient: 'horizontal',
+                    labelPosition: 'inside',
+                    labelLineLen: 20
                 };
 
                 function update() {
@@ -154,32 +145,14 @@ under the License.
                                 normal: {
                                     length: config.labelLineLen
                                 }
-                            },
-                            dynamicHeight: config.dynamicHeight === 'true',
-                            dynamicSize: config.dynamicSize ==='true',
-                            exitWidth: `${config.exitWidth}%`,
-                            thickDegree: `${config.thickDegree}%`,
-                            showRate: config.showRate === 'true',
-                            data: [
-                                { value: config.data1, name: '访问' },
-                                { value: config.data2, name: '咨询' },
-                                { value: config.data3, name: '订单' },
-                                {
-                                    value: config.data4,
-                                    name: '点击',
-
-                                },
-                                {
-                                    value: config.data5,
-                                    name: '展现',
-                                },
-
-                            ]
+                            }
                         }]
                     });
                 }
 
-                var gui = new dat.GUI();
+                var gui = new dat.GUI({autoPlace:false});
+                document.getElementById('main').appendChild(gui.domElement);
+                gui.domElement.style = 'position:absolute;top:0px;right:0px;';
                 gui.add(config, 'sort', ['descending', 'ascending', 'none'])
                     .onChange(update);
                 gui.add(config, 'orient', ['vertical', 'horizontal'])
@@ -188,29 +161,206 @@ under the License.
                     .onChange(update);
                 gui.add(config, 'labelLineLen', 0, 100)
                     .onChange(update);
-                gui.add(config, 'dynamicHeight', ['true', 'false'])
+            });
+        </script>
+        <script>
+            const itemStyle = {
+                normal: {
+                    borderWidth: 0
+                },
+                emphasis: {
+                    shadowBlur: 40,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.4)',
+                    borderWidth: 2
+                }
+            };
+            const defaultOption = {
+                    aria: {
+                        show: true
+                    },
+                    title : {
+                        text: '漏斗图',
+                        subtext: '纯属虚构'
+                    },
+                    tooltip : {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b} : {c}%'
+                    },
+                    legend: {
+                        data : ['展现','点击','访问','咨询','订单']
+                    },
+                    series: [
+                        {
+                            name:'漏斗图',
+                            type:'funnel',
+                            gap: 3,
+                            itemStyle: itemStyle,
+                            left: 300,
+                            right: 300,
+                            sort: 'ascending',
+                            orient: 'horizontal',
+                            label: {
+                                normal: {
+                                    position: 'leftTop'
+                                }
+                            },
+                            data:[
+                                {value:60, name:'访问'},
+                                {value:40, name:'咨询'},
+                                {value:20, name:'订单'},
+                                {value:80, name:'点击'},
+                                {value:100, name:'展现'}
+                            ]
+                        }
+                    ]
+                }
+        </script>
+        <script>
+            require([
+                'echarts'
+            ],function(echarts){
+
+                const chart = testHelper.create(echarts, 'main1', {
+                    title:[
+                        'data mapping on dynamic height of funnel piece',
+                        '1. set exitWidth as 100% to flatten the top',
+                        '2. set thickDegree between 0% and 99% make funnel thicker, the prop only valid in this mode'
+                    ],
+                    height:window.innerHeight,
+                    option:defaultOption
+                });
+
+                
+                const config = {
+                    sort: 'ascending',
+                    orient: 'horizontal',
+                    dynamicHeight: 'true',
+                    exitWidth:0,
+                    thickDegree:0
+                };
+
+                const update = function(){
+                    chart.setOption({series:[{
+                        name: '漏斗图',
+                        sort:config.sort,
+                        orient:config.orient,
+                        dynamicHeight:config.dynamicHeight === 'true',
+                        exitWidth:`${config.exitWidth}%`,
+                        thickDegree: `${config.thickDegree}%`
+                    }]})
+                }
+                update();
+
+                const gui = new dat.GUI({autoPlace:false});
+                document.getElementById('main1').appendChild(gui.domElement);
+                gui.domElement.style = 'position:absolute;top:0px;right:0px;';
+
+                gui.add(config, 'sort', ['descending', 'ascending', 'none'])
                     .onChange(update);
-                gui.add(config, 'dynamicSize', ['true', 'false'])
+                gui.add(config, 'orient', ['vertical', 'horizontal'])
                     .onChange(update);
-                gui.add(config, 'exitWidth', 0, 200)
+                gui.add(config, 'dynamicHeight', [true, false])   
+                    .onChange(update);        
+                gui.add(config, 'exitWidth', 0, 100)
                     .onChange(update);
                 gui.add(config, 'thickDegree', 0, 100)
                     .onChange(update);
-                gui.add(config, 'showRate', ['true', 'false'])
+            })
+        </script>
+        <script>
+            require([
+                'echarts'
+            ], function(echarts){
+                const chart = testHelper.create(echarts, 'main2', {
+                    title:[
+                        'show rate between each data',
+                        '1. invalid when dynamicHeight or dynamciArea is true',
+                        '2. different with other mapping mode ,default exitWidth is 100% in this mode',
+                        '3. if you want make top piece a trapezoidal, set exitWidth a val between 0% and 99%'
+                    ],
+                    height:window.innerHeight,
+                    option:defaultOption
+                });
+
+                const config = {
+                    sort: 'ascending',
+                    orient: 'horizontal',
+                    showRate: 'true',
+                    exitWidth:100,
+                };
+
+                const update = function(){
+                    chart.setOption({series:[{
+                        name: '漏斗图',
+                        sort:config.sort,
+                        orient:config.orient,
+                        exitWidth:`${config.exitWidth}%`,
+                        showRate: config.showRate === 'true'
+                    }]})
+                }
+                update();
+
+                const gui = new dat.GUI({autoPlace:false});
+                document.getElementById('main2').appendChild(gui.domElement);
+                gui.domElement.style = 'position:absolute;top:0px;right:0px;';
+
+                gui.add(config, 'sort', ['descending', 'ascending', 'none'])
                     .onChange(update);
-                gui.add(config, 'data1', 0, 100)
+                gui.add(config, 'orient', ['vertical', 'horizontal'])
                     .onChange(update);
-                gui.add(config, 'data2', 0, 100)
+                gui.add(config, 'exitWidth', 0, 100)
                     .onChange(update);
-                gui.add(config, 'data3', 0, 100)
+                gui.add(config, 'showRate', [true, false])
                     .onChange(update);
-                gui.add(config, 'data4', 0, 100)
+            })
+        </script>
+        <script>
+            require([
+                'echarts'
+            ],function(echarts){
+                const chart = testHelper.create(echarts, 'main3', {
+                    title:[
+                        'each data take funnel area',
+                        '1. set dynamciArea to open this mapping mode',
+                        '2. exitWidth is invalid in this mode',
+                        '3. priority lower than dynamciHeight'
+                    ],
+                    height:window.innerHeight,
+                    option:defaultOption
+                });          
+                
+                const config = {
+                    sort: 'ascending',
+                    orient: 'horizontal',
+                    dynamicArea: 'true',
+                };
+
+                const update = function () {
+                    chart.setOption({
+                        series: [{
+                            name: '漏斗图',
+                            sort: config.sort,
+                            orient: config.orient,
+                            dynamicArea: config.dynamicArea === 'true'
+                        }]
+                    })
+                }
+                update();
+
+                const gui = new dat.GUI({ autoPlace: false });
+                document.getElementById('main3').appendChild(gui.domElement);
+                gui.domElement.style = 'position:absolute;top:0px;right:0px;';
+                gui.add(config, 'sort', ['descending', 'ascending', 'none'])
                     .onChange(update);
-                gui.add(config, 'data5', 0, 100)
+                gui.add(config, 'orient', ['vertical', 'horizontal'])
                     .onChange(update);
-            });
+                gui.add(config, 'dynamicArea', [true, false])
+                    .onChange(update);
+            })
+                
 
         </script>
     </body>
-
 </html>
