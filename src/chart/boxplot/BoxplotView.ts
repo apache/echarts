@@ -228,6 +228,15 @@ function setBoxLabels(boxItemPositions: number[][], formattedLabels: Array<strin
 
     // create labels and add them to their respective positions
     formattedLabels.forEach((labelText: string, ind: number) => {
+        if (labelOption.show === 'iqr' && (ind === 0 || ind === 4)) {
+            return;
+        }
+        if (labelOption.show === 'median' && (ind !== 2)) {
+            return;
+        }
+        if (labelOption.show === 'whiskers' && (ind !== 0 && ind !== 4)) {
+            return;
+        }
         const label = new graphic.Text({
             style: {
                 text: labelText
