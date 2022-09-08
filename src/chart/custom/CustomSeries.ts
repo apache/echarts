@@ -282,6 +282,10 @@ export interface CustomSeriesRenderItemAPI extends
 }
 export interface CustomSeriesRenderItemParamsCoordSys {
     type: string;
+    width?: number;
+    height?: number;
+    x?: number;
+    y?: number;
     // And extra params for each coordinate systems.
 }
 export interface CustomSeriesRenderItemCoordinateSystemAPI {
