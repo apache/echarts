@@ -1266,6 +1266,21 @@
     function isCanvasEl(el) {
         return el.nodeName.toUpperCase() === 'CANVAS';
     }
+    var replaceReg = /([&<>"'])/g;
+    var replaceMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        '\'': '&#39;'
+    };
+    function encodeHTML(source) {
+        return source == null
+            ? ''
+            : (source + '').replace(replaceReg, function (str, c) {
+                return replaceMap[c];
+            });
+    }
 
     var MOUSE_EVENT_REG = /^(?:mouse|pointer|contextmenu|drag|drop)|click/;
     var _calcOut$1 = [];
@@ -1452,6 +1467,460 @@
         }
     };
 
+    function create$1() {
+        return [1, 0, 0, 1, 0, 0];
+    }
+    function identity(out) {
+        out[0] = 1;
+        out[1] = 0;
+        out[2] = 0;
+        out[3] = 1;
+        out[4] = 0;
+        out[5] = 0;
+        return out;
+    }
+    function copy$1(out, m) {
+        out[0] = m[0];
+        out[1] = m[1];
+        out[2] = m[2];
+        out[3] = m[3];
+        out[4] = m[4];
+        out[5] = m[5];
+        return out;
+    }
+    function mul$1(out, m1, m2) {
+        var out0 = m1[0] * m2[0] + m1[2] * m2[1];
+        var out1 = m1[1] * m2[0] + m1[3] * m2[1];
+        var out2 = m1[0] * m2[2] + m1[2] * m2[3];
+        var out3 = m1[1] * m2[2] + m1[3] * m2[3];
+        var out4 = m1[0] * m2[4] + m1[2] * m2[5] + m1[4];
+        var out5 = m1[1] * m2[4] + m1[3] * m2[5] + m1[5];
+        out[0] = out0;
+        out[1] = out1;
+        out[2] = out2;
+        out[3] = out3;
+        out[4] = out4;
+        out[5] = out5;
+        return out;
+    }
+    function translate(out, a, v) {
+        out[0] = a[0];
+        out[1] = a[1];
+        out[2] = a[2];
+        out[3] = a[3];
+        out[4] = a[4] + v[0];
+        out[5] = a[5] + v[1];
+        return out;
+    }
+    function rotate(out, a, rad) {
+        var aa = a[0];
+        var ac = a[2];
+        var atx = a[4];
+        var ab = a[1];
+        var ad = a[3];
+        var aty = a[5];
+        var st = Math.sin(rad);
+        var ct = Math.cos(rad);
+        out[0] = aa * ct + ab * st;
+        out[1] = -aa * st + ab * ct;
+        out[2] = ac * ct + ad * st;
+        out[3] = -ac * st + ct * ad;
+        out[4] = ct * atx + st * aty;
+        out[5] = ct * aty - st * atx;
+        return out;
+    }
+    function scale$1(out, a, v) {
+        var vx = v[0];
+        var vy = v[1];
+        out[0] = a[0] * vx;
+        out[1] = a[1] * vy;
+        out[2] = a[2] * vx;
+        out[3] = a[3] * vy;
+        out[4] = a[4] * vx;
+        out[5] = a[5] * vy;
+        return out;
+    }
+    function invert(out, a) {
+        var aa = a[0];
+        var ac = a[2];
+        var atx = a[4];
+        var ab = a[1];
+        var ad = a[3];
+        var aty = a[5];
+        var det = aa * ad - ab * ac;
+        if (!det) {
+            return null;
+        }
+        det = 1.0 / det;
+        out[0] = ad * det;
+        out[1] = -ab * det;
+        out[2] = -ac * det;
+        out[3] = aa * det;
+        out[4] = (ac * aty - ad * atx) * det;
+        out[5] = (ab * atx - aa * aty) * det;
+        return out;
+    }
+    function clone$2(a) {
+        var b = create$1();
+        copy$1(b, a);
+        return b;
+    }
+
+    var matrix = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        create: create$1,
+        identity: identity,
+        copy: copy$1,
+        mul: mul$1,
+        translate: translate,
+        rotate: rotate,
+        scale: scale$1,
+        invert: invert,
+        clone: clone$2
+    });
+
+    var Point = (function () {
+        function Point(x, y) {
+            this.x = x || 0;
+            this.y = y || 0;
+        }
+        Point.prototype.copy = function (other) {
+            this.x = other.x;
+            this.y = other.y;
+            return this;
+        };
+        Point.prototype.clone = function () {
+            return new Point(this.x, this.y);
+        };
+        Point.prototype.set = function (x, y) {
+            this.x = x;
+            this.y = y;
+            return this;
+        };
+        Point.prototype.equal = function (other) {
+            return other.x === this.x && other.y === this.y;
+        };
+        Point.prototype.add = function (other) {
+            this.x += other.x;
+            this.y += other.y;
+            return this;
+        };
+        Point.prototype.scale = function (scalar) {
+            this.x *= scalar;
+            this.y *= scalar;
+        };
+        Point.prototype.scaleAndAdd = function (other, scalar) {
+            this.x += other.x * scalar;
+            this.y += other.y * scalar;
+        };
+        Point.prototype.sub = function (other) {
+            this.x -= other.x;
+            this.y -= other.y;
+            return this;
+        };
+        Point.prototype.dot = function (other) {
+            return this.x * other.x + this.y * other.y;
+        };
+        Point.prototype.len = function () {
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+        };
+        Point.prototype.lenSquare = function () {
+            return this.x * this.x + this.y * this.y;
+        };
+        Point.prototype.normalize = function () {
+            var len = this.len();
+            this.x /= len;
+            this.y /= len;
+            return this;
+        };
+        Point.prototype.distance = function (other) {
+            var dx = this.x - other.x;
+            var dy = this.y - other.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+        Point.prototype.distanceSquare = function (other) {
+            var dx = this.x - other.x;
+            var dy = this.y - other.y;
+            return dx * dx + dy * dy;
+        };
+        Point.prototype.negate = function () {
+            this.x = -this.x;
+            this.y = -this.y;
+            return this;
+        };
+        Point.prototype.transform = function (m) {
+            if (!m) {
+                return;
+            }
+            var x = this.x;
+            var y = this.y;
+            this.x = m[0] * x + m[2] * y + m[4];
+            this.y = m[1] * x + m[3] * y + m[5];
+            return this;
+        };
+        Point.prototype.toArray = function (out) {
+            out[0] = this.x;
+            out[1] = this.y;
+            return out;
+        };
+        Point.prototype.fromArray = function (input) {
+            this.x = input[0];
+            this.y = input[1];
+        };
+        Point.set = function (p, x, y) {
+            p.x = x;
+            p.y = y;
+        };
+        Point.copy = function (p, p2) {
+            p.x = p2.x;
+            p.y = p2.y;
+        };
+        Point.len = function (p) {
+            return Math.sqrt(p.x * p.x + p.y * p.y);
+        };
+        Point.lenSquare = function (p) {
+            return p.x * p.x + p.y * p.y;
+        };
+        Point.dot = function (p0, p1) {
+            return p0.x * p1.x + p0.y * p1.y;
+        };
+        Point.add = function (out, p0, p1) {
+            out.x = p0.x + p1.x;
+            out.y = p0.y + p1.y;
+        };
+        Point.sub = function (out, p0, p1) {
+            out.x = p0.x - p1.x;
+            out.y = p0.y - p1.y;
+        };
+        Point.scale = function (out, p0, scalar) {
+            out.x = p0.x * scalar;
+            out.y = p0.y * scalar;
+        };
+        Point.scaleAndAdd = function (out, p0, p1, scalar) {
+            out.x = p0.x + p1.x * scalar;
+            out.y = p0.y + p1.y * scalar;
+        };
+        Point.lerp = function (out, p0, p1, t) {
+            var onet = 1 - t;
+            out.x = onet * p0.x + t * p1.x;
+            out.y = onet * p0.y + t * p1.y;
+        };
+        return Point;
+    }());
+
+    var mathMin = Math.min;
+    var mathMax = Math.max;
+    var lt = new Point();
+    var rb = new Point();
+    var lb = new Point();
+    var rt = new Point();
+    var minTv = new Point();
+    var maxTv = new Point();
+    var BoundingRect = (function () {
+        function BoundingRect(x, y, width, height) {
+            if (width < 0) {
+                x = x + width;
+                width = -width;
+            }
+            if (height < 0) {
+                y = y + height;
+                height = -height;
+            }
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
+        BoundingRect.prototype.union = function (other) {
+            var x = mathMin(other.x, this.x);
+            var y = mathMin(other.y, this.y);
+            if (isFinite(this.x) && isFinite(this.width)) {
+                this.width = mathMax(other.x + other.width, this.x + this.width) - x;
+            }
+            else {
+                this.width = other.width;
+            }
+            if (isFinite(this.y) && isFinite(this.height)) {
+                this.height = mathMax(other.y + other.height, this.y + this.height) - y;
+            }
+            else {
+                this.height = other.height;
+            }
+            this.x = x;
+            this.y = y;
+        };
+        BoundingRect.prototype.applyTransform = function (m) {
+            BoundingRect.applyTransform(this, this, m);
+        };
+        BoundingRect.prototype.calculateTransform = function (b) {
+            var a = this;
+            var sx = b.width / a.width;
+            var sy = b.height / a.height;
+            var m = create$1();
+            translate(m, m, [-a.x, -a.y]);
+            scale$1(m, m, [sx, sy]);
+            translate(m, m, [b.x, b.y]);
+            return m;
+        };
+        BoundingRect.prototype.intersect = function (b, mtv) {
+            if (!b) {
+                return false;
+            }
+            if (!(b instanceof BoundingRect)) {
+                b = BoundingRect.create(b);
+            }
+            var a = this;
+            var ax0 = a.x;
+            var ax1 = a.x + a.width;
+            var ay0 = a.y;
+            var ay1 = a.y + a.height;
+            var bx0 = b.x;
+            var bx1 = b.x + b.width;
+            var by0 = b.y;
+            var by1 = b.y + b.height;
+            var overlap = !(ax1 < bx0 || bx1 < ax0 || ay1 < by0 || by1 < ay0);
+            if (mtv) {
+                var dMin = Infinity;
+                var dMax = 0;
+                var d0 = Math.abs(ax1 - bx0);
+                var d1 = Math.abs(bx1 - ax0);
+                var d2 = Math.abs(ay1 - by0);
+                var d3 = Math.abs(by1 - ay0);
+                var dx = Math.min(d0, d1);
+                var dy = Math.min(d2, d3);
+                if (ax1 < bx0 || bx1 < ax0) {
+                    if (dx > dMax) {
+                        dMax = dx;
+                        if (d0 < d1) {
+                            Point.set(maxTv, -d0, 0);
+                        }
+                        else {
+                            Point.set(maxTv, d1, 0);
+                        }
+                    }
+                }
+                else {
+                    if (dx < dMin) {
+                        dMin = dx;
+                        if (d0 < d1) {
+                            Point.set(minTv, d0, 0);
+                        }
+                        else {
+                            Point.set(minTv, -d1, 0);
+                        }
+                    }
+                }
+                if (ay1 < by0 || by1 < ay0) {
+                    if (dy > dMax) {
+                        dMax = dy;
+                        if (d2 < d3) {
+                            Point.set(maxTv, 0, -d2);
+                        }
+                        else {
+                            Point.set(maxTv, 0, d3);
+                        }
+                    }
+                }
+                else {
+                    if (dx < dMin) {
+                        dMin = dx;
+                        if (d2 < d3) {
+                            Point.set(minTv, 0, d2);
+                        }
+                        else {
+                            Point.set(minTv, 0, -d3);
+                        }
+                    }
+                }
+            }
+            if (mtv) {
+                Point.copy(mtv, overlap ? minTv : maxTv);
+            }
+            return overlap;
+        };
+        BoundingRect.prototype.contain = function (x, y) {
+            var rect = this;
+            return x >= rect.x
+                && x <= (rect.x + rect.width)
+                && y >= rect.y
+                && y <= (rect.y + rect.height);
+        };
+        BoundingRect.prototype.clone = function () {
+            return new BoundingRect(this.x, this.y, this.width, this.height);
+        };
+        BoundingRect.prototype.copy = function (other) {
+            BoundingRect.copy(this, other);
+        };
+        BoundingRect.prototype.plain = function () {
+            return {
+                x: this.x,
+                y: this.y,
+                width: this.width,
+                height: this.height
+            };
+        };
+        BoundingRect.prototype.isFinite = function () {
+            return isFinite(this.x)
+                && isFinite(this.y)
+                && isFinite(this.width)
+                && isFinite(this.height);
+        };
+        BoundingRect.prototype.isZero = function () {
+            return this.width === 0 || this.height === 0;
+        };
+        BoundingRect.create = function (rect) {
+            return new BoundingRect(rect.x, rect.y, rect.width, rect.height);
+        };
+        BoundingRect.copy = function (target, source) {
+            target.x = source.x;
+            target.y = source.y;
+            target.width = source.width;
+            target.height = source.height;
+        };
+        BoundingRect.applyTransform = function (target, source, m) {
+            if (!m) {
+                if (target !== source) {
+                    BoundingRect.copy(target, source);
+                }
+                return;
+            }
+            if (m[1] < 1e-5 && m[1] > -1e-5 && m[2] < 1e-5 && m[2] > -1e-5) {
+                var sx = m[0];
+                var sy = m[3];
+                var tx = m[4];
+                var ty = m[5];
+                target.x = source.x * sx + tx;
+                target.y = source.y * sy + ty;
+                target.width = source.width * sx;
+                target.height = source.height * sy;
+                if (target.width < 0) {
+                    target.x += target.width;
+                    target.width = -target.width;
+                }
+                if (target.height < 0) {
+                    target.y += target.height;
+                    target.height = -target.height;
+                }
+                return;
+            }
+            lt.x = lb.x = source.x;
+            lt.y = rt.y = source.y;
+            rb.x = rt.x = source.x + source.width;
+            rb.y = lb.y = source.y + source.height;
+            lt.transform(m);
+            rt.transform(m);
+            rb.transform(m);
+            lb.transform(m);
+            target.x = mathMin(lt.x, rb.x, lb.x, rt.x);
+            target.y = mathMin(lt.y, rb.y, lb.y, rt.y);
+            var maxX = mathMax(lt.x, rb.x, lb.x, rt.x);
+            var maxY = mathMax(lt.y, rb.y, lb.y, rt.y);
+            target.width = maxX - target.x;
+            target.height = maxY - target.y;
+        };
+        return BoundingRect;
+    }());
+
     var SILENT = 'silent';
     function makeEventPacket(eveType, targetInfo, event) {
         return {
@@ -1497,14 +1966,16 @@
         'click', 'dblclick', 'mousewheel', 'mouseout',
         'mouseup', 'mousedown', 'mousemove', 'contextmenu'
     ];
+    var tmpRect = new BoundingRect(0, 0, 0, 0);
     var Handler = (function (_super) {
         __extends(Handler, _super);
-        function Handler(storage, painter, proxy, painterRoot) {
+        function Handler(storage, painter, proxy, painterRoot, pointerSize) {
             var _this = _super.call(this) || this;
             _this._hovered = new HoveredResult(0, 0);
             _this.storage = storage;
             _this.painter = painter;
             _this.painterRoot = painterRoot;
+            _this._pointerSize = pointerSize;
             proxy = proxy || new EmptyProxy();
             _this.proxy = null;
             _this.setHandlerProxy(proxy);
@@ -1605,15 +2076,40 @@
         Handler.prototype.findHover = function (x, y, exclude) {
             var list = this.storage.getDisplayList();
             var out = new HoveredResult(x, y);
-            for (var i = list.length - 1; i >= 0; i--) {
-                var hoverCheckResult = void 0;
-                if (list[i] !== exclude
-                    && !list[i].ignore
-                    && (hoverCheckResult = isHover(list[i], x, y))) {
-                    !out.topTarget && (out.topTarget = list[i]);
-                    if (hoverCheckResult !== SILENT) {
-                        out.target = list[i];
-                        break;
+            setHoverTarget(list, out, x, y, exclude);
+            if (this._pointerSize && !out.target) {
+                var candidates = [];
+                var pointerSize = this._pointerSize;
+                var targetSizeHalf = pointerSize / 2;
+                var pointerRect = new BoundingRect(x - targetSizeHalf, y - targetSizeHalf, pointerSize, pointerSize);
+                for (var i = list.length - 1; i >= 0; i--) {
+                    var el = list[i];
+                    if (el !== exclude
+                        && !el.ignore
+                        && !el.ignoreCoarsePointer
+                        && (!el.parent || !el.parent.ignoreCoarsePointer)) {
+                        tmpRect.copy(el.getBoundingRect());
+                        if (el.transform) {
+                            tmpRect.applyTransform(el.transform);
+                        }
+                        if (tmpRect.intersect(pointerRect)) {
+                            candidates.push(el);
+                        }
+                    }
+                }
+                if (candidates.length) {
+                    var rStep = 4;
+                    var thetaStep = Math.PI / 12;
+                    var PI2 = Math.PI * 2;
+                    for (var r = 0; r < targetSizeHalf; r += rStep) {
+                        for (var theta = 0; theta < PI2; theta += thetaStep) {
+                            var x1 = x + r * Math.cos(theta);
+                            var y1 = y + r * Math.sin(theta);
+                            setHoverTarget(candidates, out, x1, y1, exclude);
+                            if (out.target) {
+                                return out;
+                            }
+                        }
                     }
                 }
             }
@@ -1691,6 +2187,21 @@
             return isSilent ? SILENT : true;
         }
         return false;
+    }
+    function setHoverTarget(list, out, x, y, exclude) {
+        for (var i = list.length - 1; i >= 0; i--) {
+            var el = list[i];
+            var hoverCheckResult = void 0;
+            if (el !== exclude
+                && !el.ignore
+                && (hoverCheckResult = isHover(el, x, y))) {
+                !out.topTarget && (out.topTarget = el);
+                if (hoverCheckResult !== SILENT) {
+                    out.target = el;
+                    break;
+                }
+            }
+        }
     }
     function isOutsideBoundary(handlerInstance, x, y) {
         var painter = handlerInstance.painter;
@@ -3321,13 +3832,15 @@
                     }
                     alpha = parseCssFloat(params.pop());
                 case 'rgb':
-                    if (params.length !== 3) {
+                    if (params.length >= 3) {
+                        setRgba(rgbaArr, parseCssInt(params[0]), parseCssInt(params[1]), parseCssInt(params[2]), params.length === 3 ? alpha : parseCssFloat(params[3]));
+                        putToCache(colorStr, rgbaArr);
+                        return rgbaArr;
+                    }
+                    else {
                         setRgba(rgbaArr, 0, 0, 0, 1);
                         return;
                     }
-                    setRgba(rgbaArr, parseCssInt(params[0]), parseCssInt(params[1]), parseCssInt(params[2]), alpha);
-                    putToCache(colorStr, rgbaArr);
-                    return rgbaArr;
                 case 'hsla':
                     if (params.length !== 4) {
                         setRgba(rgbaArr, 0, 0, 0, 1);
@@ -4855,118 +5368,6 @@
     var LIGHT_LABEL_COLOR = '#ccc';
     var LIGHTER_LABEL_COLOR = '#eee';
 
-    function create$1() {
-        return [1, 0, 0, 1, 0, 0];
-    }
-    function identity(out) {
-        out[0] = 1;
-        out[1] = 0;
-        out[2] = 0;
-        out[3] = 1;
-        out[4] = 0;
-        out[5] = 0;
-        return out;
-    }
-    function copy$1(out, m) {
-        out[0] = m[0];
-        out[1] = m[1];
-        out[2] = m[2];
-        out[3] = m[3];
-        out[4] = m[4];
-        out[5] = m[5];
-        return out;
-    }
-    function mul$1(out, m1, m2) {
-        var out0 = m1[0] * m2[0] + m1[2] * m2[1];
-        var out1 = m1[1] * m2[0] + m1[3] * m2[1];
-        var out2 = m1[0] * m2[2] + m1[2] * m2[3];
-        var out3 = m1[1] * m2[2] + m1[3] * m2[3];
-        var out4 = m1[0] * m2[4] + m1[2] * m2[5] + m1[4];
-        var out5 = m1[1] * m2[4] + m1[3] * m2[5] + m1[5];
-        out[0] = out0;
-        out[1] = out1;
-        out[2] = out2;
-        out[3] = out3;
-        out[4] = out4;
-        out[5] = out5;
-        return out;
-    }
-    function translate(out, a, v) {
-        out[0] = a[0];
-        out[1] = a[1];
-        out[2] = a[2];
-        out[3] = a[3];
-        out[4] = a[4] + v[0];
-        out[5] = a[5] + v[1];
-        return out;
-    }
-    function rotate(out, a, rad) {
-        var aa = a[0];
-        var ac = a[2];
-        var atx = a[4];
-        var ab = a[1];
-        var ad = a[3];
-        var aty = a[5];
-        var st = Math.sin(rad);
-        var ct = Math.cos(rad);
-        out[0] = aa * ct + ab * st;
-        out[1] = -aa * st + ab * ct;
-        out[2] = ac * ct + ad * st;
-        out[3] = -ac * st + ct * ad;
-        out[4] = ct * atx + st * aty;
-        out[5] = ct * aty - st * atx;
-        return out;
-    }
-    function scale$1(out, a, v) {
-        var vx = v[0];
-        var vy = v[1];
-        out[0] = a[0] * vx;
-        out[1] = a[1] * vy;
-        out[2] = a[2] * vx;
-        out[3] = a[3] * vy;
-        out[4] = a[4] * vx;
-        out[5] = a[5] * vy;
-        return out;
-    }
-    function invert(out, a) {
-        var aa = a[0];
-        var ac = a[2];
-        var atx = a[4];
-        var ab = a[1];
-        var ad = a[3];
-        var aty = a[5];
-        var det = aa * ad - ab * ac;
-        if (!det) {
-            return null;
-        }
-        det = 1.0 / det;
-        out[0] = ad * det;
-        out[1] = -ab * det;
-        out[2] = -ac * det;
-        out[3] = aa * det;
-        out[4] = (ac * aty - ad * atx) * det;
-        out[5] = (ab * atx - aa * aty) * det;
-        return out;
-    }
-    function clone$2(a) {
-        var b = create$1();
-        copy$1(b, a);
-        return b;
-    }
-
-    var matrix = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        create: create$1,
-        identity: identity,
-        copy: copy$1,
-        mul: mul$1,
-        translate: translate,
-        rotate: rotate,
-        scale: scale$1,
-        invert: invert,
-        clone: clone$2
-    });
-
     var mIdentity = identity;
     var EPSILON$2 = 5e-5;
     function isNotAroundZero$1(val) {
@@ -5203,348 +5604,6 @@
             target[propName] = source[propName];
         }
     }
-
-    var Point = (function () {
-        function Point(x, y) {
-            this.x = x || 0;
-            this.y = y || 0;
-        }
-        Point.prototype.copy = function (other) {
-            this.x = other.x;
-            this.y = other.y;
-            return this;
-        };
-        Point.prototype.clone = function () {
-            return new Point(this.x, this.y);
-        };
-        Point.prototype.set = function (x, y) {
-            this.x = x;
-            this.y = y;
-            return this;
-        };
-        Point.prototype.equal = function (other) {
-            return other.x === this.x && other.y === this.y;
-        };
-        Point.prototype.add = function (other) {
-            this.x += other.x;
-            this.y += other.y;
-            return this;
-        };
-        Point.prototype.scale = function (scalar) {
-            this.x *= scalar;
-            this.y *= scalar;
-        };
-        Point.prototype.scaleAndAdd = function (other, scalar) {
-            this.x += other.x * scalar;
-            this.y += other.y * scalar;
-        };
-        Point.prototype.sub = function (other) {
-            this.x -= other.x;
-            this.y -= other.y;
-            return this;
-        };
-        Point.prototype.dot = function (other) {
-            return this.x * other.x + this.y * other.y;
-        };
-        Point.prototype.len = function () {
-            return Math.sqrt(this.x * this.x + this.y * this.y);
-        };
-        Point.prototype.lenSquare = function () {
-            return this.x * this.x + this.y * this.y;
-        };
-        Point.prototype.normalize = function () {
-            var len = this.len();
-            this.x /= len;
-            this.y /= len;
-            return this;
-        };
-        Point.prototype.distance = function (other) {
-            var dx = this.x - other.x;
-            var dy = this.y - other.y;
-            return Math.sqrt(dx * dx + dy * dy);
-        };
-        Point.prototype.distanceSquare = function (other) {
-            var dx = this.x - other.x;
-            var dy = this.y - other.y;
-            return dx * dx + dy * dy;
-        };
-        Point.prototype.negate = function () {
-            this.x = -this.x;
-            this.y = -this.y;
-            return this;
-        };
-        Point.prototype.transform = function (m) {
-            if (!m) {
-                return;
-            }
-            var x = this.x;
-            var y = this.y;
-            this.x = m[0] * x + m[2] * y + m[4];
-            this.y = m[1] * x + m[3] * y + m[5];
-            return this;
-        };
-        Point.prototype.toArray = function (out) {
-            out[0] = this.x;
-            out[1] = this.y;
-            return out;
-        };
-        Point.prototype.fromArray = function (input) {
-            this.x = input[0];
-            this.y = input[1];
-        };
-        Point.set = function (p, x, y) {
-            p.x = x;
-            p.y = y;
-        };
-        Point.copy = function (p, p2) {
-            p.x = p2.x;
-            p.y = p2.y;
-        };
-        Point.len = function (p) {
-            return Math.sqrt(p.x * p.x + p.y * p.y);
-        };
-        Point.lenSquare = function (p) {
-            return p.x * p.x + p.y * p.y;
-        };
-        Point.dot = function (p0, p1) {
-            return p0.x * p1.x + p0.y * p1.y;
-        };
-        Point.add = function (out, p0, p1) {
-            out.x = p0.x + p1.x;
-            out.y = p0.y + p1.y;
-        };
-        Point.sub = function (out, p0, p1) {
-            out.x = p0.x - p1.x;
-            out.y = p0.y - p1.y;
-        };
-        Point.scale = function (out, p0, scalar) {
-            out.x = p0.x * scalar;
-            out.y = p0.y * scalar;
-        };
-        Point.scaleAndAdd = function (out, p0, p1, scalar) {
-            out.x = p0.x + p1.x * scalar;
-            out.y = p0.y + p1.y * scalar;
-        };
-        Point.lerp = function (out, p0, p1, t) {
-            var onet = 1 - t;
-            out.x = onet * p0.x + t * p1.x;
-            out.y = onet * p0.y + t * p1.y;
-        };
-        return Point;
-    }());
-
-    var mathMin = Math.min;
-    var mathMax = Math.max;
-    var lt = new Point();
-    var rb = new Point();
-    var lb = new Point();
-    var rt = new Point();
-    var minTv = new Point();
-    var maxTv = new Point();
-    var BoundingRect = (function () {
-        function BoundingRect(x, y, width, height) {
-            if (width < 0) {
-                x = x + width;
-                width = -width;
-            }
-            if (height < 0) {
-                y = y + height;
-                height = -height;
-            }
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-        }
-        BoundingRect.prototype.union = function (other) {
-            var x = mathMin(other.x, this.x);
-            var y = mathMin(other.y, this.y);
-            if (isFinite(this.x) && isFinite(this.width)) {
-                this.width = mathMax(other.x + other.width, this.x + this.width) - x;
-            }
-            else {
-                this.width = other.width;
-            }
-            if (isFinite(this.y) && isFinite(this.height)) {
-                this.height = mathMax(other.y + other.height, this.y + this.height) - y;
-            }
-            else {
-                this.height = other.height;
-            }
-            this.x = x;
-            this.y = y;
-        };
-        BoundingRect.prototype.applyTransform = function (m) {
-            BoundingRect.applyTransform(this, this, m);
-        };
-        BoundingRect.prototype.calculateTransform = function (b) {
-            var a = this;
-            var sx = b.width / a.width;
-            var sy = b.height / a.height;
-            var m = create$1();
-            translate(m, m, [-a.x, -a.y]);
-            scale$1(m, m, [sx, sy]);
-            translate(m, m, [b.x, b.y]);
-            return m;
-        };
-        BoundingRect.prototype.intersect = function (b, mtv) {
-            if (!b) {
-                return false;
-            }
-            if (!(b instanceof BoundingRect)) {
-                b = BoundingRect.create(b);
-            }
-            var a = this;
-            var ax0 = a.x;
-            var ax1 = a.x + a.width;
-            var ay0 = a.y;
-            var ay1 = a.y + a.height;
-            var bx0 = b.x;
-            var bx1 = b.x + b.width;
-            var by0 = b.y;
-            var by1 = b.y + b.height;
-            var overlap = !(ax1 < bx0 || bx1 < ax0 || ay1 < by0 || by1 < ay0);
-            if (mtv) {
-                var dMin = Infinity;
-                var dMax = 0;
-                var d0 = Math.abs(ax1 - bx0);
-                var d1 = Math.abs(bx1 - ax0);
-                var d2 = Math.abs(ay1 - by0);
-                var d3 = Math.abs(by1 - ay0);
-                var dx = Math.min(d0, d1);
-                var dy = Math.min(d2, d3);
-                if (ax1 < bx0 || bx1 < ax0) {
-                    if (dx > dMax) {
-                        dMax = dx;
-                        if (d0 < d1) {
-                            Point.set(maxTv, -d0, 0);
-                        }
-                        else {
-                            Point.set(maxTv, d1, 0);
-                        }
-                    }
-                }
-                else {
-                    if (dx < dMin) {
-                        dMin = dx;
-                        if (d0 < d1) {
-                            Point.set(minTv, d0, 0);
-                        }
-                        else {
-                            Point.set(minTv, -d1, 0);
-                        }
-                    }
-                }
-                if (ay1 < by0 || by1 < ay0) {
-                    if (dy > dMax) {
-                        dMax = dy;
-                        if (d2 < d3) {
-                            Point.set(maxTv, 0, -d2);
-                        }
-                        else {
-                            Point.set(maxTv, 0, d3);
-                        }
-                    }
-                }
-                else {
-                    if (dx < dMin) {
-                        dMin = dx;
-                        if (d2 < d3) {
-                            Point.set(minTv, 0, d2);
-                        }
-                        else {
-                            Point.set(minTv, 0, -d3);
-                        }
-                    }
-                }
-            }
-            if (mtv) {
-                Point.copy(mtv, overlap ? minTv : maxTv);
-            }
-            return overlap;
-        };
-        BoundingRect.prototype.contain = function (x, y) {
-            var rect = this;
-            return x >= rect.x
-                && x <= (rect.x + rect.width)
-                && y >= rect.y
-                && y <= (rect.y + rect.height);
-        };
-        BoundingRect.prototype.clone = function () {
-            return new BoundingRect(this.x, this.y, this.width, this.height);
-        };
-        BoundingRect.prototype.copy = function (other) {
-            BoundingRect.copy(this, other);
-        };
-        BoundingRect.prototype.plain = function () {
-            return {
-                x: this.x,
-                y: this.y,
-                width: this.width,
-                height: this.height
-            };
-        };
-        BoundingRect.prototype.isFinite = function () {
-            return isFinite(this.x)
-                && isFinite(this.y)
-                && isFinite(this.width)
-                && isFinite(this.height);
-        };
-        BoundingRect.prototype.isZero = function () {
-            return this.width === 0 || this.height === 0;
-        };
-        BoundingRect.create = function (rect) {
-            return new BoundingRect(rect.x, rect.y, rect.width, rect.height);
-        };
-        BoundingRect.copy = function (target, source) {
-            target.x = source.x;
-            target.y = source.y;
-            target.width = source.width;
-            target.height = source.height;
-        };
-        BoundingRect.applyTransform = function (target, source, m) {
-            if (!m) {
-                if (target !== source) {
-                    BoundingRect.copy(target, source);
-                }
-                return;
-            }
-            if (m[1] < 1e-5 && m[1] > -1e-5 && m[2] < 1e-5 && m[2] > -1e-5) {
-                var sx = m[0];
-                var sy = m[3];
-                var tx = m[4];
-                var ty = m[5];
-                target.x = source.x * sx + tx;
-                target.y = source.y * sy + ty;
-                target.width = source.width * sx;
-                target.height = source.height * sy;
-                if (target.width < 0) {
-                    target.x += target.width;
-                    target.width = -target.width;
-                }
-                if (target.height < 0) {
-                    target.y += target.height;
-                    target.height = -target.height;
-                }
-                return;
-            }
-            lt.x = lb.x = source.x;
-            lt.y = rt.y = source.y;
-            rb.x = rt.x = source.x + source.width;
-            rb.y = lb.y = source.y + source.height;
-            lt.transform(m);
-            rt.transform(m);
-            rb.transform(m);
-            lb.transform(m);
-            target.x = mathMin(lt.x, rb.x, lb.x, rt.x);
-            target.y = mathMin(lt.y, rb.y, lb.y, rt.y);
-            var maxX = mathMax(lt.x, rb.x, lb.x, rt.x);
-            var maxY = mathMax(lt.y, rb.y, lb.y, rt.y);
-            target.width = maxX - target.x;
-            target.height = maxY - target.y;
-        };
-        return BoundingRect;
-    }());
 
     var textWidthCache = {};
     function getWidth(text, font) {
@@ -6979,7 +7038,16 @@
             var handerProxy = (!env.node && !env.worker && !ssrMode)
                 ? new HandlerDomProxy(painter.getViewportRoot(), painter.root)
                 : null;
-            this.handler = new Handler(storage, painter, handerProxy, painter.root);
+            var useCoarsePointer = opts.useCoarsePointer;
+            var usePointerSize = (useCoarsePointer == null || useCoarsePointer === 'auto')
+                ? env.touchEventsSupported
+                : !!useCoarsePointer;
+            var defaultPointerSize = 44;
+            var pointerSize;
+            if (usePointerSize) {
+                pointerSize = retrieve2(opts.pointerSize, defaultPointerSize);
+            }
+            this.handler = new Handler(storage, painter, handerProxy, painter.root, pointerSize);
             this.animation = new Animation({
                 stage: {
                     update: ssrMode ? null : function () { return _this._flush(true); }
@@ -7160,7 +7228,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.3.2';
+    var version = '5.4.0';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -7364,12 +7432,27 @@
         return 0;
       }
 
+      var seats = getPercentSeats(valueList, precision);
+      return seats[idx] || 0;
+    }
+    /**
+     * Get a data of given precision, assuring the sum of percentages
+     * in valueList is 1.
+     * The largest remainer method is used.
+     * https://en.wikipedia.org/wiki/Largest_remainder_method
+     *
+     * @param valueList a list of all data
+     * @param precision integer number showing digits of precision
+     * @return {Array<number>}
+     */
+
+    function getPercentSeats(valueList, precision) {
       var sum = reduce(valueList, function (acc, val) {
         return acc + (isNaN(val) ? 0 : val);
       }, 0);
 
       if (sum === 0) {
-        return 0;
+        return [];
       }
 
       var digits = Math.pow(10, precision);
@@ -7406,7 +7489,9 @@
         ++currentSum;
       }
 
-      return seats[idx] / digits;
+      return map(seats, function (seat) {
+        return seat / digits;
+      });
     }
     /**
      * Solve the floating point adding problem like 0.1 + 0.2 === 0.30000000000000004
@@ -7774,7 +7859,7 @@
     /**
      * If in __DEV__ environment, get console printable message for users hint.
      * Parameters are separated by ' '.
-     * @usuage
+     * @usage
      * makePrintable('This is an error on', someVar, someObj);
      *
      * @param hintInfo anything about the current execution context to hint users.
@@ -9655,16 +9740,16 @@
         })();
         return Displayable;
     }(Element));
-    var tmpRect = new BoundingRect(0, 0, 0, 0);
+    var tmpRect$1 = new BoundingRect(0, 0, 0, 0);
     var viewRect = new BoundingRect(0, 0, 0, 0);
     function isDisplayableCulled(el, width, height) {
-        tmpRect.copy(el.getBoundingRect());
+        tmpRect$1.copy(el.getBoundingRect());
         if (el.transform) {
-            tmpRect.applyTransform(el.transform);
+            tmpRect$1.applyTransform(el.transform);
         }
         viewRect.width = width;
         viewRect.height = height;
-        return !tmpRect.intersect(viewRect);
+        return !tmpRect$1.intersect(viewRect);
     }
 
     var mathMin$1 = Math.min;
@@ -14690,9 +14775,11 @@
      * Sub pixel optimize line for canvas
      */
 
-    function subPixelOptimizeLine$1(param) {
-      subPixelOptimizeLine(param.shape, param.shape, param.style);
-      return param;
+    function subPixelOptimizeLine$1(shape, lineWidth) {
+      subPixelOptimizeLine(shape, shape, {
+        lineWidth: lineWidth
+      });
+      return shape;
     }
     /**
      * Sub pixel optimize rect for canvas
@@ -16605,19 +16692,6 @@
       return str;
     }
     var normalizeCssArray$1 = normalizeCssArray;
-    var replaceReg = /([&<>"'])/g;
-    var replaceMap = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      '\'': '&#39;'
-    };
-    function encodeHTML(source) {
-      return source == null ? '' : (source + '').replace(replaceReg, function (str, c) {
-        return replaceMap[c];
-      });
-    }
     /**
      * Make value user readable for tooltip and label.
      * "User readable":
@@ -27674,9 +27748,9 @@
     }
 
     var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.3.3';
+    var version$1 = '5.4.0';
     var dependencies = {
-      zrender: '5.3.2'
+      zrender: '5.4.0'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800; // Some data processors depends on the stack result dimension (to calculate data extent).
@@ -27831,6 +27905,7 @@
 
         _this._dom = dom;
         var defaultRenderer = 'canvas';
+        var defaultCoarsePointer = 'auto';
         var defaultUseDirtyRect = false;
 
         if ("development" !== 'production') {
@@ -27838,6 +27913,7 @@
           /* eslint-disable-next-line */
           hasWindow ? window : global;
           defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+          defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
           var devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
           defaultUseDirtyRect = devUseDirtyRect == null ? defaultUseDirtyRect : devUseDirtyRect;
         }
@@ -27848,7 +27924,9 @@
           width: opts.width,
           height: opts.height,
           ssr: opts.ssr,
-          useDirtyRect: opts.useDirtyRect == null ? defaultUseDirtyRect : opts.useDirtyRect
+          useDirtyRect: retrieve2(opts.useDirtyRect, defaultUseDirtyRect),
+          useCoarsePointer: retrieve2(opts.useCoarsePointer, defaultCoarsePointer),
+          pointerSize: opts.pointerSize
         });
         _this._ssr = opts.ssr; // Expect 60 fps.
 
@@ -33491,7 +33569,8 @@
         if (extent[0] === extent[1]) {
           if (extent[0] !== 0) {
             // Expand extent
-            var expandSize = extent[0]; // In the fowllowing case
+            // Note that extents can be both negative. See #13154
+            var expandSize = Math.abs(extent[0]); // In the fowllowing case
             //      Axis has been fixed max 100
             //      Plus data are all 100 and axis extent are [100, 100].
             // Extend to the both side will cause expanded max is larger than fixed max.
@@ -34587,9 +34666,10 @@
       };
 
       LogScale.prototype.setExtent = function (start, end) {
-        var base = this.base;
-        start = mathLog(start) / mathLog(base);
-        end = mathLog(end) / mathLog(base);
+        var base = mathLog(this.base); // log(-Infinity) is NaN, so safe guard here
+
+        start = mathLog(Math.max(0, start)) / base;
+        end = mathLog(Math.max(0, end)) / base;
         intervalScaleProto.setExtent.call(this, start, end);
       };
       /**
@@ -37319,7 +37399,7 @@
         function convertElToString(el) {
             var children = el.children, tag = el.tag, attrs = el.attrs;
             return createElementOpen(tag, attrs)
-                + (el.text || '')
+                + encodeHTML(el.text)
                 + (children ? "" + S + map(children, function (child) { return convertElToString(child); }).join(S) + S : '')
                 + createElementClose(tag);
         }
@@ -38805,6 +38885,8 @@
                         clearColor.__canvasGradient = clearColorGradientOrPattern;
                     }
                     else if (isImagePatternObject(clearColor)) {
+                        clearColor.scaleX = clearColor.scaleX || dpr;
+                        clearColor.scaleY = clearColor.scaleY || dpr;
                         clearColorGradientOrPattern = createCanvasPattern(ctx, clearColor, {
                             dirty: function () {
                                 self.setUnpainted();
@@ -39885,14 +39967,14 @@
         var emphasisState = symbolPath.ensureState('emphasis');
         emphasisState.style = emphasisItemStyle;
         symbolPath.ensureState('select').style = selectItemStyle;
-        symbolPath.ensureState('blur').style = blurItemStyle;
+        symbolPath.ensureState('blur').style = blurItemStyle; // null / undefined / true means to use default strategy.
+        // 0 / false / negative number / NaN / Infinity means no scale.
 
-        if (hoverScale) {
-          var scaleRatio = Math.max(isNumber(hoverScale) ? hoverScale : 1.1, 3 / this._sizeY);
-          emphasisState.scaleX = this._sizeX * scaleRatio;
-          emphasisState.scaleY = this._sizeY * scaleRatio;
-        }
+        var scaleRatio = hoverScale == null || hoverScale === true ? Math.max(1.1, 3 / this._sizeY) // PENDING: restrict hoverScale > 1? It seems unreasonable to scale down
+        : isFinite(hoverScale) && hoverScale > 0 ? +hoverScale : 1; // always set scale to allow resetting
 
+        emphasisState.scaleX = this._sizeX * scaleRatio;
+        emphasisState.scaleY = this._sizeY * scaleRatio;
         this.setSymbolScale(1);
         toggleHoverEmphasis(this, focus, blurScope, emphasisDisabled);
       };
@@ -41642,8 +41724,8 @@
               return;
             }
 
-            var zlevel = seriesModel.get('zlevel');
-            var z = seriesModel.get('z');
+            var zlevel = seriesModel.get('zlevel') || 0;
+            var z = seriesModel.get('z') || 0;
             symbol = new Symbol(data, dataIndex);
             symbol.x = x;
             symbol.y = y;
@@ -43562,6 +43644,7 @@
           points: data.getLayout('largePoints')
         },
         incremental: !!incremental,
+        ignoreCoarsePointer: true,
         z2: 1
       });
       el.baseDimIdx = baseDimIdx;
@@ -43710,10 +43793,22 @@
       var width = parsePercent$1(viewRect.width, api.getWidth());
       var height = parsePercent$1(viewRect.height, api.getHeight());
       var size = Math.min(width, height);
-      var cx = parsePercent$1(center[0], width) + viewRect.x;
-      var cy = parsePercent$1(center[1], height) + viewRect.y;
       var r0 = parsePercent$1(radius[0], size / 2);
       var r = parsePercent$1(radius[1], size / 2);
+      var cx;
+      var cy;
+      var coordSys = seriesModel.coordinateSystem;
+
+      if (coordSys) {
+        // percentage is not allowed when coordinate system is specified
+        var point = coordSys.dataToPoint(center);
+        cx = point[0] || 0;
+        cy = point[1] || 0;
+      } else {
+        cx = parsePercent$1(center[0], width) + viewRect.x;
+        cy = parsePercent$1(center[1], height) + viewRect.y;
+      }
+
       return {
         cx: cx,
         cy: cy,
@@ -44209,7 +44304,8 @@
 
         if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
           each(label.states, setNotShow);
-          label.ignore = true;
+          each(labelLine.states, setNotShow);
+          label.ignore = labelLine.ignore = true;
           return;
         }
 
@@ -44818,10 +44914,16 @@
 
 
       PieSeriesModel.prototype.getInitialData = function () {
-        return createSeriesDataSimply(this, {
+        var data = createSeriesDataSimply(this, {
           coordDimensions: ['value'],
           encodeDefaulter: curry(makeSeriesEncodeForNameBased, this)
         });
+        var valueList = [];
+        data.each(data.mapDimension('value'), function (value) {
+          valueList.push(value);
+        });
+        this.seats = getPercentSeats(valueList, data.hostModel.get('percentPrecision'));
+        return data;
       };
       /**
        * @overwrite
@@ -44829,16 +44931,9 @@
 
 
       PieSeriesModel.prototype.getDataParams = function (dataIndex) {
-        var data = this.getData();
+        var params = _super.prototype.getDataParams.call(this, dataIndex);
 
-        var params = _super.prototype.getDataParams.call(this, dataIndex); // FIXME toFixed?
-
-
-        var valueList = [];
-        data.each(data.mapDimension('value'), function (value) {
-          valueList.push(value);
-        });
-        params.percent = getPercentWithPrecision(valueList, dataIndex, data.hostModel.get('percentPrecision'));
+        params.percent = this.seats[dataIndex];
         params.$vars.push('percent');
         return params;
       };
@@ -45336,6 +45431,7 @@
         var symbolEl = new LargeSymbolPath({
           cursor: 'default'
         });
+        symbolEl.ignoreCoarsePointer = true;
         this.group.add(symbolEl);
 
         this._newAdded.push(symbolEl);
@@ -46897,6 +46993,7 @@
         var matrix = transformGroup.transform;
         var pt1 = [extent[0], 0];
         var pt2 = [extent[1], 0];
+        var inverse = pt1[0] > pt2[0];
 
         if (matrix) {
           applyTransform(pt1, pt1, matrix);
@@ -46907,8 +47004,6 @@
           lineCap: 'round'
         }, axisModel.getModel(['axisLine', 'lineStyle']).getLineStyle());
         var line = new Line({
-          // Id for animation
-          subPixelOptimize: true,
           shape: {
             x1: pt1[0],
             y1: pt1[1],
@@ -46920,6 +47015,7 @@
           silent: true,
           z2: 1
         });
+        subPixelOptimizeLine$1(line.shape, line.style.lineWidth);
         line.anid = 'line';
         group.add(line);
         var arrows = axisModel.get(['axisLine', 'symbol']);
@@ -46953,10 +47049,11 @@
               var symbol = createSymbol(arrows[index], -symbolWidth_1 / 2, -symbolHeight_1 / 2, symbolWidth_1, symbolHeight_1, lineStyle.stroke, true); // Calculate arrow position with offset
 
               var r = point.r + point.offset;
+              var pt = inverse ? pt2 : pt1;
               symbol.attr({
                 rotation: point.rotate,
-                x: pt1[0] + r * Math.cos(opt.rotation),
-                y: pt1[1] - r * Math.sin(opt.rotation),
+                x: pt[0] + r * Math.cos(opt.rotation),
+                y: pt[1] - r * Math.sin(opt.rotation),
                 silent: true,
                 z2: 11
               });
@@ -47192,7 +47289,6 @@
 
 
         var tickEl = new Line({
-          subPixelOptimize: true,
           shape: {
             x1: pt1[0],
             y1: pt1[1],
@@ -47204,6 +47300,7 @@
           autoBatch: true,
           silent: true
         });
+        subPixelOptimizeLine$1(tickEl.shape, tickEl.style.lineWidth);
         tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;
         tickEls.push(tickEl);
       }
@@ -47925,9 +48022,8 @@
 
           var colorIndex = lineCount++ % lineColors.length;
           var tickValue = ticksCoords[i].tickValue;
-          axisGroup.add(new Line({
+          var line = new Line({
             anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
-            subPixelOptimize: true,
             autoBatch: true,
             shape: {
               x1: p1[0],
@@ -47939,7 +48035,9 @@
               stroke: lineColors[colorIndex]
             }, lineStyle),
             silent: true
-          }));
+          });
+          subPixelOptimizeLine$1(line.shape, lineStyle.lineWidth);
+          axisGroup.add(line);
         }
       },
       minorSplitLine: function (axisView, axisGroup, axisModel, gridModel) {
@@ -47974,9 +48072,8 @@
               p2[1] = tickCoord;
             }
 
-            axisGroup.add(new Line({
+            var line = new Line({
               anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
-              subPixelOptimize: true,
               autoBatch: true,
               shape: {
                 x1: p1[0],
@@ -47986,7 +48083,9 @@
               },
               style: lineStyle,
               silent: true
-            }));
+            });
+            subPixelOptimizeLine$1(line.shape, lineStyle.lineWidth);
+            axisGroup.add(line);
           }
         }
       },
@@ -56965,12 +57064,12 @@
 
     function dataFilter$1( // Currently only polar and cartesian has containData.
     coordSys, item) {
-      // Alwalys return true if there is no coordSys
+      // Always return true if there is no coordSys
       return coordSys && coordSys.containData && item.coord && !hasXOrY(item) ? coordSys.containData(item.coord) : true;
     }
     function zoneFilter( // Currently only polar and cartesian has containData.
     coordSys, item1, item2) {
-      // Alwalys return true if there is no coordSys
+      // Always return true if there is no coordSys
       return coordSys && coordSys.containZone && item1.coord && item2.coord && !hasXOrY(item1) && !hasXOrY(item2) ? coordSys.containZone(item1.coord, item2.coord) : true;
     }
     function createMarkerDimValueGetter(inCoordSys, dims) {
@@ -57072,7 +57171,7 @@
           point = [xPx, yPx];
         } // Chart like bar may have there own marker positioning logic
         else if (seriesModel.getMarkerPosition) {
-            // Use the getMarkerPoisition
+            // Use the getMarkerPosition
             point = seriesModel.getMarkerPosition(mpData.getValues(mpData.dimensions, idx));
           } else if (coordSys) {
             var x = mpData.get(coordSys.dimensions[0], idx);
@@ -57995,7 +58094,7 @@
       return normalizedItem;
     };
 
-    function isInifinity(val) {
+    function isInfinity(val) {
       return !isNaN(val) && !isFinite(val);
     } // If a markLine has one dim
 
@@ -58003,7 +58102,7 @@
     function ifMarkLineHasOnlyDim(dimIndex, fromCoord, toCoord, coordSys) {
       var otherDimIndex = 1 - dimIndex;
       var dimName = coordSys.dimensions[dimIndex];
-      return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex]) && fromCoord[dimIndex] === toCoord[dimIndex] && coordSys.getAxis(dimName).containData(fromCoord[dimIndex]);
+      return isInfinity(fromCoord[otherDimIndex]) && isInfinity(toCoord[otherDimIndex]) && fromCoord[dimIndex] === toCoord[dimIndex] && coordSys.getAxis(dimName).containData(fromCoord[dimIndex]);
     }
 
     function markLineFilter(coordSys, item) {
@@ -58036,7 +58135,7 @@
       } else {
         // Chart like bar may have there own marker positioning logic
         if (seriesModel.getMarkerPosition) {
-          // Use the getMarkerPoisition
+          // Use the getMarkerPosition
           point = seriesModel.getMarkerPosition(data.getValues(data.dimensions, idx));
         } else {
           var dims = coordSys.dimensions;
@@ -58060,9 +58159,9 @@
           var yAxis = coordSys.getAxis('y');
           var dims = coordSys.dimensions;
 
-          if (isInifinity(data.get(dims[0], idx))) {
+          if (isInfinity(data.get(dims[0], idx))) {
             point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[isFrom ? 0 : 1]);
-          } else if (isInifinity(data.get(dims[1], idx))) {
+          } else if (isInfinity(data.get(dims[1], idx))) {
             point[1] = yAxis.toGlobalCoord(yAxis.getExtent()[isFrom ? 0 : 1]);
           }
         } // Use x, y if has any
@@ -58351,14 +58450,14 @@
       return result;
     };
 
-    function isInifinity$1(val) {
+    function isInfinity$1(val) {
       return !isNaN(val) && !isFinite(val);
     } // If a markArea has one dim
 
 
     function ifMarkAreaHasOnlyDim(dimIndex, fromCoord, toCoord, coordSys) {
       var otherDimIndex = 1 - dimIndex;
-      return isInifinity$1(fromCoord[otherDimIndex]) && isInifinity$1(toCoord[otherDimIndex]);
+      return isInfinity$1(fromCoord[otherDimIndex]) && isInfinity$1(toCoord[otherDimIndex]);
     }
 
     function markAreaFilter(coordSys, item) {
@@ -58410,7 +58509,7 @@
       } else {
         // Chart like bar may have there own marker positioning logic
         if (seriesModel.getMarkerPosition) {
-          // Use the getMarkerPoisition
+          // Use the getMarkerPosition
           point = seriesModel.getMarkerPosition(data.getValues(dims, idx));
         } else {
           var x = data.get(dims[0], idx);
@@ -58427,9 +58526,9 @@
           var x = data.get(dims[0], idx);
           var y = data.get(dims[1], idx);
 
-          if (isInifinity$1(x)) {
+          if (isInfinity$1(x)) {
             point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[dims[0] === 'x0' ? 0 : 1]);
-          } else if (isInifinity$1(y)) {
+          } else if (isInfinity$1(y)) {
             point[1] = yAxis.toGlobalCoord(yAxis.getExtent()[dims[1] === 'y0' ? 0 : 1]);
           }
         } // Use x, y if has any
@@ -60257,8 +60356,19 @@
       };
 
       RoamController.prototype._mousedownHandler = function (e) {
-        if (isMiddleOrRightButtonOnMouseUpDown(e) || e.target && e.target.draggable) {
+        if (isMiddleOrRightButtonOnMouseUpDown(e)) {
           return;
+        }
+
+        var el = e.target;
+
+        while (el) {
+          if (el.draggable) {
+            return;
+          } // check if host is draggable
+
+
+          el = el.__hostTarget || el.parent;
         }
 
         var x = e.offsetX;
@@ -61103,7 +61213,8 @@
         var oldSize = this._shadowSize || [];
         var seriesModel = info.series;
         var data = seriesModel.getRawData();
-        var otherDim = seriesModel.getShadowDim ? seriesModel.getShadowDim() // @see candlestick
+        var candlestickDim = seriesModel.getShadowDim && seriesModel.getShadowDim();
+        var otherDim = candlestickDim && data.getDimensionInfo(candlestickDim) ? seriesModel.getShadowDim() // @see candlestick
         : info.otherDim;
 
         if (otherDim == null) {
