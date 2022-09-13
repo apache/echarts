@@ -32,6 +32,7 @@
     this._projection = new BMap.MercatorProjection();
   }
 
+  BMapCoordSys.prototype.type = 'bmap';
   BMapCoordSys.prototype.dimensions = ['lng', 'lat'];
 
   BMapCoordSys.prototype.setZoom = function (zoom) {
@@ -101,6 +102,15 @@
         size: echarts.util.bind(dataToCoordSize, this)
       }
     };
+  };
+
+  BMapCoordSys.prototype.convertToPixel = function (ecModel, finder, value) {
+    // here we ignore finder as only one bmap component is allowed
+    return this.dataToPoint(value);
+  };
+
+  BMapCoordSys.prototype.convertFromPixel = function (ecModel, finder, value) {
+    return this.pointToData(value);
   };
 
   function dataToCoordSize(dataSize, dataItem) {
@@ -233,7 +243,9 @@
       if (seriesModel.get('coordinateSystem') === 'bmap') {
         seriesModel.coordinateSystem = bmapCoordSys;
       }
-    });
+    }); // return created coordinate systems
+
+    return bmapCoordSys && [bmapCoordSys];
   };
 
   function v2Equal(a, b) {
