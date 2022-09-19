@@ -41,6 +41,11 @@ jobs:
         if: steps.cache-dep.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
       - name: Collect changed files
         run: |
           mkdir ~/tmp/
