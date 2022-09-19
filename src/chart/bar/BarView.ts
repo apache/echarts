@@ -1146,6 +1146,7 @@ function createLarge(
     const el = new LargePath({
         shape: {points: data.getLayout('largePoints')},
         incremental: !!incremental,
+        ignoreCoarsePointer: true,
         z2: 1
     });
     el.baseDimIdx = baseDimIdx;

@@ -157,9 +157,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
             const colorIndex = (lineCount++) % lineColors.length;
             const tickValue = ticksCoords[i].tickValue;
-            axisGroup.add(new graphic.Line({
+            const line = new graphic.Line({
                 anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
-                subPixelOptimize: true,
                 autoBatch: true,
                 shape: {
                     x1: p1[0],
@@ -171,7 +170,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     stroke: lineColors[colorIndex]
                 }, lineStyle),
                 silent: true
-            }));
+            });
+            graphic.subPixelOptimizeLine(line.shape, lineStyle.lineWidth);
+            axisGroup.add(line);
         }
     },
 
@@ -193,7 +194,6 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         const lineStyle = lineStyleModel.getLineStyle();
 
-
         for (let i = 0; i < minorTicksCoords.length; i++) {
             for (let k = 0; k < minorTicksCoords[i].length; k++) {
                 const tickCoord = axis.toGlobalCoord(minorTicksCoords[i][k].coord);
@@ -211,9 +211,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     p2[1] = tickCoord;
                 }
 
-                axisGroup.add(new graphic.Line({
+                const line = new graphic.Line({
                     anid: 'minor_line_' + minorTicksCoords[i][k].tickValue,
-                    subPixelOptimize: true,
                     autoBatch: true,
                     shape: {
                         x1: p1[0],
@@ -223,7 +222,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     },
                     style: lineStyle,
                     silent: true
-                }));
+                });
+                graphic.subPixelOptimizeLine(line.shape, lineStyle.lineWidth);
+                axisGroup.add(line);
             }
         }
     },

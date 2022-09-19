@@ -26,12 +26,13 @@ under the License.
     </head>
     <body>
         <style>
-            html, body, #main {
+            html, body, #main, #main1 {
                 width: 100%;
                 height: 100%;
             }
         </style>
         <div id='main'></div>
+        <div id='main1'></div>
         <script>
 
             require([
@@ -78,6 +79,36 @@ under the License.
                         type: 'line',
                         data: [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
                     }]
+                });
+            });
+
+        </script>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var chart = echarts.init(document.getElementById('main1'));
+                // See #13154
+                chart.setOption({
+                    xAxis: {
+                        type: 'value',
+                    },
+                    yAxis: {
+                        type: 'log',
+                        logBase: 2,
+                    },
+                    series: [
+                        {
+                            type: 'scatter',
+                            itemStyle: {
+                                color: 'red',
+                            },
+                            data: [
+                                [1, .5],
+                            ],
+                        },
+                    ],
                 });
             });
 
