@@ -73,7 +73,7 @@
     "@definitelytyped/typescript-versions": "0.0.64",
     "@definitelytyped/utils": "0.0.64",
     "@lang/rollup-plugin-dts": "2.0.2",
-    "@microsoft/api-extractor": "7.7.2",
+    "@microsoft/api-extractor": "7.31.2",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-replace": "^2.3.4",
