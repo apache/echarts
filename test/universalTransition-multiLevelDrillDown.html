@@ -41,7 +41,7 @@ under the License.
 
         <script>
             require(['echarts'], function (echarts) {
-                var chart = testHelper.create(echarts, 'main', {
+                var myChart = testHelper.create(echarts, 'main', {
                     title: [
                         'Multiple levels of drilldown for bar charts',
                         '(1) 1 old series --> 1 new series each `setOption()`',
@@ -51,69 +51,107 @@ under the License.
                 });
 
                 // level 1 (root)
-                const data_1 = [
-                    ['1_1', 5, '1', '1_1'],
-                    ['1_2', 2, '1', '1_2']
+                const data_things = [
+                    ['Animals', 3, 'things', 'animals'],
+                    ['Fruits', 3, 'things', 'fruits'],
+                    ['Cars', 2, 'things', 'cars']
                 ];
                 // level 2
-                const data_1_1 = [
-                    ['1_1_1', 2, '1_1', '1_1_1'],
-                    ['1_1_2', 2, '1_1', '1_1_2'],
-                    ['1_1_3', 3, '1_1', '1_1_3']
+                const data_animals = [
+                    ['Dogs', 3, 'animals', 'dogs'],
+                    ['Cats', 4, 'animals', 'cats'],
+                    ['Birds', 3, 'animals', 'birds']
                 ];
-                const data_1_2 = [
-                    ['1_2_1', 6, '1_2', '1_2_1'],
-                    ['1_2_2', 7, '1_2', '1_2_2']
+                const data_fruits = [
+                    ['Pomes', 3, 'fruits', 'pomes'],
+                    ['Berries', 4, 'fruits', 'berries'],
+                    ['Citrus', 9, 'fruits', 'citrus']
+                ];
+                const data_cars = [
+                    ['SUV', 5, 'cars', 'suv'],
+                    ['Sports', 3, 'cars', 'sports']
                 ];
                 // level 3
-                const data_1_1_1 = [
-                    ['1_1_1_A', 5, '1_1_1'], // the "childest" data need not to be specified a `childGroupId`
-                    ['1_1_1_B', 6, '1_1_1'],
-                    ['1_1_1_C', 7, '1_1_1'],
-                    ['1_1_1_D', 8, '1_1_1']
+                const data_dogs = [
+                    ['Corgi', 5, 'dogs'], // the "childest" data need not to be specified a `childGroupId`
+                    ['Bulldog', 6, 'dogs'],
+                    ['Shiba Inu', 7, 'dogs']
                 ];
-                const data_1_1_2 = [
-                    ['1_1_2_A', 2, '1_1_2'],
-                    ['1_1_2_B', 9, '1_1_2']
+                const data_cats = [
+                    ['American Shorthair', 2, 'cats'],
+                    ['British Shorthair', 9, 'cats'],
+                    ['Bengal', 2, 'cats'],
+                    ['Birman', 2, 'cats']
                 ];
-                const data_1_1_3 = [
-                    ['1_1_3_A', 1, '1_1_3'],
-                    ['1_1_3_B', 2, '1_1_3'],
-                    ['1_1_3_C', 8, '1_1_3']
+                const data_birds = [
+                    ['Goose', 1, 'birds'],
+                    ['Owl', 2, 'birds'],
+                    ['Eagle', 8, 'birds']
                 ];
-                const data_1_2_1 = [
-                    ['1_2_1_A', 9, '1_2_1'],
-                    ['1_2_1_B', 2, '1_2_1'],
-                    ['1_2_1_C', 1, '1_2_1']
+                const data_pomes = [
+                    ['Apple', 9, 'pomes'],
+                    ['Pear', 2, 'pomes'],
+                    ['Kiwi', 1, 'pomes']
                 ];
-                const data_1_2_2 = [
-                    ['1_2_2_A', 7, '1_2_2'],
-                    ['1_2_2_B', 7, '1_2_2']
+                const data_berries = [
+                    ['Blackberries', 7, 'berries'],
+                    ['Cranberries', 2, 'berries'],
+                    ['Strawberries', 9, 'berries'],
+                    ['Grapes', 4, 'berries']
+                ];
+                const data_citrus = [
+                    ['Oranges', 3, 'citrus'],
+                    ['Grapefruits', 7, 'citrus'],
+                    ['Tangerines', 8, 'citrus'],
+                    ['Lemons', 7, 'citrus'],
+                    ['Limes', 3, 'citrus'],
+                    ['Kumquats', 2, 'citrus'],
+                    ['Citrons', 3, 'citrus'],
+                    ['Tengelows', 3, 'citrus'],
+                    ['Uglifruit', 1, 'citrus']
+                ];
+                const data_suv = [
+                    ['Mazda CX-30', 7, 'suv'],
+                    ['BMW X2', 7, 'suv'],
+                    ['Ford Bronco Sport', 2, 'suv'],
+                    ['Toyota RAV4', 9, 'suv'],
+                    ['Porsche Macan', 4, 'suv']
+                ];
+                const data_sports = [
+                    ['Porsche 718 Cayman', 2, 'sports'],
+                    ['Porsche 911 Turbo', 2, 'sports'],
+                    ['Ferrari F8', 4, 'sports']
                 ];
                 const allLevelData = [
-                    data_1,
-                    data_1_1,
-                    data_1_2,
-                    data_1_1_1,
-                    data_1_1_2,
-                    data_1_1_3,
-                    data_1_2_1,
-                    data_1_2_2
+                    data_things,
+                    data_animals,
+                    data_fruits,
+                    data_cars,
+                    data_dogs,
+                    data_cats,
+                    data_birds,
+                    data_pomes,
+                    data_berries,
+                    data_citrus,
+                    data_suv,
+                    data_sports
                 ];
 
                 const allOptions = {};
 
-                allLevelData.forEach((data) => {
+                allLevelData.forEach((data, index) => {
                     // since dataItems of each data have same groupId in this
                     // example, we can use groupId as optionId for optionStack.
                     const optionId = data[0][2];
 
                     const option = {
-                        id: optionId, // option.id is not a property of echarts option model, but can be accessed if we provide it
+                        id: optionId, // option.id is not a property of emyCharts option model, but can be accessed if we provide it
                         xAxis: {
                             type: 'category'
                         },
-                        yAxis: {},
+                        yAxis: {
+                            minInterval: 1
+                        },
                         animationDurationUpdate: 500,
                         series: {
                             type: 'bar',
@@ -137,7 +175,8 @@ under the License.
                                 top: 20,
                                 style: {
                                     text: 'Back',
-                                    fontSize: 18
+                                    fontSize: 18,
+                                    fill: 'grey'
                                 },
                                 onclick: function () {
                                     goBack();
@@ -152,25 +191,26 @@ under the License.
                 const optionStack = [];
 
                 const goForward = (optionId) => {
-                    optionStack.push(chart.getOption().id); // push current option id into stack.
-                    chart.setOption(allOptions[optionId], false);
+                    optionStack.push(myChart.getOption().id); // push current option id into stack.
+                    myChart.setOption(allOptions[optionId]);
                 };
 
                 const goBack = () => {
                     if (optionStack.length === 0) {
                         console.log('Already in root level!');
                     } else {
-                        console.log('Go back to previous level');
-                        chart.setOption(allOptions[optionStack.pop()]);
+                        console.log('Go back to previous level.');
+                        myChart.setOption(allOptions[optionStack.pop()]);
                     }
                 };
 
-                option = allOptions['1']; // The initial option is the root data option
+                option = allOptions['things']; // The initial option is the root data option
 
-                chart.on('click', 'series.bar', (params) => {
-                    if (params.data[3]) {
+                myChart.on('click', 'series', (params) => {
+                    const dataItem = params.data;
+                    if (dataItem[3]) {
                         // If current params is not belong to the "childest" data, it has data[3]
-                        const childGroupId = params.data[3];
+                        const childGroupId = dataItem[3];
                         // since we use groupId as optionId in this example,
                         // we use childGroupId as the next level optionId.
                         const nextOptionId = childGroupId;
@@ -178,9 +218,9 @@ under the License.
                     }
                 });
 
-                option && chart.setOption(option);
+                option && myChart.setOption(option);
 
-                window.onresize = chart.resize;
+                window.onresize = myChart.resize;
             });
         </script>
     </body>
