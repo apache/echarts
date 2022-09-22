@@ -92,7 +92,7 @@
     "husky": "^4.2.5",
     "jest": "^26.6.1",
     "jest-canvas-mock": "^2.2.0",
-    "jshint": "2.10.2",
+    "jshint": "2.13.5",
     "magic-string": "^0.25.7",
     "open": "6.4.0",
     "pixelmatch": "5.0.2",
