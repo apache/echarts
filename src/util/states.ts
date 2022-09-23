@@ -365,7 +365,8 @@ function elementStateProxy(this: Displayable, stateName: string, targetStates?: 
     }
     return state;
 }
-/**FI
+
+/**
  * Set hover style (namely "emphasis style") of element.
  * @param el Should not be `zrender/graphic/Group`.
  * @param focus 'self' | 'selfInSeries' | 'series'
