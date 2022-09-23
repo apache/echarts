@@ -41,7 +41,7 @@ export {use} from '../extension';
 
 export {setPlatformAPI} from 'zrender/src/core/platform';
 
-//////////////// Helper Methods /////////////////////
+// --------------------- Helper Methods ---------------------
 export {default as parseGeoJSON} from '../coord/geo/parseGeoJson';
 export {default as parseGeoJson} from '../coord/geo/parseGeoJson';
 
@@ -55,7 +55,7 @@ export * as util from './api/util';
 
 export {default as env} from 'zrender/src/core/env';
 
-//////////////// Export for Extension Usage ////////////////
+// --------------------- Export for Exension Usage ---------------------
 // export {SeriesData};
 export {SeriesData as List};    // TODO: Compatible with exists echarts-gl code
 export {default as Model} from '../model/Model';
@@ -72,7 +72,7 @@ export {
 export {brushSingle as innerDrawElementOnCanvas} from 'zrender/src/canvas/graphic';
 
 
-//////////////// Deprecated Extension Methods ////////////////
+// --------------------- Deprecated Extension Methods ---------------------
 
 // Should use `ComponentModel.extend` or `class XXXX extend ComponentModel` to create class.
 // Then use `registerComponentModel` in `install` parameter when `use` this extension. For example:

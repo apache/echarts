@@ -18,6 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import { encodeHTML } from 'zrender/src/core/dom';
 import { parseDate, isNumeric, numericToNumber } from './number';
 import { TooltipRenderMode, ColorString, ZRColor, DimensionType } from './types';
 import { Dictionary } from 'zrender/src/core/types';
@@ -51,24 +52,7 @@ export function toCamelCase(str: string, upperCaseFirst?: boolean): string {
 
 export const normalizeCssArray = zrUtil.normalizeCssArray;
 
-
-const replaceReg = /([&<>"'])/g;
-const replaceMap: Dictionary<string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    '\'': '&#39;'
-};
-
-export function encodeHTML(source: string): string {
-    return source == null
-        ? ''
-        : (source + '').replace(replaceReg, function (str, c) {
-            return replaceMap[c];
-        });
-}
-
+export { encodeHTML };
 
 /**
  * Make value user readable for tooltip and label.
