@@ -127,6 +127,7 @@ class GaugeView extends ChartView {
 
         let prevEndAngle = startAngle;
 
+        const sectors: (Sausage | graphic.Sector)[] = [];
         for (let i = 0; showAxis && i < colorList.length; i++) {
             // Clamp
             const percent = Math.min(Math.max(colorList[i][0], 0), 1);
@@ -154,10 +155,13 @@ class GaugeView extends ChartView {
                 ['color', 'width']
             ));
 
-            group.add(sector);
+            sectors.push(sector);
 
             prevEndAngle = endAngle;
         }
+
+        sectors.reverse();
+        sectors.forEach(sector => group.add(sector));
 
         const getColor = function (percent: number) {
             // Less than 0
