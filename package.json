@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "5.3.3",
+  "version": "5.4.0",
   "description": "Apache ECharts is a powerful, interactive charting and data visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
@@ -64,7 +64,7 @@
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "npm:zrender-nightly@^5.3.3-dev.20220820"
+    "zrender": "5.4.0"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
@@ -78,8 +78,8 @@
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-replace": "^2.3.4",
     "@types/jest": "^26.0.14",
-    "@typescript-eslint/eslint-plugin": "^4.29.2",
-    "@typescript-eslint/parser": "^4.9.1",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "chalk": "^3.0.0",
     "commander": "2.11.0",
     "cwebp-bin": "^6.1.1",

@@ -24,7 +24,8 @@ import {
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
     ScaleDataValue,
-    DefaultStatesMixin
+    DefaultStatesMixin,
+    StatesMixinBase
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
@@ -34,7 +35,7 @@ import { each } from 'zrender/src/core/util';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 
 
-export interface BaseBarSeriesOption<StateOption, ExtraStateOption = DefaultStatesMixin>
+export interface BaseBarSeriesOption<StateOption, ExtraStateOption extends StatesMixinBase = DefaultStatesMixin>
     extends SeriesOption<StateOption, ExtraStateOption>,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin {
