@@ -234,7 +234,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
     mergeOption(newOption: Opts): void {
         const inputRawOption = retrieveRawOption(newOption);
 
-        //FIX #2591
+        // FIX #2591
         merge(this.option, newOption, true);
         merge(this.settledOption, inputRawOption, true);
 

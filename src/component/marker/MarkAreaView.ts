@@ -133,11 +133,11 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
         ) {
             return true;
         }
-        //Directly returning true may also do the work,
-        //because markArea will not be shown automatically
-        //when it's not included in coordinate system.
-        //But filtering ahead can avoid keeping rendering markArea
-        //when there are too many of them.
+        // Directly returning true may also do the work,
+        // because markArea will not be shown automatically
+        // when it's not included in coordinate system.
+        // But filtering ahead can avoid keeping rendering markArea
+        // when there are too many of them.
         return markerHelper.zoneFilter(coordSys, item0, item1);
     }
     return markerHelper.dataFilter(coordSys, item0)
@@ -164,8 +164,8 @@ function getSingleMarkerEndPoint(
     else {
         // Chart like bar may have there own marker positioning logic
         if (seriesModel.getMarkerPosition) {
-            //Consider the case that user input the right-bottom point first
-            //Pick the larger x and y as 'x1' and 'y1'
+            // Consider the case that user input the right-bottom point first
+            // Pick the larger x and y as 'x1' and 'y1'
             const pointValue0 = data.getValues(['x0', 'y0'], idx);
             const pointValue1 = data.getValues(['x1', 'y1'], idx);
             const clampPointValue0 = coordSys.clampData(pointValue0);

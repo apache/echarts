@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';

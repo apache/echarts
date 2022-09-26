@@ -93,11 +93,11 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
             const pt = coordSys.dataToPoint(coordSys.clampData(value));
             if (startingAtTick) {
                 each(coordSys.getAxes(), function (axis: Axis2D, idx: number) {
-                    //If axis type is category, use tick coords instead
+                    // If axis type is category, use tick coords instead
                     if (axis.type === 'category') {
                         const tickCoords = axis.getTicksCoords();
                         let tickIdx = coordSys.clampData(value)[idx];
-                        //The index of rightmost tick of markArea is 1 larger than x1/y1 index
+                        // The index of rightmost tick of markArea is 1 larger than x1/y1 index
                         if (dims && (dims[idx] === 'x1' || dims[idx] === 'y1')) {
                             tickIdx += 1;
                         }
