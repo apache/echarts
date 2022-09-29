@@ -27,14 +27,13 @@ import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemCreator } from '../CoordinateSystem';
 import { NameMap } from './geoTypes';
-import SeriesModel from '../../model/Series';
 import { SeriesOption, SeriesOnGeoOptionMixin } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
-import GlobalModel from '../../model/Global';
-import ComponentModel from '../../model/Component';
-import { Model } from '../../echarts.all';
+import type Model from '../../model/Model';
+import type GlobalModel from '../../model/Global';
+import type SeriesModel from '../../model/Series';
+import type ComponentModel from '../../model/Component';
 import * as vector from 'zrender/src/core/vector';
-
 
 export type resizeGeoType = typeof resizeGeo;
 

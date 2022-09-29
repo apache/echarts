@@ -420,7 +420,7 @@ class SliderTimelineView extends TimelineView {
 
         this._tickSymbols = [];
 
-        // The value is dataIndex, see the costomized scale.
+        // The value is dataIndex, see the customized scale.
         each(ticks, (tick: ScaleTick) => {
             const tickCoord = axis.dataToCoord(tick.value);
             const itemModel = data.getItemModel<TimelineDataItemOption>(tick.value);
@@ -470,7 +470,7 @@ class SliderTimelineView extends TimelineView {
         this._tickLabels = [];
 
         each(labels, (labelItem) => {
-            // The tickValue is dataIndex, see the costomized scale.
+            // The tickValue is dataIndex, see the customized scale.
             const dataIndex = labelItem.tickValue;
 
             const itemModel = data.getItemModel<TimelineDataItemOption>(dataIndex);
@@ -626,8 +626,11 @@ class SliderTimelineView extends TimelineView {
         this._currentPointer.x = toCoord;
         this._currentPointer.markRedraw();
 
-        this._progressLine.shape.x2 = toCoord;
-        this._progressLine.dirty();
+        const progressLine = this._progressLine;
+        if (progressLine) {
+            progressLine.shape.x2 = toCoord;
+            progressLine.dirty();
+        }
 
         const targetDataIndex = this._findNearestTick(toCoord);
         const timelineModel = this.model;

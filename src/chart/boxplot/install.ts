@@ -20,14 +20,12 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import BoxplotSeriesModel from './BoxplotSeries';
 import BoxplotView from './BoxplotView';
-import boxplotVisual from './boxplotVisual';
 import boxplotLayout from './boxplotLayout';
 import { boxplotTransform } from './boxplotTransform';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerSeriesModel(BoxplotSeriesModel);
     registers.registerChartView(BoxplotView);
-    registers.registerVisual(boxplotVisual);
     registers.registerLayout(boxplotLayout);
     registers.registerTransform(boxplotTransform);
 }
