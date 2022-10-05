@@ -328,8 +328,8 @@ type EChartsInitOpts = {
     useCoarsePointer?: boolean,
     pointerSize?: number,
     ssr?: boolean,
-    width?: number,
-    height?: number
+    width?: number | string,
+    height?: number | string
 };
 class ECharts extends Eventful<ECEventDefinition> {
 
