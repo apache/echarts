@@ -299,7 +299,8 @@ function prepareBarLength(
     const valueDim = opt.valueDim;
     const symbolBoundingData = itemModel.get('symbolBoundingData');
     const valueAxis = opt.coordSys.getOtherAxis(opt.coordSys.getBaseAxis());
-    const zeroPx = valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
+    const min = valueAxis.type === 'log' ? valueAxis.scale.getExtent()[0] : 0;
+    const zeroPx = valueAxis.toGlobalCoord(valueAxis.dataToCoord(min));
     const pxSignIdx = 1 - +(layout[valueDim.wh] <= 0);
     let boundingLength;
 
