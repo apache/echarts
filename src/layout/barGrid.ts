@@ -603,5 +603,6 @@ function isInLargeMode(seriesModel: BarSeriesModel) {
 
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D) {
-    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
+    const min = valueAxis.type === 'log' ? valueAxis.scale.getExtent()[0] : 0;
+    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(min));
 }
