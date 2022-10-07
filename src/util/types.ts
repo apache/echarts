@@ -758,7 +758,8 @@ export type ComponentLayoutMode = {
     type?: 'box',
     ignoreSize?: boolean | boolean[]
 };
-/******************* Mixins for Common Option Properties   ********************** */
+
+// ------------------ Mixins for Common Option Properties ------------------
 export type PaletteOptionMixin = ColorPaletteOptionMixin;
 
 export interface ColorPaletteOptionMixin {

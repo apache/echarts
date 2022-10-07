@@ -286,7 +286,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         // for geoJSON source: 0.75.
         aspectScale: null,
 
-        ///// Layout with center and size
+        // Layout with center and size
         // If you wan't to put map in a fixed size box with right aspect ratio
         // This two properties may more conveninet
         // layoutCenter: [50%, 50%]

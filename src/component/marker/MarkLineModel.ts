@@ -118,7 +118,7 @@ class MarkLineModel extends MarkerModel<MarkLineOption> {
         symbol: ['circle', 'arrow'],
         symbolSize: [8, 16],
 
-        //symbolRotate: 0,
+        // symbolRotate: 0,
         symbolOffset: 0,
 
         precision: 2,

@@ -61,7 +61,7 @@ function markerTypeCalculatorWithExtent(
 ): [ParsedValue[], ParsedValue] {
     const coordArr: ParsedValue[] = [];
 
-    const stacked = isDimensionStacked(data, targetDataDim /*, otherDataDim*/);
+    const stacked = isDimensionStacked(data, targetDataDim /* , otherDataDim */);
     const calcDataDim = stacked
         ? data.getCalculationInfo('stackResultDimension')
         : targetDataDim;
