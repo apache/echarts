@@ -43,6 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import LineSeriesModel from '../../chart/line/LineSeries';
 
 const Rect = graphic.Rect;
 
@@ -409,18 +410,30 @@ class SliderZoomView extends DataZoomView {
                 const otherCoord = isEmpty
                     ? 0 : linearMap(value as number, otherDataExtent, otherShadowExtent, true);
 
-                // Attempt to draw data shadow precisely when there are empty value.
-                if (isEmpty && !lastIsEmpty && index) {
-                    areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
-                    linePoints.push([linePoints[linePoints.length - 1][0], 0]);
-                }
-                else if (!isEmpty && lastIsEmpty) {
-                    areaPoints.push([thisCoord, 0]);
-                    linePoints.push([thisCoord, 0]);
-                }
+                const connectNulls = (seriesModel as LineSeriesModel).get('connectNulls');
 
-                areaPoints.push([thisCoord, otherCoord]);
-                linePoints.push([thisCoord, otherCoord]);
+                if (connectNulls) {
+                    const otherCoordOrNull = isEmpty
+                        ? null : linearMap(value as number, otherDataExtent, otherShadowExtent, true);
+                    if (otherCoordOrNull !== null) {
+                        areaPoints.push([thisCoord, otherCoordOrNull]);
+                        linePoints.push([thisCoord, otherCoordOrNull]);
+                    }
+                }
+                else {
+                    // Attempt to draw data shadow precisely when there are empty value.
+                    if (isEmpty && !lastIsEmpty && index) {
+                        areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
+                        linePoints.push([linePoints[linePoints.length - 1][0], 0]);
+                    }
+                    else if (!isEmpty && lastIsEmpty) {
+                        areaPoints.push([thisCoord, 0]);
+                        linePoints.push([thisCoord, 0]);
+                    }
+
+                    areaPoints.push([thisCoord, otherCoord]);
+                    linePoints.push([thisCoord, otherCoord]);
+                }
 
                 thisCoord += step;
                 lastIsEmpty = isEmpty;
