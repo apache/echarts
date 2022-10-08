@@ -129,13 +129,13 @@ export interface PieSeriesOption extends
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
 
+const innerData = modelUtil.makeInner<{
+    seats?: number[]
+}, SeriesData>();
+
 class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
     static type = 'series.pie' as const;
-
-    seats: number[];
-
-    private _data: SeriesData;
 
     /**
      * @overwrite
@@ -175,17 +175,18 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     getDataParams(dataIndex: number): PieCallbackDataParams {
         const data = this.getData();
         // update seats when data is changed
-        if (this._data !== data) {
+        const dataInner = innerData(data);
+        let seats = dataInner.seats;
+        if (!seats) {
             const valueList: number[] = [];
             data.each(data.mapDimension('value'), function (value: number) {
                 valueList.push(value);
             });
-            this.seats = getPercentSeats(valueList, data.hostModel.get('percentPrecision'));
-            this._data = data;
+            seats = dataInner.seats = getPercentSeats(valueList, data.hostModel.get('percentPrecision'));
         }
         const params = super.getDataParams(dataIndex) as PieCallbackDataParams;
         // seats may be empty when sum is 0
-        params.percent = this.seats[dataIndex] || 0;
+        params.percent = seats[dataIndex] || 0;
         params.$vars.push('percent');
         return params;
     }
