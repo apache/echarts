@@ -423,8 +423,17 @@ class Line extends graphic.Group {
                 label.rotation = rotation;
             }
 
+            let dx;
             let dy;
             switch (label.__position) {
+                case 'start':
+                    dx = d[0] === 0 ? distanceX : (d[0] * distanceX);
+                    dy = d[1] === 0 ? -distanceY : (d[1] * distanceY);
+                    break;
+                case 'end':
+                    dx = d[0] === 0 ? distanceX : (d[0] * distanceX);
+                    dy = d[1] === 0 ? -distanceY : (d[1] * distanceY);
+                    break;
                 case 'insideStartTop':
                 case 'insideMiddleTop':
                 case 'insideEndTop':
@@ -447,15 +456,15 @@ class Line extends graphic.Group {
 
             switch (label.__position) {
                 case 'end':
-                    label.x = d[0] * distanceX + toPos[0];
-                    label.y = d[1] * distanceY + toPos[1];
+                    label.x = dx + toPos[0];
+                    label.y = dy + toPos[1];
                     textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
                     textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
                     break;
 
                 case 'start':
-                    label.x = -d[0] * distanceX + fromPos[0];
-                    label.y = -d[1] * distanceY + fromPos[1];
+                    label.x = -dx + fromPos[0];
+                    label.y = -dy + fromPos[1];
                     textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
                     textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
                     break;
