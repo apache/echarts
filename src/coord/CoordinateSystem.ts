@@ -137,6 +137,8 @@ export interface CoordinateSystem {
     // @param point Point in global pixel coordinate system.
     containPoint(point: number[]): boolean;
 
+    getAxes?: () => Axis[];
+
     getAxis?: (dim?: DimensionName) => Axis;
 
     getBaseAxis?: () => Axis;

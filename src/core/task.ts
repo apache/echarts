@@ -384,7 +384,7 @@ const iterator: TaskDataIterator = (function () {
 
 
 
-///////////////////////////////////////////////////////////
+// -----------------------------------------------------------------------------
 // For stream debug (Should be commented out after used!)
 // @usage: printTask(this, 'begin');
 // @usage: printTask(this, null, {someExtraProp});

@@ -21,9 +21,8 @@ import { parsePercent } from '../../util/number';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
+import SunburstSeriesModel, { SunburstSeriesOption } from './SunburstSeries';
 import { TreeNode } from '../../data/Tree';
-import SeriesModel from '../../model/Series';
 
 // let PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
