@@ -58,6 +58,7 @@ import { ColorString, ECElement } from '../../util/types';
 import { windowOpen } from '../../util/format';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { calculateTextPosition, TextPositionCalculationResult } from 'zrender/src/contain/text';
 
 const Group = graphic.Group;
 const Rect = graphic.Rect;
@@ -1001,10 +1002,14 @@ function renderNode(
                 (upperLabelRect ? upperLabelRect.height : rectEl.shape.height) - textPadding[0] - textPadding[2], 0
             );
             if (textStyle.width !== width || textStyle.height !== height) {
-                textEl.setStyle({
-                    width,
-                    height
-                });
+                const {textConfig} = rectEl;
+                const res = calculateTextPosition(
+                    {} as TextPositionCalculationResult,
+                    textConfig,
+                    textConfig.layoutRect ?? new BoundingRect(0, 0, 0, 0)
+                );
+
+                textEl.setStyle(res);
             }
         };
 
