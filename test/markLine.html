@@ -43,15 +43,18 @@ under the License.
                 var xAxisData = [];
                 var data1 = [];
                 var data2 = [];
+                var data3 = [];
 
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
                     data1.push(+Math.random().toFixed(2));
                     data2.push(+Math.random().toFixed(2));
+                    data3.push(+Math.random().toFixed(2));
                 }
 
                 var markLine1 = [];
                 var markLine2 = [];
+                var markLine3 = [];
                 var positions = [
                     'start', 'middle', 'end',
                     'insideStart', 'insideStartTop', 'insideStartBottom',
@@ -100,13 +103,41 @@ under the License.
                         valueIndex: 0,
                         type: 'max'
                     }]);
+
+                    markLine3.push({
+                        name: positions[i],
+                        xAxis: Math.floor(i / 3) + 5,
+                        label: {
+                            formatter: '{b}',
+                            position: positions[i]
+                        }
+                    });
+                    markLine3.push({
+                        name: positions[i],
+                        yAxis: 0.2 + 0.2 * Math.floor(i / 3),
+                        label: {
+                            formatter: '{b}',
+                            position: positions[i]
+                        }
+                    });
+                    markLine3.push([{
+                        name: 'start: ' + positions[i],
+                        type: 'min',
+                        label: {
+                            formatter: positions[i],
+                            position: positions[i]
+                        }
+                    }, {
+                        name: 'end: ' + positions[i],
+                        type: 'max'
+                    }]);
                 }
 
                 chart.setOption({
                     animation: false,
-                    color: ['#f60', '#0c6'],
+                    color: ['#f60', '#0c6', '#5470C7'],
                     legend: {
-                        data: ['line', 'line2']
+                        data: ['line', 'line2', 'line3']
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -150,6 +181,19 @@ under the License.
                             data: markLine2,
                             label: {
                                 distance: [20, 5]
+                            }
+                        }
+                    },{
+                        name: 'line3',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 6,
+                        data: data3,
+
+                        markLine: {
+                            data: markLine3,
+                            label: {
+                                distance: [0, 0]
                             }
                         }
                     }]
