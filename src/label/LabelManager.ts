@@ -152,7 +152,7 @@ const labelLayoutInnerStore = makeInner<{
         y?: number,
         rotation?: number
     },
-
+    labelLinePoints?: number[][],
     needsUpdateLabelLine?: boolean
 }, ZRText>();
 
@@ -376,6 +376,8 @@ class LabelManager {
                 label.setStyle('y', defaultLabelAttr.style.y);
             }
 
+            const labelLayoutStore = labelLayoutInnerStore(label);
+
             if (layoutOption.labelLinePoints) {
                 const guideLine = hostEl.getTextGuideLine();
                 if (guideLine) {
@@ -383,9 +385,16 @@ class LabelManager {
                     // Not update
                     needsUpdateLabelLine = false;
                 }
+
+                else {
+                    labelLayoutStore.labelLinePoints = layoutOption.labelLinePoints;
+                }
             }
 
-            const labelLayoutStore = labelLayoutInnerStore(label);
+            else {
+                delete labelLayoutStore.labelLinePoints;
+            }
+
             labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
 
             label.rotation = layoutOption.rotate != null
@@ -492,10 +501,12 @@ class LabelManager {
             defaultStyle.stroke = visualStyle[visualType];
 
             const labelLineModel = itemModel.getModel('labelLine');
+            const labelLayoutStore = labelLayoutInnerStore(textEl);
+            const points = labelLayoutStore.labelLinePoints;
 
             setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
 
-            updateLabelLinePoints(el, labelLineModel);
+            updateLabelLinePoints(el, labelLineModel, points);
         }
     }
 
