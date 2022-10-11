@@ -12315,7 +12315,7 @@
 
       return state;
     }
-    /**
+    /**FI
      * Set hover style (namely "emphasis style") of element.
      * @param el Should not be `zrender/graphic/Group`.
      * @param focus 'self' | 'selfInSeries' | 'series'
@@ -17883,7 +17883,7 @@
                     if (seriesImportName) {
                       error("Series " + subType + " is used but not imported.\nimport { " + seriesImportName + " } from 'echarts/charts';\necharts.use([" + seriesImportName + "]);");
                     } else {
-                      error("Unknown series " + subType);
+                      error("Unkown series " + subType);
                     }
                   }
                 }
@@ -20540,7 +20540,7 @@
         current++;
         return result;
       }
-    }(); // -----------------------------------------------------------------------------
+    }(); ///////////////////////////////////////////////////////////
     // For stream debug (Should be commented out after used!)
     // @usage: printTask(this, 'begin');
     // @usage: printTask(this, null, {someExtraProp});
@@ -23766,7 +23766,7 @@
       var styleMapper = seriesModel.visualStyleMapper || defaultStyleMappers[stylePath];
 
       if (!styleMapper) {
-        console.warn("Unknown style type '" + stylePath + "'.");
+        console.warn("Unkown style type '" + stylePath + "'.");
         return defaultStyleMappers.itemStyle;
       }
 
@@ -23778,7 +23778,7 @@
       var colorKey = seriesModel.visualDrawType || defaultColorKey[stylePath];
 
       if (!colorKey) {
-        console.warn("Unknown style type '" + stylePath + "'.");
+        console.warn("Unkown style type '" + stylePath + "'.");
         return 'fill';
       }
 
@@ -30003,7 +30003,7 @@
     var isObject$2 = isObject;
     var map$1 = map;
     var CtorInt32Array$1 = typeof Int32Array === 'undefined' ? Array : Int32Array; // Use prefix to avoid index to be the same as otherIdList[idx],
-    // which will cause weird update animation.
+    // which will cause weird udpate animation.
 
     var ID_PREFIX = 'e\0\0';
     var INDEX_NOT_FOUND = -1; // type SeriesDimensionIndex = DimensionIndex;
@@ -30038,13 +30038,13 @@
         // private _optionModels: Model[] = [];
         // Global visual properties after visual coding
 
-        this._visual = {}; // Global layout properties.
+        this._visual = {}; // Globel layout properties.
 
         this._layout = {}; // Item visual properties after visual coding
 
         this._itemVisuals = []; // Item layout properties after layout
 
-        this._itemLayouts = []; // Graphic elements
+        this._itemLayouts = []; // Graphic elemnents
 
         this._graphicEls = []; // key: dim, value: extent
 
@@ -30148,7 +30148,7 @@
        * Because only those dimensions will have auto-generated dimension names if not
        * have a user-specified name, and other dimensions will get a return of null/undefined.
        *
-       * @notice Because of this reason, should better use `getDimensionIndex` instead, for examples:
+       * @notice Becuause of this reason, should better use `getDimensionIndex` instead, for examples:
        * ```js
        * const val = data.getStore().get(data.getDimensionIndex(dim), dataIdx);
        * ```
@@ -30168,7 +30168,7 @@
 
         if (!this._dimOmitted) {
           return this.dimensions[dimIdx];
-        } // Retrieve from series dimension definition because it probably contains
+        } // Retrieve from series dimension definition becuase it probably contains
         // generated dimension name (like 'x', 'y').
 
 
@@ -30214,7 +30214,7 @@
        *     + If there is the same concrete dim name defined in `series.dimensions` or `dataset.dimensions`,
        *        it means that concrete name.
        *     + If not, it will be converted to a number, which means the index of the dimension.
-       *        (why? because of the backward compatibility. We have been tolerating number-like string in
+       *        (why? because of the backward compatbility. We have been tolerating number-like string in
        *        dimension setting, although now it seems that it is not a good idea.)
        *     For example, `visualMap[i].dimension: "1"` is the same meaning as `visualMap[i].dimension: 1`,
        *     if no dimension name is defined as `"1"`.
@@ -30222,7 +30222,7 @@
        *   For example, it can be be default name `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
        *   or customized in `dimensions` property of option like `"age"`.
        *
-       * @return recognized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
+       * @return recogonized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
        */
 
 
@@ -30238,7 +30238,7 @@
 
         if ("development" !== 'production') {
           if (dimIdx == null) {
-            throw new Error('Unknown dimension ' + dim);
+            throw new Error('Unkown dimension ' + dim);
           }
         }
 
@@ -30363,7 +30363,7 @@
        *            [NaN, 43, 1],
        *            ['-', 'asdf', 0]
        *        ]
-       *        Each item is exactly corresponding to a dimension.
+       *        Each item is exaclty cooresponding to a dimension.
        */
 
 
@@ -30485,7 +30485,7 @@
       };
       /**
        * Calculate extent on a filtered data might be time consuming.
-       * Approximate extent is only used for: calculate extent of filtered data outside.
+       * Approximate extent is only used for: calculte extent of filtered data outside.
        */
 
 
@@ -30502,7 +30502,7 @@
         isObject$2(key) ? extend(this._calculationInfo, key) : this._calculationInfo[key] = value;
       };
       /**
-       * @return Never be null/undefined. `number` will be converted to string. Because:
+       * @return Never be null/undefined. `number` will be converted to string. Becuase:
        * In most cases, name is used in display, where returning a string is more convenient.
        * In other cases, name is used in query (see `indexOfName`), where we can keep the
        * rule that name `2` equals to name `'2'`.
@@ -30536,7 +30536,7 @@
         return ordinal;
       };
       /**
-       * @return Never null/undefined. `number` will be converted to string. Because:
+       * @return Never null/undefined. `number` will be converted to string. Becuase:
        * In all cases having encountered at present, id is used in making diff comparison, which
        * are usually based on hash map. We can keep the rule that the internal id are always string
        * (treat `2` is the same as `'2'`) to make the related logic simple.
@@ -30604,7 +30604,7 @@
         }), idx) : store.getValues(dimensions);
       };
       /**
-       * If value is NaN. Including '-'
+       * If value is NaN. Inlcuding '-'
        * Only check the coord dimensions.
        */
 
@@ -30624,7 +30624,7 @@
         return true;
       };
       /**
-       * Retrieve the index with given name
+       * Retreive the index with given name
        */
 
 
@@ -30672,7 +30672,7 @@
         return rawIndex;
       };
       /**
-       * Retrieve the index of nearest value
+       * Retreive the index of nearest value
        * @param dim
        * @param value
        * @param [maxDistance=Infinity]
@@ -30780,8 +30780,8 @@
         }
 
         var dimIndices = map$1(normalizeDimensions(dims), this._getStoreDimIndex, this); // If do shallow clone here, if there are too many stacked series,
-        // it still cost lots of memory, because `_store.dimensions` are not shared.
-        // We should consider there probably be shallow clone happen in each series
+        // it still cost lots of memory, becuase `_store.dimensions` are not shared.
+        // We should consider there probably be shallow clone happen in each sereis
         // in consequent filter/map.
 
         this._store.modify(dimIndices, fCtx ? bind(cb, fCtx) : cb);
@@ -31085,7 +31085,7 @@
           return dimensions;
         };
         /**
-         * Data in excludeDimensions is copied, otherwise transferred.
+         * Data in excludeDimensions is copied, otherwise transfered.
          */
 
 
@@ -34020,7 +34020,7 @@
       var ecModel = model.ecModel;
 
       if (ecModel && scaleType === 'time'
-      /* || scaleType === 'interval' */
+      /*|| scaleType === 'interval' */
       ) {
         var barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
         var isBaseAxisAndHasBarSeries_1 = false;
@@ -37770,7 +37770,7 @@
       var stackResultDim = data.getCalculationInfo('stackResultDimension');
 
       if (isDimensionStacked(data, dims[0]
-      /* , dims[1] */
+      /*, dims[1]*/
       )) {
         // jshint ignore:line
         stacked = true;
@@ -37778,7 +37778,7 @@
       }
 
       if (isDimensionStacked(data, dims[1]
-      /* , dims[0] */
+      /*, dims[0]*/
       )) {
         // jshint ignore:line
         stacked = true;
@@ -39916,42 +39916,18 @@
         });
       };
 
-      BaseBarSeriesModel.prototype.getMarkerPosition = function (value, dims, startingAtTick) {
-        if (startingAtTick === void 0) {
-          startingAtTick = false;
-        }
-
+      BaseBarSeriesModel.prototype.getMarkerPosition = function (value) {
         var coordSys = this.coordinateSystem;
 
         if (coordSys && coordSys.clampData) {
           // PENDING if clamp ?
-          var pt_1 = coordSys.dataToPoint(coordSys.clampData(value));
-
-          if (startingAtTick) {
-            each(coordSys.getAxes(), function (axis, idx) {
-              // If axis type is category, use tick coords instead
-              if (axis.type === 'category') {
-                var tickCoords = axis.getTicksCoords();
-                var tickIdx = coordSys.clampData(value)[idx]; // The index of rightmost tick of markArea is 1 larger than x1/y1 index
-
-                if (dims && (dims[idx] === 'x1' || dims[idx] === 'y1')) {
-                  tickIdx += 1;
-                }
-
-                tickIdx > tickCoords.length - 1 && (tickIdx = tickCoords.length - 1);
-                tickIdx < 0 && (tickIdx = 0);
-                tickCoords[tickIdx] && (pt_1[idx] = axis.toGlobalCoord(tickCoords[tickIdx].coord));
-              }
-            });
-          } else {
-            var data = this.getData();
-            var offset = data.getLayout('offset');
-            var size = data.getLayout('size');
-            var offsetIndex = coordSys.getBaseAxis().isHorizontal() ? 0 : 1;
-            pt_1[offsetIndex] += offset + size / 2;
-          }
-
-          return pt_1;
+          var pt = coordSys.dataToPoint(coordSys.clampData(value));
+          var data = this.getData();
+          var offset = data.getLayout('offset');
+          var size = data.getLayout('size');
+          var offsetIndex = coordSys.getBaseAxis().isHorizontal() ? 0 : 1;
+          pt[offsetIndex] += offset + size / 2;
+          return pt;
         }
 
         return [NaN, NaN];
@@ -41858,13 +41834,8 @@
 
         if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
           each(label.states, setNotShow);
-          label.ignore = true;
-
-          if (labelLine) {
-            each(labelLine.states, setNotShow);
-            labelLine.ignore = true;
-          }
-
+          each(labelLine.states, setNotShow);
+          label.ignore = labelLine.ignore = true;
           return;
         }
 
@@ -42437,8 +42408,6 @@
       return LegendVisualProvider;
     }();
 
-    var innerData = makeInner();
-
     var PieSeriesModel =
     /** @class */
     function (_super) {
@@ -42475,10 +42444,16 @@
 
 
       PieSeriesModel.prototype.getInitialData = function () {
-        return createSeriesDataSimply(this, {
+        var data = createSeriesDataSimply(this, {
           coordDimensions: ['value'],
           encodeDefaulter: curry(makeSeriesEncodeForNameBased, this)
         });
+        var valueList = [];
+        data.each(data.mapDimension('value'), function (value) {
+          valueList.push(value);
+        });
+        this.seats = getPercentSeats(valueList, data.hostModel.get('percentPrecision'));
+        return data;
       };
       /**
        * @overwrite
@@ -42486,23 +42461,9 @@
 
 
       PieSeriesModel.prototype.getDataParams = function (dataIndex) {
-        var data = this.getData(); // update seats when data is changed
+        var params = _super.prototype.getDataParams.call(this, dataIndex);
 
-        var dataInner = innerData(data);
-        var seats = dataInner.seats;
-
-        if (!seats) {
-          var valueList_1 = [];
-          data.each(data.mapDimension('value'), function (value) {
-            valueList_1.push(value);
-          });
-          seats = dataInner.seats = getPercentSeats(valueList_1, data.hostModel.get('percentPrecision'));
-        }
-
-        var params = _super.prototype.getDataParams.call(this, dataIndex); // seats may be empty when sum is 0
-
-
-        params.percent = seats[dataIndex] || 0;
+        params.percent = this.seats[dataIndex];
         params.$vars.push('percent');
         return params;
       };
@@ -42566,8 +42527,8 @@
           // Works only position is 'outer' and alignTo is not 'edge'.
           bleedMargin: 10,
           // Distance between text and label line.
-          distanceToLabelLine: 5 // formatter: 标签文本格式器，同 tooltip.formatter，不支持异步回调
-          // 默认使用全局文本样式，详见 textStyle
+          distanceToLabelLine: 5 // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+          // 默认使用全局文本样式，详见TEXTSTYLE
           // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
 
         },
@@ -43670,7 +43631,7 @@
         var axesCount = {
           x: 0,
           y: 0
-        }; // Create axis
+        }; /// Create axis
 
         ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
         ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
@@ -43682,7 +43643,7 @@
           return;
         }
 
-        this._axesMap = axesMap; // Create cartesian2d
+        this._axesMap = axesMap; /// Create cartesian2d
 
         each(axesMap.x, function (xAxis, xAxisIndex) {
           each(axesMap.y, function (yAxis, yAxisIndex) {

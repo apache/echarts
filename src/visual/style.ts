@@ -43,7 +43,7 @@ function getStyleMapper(seriesModel: SeriesModel, stylePath: string) {
     const styleMapper = seriesModel.visualStyleMapper
         || defaultStyleMappers[stylePath as 'itemStyle' | 'lineStyle'];
     if (!styleMapper) {
-        console.warn(`Unknown style type '${stylePath}'.`);
+        console.warn(`Unkown style type '${stylePath}'.`);
         return defaultStyleMappers.itemStyle;
     }
     return styleMapper;
@@ -55,7 +55,7 @@ function getDefaultColorKey(seriesModel: SeriesModel, stylePath: string): 'strok
         || defaultColorKey[stylePath as 'itemStyle' | 'lineStyle'];
 
     if (!colorKey) {
-        console.warn(`Unknown style type '${stylePath}'.`);
+        console.warn(`Unkown style type '${stylePath}'.`);
         return 'fill';
     }
 

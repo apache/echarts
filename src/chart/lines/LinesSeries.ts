@@ -306,7 +306,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         if (__DEV__) {
             const CoordSys = CoordinateSystem.get(option.coordinateSystem);
             if (!CoordSys) {
-                throw new Error('Unknown coordinate system ' + option.coordinateSystem);
+                throw new Error('Unkown coordinate system ' + option.coordinateSystem);
             }
         }
 

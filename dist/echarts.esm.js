@@ -18585,7 +18585,7 @@ function (_super) {
                 if (seriesImportName) {
                   error("Series " + subType + " is used but not imported.\nimport { " + seriesImportName + " } from 'echarts/charts';\necharts.use([" + seriesImportName + "]);");
                 } else {
-                  error("Unknown series " + subType);
+                  error("Unkown series " + subType);
                 }
               }
             }
@@ -25091,7 +25091,7 @@ function getStyleMapper(seriesModel, stylePath) {
   var styleMapper = seriesModel.visualStyleMapper || defaultStyleMappers[stylePath];
 
   if (!styleMapper) {
-    console.warn("Unknown style type '" + stylePath + "'.");
+    console.warn("Unkown style type '" + stylePath + "'.");
     return defaultStyleMappers.itemStyle;
   }
 
@@ -25103,7 +25103,7 @@ function getDefaultColorKey(seriesModel, stylePath) {
   var colorKey = seriesModel.visualDrawType || defaultColorKey[stylePath];
 
   if (!colorKey) {
-    console.warn("Unknown style type '" + stylePath + "'.");
+    console.warn("Unkown style type '" + stylePath + "'.");
     return 'fill';
   }
 
@@ -31590,7 +31590,7 @@ function () {
 
     if ("development" !== 'production') {
       if (dimIdx == null) {
-        throw new Error('Unknown dimension ' + dim);
+        throw new Error('Unkown dimension ' + dim);
       }
     }
 
@@ -69182,7 +69182,7 @@ function (_super) {
       var CoordSys = CoordinateSystemManager.get(option.coordinateSystem);
 
       if (!CoordSys) {
-        throw new Error('Unknown coordinate system ' + option.coordinateSystem);
+        throw new Error('Unkown coordinate system ' + option.coordinateSystem);
       }
     }
 
