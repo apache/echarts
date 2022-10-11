@@ -494,7 +494,7 @@ class LabelManager {
 
             const labelLineModel = itemModel.getModel('labelLine');
             const labelItem = this._labelList.find((item) => item.dataIndex === dataIndex);
-            const points = labelItem.computedLayoutOption.labelLinePoints;
+            const points = labelItem?.computedLayoutOption.labelLinePoints;
 
             setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
 
