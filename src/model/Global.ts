@@ -427,7 +427,7 @@ import { ${seriesImportName} } from 'echarts/charts';
 echarts.use([${seriesImportName}]);`);
                                 }
                                 else {
-                                    error(`Unkown series ${subType}`);
+                                    error(`Unknown series ${subType}`);
                                 }
                             }
                         }
