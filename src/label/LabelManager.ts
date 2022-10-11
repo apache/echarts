@@ -385,14 +385,6 @@ class LabelManager {
                     // Not update
                     needsUpdateLabelLine = false;
                 }
-
-                else {
-                    labelLayoutStore.labelLinePoints = layoutOption.labelLinePoints;
-                }
-            }
-
-            else {
-                delete labelLayoutStore.labelLinePoints;
             }
 
             labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
@@ -501,8 +493,8 @@ class LabelManager {
             defaultStyle.stroke = visualStyle[visualType];
 
             const labelLineModel = itemModel.getModel('labelLine');
-            const labelLayoutStore = labelLayoutInnerStore(textEl);
-            const points = labelLayoutStore.labelLinePoints;
+            const labelItem = this._labelList.find((item) => item.dataIndex === dataIndex);
+            const points = labelItem.computedLayoutOption.labelLinePoints;
 
             setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
 
