@@ -44,7 +44,7 @@ import {
     isTransitionAll,
     updateLeaveTo
 } from '../../animation/customGraphicTransition';
-import { updateProps } from '../../animation/basicTrasition';
+import { updateProps } from '../../animation/basicTransition';
 import {
     applyKeyframeAnimation,
     stopPreviousKeyframeAnimationAndRestore

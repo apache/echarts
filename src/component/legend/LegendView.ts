@@ -510,7 +510,7 @@ class LegendView extends ComponentView {
                 contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
             }
 
-            //Always align selector to content as 'middle'
+            // Always align selector to content as 'middle'
             selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
             selectorGroup.x = selectorPos[0];
             selectorGroup.y = selectorPos[1];

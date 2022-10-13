@@ -27,7 +27,7 @@ import SeriesData from '../../data/SeriesData';
 import { ColorString } from '../../util/types';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 

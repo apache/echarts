@@ -30,7 +30,7 @@ import GlobalModel from '../../model/Global';
 import { VectorArray } from 'zrender/src/core/vector';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 
 type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
     __dimIdx: number

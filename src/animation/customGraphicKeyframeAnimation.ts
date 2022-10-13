@@ -22,8 +22,8 @@ import Element from 'zrender/src/Element';
 import { keys, filter, each, isArray, indexOf } from 'zrender/src/core/util';
 import { ELEMENT_ANIMATABLE_PROPS } from './customGraphicTransition';
 import { AnimationOption, AnimationOptionMixin, Dictionary } from '../util/types';
-import { Model } from '../echarts.all';
-import { getAnimationConfig } from './basicTrasition';
+import type Model from '../model/Model';
+import { getAnimationConfig } from './basicTransition';
 import { warn } from '../util/log';
 import { makeInner } from '../util/model';
 

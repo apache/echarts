@@ -26,7 +26,7 @@ import {
     AnimationOption
 } from '../util/types';
 import { AnimationEasing } from 'zrender/src/animation/easing';
-import Element, { ElementAnimateConfig } from 'zrender/src/Element';
+import Element, { ElementAnimateConfig, ElementProps } from 'zrender/src/Element';
 import Model from '../model/Model';
 import {
     isFunction,
@@ -216,7 +216,7 @@ function animateOrSetProps<Props>(
  *         position: [100, 100]
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
- function updateProps<Props>(
+ function updateProps<Props extends ElementProps>(
     el: Element<Props>,
     props: Props,
     // TODO: TYPE AnimatableModel
@@ -238,7 +238,7 @@ export {updateProps};
  * So do not use this method to one element twice before
  * animation starts, unless you know what you are doing.
  */
-export function initProps<Props>(
+export function initProps<Props extends ElementProps>(
     el: Element<Props>,
     props: Props,
     animatableModel?: Model<AnimationOptionMixin>,
