@@ -129,8 +129,8 @@ function getChildGroupId(data: SeriesData, dataIndex: number) {
     if (itemVal && itemVal.childGroupId) {
         return itemVal.childGroupId + '';
     }
-    // if no childGroupId specified, return undefined
-    return undefined;
+    // if no childGroupId specified
+    return;
 }
 
 // flatten all data items from different serieses into one arrary
