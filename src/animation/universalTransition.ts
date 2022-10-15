@@ -49,6 +49,9 @@ import Model from '../model/Model';
 import Displayable from 'zrender/src/graphic/Displayable';
 
 const DATA_COUNT_THRESHOLD = 1e4;
+const TRANSITION_NONE = 0;
+const TRANSITION_P2C = 1;
+const TRANSITION_C2P = 2;
 
 interface GlobalStore { oldSeries: SeriesModel[], oldDataGroupIds: string[], oldData: SeriesData[] };
 const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>();
@@ -65,12 +68,6 @@ interface TransitionSeries {
     data: SeriesData
     divide: UniversalTransitionOption['divideShape']
     groupIdDim?: DimensionLoose
-}
-
-enum TransitionDirection {
-    None = 'none',
-    P2C = 'parent -> child',
-    C2P = 'child -> parent'
 }
 
 function getDimension(data: SeriesData, visualDimension: string) {
@@ -291,7 +288,7 @@ function transitionBetween(
      *   direction = 'none';
      * }
      */
-    let direction = TransitionDirection.None;
+    let direction = TRANSITION_NONE;
 
     const oldGroupIds = oldDiffItems.filter((item) => item.groupId != null).map((item) => item.groupId);
     const oldChildGroupIds = oldDiffItems
@@ -300,12 +297,12 @@ function transitionBetween(
     for (let i = 0; i < newDiffItems.length; i++) {
         const newGroupId = newDiffItems[i].groupId;
         if (oldChildGroupIds.includes(newGroupId)) {
-            direction = TransitionDirection.P2C;
+            direction = TRANSITION_P2C;
             break;
         }
         const newChildGroupId = newDiffItems[i].childGroupId;
         if (newChildGroupId && oldGroupIds.includes(newChildGroupId)) {
-            direction = TransitionDirection.C2P;
+            direction = TRANSITION_C2P;
             break;
         }
     }
@@ -319,18 +316,18 @@ function transitionBetween(
                 return data.getId(dataIndex);
             }
             if (isOld) {
-                if (direction === TransitionDirection.C2P || direction === TransitionDirection.None) {
+                if (direction === TRANSITION_C2P || direction === TRANSITION_NONE) {
                     return diffItem.groupId;
                 }
-                if (direction === TransitionDirection.P2C) {
+                if (direction === TRANSITION_P2C) {
                     return diffItem.childGroupId;
                 }
             }
             else {
-                if (direction === TransitionDirection.P2C || direction === TransitionDirection.None) {
+                if (direction === TRANSITION_P2C || direction === TRANSITION_NONE) {
                     return diffItem.groupId;
                 }
-                if (direction === TransitionDirection.C2P) {
+                if (direction === TRANSITION_C2P) {
                     return diffItem.childGroupId;
                 }
             }
