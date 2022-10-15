@@ -293,9 +293,9 @@ function transitionBetween(
      */
     let direction = TransitionDirection.None;
 
-    const oldGroupIds = oldDiffItems.filter((item) => item.groupId !== undefined).map((item) => item.groupId);
+    const oldGroupIds = oldDiffItems.filter((item) => item.groupId != null).map((item) => item.groupId);
     const oldChildGroupIds = oldDiffItems
-        .filter((item) => item.childGroupId !== undefined)
+        .filter((item) => item.childGroupId != null)
         .map((item) => item.childGroupId);
     for (let i = 0; i < newDiffItems.length; i++) {
         const newGroupId = newDiffItems[i].groupId;
