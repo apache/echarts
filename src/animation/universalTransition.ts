@@ -117,7 +117,7 @@ function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string) {
 
 function getChildGroupId(data: SeriesData, dataIndex: number) {
     // try to get childGroupId from encode
-    const childGroupIdDim = getDimension(data, 'childGroupId');
+    const childGroupIdDim = getDimension(data, 'itemChildGroupId');
     if (childGroupIdDim) {
         const childGroupId = getValueByDimension(data, dataIndex, childGroupIdDim);
         if (childGroupId) {

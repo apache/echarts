@@ -430,7 +430,7 @@ export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = DataStoreDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
-    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'childGroupId', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'itemChildGroupId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
 export interface DataVisualDimensions {
@@ -442,7 +442,7 @@ export interface DataVisualDimensions {
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
     itemGroupId?: DimensionIndex;
-    childGroupId?: DimensionIndex;
+    itemChildGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
