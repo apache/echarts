@@ -267,7 +267,7 @@ export class GeoSVGResource implements GeoResource {
      * So we maintain graphic elements in this module, and enables `view` to use/return these
      * graphics from/to the pool with it's uid.
      */
-    useGraphic(hostKey: string /*, nameMap: NameMap */): GeoSVGGraphicRecord {
+    useGraphic(hostKey: string /* , nameMap: NameMap */): GeoSVGGraphicRecord {
         const usedRootMap = this._usedGraphicMap;
 
         let svgGraphic = usedRootMap.get(hostKey);

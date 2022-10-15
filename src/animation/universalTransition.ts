@@ -54,6 +54,7 @@ interface GlobalStore { oldSeries: SeriesModel[], oldDataGroupIds: string[], old
 const getUniversalTransitionGlobalStore = makeInner<GlobalStore, ExtensionAPI>();
 
 interface DiffItem {
+    dataGroupId: string
     data: SeriesData
     groupId: string
     childGroupId: string
@@ -149,6 +150,7 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
         const indices = data.getIndices();
         for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
             items.push({
+                dataGroupId: seriesInfo.dataGroupId,
                 data,
                 groupId: getGroupId(data, dataIndex, dataGroupId), // either of groupId or childGroupId will be used as diffItem's key,
                 childGroupId: getChildGroupId(data, dataIndex),    // depending on the transition direction (see below)

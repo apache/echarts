@@ -82,14 +82,16 @@
 
         toolbox: {
             iconStyle: {
-                normal: {
-                    borderColor: colorPalette[0]
-                }
+                borderColor: colorPalette[0]
             }
         },
 
         tooltip: {
+            borderWidth: 0,
             backgroundColor: 'rgba(50,50,50,0.5)',
+            textStyle: {
+                color: '#FFF'
+            },
             axisPointer: {
                 type: 'line',
                 lineStyle: {
