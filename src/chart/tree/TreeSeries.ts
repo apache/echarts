@@ -33,9 +33,6 @@ import {
     CallbackDataParams,
     DefaultEmphasisFocus
 } from '../../util/types';
-import { Color } from '../../echarts.all';
-import { LineStyleProps } from './../../model/mixin/lineStyle';
-import { AreaStyleProps } from '../../model/mixin/areaStyle';
 import SeriesData from '../../data/SeriesData';
 import View from '../../coord/View';
 import { LayoutRect } from '../../util/layout';
@@ -115,34 +112,6 @@ export interface TreeSeriesOption extends
     leaves?: TreeSeriesLeavesOption
 
     data?: TreeSeriesNodeItemOption[]
-
-    thumbnail?: {
-        show?: boolean,
-
-        top?: number | string,
-
-        bottom?: number | string,
-
-        left?: number | string,
-
-        right?: number | string,
-
-        width?: number,
-
-        height?: number,
-
-        borderColor?: Color,
-
-        backgroundColor?: Color,
-
-        overlayBackgroundColor?: Color,
-
-        selectedDataBackground?: {
-            lineStyle: LineStyleProps,
-
-            areaStyle: AreaStyleProps
-        }
-     }
 }
 
 export interface TreeAncestors {
@@ -337,35 +306,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         animationDuration: 700,
 
-        animationDurationUpdate: 500,
-
-        thumbnail: {
-            show: true,
-
-            right: 0,
-            bottom: 0,
-
-            width: 0,
-            height: 0,
-
-            backgroundColor: 'white',
-
-            borderColor: 'black',
-
-            overlayBackgroundColor: 'white',
-
-            selectedDataBackground: {
-                lineStyle: {
-                    lineWidth: 10,
-                    stroke: 'black'
-                },
-
-                areaStyle: {
-                    fill: 'white',
-                    opacity: 0.2
-                }
-            }
-        }
+        animationDurationUpdate: 500
     };
 }
 

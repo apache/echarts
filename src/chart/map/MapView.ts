@@ -27,7 +27,6 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { setStatesFlag, Z2_EMPHASIS_LIFT } from '../../util/states';
-import Thumbnail from './Thumbnail';
 
 
 class MapView extends ChartView {
@@ -37,7 +36,6 @@ class MapView extends ChartView {
 
     private _mapDraw: MapDraw;
 
-    private _thumbanil: Thumbnail;
 
     render(
         mapModel: MapSeries,
@@ -90,7 +88,6 @@ class MapView extends ChartView {
         mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
             && this._renderSymbols(mapModel, ecModel, api);
 
-        this._renderThumbnail(mapModel, api);
     }
 
     remove(): void {
@@ -196,18 +193,6 @@ class MapView extends ChartView {
         });
     }
 
-    private _renderThumbnail(seriesModel: MapSeries, api: ExtensionAPI) {
-        if (this._thumbanil) {
-            this.group.add(this._thumbanil.group);
-            this._thumbanil.render(seriesModel, api);
-            this._mapDraw && this._mapDraw._initThumbnail(this._thumbanil);
-        }
-        else {
-           this._thumbanil = new Thumbnail(this.group);
-           this._thumbanil.render(seriesModel, api);
-           this._mapDraw && this._mapDraw._initThumbnail(this._thumbanil);
-        };
-    }
 }
 
 export default MapView;

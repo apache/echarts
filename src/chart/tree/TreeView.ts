@@ -37,7 +37,6 @@ import { TreeNode } from '../../data/Tree';
 import SeriesData from '../../data/SeriesData';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
 import { AnimationOption, ECElement } from '../../util/types';
-import Thumbnail from './Thumbnail';
 
 type TreeSymbol = SymbolClz & {
     __edge: graphic.BezierCurve | TreePath
@@ -141,19 +140,14 @@ class TreeView extends ChartView {
     private _min: number[];
     private _max: number[];
 
-    private _thumbanil: Thumbnail;
-
-
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this._controller = new RoamController(api.getZr());
 
-        const roamGroup = new graphic.Group();
-        roamGroup.add(this._mainGroup);
         this._controllerHost = {
-            target: roamGroup
+            target: this.group
         } as RoamControllerHost;
 
-        this.group.add(roamGroup);
+        this.group.add(this._mainGroup);
     }
 
     render(
@@ -229,7 +223,6 @@ class TreeView extends ChartView {
         }
 
         this._data = data;
-        this._renderThumbnail(seriesModel, api);
 
     }
 
@@ -311,7 +304,6 @@ class TreeView extends ChartView {
                     dx: e.dx,
                     dy: e.dy
                 });
-                this._thumbanil._updatePan(e);
             })
             .on('zoom', (e) => {
                 roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
@@ -323,7 +315,6 @@ class TreeView extends ChartView {
                     originY: e.originY
                 });
                 this._updateNodeAndLinkScale(seriesModel);
-                this._thumbanil._updateZoom(e);
                 // Only update label layout on zoom
                 api.updateLabelLayout();
             });
@@ -353,10 +344,6 @@ class TreeView extends ChartView {
         const nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
 
         return nodeScale / groupZoom;
-    }
-
-    private _renderThumbnail(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
-        (this._thumbanil || (this._thumbanil = new Thumbnail(this.group))).render(seriesModel, api);
     }
 
     dispose() {
