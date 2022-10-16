@@ -127,7 +127,7 @@ class OptionManager {
             // the mapping can not be 100% consistent with ecModel, which probably brings
             // potential bug!
 
-            // The first merge is delayed, becuase in most cases, users do not call `setOption` twice.
+            // The first merge is delayed, because in most cases, users do not call `setOption` twice.
             // let fakeCmptsMap = this._fakeCmptsMap;
             // if (!fakeCmptsMap) {
             //     fakeCmptsMap = this._fakeCmptsMap = createHashMap();

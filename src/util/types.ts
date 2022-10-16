@@ -411,7 +411,7 @@ export interface OrdinalScaleTick extends ScaleTick {
      * const coord = dataToCoord(ordinalScale.getRawOrdinalNumber(tick.value)).
      * ```
      * Why place the tick value here rather than the raw ordinal value (like LogScale did)?
-     * Becuase ordinal scale sort is the different case from LogScale, where
+     * Because ordinal scale sort is the different case from LogScale, where
      * axis tick, splitArea should better not to be sorted, especially in
      * anid(animation id) when `boundaryGap: true`.
      * Only axis label are sorted.

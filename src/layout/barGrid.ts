@@ -363,7 +363,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             }
             else {
                 // `barMinWidth/barMaxWidth` has higher priority than `barWidth`, as
-                // CSS does. Becuase barWidth can be a percent value, where
+                // CSS does. Because barWidth can be a percent value, where
                 // `barMaxWidth` can be used to restrict the final width.
                 let finalWidth = column.width;
                 if (maxWidth) {

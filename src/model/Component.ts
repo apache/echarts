@@ -50,7 +50,7 @@ const inner = makeInner<{
 
 class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Model<Opt> {
 
-    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // [Caution]: Because this class or desecendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.
     // Otherwise there is bad case:
     //   class A {xxx = 1;}
