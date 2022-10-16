@@ -76,6 +76,7 @@ class GraphView extends ChartView {
         roamGroup.add(symbolDraw.group);
         roamGroup.add(lineDraw.group);
         group.add(roamGroup);
+
         this._symbolDraw = symbolDraw;
         this._lineDraw = lineDraw;
 
@@ -84,6 +85,7 @@ class GraphView extends ChartView {
 
     render(seriesModel: GraphSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const coordSys = seriesModel.coordinateSystem;
+
         this._model = seriesModel;
 
         const symbolDraw = this._symbolDraw;
@@ -108,9 +110,11 @@ class GraphView extends ChartView {
 
         const data = seriesModel.getData();
         symbolDraw.updateData(data as ListForSymbolDraw);
+
         const edgeData = seriesModel.getEdgeData();
         // TODO: TYPE
         lineDraw.updateData(edgeData as SeriesData);
+
         this._updateNodeAndLinkScale();
 
         this._updateController(seriesModel, ecModel, api);
