@@ -50,7 +50,6 @@ import SeriesData from '../../data/SeriesData';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
 import { makeInner } from '../../util/model';
-import Thumbnail from '../../chart/map/Thumbnail';
 import { GeoProjection, ProjectionStream } from '../../coord/geo/geoTypes';
 
 interface RegionsGroup extends graphic.Group {
@@ -132,8 +131,6 @@ class MapDraw {
         zoom?: number;
         zoomLimit?: GeoCommonOptionMixin['scaleLimit'];
     };
-
-    private _thumbnail: Thumbnail;
 
     readonly group: graphic.Group;
 
@@ -594,6 +591,7 @@ class MapDraw {
 
         controller.off('zoom').on('zoom', function (e) {
             this._mouseDownFlag = false;
+
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
@@ -605,18 +603,12 @@ class MapDraw {
                 }
             }));
 
-            this._thumbnail._updateZoom(e);
-
         }, this);
 
         controller.setPointerChecker(function (e, x, y) {
             return geo.containPoint([x, y])
                 && !onIrrelevantElement(e, api, mapOrGeoModel);
         });
-    }
-
-    _initThumbnail(thumbnail: Thumbnail) {
-        this._thumbnail = thumbnail;
     }
 
     /**

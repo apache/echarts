@@ -36,7 +36,6 @@ class MapView extends ChartView {
 
     private _mapDraw: MapDraw;
 
-
     render(
         mapModel: MapSeries,
         ecModel: GlobalModel,
@@ -49,6 +48,7 @@ class MapView extends ChartView {
         ) {
             return;
         }
+
         const group = this.group;
         group.removeAll();
 
@@ -87,7 +87,6 @@ class MapView extends ChartView {
 
         mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
             && this._renderSymbols(mapModel, ecModel, api);
-
     }
 
     remove(): void {
@@ -192,7 +191,6 @@ class MapView extends ChartView {
             group.add(circle);
         });
     }
-
 }
 
 export default MapView;

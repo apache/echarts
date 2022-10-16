@@ -36,9 +36,6 @@ import {
     DefaultEmphasisFocus,
     CallbackDataParams
 } from '../../util/types';
-import { Color } from '../../echarts.all';
-import { LineStyleProps } from './../../model/mixin/lineStyle';
-import { AreaStyleProps } from '../../model/mixin/areaStyle';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
@@ -140,7 +137,6 @@ export interface SankeySeriesOption
     links?: SankeyEdgeItemOption[]
 
     levels?: SankeyLevelOption[]
-
 }
 
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
@@ -330,7 +326,6 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         animationEasing: 'linear',
 
         animationDuration: 1000
-
     };
 }
 

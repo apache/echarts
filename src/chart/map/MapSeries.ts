@@ -46,7 +46,6 @@ import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
 
-
 export interface MapStateOption<TCbParams = never> {
     itemStyle?: GeoItemStyleOption<TCbParams>
     label?: SeriesLabelOption
@@ -90,8 +89,6 @@ export interface MapSeriesOption extends
 
 
     nameProperty?: string;
-
-
 }
 
 class MapSeries extends SeriesModel<MapSeriesOption> {
@@ -343,8 +340,6 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         },
 
         nameProperty: 'name'
-
-
     };
 
 }

@@ -30,9 +30,8 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { isString } from 'zrender/src/core/util';
-import * as roamHelper from '../../component/helper/roamHelper';
 
-export class SankeyPathShape {
+class SankeyPathShape {
     x1 = 0;
     y1 = 0;
 
@@ -49,12 +48,11 @@ export class SankeyPathShape {
     orient: LayoutOrient;
 }
 
-
 interface SankeyPathProps extends PathProps {
     shape?: Partial<SankeyPathShape>
 }
 
-export class SankeyPath extends graphic.Path<SankeyPathProps> {
+class SankeyPath extends graphic.Path<SankeyPathProps> {
     shape: SankeyPathShape;
 
     constructor(opts?: SankeyPathProps) {
@@ -106,6 +104,8 @@ class SankeyView extends ChartView {
     static readonly type = 'sankey';
     readonly type = SankeyView.type;
 
+    private _model: SankeySeriesModel;
+
     private _focusAdjacencyDisabled = false;
 
     private _data: SeriesData;
@@ -123,11 +123,13 @@ class SankeyView extends ChartView {
         const edgeData = seriesModel.getData('edge');
         const orient = seriesModel.get('orient');
 
+        this._model = seriesModel;
 
         group.removeAll();
 
         group.x = layoutInfo.x;
         group.y = layoutInfo.y;
+
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
             const curve = new SankeyPath();
@@ -286,7 +288,6 @@ class SankeyView extends ChartView {
                 emphasisModel.get('disabled')
             );
         });
-
 
         nodeData.eachItemGraphicEl(function (el: graphic.Rect, dataIndex: number) {
             const itemModel = nodeData.getItemModel<SankeyNodeItemOption>(dataIndex);

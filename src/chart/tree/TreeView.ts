@@ -221,9 +221,7 @@ class TreeView extends ChartView {
                 });
             });
         }
-
         this._data = data;
-
     }
 
     _updateViewCoordSys(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
