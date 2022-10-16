@@ -22,9 +22,6 @@ class Thumbnail {
     group = new graphic.Group();
     _parent: graphic.Group;
 
-    _widthProportion: number;
-    _heightProportion: number;
-
     _selectedRect: graphic.Rect;
     _wrapper: graphic.Rect;
     _layoutParams: LayoutParams;
