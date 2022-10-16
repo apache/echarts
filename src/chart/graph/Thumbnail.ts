@@ -7,6 +7,7 @@ import ECLinePath from '../helper/LinePath';
 import GraphSeriesModel from './GraphSeries';
 import { RoamEventParams } from '../../component/helper/RoamController';
 import { clone } from 'zrender/src/core/util';
+import { zrUtil } from '../../echarts.all';
 
 interface LayoutParams {
     pos: BoxLayoutOptionMixin
@@ -28,7 +29,7 @@ class Thumbnail {
     _wrapper: graphic.Rect;
     _layoutParams: LayoutParams;
 
-    _treeModel: GraphSeriesModel;
+    _graphModel: GraphSeriesModel;
 
     constructor(containerGroup: graphic.Group) {
         containerGroup.add(this.group);
@@ -41,10 +42,10 @@ class Thumbnail {
 
         group.removeAll();
         if (!model.get('show')) {
-          return;
+            return;
         }
 
-        this._treeModel = seriesModel;
+        this._graphModel = seriesModel;
 
         const childrenNodes = (this._parent.children()[0] as graphic.Group).children();
         const symbolNodes = (childrenNodes[0] as graphic.Group).children();
@@ -52,9 +53,8 @@ class Thumbnail {
 
         const backgroundColor = model.getModel('backgroundColor');
         const borderColor = model.getModel('borderColor');
-        const thumbnailWidth = model.get('width');
-        const thumbnailHeight = model.get('height');
-        const selectedDataBackground = model.getModel('selectedDataBackground');
+        const thumbnailScale = model.getModel('scale').option;
+        const selectedDataBackground = model.getModel('selectedDataBackground').option;
 
         this._layoutParams = {
             pos: {
@@ -69,95 +69,84 @@ class Thumbnail {
             }
         };
 
-          const layoutParams = this._layoutParams;
+        const layoutParams = this._layoutParams;
 
-          this._widthProportion = <number>thumbnailWidth / layoutParams.box.width;
-          this._heightProportion = <number>thumbnailHeight / layoutParams.box.height;
-
-          const thumbnailGroup = new graphic.Group();
+        const thumbnailGroup = new graphic.Group();
 
         for (const node of symbolNodes) {
-              const sub = (node as graphic.Group).children()[0];
-              const x = (node as SymbolClz).x;
-              const y = (node as SymbolClz).y;
+            const sub = (node as graphic.Group).children()[0];
+            const x = (node as SymbolClz).x;
+            const y = (node as SymbolClz).y;
+            const subShape = zrUtil.extend({}, (sub as graphic.Path).shape);
+            const shape = zrUtil.extend(subShape, { width: 5,
+                height: 5,
+                x: (x * thumbnailScale - 2.5),
+                y: (y * thumbnailScale - 2.5)});
 
-              const subThumbnail = new (sub as any).constructor({
-                  shape: {
-                        ...(sub as graphic.Path).shape,
-                        width: 5,
-                        height: 5,
-                        x: (x * 0.25 - 2.5),
-                        y: (y * 0.25 - 2.5)
-                      },
-                  style: (sub as graphic.Path).style,
-                  z: 3,
-                  z2: 151
-              });
+            const subThumbnail = new (sub as any).constructor({
+                shape,
+                style: (sub as graphic.Path).style,
+                z2: 151
+                });
 
-              thumbnailGroup.add(subThumbnail);
+            thumbnailGroup.add(subThumbnail);
         }
 
-      for (const node of lineNodes) {
-          const line = (node as graphic.Group).children()[0];
-          const lineThumbnail = new ECLinePath({
-              style: (line as ECLinePath).style,
-              shape: (line as ECLinePath).shape,
-              scaleX: 0.25,
-              scaleY: 0.25,
-              z: 3,
-              z2: 151
-          });
-          thumbnailGroup.add(lineThumbnail);
-      }
+        for (const node of lineNodes) {
+            const line = (node as graphic.Group).children()[0];
+            const lineThumbnail = new ECLinePath({
+                style: (line as ECLinePath).style,
+                shape: (line as ECLinePath).shape,
+                scaleX: thumbnailScale,
+                scaleY: thumbnailScale,
+                z2: 151
+            });
+            thumbnailGroup.add(lineThumbnail);
+        }
 
-      const thumbnailWrapper = new graphic.Rect({
-          style: {
-              stroke: borderColor.option,
-              fill: backgroundColor.option,
-              lineWidth: 2
-          },
-          shape: {
-              height: thumbnailHeight === 0 ? layoutParams.box.height / 4 : thumbnailHeight,
-              width: thumbnailWidth === 0 ? layoutParams.box.width / 4 : thumbnailWidth
-          },
-          z: 2,
-          z2: 130
-      });
+        const thumbnailWrapper = new graphic.Rect({
+            style: {
+                stroke: borderColor.option,
+                fill: backgroundColor.option,
+                lineWidth: 2
+            },
+            shape: {
+                height: layoutParams.box.height * thumbnailScale,
+                width: layoutParams.box.width * thumbnailScale
+            },
+            z2: 150
+        });
 
-      this._wrapper = thumbnailWrapper;
+        this._wrapper = thumbnailWrapper;
 
-      const areaStyle = selectedDataBackground.get('areaStyle');
-      const lineStyle = selectedDataBackground.get('lineStyle');
+        const selectStyle = zrUtil.extend({lineWidth: 10, stroke: 'black'}, selectedDataBackground);
 
-      this._selectedRect = new graphic.Rect({
-          style: {...areaStyle, ...lineStyle},
-          shape: clone(thumbnailWrapper.shape),
-          z: 2,
-          z2: 150,
-          draggable: true,
-          ignore: true
-      });
+        this._selectedRect = new graphic.Rect({
+            style: selectStyle,
+            shape: clone(thumbnailWrapper.shape),
+            ignore: true,
+            z2: 150
+        });
 
-      group.add(thumbnailWrapper);
-      group.add(thumbnailGroup);
-      group.add(this._selectedRect);
+        group.add(thumbnailWrapper);
+        group.add(this._selectedRect);
+        group.add(thumbnailGroup);
 
-      layout.positionElement(group, layoutParams.pos, layoutParams.box);
-  }
+        layout.positionElement(group, layoutParams.pos, layoutParams.box);
+    }
 
     remove() {
         this.group.removeAll();
     }
 
-    _updateZoom(e: RoamEventParams['zoom']) {
-
+    _updateZoom(e: RoamEventParams['zoom'], scale: number) {
         const wrapper = this._wrapper.getBoundingRect();
         const {height, width} = this._layoutParams.box;
         const rect = this._selectedRect;
         const origin = [0, 0];
         const end = [width, height];
-        const originData = this._treeModel.coordinateSystem.pointToData(origin);
-        const endData = this._treeModel.coordinateSystem.pointToData(end);
+        const originData = this._graphModel.coordinateSystem.pointToData(origin);
+        const endData = this._graphModel.coordinateSystem.pointToData(end);
         const x0 = (originData as number[])[0] / width;
         const x1 = (endData as number[])[0] / width;
 
@@ -167,17 +156,16 @@ class Thumbnail {
         const offectX = x0 * rect.shape.width;
         const offectY = y0 * rect.shape.height;
 
-        if (x1 - x0 >= 1 || !wrapper.contain(offectX, offectY)) {
+        if (scale === 0 || !wrapper.contain(offectX, offectY)) {
             this._selectedRect.hide();
             return;
         }
 
-        if (x1 - x0 < 0.08) {
+        if (scale >= 30) {
             return;
-        };
-        if (this._selectedRect.ignore) {
-            this._selectedRect.show();
         }
+
+        this._selectedRect.show();
 
         rect.x = offectX;
         rect.y = offectY;
@@ -186,19 +174,23 @@ class Thumbnail {
         rect.scaleY = y1 - y0;
     }
 
-  _updatePan(e: RoamEventParams['pan']) {
-      const {height, width} = this._layoutParams.box;
-      const rect = this._selectedRect;
+    _updatePan(e: RoamEventParams['pan']) {
+        const {height, width} = this._layoutParams.box;
+        const rect = this._selectedRect;
 
-      const origin = [0, 0];
-      const originData = this._treeModel.coordinateSystem.pointToData(origin);
+        const origin = [0, 0];
+        const originData = this._graphModel.coordinateSystem.pointToData(origin);
 
-      const x0 = (originData as number[])[0] / width;
-      const y0 = (originData as number[])[1] / height;
+        const x = (originData as number[])[0] / width;
+        const y = (originData as number[])[1] / height;
 
-      rect.x = x0 * rect.shape.width;
-      rect.y = y0 * rect.shape.height;
-  }
+        if (x <= 0 || y <= 0) {
+            return;
+        };
+
+        rect.x = x * rect.shape.width;
+        rect.y = y * rect.shape.height;
+    }
 }
 
 export default Thumbnail;

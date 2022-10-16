@@ -244,9 +244,7 @@ export interface GraphSeriesOption
 
         right?: number | string,
 
-        width?: number,
-
-        height?: number,
+        scale?: number,
 
         borderColor?: Color,
 
@@ -254,11 +252,7 @@ export interface GraphSeriesOption
 
         overlayBackgroundColor?: Color,
 
-        selectedDataBackground?: {
-            lineStyle: LineStyleProps,
-
-            areaStyle: AreaStyleProps
-        }
+        selectedDataBackground?: AreaStyleProps
      }
 }
 
@@ -548,8 +542,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             right: 0,
             bottom: 0,
 
-            width: 0,
-            height: 0,
+            scale: 0.25,
 
             backgroundColor: 'white',
 
@@ -558,15 +551,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             overlayBackgroundColor: 'white',
 
             selectedDataBackground: {
-                lineStyle: {
-                    lineWidth: 10,
-                    stroke: 'black'
-                },
-
-                areaStyle: {
-                    fill: 'white',
-                    opacity: 0.2
-                }
+                fill: 'white'
             }
         }
     };

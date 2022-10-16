@@ -63,6 +63,8 @@ class GraphView extends ChartView {
 
     private _thumbanil: Thumbnail;
 
+    private _scale = 0;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const symbolDraw = new SymbolDraw();
         const lineDraw = new LineDraw();
@@ -293,7 +295,15 @@ class GraphView extends ChartView {
                 this._lineDraw.updateLayout();
                 // Only update label layout on zoom
                 api.updateLabelLayout();
-                this._thumbanil._updateZoom(e);
+
+                if (e.scale > 1) {
+                    this._scale++;
+                }
+                else {
+                    this._scale--;
+                }
+
+                this._scale >= 0 && this._thumbanil._updateZoom(e, this._scale);
             });
     }
 
