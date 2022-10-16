@@ -311,4 +311,3 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 }
 
 export default TreeSeriesModel;
-
