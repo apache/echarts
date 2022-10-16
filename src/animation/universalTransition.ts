@@ -93,9 +93,10 @@ function getValueByDimension(data: SeriesData, dataIndex: number, dimension: Dim
     }
 }
 
-function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string) {
+function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string, isChild: boolean) {
     // try to get groupId from encode
-    const groupIdDim = getDimension(data, 'itemGroupId');
+    const visualDimension = isChild ? 'itemChildGroupId' : 'itemGroupId';
+    const groupIdDim = getDimension(data, visualDimension);
     if (groupIdDim) {
         const groupId = getValueByDimension(data, dataIndex, groupIdDim);
         if (groupId) {
@@ -103,31 +104,19 @@ function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string) {
         }
     }
     // try to get groupId from raw data item
-    const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
-    if (itemVal && itemVal.groupId) {
-        return itemVal.groupId + '';
+    const rawDataItem = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
+    const property = isChild ? 'childGroupId' : 'groupId';
+    if (rawDataItem && rawDataItem[property]) {
+        return rawDataItem[property] + '';
     }
-    // try to use series.dataGroupId as groupId
-    // if failing to get groupId by all 3 ways above, fallback to data.getId(dataIndex)
-    return (dataGroupId || data.getId(dataIndex));
-}
-
-function getChildGroupId(data: SeriesData, dataIndex: number) {
-    // try to get childGroupId from encode
-    const childGroupIdDim = getDimension(data, 'itemChildGroupId');
-    if (childGroupIdDim) {
-        const childGroupId = getValueByDimension(data, dataIndex, childGroupIdDim);
-        if (childGroupId) {
-            return childGroupId;
-        }
+    // fallback
+    if (isChild) {
+        return;
     }
-    // try to get groupId from raw data item
-    const itemVal = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
-    if (itemVal && itemVal.childGroupId) {
-        return itemVal.childGroupId + '';
+    else {
+        // try to use series.dataGroupId as groupId, otherwise use dataItem's id as groupId
+        return (dataGroupId || data.getId(dataIndex));
     }
-    // if no childGroupId specified
-    return;
 }
 
 // flatten all data items from different serieses into one arrary
@@ -147,8 +136,8 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
         for (let dataIndex = 0; dataIndex < indices.length; dataIndex++) {
             items.push({
                 data,
-                groupId: getGroupId(data, dataIndex, dataGroupId), // either of groupId or childGroupId will be used as diffItem's key,
-                childGroupId: getChildGroupId(data, dataIndex),    // depending on the transition direction (see below)
+                groupId: getGroupId(data, dataIndex, dataGroupId, false), // either of groupId or childGroupId will be used as diffItem's key,
+                childGroupId: getGroupId(data, dataIndex, dataGroupId, true),    // depending on the transition direction (see below)
                 divide: seriesInfo.divide,
                 dataIndex
             });
@@ -273,10 +262,10 @@ function transitionBetween(
      * of dataItemA as keys and universalTransition will work. This derection is "child -> parent".
      *
      * If there is no childGroupId specified, which means no multiLevelDrillDown/Up is needed and no
-     * parent-child relationship exists too. This direction is "none".
+     * parent-child relationship exists. This direction is "none".
      *
-     * So basiclly we need to know whether using groupId or childGroupId as key when we get key from
-     * the keyGetter function. Thus, we need to decide the direction first.
+     * So we need to know whether to use groupId or childGroupId as the key when we call the keyGetter
+     * functions. Thus, we need to decide the direction first.
      *
      * The rule is:
      *
