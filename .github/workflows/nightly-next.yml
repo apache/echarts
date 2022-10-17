@@ -28,7 +28,9 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - name: Setup and publish nightly
         run: |
-          npm ci
+          npm i
+          npm i zrender@npm:zrender-nightly@next
+          npm ls zrender
           npm run release
           npm run test
           npm run test:dts
