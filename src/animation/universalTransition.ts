@@ -279,18 +279,23 @@ function transitionBetween(
      */
     let direction = TRANSITION_NONE;
 
-    const oldGroupIds = oldDiffItems.filter((item) => item.groupId != null).map((item) => item.groupId);
-    const oldChildGroupIds = oldDiffItems
-        .filter((item) => item.childGroupId != null)
-        .map((item) => item.childGroupId);
+    // find all groupIds and childGroupIds from oldDiffItems
+    const oldGroupIds = createHashMap();
+    const oldChildGroupIds = createHashMap();
+    oldDiffItems.forEach((item) => {
+        item.groupId && oldGroupIds.set(item.groupId, true);
+        item.childGroupId && oldChildGroupIds.set(item.childGroupId, true);
+
+    });
+    // traverse newDiffItems and decide the direction according to the rule
     for (let i = 0; i < newDiffItems.length; i++) {
         const newGroupId = newDiffItems[i].groupId;
-        if (oldChildGroupIds.includes(newGroupId)) {
+        if (oldChildGroupIds.get(newGroupId)) {
             direction = TRANSITION_P2C;
             break;
         }
         const newChildGroupId = newDiffItems[i].childGroupId;
-        if (newChildGroupId && oldGroupIds.includes(newChildGroupId)) {
+        if (newChildGroupId && oldGroupIds.get(newChildGroupId)) {
             direction = TRANSITION_C2P;
             break;
         }
