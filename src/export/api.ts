@@ -55,7 +55,7 @@ export * as util from './api/util';
 
 export {default as env} from 'zrender/src/core/env';
 
-// --------------------- Export for Exension Usage ---------------------
+// --------------------- Export for Extension Usage ---------------------
 // export {SeriesData};
 export {SeriesData as List};    // TODO: Compatitable with exists echarts-gl code
 export {default as Model} from '../model/Model';
@@ -77,7 +77,7 @@ export {brushSingle as innerDrawElementOnCanvas} from 'zrender/src/canvas/graphi
 // Should use `ComponentModel.extend` or `class XXXX extend ComponentModel` to create class.
 // Then use `registerComponentModel` in `install` parameter when `use` this extension. For example:
 // class Bar3DModel extends ComponentModel {}
-// export function install(registers) { regsiters.registerComponentModel(Bar3DModel); }
+// export function install(registers) { registers.registerComponentModel(Bar3DModel); }
 // echarts.use(install);
 export function extendComponentModel(proto: object): ComponentModel {
     const Model = (ComponentModel as ComponentModelConstructor).extend(proto) as any;

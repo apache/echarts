@@ -73,7 +73,7 @@ export const SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
 
 interface SeriesModel {
     /**
-     * Convinient for override in extended class.
+     * Convenient for override in extended class.
      * Implement it if needed.
      */
     preventIncremental(): boolean;
@@ -319,7 +319,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
     /**
      * Init a data structure from data related option in series
-     * Must be overriden.
+     * Must be overridden.
      */
     getInitialData(option: Opt, ecModel: GlobalModel): SeriesData {
         return;
@@ -426,7 +426,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     /**
      * Get base axis if has coordinate system and has axis.
      * By default use coordSys.getBaseAxis();
-     * Can be overrided for some chart.
+     * Can be overridden for some chart.
      * @return {type} description
      */
     getBaseAxis(): Axis {
@@ -615,7 +615,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             const selectedMap = option.selectedMap;
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
-                // TODO diffrent types of data share same object.
+                // TODO different types of data share same object.
                 const nameOrId = getSelectionKey(data, dataIndex);
                 selectedMap[nameOrId] = true;
                 this._selectedDataIndicesMap[nameOrId] = data.getRawIndex(dataIndex);
