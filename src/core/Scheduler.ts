@@ -499,8 +499,8 @@ class Scheduler {
         // we set the pipeline block.
         let errMsg = '';
         if (__DEV__) {
-            errMsg = '"createOnAllSeries" do not supported for "overallReset", '
-                + 'becuase it will block all streams.';
+            errMsg = '"createOnAllSeries" is not supported for "overallReset", '
+                + 'because it will block all streams.';
         }
         assert(!stageHandler.createOnAllSeries, errMsg);
         if (seriesType) {
