@@ -331,10 +331,7 @@ class GraphView extends ChartView {
     }
 
     private _renderThumbnail(seriesModel: GraphSeriesModel, api: ExtensionAPI) {
-        if (this._thumbanil) {
-            return;
-        }
-        this._thumbanil || (this._thumbanil = new Thumbnail(this.group)).render(seriesModel, api);
+        (this._thumbanil = new Thumbnail(this.group)).render(seriesModel, api);
     }
 }
 

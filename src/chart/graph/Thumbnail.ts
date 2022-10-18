@@ -6,8 +6,7 @@ import SymbolClz from '../helper/Symbol';
 import ECLinePath from '../helper/LinePath';
 import GraphSeriesModel from './GraphSeries';
 import { RoamEventParams } from '../../component/helper/RoamController';
-import { clone } from 'zrender/src/core/util';
-import { zrUtil } from '../../echarts.all';
+import * as zrUtil from 'zrender/src/core/util';
 
 interface LayoutParams {
     pos: BoxLayoutOptionMixin
@@ -124,7 +123,7 @@ class Thumbnail {
 
         this._selectedRect = new graphic.Rect({
             style: selectStyle,
-            shape: clone(thumbnailWrapper.shape),
+            shape: zrUtil.clone(thumbnailWrapper.shape),
             ignore: true,
             z2: 152
         });
