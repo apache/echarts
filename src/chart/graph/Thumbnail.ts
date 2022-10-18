@@ -48,10 +48,11 @@ class Thumbnail {
         const symbolNodes = (childrenNodes[0] as graphic.Group).children();
         const lineNodes = (childrenNodes[1] as graphic.Group).children();
 
-        const backgroundColor = model.getModel('backgroundColor');
-        const borderColor = model.getModel('borderColor');
+        const itemStyle = model.getModel('itemStyle');
         const thumbnailScale = model.getModel('scale').option;
-        const selectedDataBackground = model.getModel('selectedDataBackground').option;
+        const selectedDataBackground = model.getModel('selectedDataBackgroundStyle').option;
+        const backgroundColor = itemStyle.getModel('backgroundColor');
+        const borderColor = itemStyle.getModel('borderColor');
 
         this._layoutParams = {
             pos: {
@@ -66,6 +67,7 @@ class Thumbnail {
             }
         };
 
+
         const layoutParams = this._layoutParams;
 
         const thumbnailGroup = new graphic.Group();
@@ -75,16 +77,18 @@ class Thumbnail {
             const x = (node as SymbolClz).x;
             const y = (node as SymbolClz).y;
             const subShape = zrUtil.extend({}, (sub as graphic.Path).shape);
-            const shape = zrUtil.extend(subShape, { width: 5,
+            const shape = zrUtil.extend(subShape, {
+                width: 5,
                 height: 5,
                 x: (x * thumbnailScale - 2.5),
-                y: (y * thumbnailScale - 2.5)});
+                y: (y * thumbnailScale - 2.5)
+            });
 
             const subThumbnail = new (sub as any).constructor({
                 shape,
                 style: (sub as graphic.Path).style,
                 z2: 151
-                });
+            });
 
             thumbnailGroup.add(subThumbnail);
         }
@@ -122,7 +126,7 @@ class Thumbnail {
             style: selectStyle,
             shape: clone(thumbnailWrapper.shape),
             ignore: true,
-            z2: 150
+            z2: 152
         });
 
         group.add(thumbnailWrapper);

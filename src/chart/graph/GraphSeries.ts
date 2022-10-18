@@ -55,8 +55,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
 import { Color } from '../../echarts.all';
-import { LineStyleProps } from './../../model/mixin/lineStyle';
-import { AreaStyleProps } from '../../model/mixin/areaStyle';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -68,6 +67,10 @@ interface GraphEdgeLineStyleOption extends LineStyleOption {
 export interface GraphNodeStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
+}
+
+interface ThumbnailItemStyleOption extends ItemStyleOption {
+    backgroundColor?: Color
 }
 
 
@@ -246,13 +249,9 @@ export interface GraphSeriesOption
 
         scale?: number,
 
-        borderColor?: Color,
+        itemStyle?: ThumbnailItemStyleOption
 
-        backgroundColor?: Color,
-
-        overlayBackgroundColor?: Color,
-
-        selectedDataBackground?: AreaStyleProps
+        selectedDataBackgroundStyle?: PathStyleProps
      }
 }
 
@@ -544,14 +543,14 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
             scale: 0.25,
 
-            backgroundColor: 'white',
+            itemStyle: {
+                backgroundColor: 'white',
+                borderColor: 'black'
+            },
 
-            borderColor: 'black',
-
-            overlayBackgroundColor: 'white',
-
-            selectedDataBackground: {
-                fill: 'white'
+            selectedDataBackgroundStyle: {
+                fill: 'white',
+                opacity: 0.5
             }
         }
     };
