@@ -152,7 +152,7 @@ const PRIORITY_PROCESSOR_SERIES_FILTER = 800;
 // So data stack stage should be in front of data processing stage.
 const PRIORITY_PROCESSOR_DATASTACK = 900;
 // "Data filter" will block the stream, so it should be
-// put at the begining of data processing.
+// put at the beginning of data processing.
 const PRIORITY_PROCESSOR_FILTER = 1000;
 const PRIORITY_PROCESSOR_DEFAULT = 2000;
 const PRIORITY_PROCESSOR_STATISTIC = 5000;
@@ -541,8 +541,8 @@ class ECharts extends Eventful<ECEventDefinition> {
 
                 // Do not update coordinate system here. Because that coord system update in
                 // each frame is not a good user experience. So we follow the rule that
-                // the extent of the coordinate system is determin in the first frame (the
-                // frame is executed immedietely after task reset.
+                // the extent of the coordinate system is determined in the first frame (the
+                // frame is executed immediately after task reset.
                 // this._coordSysMgr.update(ecModel, api);
 
                 // console.log('--- ec frame visual ---', remainTime);
@@ -1382,9 +1382,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             this._zr.flush();
         }
         else if (flush !== false && env.browser.weChat) {
-            // In WeChat embeded browser, `requestAnimationFrame` and `setInterval`
+            // In WeChat embedded browser, `requestAnimationFrame` and `setInterval`
             // hang when sliding page (on touch event), which cause that zr does not
-            // refresh util user interaction finished, which is not expected.
+            // refresh until user interaction finished, which is not expected.
             // But `dispatchAction` may be called too frequently when pan on touch
             // screen, which impacts performance if do not throttle them.
             this._throttledZrFlush();
@@ -1474,7 +1474,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 : ecModel.eachSeries(doPrepare);
 
             function doPrepare(model: ComponentModel): void {
-                // By defaut view will be reused if possible for the case that `setOption` with "notMerge"
+                // By default view will be reused if possible for the case that `setOption` with "notMerge"
                 // mode and need to enable transition animation. (Usually, when they have the same id, or
                 // especially no id but have the same type & name & index. See the `model.id` generation
                 // rule in `makeIdAndName` and `viewId` generation rule here).
@@ -1677,20 +1677,20 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
 
                 // Create new coordinate system each update
-                // In LineView may save the old coordinate system and use it to get the orignal point
+                // In LineView may save the old coordinate system and use it to get the original point.
                 coordSysMgr.create(ecModel, api);
 
                 scheduler.performDataProcessorTasks(ecModel, payload);
 
                 // Current stream render is not supported in data process. So we can update
                 // stream modes after data processing, where the filtered data is used to
-                // deteming whether use progressive rendering.
+                // determine whether to use progressive rendering.
                 updateStreamModes(this, ecModel);
 
                 // We update stream modes before coordinate system updated, then the modes info
                 // can be fetched when coord sys updating (consider the barGrid extent fix). But
                 // the drawback is the full coord info can not be fetched. Fortunately this full
-                // coord is not requied in stream mode updater currently.
+                // coord is not required in stream mode updater currently.
                 coordSysMgr.update(ecModel, api);
 
                 clearColorPalette(ecModel);
@@ -2019,8 +2019,8 @@ class ECharts extends Eventful<ECEventDefinition> {
 
                 ecIns.trigger('rendered', params);
 
-                // The `finished` event should not be triggered repeatly,
-                // so it should only be triggered when rendering indeed happend
+                // The `finished` event should not be triggered repeatedly,
+                // so it should only be triggered when rendering indeed happens
                 // in zrender. (Consider the case that dipatchAction is keep
                 // triggering when mouse move).
                 if (
@@ -2221,7 +2221,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
                 chartView.group.silent = !!seriesModel.get('silent');
                 // Should not call markRedraw on group, because it will disable zrender
-                // increamental render (alway render from the __startIndex each frame)
+                // incremental render (always render from the __startIndex each frame)
                 // chartView.group.markRedraw();
 
                 updateBlend(seriesModel, chartView);
@@ -2335,7 +2335,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             chartView.eachRendered((el: Displayable) => {
                 // FIXME marker and other components
                 if (!el.isGroup) {
-                    // DONT mark the element dirty. In case element is incremental and don't wan't to rerender.
+                    // DON'T mark the element dirty. In case element is incremental and don't want to rerender.
                     el.style.blend = blendMode;
                 }
             });
@@ -2447,7 +2447,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                         savePathStates(el);
                     }
 
-                    // Only updated on changed element. In case element is incremental and don't wan't to rerender.
+                    // Only updated on changed element. In case element is incremental and don't want to rerender.
                     // TODO, a more proper way?
                     if (el.__dirty) {
                         const prevStates = el.prevStates;
@@ -2471,7 +2471,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                         }
                     }
 
-                    // The use higlighted and selected flag to toggle states.
+                    // Use highlighted and selected flag to toggle states.
                     if (el.__dirty) {
                         applyElementStates(el);
                     }
@@ -2734,7 +2734,7 @@ export function disConnect(groupId: string): void {
 }
 
 /**
- * Alias and backword compat
+ * Alias and backward compatibility
  */
 export const disconnect = disConnect;
 
@@ -3016,7 +3016,7 @@ export const registerTransform = registerExternalTransform;
 
 
 
-// Buitlin global visual
+// Builtin global visual
 registerVisual(PRIORITY_VISUAL_GLOBAL, seriesStyleTask);
 registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataStyleTask);
 registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataColorPaletteTask);

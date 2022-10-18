@@ -921,8 +921,8 @@ echarts.use([${seriesImportName}]);`);
         };
 
         initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption & AriaOptionMixin): void {
-            // Using OPTION_INNER_KEY to mark that this option can not be used outside,
-            // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
+            // Using OPTION_INNER_KEY to mark that this option cannot be used outside,
+            // i.e. `chart.setOption(chart.getModel().option);` is forbidden.
             ecModel.option = {} as ECUnitOption;
             ecModel.option[OPTION_INNER_KEY] = OPTION_INNER_VALUE;
 
