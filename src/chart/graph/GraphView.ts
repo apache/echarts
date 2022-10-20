@@ -63,8 +63,6 @@ class GraphView extends ChartView {
 
     private _thumbanil: Thumbnail;
 
-    private _scale = 0;
-
     private _isForceLayout = false;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
@@ -287,7 +285,7 @@ class GraphView extends ChartView {
                     dx: e.dx,
                     dy: e.dy
                 });
-                this._scale >= 0 && this._thumbanil._updateSelectedRect('pan', this._scale);
+                this._thumbanil._updateSelectedRect();
             })
             .on('zoom', (e) => {
                 roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
@@ -303,13 +301,7 @@ class GraphView extends ChartView {
                 this._lineDraw.updateLayout();
                 // Only update label layout on zoom
                 api.updateLabelLayout();
-                if (e.scale > 1) {
-                    this._scale++;
-                }
-                else {
-                    this._scale--;
-                }
-                this._scale >= 0 && this._thumbanil._updateSelectedRect('zoom', this._scale);
+                this._thumbanil._updateSelectedRect();
             });
     }
 

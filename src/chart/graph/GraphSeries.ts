@@ -251,8 +251,6 @@ export interface GraphSeriesOption
 
         width?: number,
 
-        scale?: number,
-
         itemStyle?: ThumbnailItemStyleOption
 
         selectedDataBackgroundStyle?: PathStyleProps
@@ -548,8 +546,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             height: 200,
 
             width: 200,
-
-            scale: 0.25,
 
             itemStyle: {
                 backgroundColor: 'white',
