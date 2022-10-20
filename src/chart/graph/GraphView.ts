@@ -279,7 +279,7 @@ class GraphView extends ChartView {
                     dx: e.dx,
                     dy: e.dy
                 });
-                this._thumbanil._updatePan(e);
+                this._scale >= 0 && this._thumbanil._updateSelectedRect('pan', this._scale);
             })
             .on('zoom', (e) => {
                 roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
@@ -295,15 +295,13 @@ class GraphView extends ChartView {
                 this._lineDraw.updateLayout();
                 // Only update label layout on zoom
                 api.updateLabelLayout();
-
                 if (e.scale > 1) {
                     this._scale++;
                 }
                 else {
                     this._scale--;
                 }
-
-                this._scale >= 0 && this._thumbanil._updateZoom(e, this._scale);
+                this._scale >= 0 && this._thumbanil._updateSelectedRect('zoom', this._scale);
             });
     }
 
@@ -331,6 +329,9 @@ class GraphView extends ChartView {
     }
 
     private _renderThumbnail(seriesModel: GraphSeriesModel, api: ExtensionAPI) {
+        if (this._thumbanil) {
+            this._thumbanil.remove();
+        }
         (this._thumbanil = new Thumbnail(this.group)).render(seriesModel, api);
     }
 }

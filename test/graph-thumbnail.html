@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="lib/simpleRequire.js"></script>
+  <script src="lib/config.js"></script>
+  <script src="lib/jquery.min.js"></script>
+  <script src="lib/facePrint.js"></script>
+  <script src="lib/testHelper.js"></script>
+  <link rel="stylesheet" href="lib/reset.css" />
+  <title>graph-thumbnail.html</title>
+</head>
+<body>
+  <div id="main0"></div>
+  <div id="main1"></div>
+  <div id="main2"></div>
+  <div id="main3"></div>
+  
+</body>
+
+<script>
+  var option;
+  require([
+      'echarts'/*, 'map/js/china' */
+  ], function (echarts) {
+      option = {
+          tooltip: {},
+          legend: {},
+          series: [{
+              type: 'graph',
+              name: 'Gene',
+              layout: 'circular',
+              circular: {
+                  rotateLabel: true
+              },
+              thumbnail: {
+                show: true,
+                width: 200,
+                height: 200,
+                selectedDataBackgroundStyle: {
+                  fill: 'blue'
+                }
+              },
+              roam: true,
+              focusNodeAdjacency: true,
+              label: {
+                  show: true
+              },
+              lineStyle: {
+                  color: 'source',
+                  curveness: 0.3
+              },
+              emphasis: {
+                  label: {
+                      color: 'blue'
+                  },
+                  lineStyle: {
+                      width: 10
+                  }
+              },
+              data: [
+                  {
+                      itemStyle: null,
+                      name: 'DRD2',
+                      value: 40,
+                      symbolSize: 40
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'ADORA2A',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'ARRB2',
+                      value: 30,
+                      symbolSize: 20,
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'CALM1',
+                      value: 20,
+                      symbolSize: 40
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'CALM2',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'FLNA',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'NSF',
+                      value: 0,
+                      symbolSize: 20
+                  }
+              ],
+              links: [
+                  {
+                      source: 'DRD2',
+                      target: 'ADORA2A'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'ARRB2'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'CALM1'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'CALM2'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'FLNA'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'NSF'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'ADORA2A'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'ARRB2'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'CALM2'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'FLNA'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'NSF'
+                  },
+              ]
+          }]
+      };
+      var chart = testHelper.create(echarts, 'main0', {
+          option: option,
+          title: 'has 0 value nodes'
+      });
+  });
+</script>
+
+<script>
+  var option;
+  require([
+      'echarts'/*, 'map/js/china' */
+  ], function (echarts) {
+      option = {
+          tooltip: {},
+          legend: {},
+          series: [{
+              type: 'graph',
+              name: 'Gene',
+              layout: 'circular',
+              circular: {
+                  rotateLabel: true
+              },
+              thumbnail: {
+                show: true,
+                width: 200,
+                height: 400,
+                selectedDataBackgroundStyle: {
+                  fill: 'red'
+                }
+              },
+              roam: true,
+              focusNodeAdjacency: true,
+              label: {
+                  show: true
+              },
+              lineStyle: {
+                  color: 'source',
+                  curveness: 0.3
+              },
+              emphasis: {
+                  label: {
+                      color: 'blue'
+                  },
+                  lineStyle: {
+                      width: 10
+                  }
+              },
+              data: [
+                  {
+                      itemStyle: null,
+                      name: 'DRD2',
+                      value: 40,
+                      symbolSize: 40
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'ADORA2A',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'ARRB2',
+                      value: 30,
+                      symbolSize: 20,
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'CALM1',
+                      value: 20,
+                      symbolSize: 40
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'CALM2',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'FLNA',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'NSF',
+                      value: 0,
+                      symbolSize: 20
+                  }
+              ],
+              links: [
+                  {
+                      source: 'DRD2',
+                      target: 'ADORA2A'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'ARRB2'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'CALM1'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'CALM2'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'FLNA'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'NSF'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'ADORA2A'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'ARRB2'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'CALM2'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'FLNA'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'NSF'
+                  },
+              ]
+          }]
+      };
+      var chart = testHelper.create(echarts, 'main1', {
+          option: option,
+          title: 'has 0 value nodes'
+      });
+  });
+</script>
+
+<script>
+  var option;
+  require([
+      'echarts'/*, 'map/js/china' */
+  ], function (echarts) {
+      option = {
+          tooltip: {},
+          legend: {},
+          series: [{
+              type: 'graph',
+              name: 'Gene',
+              layout: 'circular',
+              circular: {
+                  rotateLabel: true
+              },
+              thumbnail: {
+                show: true,
+                width: 400,
+                height: 200,
+                selectedDataBackgroundStyle: {
+                  fill: 'yellow'
+                }
+              },
+              roam: true,
+              focusNodeAdjacency: true,
+              label: {
+                  show: true
+              },
+              lineStyle: {
+                  color: 'source',
+                  curveness: 0.3
+              },
+              emphasis: {
+                  label: {
+                      color: 'blue'
+                  },
+                  lineStyle: {
+                      width: 10
+                  }
+              },
+              data: [
+                  {
+                      itemStyle: null,
+                      name: 'DRD2',
+                      value: 40,
+                      symbolSize: 40
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'ADORA2A',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'ARRB2',
+                      value: 30,
+                      symbolSize: 20,
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'CALM1',
+                      value: 20,
+                      symbolSize: 40
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'CALM2',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'FLNA',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'NSF',
+                      value: 0,
+                      symbolSize: 20
+                  }
+              ],
+              links: [
+                  {
+                      source: 'DRD2',
+                      target: 'ADORA2A'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'ARRB2'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'CALM1'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'CALM2'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'FLNA'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'NSF'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'ADORA2A'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'ARRB2'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'CALM2'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'FLNA'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'NSF'
+                  },
+              ]
+          }]
+      };
+      var chart = testHelper.create(echarts, 'main2', {
+          option: option,
+          title: 'has 0 value nodes'
+      });
+  });
+</script>
+
+<script>
+  var option;
+  require([
+      'echarts'/*, 'map/js/china' */
+  ], function (echarts) {
+      option = {
+          tooltip: {},
+          legend: {},
+          series: [{
+              type: 'graph',
+              name: 'Gene',
+              layout: 'circular',
+              circular: {
+                  rotateLabel: true
+              },
+              thumbnail: {
+                show: true,
+                width: 1000,
+                height: 200,
+                selectedDataBackgroundStyle: {
+                  fill: 'green'
+                }
+              },
+              roam: true,
+              focusNodeAdjacency: true,
+              label: {
+                  show: true
+              },
+              lineStyle: {
+                  color: 'source',
+                  curveness: 0.3
+              },
+              emphasis: {
+                  label: {
+                      color: 'blue'
+                  },
+                  lineStyle: {
+                      width: 10
+                  }
+              },
+              data: [
+                  {
+                      itemStyle: null,
+                      name: 'DRD2',
+                      value: 40,
+                      symbolSize: 40
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'ADORA2A',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'ARRB2',
+                      value: 30,
+                      symbolSize: 20,
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'CALM1',
+                      value: 20,
+                      symbolSize: 40
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'CALM2',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'FLNA',
+                      value: 0,
+                      symbolSize: 20
+                  },
+                  {
+                      itemStyle: null,
+                      name: 'NSF',
+                      value: 0,
+                      symbolSize: 20
+                  }
+              ],
+              links: [
+                  {
+                      source: 'DRD2',
+                      target: 'ADORA2A'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'ARRB2'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'CALM1'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'CALM2'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'FLNA'
+                  },
+                  {
+                      source: 'DRD2',
+                      target: 'NSF'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'ADORA2A'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'ARRB2'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'CALM2'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'FLNA'
+                  },
+                  {
+                      source: 'CALM1',
+                      target: 'NSF'
+                  },
+              ]
+          }]
+      };
+      var chart = testHelper.create(echarts, 'main3', {
+          option: option,
+          title: 'has 0 value nodes'
+      });
+  });
+</script>
+</html>

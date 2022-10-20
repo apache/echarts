@@ -43,7 +43,8 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ZRColor
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -54,7 +55,6 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
-import { Color } from '../../echarts.all';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 
@@ -70,7 +70,7 @@ export interface GraphNodeStateOption<TCbParams = never> {
 }
 
 interface ThumbnailItemStyleOption extends ItemStyleOption {
-    backgroundColor?: Color
+    backgroundColor?: ZRColor
 }
 
 
@@ -246,6 +246,10 @@ export interface GraphSeriesOption
         left?: number | string,
 
         right?: number | string,
+
+        height?: number,
+
+        width?: number,
 
         scale?: number,
 
@@ -536,10 +540,14 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         },
 
         thumbnail: {
-            show: true,
+            show: false,
 
             right: 0,
             bottom: 0,
+
+            height: 200,
+
+            width: 200,
 
             scale: 0.25,
 
