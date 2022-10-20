@@ -65,6 +65,8 @@ class GraphView extends ChartView {
 
     private _scale = 0;
 
+    private _isForceLayout = false;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const symbolDraw = new SymbolDraw();
         const lineDraw = new LineDraw();
@@ -125,7 +127,8 @@ class GraphView extends ChartView {
         const forceLayout = seriesModel.forceLayout;
         const layoutAnimation = seriesModel.get(['force', 'layoutAnimation']);
         if (forceLayout) {
-            this._startForceLayoutIteration(forceLayout, layoutAnimation);
+            this._isForceLayout = true;
+            this._startForceLayoutIteration(forceLayout, api, layoutAnimation);
         }
 
         data.graph.eachNode((node) => {
@@ -145,7 +148,7 @@ class GraphView extends ChartView {
                     if (forceLayout) {
                         forceLayout.warmUp();
                         !this._layouting
-                            && this._startForceLayoutIteration(forceLayout, layoutAnimation);
+                            && this._startForceLayoutIteration(forceLayout, api, layoutAnimation);
                         forceLayout.setFixed(idx);
                         // Write position back to layout
                         data.setItemLayout(idx, [el.x, el.y]);
@@ -219,7 +222,7 @@ class GraphView extends ChartView {
         });
 
         this._firstRender = false;
-        this._renderThumbnail(seriesModel, api);
+        this._isForceLayout || this._renderThumbnail(seriesModel, api);
     }
 
     dispose() {
@@ -229,11 +232,16 @@ class GraphView extends ChartView {
 
     _startForceLayoutIteration(
         forceLayout: GraphSeriesModel['forceLayout'],
+        api: ExtensionAPI,
         layoutAnimation?: boolean
     ) {
         const self = this;
         (function step() {
             forceLayout.step(function (stopped) {
+                if (stopped) {
+                    self._isForceLayout = false;
+                    self._renderThumbnail(self._model, api);
+                }
                 self.updateLayout(self._model);
                 (self._layouting = !stopped) && (
                     layoutAnimation
