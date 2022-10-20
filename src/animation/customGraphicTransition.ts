@@ -427,12 +427,12 @@ function duringCall(
         return;
     }
     // If el is remove from zr by reason like legend, during still need to called,
-    // becuase el will be added back to zr and the prop value should not be incorrect.
+    // because el will be added back to zr and the prop value should not be incorrect.
 
     const latestUserDuring = transitionInnerStore(el).userDuring;
     const scopeUserDuring = scope.userDuring;
     // Ensured a during is only called once in each animation frame.
-    // If a during is called multiple times in one frame, maybe some users' calulation logic
+    // If a during is called multiple times in one frame, maybe some users' calculation logic
     // might be wrong (not sure whether this usage exists).
     // The case of a during might be called twice can be: by default there is a animator for
     // 'x', 'y' when init. Before the init animation finished, call `setOption` to start

@@ -18,7 +18,7 @@
 */
 
 /*
-* A third-party license is embeded for some of the code in this file:
+* A third-party license is embedded for some of the code in this file:
 * The "scaleLevels" was originally copied from "d3.js" with some
 * modifications made for this project.
 * (See more details in the comment on the definition of "scaleLevels" below.)
@@ -31,9 +31,9 @@
 // [About UTC and local time zone]:
 // In most cases, `number.parseDate` will treat input data string as local time
 // (except time zone is specified in time string). And `format.formateTime` returns
-// local time by default. option.useUTC is false by default. This design have
-// concidered these common case:
-// (1) Time that is persistent in server is in UTC, but it is needed to be diplayed
+// local time by default. option.useUTC is false by default. This design has
+// considered these common cases:
+// (1) Time that is persistent in server is in UTC, but it is needed to be displayed
 // in local time by default.
 // (2) By default, the input data string (e.g., '2011-01-02') should be displayed
 // as its original time, without any time difference.
@@ -371,7 +371,7 @@ function isUnitValueSame(
 function getDateInterval(approxInterval: number, daysInMonth: number) {
     approxInterval /= ONE_DAY;
     return approxInterval > 16 ? 16
-                // Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick betwen two month.
+                // Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick between two months.
             : approxInterval > 7.5 ? 7  // TODO week 7 or day 8?
             : approxInterval > 3.5 ? 4
             : approxInterval > 1.5 ? 2 : 1;

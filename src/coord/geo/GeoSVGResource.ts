@@ -55,7 +55,7 @@ export interface GeoSVGGraphicRecord {
  */
 const REGION_AVAILABLE_SVG_TAG_MAP = createHashMap<number, SVGNodeTagLower>([
     'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path',
-    // <text> <tspan> are also enabled becuase some SVG might paint text itself,
+    // <text> <tspan> are also enabled because some SVG might paint text itself,
     // but still need to trigger events or tooltip.
     'text', 'tspan',
     // <g> is also enabled because this case: if multiple tags share one name

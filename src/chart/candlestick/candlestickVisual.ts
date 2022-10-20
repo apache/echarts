@@ -25,6 +25,7 @@ import { extend } from 'zrender/src/core/util';
 
 const positiveBorderColorQuery = ['itemStyle', 'borderColor'] as const;
 const negativeBorderColorQuery = ['itemStyle', 'borderColor0'] as const;
+const dojiBorderColorQuery = ['itemStyle', 'borderColorDoji'] as const;
 const positiveColorQuery = ['itemStyle', 'color'] as const;
 const negativeColorQuery = ['itemStyle', 'color0'] as const;
 
@@ -47,7 +48,10 @@ const candlestickVisual: StageHandler = {
 
         function getBorderColor(sign: number, model: Model<Pick<CandlestickDataItemOption, 'itemStyle'>>) {
             return model.get(
-                sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
+                sign === 0 ? dojiBorderColorQuery
+                    : sign > 0
+                        ? positiveBorderColorQuery
+                        : negativeBorderColorQuery
             );
         }
 

@@ -50,7 +50,7 @@ const inner = makeInner<{
 
 class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Model<Opt> {
 
-    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // [Caution]: Because this class or desecendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.
     // Otherwise there is bad case:
     //   class A {xxx = 1;}
@@ -72,10 +72,10 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
 
     /**
      * Because simplified concept is probably better, series.name (or component.name)
-     * has been having too many resposibilities:
+     * has been having too many responsibilities:
      * (1) Generating id (which requires name in option should not be modified).
      * (2) As an index to mapping series when merging option or calling API (a name
-     * can refer to more then one components, which is convinient is some case).
+     * can refer to more than one component, which is convenient is some cases).
      * (3) Display.
      * @readOnly But injected
      */
@@ -281,7 +281,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     getReferringComponents(mainType: ComponentMainType, opt: QueryReferringOpt): {
         // Always be array rather than null/undefined, which is convenient to use.
         models: ComponentModel[];
-        // Whether target compoent specified
+        // Whether target component is specified
         specified: boolean;
     } {
         const indexKey = (mainType + 'Index') as keyof Opt;

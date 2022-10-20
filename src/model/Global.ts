@@ -164,7 +164,7 @@ class GlobalModel extends Model<ECUnitOption> {
     private _componentsMap: HashMap<ComponentModel[], ComponentMainType>;
 
     /**
-     * `_componentsMap` might have "hole" becuase of remove.
+     * `_componentsMap` might have "hole" because of remove.
      * So save components count for a certain mainType here.
      */
     private _componentsCount: HashMap<number>;
@@ -275,7 +275,7 @@ class GlobalModel extends Model<ECUnitOption> {
 
         // By design, if `setOption(option2)` at the second time, and `option2` is a `ECUnitOption`,
         // it should better not have the same props with `MediaUnit['option']`.
-        // Becuase either `option2` or `MediaUnit['option']` will be always merged to "current option"
+        // Because either `option2` or `MediaUnit['option']` will be always merged to "current option"
         // rather than original "baseOption". If they both override a prop, the result might be
         // unexpected when media state changed after `setOption` called.
         // If we really need to modify a props in each `MediaUnit['option']`, use the full version
@@ -427,7 +427,7 @@ import { ${seriesImportName} } from 'echarts/charts';
 echarts.use([${seriesImportName}]);`);
                                 }
                                 else {
-                                    error(`Unkown series ${subType}`);
+                                    error(`Unknown series ${subType}`);
                                 }
                             }
                         }
@@ -787,7 +787,7 @@ echarts.use([${seriesImportName}]);`);
 
     /**
      * After filtering, series may be different
-     * frome raw series.
+     * from raw series.
      */
     eachSeries<T>(
         cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
@@ -817,7 +817,7 @@ echarts.use([${seriesImportName}]);`);
 
     /**
      * After filtering, series may be different.
-     * frome raw series.
+     * from raw series.
      */
     eachSeriesByType<T>(
         subType: ComponentSubType,
@@ -921,8 +921,8 @@ echarts.use([${seriesImportName}]);`);
         };
 
         initBase = function (ecModel: GlobalModel, baseOption: ECUnitOption & AriaOptionMixin): void {
-            // Using OPTION_INNER_KEY to mark that this option can not be used outside,
-            // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
+            // Using OPTION_INNER_KEY to mark that this option cannot be used outside,
+            // i.e. `chart.setOption(chart.getModel().option);` is forbidden.
             ecModel.option = {} as ECUnitOption;
             ecModel.option[OPTION_INNER_KEY] = OPTION_INNER_VALUE;
 
