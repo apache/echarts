@@ -310,7 +310,6 @@ class FunnelView extends ChartView {
             seriesModel.get('showRate')
             && !(
                 seriesModel.get('dynamicHeight')
-                || seriesModel.get('dynamicArea')
                 || seriesModel.get('sort') === 'none'
             );
 

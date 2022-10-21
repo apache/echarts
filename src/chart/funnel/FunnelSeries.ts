@@ -101,8 +101,6 @@ export interface FunnelSeriesOption
 
     showRate?: boolean
 
-    dynamicArea?: boolean
-
     dynamicHeight?: boolean
 
     /**

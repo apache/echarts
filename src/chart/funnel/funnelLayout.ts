@@ -299,7 +299,6 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
         // mapping mode about
         const dynamicHeight = seriesModel.get('dynamicHeight');
-        const dynamicArea = seriesModel.get('dynamicArea');
         const showRate = seriesModel.get('showRate');
         // size extent based on orient and mapping mode
         // determine the width extent of the funnel piece  when dynamicHeight is false
@@ -314,7 +313,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             parsePercent(seriesModel.get('minSize'), size),
             size
         ];
-        if (!dynamicHeight && !dynamicArea) {
+        if (!dynamicHeight) {
             sizeExtent[1] = parsePercent(seriesModel.get('maxSize'), size);
         }
 
@@ -345,18 +344,17 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         if (sort === 'ascending') {
             // From bottom to top
             itemSize = -itemSize;
-            const symbol = !dynamicHeight && dynamicArea ? 1 : -1;
-            gap = gap * symbol;
+            gap = -gap;
             if (orient === 'horizontal') {
-                x += symbol === 1 ? 0 : viewWidth;
+                x += viewWidth;
             }
             else {
-                y += symbol === 1 ? 0 : viewHeight;
+                y += viewHeight;
             }
             indices = indices.reverse();
         }
         else {
-            if (dynamicArea && !dynamicHeight) {
+            if (!dynamicHeight) {
                 gap = -gap;
                 if (orient === 'horizontal') {
                     x += viewWidth;
@@ -417,7 +415,6 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         // exit shape control
         const exitWidth = parsePercent(seriesModel.get('exitWidth'), 100);
 
-
         // dy height funnel piece about
         let setDynamicHeightPoints:
             (
@@ -445,47 +442,6 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     });
                 };
             })();
-        }
-
-        // dy area funnel piece about
-        let getAreaPieceHeight: (val: number, pieceHeight: number | string) => number | null = null;
-        let setAreaPiecePoint: (idx: number, pos: number, pieceHeight: number) => void | null = null;
-        if (dynamicArea) {
-            ({ getAreaPieceHeight, setAreaPiecePoint } = (function () {
-                // dynamicArea about
-                const areaExtent = [0, viewHeight * viewWidth / 2];
-                // auxiliary variable
-                let cumulativeArea = 0;
-                let cumulativeHeight = 0;
-                // piece top and bottom
-                let pieceAreaBottom = 0;
-                let pieceAreaTop = 0;
-                const getAreaPieceHeight = function (val: number, pieceHeight: number | string) {
-                    const pieceArea = linearMap(val, [0, valueSum], areaExtent, true);
-
-                    cumulativeArea += pieceArea;
-                    pieceAreaTop = pieceAreaBottom;
-
-                    // calculate bottom line length and top line length
-                    pieceAreaBottom = Math.sqrt(2 * cumulativeArea * size / viewSize);
-                    pieceHeight = pieceAreaBottom * viewSize / size - cumulativeHeight;
-
-                    cumulativeHeight += pieceHeight;
-                    pieceHeight = sort === 'ascending' ? pieceHeight : -pieceHeight;
-                    return pieceHeight;
-                };
-
-                const setAreaPiecePoint = function (idx: number, pos: number, pieceHeight: number) {
-                    const start = getLinePoints(pos, pieceAreaTop);
-                    const end = getLinePoints(pos + pieceHeight, pieceAreaBottom);
-
-                    data.setItemLayout(idx, {
-                        points: start.concat(end.slice().reverse())
-                    });
-                };
-
-                return { getAreaPieceHeight, setAreaPiecePoint };
-            })());
         }
 
         // rate funnel about
@@ -571,9 +527,6 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 pieceHeight = sort === 'ascending' ? -pieceHeight : pieceHeight;
                 return pieceHeight;
             }
-            else if (dynamicArea) {
-                return getAreaPieceHeight(val, pieceHeight);
-            }
 
             // default mapping or show rate pieceHeight
             if (pieceHeight == null) {
@@ -598,10 +551,6 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             // We don’t need to concern direction when we use this function to set points.
             if (dynamicHeight) {
                 setDynamicHeightPoints(index, idx, pos, pieceHeight);
-                return;
-            }
-            else if (dynamicArea) {
-                setAreaPiecePoint(idx, pos, pieceHeight);
                 return;
             }
             else if (showRate && sort !== 'none') {
@@ -636,7 +585,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         }
 
         labelLayout(data);
-        if (showRate && !dynamicHeight && !dynamicArea && sort !== 'none') {
+        if (showRate && !dynamicHeight && sort !== 'none') {
             rateLabelLayout(data);
         }
     });
