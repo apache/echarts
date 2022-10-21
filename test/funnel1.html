@@ -1,0 +1,263 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+   http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/dat.gui.min.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css">
+</head>
+
+<body>
+    <style>
+        html,
+        body,
+        #main {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        #main,
+        #main0 {
+            position: relative;
+        }
+    </style>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+    <script>
+        const itemStyle = {
+            normal: {
+                borderWidth: 0
+            },
+            emphasis: {
+                shadowBlur: 40,
+                shadowOffsetX: 0,
+                shadowOffsetY: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.4)',
+                borderWidth: 2
+            }
+        };
+        const defaultOption = {
+            aria: {
+                show: true
+            },
+            title: {
+                text: '漏斗图',
+                subtext: '纯属虚构'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: '{a} <br/>{b} : {c}%'
+            },
+            legend: {
+                data: ['展现', '点击', '访问', '咨询', '订单']
+            },
+            series: [
+                {
+                    name: '漏斗图',
+                    type: 'funnel',
+                    gap: 3,
+                    itemStyle: itemStyle,
+                    left: 300,
+                    right: 300,
+                    sort: 'ascending',
+                    orient: 'horizontal',
+                    label: {
+                        normal: {
+                            position: 'leftTop'
+                        }
+                    },
+                    rateLabel: {
+                        formatter: '{e}-{f} {g}'
+                    },
+                    data: [
+                        { value: 60, name: '访问' },
+                        { value: 40, name: '咨询' },
+                        { value: 20, name: '订单', rateLabel: { formatter: 'Overall rate {g}' } },
+                        { value: 80, name: '点击' },
+                        { value: 100, name: '展现' }
+                    ]
+                }
+            ]
+        }
+    </script>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            const chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'data mapping on dynamic height of funnel piece',
+                    '1. set exitWidth as 100% to flatten the top',
+                    '2. to set maxSize or minSize to control the width of funnel piece'
+                ],
+                height: window.innerHeight,
+                option: defaultOption
+            });
+
+
+            const config = {
+                sort: 'ascending',
+                orient: 'horizontal',
+                dynamicHeight: 'true',
+                exitWidth: 0,
+                maxSize: 100,
+                minSize: 0
+            };
+
+            const update = function () {
+                chart.setOption({
+                    series: [{
+                        name: '漏斗图',
+                        sort: config.sort,
+                        orient: config.orient,
+                        dynamicHeight: config.dynamicHeight === 'true',
+                        exitWidth: `${config.exitWidth}%`,
+                        maxSize: `${config.maxSize}%`,
+                        minSize: `${config.minSize}%`
+                    }]
+                })
+            }
+            update();
+
+            const gui = new dat.GUI({ autoPlace: false });
+            document.getElementById('main1').appendChild(gui.domElement);
+            gui.domElement.style = 'position:absolute;top:0px;right:0px;';
+
+            gui.add(config, 'sort', ['descending', 'ascending', 'none'])
+                .onChange(update);
+            gui.add(config, 'orient', ['vertical', 'horizontal'])
+                .onChange(update);
+            gui.add(config, 'dynamicHeight', [true, false])
+                .onChange(update);
+            gui.add(config, 'exitWidth', 0, 100)
+                .onChange(update);
+            gui.add(config, 'maxSize', 0, 100)
+                .onChange(update);
+            gui.add(config, 'minSize', 0, 100)
+                .onChange(update);
+        })
+    </script>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            const chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'show rate between each data',
+                    '1. invalid when dynamicHeight or dynamciArea is true',
+                    '2. different with other mapping mode ,default exitWidth is 100% in this mode',
+                    '3. if you want make top piece a trapezoidal, set exitWidth a val between 0% and 99%',
+                    `4. the label of rate piece sholud be set by rateLabel.formatter,it can be a formatt string like previous, 
+                     it also can be a function give params to user. In rate piece, {e} is mapped to previous data
+                     , {f} is mapped to next data, and {g} is mapped to conversion rate`,
+                ],
+                height: window.innerHeight,
+                option: defaultOption
+            });
+
+            const config = {
+                sort: 'ascending',
+                orient: 'horizontal',
+                showRate: 'true',
+                exitWidth: 100,
+            };
+
+            const update = function () {
+                chart.setOption({
+                    series: [{
+                        name: '漏斗图',
+                        sort: config.sort,
+                        orient: config.orient,
+                        exitWidth: `${config.exitWidth}%`,
+                        showRate: config.showRate === 'true'
+                    }]
+                })
+            }
+            update();
+
+            const gui = new dat.GUI({ autoPlace: false });
+            document.getElementById('main2').appendChild(gui.domElement);
+            gui.domElement.style = 'position:absolute;top:0px;right:0px;';
+
+            gui.add(config, 'sort', ['descending', 'ascending', 'none'])
+                .onChange(update);
+            gui.add(config, 'orient', ['vertical', 'horizontal'])
+                .onChange(update);
+            gui.add(config, 'exitWidth', 0, 100)
+                .onChange(update);
+            gui.add(config, 'showRate', [true, false])
+                .onChange(update);
+        })
+    </script>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            const chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'each data take funnel area',
+                    '1. set dynamciArea to open this mapping mode',
+                    '2. exitWidth is invalid in this mode',
+                    '3. priority lower than dynamciHeight'
+                ],
+                height: window.innerHeight,
+                option: defaultOption
+            });
+
+            const config = {
+                sort: 'ascending',
+                orient: 'horizontal',
+                dynamicArea: 'true',
+            };
+
+            const update = function () {
+                chart.setOption({
+                    series: [{
+                        name: '漏斗图',
+                        sort: config.sort,
+                        orient: config.orient,
+                        dynamicArea: config.dynamicArea === 'true'
+                    }]
+                })
+            }
+            update();
+
+            const gui = new dat.GUI({ autoPlace: false });
+            document.getElementById('main3').appendChild(gui.domElement);
+            gui.domElement.style = 'position:absolute;top:0px;right:0px;';
+            gui.add(config, 'sort', ['descending', 'ascending', 'none'])
+                .onChange(update);
+            gui.add(config, 'orient', ['vertical', 'horizontal'])
+                .onChange(update);
+            gui.add(config, 'dynamicArea', [true, false])
+                .onChange(update);
+        })
+
+
+    </script>
+
+</body>
+
+</html>
