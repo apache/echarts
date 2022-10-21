@@ -68,7 +68,7 @@ export function deprecateReplaceLog(oldOpt: string, newOpt: string, scope?: stri
 /**
  * If in __DEV__ environment, get console printable message for users hint.
  * Parameters are separated by ' '.
- * @usuage
+ * @usage
  * makePrintable('This is an error on', someVar, someObj);
  *
  * @param hintInfo anything about the current execution context to hint users.
