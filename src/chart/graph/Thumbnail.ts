@@ -55,10 +55,11 @@ class Thumbnail {
         const lineGroup = new graphic.Group();
         const symbolGroup = new graphic.Group();
 
+        const zoom = seriesModel.get('zoom');
+
         const itemStyle = model.getModel('itemStyle');
         this._height = model.getModel('height').option;
         this._width = model.getModel('width').option;
-
         const selectedDataBackground = model.getModel('selectedDataBackgroundStyle').option;
         const backgroundColor = itemStyle.getModel('backgroundColor');
         const borderColor = itemStyle.getModel('borderColor');
@@ -131,6 +132,8 @@ class Thumbnail {
             z2: 150
         });
 
+        this._wrapper = thumbnailWrapper;
+
         const offectX = this._width / 2 - width / 2;
         const offectY = this._height / 2 - height / 2;
 
@@ -169,16 +172,56 @@ class Thumbnail {
         group.add(thumbnailGroup);
         group.add(thumbnailWrapper);
 
-        this._wrapper = thumbnailWrapper;
-
         layout.positionElement(group, layoutParams.pos, layoutParams.box);
+
+        if (zoom >= 2) {
+            this._updateSelectedRect('init');
+        }
     }
 
     remove() {
         this.group.removeAll();
     }
 
-    _updateSelectedRect() {
+
+
+    _updateSelectedRect(type: 'zoom' | 'pan' | 'init') {
+        const getNewRect = () => {
+            const {height, width} = this._layoutParams.box;
+            const origin = [0, 40];
+            const end = [width, height];
+            const originData = this._graphModel.coordinateSystem.pointToData(origin);
+            const endData = this._graphModel.coordinateSystem.pointToData(end);
+            const x0 = (originData as number[])[0] / width;
+            const x1 = (endData as number[])[0] / width;
+
+            const y0 = (originData as number[])[1] / height;
+            const y1 = (endData as number[])[1] / height;
+
+            const offectX = x0 * this._thumbnailSystem.shape.width;
+            const offectY = y0 * this._thumbnailSystem.shape.height;
+
+            const newWidth = (x1 - x0) * this._thumbnailSystem.shape.width;
+            const newHeight = (y1 - y0) * this._thumbnailSystem.shape.height;
+
+            // 限制slectRect最小范围 达到最小范围后如果是zoom则限制rect改
+            if (newWidth <= wWidth / 10) {
+                if (type === 'zoom') {
+                    return;
+                }
+                rect.x = offectX + this._thumbnailSystem.x;
+                rect.y = offectY + this._thumbnailSystem.y;
+                return;
+            }
+
+            rect.x = offectX + this._thumbnailSystem.x;
+            rect.y = offectY + this._thumbnailSystem.y;
+
+            rect.shape.width = newWidth;
+            rect.shape.height = newHeight;
+
+            rect.dirty();
+        };
         const rect = this._selectedRect;
 
         const {x: rMinX, y: rMinY, shape: {width: rWidth, height: rHeight}} = rect;
@@ -189,6 +232,12 @@ class Thumbnail {
         const wMaxX = wMinX + wWidth;
         const wMaxY = wMinY + wHeight;
 
+        if (type === 'init') {
+            rect.show();
+            getNewRect();
+            return;
+        }
+
         if (rMinX > wMinX && rMinY > wMinY && rMaxX < wMaxX && rMaxY < wMaxY) {
             this._selectedRect.show();
         }
@@ -196,27 +245,7 @@ class Thumbnail {
             this._selectedRect.hide();
         }
 
-        const {height, width} = this._layoutParams.box;
-        const origin = [0, 40];
-        const end = [width, height];
-        const originData = this._graphModel.coordinateSystem.pointToData(origin);
-        const endData = this._graphModel.coordinateSystem.pointToData(end);
-        const x0 = (originData as number[])[0] / width;
-        const x1 = (endData as number[])[0] / width;
-
-        const y0 = (originData as number[])[1] / height;
-        const y1 = (endData as number[])[1] / height;
-
-        const offectX = x0 * this._thumbnailSystem.shape.width;
-        const offectY = y0 * this._thumbnailSystem.shape.height;
-
-        rect.x = offectX + this._thumbnailSystem.x;
-        rect.y = offectY + this._thumbnailSystem.y;
-
-        rect.shape.width = (x1 - x0) * this._thumbnailSystem.shape.width;
-        rect.shape.height = (y1 - y0) * this._thumbnailSystem.shape.height;
-
-        rect.dirty();
+        getNewRect();
     }
 }
 

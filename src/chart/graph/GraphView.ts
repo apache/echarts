@@ -65,6 +65,8 @@ class GraphView extends ChartView {
 
     private _isForceLayout = false;
 
+    private _roamGroup: graphic.Group;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const symbolDraw = new SymbolDraw();
         const lineDraw = new LineDraw();
@@ -81,6 +83,8 @@ class GraphView extends ChartView {
 
         this._symbolDraw = symbolDraw;
         this._lineDraw = lineDraw;
+
+        this._roamGroup = roamGroup;
 
         this._firstRender = true;
     }
@@ -101,10 +105,10 @@ class GraphView extends ChartView {
                 scaleX: coordSys.scaleX, scaleY: coordSys.scaleY
             };
             if (this._firstRender) {
-                group.attr(groupNewProp);
+                this._roamGroup.attr(groupNewProp);
             }
             else {
-                graphic.updateProps(group, groupNewProp, seriesModel);
+                graphic.updateProps(this._roamGroup, groupNewProp, seriesModel);
             }
         }
         // Fix edge contact point with node
@@ -285,7 +289,7 @@ class GraphView extends ChartView {
                     dx: e.dx,
                     dy: e.dy
                 });
-                this._thumbanil._updateSelectedRect();
+                this._thumbanil._updateSelectedRect('pan');
             })
             .on('zoom', (e) => {
                 roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
@@ -301,7 +305,7 @@ class GraphView extends ChartView {
                 this._lineDraw.updateLayout();
                 // Only update label layout on zoom
                 api.updateLabelLayout();
-                this._thumbanil._updateSelectedRect();
+                this._thumbanil._updateSelectedRect('zoom');
             });
     }
 
