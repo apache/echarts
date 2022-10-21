@@ -97,8 +97,6 @@ class GraphView extends ChartView {
         const symbolDraw = this._symbolDraw;
         const lineDraw = this._lineDraw;
 
-        const group = this.group;
-
         if (isViewCoordSys(coordSys)) {
             const groupNewProp = {
                 x: coordSys.x, y: coordSys.y,
@@ -330,6 +328,7 @@ class GraphView extends ChartView {
     remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
+        this._thumbanil && this.group.remove(this._thumbanil.group);
     }
 
     private _renderThumbnail(seriesModel: GraphSeriesModel, api: ExtensionAPI) {

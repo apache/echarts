@@ -58,8 +58,8 @@ class Thumbnail {
         const zoom = seriesModel.get('zoom');
 
         const itemStyle = model.getModel('itemStyle');
-        this._height = model.getModel('height').option;
-        this._width = model.getModel('width').option;
+        this._height = model.get('height');
+        this._width = model.get('width');
         const selectedDataBackground = model.getModel('selectedDataBackgroundStyle').option;
         const backgroundColor = itemStyle.getModel('backgroundColor');
         const borderColor = itemStyle.getModel('borderColor');
