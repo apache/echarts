@@ -22,6 +22,7 @@ import {
     AreaStyleOption, ComponentOption, ColorString,
     AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption
 } from '../util/types';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
@@ -230,6 +231,7 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     hideOverlap?: boolean;
     // Color can be callback
     color?: ColorString | ((value?: string | number, index?: number) => ColorString)
+    overflow?: TextStyleProps['overflow']
 }
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]
