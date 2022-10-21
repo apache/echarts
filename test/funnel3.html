@@ -41,7 +41,7 @@ under the License.
             position: relative;
         }
     </style>
-    <div id="main1"></div>
+    <div id="main"></div>
     <script>
         const itemStyle = {
             normal: {
@@ -103,25 +103,21 @@ under the License.
         require([
             'echarts'
         ], function (echarts) {
-
-            const chart = testHelper.create(echarts, 'main1', {
+            const chart = testHelper.create(echarts, 'main', {
                 title: [
-                    'data mapping on dynamic height of funnel piece',
-                    '1. set exitWidth as 100% to flatten the top',
-                    '2. to set maxSize or minSize to control the width of funnel piece'
+                    'each data take funnel area',
+                    '1. set dynamciArea to open this mapping mode',
+                    '2. exitWidth is invalid in this mode',
+                    '3. priority lower than dynamciHeight'
                 ],
                 height: window.innerHeight,
                 option: defaultOption
             });
 
-
             const config = {
                 sort: 'ascending',
                 orient: 'vertical',
-                dynamicHeight: 'true',
-                exitWidth: 0,
-                maxSize: 100,
-                minSize: 0
+                dynamicArea: 'true',
             };
 
             const update = function () {
@@ -130,32 +126,23 @@ under the License.
                         name: '漏斗图',
                         sort: config.sort,
                         orient: config.orient,
-                        dynamicHeight: config.dynamicHeight === 'true',
-                        exitWidth: `${config.exitWidth}%`,
-                        maxSize: `${config.maxSize}%`,
-                        minSize: `${config.minSize}%`
+                        dynamicArea: config.dynamicArea === 'true'
                     }]
                 })
             }
             update();
 
             const gui = new dat.GUI();
-
             gui.add(config, 'sort', ['descending', 'ascending', 'none'])
                 .onChange(update);
             gui.add(config, 'orient', ['vertical', 'horizontal'])
                 .onChange(update);
-            gui.add(config, 'dynamicHeight', [true, false])
-                .onChange(update);
-            gui.add(config, 'exitWidth', 0, 100)
-                .onChange(update);
-            gui.add(config, 'maxSize', 0, 100)
-                .onChange(update);
-            gui.add(config, 'minSize', 0, 100)
+            gui.add(config, 'dynamicArea', [true, false])
                 .onChange(update);
         })
-    </script>
 
+
+    </script>
 
 </body>
 

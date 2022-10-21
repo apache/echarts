@@ -41,7 +41,7 @@ under the License.
             position: relative;
         }
     </style>
-    <div id="main1"></div>
+    <div id="main"></div>
     <script>
         const itemStyle = {
             normal: {
@@ -103,25 +103,25 @@ under the License.
         require([
             'echarts'
         ], function (echarts) {
-
-            const chart = testHelper.create(echarts, 'main1', {
+            const chart = testHelper.create(echarts, 'main', {
                 title: [
-                    'data mapping on dynamic height of funnel piece',
-                    '1. set exitWidth as 100% to flatten the top',
-                    '2. to set maxSize or minSize to control the width of funnel piece'
+                    'show rate between each data',
+                    '1. invalid when dynamicHeight or dynamciArea is true',
+                    '2. different with other mapping mode ,default exitWidth is 100% in this mode',
+                    '3. if you want make top piece a trapezoidal, set exitWidth a val between 0% and 99%',
+                    `4. the label of rate piece sholud be set by rateLabel.formatter,it can be a formatt string like previous, 
+                     it also can be a function give params to user. In rate piece, {e} is mapped to previous data
+                     , {f} is mapped to next data, and {g} is mapped to conversion rate`,
                 ],
                 height: window.innerHeight,
                 option: defaultOption
             });
 
-
             const config = {
                 sort: 'ascending',
                 orient: 'vertical',
-                dynamicHeight: 'true',
-                exitWidth: 0,
-                maxSize: 100,
-                minSize: 0
+                showRate: 'true',
+                exitWidth: 100,
             };
 
             const update = function () {
@@ -130,10 +130,8 @@ under the License.
                         name: '漏斗图',
                         sort: config.sort,
                         orient: config.orient,
-                        dynamicHeight: config.dynamicHeight === 'true',
                         exitWidth: `${config.exitWidth}%`,
-                        maxSize: `${config.maxSize}%`,
-                        minSize: `${config.minSize}%`
+                        showRate: config.showRate === 'true'
                     }]
                 })
             }
@@ -145,18 +143,12 @@ under the License.
                 .onChange(update);
             gui.add(config, 'orient', ['vertical', 'horizontal'])
                 .onChange(update);
-            gui.add(config, 'dynamicHeight', [true, false])
-                .onChange(update);
             gui.add(config, 'exitWidth', 0, 100)
                 .onChange(update);
-            gui.add(config, 'maxSize', 0, 100)
-                .onChange(update);
-            gui.add(config, 'minSize', 0, 100)
+            gui.add(config, 'showRate', [true, false])
                 .onChange(update);
         })
     </script>
-
-
 </body>
 
 </html>
