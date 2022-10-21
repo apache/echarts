@@ -65,26 +65,26 @@ class GraphView extends ChartView {
 
     private _isForceLayout = false;
 
-    private _roamGroup: graphic.Group;
+    private _mainGroup: graphic.Group;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const symbolDraw = new SymbolDraw();
         const lineDraw = new LineDraw();
         const group = this.group;
-        const roamGroup = new graphic.Group();
+        const mainGroup = new graphic.Group();
         this._controller = new RoamController(api.getZr());
         this._controllerHost = {
-            target: roamGroup
+            target: mainGroup
         } as RoamControllerHost;
 
-        roamGroup.add(symbolDraw.group);
-        roamGroup.add(lineDraw.group);
-        group.add(roamGroup);
+        mainGroup.add(symbolDraw.group);
+        mainGroup.add(lineDraw.group);
+        group.add(mainGroup);
 
         this._symbolDraw = symbolDraw;
         this._lineDraw = lineDraw;
 
-        this._roamGroup = roamGroup;
+        this._mainGroup = mainGroup;
 
         this._firstRender = true;
     }
@@ -96,17 +96,16 @@ class GraphView extends ChartView {
 
         const symbolDraw = this._symbolDraw;
         const lineDraw = this._lineDraw;
-
         if (isViewCoordSys(coordSys)) {
             const groupNewProp = {
                 x: coordSys.x, y: coordSys.y,
                 scaleX: coordSys.scaleX, scaleY: coordSys.scaleY
             };
             if (this._firstRender) {
-                this._roamGroup.attr(groupNewProp);
+                this._mainGroup.attr(groupNewProp);
             }
             else {
-                graphic.updateProps(this._roamGroup, groupNewProp, seriesModel);
+                graphic.updateProps(this._mainGroup, groupNewProp, seriesModel);
             }
         }
         // Fix edge contact point with node

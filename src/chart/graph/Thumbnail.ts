@@ -6,6 +6,7 @@ import SymbolClz from '../helper/Symbol';
 import ECLinePath from '../helper/LinePath';
 import GraphSeriesModel from './GraphSeries';
 import * as zrUtil from 'zrender/src/core/util';
+import View from '../../coord/View';
 
 interface LayoutParams {
     pos: BoxLayoutOptionMixin
@@ -15,9 +16,20 @@ interface LayoutParams {
     }
 }
 
+function getViewRect(layoutParams: LayoutParams, wrapperShpae: {width: number, height: number}, aspect: number) {
+    const option = zrUtil.extend(layoutParams, {
+        aspect: aspect
+    });
+    return layout.getLayoutRect(option, {
+        width: wrapperShpae.width,
+        height: wrapperShpae.height
+    });
+}
+
 class Thumbnail {
 
     group = new graphic.Group();
+
     _parent: graphic.Group;
 
     _selectedRect: graphic.Rect;
@@ -26,9 +38,9 @@ class Thumbnail {
 
     _graphModel: GraphSeriesModel;
 
-    _thumbnailSystem: graphic.Rect;
-
     _wrapper: graphic.Rect;
+
+    _coords: View;
 
     _height: number;
     _width: number;
@@ -87,12 +99,11 @@ class Thumbnail {
             const y = (node as SymbolClz).y;
             const subShape = zrUtil.extend({}, (sub as graphic.Path).shape);
             const shape = zrUtil.extend(subShape, {
-                width: 5,
-                height: 5,
-                x: (x * 0.25 - 2.5),
-                y: (y * 0.25 - 2.5)
+                width: sub.scaleX,
+                height: sub.scaleY,
+                x: x - sub.scaleX / 2,
+                y: y - sub.scaleY / 2
             });
-
             const subThumbnail = new (sub as any).constructor({
                 shape,
                 style: (sub as graphic.Path).style,
@@ -106,17 +117,13 @@ class Thumbnail {
             const lineThumbnail = new ECLinePath({
                 style: (line as ECLinePath).style,
                 shape: (line as ECLinePath).shape,
-                scaleX: 0.25,
-                scaleY: 0.25,
                 z2: 151
             });
             lineGroup.add(lineThumbnail);
         }
 
-        thumbnailGroup.add(lineGroup);
         thumbnailGroup.add(symbolGroup);
-
-        const { x, y, width, height } = thumbnailGroup.getBoundingRect();
+        thumbnailGroup.add(lineGroup);
 
         const thumbnailWrapper = new graphic.Rect({
             style: {
@@ -127,54 +134,52 @@ class Thumbnail {
                 height: this._height,
                 width: this._width
             },
-            x,
-            y,
             z2: 150
         });
 
         this._wrapper = thumbnailWrapper;
 
-        const offectX = this._width / 2 - width / 2;
-        const offectY = this._height / 2 - height / 2;
+        group.add(thumbnailGroup);
+        group.add(thumbnailWrapper);
 
-        thumbnailGroup.x += offectX;
-        thumbnailGroup.y += offectY;
+        layout.positionElement(thumbnailWrapper, layoutParams.pos, layoutParams.box);
 
-        const view = new graphic.Rect({
-            style: {
-                stroke: borderColor.option,
-                fill: backgroundColor.option,
-                lineWidth: 1
-            },
-            shape: {
-                height: layoutParams.box.height * 0.25,
-                width: layoutParams.box.width * 0.25
-            },
-            x: thumbnailGroup.x,
-            y: thumbnailGroup.y,
-            z2: 150
-        });
+        const coordSys = new View();
+        const boundingRect = this._parent.children()[0].getBoundingRect();
+        coordSys.setBoundingRect(boundingRect.x, boundingRect.y, boundingRect.width, boundingRect.height);
 
-        this._thumbnailSystem = view;
+        this._coords = coordSys;
+
+        const viewRect = getViewRect(layoutParams, thumbnailWrapper.shape, boundingRect.width / boundingRect.height);
+
+        coordSys.setViewRect(
+            thumbnailWrapper.x,
+            thumbnailWrapper.y,
+            viewRect.width,
+            viewRect.height
+        );
+
+        const groupNewProp = {
+            x: coordSys.x, y: coordSys.y,
+            scaleX: coordSys.scaleX, scaleY: coordSys.scaleY
+        };
 
         const selectStyle = zrUtil.extend({lineWidth: 1, stroke: 'black'}, selectedDataBackground);
 
+        thumbnailGroup.attr(groupNewProp);
+
         this._selectedRect = new graphic.Rect({
             style: selectStyle,
-            shape: zrUtil.clone(view.shape),
+            shape: zrUtil.clone(thumbnailWrapper.shape),
+            x: coordSys.x,
+            y: coordSys.y,
             ignore: true,
-            x: thumbnailWrapper.x,
-            y: thumbnailWrapper.y,
             z2: 152
         });
 
         group.add(this._selectedRect);
-        group.add(thumbnailGroup);
-        group.add(thumbnailWrapper);
 
-        layout.positionElement(group, layoutParams.pos, layoutParams.box);
-
-        if (zoom >= 2) {
+        if (zoom > 1) {
             this._updateSelectedRect('init');
         }
     }
@@ -192,30 +197,15 @@ class Thumbnail {
             const end = [width, height];
             const originData = this._graphModel.coordinateSystem.pointToData(origin);
             const endData = this._graphModel.coordinateSystem.pointToData(end);
-            const x0 = (originData as number[])[0] / width;
-            const x1 = (endData as number[])[0] / width;
 
-            const y0 = (originData as number[])[1] / height;
-            const y1 = (endData as number[])[1] / height;
+            const thumbnailMain = this._coords.dataToPoint(originData as number[]);
+            const thumbnailMax = this._coords.dataToPoint(endData as number[]);
 
-            const offectX = x0 * this._thumbnailSystem.shape.width;
-            const offectY = y0 * this._thumbnailSystem.shape.height;
+            const newWidth = thumbnailMax[0] - thumbnailMain[0];
+            const newHeight = thumbnailMax[1] - thumbnailMain[1];
 
-            const newWidth = (x1 - x0) * this._thumbnailSystem.shape.width;
-            const newHeight = (y1 - y0) * this._thumbnailSystem.shape.height;
-
-            // 限制slectRect最小范围 达到最小范围后如果是zoom则限制rect改
-            if (newWidth <= wWidth / 10) {
-                if (type === 'zoom') {
-                    return;
-                }
-                rect.x = offectX + this._thumbnailSystem.x;
-                rect.y = offectY + this._thumbnailSystem.y;
-                return;
-            }
-
-            rect.x = offectX + this._thumbnailSystem.x;
-            rect.y = offectY + this._thumbnailSystem.y;
+            rect.x = thumbnailMain[0];
+            rect.y = thumbnailMain[1];
 
             rect.shape.width = newWidth;
             rect.shape.height = newHeight;
