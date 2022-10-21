@@ -18,7 +18,7 @@
 */
 
 import * as layout from '../../util/layout';
-import { parsePercent, linearMap } from '../../util/number';
+import {parsePercent, linearMap} from '../../util/number';
 import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -28,9 +28,9 @@ import { isFunction } from 'zrender/src/core/util';
 function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
-        width: api.getWidth(),
-        height: api.getHeight()
-    }
+            width: api.getWidth(),
+            height: api.getHeight()
+        }
     );
 }
 

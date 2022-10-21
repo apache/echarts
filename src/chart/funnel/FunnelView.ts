@@ -20,7 +20,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import FunnelSeriesModel, { FunnelDataItemOption } from './FunnelSeries';
+import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -129,7 +129,7 @@ const rateLabelFetcher = {
 class FunnelPiece extends graphic.Polygon {
 
     /**
-     * @param type judge is data blocks and conversion blocks
+     * @param type judge is data blocks or conversion blocks
      */
 
     constructor(data: SeriesData, idx: number, type: 'data' | 'rate') {
@@ -375,7 +375,7 @@ class FunnelView extends ChartView {
         this._data = null;
     }
 
-    dispose() { }
+    dispose() {}
 }
 
 

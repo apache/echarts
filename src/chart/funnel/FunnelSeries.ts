@@ -19,8 +19,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import createSeriesDataSimply from '../helper/createSeriesDataSimply';
-import { defaultEmphasis } from '../../util/model';
-import { makeSeriesEncodeForNameBased } from '../../data/helper/sourceHelper';
+import {defaultEmphasis} from '../../util/model';
+import {makeSeriesEncodeForNameBased} from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
 import {
@@ -45,7 +45,7 @@ import SeriesData from '../../data/SeriesData';
 
 type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
     position?: LabelOption['position']
-    | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
+        | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
 
 interface FunnelStatesMixin {
