@@ -99,9 +99,7 @@ function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string, is
     const groupIdDim = getDimension(data, visualDimension);
     if (groupIdDim) {
         const groupId = getValueByDimension(data, dataIndex, groupIdDim);
-        if (groupId) {
-            return groupId;
-        }
+        return groupId;
     }
     // try to get groupId from raw data item
     const rawDataItem = data.getRawDataItem(dataIndex) as OptionDataItemObject<unknown>;
@@ -113,10 +111,8 @@ function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string, is
     if (isChild) {
         return;
     }
-    else {
-        // try to use series.dataGroupId as groupId, otherwise use dataItem's id as groupId
-        return (dataGroupId || data.getId(dataIndex));
-    }
+    // try to use series.dataGroupId as groupId, otherwise use dataItem's id as groupId
+    return (dataGroupId || data.getId(dataIndex));
 }
 
 // flatten all data items from different serieses into one arrary
@@ -310,20 +306,10 @@ function transitionBetween(
                 return data.getId(dataIndex);
             }
             if (isOld) {
-                if (direction === TRANSITION_C2P || direction === TRANSITION_NONE) {
-                    return diffItem.groupId;
-                }
-                if (direction === TRANSITION_P2C) {
-                    return diffItem.childGroupId;
-                }
+              return direction === TRANSITION_P2C ? diffItem.childGroupId : diffItem.groupId;
             }
             else {
-                if (direction === TRANSITION_P2C || direction === TRANSITION_NONE) {
-                    return diffItem.groupId;
-                }
-                if (direction === TRANSITION_C2P) {
-                    return diffItem.childGroupId;
-                }
+              return direction === TRANSITION_C2P ? diffItem.childGroupId : diffItem.groupId;
             }
         };
     }
