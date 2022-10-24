@@ -75,10 +75,9 @@ under the License.
         <script>
 
             require([
-                'echarts', 'ecStat', 'ecSimpleTransform', 'ecSimpleOptionPlayer'
-            ], function (echarts, ecStat, ecSimpleTransform, ecSimpleOptionPlayer) {
+                'echarts', 'ecStat', 'ecSimpleOptionPlayer'
+            ], function (echarts, ecStat, ecSimpleOptionPlayer) {
 
-                echarts.registerTransform(ecSimpleTransform.aggregate);
                 echarts.registerTransform(ecStat.transform.clustering);
 
 
@@ -146,9 +145,9 @@ under the License.
                         id: 'mTagSum',
                         fromDatasetId: 'raw',
                         transform: {
-                            type: 'ecSimpleTransform:aggregate',
+                            type: 'aggregate',
                             config: {
-                                resultDimensions: [
+                                output: [
                                     { from: 'ATA', method: 'sum' },
                                     { from: 'STE', method: 'sum' },
                                     { from: 'CTZ', method: 'sum' },
@@ -183,10 +182,10 @@ under the License.
                         id: 'rawClusterCenters',
                         fromDatasetId: 'rawClusters',
                         transform: {
-                            type: 'ecSimpleTransform:aggregate',
+                            type: 'aggregate',
                             print: true,
                             config: {
-                                resultDimensions: [
+                                output: [
                                     { name: 'COUNT', from: 'ATA', method: 'count' },
                                     { from: 'CLUSTER_CENTER_ATA' },
                                     { from: 'CLUSTER_CENTER_STE' },

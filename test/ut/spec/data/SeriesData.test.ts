@@ -201,7 +201,7 @@ describe('SeriesData', function () {
         it('should guess ordinal correctly', function () {
             const source = createSource([['A', 15], ['B', 25], ['C', 35]], {
                 dimensions: ['A', 'B'],
-                seriesLayoutBy: null,
+                sourceLayout: null,
                 sourceHeader: false
             }, SOURCE_FORMAT_ORIGINAL);
             expect(source.dimensionsDefine[0].type).toEqual('ordinal');
@@ -220,7 +220,7 @@ describe('SeriesData', function () {
                 [['A', 15, 20, 'cat'], ['B', 25, 30, 'mouse'], ['C', 35, 40, 'dog']],
                 {
                     dimensions: null,
-                    seriesLayoutBy: null,
+                    sourceLayout: null,
                     sourceHeader: false
                 },
                 SOURCE_FORMAT_ARRAY_ROWS
@@ -369,7 +369,7 @@ describe('SeriesData', function () {
                         [ 80, 'c' ]
                     ],
                     {
-                        seriesLayoutBy: 'column',
+                        sourceLayout: 'column',
                         sourceHeader: 0,
                         dimensions: null
                     },
@@ -514,7 +514,7 @@ describe('SeriesData', function () {
                         [120, 'myId_better', null] // duplicated id.
                     ],
                     {
-                        seriesLayoutBy: 'column',
+                        sourceLayout: 'column',
                         sourceHeader: 0,
                         dimensions: null
                     },

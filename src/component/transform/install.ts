@@ -20,8 +20,12 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import {filterTransform} from './filterTransform';
 import {sortTransform} from './sortTransform';
+import {aggregateTransform} from './aggregateTransform';
+import { idTransform } from './idTransform';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerTransform(filterTransform);
     registers.registerTransform(sortTransform);
+    registers.registerTransform(aggregateTransform);
+    registers.registerTransform(idTransform);
 }

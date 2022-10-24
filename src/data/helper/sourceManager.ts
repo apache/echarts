@@ -26,7 +26,7 @@ import { SourceMetaRawOption, Source, createSource, cloneSourceShallow } from '.
 import {
     SeriesEncodableModel, OptionSourceData,
     SOURCE_FORMAT_TYPED_ARRAY, SOURCE_FORMAT_ORIGINAL,
-    SourceFormat, SeriesLayoutBy, OptionSourceHeader,
+    SourceFormat, SourceLayout, OptionSourceHeader,
     DimensionDefinitionLoose, Dictionary
 } from '../../util/types';
 import {
@@ -36,12 +36,13 @@ import { applyDataTransform } from './transform';
 import DataStore, { DataStoreDimensionDefine } from '../DataStore';
 import { DefaultDataProvider } from './dataProvider';
 import { SeriesDataSchema } from './SeriesDataSchema';
+import { deprecateReplaceLog } from '../../util/log';
 
 type DataStoreMap = Dictionary<DataStore>;
 
 /**
  * [REQUIREMENT_MEMO]:
- * (0) `metaRawOption` means `dimensions`/`sourceHeader`/`seriesLayoutBy` in raw option.
+ * (0) `metaRawOption` means `dimensions`/`sourceHeader`/`sourceLayout` in raw option.
  * (1) Keep support the feature: `metaRawOption` can be specified both on `series` and
  * `root-dataset`. Them on `series` has higher priority.
  * (2) Do not support to set `metaRawOption` on a `non-root-dataset`, because it might
@@ -85,7 +86,7 @@ type DataStoreMap = Dictionary<DataStore>;
  * series: {
  *     encode: {...},
  *     dimensions: [...]
- *     seriesLayoutBy: 'row',
+ *     sourceLayout: 'row',
  *     data: [[...]]
  * }
  * ```
@@ -97,7 +98,7 @@ type DataStoreMap = Dictionary<DataStore>;
  *     // and the dimensions defination in dataset is used
  * }, {
  *     encode: {...},
- *     seriesLayoutBy: 'column',
+ *     sourceLayout: 'column',
  *     datasetIndex: 1
  * }]
  * ```
@@ -228,21 +229,21 @@ export class SourceManager {
             // See [REQUIREMENT_MEMO], merge settings on series and parent dataset if it is root.
             const newMetaRawOption = this._getSourceMetaRawOption() || {} as SourceMetaRawOption;
             const upMetaRawOption = upSource && upSource.metaRawOption || {} as SourceMetaRawOption;
-            const seriesLayoutBy = retrieve2(newMetaRawOption.seriesLayoutBy, upMetaRawOption.seriesLayoutBy) || null;
+            const sourceLayout = retrieve2(newMetaRawOption.sourceLayout, upMetaRawOption.sourceLayout) || null;
             const sourceHeader = retrieve2(newMetaRawOption.sourceHeader, upMetaRawOption.sourceHeader);
             // Note here we should not use `upSource.dimensionsDefine`. Consider the case:
-            // `upSource.dimensionsDefine` is detected by `seriesLayoutBy: 'column'`,
-            // but series need `seriesLayoutBy: 'row'`.
+            // `upSource.dimensionsDefine` is detected by `sourceLayout: 'column'`,
+            // but series need `sourceLayout: 'row'`.
             const dimensions = retrieve2(newMetaRawOption.dimensions, upMetaRawOption.dimensions);
 
             // We share source with dataset as much as possible
             // to avoid extra memroy cost of high dimensional data.
-            const needsCreateSource = seriesLayoutBy !== upMetaRawOption.seriesLayoutBy
+            const needsCreateSource = sourceLayout !== upMetaRawOption.sourceLayout
                 || !!sourceHeader !== !!upMetaRawOption.sourceHeader
                 || dimensions;
             resultSourceList = needsCreateSource ? [createSource(
                 data,
-                { seriesLayoutBy, sourceHeader, dimensions },
+                { sourceLayout: sourceLayout, sourceHeader, dimensions },
                 sourceFormat
             )] : [];
         }
@@ -274,9 +275,7 @@ export class SourceManager {
         this._setLocalSource(resultSourceList, upstreamSignList);
     }
 
-    private _applyTransform(
-        upMgrList: SourceManager[]
-    ): {
+    private _applyTransform(upMgrList: SourceManager[]): {
         sourceList: Source[],
         upstreamSignList: string[]
     } {
@@ -446,22 +445,25 @@ export class SourceManager {
 
     private _getSourceMetaRawOption(): SourceMetaRawOption {
         const sourceHost = this._sourceHost;
-        let seriesLayoutBy: SeriesLayoutBy;
+        let sourceLayout: SourceLayout;
         let sourceHeader: OptionSourceHeader;
         let dimensions: DimensionDefinitionLoose[];
-        if (isSeries(sourceHost)) {
-            seriesLayoutBy = sourceHost.get('seriesLayoutBy', true);
-            sourceHeader = sourceHost.get('sourceHeader', true);
-            dimensions = sourceHost.get('dimensions', true);
+        if (isSeries(sourceHost)
+            // See [REQUIREMENT_MEMO], `non-root-dataset` do not support them.
+            || !this._getUpstreamSourceManagers().length
+        ) {
+            sourceLayout = (sourceHost as DatasetModel).get('sourceLayout', true);
+            sourceHeader = (sourceHost as DatasetModel).get('sourceHeader', true);
+            dimensions = (sourceHost as DatasetModel).get('dimensions', true);
+
+            if (sourceLayout == null) {
+                sourceLayout = (sourceHost as DatasetModel).get('seriesLayoutBy', true);
+                if (__DEV__ && sourceLayout) {
+                    deprecateReplaceLog('seriesLayoutBy', 'sourceLayout', 'dataset');
+                }
+            }
         }
-        // See [REQUIREMENT_MEMO], `non-root-dataset` do not support them.
-        else if (!this._getUpstreamSourceManagers().length) {
-            const model = sourceHost as DatasetModel;
-            seriesLayoutBy = model.get('seriesLayoutBy', true);
-            sourceHeader = model.get('sourceHeader', true);
-            dimensions = model.get('dimensions', true);
-        }
-        return { seriesLayoutBy, sourceHeader, dimensions };
+        return { sourceLayout: sourceLayout, sourceHeader, dimensions };
     }
 
 }

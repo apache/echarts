@@ -95,7 +95,7 @@ class PiePiece extends graphic.Sector {
                     }
                 }, seriesModel, idx);
             }
-            // Expansion
+            // Expansion.
             else {
                 if (startAngle != null) {
                     sector.setShape({ startAngle, endAngle: startAngle });

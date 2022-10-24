@@ -21,7 +21,7 @@
 import SeriesDimensionDefine from '@/src/data/SeriesDimensionDefine';
 import createDimensions from '@/src/data/helper/createDimensions';
 import { createSource } from '@/src/data/Source';
-import { SOURCE_FORMAT_ARRAY_ROWS, SERIES_LAYOUT_BY_COLUMN } from '@/src/util/types';
+import { SOURCE_FORMAT_ARRAY_ROWS, SOURCE_LAYOUT_BY_COLUMN } from '@/src/util/types';
 
 type ParametersOfCreateDimensions = Parameters<typeof createDimensions>;
 
@@ -71,7 +71,7 @@ describe('createDimensions', function () {
                 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
             ],
             {
-                seriesLayoutBy: SERIES_LAYOUT_BY_COLUMN,
+                sourceLayout: SOURCE_LAYOUT_BY_COLUMN,
                 sourceHeader: 0,
                 dimensions: void 0
             },
