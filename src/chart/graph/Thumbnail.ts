@@ -72,9 +72,9 @@ class Thumbnail {
         const itemStyle = model.getModel('itemStyle');
         this._height = model.get('height');
         this._width = model.get('width');
-        const selectedDataBackground = model.getModel('selectedDataBackgroundStyle').option;
-        const backgroundColor = itemStyle.getModel('backgroundColor');
-        const borderColor = itemStyle.getModel('borderColor');
+        const selectedDataBackground = model.get('selectedDataBackgroundStyle');
+        const backgroundColor = itemStyle.get('backgroundColor');
+        const borderColor = itemStyle.get('borderColor');
 
         this._layoutParams = {
             pos: {
@@ -127,8 +127,8 @@ class Thumbnail {
 
         const thumbnailWrapper = new graphic.Rect({
             style: {
-                stroke: borderColor.option,
-                fill: backgroundColor.option
+                stroke: borderColor,
+                fill: backgroundColor
             },
             shape: {
                 height: this._height,
@@ -170,7 +170,6 @@ class Thumbnail {
 
         this._selectedRect = new graphic.Rect({
             style: selectStyle,
-            shape: zrUtil.clone(thumbnailWrapper.shape),
             x: coordSys.x,
             y: coordSys.y,
             ignore: true,
@@ -191,7 +190,7 @@ class Thumbnail {
 
 
     _updateSelectedRect(type: 'zoom' | 'pan' | 'init') {
-        const getNewRect = () => {
+        const getNewRect = (min = false) => {
             const {height, width} = this._layoutParams.box;
             const origin = [0, 40];
             const end = [width, height];
@@ -210,24 +209,27 @@ class Thumbnail {
             rect.shape.width = newWidth;
             rect.shape.height = newHeight;
 
-            rect.dirty();
+            if (min === false) {
+                rect.dirty();
+            }
         };
         const rect = this._selectedRect;
 
         const {x: rMinX, y: rMinY, shape: {width: rWidth, height: rHeight}} = rect;
         const {x: wMinX, y: wMinY, shape: {width: wWidth, height: wHeight}} = this._wrapper;
 
-        const rMaxX = rMinX + rWidth;
-        const rMaxY = rMinY + rHeight;
-        const wMaxX = wMinX + wWidth;
-        const wMaxY = wMinY + wHeight;
+        const [rMaxX, rMaxY] = [rMinX + rWidth, rMinY + rHeight];
+        const [wMaxX, wMaxY] = [wMinX + wWidth, wMinY + wHeight];
 
         if (type === 'init') {
             rect.show();
             getNewRect();
             return;
         }
-
+        else if (type === 'zoom' && rWidth < wWidth / 10) {
+            getNewRect(true);
+            return;
+        }
         if (rMinX > wMinX && rMinY > wMinY && rMaxX < wMaxX && rMaxY < wMaxY) {
             this._selectedRect.show();
         }
