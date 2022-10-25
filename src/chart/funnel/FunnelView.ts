@@ -20,27 +20,21 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
+import FunnelSeriesModel, { FunnelDataItemOption } from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import {
     ColorString,
-    DimensionLoose,
     DisplayState,
     InterpolatableValue,
-    OptionDataValue,
     SeriesDataType
 } from '../../util/types';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { saveOldStyle } from '../../animation/basicTransition';
-import { formatTpl } from '../../util/format';
-import { error } from '../../util/log';
-import { retrieveRawValue } from '../../data/helper/dataProvider';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
-const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
 const rateLabelFetcher = {
     getFormattedLabel(
@@ -60,17 +54,6 @@ const rateLabelFetcher = {
         const { hostModel, layout } = this as unknown as { hostModel: FunnelSeriesModel, layout: any };
         const data = hostModel.getData(dataType);
 
-        const { rate, isLastPiece, nextName, preName } = layout;
-        const params = { ...hostModel.getDataParams(labelDataIndex), rate, isLastPiece, nextName, preName };
-
-        if (extendParams) {
-            params.value = extendParams.interpolatedValue;
-        }
-
-        if (labelDimIndex != null && zrUtil.isArray(params.value)) {
-            params.value = params.value[labelDimIndex];
-        }
-
         if (!formatter) {
             const itemModel = data.getItemModel(labelDataIndex);
             // @ts-ignore
@@ -78,46 +61,53 @@ const rateLabelFetcher = {
                 ? ['rateLabel', 'formatter']
                 : [status, 'rateLabel', 'formatter']
             );
-            if (!formatter) {
-                return;
-            }
         }
+
+        const { rate, isLastPiece, nextName, preName, preIndex, nextIndex } = layout;
+
+        if (isLastPiece) {
+            const itemModel = data.getItemModel(labelDataIndex);
+            // @ts-ignore
+            formatter = itemModel.get(status === 'normal'
+                ? ['overallRateLabel', 'formatter']
+                : [status, 'overallRateLabel', 'formatter']
+            );
+        }
+
+        type RateParams = {
+            rate: string,
+            preName : string,
+            nextName : string,
+            preIndex : string,
+            nextIndex : string,
+            isLastPiece : any,
+        };
+
+        const params: RateParams = {
+            rate, // a
+            preName, // b
+            nextName, // c
+            preIndex, // d
+            nextIndex, // e
+            isLastPiece
+        };
+
+        const maps = [
+            ['a', 'rate'],
+            ['b', 'preName'],
+            ['c', 'nextName'],
+            ['d', 'preIndex'],
+            ['e', 'nextIndex']
+        ];
+
         if (zrUtil.isFunction(formatter)) {
-            params.status = status;
-            params.dimensionIndex = labelDimIndex;
             return formatter(params);
         }
         else if (zrUtil.isString(formatter)) {
-            params.$vars.push('preName'); // e
-            params.$vars.push('nextName'); // f
-            params.$vars.push('rate'); // g
-            const str = formatTpl(formatter, params);
-            // Support 'aaa{@[3]}bbb{@product}ccc'.
-            // Do not support '}' in dim name util have to.
-            return str.replace(DIMENSION_LABEL_REG, function (origin, dimStr: string) {
-                const len = dimStr.length;
-
-                let dimLoose: DimensionLoose = dimStr;
-                if (dimLoose.charAt(0) === '[' && dimLoose.charAt(len - 1) === ']') {
-                    dimLoose = +dimLoose.slice(1, len - 1); // Also support: '[]' => 0
-                    if (__DEV__) {
-                        if (isNaN(dimLoose)) {
-                            error(`Invalide label formatter: @${dimStr}, only support @[0], @[1], @[2], ...`);
-                        }
-                    }
-                }
-
-                let val = retrieveRawValue(data, labelDataIndex, dimLoose) as OptionDataValue;
-
-                if (extendParams && zrUtil.isArray(extendParams.interpolatedValue)) {
-                    const dimIndex = data.getDimensionIndex(dimLoose);
-                    if (dimIndex >= 0) {
-                        val = extendParams.interpolatedValue[dimIndex];
-                    }
-                }
-
-                return val != null ? val + '' : '';
-            });
+            return maps.reduce(
+                (preStr, curMap) => preStr.replace('{' + curMap[0] + '}',
+                params[curMap[1] as keyof RateParams]), formatter
+            );
         }
         return '';
     }
@@ -374,7 +364,7 @@ class FunnelView extends ChartView {
         this._data = null;
     }
 
-    dispose() {}
+    dispose() { }
 }
 
 

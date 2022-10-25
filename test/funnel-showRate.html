@@ -86,12 +86,15 @@ under the License.
                         }
                     },
                     rateLabel: {
-                        formatter: '{e}-{f} {g}'
+                        formatter: '{b}-{c} {a}'
+                    },
+                    overallRateLabel:{
+                        formatter: 'Overall rate {a}'
                     },
                     data: [
                         { value: 60, name: '访问' },
                         { value: 40, name: '咨询' },
-                        { value: 20, name: '订单', rateLabel: { formatter: 'Overall rate {g}' } },
+                        { value: 20, name: '订单' },
                         { value: 80, name: '点击' },
                         { value: 100, name: '展现' }
                     ]

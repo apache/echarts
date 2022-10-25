@@ -60,6 +60,7 @@ export interface FunnelStateOption<TCbParams = never> {
     label?: FunnelLabelOption
     labelLine?: LabelLineOption
     rateLabel?: FunnelLabelOption
+    overallRateLabel?: FunnelLabelOption
 }
 
 export interface FunnelDataItemOption
