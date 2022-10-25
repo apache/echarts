@@ -165,6 +165,6 @@ var localeObj = {
     }
 };
 
-    echarts.registerLocale('UA', localeObj);
+    echarts.registerLocale('UK', localeObj);
         
 });
