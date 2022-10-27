@@ -18,7 +18,7 @@
 */
 
 import * as layout from '../../util/layout';
-import { parsePercent, linearMap } from '../../util/number';
+import {parsePercent, linearMap} from '../../util/number';
 import FunnelSeriesModel, { FunnelSeriesOption, FunnelDataItemOption } from './FunnelSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -446,7 +446,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             const getConverRate = (function () {
                 let firstVal: number;
                 let firstName: string;
-                let firstIndex: number;
+                let firstDataIndex: number;
                 // get rate fixed decimal places
                 const rateFixed = seriesModel.get('rateFixed');
                 return function (index: number, idx: number, nextIdx: number) {
@@ -454,14 +454,14 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     const nextVal = data.get(valueDim, nextIdx) as number || 0;
                     let preName = data.getName(idx);
                     let nextName = data.getName(nextIdx);
-                    let preIndex = idx;
-                    let nextIndex = nextIdx;
+                    let preDataIndex = idx;
+                    let nextDataIndex = nextIdx;
                     let rate: number | string = nextVal / val;
                     rate = (rate * 100).toFixed(rateFixed) + '%';
                     if (index === 0) {
                         firstVal = val;
                         firstName = data.getName(idx);
-                        firstIndex = idx;
+                        firstDataIndex = idx;
                     }
                     else if (index === indices.length - 1) {
                         const lastVal = val;
@@ -469,12 +469,12 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                         rate = (rate * 100).toFixed(rateFixed) + '%';
                         nextName = preName;
                         preName = firstName;
-                        preIndex = firstIndex;
-                        nextIndex = idx;
+                        preDataIndex = firstDataIndex;
+                        nextDataIndex = idx;
                     }
-                    preIndex = preIndex + 1;
-                    nextIndex = nextIndex + 1;
-                    return { rate, nextName, preName, preIndex, nextIndex };
+                    preDataIndex = preDataIndex + 1;
+                    nextDataIndex = nextDataIndex + 1;
+                    return { rate, nextName, preName, preDataIndex, nextDataIndex };
                 };
             })();
             setRatePiecePoint = function (
@@ -500,8 +500,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 const rateEnd = getLinePoints(pos + pieceHeight, nextSize);
 
                 // rate string about
-                const { rate, nextName, preName, preIndex, nextIndex } = getConverRate(index, idx, nextIdx);
-
+                const { rate, nextName, preName, preDataIndex, nextDataIndex } = getConverRate(index, idx, nextIdx);
                 data.setItemLayout(idx, {
                     points: dataStart.concat(dataEnd.slice().reverse()),
                     ratePoints: rateStart.concat(rateEnd.slice().reverse()),
@@ -509,8 +508,8 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     rate,
                     nextName,
                     preName,
-                    preIndex,
-                    nextIndex
+                    preDataIndex,
+                    nextDataIndex
                 });
             };
 

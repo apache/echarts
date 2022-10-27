@@ -86,10 +86,10 @@ under the License.
                         }
                     },
                     rateLabel: {
-                        formatter: '{b}-{c} {a}'
+                        formatter: ({ rate }) => 'rate ' + rate
                     },
-                    overallRateLabel:{
-                        formatter: 'Overall rate {a}'
+                    overallRateLabel: {
+                        formatter: ({ rate }) => 'Overall rate ' + rate
                     },
                     data: [
                         { value: 60, name: '访问' },

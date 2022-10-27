@@ -20,7 +20,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import FunnelSeriesModel, { FunnelDataItemOption } from './FunnelSeries';
+import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -63,7 +63,7 @@ const rateLabelFetcher = {
             );
         }
 
-        const { rate, isLastPiece, nextName, preName, preIndex, nextIndex } = layout;
+        const { rate, isLastPiece, nextName, preName, preDataIndex, nextDataIndex } = layout;
 
         if (isLastPiece) {
             const itemModel = data.getItemModel(labelDataIndex);
@@ -78,37 +78,22 @@ const rateLabelFetcher = {
             rate: string,
             preName : string,
             nextName : string,
-            preIndex : string,
-            nextIndex : string,
-            isLastPiece : any,
+            preDataIndex : string,
+            nextDataIndex : string,
         };
 
         const params: RateParams = {
             rate, // a
             preName, // b
             nextName, // c
-            preIndex, // d
-            nextIndex, // e
-            isLastPiece
+            preDataIndex, // d
+            nextDataIndex // e
         };
-
-        const maps = [
-            ['a', 'rate'],
-            ['b', 'preName'],
-            ['c', 'nextName'],
-            ['d', 'preIndex'],
-            ['e', 'nextIndex']
-        ];
 
         if (zrUtil.isFunction(formatter)) {
             return formatter(params);
         }
-        else if (zrUtil.isString(formatter)) {
-            return maps.reduce(
-                (preStr, curMap) => preStr.replace('{' + curMap[0] + '}',
-                params[curMap[1] as keyof RateParams]), formatter
-            );
-        }
+
         return '';
     }
 };
