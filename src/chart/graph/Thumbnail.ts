@@ -41,10 +41,6 @@ class Thumbnail {
     _wrapper: graphic.Rect;
 
     _coords: View;
-
-    _height: number;
-    _width: number;
-
     constructor(containerGroup: graphic.Group) {
         containerGroup.add(this.group);
         this._parent = containerGroup;
@@ -70,8 +66,8 @@ class Thumbnail {
         const zoom = seriesModel.get('zoom');
 
         const itemStyle = model.getModel('itemStyle');
-        this._height = model.get('height');
-        this._width = model.get('width');
+        const thumbnailHeight = model.get('height');
+        const thumbnailWidth = model.get('width');
         const selectedDataBackground = model.get('selectedDataBackgroundStyle');
         const backgroundColor = itemStyle.get('backgroundColor');
         const borderColor = itemStyle.get('borderColor');
@@ -131,8 +127,8 @@ class Thumbnail {
                 fill: backgroundColor
             },
             shape: {
-                height: this._height,
-                width: this._width
+                height: thumbnailHeight,
+                width: thumbnailWidth
             },
             z2: 150
         });
@@ -152,16 +148,24 @@ class Thumbnail {
 
         const viewRect = getViewRect(layoutParams, thumbnailWrapper.shape, boundingRect.width / boundingRect.height);
 
+        const scaleX = viewRect.width / boundingRect.width;
+        const scaleY = viewRect.height / boundingRect.height;
+        const offectX = (thumbnailWidth - boundingRect.width * scaleX) / 2;
+        const offectY = (thumbnailHeight - boundingRect.height * scaleY) / 2;
+
+
         coordSys.setViewRect(
-            thumbnailWrapper.x,
-            thumbnailWrapper.y,
+            thumbnailWrapper.x + offectX,
+            thumbnailWrapper.y + offectY,
             viewRect.width,
             viewRect.height
         );
 
         const groupNewProp = {
-            x: coordSys.x, y: coordSys.y,
-            scaleX: coordSys.scaleX, scaleY: coordSys.scaleY
+            x: coordSys.x,
+            y: coordSys.y,
+            scaleX,
+            scaleY
         };
 
         const selectStyle = zrUtil.extend({lineWidth: 1, stroke: 'black'}, selectedDataBackground);
@@ -230,7 +234,7 @@ class Thumbnail {
             getNewRect(true);
             return;
         }
-        if (rMinX > wMinX && rMinY > wMinY && rMaxX < wMaxX && rMaxY < wMaxY) {
+        if (rMinX > wMinX + 5 && rMinY > wMinY + 5 && rMaxX < wMaxX && rMaxY < wMaxY) {
             this._selectedRect.show();
         }
         else {
