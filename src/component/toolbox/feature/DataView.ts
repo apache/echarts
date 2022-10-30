@@ -324,6 +324,9 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
             api.dispatchAction({
                 type: 'hideTip'
             });
+            api.dispatchAction({
+                type: 'openDataView'
+            });
         });
 
         const container = api.getDom();
@@ -390,6 +393,9 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         function close() {
             container.removeChild(root);
             self._dom = null;
+            api.dispatchAction({
+                type: 'closeDataView'
+            });
         }
         addEventListener(closeButton, 'click', close);
 
@@ -533,5 +539,15 @@ echarts.registerAction({
         series: newSeriesOptList
     }, payload.newOption));
 });
+
+echarts.registerAction(
+    { type: 'openDataView', event: 'dataViewOpend' },
+    function noop() { }
+);
+
+echarts.registerAction(
+    { type: 'closeDataView', event: 'dataViewClosed' },
+    function noop() { }
+);
 
 export default DataView;
