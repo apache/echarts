@@ -48,6 +48,10 @@ type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
         | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
 
+type FunnelRateLabelOption = Omit<SeriesLabelOption, 'position'> & {
+    precision: number
+};
+
 interface FunnelStatesMixin {
     emphasis?: DefaultStatesMixinEmphasis
 }
@@ -59,8 +63,8 @@ export interface FunnelStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
     label?: FunnelLabelOption
     labelLine?: LabelLineOption
-    rateLabel?: FunnelLabelOption
-    overallRateLabel?: FunnelLabelOption
+    rateLabel?: FunnelRateLabelOption
+    overallRateLabel?: FunnelRateLabelOption
 }
 
 export interface FunnelDataItemOption
@@ -103,12 +107,6 @@ export interface FunnelSeriesOption
     showRate?: boolean
 
     dynamicHeight?: boolean
-
-    /**
-     * @param rateFixed determine how much decimal places rate will keep
-     */
-
-    rateFixed?: number
 }
 
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
@@ -188,7 +186,11 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         },
         rateLabel: {
             show: true,
-            position: 'center'
+            precision: 2
+        },
+        overallRateLabel: {
+            show: true,
+            precision: 2
         },
         labelLine: {
             show: true,
@@ -212,8 +214,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
             itemStyle: {
                 borderColor: '#212121'
             }
-        },
-        rateFixed: 0
+        }
     };
 
 }

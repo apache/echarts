@@ -28,9 +28,9 @@ import { isFunction } from 'zrender/src/core/util';
 function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
-        width: api.getWidth(),
-        height: api.getHeight()
-    }
+            width: api.getWidth(),
+            height: api.getHeight()
+        }
     );
 }
 
@@ -448,7 +448,8 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 let firstName: string;
                 let firstDataIndex: number;
                 // get rate fixed decimal places
-                const rateFixed = seriesModel.get('rateFixed');
+                const ratePrecision = seriesModel.get(['rateLabel', 'precision']);
+                const overallRatePrecision = seriesModel.get(['overallRateLabel', 'precision']);
                 return function (index: number, idx: number, nextIdx: number) {
                     const val = data.get(valueDim, idx) as number || 0;
                     const nextVal = data.get(valueDim, nextIdx) as number || 0;
@@ -457,7 +458,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     let preDataIndex = idx;
                     let nextDataIndex = nextIdx;
                     let rate: number | string = nextVal / val;
-                    rate = (rate * 100).toFixed(rateFixed) + '%';
+                    rate = (rate * 100).toFixed(ratePrecision) + '%';
                     if (index === 0) {
                         firstVal = val;
                         firstName = data.getName(idx);
@@ -466,7 +467,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     else if (index === indices.length - 1) {
                         const lastVal = val;
                         rate = lastVal / firstVal;
-                        rate = (rate * 100).toFixed(rateFixed) + '%';
+                        rate = (rate * 100).toFixed(overallRatePrecision) + '%';
                         nextName = preName;
                         preName = firstName;
                         preDataIndex = firstDataIndex;

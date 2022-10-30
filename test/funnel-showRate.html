@@ -86,10 +86,12 @@ under the License.
                         }
                     },
                     rateLabel: {
-                        formatter: ({ rate }) => 'rate ' + rate
+                        formatter: ({ rate }) => 'rate ' + rate,
                     },
                     overallRateLabel: {
-                        formatter: ({ rate }) => 'Overall rate ' + rate
+                        formatter: ({ rate }) => 'Overall rate ' + rate,
+                        precision: 0,
+                        color: 'red'
                     },
                     data: [
                         { value: 60, name: '访问' },

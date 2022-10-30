@@ -20,7 +20,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
-import FunnelSeriesModel, {FunnelDataItemOption} from './FunnelSeries';
+import FunnelSeriesModel, { FunnelDataItemOption } from './FunnelSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
@@ -76,10 +76,10 @@ const rateLabelFetcher = {
 
         type RateParams = {
             rate: string,
-            preName : string,
-            nextName : string,
-            preDataIndex : string,
-            nextDataIndex : string,
+            preName: string,
+            nextName: string,
+            preDataIndex: string,
+            nextDataIndex: string,
         };
 
         const params: RateParams = {
@@ -151,7 +151,7 @@ class FunnelPiece extends graphic.Polygon {
 
         if (firstCreate) {
             polygon.setShape({
-                points: points
+                points
             });
             polygon.style.opacity = 0;
             graphic.initProps(polygon, {
@@ -166,7 +166,7 @@ class FunnelPiece extends graphic.Polygon {
                     opacity: opacity
                 },
                 shape: {
-                    points: points
+                    points
                 }
             }, seriesModel, idx);
         }
@@ -204,11 +204,12 @@ class FunnelPiece extends graphic.Polygon {
                 )
             };
         }
+        const rateLabel = layout.isLastPiece ? 'overallRateLabel' : 'rateLabel';
 
         setLabelStyle(
             // position will not be used in setLabelStyle
             labelText,
-            getLabelStatesModels(itemModel, type === 'data' ? undefined : 'rateLabel'),
+            getLabelStatesModels(itemModel, type === 'data' ? undefined : rateLabel),
             {
                 labelFetcher: type === 'data' ? data.hostModel as FunnelSeriesModel : rateFetcher,
                 labelDataIndex: idx,
