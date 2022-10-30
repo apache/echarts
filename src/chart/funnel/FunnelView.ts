@@ -80,6 +80,7 @@ const rateLabelFetcher = {
             nextName: string,
             preDataIndex: string,
             nextDataIndex: string,
+            formatter: string | ((params: object) => string)
         };
 
         const params: RateParams = {
@@ -87,7 +88,8 @@ const rateLabelFetcher = {
             preName, // b
             nextName, // c
             preDataIndex, // d
-            nextDataIndex // e
+            nextDataIndex, // e
+            formatter
         };
 
         if (zrUtil.isFunction(formatter)) {

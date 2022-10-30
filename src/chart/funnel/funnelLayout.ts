@@ -488,7 +488,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 // get this size
                 const itemSize = getItemSize(idx);
                 let exitSize = itemSize;
-                if (exitWidth !== undefined && index === indices.length - 1) {
+                if (exitWidth != null && index === indices.length - 1) {
                     exitSize = itemSize * (exitWidth > 100 ? 100 : exitWidth) / 100;
                 }
                 // data piece
