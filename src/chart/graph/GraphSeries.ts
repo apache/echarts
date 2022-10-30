@@ -73,7 +73,6 @@ interface ThumbnailItemStyleOption extends ItemStyleOption {
     backgroundColor?: ZRColor
 }
 
-
 interface ExtraEmphasisState {
     focus?: DefaultEmphasisFocus | 'adjacency'
 }
@@ -236,25 +235,13 @@ export interface GraphSeriesOption
      */
     autoCurveness?: boolean | number | number[]
 
-    thumbnail?: {
+    thumbnail?: BoxLayoutOptionMixin & {
         show?: boolean,
-
-        top?: number | string,
-
-        bottom?: number | string,
-
-        left?: number | string,
-
-        right?: number | string,
-
-        height?: number,
-
-        width?: number,
 
         itemStyle?: ThumbnailItemStyleOption
 
         selectedDataBackgroundStyle?: PathStyleProps
-     }
+    }
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
@@ -543,9 +530,8 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             right: 0,
             bottom: 0,
 
-            height: 200,
-
-            width: 200,
+            height: '25%',
+            width: '25%',
 
             itemStyle: {
                 backgroundColor: 'white',
