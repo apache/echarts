@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
@@ -37,6 +36,9 @@ import SeriesData from '../../data/SeriesData';
 import Line from '../helper/Line';
 import { getECData } from '../../util/innerStore';
 import Thumbnail from './Thumbnail';
+
+import { simpleLayoutEdge } from './simpleLayoutHelper';
+import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -61,9 +63,7 @@ class GraphView extends ChartView {
 
     private _layouting: boolean;
 
-    private _thumbanil: Thumbnail;
-
-    private _isForceLayout = false;
+    private _thumbnail: Thumbnail;
 
     private _mainGroup: graphic.Group;
 
@@ -91,6 +91,7 @@ class GraphView extends ChartView {
 
     render(seriesModel: GraphSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const coordSys = seriesModel.coordinateSystem;
+        let isForceLayout = false;
 
         this._model = seriesModel;
 
@@ -126,9 +127,11 @@ class GraphView extends ChartView {
         const forceLayout = seriesModel.forceLayout;
         const layoutAnimation = seriesModel.get(['force', 'layoutAnimation']);
         if (forceLayout) {
-            this._isForceLayout = true;
+            isForceLayout = true;
             this._startForceLayoutIteration(forceLayout, api, layoutAnimation);
         }
+
+        const layout = seriesModel.get('layout');
 
         data.graph.eachNode((node) => {
             const idx = node.dataIndex;
@@ -143,14 +146,31 @@ class GraphView extends ChartView {
             el.off('drag').off('dragend');
             const draggable = itemModel.get('draggable');
             if (draggable) {
-                el.on('drag', () => {
-                    if (forceLayout) {
-                        forceLayout.warmUp();
-                        !this._layouting
-                            && this._startForceLayoutIteration(forceLayout, api, layoutAnimation);
-                        forceLayout.setFixed(idx);
-                        // Write position back to layout
-                        data.setItemLayout(idx, [el.x, el.y]);
+                el.on('drag', (e) => {
+                    switch (layout) {
+                        case 'force':
+                            forceLayout.warmUp();
+                            !this._layouting
+                                && this._startForceLayoutIteration(forceLayout, api, layoutAnimation);
+                            forceLayout.setFixed(idx);
+                            // Write position back to layout
+                            data.setItemLayout(idx, [el.x, el.y]);
+                            break;
+                        case 'circular':
+                            data.setItemLayout(idx, [el.x, el.y]);
+                            // mark node fixed
+                            node.setLayout({ fixed: true }, true);
+                            // recalculate circular layout
+                            circularLayout(seriesModel, 'symbolSize', node, [e.offsetX, e.offsetY]);
+                            this.updateLayout(seriesModel);
+                            break;
+                        case 'none':
+                        default:
+                            data.setItemLayout(idx, [el.x, el.y]);
+                            // update edge
+                            simpleLayoutEdge(seriesModel.getGraph(), seriesModel);
+                            this.updateLayout(seriesModel);
+                            break;
                     }
                 }).on('dragend', () => {
                     if (forceLayout) {
@@ -187,41 +207,12 @@ class GraphView extends ChartView {
             && seriesModel.get(['circular', 'rotateLabel']);
         const cx = data.getLayout('cx');
         const cy = data.getLayout('cy');
-        data.eachItemGraphicEl(function (el: Symbol, idx) {
-            const itemModel = data.getItemModel<GraphNodeItemOption>(idx);
-            let labelRotate = itemModel.get(['label', 'rotate']) || 0;
-            const symbolPath = el.getSymbolPath();
-            if (circularRotateLabel) {
-                const pos = data.getItemLayout(idx);
-                let rad = Math.atan2(pos[1] - cy, pos[0] - cx);
-                if (rad < 0) {
-                    rad = Math.PI * 2 + rad;
-                }
-                const isLeft = pos[0] < cx;
-                if (isLeft) {
-                    rad = rad - Math.PI;
-                }
-                const textPosition = isLeft ? 'left' as const : 'right' as const;
-
-                symbolPath.setTextConfig({
-                    rotation: -rad,
-                    position: textPosition,
-                    origin: 'center'
-                });
-                const emphasisState = symbolPath.ensureState('emphasis');
-                zrUtil.extend(emphasisState.textConfig || (emphasisState.textConfig = {}), {
-                    position: textPosition
-                });
-            }
-            else {
-                symbolPath.setTextConfig({
-                    rotation: labelRotate *= Math.PI / 180
-                });
-            }
+        data.graph.eachNode((node) => {
+            rotateNodeLabel(node, circularRotateLabel, cx, cy);
         });
 
         this._firstRender = false;
-        this._isForceLayout || this._renderThumbnail(seriesModel, api);
+        isForceLayout || this._renderThumbnail(seriesModel, api, this._symbolDraw, this._lineDraw);
     }
 
     dispose() {
@@ -238,8 +229,7 @@ class GraphView extends ChartView {
         (function step() {
             forceLayout.step(function (stopped) {
                 if (stopped) {
-                    self._isForceLayout = false;
-                    self._renderThumbnail(self._model, api);
+                    self._renderThumbnail(self._model, api, self._symbolDraw, self._lineDraw);
                 }
                 self.updateLayout(self._model);
                 (self._layouting = !stopped) && (
@@ -286,7 +276,7 @@ class GraphView extends ChartView {
                     dx: e.dx,
                     dy: e.dy
                 });
-                this._thumbanil._updateSelectedRect('pan');
+                this._thumbnail._updateSelectedRect('pan');
             })
             .on('zoom', (e) => {
                 roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
@@ -302,7 +292,7 @@ class GraphView extends ChartView {
                 this._lineDraw.updateLayout();
                 // Only update label layout on zoom
                 api.updateLabelLayout();
-                this._thumbanil._updateSelectedRect('zoom');
+                this._thumbnail._updateSelectedRect('zoom');
             });
     }
 
@@ -327,14 +317,19 @@ class GraphView extends ChartView {
     remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
-        this._thumbanil && this.group.remove(this._thumbanil.group);
+        this._thumbnail && this.group.remove(this._thumbnail.group);
     }
 
-    private _renderThumbnail(seriesModel: GraphSeriesModel, api: ExtensionAPI) {
-        if (this._thumbanil) {
-            this._thumbanil.remove();
+    private _renderThumbnail(
+        seriesModel: GraphSeriesModel,
+        api: ExtensionAPI,
+        symbolDraw: SymbolDraw,
+        lineDraw: LineDraw
+    ) {
+        if (this._thumbnail) {
+            this.group.remove(this._thumbnail.group);
         }
-        (this._thumbanil = new Thumbnail(this.group)).render(seriesModel, api);
+        (this._thumbnail = new Thumbnail(this.group)).render(seriesModel, api, symbolDraw, lineDraw, this._mainGroup);
     }
 }
 

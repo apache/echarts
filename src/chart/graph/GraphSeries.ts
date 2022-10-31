@@ -55,7 +55,6 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -67,10 +66,6 @@ interface GraphEdgeLineStyleOption extends LineStyleOption {
 export interface GraphNodeStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
-}
-
-interface ThumbnailItemStyleOption extends ItemStyleOption {
-    backgroundColor?: ZRColor
 }
 
 interface ExtraEmphasisState {
@@ -238,9 +233,9 @@ export interface GraphSeriesOption
     thumbnail?: BoxLayoutOptionMixin & {
         show?: boolean,
 
-        itemStyle?: ThumbnailItemStyleOption
+        itemStyle?: ItemStyleOption
 
-        selectedDataBackgroundStyle?: PathStyleProps
+        selectedAreaStyle?: ItemStyleOption
     }
 }
 
@@ -534,12 +529,14 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             width: '25%',
 
             itemStyle: {
-                backgroundColor: 'white',
+                color: 'white',
                 borderColor: 'black'
             },
 
-            selectedDataBackgroundStyle: {
-                fill: 'white',
+            selectedAreaStyle: {
+                color: 'white',
+                borderColor: 'black',
+                borderWidth: 1,
                 opacity: 0.5
             }
         }
