@@ -43,7 +43,8 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ZRColor
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -66,7 +67,6 @@ export interface GraphNodeStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
-
 
 interface ExtraEmphasisState {
     focus?: DefaultEmphasisFocus | 'adjacency'
@@ -229,6 +229,14 @@ export interface GraphSeriesOption
      * auto curveness for multiple edge, invalid when `lineStyle.curveness` is set
      */
     autoCurveness?: boolean | number | number[]
+
+    thumbnail?: BoxLayoutOptionMixin & {
+        show?: boolean,
+
+        itemStyle?: ItemStyleOption
+
+        selectedAreaStyle?: ItemStyleOption
+    }
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
@@ -508,6 +516,28 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         select: {
             itemStyle: {
                 borderColor: '#212121'
+            }
+        },
+
+        thumbnail: {
+            show: false,
+
+            right: 0,
+            bottom: 0,
+
+            height: '25%',
+            width: '25%',
+
+            itemStyle: {
+                color: 'white',
+                borderColor: 'black'
+            },
+
+            selectedAreaStyle: {
+                color: 'white',
+                borderColor: 'black',
+                borderWidth: 1,
+                opacity: 0.5
             }
         }
     };
