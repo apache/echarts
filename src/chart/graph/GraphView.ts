@@ -334,3 +334,4 @@ class GraphView extends ChartView {
 }
 
 export default GraphView;
+
