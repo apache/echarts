@@ -30,6 +30,8 @@ import { addEventListener } from 'zrender/src/core/event';
 import Axis from '../../../coord/Axis';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import { warn } from '../../../util/log';
+// eslint-disable-next-line no-duplicate-imports
+import { noop } from 'zrender/src/core/util';
 
 /* global document */
 
@@ -325,7 +327,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
                 type: 'hideTip'
             });
             api.dispatchAction({
-                type: 'openDataView'
+                type: 'showDataView'
             });
         });
 
@@ -394,7 +396,7 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
             container.removeChild(root);
             self._dom = null;
             api.dispatchAction({
-                type: 'closeDataView'
+                type: 'hideDataView'
             });
         }
         addEventListener(closeButton, 'click', close);
@@ -541,13 +543,13 @@ echarts.registerAction({
 });
 
 echarts.registerAction(
-    { type: 'openDataView', event: 'dataViewOpend' },
-    function noop() { }
+    { type: 'showDataView', event: 'dataViewShowed' },
+    noop
 );
 
 echarts.registerAction(
-    { type: 'closeDataView', event: 'dataViewClosed' },
-    function noop() { }
+    { type: 'hideDataView', event: 'dataViewHidden' },
+    noop
 );
 
 export default DataView;

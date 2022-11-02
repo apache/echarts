@@ -44,19 +44,19 @@
             ]
         };
 
+        chart.setOption(option);
+
         chart.on('dataViewChanged', function (params) {
             console.log('dataViewChanged', params)
         });
 
-        chart.on('dataViewOpend', function (params) {
-            console.log('dataViewOpend', params)
+        chart.on('dataViewShowed', function (params) {
+            console.log('dataViewShowed', params)
         });
 
-        chart.on('dataViewClosed', function (params) {
-            console.log('dataViewClosed', params)
+        chart.on('dataViewHidden', function (params) {
+            console.log('dataViewHidden', params)
         });
-
-        chart.setOption(option);
     </script>
 </body>
 
