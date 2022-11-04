@@ -91,7 +91,7 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     boundaryGap?: [number | string, number | string]
 
     /**
-     * AxisTick and axisLabel and splitLine are caculated based on splitNumber.
+     * AxisTick and axisLabel and splitLine are calculated based on splitNumber.
      */
     splitNumber?: number;
     /**
@@ -128,7 +128,7 @@ export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
     })[];
     /*
      * Set false to faster category collection.
-     * Only usefull in the case like: category is
+     * Only useful in the case like: category is
      * ['2012-01-01', '2012-01-02', ...], where the input
      * data has been ensured not duplicate and is large data.
      * null means "auto":

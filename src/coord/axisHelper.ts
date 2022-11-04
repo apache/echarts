@@ -147,7 +147,7 @@ function adjustScaleForOverflow(
 }
 
 // Precondition of calling this method:
-// The scale extent has been initailized using series data extent via
+// The scale extent has been initialized using series data extent via
 // `scale.setExtent` or `scale.unionExtentFromData`;
 export function niceScaleExtent(
     scale: Scale,
