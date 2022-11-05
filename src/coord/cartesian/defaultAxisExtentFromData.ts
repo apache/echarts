@@ -141,7 +141,7 @@ function calculateFilteredExtent(
         let tarAxisRecord: AxisRecord;
 
         function addCondition(axis: Axis, axisRecord: AxisRecord) {
-            // But for simplicity and safty and performance, we only adopt this
+            // But for simplicity and safety and performance, we only adopt this
             // feature on category axis at present.
             const condExtent = axisRecord.condExtent;
             const rawExtentResult = axisRecord.rawExtentResult;

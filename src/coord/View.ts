@@ -310,7 +310,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * @return {number}
      */
     // getScalarScale() {
-    //     // Use determinant square root of transform to mutiply scalar
+    //     // Use determinant square root of transform to multiply scalar
     //     let m = this.transform;
     //     let det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
     //     return det;
