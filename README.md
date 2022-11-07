@@ -45,6 +45,8 @@ Execute the instructions in the root directory of the echarts:
 npm install
 
 # Rebuild source code immediately in watch mode when changing the source code.
+# It will start a server with './test' at http://127.0.0.1:8080.
+# Open http://127.0.0.1:8080/-cases.html to view the list of test cases.
 npm run dev
 
 # Check correctness of TypeScript code.
