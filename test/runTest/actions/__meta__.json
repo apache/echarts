@@ -188,6 +188,7 @@
   "tooltip-axisPointer2": 2,
   "tooltip-cascade": 4,
   "tooltip-component": 6,
+  "tooltip-domnode": 1,
   "tooltip-event": 1,
   "tooltip-link": 2,
   "tooltip-rich": 1,
