@@ -17,19 +17,19 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import * as textContain from 'zrender/src/contain/text';
-import {makeInner} from '../util/model';
+import * as zrUtil from 'zrender/src/core/util';
+import Model from '../model/Model';
+import OrdinalScale from '../scale/Ordinal';
+import { makeInner } from '../util/model';
+import Axis from './Axis';
+import { AxisBaseModel } from './AxisBaseModel';
+import { AxisBaseOption } from './axisCommonTypes';
 import {
-    makeLabelFormatter,
     getOptionCategoryInterval,
+    makeLabelFormatter,
     shouldShowAllLabels
 } from './axisHelper';
-import Axis from './Axis';
-import Model from '../model/Model';
-import { AxisBaseOption } from './axisCommonTypes';
-import OrdinalScale from '../scale/Ordinal';
-import { AxisBaseModel } from './AxisBaseModel';
 import type Axis2D from './cartesian/Axis2D';
 
 type CacheKey = string | number;
@@ -216,6 +216,22 @@ function makeAutoCategoryInterval(axis: Axis) {
         : (inner(axis).autoInterval = axis.calculateCategoryInterval());
 }
 
+function getWrappedLabelRect(
+    params: ReturnType<typeof fetchAutoCategoryIntervalCalculationParams>,
+    height: number,
+    width: number) {
+    const labelWidth = params.width;
+    if (labelWidth) {
+        // label text may be wrapped into multiple lines
+        if (params.overflow?.startsWith('break')) {
+            // 1.3 is the magic number, it may be the line height ratio?
+            height = Math.ceil(width / labelWidth) * (height / 1.3);
+        }
+        width = labelWidth;
+    }
+    return { height, width };
+}
+
 /**
  * Calculate interval for category axis ticks and labels.
  * To get precise result, at least one of `getRotate` and `isHorizontal`
@@ -259,11 +275,14 @@ export function calculateCategoryInterval(axis: Axis) {
         // Not precise, do not consider align and vertical align
         // and each distance from axis line yet.
         const rect = textContain.getBoundingRect(
-            labelFormatter({ value: tickValue }), params.font, 'center', 'top'
+          labelFormatter({ value: tickValue }), params.font, 'center', 'top'
         );
         // Magic number
         width = rect.width * 1.3;
         height = rect.height * 1.3;
+        const wrappedRect = getWrappedLabelRect(params, height, width);
+        height = wrappedRect.height;
+        width = wrappedRect.width;
 
         // Min size, void long loop.
         maxW = Math.max(maxW, width, 7);
@@ -316,14 +335,17 @@ export function calculateCategoryInterval(axis: Axis) {
 
 function fetchAutoCategoryIntervalCalculationParams(axis: Axis) {
     const labelModel = axis.getLabelModel();
+    let labelWidth = +(labelModel.get('width'));
     return {
         axisRotate: axis.getRotate
-            ? axis.getRotate()
-            : ((axis as Axis2D).isHorizontal && !(axis as Axis2D).isHorizontal())
+          ? axis.getRotate()
+          : ((axis as Axis2D).isHorizontal && !(axis as Axis2D).isHorizontal())
             ? 90
             : 0,
         labelRotate: labelModel.get('rotate') || 0,
-        font: labelModel.getFont()
+        font: labelModel.getFont(),
+        width: isFinite(labelWidth) ? labelWidth : null,
+        overflow: labelModel.get('overflow')
     };
 }
 
