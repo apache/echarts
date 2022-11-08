@@ -43,6 +43,7 @@ type CandlestickDataValue = OptionDataValue[];
 interface CandlestickItemStyleOption extends ItemStyleOption {
     color0?: ZRColor
     borderColor0?: ColorString
+    borderColorDoji?: ZRColor
 }
 export interface CandlestickStateOption {
     itemStyle?: CandlestickItemStyleOption
@@ -116,6 +117,7 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
             color0: '#47b262', // negative
             borderColor: '#eb5454',
             borderColor0: '#47b262',
+            borderColorDoji: null, // when close === open
             // borderColor: '#d24040',
             // borderColor0: '#398f4f',
             borderWidth: 1

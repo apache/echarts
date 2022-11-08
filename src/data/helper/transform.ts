@@ -143,7 +143,7 @@ export class ExternalSource {
     /**
      * Only support by dimension index.
      * No need to support by dimension name in transform function,
-     * becuase transform function is not case-specific, no need to use name literally.
+     * because transform function is not case-specific, no need to use name literally.
      */
     retrieveValue(dataIndex: number, dimIndex: DimensionIndex): OptionDataValue {
         return;
@@ -180,8 +180,8 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
     // [MEMO]
     // Create a new dimensions structure for exposing.
     // Do not expose all dimension info to users directly.
-    // Becuase the dimension is probably auto detected from data and not might reliable.
-    // Should not lead the transformers to think that is relialbe and return it.
+    // Because the dimension is probably auto detected from data and not might reliable.
+    // Should not lead the transformers to think that is reliable and return it.
     // See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
     const dimensions = [] as ExternalDimensionDefinition[];
     const dimsByName = {} as Dictionary<ExternalDimensionDefinition>;
@@ -505,7 +505,7 @@ function applySingleDataTransform(
             && !result.dimensions
         ) {
             const startIndex = firstUpSource.startIndex;
-            // We copy the header of upstream to the result becuase:
+            // We copy the header of upstream to the result, because:
             // (1) The returned data always does not contain header line and can not be used
             // as dimension-detection. In this case we can not use "detected dimensions" of
             // upstream directly, because it might be detected based on different `seriesLayoutBy`.

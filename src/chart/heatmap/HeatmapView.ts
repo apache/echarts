@@ -33,7 +33,7 @@ import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../u
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import Element from 'zrender/src/Element';
+import type Element from 'zrender/src/Element';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -94,7 +94,7 @@ function getIsInContinuousRange(dataExtent: number[], range: number[]) {
 
 function isGeoCoordSys(coordSys: CoordinateSystem): coordSys is GeoLikeCoordSys {
     const dimensions = coordSys.dimensions;
-    // Not use coorSys.type === 'geo' because coordSys maybe extended
+    // Not use coordSys.type === 'geo' because coordSys maybe extended
     return dimensions[0] === 'lng' && dimensions[1] === 'lat';
 }
 
@@ -235,6 +235,8 @@ class HeatmapView extends ChartView {
 
                 // Ignore empty data and out of extent data
                 if (isNaN(data.get(dataDims[2], idx) as number)
+                    || isNaN(dataDimX as number)
+                    || isNaN(dataDimY as number)
                     || dataDimX < xAxisExtent[0]
                     || dataDimX > xAxisExtent[1]
                     || dataDimY < yAxisExtent[0]
@@ -271,7 +273,7 @@ class HeatmapView extends ChartView {
                 });
             }
 
-            // Optimization for large datset
+            // Optimization for large dataset
             if (data.hasItemOption) {
                 const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');

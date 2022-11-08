@@ -127,7 +127,7 @@ class OptionManager {
             // the mapping can not be 100% consistent with ecModel, which probably brings
             // potential bug!
 
-            // The first merge is delayed, becuase in most cases, users do not call `setOption` twice.
+            // The first merge is delayed, because in most cases, users do not call `setOption` twice.
             // let fakeCmptsMap = this._fakeCmptsMap;
             // if (!fakeCmptsMap) {
             //     fakeCmptsMap = this._fakeCmptsMap = createHashMap();
@@ -140,7 +140,7 @@ class OptionManager {
 
             // For simplicity, timeline options and media options do not support merge,
             // that is, if you `setOption` twice and both has timeline options, the latter
-            // timeline opitons will not be merged to the formers, but just substitude them.
+            // timeline options will not be merged to the former, but just substitute them.
             if (newParsedOption.timelineOptions.length) {
                 optionBackup.timelineOptions = newParsedOption.timelineOptions;
             }
@@ -392,10 +392,10 @@ function applyMediaQuery(query: MediaQuery, ecWidth: number, ecHeight: number): 
     const realMap = {
         width: ecWidth,
         height: ecHeight,
-        aspectratio: ecWidth / ecHeight // lowser case for convenientce.
+        aspectratio: ecWidth / ecHeight // lower case for convenience.
     };
 
-    let applicatable = true;
+    let applicable = true;
 
     each(query, function (value: number, attr) {
         const matched = attr.match(QUERY_REG);
@@ -408,11 +408,11 @@ function applyMediaQuery(query: MediaQuery, ecWidth: number, ecHeight: number): 
         const realAttr = matched[2].toLowerCase();
 
         if (!compare(realMap[realAttr as keyof typeof realMap], value, operator)) {
-            applicatable = false;
+            applicable = false;
         }
     });
 
-    return applicatable;
+    return applicable;
 }
 
 function compare(real: number, expect: number, operator: string): boolean {
@@ -449,9 +449,9 @@ function indicesEquals(indices1: number[], indices2: number[]): boolean {
  * this might be the only simple way to implement that feature.
  *
  * MEMO: We've considered some other approaches:
- * 1. Each model handle its self restoration but not uniform treatment.
+ * 1. Each model handles its self restoration but not uniform treatment.
  *     (Too complex in logic and error-prone)
- * 2. Use a shadow ecModel. (Performace expensive)
+ * 2. Use a shadow ecModel. (Performance expensive)
  *
  * FIXME: A possible solution:
  * Add a extra level of model for each component model. The inheritance chain would be:

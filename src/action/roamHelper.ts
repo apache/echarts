@@ -22,7 +22,7 @@ import type View from '../coord/View';
 import type ExtensionAPI from '../core/ExtensionAPI';
 import type { Payload } from '../util/types';
 
-export interface RoamPaylod extends Payload {
+export interface RoamPayload extends Payload {
     dx: number
     dy: number
     zoom: number
@@ -39,7 +39,7 @@ function getCenterCoord(view: View, point: number[]) {
 
 export function updateCenterAndZoom(
     view: View,
-    payload: RoamPaylod,
+    payload: RoamPayload,
     zoomLimit?: {
         min?: number,
         max?: number

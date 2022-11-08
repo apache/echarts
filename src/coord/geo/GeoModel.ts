@@ -81,9 +81,9 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // This parameter is used for scale this aspect
     aspectScale?: number;
 
-    ///// Layout with center and size
-    // If you wan't to put map in a fixed size box with right aspect ratio
-    // This two properties may more conveninet
+    // Layout with center and size
+    // If you want to put map in a fixed size box with right aspect ratio
+    // This two properties may be more convenient
     // Like: `40` or `'50%'`.
     layoutCenter?: (number | string)[];
     // Like: `40` or `'50%'`.
@@ -156,9 +156,9 @@ class GeoModel extends ComponentModel<GeoOption> {
         // for geoJSON source: 0.75.
         aspectScale: null,
 
-        ///// Layout with center and size
-        // If you wan't to put map in a fixed size box with right aspect ratio
-        // This two properties may more conveninet
+        // /// Layout with center and size
+        // If you want to put map in a fixed size box with right aspect ratio
+        // This two properties may be more convenient
         // layoutCenter: [50%, 50%]
         // layoutSize: 100
 

@@ -357,7 +357,7 @@ export type OrdinalNumber = number; // The number mapped from each OrdinalRawVal
  * ```js
  * { ordinalNumbers: [2, 5, 3, 4] }
  * ```
- * means that ordinal 2 should be diplayed on tick 0,
+ * means that ordinal 2 should be displayed on tick 0,
  * ordinal 5 should be displayed on tick 1, ...
  */
 export type OrdinalSortInfo = {
@@ -411,7 +411,7 @@ export interface OrdinalScaleTick extends ScaleTick {
      * const coord = dataToCoord(ordinalScale.getRawOrdinalNumber(tick.value)).
      * ```
      * Why place the tick value here rather than the raw ordinal value (like LogScale did)?
-     * Becuase ordinal scale sort is the different case from LogScale, where
+     * Because ordinal scale sort is the different case from LogScale, where
      * axis tick, splitArea should better not to be sorted, especially in
      * anid(animation id) when `boundaryGap: true`.
      * Only axis label are sorted.
@@ -758,7 +758,8 @@ export type ComponentLayoutMode = {
     type?: 'box',
     ignoreSize?: boolean | boolean[]
 };
-/******************* Mixins for Common Option Properties   ********************** */
+
+// ------------------ Mixins for Common Option Properties ------------------
 export type PaletteOptionMixin = ColorPaletteOptionMixin;
 
 export interface ColorPaletteOptionMixin {
@@ -1113,12 +1114,12 @@ export interface SeriesLineLabelOption extends LineLabelOption {
 export interface LabelLayoutOptionCallbackParams {
     /**
      * Index of data which the label represents.
-     * It can be null if label does't represent any data.
+     * It can be null if label doesn't represent any data.
      */
     dataIndex?: number,
     /**
      * Type of data which the label represents.
-     * It can be null if label does't represent any data.
+     * It can be null if label doesn't represent any data.
      */
     dataType?: SeriesDataType,
     seriesIndex: number,
@@ -1374,7 +1375,7 @@ export interface CommonAxisPointerOption {
     triggerTooltip?: boolean
 
     /**
-     * current value. When using axisPointer.handle, value can be set to define the initail position of axisPointer.
+     * current value. When using axisPointer.handle, value can be set to define the initial position of axisPointer.
      */
     value?: ScaleDataValue
 

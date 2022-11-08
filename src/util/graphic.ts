@@ -268,16 +268,14 @@ export function resizePath(path: SVGPath, rect: ZRRectLike): void {
 /**
  * Sub pixel optimize line for canvas
  */
-export function subPixelOptimizeLine(param: {
+export function subPixelOptimizeLine(
     shape: {
         x1: number, y1: number, x2: number, y2: number
     },
-    style: {
-        lineWidth: number
-    }
-}) {
-    subPixelOptimizeUtil.subPixelOptimizeLine(param.shape, param.shape, param.style);
-    return param;
+    lineWidth: number
+) {
+    subPixelOptimizeUtil.subPixelOptimizeLine(shape, shape, {lineWidth});
+    return shape;
 }
 
 /**
@@ -529,7 +527,7 @@ export function lineLineIntersect(
     const ny = b2y - b1y;
 
     // `vec_m` and `vec_n` are parallel iff
-    //     exising `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
+    //     existing `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
     const nmCrossProduct = crossProduct2d(nx, ny, mx, my);
     if (nearZero(nmCrossProduct)) {
         return false;

@@ -20,12 +20,13 @@
 import * as zrUtil from 'zrender/src/core/util';
 import VisualMapping from '../../visual/VisualMapping';
 import GlobalModel from '../../model/Global';
-import SankeySeriesModel, { SankeyNodeItemOption } from './SankeySeries';
+import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
 
 export default function sankeyVisual(ecModel: GlobalModel) {
     ecModel.eachSeriesByType('sankey', function (seriesModel: SankeySeriesModel) {
         const graph = seriesModel.getGraph();
         const nodes = graph.nodes;
+        const edges = graph.edges;
         if (nodes.length) {
             let minValue = Infinity;
             let maxValue = -Infinity;
@@ -57,6 +58,12 @@ export default function sankeyVisual(ecModel: GlobalModel) {
                     node.setVisual('color', mapValueToColor);
                     node.setVisual('style', {fill: mapValueToColor});
                 }
+            });
+        }
+        if (edges.length) {
+            zrUtil.each(edges, function (edge) {
+                const edgeStyle = edge.getModel<SankeyEdgeItemOption>().get('lineStyle');
+                edge.setVisual('style', edgeStyle);
             });
         }
     });

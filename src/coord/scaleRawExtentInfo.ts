@@ -80,7 +80,7 @@ export class ScaleRawExtentInfo {
     }
 
     /**
-     * Parameters depending on ouside (like model, user callback)
+     * Parameters depending on outside (like model, user callback)
      * are prepared and fixed here.
      */
     private _prepareParams(
@@ -100,7 +100,7 @@ export class ScaleRawExtentInfo {
 
         const modelMinRaw = this._modelMinRaw = model.get('min', true);
         if (isFunction(modelMinRaw)) {
-            // This callback alway provide users the full data extent (before data filtered).
+            // This callback always provides users the full data extent (before data is filtered).
             this._modelMinNum = parseAxisModelMinMax(scale, modelMinRaw({
                 min: dataExtent[0],
                 max: dataExtent[1]
@@ -112,7 +112,7 @@ export class ScaleRawExtentInfo {
 
         const modelMaxRaw = this._modelMaxRaw = model.get('max', true);
         if (isFunction(modelMaxRaw)) {
-            // This callback alway provide users the full data extent (before data filtered).
+            // This callback always provides users the full data extent (before data is filtered).
             this._modelMaxNum = parseAxisModelMinMax(scale, modelMaxRaw({
                 min: dataExtent[0],
                 max: dataExtent[1]
@@ -285,7 +285,7 @@ const DATA_MIN_MAX_ATTR = { min: '_dataMin', max: '_dataMax' } as const;
  * (3) `coordSys.update` use it to finally decide the scale extent.
  * But the callback of `min`/`max` should not be called multiple times.
  * The code below should not be implemented repeatedly either.
- * So we cache the result in the scale instance, which will be recreated at the begining
+ * So we cache the result in the scale instance, which will be recreated at the beginning
  * of the workflow (because `scale` instance will be recreated each round of the workflow).
  */
 export function ensureScaleRawExtentInfo(

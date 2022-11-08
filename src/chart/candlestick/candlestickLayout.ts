@@ -22,7 +22,7 @@ import createRenderPlanner from '../helper/createRenderPlanner';
 import {parsePercent} from '../../util/number';
 import {map, retrieve2} from 'zrender/src/core/util';
 import { DimensionIndex, StageHandler, StageHandlerProgressParams } from '../../util/types';
-import CandlestickSeriesModel from './CandlestickSeries';
+import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
 import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import DataStore from '../../data/DataStore';
@@ -106,8 +106,10 @@ const candlestickLayout: StageHandler = {
                     subPixelOptimizePoint(ocLowPoint)
                 );
 
+                const itemModel = data.getItemModel<CandlestickDataItemOption>(dataIndex);
+                const hasDojiColor = !!itemModel.get(['itemStyle', 'borderColorDoji']);
                 data.setItemLayout(dataIndex, {
-                    sign: getSign(store, dataIndex, openVal, closeVal, closeDimI),
+                    sign: getSign(store, dataIndex, openVal, closeVal, closeDimI, hasDojiColor),
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx], // open point.
                     ends: ends,
@@ -170,6 +172,7 @@ const candlestickLayout: StageHandler = {
             const tmpOut: number[] = [];
             let dataIndex;
             const store = data.getStore();
+            const hasDojiColor = !!seriesModel.get(['itemStyle', 'borderColorDoji']);
 
             while ((dataIndex = params.next()) != null) {
                 const axisDimVal = store.get(cDimI, dataIndex) as number;
@@ -184,7 +187,7 @@ const candlestickLayout: StageHandler = {
                     continue;
                 }
 
-                points[offset++] = getSign(store, dataIndex, openVal, closeVal, closeDimI);
+                points[offset++] = getSign(store, dataIndex, openVal, closeVal, closeDimI, hasDojiColor);
 
                 tmpIn[cDimIdx] = axisDimVal;
 
@@ -202,10 +205,18 @@ const candlestickLayout: StageHandler = {
     }
 };
 
+/**
+ * Get the sign of a single data.
+ *
+ * @returns 0 for doji with hasDojiColor: true,
+ *          1 for positive,
+ *          -1 for negative.
+ */
 function getSign(
-    store: DataStore, dataIndex: number, openVal: number, closeVal: number, closeDimI: DimensionIndex
-): -1 | 1 {
-    let sign: -1 | 1;
+    store: DataStore, dataIndex: number, openVal: number, closeVal: number, closeDimI: DimensionIndex,
+    hasDojiColor: boolean
+): -1 | 1 | 0 {
+    let sign: -1 | 1 | 0;
     if (openVal > closeVal) {
         sign = -1;
     }
@@ -213,11 +224,15 @@ function getSign(
         sign = 1;
     }
     else {
-        sign = dataIndex > 0
-            // If close === open, compare with close of last record
-            ? (store.get(closeDimI, dataIndex - 1) <= closeVal ? 1 : -1)
-            // No record of previous, set to be positive
-            : 1;
+        sign = hasDojiColor
+            // When doji color is set, use it instead of color/color0.
+            ? 0
+            : (dataIndex > 0
+                // If close === open, compare with close of last record
+                ? (store.get(closeDimI, dataIndex - 1) <= closeVal ? 1 : -1)
+                // No record of previous, set to be positive
+                : 1
+            );
     }
 
     return sign;
