@@ -47,7 +47,7 @@ npm install
 # Rebuild source code immediately in watch mode when changing the source code.
 # It opens the `./test` directory and you may open `-cases.html` to get the list
 # of all test cases.
-# If you wish to create a new test case, run `npm run mktest` to learn more.
+# If you wish to create a test case, run `npm run mktest:help` to learn more.
 npm run dev
 
 # Check correctness of TypeScript code.
