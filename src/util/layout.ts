@@ -302,13 +302,13 @@ export function getLayoutRect(
  * Logic:
  *     1. Scale (against origin point in parent coord)
  *     2. Rotate (against origin point in parent coord)
- *     3. Traslate (with el.position by this method)
- * So this method only fixes the last step 'Traslate', which does not affect
+ *     3. Translate (with el.position by this method)
+ * So this method only fixes the last step 'Translate', which does not affect
  * scaling and rotating.
  *
- * If be called repeatly with the same input el, the same result will be gotten.
+ * If be called repeatedly with the same input el, the same result will be gotten.
  *
- * Return true if the layout happend.
+ * Return true if the layout happened.
  *
  * @param el Should have `getBoundingRect` method.
  * @param positionInfo

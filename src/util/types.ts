@@ -517,7 +517,7 @@ export type SeriesDataType = 'main' | 'node' | 'edge';
  * ```
  */
 export type ECUnitOption = {
-    // Exclude these reserverd word for `ECOption` to avoid to infer to "any".
+    // Exclude these reserved word for `ECOption` to avoid to infer to "any".
     baseOption?: unknown
     options?: unknown
     media?: unknown
@@ -1333,7 +1333,7 @@ export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
 export type ComponentItemTooltipLabelFormatterParams = {
     componentType: string
     name: string
-    // properies key array like ['name']
+    // properties key array like ['name']
     $vars: string[]
 } & {
     // Other properties
