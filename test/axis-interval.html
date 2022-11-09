@@ -69,7 +69,11 @@ under the License.
     </div>
 
     <div class="chart" id="main5"></div>
-    <div class="chart" id="main6"></div>
+
+    <h1>Test xAxis.splitLine.showMinLine/showMaxLine</h1>
+    <div class="chart" id="main60"></div>
+    <div class="chart" id="main61"></div>
+    <div class="chart" id="main62"></div>
 
 
     <script>
@@ -538,68 +542,124 @@ under the License.
 
         </script>
 
-
-
     <script>
-
-        require([
-            'echarts'
-        ], function (echarts) {
+        require(["echarts"], function (echarts) {
             function func(x) {
                 x /= 10;
-                return Math.sin(x) * Math.cos(x * 2 + 1) * Math.sin(x * 3 + 2) * 50;
+                return (
+                    Math.sin(x) *
+                    Math.cos(x * 2 + 1) *
+                    Math.sin(x * 3 + 2) *
+                    50
+                );
             }
-            function generateData() {
+
+            function generateData(start, end, interval = 1) {
                 let data = [];
-                for (let i = -20; i <= 20; i += 0.1) {
+                for (let i = start; i <= end; i += interval) {
                     data.push([i, func(i)]);
                 }
                 return data;
             }
-            const option = {
+
+            const baseOption = {
                 animation: false,
                 grid: {
                     top: 40,
                     left: 50,
                     right: 40,
-                    bottom: 50
+                    bottom: 50,
                 },
                 xAxis: {
-                    name: 'x',
-                    min: -22,
                     splitLine: {
                         show: true,
                         lineStyle: {
-                            color: 'red'
+                            color: "red",
                         },
-                        showMinLine: 'auto',
-                        showMaxLine: 'auto'
-                    }
+                        showMinLine: "auto",
+                        showMaxLine: "auto",
+                    },
                 },
                 yAxis: {
-                    name: 'y',
+                    name: "y",
                     max: 45,
                     splitLine: {
                         show: true,
-                        showMinLine: 'auto',
-                        showMaxLine: 'auto'
-                    }
+                        showMinLine: "auto",
+                        showMaxLine: "auto",
+                    },
                 },
                 series: [
                     {
-                        type: 'line',
+                        type: "line",
                         showSymbol: false,
                         clip: true,
-                        data: generateData()
-                    }
-                ]
+                        data: generateData(-20, 20, 0.1),
+                    },
+                ],
             };
-            testHelper.create(echarts, 'main6', {
-                title: 'xAxis (type: value) should work with showMinLine and showMaxLine',
-                option: option
+
+            const oneMin = 60 * 1000;
+            let startTimestamp = +new Date() - 30 * oneMin;
+            let onTheMinTimestamp = (startTimestamp =
+                Math.floor(startTimestamp / oneMin) * oneMin);
+            const chart60 = testHelper.create(echarts, "main60", {
+                title: "xAxis (type: time) should work with showMinLine/showMaxLine auto",
+                option: echarts.util.merge(
+                    {
+                        series: [
+                            {
+                                ...baseOption.series[0],
+                                data: generateData(
+                                    Math.random() > 0.5
+                                        ? startTimestamp
+                                        : onTheMinTimestamp,
+                                    +new Date(),
+                                    oneMin
+                                ),
+                            },
+                        ],
+                        xAxis: { type: "time" },
+                    },
+                    baseOption
+                ),
+            });
+
+            const valueOption = echarts.util.merge(baseOption, {
+                xAxis: { min: -22 },
+            });
+            const chart61 = testHelper.create(echarts, "main61", {
+                title: "xAxis (type: value) should work with showMinLine and showMaxLine",
+                option: valueOption,
+            });
+            window.chart61 = chart61;
+            let chart61Index = 0;
+            const showMinLineValues = ["auto", true, false];
+            setInterval(() => {
+                chart61Index += 1;
+                const newVal =
+                    showMinLineValues[
+                    chart61Index % showMinLineValues.length
+                        ];
+                // console.log(`chart61: xAxis (type: value) showMinLine/showMaxLine is ${newVal}`)
+                chart61.setOption({
+                    xAxis: {
+                        splitLine: {
+                            showMinLine: newVal,
+                            showMaxLine: newVal,
+                        },
+                    },
+                });
+            }, 3000);
+
+            const inverseOption = echarts.util.merge(baseOption, {
+                xAxis: { inverse: true },
+            });
+            testHelper.create(echarts, "main62", {
+                title: "xAxis (type: value, inverse) should work with showMinLine and showMaxLine",
+                option: inverseOption,
             });
         });
-
     </script>
 
 </body>

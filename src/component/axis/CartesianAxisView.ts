@@ -138,10 +138,10 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         const axisScale = axis.scale as IntervalScale;
         if (ticksCoords.length > 2 && axisScale.getInterval) {
-            const interval = axisScale.getInterval() || null;
+            const interval = axisScale.getInterval();
 
             const showMinLine = splitLineModel.get('showMinLine');
-            if (showMinLine === false
+            if (!showMinLine
                 || (showMinLine === 'auto'
                     && ticksCoords[1].tickValue - ticksCoords[0].tickValue < interval
                 )
@@ -150,7 +150,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             }
 
             const showMaxLine = splitLineModel.get('showMaxLine');
-            if (showMaxLine === false
+            if (!showMaxLine
                 || (showMaxLine === 'auto'
                     && ticksCoords[ticksCoords.length - 1].tickValue
                         - ticksCoords[ticksCoords.length - 2].tickValue < interval
