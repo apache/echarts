@@ -22,14 +22,14 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
         <!-- <script src="ut/lib/canteen.js"></script> -->
-        <link rel="stylesheet" href="lib/reset.css" />
+        <link rel="stylesheet" href="lib/reset.css"/>
     </head>
     <body>
         <style>
@@ -39,52 +39,58 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3-1"></div>
+        <div id="main3-2"></div>
 
 
         <script>
-        require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            var option = {
-                tooltip: {
-                    formatter: '{a} <br/>{b} : {c}%'
-                },
-                toolbox: {
-                    feature: {
-                        restore: {},
-                        saveAsImage: {}
-                    }
-                },
-                series:  {
-                    type: 'gauge',
-                    center: ["50%", "50%"],
-                    radius: '70%',
-                    startAngle: 150,
-                    endAngle: -20,
-                    min: 0,
-                    max: 2000,
-                    progress: {
-                        show: true,
-                        width: 18
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                var option = {
+                    tooltip: {
+                        formatter: '{a} <br/>{b} : {c}%'
                     },
-                    data: [
-                        {
-                            value: 0
+                    toolbox: {
+                        feature: {
+                            restore: {},
+                            saveAsImage: {}
                         }
-                    ]
-                }
-            };
+                    },
+                    series: {
+                        type: 'gauge',
+                        center: ["50%", "50%"],
+                        radius: '70%',
+                        startAngle: 150,
+                        endAngle: -20,
+                        min: 0,
+                        max: 2000,
+                        progress: {
+                            show: true,
+                            width: 18
+                        },
+                        axisLabel: {
+                            distance: 30,
+                            rotate: 50
+                        },
+                        data: [
+                            {
+                                value: 0
+                            }
+                        ]
+                    }
+                };
 
-            var chart = testHelper.create(echarts, 'main0', {
-                title: [
-                    'Regression Test from #14162',
-                    'Should not display a circle'
-                ],
-                option: option
-                // height: 1200,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Regression Test from #14162',
+                        'Should not display a circle'
+                    ],
+                    option: option
+                    // height: 1200,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+
             });
-
-        });
         </script>
 
         <script>
@@ -99,8 +105,12 @@ under the License.
                             {
                                 value: 0,
                                 name: 'SCORE'
-                                }
+                            }
                         ],
+                        axisLabel: {
+                            distance: 30,
+                            rotate: 'radial'
+                        },
                         progress: {
                             show: true,
                             roundCap: true
@@ -146,6 +156,61 @@ under the License.
                     option: option
                 });
             });
+        </script>
+        <script>
+            require(['echarts'], function (echarts) {
+                const option = {
+                    tooltip: {
+                        formatter: '{a} <br/>{b} : {c}%'
+                    },
+                    series: [
+                        {
+                            name: 'Pressure',
+                            type: 'gauge',
+                            clockwise: true,
+                            detail: {
+                                valueAnimation: true,
+                                formatter: '{value}'
+                            },
+                            data: [
+                                {
+                                    value: 50,
+                                    name: 'SCORE'
+                                }
+                            ],
+                            axisLine: {
+                                "roundCap": true,
+                                "lineStyle": {
+                                    "width": 16,
+                                    "color": [[0.3, "#C9781B"], [0.7, "#F163EA"], [1, "#6366F1"]]
+                                }
+                            }
+                        }
+                    ]
+                };
+                testHelper.create(echarts, 'main3-1', {
+                    title: [
+                        'Case from #17633',
+                        'Order of Axis lines should respect the clockwise option',
+                        'clockwise: true'
+                    ],
+                    option
+                });
+                testHelper.create(echarts, 'main3-2', {
+                    title: [
+                        'Case from #17633',
+                        'Order of Axis lines should respect the clockwise option',
+                        'clockwise: false'
+                    ],
+                    option: {
+                        ...option,
+                        series: [{
+                            ...option.series[0],
+                            clockwise: false
+                        }]
+                    }
+                });
+            })
         </script>
 
 

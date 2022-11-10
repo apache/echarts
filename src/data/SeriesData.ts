@@ -53,7 +53,7 @@ const map = zrUtil.map;
 const CtorInt32Array = typeof Int32Array === 'undefined' ? Array : Int32Array;
 
 // Use prefix to avoid index to be the same as otherIdList[idx],
-// which will cause weird udpate animation.
+// which will cause weird update animation.
 const ID_PREFIX = 'e\0\0';
 
 const INDEX_NOT_FOUND = -1;
@@ -159,12 +159,12 @@ class SeriesData<
      * Name of dimensions list of SeriesData.
      *
      * @caution Carefully use the index of this array.
-     * Becuase when DataStore is an extra high dimension(>30) dataset. We will only pick
+     * Because when DataStore is an extra high dimension(>30) dataset. We will only pick
      * the used dimensions from DataStore to avoid performance issue.
      */
     readonly dimensions: SeriesDimensionName[];
 
-    // Infomation of each data dimension, like data type.
+    // Information of each data dimension, like data type.
     private _dimInfos: Record<SeriesDimensionName, SeriesDimensionDefine>;
 
     private _dimOmitted = false;
@@ -192,7 +192,7 @@ class SeriesData<
 
     /**
      * @readonly
-     * Host tree if List is used to store tree ndoes.
+     * Host tree if List is used to store tree nodes.
      */
     tree?: Tree;
 
@@ -208,7 +208,7 @@ class SeriesData<
     // Global visual properties after visual coding
     private _visual: Dictionary<any> = {};
 
-    // Globel layout properties.
+    // Global layout properties.
     private _layout: Dictionary<any> = {};
 
     // Item visual properties after visual coding
@@ -217,7 +217,7 @@ class SeriesData<
     // Item layout properties after layout
     private _itemLayouts: any[] = [];
 
-    // Graphic elemnents
+    // Graphic elements
     private _graphicEls: Element[] = [];
 
     // key: dim, value: extent
@@ -357,7 +357,7 @@ class SeriesData<
      * Because only those dimensions will have auto-generated dimension names if not
      * have a user-specified name, and other dimensions will get a return of null/undefined.
      *
-     * @notice Becuause of this reason, should better use `getDimensionIndex` instead, for examples:
+     * @notice Because of this reason, should better use `getDimensionIndex` instead, for examples:
      * ```js
      * const val = data.getStore().get(data.getDimensionIndex(dim), dataIdx);
      * ```
@@ -375,7 +375,7 @@ class SeriesData<
             return this.dimensions[dimIdx];
         }
 
-        // Retrieve from series dimension definition becuase it probably contains
+        // Retrieve from series dimension definition because it probably contains
         // generated dimension name (like 'x', 'y').
         const dimName = this._dimIdxToName.get(dimIdx);
         if (dimName != null) {
@@ -419,7 +419,7 @@ class SeriesData<
      *     + If there is the same concrete dim name defined in `series.dimensions` or `dataset.dimensions`,
      *        it means that concrete name.
      *     + If not, it will be converted to a number, which means the index of the dimension.
-     *        (why? because of the backward compatbility. We have been tolerating number-like string in
+     *        (why? because of the backward compatibility. We have been tolerating number-like string in
      *        dimension setting, although now it seems that it is not a good idea.)
      *     For example, `visualMap[i].dimension: "1"` is the same meaning as `visualMap[i].dimension: 1`,
      *     if no dimension name is defined as `"1"`.
@@ -427,7 +427,7 @@ class SeriesData<
      *   For example, it can be be default name `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
      *   or customized in `dimensions` property of option like `"age"`.
      *
-     * @return recogonized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
+     * @return recognized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
      */
     private _recognizeDimIndex(dim: DimensionLoose): DimensionIndex {
         if (zrUtil.isNumber(dim)
@@ -447,7 +447,7 @@ class SeriesData<
         const dimIdx = this.getDimensionIndex(dim);
         if (__DEV__) {
             if (dimIdx == null) {
-                throw new Error('Unkown dimension ' + dim);
+                throw new Error('Unknown dimension ' + dim);
             }
         }
         return dimIdx;
@@ -580,7 +580,7 @@ class SeriesData<
      *            [NaN, 43, 1],
      *            ['-', 'asdf', 0]
      *        ]
-     *        Each item is exaclty cooresponding to a dimension.
+     *        Each item is exactly corresponding to a dimension.
      */
     appendValues(values: any[][], names?: string[]): void {
         const {start, end} = this._store.appendValues(values, names.length);
@@ -690,7 +690,7 @@ class SeriesData<
 
     /**
      * Calculate extent on a filtered data might be time consuming.
-     * Approximate extent is only used for: calculte extent of filtered data outside.
+     * Approximate extent is only used for: calculate extent of filtered data outside.
      */
     setApproximateExtent(extent: [number, number], dim: SeriesDimensionLoose): void {
         dim = this.getDimension(dim);
@@ -723,7 +723,7 @@ class SeriesData<
     }
 
     /**
-     * @return Never be null/undefined. `number` will be converted to string. Becuase:
+     * @return Never be null/undefined. `number` will be converted to string. Because:
      * In most cases, name is used in display, where returning a string is more convenient.
      * In other cases, name is used in query (see `indexOfName`), where we can keep the
      * rule that name `2` equals to name `'2'`.
@@ -750,7 +750,7 @@ class SeriesData<
     }
 
     /**
-     * @return Never null/undefined. `number` will be converted to string. Becuase:
+     * @return Never null/undefined. `number` will be converted to string. Because:
      * In all cases having encountered at present, id is used in making diff comparison, which
      * are usually based on hash map. We can keep the rule that the internal id are always string
      * (treat `2` is the same as `'2'`) to make the related logic simple.
@@ -816,7 +816,7 @@ class SeriesData<
     }
 
     /**
-     * If value is NaN. Inlcuding '-'
+     * If value is NaN. Including '-'
      * Only check the coord dimensions.
      */
     hasValue(idx: number): boolean {
@@ -833,7 +833,7 @@ class SeriesData<
     }
 
     /**
-     * Retreive the index with given name
+     * Retrieve the index with given name
      */
     indexOfName(name: string): number {
         for (let i = 0, len = this._store.count(); i < len; i++) {
@@ -874,7 +874,7 @@ class SeriesData<
     }
 
     /**
-     * Retreive the index of nearest value
+     * Retrieve the index of nearest value
      * @param dim
      * @param value
      * @param [maxDistance=Infinity]
@@ -1069,8 +1069,8 @@ class SeriesData<
         );
 
         // If do shallow clone here, if there are too many stacked series,
-        // it still cost lots of memory, becuase `_store.dimensions` are not shared.
-        // We should consider there probably be shallow clone happen in each sereis
+        // it still cost lots of memory, because `_store.dimensions` are not shared.
+        // We should consider there probably be shallow clone happen in each series
         // in consequent filter/map.
         this._store.modify(
             dimIndices,
@@ -1124,7 +1124,7 @@ class SeriesData<
      */
     // TODO: Type of data item
     getItemModel<ItemOpts extends unknown = unknown>(idx: number): Model<ItemOpts
-        // Extract item option with value key. FIXME will cause incompatitable issue
+        // Extract item option with value key. FIXME will cause incompatible issue
         // Extract<HostModel['option']['data'][number], { value?: any }>
     > {
         const hostModel = this.hostModel;
@@ -1433,7 +1433,7 @@ class SeriesData<
         };
 
         /**
-         * Data in excludeDimensions is copied, otherwise transfered.
+         * Data in excludeDimensions is copied, otherwise transferred.
          */
         cloneListForMapAndSample = function (original: SeriesData): SeriesData {
             const list = new SeriesData(

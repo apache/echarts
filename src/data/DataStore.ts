@@ -91,7 +91,7 @@ export interface DataStoreDimensionDefine {
      * For example, in `[{bb: 124, aa: 543}, ...]`, "aa" and "bb" is "object property".
      *
      * Deliberately name it as "property" rather than "name" to prevent it from been used in
-     * SOURCE_FORMAT_ARRAY_ROWS, becuase if it comes from series, it probably
+     * SOURCE_FORMAT_ARRAY_ROWS, because if it comes from series, it probably
      * can not be shared by different series.
      */
     property?: string;
@@ -448,7 +448,7 @@ class DataStore {
     }
 
     getValues(idx: number): ParsedValue[];
-    getValues(dimensions: readonly DimensionIndex[], idx?: number): ParsedValue[]
+    getValues(dimensions: readonly DimensionIndex[], idx?: number): ParsedValue[];
     getValues(dimensions: readonly DimensionIndex[] | number, idx?: number): ParsedValue[] {
         const values = [];
         let dimArr: DimensionIndex[] = [];

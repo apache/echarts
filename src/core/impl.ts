@@ -21,7 +21,7 @@ import { error } from '../util/log';
 
 
 // Implementation of exported APIs. For example registerMap, getMap.
-// The implentations will be registered when installing the component.
+// The implementations will be registered when installing the component.
 // Avoid these code being bundled to the core module.
 
 const implsStore: Record<string, any> = {};

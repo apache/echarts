@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [16.x]
 
     steps:
       - name: Fetch commit count
@@ -44,7 +44,7 @@ jobs:
       - name: Collect changed files
         run: |
           mkdir ~/tmp/
-          git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} --name-only --relative '*src/**/*.ts' > ~/tmp/changed_files
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} --diff-filter=ACM --name-only --relative '*src/**/*.ts' > ~/tmp/changed_files
           echo -e "Changed files: \n$(cat ~/tmp/changed_files)"
 
       - name: Lint
@@ -58,7 +58,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [16.x]
 
     steps:
       - uses: actions/checkout@v3

@@ -617,7 +617,7 @@ class MapDraw {
      * `ignore` might have been modified by `LabelManager`, and `LabelManager#addLabelsOfSeries`
      * will subsequently cache `defaultAttr` like `ignore`. If do not do this reset, the modified
      * props will have no chance to be restored.
-     * Note: this reset should be after `clearStates` in `renderSeries` becuase `useStates` in
+     * Note: This reset should be after `clearStates` in `renderSeries` because `useStates` in
      * `renderSeries` will cache the modified `ignore` to `el._normalState`.
      * TODO:
      * Use clone/immutable in `LabelManager`?
@@ -672,7 +672,7 @@ function applyOptionStyleForRegion(
         }
     >
 ): void {
-    // All of the path are using `itemStyle`, becuase
+    // All of the path are using `itemStyle`, because
     // (1) Some SVG also use fill on polyline (The different between
     // polyline and polygon is "open" or "close" but not fill or not).
     // (2) For the common props like opacity, if some use itemStyle
@@ -820,7 +820,7 @@ function resetEventTriggerForRegion(
     dataIdx: number
 ): void {
     // setItemGraphicEl, setHoverStyle after all polygons and labels
-    // are added to the rigionGroup
+    // are added to the regionGroup
     if (viewBuildCtx.data) {
         // FIXME: when series-map use a SVG map, and there are duplicated name specified
         // on different SVG elements, after `data.setItemGraphicEl(...)`:
@@ -832,7 +832,7 @@ function resetEventTriggerForRegion(
         viewBuildCtx.data.setItemGraphicEl(dataIdx, eventTrigger);
     }
     // series-map will not trigger "geoselectchange" no matter it is
-    // based on a declared geo component. Becuause series-map will
+    // based on a declared geo component. Because series-map will
     // trigger "selectchange". If it trigger both the two events,
     // If users call `chart.dispatchAction({type: 'toggleSelect'})`,
     // it not easy to also fire event "geoselectchanged".

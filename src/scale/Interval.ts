@@ -79,8 +79,8 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
 
     setInterval(interval: number): void {
         this._interval = interval;
-        // Dropped auto calculated niceExtent and use user setted extent
-        // We assume user wan't to set both interval, min, max to get a better result
+        // Dropped auto calculated niceExtent and use user-set extent.
+        // We assume user wants to set both interval, min, max to get a better result.
         this._niceExtent = this._extent.slice() as [number, number];
 
         this._intervalPrecision = helper.getIntervalPrecision(interval);
@@ -250,7 +250,8 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         if (extent[0] === extent[1]) {
             if (extent[0] !== 0) {
                 // Expand extent
-                const expandSize = extent[0];
+                // Note that extents can be both negative. See #13154
+                const expandSize = Math.abs(extent[0]);
                 // In the fowllowing case
                 //      Axis has been fixed max 100
                 //      Plus data are all 100 and axis extent are [100, 100].

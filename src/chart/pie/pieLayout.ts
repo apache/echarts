@@ -53,10 +53,23 @@ export function getBasicPieLayout(seriesModel: PieSeriesModel, api: ExtensionAPI
     const width = parsePercent(viewRect.width, api.getWidth());
     const height = parsePercent(viewRect.height, api.getHeight());
     const size = Math.min(width, height);
-    const cx = parsePercent(center[0], width) + viewRect.x;
-    const cy = parsePercent(center[1], height) + viewRect.y;
     const r0 = parsePercent(radius[0], size / 2);
     const r = parsePercent(radius[1], size / 2);
+
+    let cx: number;
+    let cy: number;
+    const coordSys = seriesModel.coordinateSystem;
+    if (coordSys) {
+        // percentage is not allowed when coordinate system is specified
+        const point = coordSys.dataToPoint(center);
+        cx = point[0] || 0;
+        cy = point[1] || 0;
+    }
+    else {
+        cx = parsePercent(center[0], width) + viewRect.x;
+        cy = parsePercent(center[1], height) + viewRect.y;
+    }
+
     return {
         cx,
         cy,
