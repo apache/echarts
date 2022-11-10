@@ -28,6 +28,6 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerSeriesModel(PictorialBarSeriesModel);
 
     registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, curry(layout, 'pictorialBar'));
-    // Do layout after other overall layout, which can preapre some informations.
+    // Do layout after other overall layout, which can prepare some information.
     registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout('pictorialBar'));
 }
