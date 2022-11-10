@@ -86,7 +86,11 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
         return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
-    getMarkerPosition(value: ScaleDataValue[], dims?: typeof dimPermutations[number], startingAtTick: boolean = false) {
+    getMarkerPosition(
+        value: ScaleDataValue[],
+        dims?: typeof dimPermutations[number],
+        startingAtTick?: boolean
+    ) {
         const coordSys = this.coordinateSystem;
         if (coordSys && coordSys.clampData) {
             // PENDING if clamp ?

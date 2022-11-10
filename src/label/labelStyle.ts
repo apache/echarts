@@ -263,7 +263,7 @@ function setLabelStyle<TLabelDataIndex>(
 
         // PENDING: if there is many requirements that emphasis position
         // need to be different from normal position, we might consider
-        // auto slient is those cases.
+        // auto silent is those cases.
         textContent.silent = !!normalModel.getShallow('silent');
         // Keep x and y
         if (textContent.style.x != null) {

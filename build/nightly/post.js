@@ -17,30 +17,14 @@
 * under the License.
 */
 
-import { error } from '../util/log';
+const fs = require('fs');
 
+const root = __dirname + '/../../';
+const echartsPkg = JSON.parse(fs.readFileSync(root + 'package.json'), 'utf-8');
+const zrenderPkg = JSON.parse(fs.readFileSync(root + 'node_modules/zrender/package.json', 'utf-8'));
 
-// Implementation of exported APIs. For example registerMap, getMap.
-// The implementations will be registered when installing the component.
-// Avoid these code being bundled to the core module.
-
-const implsStore: Record<string, any> = {};
-
-// TODO Type
-export function registerImpl(name: string, impl: any) {
-    if (__DEV__) {
-        if (implsStore[name]) {
-            error(`Already has an implementation of ${name}.`);
-        }
-    }
-    implsStore[name] = impl;
-}
-
-export function getImpl(name: string) {
-    if (__DEV__) {
-        if (!implsStore[name]) {
-            error(`Implementation of ${name} doesn't exists.`);
-        }
-    }
-    return implsStore[name];
-}
+const echartsCorePath = root + 'src/core/echarts.ts';
+const echartsCoreFile = fs.readFileSync(echartsCorePath, 'utf-8')
+    .replace(/export const version = '\S+'/, `export const version = '${echartsPkg.version}'`)
+    .replace(/(export const dependencies = {\s+zrender: ')\S+('\s+})/, `$1${zrenderPkg.version}$2`);
+fs.writeFileSync(echartsCorePath, echartsCoreFile, 'utf-8');

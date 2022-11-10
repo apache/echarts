@@ -319,7 +319,7 @@ function determineSourceDimensions(
     let dimensionsDetectedCount;
     let startIndex: number;
 
-    // PEDING: could data be null/undefined here?
+    // PENDING: Could data be null/undefined here?
     // currently, if `dataset.source` not specified, error thrown.
     // if `series.data` not specified, nothing rendered without error thrown.
     // Should test these cases.

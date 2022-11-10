@@ -454,7 +454,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
             return {behavior: 'none', axisExpandWindow: axisExpandWindow};
         }
 
-        // Conver the point from global to expand coordinates.
+        // Convert the point from global to expand coordinates.
         const pointCoord = point[pixelDimIndex] - layoutInfo.layoutBase - layoutInfo.axisExpandWindow0Pos;
 
         // For dragging operation convenience, the window should not be

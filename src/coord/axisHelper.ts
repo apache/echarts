@@ -147,7 +147,7 @@ function adjustScaleForOverflow(
 }
 
 // Precondition of calling this method:
-// The scale extent has been initailized using series data extent via
+// The scale extent has been initialized using series data extent via
 // `scale.setExtent` or `scale.unionExtentFromData`;
 export function niceScaleExtent(
     scale: Scale,
@@ -364,7 +364,7 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
 
 /**
  * Set `categoryInterval` as 0 implicitly indicates that
- * show all labels reguardless of overlap.
+ * show all labels regardless of overlap.
  * @param {Object} axis axisModel.axis
  */
 export function shouldShowAllLabels(axis: Axis): boolean {

@@ -43,7 +43,7 @@ function getStyleMapper(seriesModel: SeriesModel, stylePath: string) {
     const styleMapper = seriesModel.visualStyleMapper
         || defaultStyleMappers[stylePath as 'itemStyle' | 'lineStyle'];
     if (!styleMapper) {
-        console.warn(`Unkown style type '${stylePath}'.`);
+        console.warn(`Unknown style type '${stylePath}'.`);
         return defaultStyleMappers.itemStyle;
     }
     return styleMapper;
@@ -55,7 +55,7 @@ function getDefaultColorKey(seriesModel: SeriesModel, stylePath: string): 'strok
         || defaultColorKey[stylePath as 'itemStyle' | 'lineStyle'];
 
     if (!colorKey) {
-        console.warn(`Unkown style type '${stylePath}'.`);
+        console.warn(`Unknown style type '${stylePath}'.`);
         return 'fill';
     }
 
@@ -92,8 +92,8 @@ const seriesStyleTask: StageHandler = {
         const hasAutoColor = globalStyle.fill === 'auto' || globalStyle.stroke === 'auto';
         // Get from color palette by default.
         if (!globalStyle[colorKey] || colorCallback || hasAutoColor) {
-            // Note: if some series has color specified (e.g., by itemStyle.color), we DO NOT
-            // make it effect palette. Bacause some scenarios users need to make some series
+            // Note: If some series has color specified (e.g., by itemStyle.color), we DO NOT
+            // make it effect palette. Because some scenarios users need to make some series
             // transparent or as background, which should better not effect the palette.
             const colorPalette = seriesModel.getColorFromPalette(
                 // TODO series count changed.
@@ -177,8 +177,8 @@ const dataStyleTask: StageHandler = {
 const dataColorPaletteTask: StageHandler = {
     performRawSeries: true,
     overallReset(ecModel) {
-        // Each type of series use one scope.
-        // Pie and funnel are using diferrent scopes
+        // Each type of series uses one scope.
+        // Pie and funnel are using different scopes.
         const paletteScopeGroupByType = createHashMap<object>();
         ecModel.eachSeries((seriesModel: SeriesModel) => {
             const colorBy = seriesModel.getColorBy();

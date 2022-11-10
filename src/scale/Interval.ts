@@ -79,8 +79,8 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
 
     setInterval(interval: number): void {
         this._interval = interval;
-        // Dropped auto calculated niceExtent and use user setted extent
-        // We assume user wan't to set both interval, min, max to get a better result
+        // Dropped auto calculated niceExtent and use user-set extent.
+        // We assume user wants to set both interval, min, max to get a better result.
         this._niceExtent = this._extent.slice() as [number, number];
 
         this._intervalPrecision = helper.getIntervalPrecision(interval);

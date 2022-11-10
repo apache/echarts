@@ -183,7 +183,7 @@ function getSingleMarkerEndPoint(
             else {
                 pointValue[1] = (clampPointValue0[1] > clampPointValue1[1]) ? pointValue0[1] : pointValue1[1];
             }
-            // Use the getMarkerPoisition
+            // Use the getMarkerPosition
             point = seriesModel.getMarkerPosition(
                 pointValue, dims, true
             );
