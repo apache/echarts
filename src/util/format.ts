@@ -212,7 +212,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     else {
         // Should better not to auto generate style name by auto-increment number here.
         // Because this util is usually called in tooltip formatter, which is probably
-        // called repeatly when mouse move and the auto-increment number increases fast.
+        // called repeatedly when mouse move and the auto-increment number increases fast.
         // Users can make their own style name by theirselves, make it unique and readable.
         const markerId = opt.markerId || 'markerX';
         return {
