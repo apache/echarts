@@ -45,12 +45,12 @@ export interface BaseBarSeriesOption<StateOption, ExtraStateOption extends State
      */
     barMinHeight?: number
     /**
-     * Min angle of bar. Avaiable on polar coordinate system
+     * Min angle of bar. Available on polar coordinate system.
      */
     barMinAngle?: number
 
     /**
-     * Max width of bar. Default to be 1 on cartesian coordinate system. Otherwise it's null
+     * Max width of bar. Defaults to 1 on cartesian coordinate system. Otherwise it's null.
      */
     barMaxWidth?: number
 

@@ -51,7 +51,7 @@ type DataStoreMap = Dictionary<DataStore>;
  * (3) Transforms should specify `metaRawOption` in each output, just like they can be
  * declared in `root-dataset`.
  * (4) At present only support visit source in `SERIES_LAYOUT_BY_COLUMN` in transforms.
- * That is for reducing complexity in transfroms.
+ * That is for reducing complexity in transforms.
  * PENDING: Whether to provide transposition transform?
  *
  * [IMPLEMENTAION_MEMO]:
@@ -236,7 +236,7 @@ export class SourceManager {
             const dimensions = retrieve2(newMetaRawOption.dimensions, upMetaRawOption.dimensions);
 
             // We share source with dataset as much as possible
-            // to avoid extra memroy cost of high dimensional data.
+            // to avoid extra memory cost of high dimensional data.
             const needsCreateSource = seriesLayoutBy !== upMetaRawOption.seriesLayoutBy
                 || !!sourceHeader !== !!upMetaRawOption.sourceHeader
                 || dimensions;
@@ -334,7 +334,7 @@ export class SourceManager {
             return true;
         }
 
-        // All sourceList is from the some upsteam.
+        // All sourceList is from the some upstream.
         const upSourceMgrList = this._getUpstreamSourceManagers();
         for (let i = 0; i < upSourceMgrList.length; i++) {
             const upSrcMgr = upSourceMgrList[i];
@@ -350,8 +350,8 @@ export class SourceManager {
     }
 
     /**
-     * @param sourceIndex By defualt 0, means "main source".
-     *                    Most cases there is only one source.
+     * @param sourceIndex By default 0, means "main source".
+     *                    In most cases there is only one source.
      */
     getSource(sourceIndex?: number): Source {
         sourceIndex = sourceIndex || 0;
@@ -423,13 +423,13 @@ export class SourceManager {
     }
 
     /**
-     * PEDING: Is it fast enough?
+     * PENDING: Is it fast enough?
      * If no upstream, return empty array.
      */
     private _getUpstreamSourceManagers(): SourceManager[] {
         // Always get the relationship from the raw option.
         // Do not cache the link of the dependency graph, so that
-        // no need to update them when change happen.
+        // there is no need to update them when change happens.
         const sourceHost = this._sourceHost;
 
         if (isSeries(sourceHost)) {
@@ -467,7 +467,7 @@ export class SourceManager {
 }
 
 // Call this method after `super.init` and `super.mergeOption` to
-// disable the transform merge, but do not disable transfrom clone from rawOption.
+// disable the transform merge, but do not disable transform clone from rawOption.
 export function disableTransformOptionMerge(datasetModel: DatasetModel): void {
     const transformOption = datasetModel.option.transform;
     transformOption && setAsPrimitive(datasetModel.option.transform);

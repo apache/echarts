@@ -163,8 +163,8 @@ export function summarizeDimensions(
     summary.encodeFirstDimNotExtra = encodeFirstDimNotExtra;
 
     const encodeLabel = encode.label;
-    // FIXME `encode.label` is not recommanded, because formatter can not be set
-    // in this way. Use label.formatter instead. May be remove this approach someday.
+    // FIXME `encode.label` is not recommended, because formatter cannot be set
+    // in this way. Use label.formatter instead. Maybe remove this approach someday.
     if (encodeLabel && encodeLabel.length) {
         defaultedLabel = encodeLabel.slice();
     }

@@ -95,8 +95,8 @@ export class ExternalSource {
      * This instance is to be exposed to users.
      * (1) DO NOT mount private members on this instance directly.
      * If we have to use private members, we can make them in closure or use `makeInner`.
-     * (2) "soruce header count" is not provided to transform, because it's complicated to manage
-     * header and dimensions definition in each transfrom. Source header are all normalized to
+     * (2) "source header count" is not provided to transform, because it's complicated to manage
+     * header and dimensions definition in each transform. Source headers are all normalized to
      * dimensions definitions in transforms and their downstreams.
      */
 
@@ -196,11 +196,11 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
                 displayName: dimDef.displayName
             };
             dimensions.push(dimDefExt);
-            // Users probably not sepcify dimension name. For simplicity, data transform
-            // do not generate dimension name.
+            // Users probably do not specify dimension name. For simplicity, data transform
+            // does not generate dimension name.
             if (name != null) {
                 // Dimension name should not be duplicated.
-                // For simplicity, data transform forbid name duplication, do not generate
+                // For simplicity, data transform forbids name duplication, do not generate
                 // new name like module `completeDimensions.ts` did, but just tell users.
                 let errMsg = '';
                 if (hasOwn(dimsByName, name)) {

@@ -28,8 +28,8 @@ import DataStore from '../DataStore';
 type EnableDataStackDimensionsInput = {
     schema: SeriesDataSchema;
     // If given, stack dimension will be ensured on this store.
-    // Otherwise, stack dimesnion will be appended at the tail, and should not
-    // be used on a shared store, but should create a brand new stroage later.
+    // Otherwise, stack dimension will be appended at the tail, and should not
+    // be used on a shared store, but should create a brand new storage later.
     store?: DataStore;
 };
 type EnableDataStackDimensionsInputLegacy = (SeriesDimensionDefine | string)[];
