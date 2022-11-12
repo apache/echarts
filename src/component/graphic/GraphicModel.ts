@@ -163,7 +163,7 @@ export interface GraphicComponentImageOption
 // interface GraphicComponentImageOptionOnState extends GraphicComponentDisplayableOptionOnState {
 //     style?: ImageStyleProps;
 // }
-interface GraphicComponentTextOption
+export interface GraphicComponentTextOption
     extends Omit<GraphicComponentDisplayableOption, 'textContent' | 'textConfig'>, TransitionOptionMixin<TextProps> {
     type?: 'text';
     style?: TextStyleProps & TransitionOptionMixin<TextStyleProps>;
