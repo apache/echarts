@@ -43,8 +43,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
                 option.graphic = [{ elements: graphicOption }];
             }
             else {
-                // Only one graphic instance can be instantiated. (We dont
-                // want that too many views are created in echarts._viewMap)
+                // Only one graphic instance can be instantiated. (We don't
+                // want that too many views are created in echarts._viewMap.)
                 option.graphic = [(option.graphic as any)[0]];
             }
         }
