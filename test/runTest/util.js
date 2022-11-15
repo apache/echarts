@@ -100,14 +100,13 @@ module.exports.prepareEChartsLib = function (version) {
 
 module.exports.fetchVersions = function (isNighlty) {
     return new Promise((resolve, reject) => {
-        https.get(
-            isNighlty
-                ? `https://registry.npmjs.org/echarts-nightly`
-                : `https://registry.npmjs.org/echarts`
-        , res => {
+        const url = isNighlty
+        ? 'https://registry.npmjs.org/echarts-nightly'
+        : 'https://registry.npmjs.org/echarts';
+        const request = https.get(url, res => {
             if (res.statusCode !== 200) {
                 res.destroy();
-                reject('Failed fetch versions from https://registry.npmjs.org/echarts');
+                reject(`Failed fetch versions from ${url}`);
                 return;
             }
             var buffers = [];

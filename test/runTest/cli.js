@@ -28,7 +28,6 @@ const program = require('commander');
 const compareScreenshot = require('./compareScreenshot');
 const {testNameFromFile, fileNameFromTest, getVersionDir, buildRuntimeCode, getEChartsTestFileName, waitTime} = require('./util');
 const {origin} = require('./config');
-const cwebpBin = require('cwebp-bin');
 const { execFile } = require('child_process');
 const {runTasks} = require('./task');
 const chalk = require('chalk');
@@ -93,8 +92,9 @@ function replaceEChartsVersion(interceptedRequest, version) {
 
 async function convertToWebP(filePath, lossless) {
     const webpPath = filePath.replace(/\.png$/, '.webp');
+    const cwebpBin = await import('cwebp-bin');
     return new Promise((resolve, reject) => {
-        execFile(cwebpBin, [
+        execFile(cwebpBin.default, [
             filePath,
             '-o', webpPath,
             ...(lossless ? ['-lossless'] : ['-q', 75])
