@@ -66,8 +66,15 @@ const markAreaTransform = function (
     maModel: MarkAreaModel,
     item: MarkArea2DDataItemOption
 ): MarkAreaMergedItemOption {
-    const lt = markerHelper.dataTransform(seriesModel, item[0]);
-    const rb = markerHelper.dataTransform(seriesModel, item[1]);
+    // item may be null
+    const item0 = item[0];
+    const item1 = item[1];
+    if (!item0 || !item1) {
+        return;
+    }
+
+    const lt = markerHelper.dataTransform(seriesModel, item0);
+    const rb = markerHelper.dataTransform(seriesModel, item1);
 
     // FIXME make sure lt is less than rb
     const ltCoord = lt.coord;
@@ -183,7 +190,7 @@ function getSingleMarkerEndPoint(
             else {
                 pointValue[1] = (clampPointValue0[1] > clampPointValue1[1]) ? pointValue0[1] : pointValue1[1];
             }
-            // Use the getMarkerPoisition
+            // Use the getMarkerPosition
             point = seriesModel.getMarkerPosition(
                 pointValue, dims, true
             );

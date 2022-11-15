@@ -30,17 +30,17 @@ import {
 
 // PENDING:
 // (1) Support more parser like: `parser: 'trim'`, `parser: 'lowerCase'`, `parser: 'year'`, `parser: 'dayOfWeek'`?
-// (2) Support piped parser ?
+// (2) Support piped parser?
 // (3) Support callback parser or callback condition?
-// (4) At present do not support string expression yet but only stuctured expression.
+// (4) At present do not support string expression yet but only structured expression.
 
 
 /**
  * The structured expression considered:
  * (1) Literal simplicity
- * (2) Sementic displayed clearly
+ * (2) Semantic displayed clearly
  *
- * Sementic supports:
+ * Semantic supports:
  * (1) relational expression
  * (2) logical expression
  *
@@ -148,8 +148,8 @@ const RELATIONAL_EXPRESSION_OP_ALIAS_MAP = {
     '!=': 'ne',
     '<>': 'ne'
 
-    // Might mileading for sake of the different between '==' and '===',
-    // So dont support them.
+    // Might be misleading for sake of the difference between '==' and '===',
+    // so don't support them.
     // '==': 'eq',
     // '===': 'seq',
     // '!==': 'sne'

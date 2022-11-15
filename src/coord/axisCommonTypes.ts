@@ -22,6 +22,7 @@ import {
     AreaStyleOption, ComponentOption, ColorString,
     AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption
 } from '../util/types';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
@@ -90,7 +91,7 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     boundaryGap?: [number | string, number | string]
 
     /**
-     * AxisTick and axisLabel and splitLine are caculated based on splitNumber.
+     * AxisTick and axisLabel and splitLine are calculated based on splitNumber.
      */
     splitNumber?: number;
     /**
@@ -127,7 +128,7 @@ export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
     })[];
     /*
      * Set false to faster category collection.
-     * Only usefull in the case like: category is
+     * Only useful in the case like: category is
      * ['2012-01-01', '2012-01-02', ...], where the input
      * data has been ensured not duplicate and is large data.
      * null means "auto":
@@ -230,6 +231,7 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     hideOverlap?: boolean;
     // Color can be callback
     color?: ColorString | ((value?: string | number, index?: number) => ColorString)
+    overflow?: TextStyleProps['overflow']
 }
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]

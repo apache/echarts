@@ -331,11 +331,11 @@ export class Task<Ctx extends TaskContext> {
     }
 
     setOutputEnd(end: number): void {
-        // This only happend in dataTask, dataZoom, map, currently.
+        // This only happens in dataTask, dataZoom, map, currently.
         // where dataZoom do not set end each time, but only set
-        // when reset. So we should record the setted end, in case
+        // when reset. So we should record the set end, in case
         // that the stub of dataZoom perform again and earse the
-        // setted end by upstream.
+        // set end by upstream.
         this._outputDueEnd = this._settedOutputEnd = end;
     }
 

@@ -55,7 +55,7 @@ export interface GeoSVGGraphicRecord {
  */
 const REGION_AVAILABLE_SVG_TAG_MAP = createHashMap<number, SVGNodeTagLower>([
     'rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path',
-    // <text> <tspan> are also enabled becuase some SVG might paint text itself,
+    // <text> <tspan> are also enabled because some SVG might paint text itself,
     // but still need to trigger events or tooltip.
     'text', 'tspan',
     // <g> is also enabled because this case: if multiple tags share one name
@@ -168,7 +168,7 @@ export class GeoSVGResource implements GeoResource {
         // If both `svgWidth/svgHeight/viewBox` are specified in a SVG file, the transform rule will be:
         // 0. `boundingRect` is `(0, 0, svgWidth, svgHeight)`. Set it to Geo['_rect'] (View['_rect']).
         // 1. Make a transform from `viewBox` to `boundingRect`.
-        //    Note: only suport `preserveAspectRatio 'xMidYMid'` here. That is, this transform will preserve
+        //    Note: only support `preserveAspectRatio 'xMidYMid'` here. That is, this transform will preserve
         //    the aspect ratio.
         // 2. Make a transform from boundingRect to Geo['_viewRect'] (View['_viewRect'])
         //    (`Geo`/`View` will do this job).

@@ -73,7 +73,7 @@ export const SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
 
 interface SeriesModel {
     /**
-     * Convinient for override in extended class.
+     * Convenient for override in extended class.
      * Implement it if needed.
      */
     preventIncremental(): boolean;
@@ -103,7 +103,8 @@ interface SeriesModel {
     getMarkerPosition(
         value: ScaleDataValue[],
         dims?: typeof dimPermutations[number],
-        startingAtTick?:boolean): number[];
+        startingAtTick?: boolean
+    ): number[];
 
     /**
      * Get legend icon symbol according to each series type
@@ -126,7 +127,7 @@ interface SeriesModel {
 
 class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentModel<Opt> {
 
-    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // [Caution]: Because this class or desecendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.
     // Otherwise there is bad case:
     //   class A {xxx = 1;}
@@ -319,7 +320,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
     /**
      * Init a data structure from data related option in series
-     * Must be overriden.
+     * Must be overridden.
      */
     getInitialData(option: Opt, ecModel: GlobalModel): SeriesData {
         return;
@@ -426,7 +427,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     /**
      * Get base axis if has coordinate system and has axis.
      * By default use coordSys.getBaseAxis();
-     * Can be overrided for some chart.
+     * Can be overridden for some chart.
      * @return {type} description
      */
     getBaseAxis(): Axis {
@@ -615,7 +616,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
             const selectedMap = option.selectedMap;
             for (let i = 0; i < len; i++) {
                 const dataIndex = innerDataIndices[i];
-                // TODO diffrent types of data share same object.
+                // TODO different types of data share same object.
                 const nameOrId = getSelectionKey(data, dataIndex);
                 selectedMap[nameOrId] = true;
                 this._selectedDataIndicesMap[nameOrId] = data.getRawIndex(dataIndex);

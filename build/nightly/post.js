@@ -17,17 +17,14 @@
 * under the License.
 */
 
-import { EChartsExtensionInstallRegisters } from '../../extension';
-import PictorialBarView from './PictorialBarView';
-import PictorialBarSeriesModel from './PictorialBarSeries';
-import { createProgressiveLayout, layout } from '../../layout/barGrid';
-import { curry } from 'zrender/src/core/util';
+const fs = require('fs');
 
-export function install(registers: EChartsExtensionInstallRegisters) {
-    registers.registerChartView(PictorialBarView);
-    registers.registerSeriesModel(PictorialBarSeriesModel);
+const root = __dirname + '/../../';
+const echartsPkg = JSON.parse(fs.readFileSync(root + 'package.json'), 'utf-8');
+const zrenderPkg = JSON.parse(fs.readFileSync(root + 'node_modules/zrender/package.json', 'utf-8'));
 
-    registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, curry(layout, 'pictorialBar'));
-    // Do layout after other overall layout, which can prepare some information.
-    registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout('pictorialBar'));
-}
+const echartsCorePath = root + 'src/core/echarts.ts';
+const echartsCoreFile = fs.readFileSync(echartsCorePath, 'utf-8')
+    .replace(/export const version = '\S+'/, `export const version = '${echartsPkg.version}'`)
+    .replace(/(export const dependencies = {\s+zrender: ')\S+('\s+})/, `$1${zrenderPkg.version}$2`);
+fs.writeFileSync(echartsCorePath, echartsCoreFile, 'utf-8');

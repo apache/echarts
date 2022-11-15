@@ -321,7 +321,7 @@ function nearestPointOnPath(pt: Point, path: PathProxy, out: Point) {
     return minDist;
 }
 
-// Temporal varible for intermediate usage.
+// Temporal variable for intermediate usage.
 const pt0 = new Point();
 const pt1 = new Point();
 const pt2 = new Point();

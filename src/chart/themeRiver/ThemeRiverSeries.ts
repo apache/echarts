@@ -156,7 +156,7 @@ class ThemeRiverSeriesModel extends SeriesModel<ThemeRiverSeriesOption> {
 
     /**
      * @override
-     * @param  option  the initial option that user gived
+     * @param  option  the initial option that user gave
      * @param  ecModel  the model object for themeRiver option
      */
     getInitialData(option: ThemeRiverSeriesOption, ecModel: GlobalModel): SeriesData {

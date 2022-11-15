@@ -28,9 +28,9 @@ import { isComponentIdInternal } from '../util/model';
 //     It is added since echarts 3.
 // (3) Why keep supporting "internal component" in global model rather than
 //     make each type components manage their models themselves?
-//     Because a protential feature that reproduce a chart from a diffferent chart instance
-//     might be useful in some BI analysis scenario, where the entire state need to be
-//     retrieved from the current chart instance. So we'd bettern manage the all of the
+//     Because a potential feature that reproduces a chart from a different chart instance
+//     might be useful in some BI analysis scenario, where the entire state needs to be
+//     retrieved from the current chart instance. So we'd better manage all of the
 //     state universally.
 // (4) Internal component always merged in "replaceMerge" approach, that is, if the existing
 //     internal components does not matched by a new option with the same id, it will be
