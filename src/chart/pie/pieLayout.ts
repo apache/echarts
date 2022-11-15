@@ -41,14 +41,12 @@ export function getBasicPieLayout(seriesModel: PieSeriesModel, api: ExtensionAPI
     Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> {
     const viewRect = getViewRect(seriesModel, api);
 
+    // center can be string or number when coordinateSystem is specified
     let center = seriesModel.get('center');
     let radius = seriesModel.get('radius');
 
     if (!zrUtil.isArray(radius)) {
         radius = [0, radius];
-    }
-    if (!zrUtil.isArray(center)) {
-        center = [center, center];
     }
     const width = parsePercent(viewRect.width, api.getWidth());
     const height = parsePercent(viewRect.height, api.getHeight());
@@ -66,6 +64,9 @@ export function getBasicPieLayout(seriesModel: PieSeriesModel, api: ExtensionAPI
         cy = point[1] || 0;
     }
     else {
+        if (!zrUtil.isArray(center)) {
+            center = [center, center];
+        }
         cx = parsePercent(center[0], width) + viewRect.x;
         cy = parsePercent(center[1], height) + viewRect.y;
     }
