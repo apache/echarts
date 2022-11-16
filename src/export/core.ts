@@ -30,7 +30,37 @@ use(installLabelLayout);
 
 
 // Export necessary types
-export {ZRColor as Color, Payload, ECElementEvent} from '../util/types';
+export {
+    ZRColor as Color,
+    Payload,
+    ECElement,
+    RendererType,
+    ECActionEvent,
+    ActionHandler,
+    ActionInfo,
+    OptionPreprocessor,
+    PostUpdater,
+    LoadingEffect,
+    LoadingEffectCreator,
+    StageHandlerInternal,
+    StageHandlerOverallReset,
+    StageHandler,
+    ViewRootGroup,
+    DimensionDefinitionLoose,
+    ECEventData,
+    ThemeOption,
+    ECBasicOption,
+    ECUnitOption,
+    ZRColor,
+    ComponentMainType,
+    ComponentSubType,
+    ColorString,
+    SelectChangedPayload,
+    ScaleDataValue,
+    ZRElementEventName,
+    ECElementEvent,
+    AnimationOption
+} from '../util/types';
 export {LinearGradientObject} from 'zrender/src/graphic/LinearGradient';
 export {RadialGradientObject} from 'zrender/src/graphic/RadialGradient';
 export {PatternObject, ImagePatternObject, SVGPatternObject} from 'zrender/src/graphic/Pattern';
