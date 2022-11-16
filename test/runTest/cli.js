@@ -90,11 +90,10 @@ function replaceEChartsVersion(interceptedRequest, version) {
     }
 }
 
-async function convertToWebP(filePath, lossless) {
+async function convertToWebP(filePath, lossless, cwebp) {
     const webpPath = filePath.replace(/\.png$/, '.webp');
-    const cwebpBin = await import('cwebp-bin');
     return new Promise((resolve, reject) => {
-        execFile(cwebpBin.default, [
+        execFile(cwebp, [
             filePath,
             '-o', webpPath,
             ...(lossless ? ['-lossless'] : ['-q', 75])
@@ -109,7 +108,7 @@ async function convertToWebP(filePath, lossless) {
     });
 }
 
-async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) {
+async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor, cwebp) {
     let screenshotName = testNameFromFile(fileUrl);
     if (desc) {
         screenshotName += '-' + slugify(desc, { replacement: '-', lower: true });
@@ -128,7 +127,7 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
         fullPage
     });
 
-    const webpScreenshotPath = await convertToWebP(screenshotPath);
+    const webpScreenshotPath = await convertToWebP(screenshotPath, false, cwebp);
 
     return {
         screenshotName,
@@ -158,7 +157,7 @@ async function waitForNetworkIdle(page) {
   }
 
 
-async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
+async function runTestPage(browser, testOpt, version, runtimeCode, isExpected, cwebp) {
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
@@ -179,7 +178,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             screenshotName,
             screenshotPath,
             rawScreenshotPath
-        } = await takeScreenshot(page, true, fileUrl, desc, isExpected);
+        } = await takeScreenshot(page, true, fileUrl, desc, isExpected, undefined, cwebp);
         screenshots.push({
             screenshotName,
             desc,
@@ -239,7 +238,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             screenshotName,
             screenshotPath,
             rawScreenshotPath
-        } = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, actionScreenshotCount[action.name]++);
+        } = await takeScreenshot(page, false, testOpt.fileUrl, desc, isExpected, actionScreenshotCount[action.name]++, cwebp);
         screenshots.push({
             screenshotName,
             desc,
@@ -324,12 +323,12 @@ async function writePNG(diffPNG, diffPath) {
     });
 };
 
-async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
+async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion, cwebp) {
     if (program.save) {
         testOpt.status === 'running';
 
-        const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
-        const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
+        const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true, cwebp);
+        const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false, cwebp);
 
         // sortScreenshots(expectedResult.screenshots);
         // sortScreenshots(actualResult.screenshots);
@@ -353,7 +352,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
 
                 const diffPath = `${getScreenshotDir()}/${shot.screenshotName}-diff.png`;
                 await writePNG(diffPNG, diffPath);
-                const diffWebpPath = await convertToWebP(diffPath);
+                const diffWebpPath = await convertToWebP(diffPath, false, cwebp);
 
                 result.diff = getClientRelativePath(diffWebpPath);
                 result.diffRatio = diffRatio;
@@ -396,6 +395,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
 }
 
 async function runTests(pendingTests) {
+    const { default: cwebp } = await import('cwebp-bin');
     const browser = await puppeteer.launch({
         headless: program.headless,
         args: [`--window-size=830,750`] // new option
@@ -412,7 +412,7 @@ async function runTests(pendingTests) {
     async function eachTask(testOpt) {
         console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}, useCoarsePointer: ${program.useCoarsePointer}`);
         try {
-            await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
+            await runTest(browser, testOpt, runtimeCode, program.expected, program.actual, cwebp);
         }
         catch (e) {
             // Restore status
