@@ -30,7 +30,7 @@ use(installLabelLayout);
 
 
 // Export necessary types
-export {ZRColor as Color, Payload} from '../util/types';
+export {ZRColor as Color, Payload, ECElementEvent} from '../util/types';
 export {LinearGradientObject} from 'zrender/src/graphic/LinearGradient';
 export {RadialGradientObject} from 'zrender/src/graphic/RadialGradient';
 export {PatternObject, ImagePatternObject, SVGPatternObject} from 'zrender/src/graphic/Pattern';

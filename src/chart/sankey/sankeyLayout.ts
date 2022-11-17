@@ -122,7 +122,7 @@ function computeNodeBreadths(
     const remainEdges = [];
     // Storage each node's indegree.
     const indegreeArr = [];
-    //Used to storage the node with indegree is equal to 0.
+    // Used to storage the node with indegree is equal to 0.
     let zeroIndegrees: GraphNode[] = [];
     let nextTargetNode: GraphNode[] = [];
     let x = 0;

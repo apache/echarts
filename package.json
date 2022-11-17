@@ -46,7 +46,7 @@
     "build:lib": "node build/build.js --prepublish",
     "build:extension": "node build/build.js --type extension",
     "dev:fast": "node build/build-i18n.js && node build/dev-fast.js",
-    "dev": "npm run dev:fast",
+    "dev": "npx -y concurrently -n build,server \"npm run dev:fast\" \"npx -y http-server -c-1 -s -o test\"",
     "prepublish": "npm run build:lib",
     "release": "npm run build:lib && npm run build:i18n && npm run build && npm run build:esm && npm run build:extension",
     "help": "node build/build.js --help",
@@ -64,7 +64,7 @@
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "5.4.0"
+    "zrender": "npm:zrender-nightly@^5.4.1-dev.20221104"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
@@ -73,7 +73,7 @@
     "@definitelytyped/typescript-versions": "0.0.64",
     "@definitelytyped/utils": "0.0.64",
     "@lang/rollup-plugin-dts": "2.0.2",
-    "@microsoft/api-extractor": "7.7.2",
+    "@microsoft/api-extractor": "7.31.2",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-replace": "^2.3.4",
@@ -92,7 +92,7 @@
     "husky": "^4.2.5",
     "jest": "^26.6.1",
     "jest-canvas-mock": "^2.2.0",
-    "jshint": "2.10.2",
+    "jshint": "2.13.5",
     "magic-string": "^0.25.7",
     "open": "6.4.0",
     "pixelmatch": "5.0.2",

@@ -93,7 +93,7 @@ function assembleArrow(
 
     const borderStyle = `${borderColor} solid ${borderWidth}px;`;
     const styleCss = [
-        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;`,
+        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;z-index:-1;`,
         `${positionStyle};${transformStyle};`,
         `border-bottom:${borderStyle}`,
         `border-right:${borderStyle}`,

@@ -18,7 +18,7 @@
 */
 
 /**
- * A mapping of visual provided to deverloper and visual stored in the List module.
+ * A mapping of visual provided to developer and visual stored in the List module.
  * To developer:
  *  'color', 'opacity', 'symbol', 'symbolSize'...
  * In the List module storage:

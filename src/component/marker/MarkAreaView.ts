@@ -66,8 +66,15 @@ const markAreaTransform = function (
     maModel: MarkAreaModel,
     item: MarkArea2DDataItemOption
 ): MarkAreaMergedItemOption {
-    const lt = markerHelper.dataTransform(seriesModel, item[0]);
-    const rb = markerHelper.dataTransform(seriesModel, item[1]);
+    // item may be null
+    const item0 = item[0];
+    const item1 = item[1];
+    if (!item0 || !item1) {
+        return;
+    }
+
+    const lt = markerHelper.dataTransform(seriesModel, item0);
+    const rb = markerHelper.dataTransform(seriesModel, item1);
 
     // FIXME make sure lt is less than rb
     const ltCoord = lt.coord;
@@ -133,11 +140,11 @@ function markAreaFilter(coordSys: CoordinateSystem, item: MarkAreaMergedItemOpti
         ) {
             return true;
         }
-        //Directly returning true may also do the work,
-        //because markArea will not be shown automatically
-        //when it's not included in coordinate system.
-        //But filtering ahead can avoid keeping rendering markArea
-        //when there are too many of them.
+        // Directly returning true may also do the work,
+        // because markArea will not be shown automatically
+        // when it's not included in coordinate system.
+        // But filtering ahead can avoid keeping rendering markArea
+        // when there are too many of them.
         return markerHelper.zoneFilter(coordSys, item0, item1);
     }
     return markerHelper.dataFilter(coordSys, item0)
@@ -164,9 +171,28 @@ function getSingleMarkerEndPoint(
     else {
         // Chart like bar may have there own marker positioning logic
         if (seriesModel.getMarkerPosition) {
+            // Consider the case that user input the right-bottom point first
+            // Pick the larger x and y as 'x1' and 'y1'
+            const pointValue0 = data.getValues(['x0', 'y0'], idx);
+            const pointValue1 = data.getValues(['x1', 'y1'], idx);
+            const clampPointValue0 = coordSys.clampData(pointValue0);
+            const clampPointValue1 = coordSys.clampData(pointValue1);
+            const pointValue = [];
+            if (dims[0] === 'x0') {
+                pointValue[0] = (clampPointValue0[0] > clampPointValue1[0]) ? pointValue1[0] : pointValue0[0];
+            }
+            else {
+                pointValue[0] = (clampPointValue0[0] > clampPointValue1[0]) ? pointValue0[0] : pointValue1[0];
+            }
+            if (dims[1] === 'y0') {
+                pointValue[1] = (clampPointValue0[1] > clampPointValue1[1]) ? pointValue1[1] : pointValue0[1];
+            }
+            else {
+                pointValue[1] = (clampPointValue0[1] > clampPointValue1[1]) ? pointValue0[1] : pointValue1[1];
+            }
             // Use the getMarkerPosition
             point = seriesModel.getMarkerPosition(
-                data.getValues(dims, idx)
+                pointValue, dims, true
             );
         }
         else {
@@ -202,7 +228,7 @@ function getSingleMarkerEndPoint(
     return point;
 }
 
-const dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']] as const;
+export const dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']] as const;
 
 class MarkAreaView extends MarkerView {
 

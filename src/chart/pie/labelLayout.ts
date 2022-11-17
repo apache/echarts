@@ -288,12 +288,12 @@ function constrainTextWidth(
         const oldHeight = textRect.height;
         if (overflow && overflow.match('break')) {
             // Temporarily set background to be null to calculate
-            // the bounding box without backgroud.
+            // the bounding box without background.
             label.setStyle('backgroundColor', null);
             // Set constraining width
             label.setStyle('width', availableWidth - paddingH);
 
-            // This is the real bounding box of the text without padding
+            // This is the real bounding box of the text without padding.
             const innerRect = label.getBoundingRect();
 
             label.setStyle('width', Math.ceil(innerRect.width));
@@ -394,8 +394,11 @@ export default function pieLabelLayout(
 
         if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
             each(label.states, setNotShow);
-            each(labelLine.states, setNotShow);
-            label.ignore = labelLine.ignore = true;
+            label.ignore = true;
+            if (labelLine) {
+                each(labelLine.states, setNotShow);
+                labelLine.ignore = true;
+            }
             return;
         }
 

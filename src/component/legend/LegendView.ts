@@ -69,7 +69,7 @@ class LegendView extends ComponentView {
 
     /**
      * If first rendering, `contentGroup.position` is [0, 0], which
-     * does not make sense and may cause unexepcted animation if adopted.
+     * does not make sense and may cause unexpected animation if adopted.
      */
     private _isFirstRender: boolean;
 
@@ -199,7 +199,7 @@ class LegendView extends ComponentView {
                 SeriesModel<SeriesOption & SymbolOptionMixin>;
 
             if (legendDrawnMap.get(name)) {
-                // Have been drawed
+                // Have been drawn
                 return;
             }
 
@@ -510,7 +510,7 @@ class LegendView extends ComponentView {
                 contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
             }
 
-            //Always align selector to content as 'middle'
+            // Always align selector to content as 'middle'
             selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
             selectorGroup.x = selectorPos[0];
             selectorGroup.y = selectorPos[1];
@@ -663,7 +663,7 @@ function dispatchSelectAction(
         name: seriesName != null ? seriesName : dataName
     });
     // highlight after select
-    // TODO higlight immediately may cause animation loss.
+    // TODO highlight immediately may cause animation loss.
     dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 
