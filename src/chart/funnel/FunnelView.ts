@@ -34,6 +34,7 @@ import {
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { saveOldStyle } from '../../animation/basicTransition';
+import ZRText from 'zrender/src/graphic/Text';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -82,7 +83,7 @@ const rateLabelFetcher = {
 
 type Accessory = {
     type: 'rate' | 'overallLabel',
-    item: RatePiece | OverallRateLabel
+    item: graphic.Polygon | ZRText
 };
 
 /**
@@ -233,135 +234,114 @@ class FunnelPiece extends graphic.Polygon {
     isLastPiece: boolean;
 }
 
-class RatePiece extends graphic.Polygon {
-    constructor(data: SeriesData, idx: number) {
-        super();
-        const polygon = this;
+function RatePiece(
+    data: SeriesData,
+    idx: number,
+    firstCreate: boolean,
+    polygon: graphic.Polygon = new graphic.Polygon()
+): graphic.Polygon {
+    const seriesModel = data.hostModel;
+    const layout = data.getItemLayout(idx);
+    const opacity = 0.5;
+    const style = data.getItemVisual(idx, 'style');
+
+    polygon.useStyle(style);
+    polygon.style.lineJoin = 'round';
+
+    if (!firstCreate) {
+        saveOldStyle(polygon);
+    }
+
+    const points = layout.ratePoints;
+
+    if (firstCreate) {
         const text = new graphic.Text();
         polygon.setTextConfig(text);
 
-        this.updateData(data, idx, true);
-    }
-    updateData(data: SeriesData, idx: number, firstCreate?: boolean) {
-        const polygon = this;
-        const seriesModel = data.hostModel;
-        // const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
-        const layout = data.getItemLayout(idx);
-        const opacity = 0.5;
-        polygon.useStyle(data.getItemVisual(idx, 'style'));
-        polygon.style.lineJoin = 'round';
-
-        if (!firstCreate) {
-            saveOldStyle(polygon);
-        }
-
-        const points = layout.ratePoints;
-
-        if (firstCreate) {
-            polygon.setShape({
-                points
-            });
-            polygon.style.opacity = 0;
-            graphic.initProps(polygon, {
-                style: {
-                    opacity
-                }
-            }, seriesModel, idx);
-        }
-        else {
-            graphic.updateProps(polygon, {
-                style: {
-                    opacity
-                },
-                shape: {
-                    points
-                }
-            }, seriesModel, idx);
-        }
-
-        this._updateLabel(data, idx);
-    }
-
-    _updateLabel(data: SeriesData, idx: number) {
-        const polygon = this;
-        const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
-        const layout = data.getItemLayout(idx);
-        const rateFetcher = {
-            getFormattedLabel: rateLabelFetcher.getFormattedLabel.bind(
-                { hostModel: data.hostModel, layout }
-            )
-        };
-        const style = data.getItemVisual(idx, 'style');
-        const visualColor = style.fill as ColorString;
-
-        setLabelStyle(
-            polygon,
-            getLabelStatesModels(itemModel, 'rateLabel'),
-            {
-                labelFetcher: rateFetcher,
-                labelDataIndex: idx,
-                defaultOpacity: style.opacity,
-                defaultText: layout.rate
-            },
-            {
-                normal: {
-                    align: 'center',
-                    verticalAlign: 'middle'
-                }
-            }
-        );
-
-        polygon.setTextConfig({
-            local: true,
-            inside: true,
-            insideStroke: visualColor,
-            outsideFill: visualColor
+        polygon.setShape({
+            points
         });
-
-    }
-}
-
-class OverallRateLabel extends graphic.Text {
-    constructor(data: SeriesData, idx: number) {
-        super();
-        this.updateLabel(data, idx);
-    }
-    updateLabel(data: SeriesData, idx: number) {
-        const text = this;
-        const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
-        const layout = data.getItemLayout(idx);
-        const rateFetcher = {
-            getFormattedLabel: rateLabelFetcher.getFormattedLabel.bind(
-                { hostModel: data.hostModel, layout }
-            )
-        };
-        const seriesModel = data.hostModel;
-        const labelLayout = layout.rateLabel;
-
-        setLabelStyle(
-            text,
-            getLabelStatesModels(itemModel, 'overallRateLabel'),
-            {
-                labelFetcher: rateFetcher,
-                labelDataIndex: idx,
-                defaultOpacity: 1,
-                defaultText: layout.rate
-            },
-            {
-                normal: {
-                    align: labelLayout.textAlign,
-                    verticalAlign: labelLayout.verticalAlign
-                }
-            }
-        );
-
-        graphic.updateProps(text, {
+        polygon.style.opacity = 0;
+        graphic.initProps(polygon, {
             style: {
-                x: labelLayout.x,
-                y: labelLayout.y
+                opacity
             }
         }, seriesModel, idx);
     }
+    else {
+        graphic.updateProps(polygon, {
+            style: {
+                opacity
+            },
+            shape: {
+                points
+            }
+        }, seriesModel, idx);
+    }
+
+    const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
+    const rateFetcher = {
+        getFormattedLabel: rateLabelFetcher.getFormattedLabel.bind(
+            { hostModel: data.hostModel, layout }
+        )
+    };
+
+    setLabelStyle(
+        polygon,
+        getLabelStatesModels(itemModel, 'rateLabel'),
+        {
+            labelFetcher: rateFetcher,
+            labelDataIndex: idx,
+            defaultOpacity: style.opacity,
+            defaultText: layout.rate
+        },
+        {
+            normal: {
+                align: 'center',
+                verticalAlign: 'middle'
+            }
+        }
+    );
+
+    return polygon;
+}
+
+function OverallRateLabel(data: SeriesData, idx: number, text: ZRText = new graphic.Text()) {
+    const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
+    const layout = data.getItemLayout(idx);
+    const rateFetcher = {
+        getFormattedLabel: rateLabelFetcher.getFormattedLabel.bind(
+            { hostModel: data.hostModel, layout }
+        )
+    };
+    const seriesModel = data.hostModel;
+    const labelLayout = layout.rateLabel;
+
+    setLabelStyle(
+        text,
+        getLabelStatesModels(itemModel, 'overallRateLabel'),
+        {
+            labelFetcher: rateFetcher,
+            labelDataIndex: idx,
+            defaultOpacity: 1,
+            defaultText: layout.rate
+        },
+        {
+            normal: {
+                align: labelLayout.textAlign,
+                verticalAlign: labelLayout.verticalAlign
+            }
+        }
+    );
+
+    graphic.updateProps(text, {
+        style: {
+            x: labelLayout.x,
+            y: labelLayout.y
+        }
+    }, seriesModel, idx);
+
+    return text;
 }
 
 const initRate = function (
@@ -373,12 +353,12 @@ const initRate = function (
     if (isLastPiece) {
         return {
             type: 'overallLabel',
-            item: new OverallRateLabel(data, idx)
+            item: OverallRateLabel(data, idx)
         };
     }
     return {
         type: 'rate',
-        item: new RatePiece(data, idx)
+        item: RatePiece(data, idx, true)
     };
 };
 
@@ -387,7 +367,7 @@ const replaceTop = function (
     newIdx: number,
     oldIdx: number,
     type: 'rate' | 'overallLabel',
-    item: RatePiece | OverallRateLabel,
+    item: graphic.Polygon | ZRText,
     group: ViewRootGroup,
     piece: FunnelPiece,
     seriesModel: FunnelSeriesModel = data.hostModel as FunnelSeriesModel
@@ -403,7 +383,7 @@ const addRateItem = function (
     newIdx: number,
     piece: FunnelPiece,
     group: ViewRootGroup
-    ) {
+) {
     const accessory = initRate(data, newIdx, piece.isLastPiece);
     group.add(accessory.item);
     piece.accessory = accessory;
@@ -422,16 +402,16 @@ const updateRate = function (
         addRateItem(data, newIdx, piece, group);
     }
     else {
-        const {type, item} = accessory;
+        const { type, item } = accessory;
 
         if (isLastPiece && type === 'rate' || !isLastPiece && type === 'overallLabel') {
             replaceTop(data, newIdx, oldIdx, type, item, group, piece);
         }
         else if (isLastPiece && type === 'overallLabel') {
-            (item as OverallRateLabel).updateLabel(data, newIdx);
+            OverallRateLabel(data, newIdx, item as ZRText);
         }
         else if (!isLastPiece && type === 'rate') {
-            (item as RatePiece).updateData(data, newIdx);
+            RatePiece(data, newIdx, false, item as graphic.Polygon);
         }
     }
 
@@ -512,7 +492,6 @@ class FunnelView extends ChartView {
     }
 
     dispose() { }
-}
-
+};
 
 export default FunnelView;
