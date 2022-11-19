@@ -335,7 +335,7 @@ export function calculateCategoryInterval(axis: Axis) {
 
 function fetchAutoCategoryIntervalCalculationParams(axis: Axis) {
     const labelModel = axis.getLabelModel();
-    let labelWidth = +(labelModel.get('width'));
+    const labelWidth = +(labelModel.get('width'));
     return {
         axisRotate: axis.getRotate
           ? axis.getRotate()
