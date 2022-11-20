@@ -76,6 +76,8 @@ export interface FunnelDataItemOption
         width?: number | string
         height?: number | string
     }
+
+    rateItemStyle?: ItemStyleOption
 }
 
 export interface FunnelSeriesOption

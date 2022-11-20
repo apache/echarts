@@ -241,11 +241,14 @@ function RatePiece(
     polygon: graphic.Polygon = new graphic.Polygon()
 ): graphic.Polygon {
     const seriesModel = data.hostModel;
+    const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
     const layout = data.getItemLayout(idx);
-    const opacity = 0.5;
     const style = data.getItemVisual(idx, 'style');
+    const rateItemStyle = itemModel.getModel('rateItemStyle').getItemStyle();
+    const combineStyle = zrUtil.extend({ ...style }, rateItemStyle);
+    const opacity = rateItemStyle.opacity || 0.5;
 
-    polygon.useStyle(style);
+    polygon.useStyle(combineStyle);
     polygon.style.lineJoin = 'round';
 
     if (!firstCreate) {
@@ -279,7 +282,6 @@ function RatePiece(
         }, seriesModel, idx);
     }
 
-    const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
     const rateFetcher = {
         getFormattedLabel: rateLabelFetcher.getFormattedLabel.bind(
             { hostModel: data.hostModel, layout }
@@ -292,7 +294,7 @@ function RatePiece(
         {
             labelFetcher: rateFetcher,
             labelDataIndex: idx,
-            defaultOpacity: style.opacity,
+            defaultOpacity: rateItemStyle.opacity,
             defaultText: layout.rate
         },
         {
