@@ -19,7 +19,7 @@
 
 
 const fs = require('fs');
-const packageJsonPath = __dirname + '/../package.json';
+const packageJsonPath = __dirname + '/../../package.json';
 const nightlyPackageName = 'echarts-nightly';
 
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
@@ -57,8 +57,7 @@ packageJson.version = updateVersion(packageJson.version);
 
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2), 'utf-8');
 
-
-const readmePath = __dirname + '/../README.md';
+const readmePath = __dirname + '/../../README.md';
 const readmeAttention = `<h3>
 <p><em>⚠️ ATTENTION PLEASE</em></p>
 <p><em>This is nightly build of Apache ECharts. Please DON't use it in your production environment.</em></p>

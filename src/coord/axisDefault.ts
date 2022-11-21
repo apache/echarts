@@ -151,7 +151,7 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
         show: false,
         // Split number of minor ticks. The value should be in range of (0, 100)
         splitNumber: 5,
-        // Lenght of minor tick
+        // Length of minor tick
         length: 3,
 
         // Line style

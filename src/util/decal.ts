@@ -155,7 +155,7 @@ export function createOrUpdatePatternFromDecal(
         (pattern as SVGPatternObject).svgHeight = pSize.height;
 
         /**
-         * Get minumum length that can make a repeatable pattern.
+         * Get minimum length that can make a repeatable pattern.
          *
          * @return {Object} pattern width and height
          */
@@ -169,7 +169,7 @@ export function createOrUpdatePatternFromDecal(
              * |-- -- -- -- -- -- -- -- ...
              * |---  ---  ---  ---  --- ...
              * |-- -- -- -- -- -- -- -- ...
-             * So the minumum length of X is 15,
+             * So the minimum length of X is 15,
              * which is the least common multiple of `3 + 2` and `2 + 1`
              * |---  ---  ---  |---  --- ...
              * |-- -- -- -- -- |-- -- -- ...
@@ -417,7 +417,7 @@ function normalizeDashArrayY(dash: DecalDashArrayY): number[] {
  * For example, a line with [4, 1] has a dash line of 4 and a space of 1 after
  * that, so the block length of this line is 5.
  *
- * @param {number[][]} dash dash arrary of X or Y
+ * @param {number[][]} dash dash array of X or Y
  * @return {number[]} block length of each line
  */
 function getLineBlockLengthX(dash: number[][]): number[] {

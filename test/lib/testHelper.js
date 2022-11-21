@@ -262,6 +262,8 @@
      * @param {boolean|number} opt If number, means height
      * @param {boolean} opt.lazyUpdate
      * @param {boolean} opt.notMerge
+     * @param {boolean} opt.useCoarsePointer
+     * @param {boolean} opt.pointerSize
      * @param {number} opt.width
      * @param {number} opt.height
      * @param {boolean} opt.draggable
@@ -284,7 +286,10 @@
                 dom.style.height = opt.height + 'px';
             }
 
-            var chart = echarts.init(dom);
+            var chart = echarts.init(dom, null, {
+                useCoarsePointer: opt.useCoarsePointer,
+                pointerSize: opt.pointerSize
+            });
 
             if (opt.draggable) {
                 if (!window.draggable) {

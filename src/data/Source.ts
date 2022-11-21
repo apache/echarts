@@ -319,7 +319,7 @@ function determineSourceDimensions(
     let dimensionsDetectedCount;
     let startIndex: number;
 
-    // PEDING: could data be null/undefined here?
+    // PENDING: Could data be null/undefined here?
     // currently, if `dataset.source` not specified, error thrown.
     // if `series.data` not specified, nothing rendered without error thrown.
     // Should test these cases.
@@ -415,7 +415,7 @@ function objectRowsCollectDimensions(data: OptionSourceDataObjectRows): Dimensio
 
 // Consider dimensions defined like ['A', 'price', 'B', 'price', 'C', 'price'],
 // which is reasonable. But dimension name is duplicated.
-// Returns undefined or an array contains only object without null/undefiend or string.
+// Returns undefined or an array contains only object without null/undefined or string.
 function normalizeDimensionsOption(dimensionsDefine: DimensionDefinitionLoose[]): DimensionDefinition[] {
     if (!dimensionsDefine) {
         // The meaning of null/undefined is different from empty array.
@@ -432,8 +432,8 @@ function normalizeDimensionsOption(dimensionsDefine: DimensionDefinitionLoose[])
         };
 
         // User can set null in dimensions.
-        // We dont auto specify name, othewise a given name may
-        // cause it be refered unexpectedly.
+        // We don't auto specify name, otherwise a given name may
+        // cause it to be referred unexpectedly.
         if (item.name == null) {
             return item;
         }

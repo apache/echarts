@@ -95,8 +95,8 @@ export class ExternalSource {
      * This instance is to be exposed to users.
      * (1) DO NOT mount private members on this instance directly.
      * If we have to use private members, we can make them in closure or use `makeInner`.
-     * (2) "soruce header count" is not provided to transform, because it's complicated to manage
-     * header and dimensions definition in each transfrom. Source header are all normalized to
+     * (2) "source header count" is not provided to transform, because it's complicated to manage
+     * header and dimensions definition in each transform. Source headers are all normalized to
      * dimensions definitions in transforms and their downstreams.
      */
 
@@ -143,7 +143,7 @@ export class ExternalSource {
     /**
      * Only support by dimension index.
      * No need to support by dimension name in transform function,
-     * becuase transform function is not case-specific, no need to use name literally.
+     * because transform function is not case-specific, no need to use name literally.
      */
     retrieveValue(dataIndex: number, dimIndex: DimensionIndex): OptionDataValue {
         return;
@@ -180,8 +180,8 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
     // [MEMO]
     // Create a new dimensions structure for exposing.
     // Do not expose all dimension info to users directly.
-    // Becuase the dimension is probably auto detected from data and not might reliable.
-    // Should not lead the transformers to think that is relialbe and return it.
+    // Because the dimension is probably auto detected from data and not might reliable.
+    // Should not lead the transformers to think that is reliable and return it.
     // See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
     const dimensions = [] as ExternalDimensionDefinition[];
     const dimsByName = {} as Dictionary<ExternalDimensionDefinition>;
@@ -196,11 +196,11 @@ function createExternalSource(internalSource: Source, externalTransform: Externa
                 displayName: dimDef.displayName
             };
             dimensions.push(dimDefExt);
-            // Users probably not sepcify dimension name. For simplicity, data transform
-            // do not generate dimension name.
+            // Users probably do not specify dimension name. For simplicity, data transform
+            // does not generate dimension name.
             if (name != null) {
                 // Dimension name should not be duplicated.
-                // For simplicity, data transform forbid name duplication, do not generate
+                // For simplicity, data transform forbids name duplication, do not generate
                 // new name like module `completeDimensions.ts` did, but just tell users.
                 let errMsg = '';
                 if (hasOwn(dimsByName, name)) {
@@ -505,7 +505,7 @@ function applySingleDataTransform(
             && !result.dimensions
         ) {
             const startIndex = firstUpSource.startIndex;
-            // We copy the header of upstream to the result becuase:
+            // We copy the header of upstream to the result, because:
             // (1) The returned data always does not contain header line and can not be used
             // as dimension-detection. In this case we can not use "detected dimensions" of
             // upstream directly, because it might be detected based on different `seriesLayoutBy`.

@@ -350,12 +350,12 @@ class Scheduler {
                     }
                     const performArgs: PerformArgs = scheduler.getPerformArgs(task, opt.block);
                     // FIXME
-                    // if intending to decalare `performRawSeries` in handlers, only
+                    // if intending to declare `performRawSeries` in handlers, only
                     // stream-independent (specifically, data item independent) operations can be
-                    // performed. Because is a series is filtered, most of the tasks will not
+                    // performed. Because if a series is filtered, most of the tasks will not
                     // be performed. A stream-dependent operation probably cause wrong biz logic.
                     // Perhaps we should not provide a separate callback for this case instead
-                    // of providing the config `performRawSeries`. The stream-dependent operaions
+                    // of providing the config `performRawSeries`. The stream-dependent operations
                     // and stream-independent operations should better not be mixed.
                     performArgs.skip = !stageHandler.performRawSeries
                         && ecModel.isSeriesFiltered(task.context.model);
@@ -499,8 +499,8 @@ class Scheduler {
         // we set the pipeline block.
         let errMsg = '';
         if (__DEV__) {
-            errMsg = '"createOnAllSeries" do not supported for "overallReset", '
-                + 'becuase it will block all streams.';
+            errMsg = '"createOnAllSeries" is not supported for "overallReset", '
+                + 'because it will block all streams.';
         }
         assert(!stageHandler.createOnAllSeries, errMsg);
         if (seriesType) {
@@ -509,10 +509,10 @@ class Scheduler {
         else if (getTargetSeries) {
             getTargetSeries(ecModel, api).each(createStub);
         }
-        // Otherwise, (usually it is legancy case), the overall task will only be
-        // executed when upstream dirty. Otherwise the progressive rendering of all
+        // Otherwise, (usually it is legacy case), the overall task will only be
+        // executed when upstream is dirty. Otherwise the progressive rendering of all
         // pipelines will be disabled unexpectedly. But it still needs stubs to receive
-        // dirty info from upsteam.
+        // dirty info from upstream.
         else {
             overallProgress = false;
             each(ecModel.getSeries(), createStub);

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            function createCase(isTestingNull, hasAnimation) {
+                var option;
+                var cellSize = [50, 51];
+                var isFirst = true;
+                var clickTimes = 0;
+
+                option = {
+                    calendar: [
+                        {
+                        orient: 'vertical',
+                        cellSize: cellSize,
+                        yearLabel: {
+                            show: false
+                        },
+                        monthLabel: {
+                            show: false
+                        },
+                        range: ['2022-1']
+                        }
+                    ],
+                    series: [
+                        {
+                            type: 'custom',
+                            universalTransition: {
+                                enabled: false
+                            },
+                            name: 'a',
+                            coordinateSystem: 'calendar',
+                            animation: hasAnimation ? 3000 : 0,
+                            data: [
+                                ['2022-01-16', 'e', false]
+                            ],
+                            renderItem: (params, api) => {
+                                const date = api.value(0);
+                                const cellPoint = api.coord(date);
+                                const xPos = cellPoint[0] - cellSize[0] / 2;
+                                const yPos = cellPoint[1] - cellSize[1] / 2;
+                                const name = api.value(1);
+                                const cellWidth = params.coordSys.cellWidth;
+                                const position = [xPos, yPos];
+                                const rect = {
+                                    type: 'rect',
+                                    shape: {
+                                        x: 0,
+                                        y: 0,
+                                        width: cellWidth,
+                                        height: 15
+                                    },
+                                    position,
+                                    style: {
+                                        fill: api.value(2) ? '#eee' : '#6ee'
+                                    },
+                                    textContent: {
+                                        style: {
+                                        text: name,
+                                        fill: '#888',
+                                        overflow: 'truncate',
+                                        width: cellWidth,
+                                        height: 13,
+                                        y: 1
+                                        }
+                                    },
+                                    textConfig: {
+                                        position: 'insideLeft',
+                                        distance: 2
+                                    },
+                                    name: 'rect'
+                                };
+
+                                const borderLeft = api.value(2)
+                                    ? (isTestingNull ? null : {})
+                                    : {
+                                        type: 'rect',
+                                        shape: {
+                                            x: -20,
+                                            y: 0,
+                                            width: 20,
+                                            height: 15
+                                        },
+                                        position,
+                                        style: {
+                                            fill: 'red'
+                                        },
+                                        name: 'bar'
+                                    };
+
+                                const right = api.value(2)
+                                    ? {
+                                    type: 'circle',
+                                    shape: {
+                                        cx: cellWidth + 20,
+                                        cy: 20,
+                                        r: 30
+                                    },
+                                    position,
+                                    style: {
+                                        fill: 'transparent',
+                                        stroke: 'blue',
+                                    }
+                                }
+                                : {
+                                    type: 'circle',
+                                    shape: {
+                                        cx: cellWidth + 20,
+                                        cy: 20,
+                                        r: 15
+                                    },
+                                    position,
+                                    style: {
+                                        fill: 'red'
+                                    }
+                                };
+
+                                const group = {
+                                    type: 'group',
+                                    children: [rect, borderLeft, right]
+                                };
+                                return group;
+                            },
+                            silent: true,
+                            z: 2,
+                            legendHoverLink: true,
+                            clip: false,
+                            label: {},
+                            emphasis: { label: {} }
+                        }
+                    ]
+                };
+
+                var rendered = isTestingNull ? ' NOT' : '';
+                var chartId = (isTestingNull ? 2 : 0) + (hasAnimation ? 1 : 0);
+                var chart = testHelper.create(echarts, 'main' + chartId, {
+                    title: [
+                        'Update group with ' + (isTestingNull ? 'null' : '{}') + ' as new child',
+                        'Animation: ' + (hasAnimation ? 'true' : 'false'),
+                        'The red shapes should be' + rendered + ' rendered after "Update"'
+                    ],
+                    option: option,
+                    // height: 300,
+                    buttons: [{text: 'Update', onclick: function () {
+                        isFirst = false;
+                        var testId = clickTimes % 2;
+                        chart.setOption({
+                            calendar: {
+                                range: testId === 0 ? ['2022-02'] : ['2022-01']
+                            },
+                            series: [
+                            {
+                                type: 'custom',
+                                data: [
+                                    [
+                                        testId === 0 ? '2022-02-13' : '2022-01-16' ,
+                                        'e',
+                                        testId === 0
+                                    ]
+                                ]
+                            }
+                            ]
+                        });
+                        ++clickTimes;
+                    }}]
+                });
+            }
+
+            createCase(false, false);
+            createCase(true, false);
+            createCase(false, true);
+            createCase(true, true);
+        });
+        </script>
+
+
+    </body>
+</html>

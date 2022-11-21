@@ -106,7 +106,7 @@ class LinesView extends ChartView {
 
         const lineDraw = this._updateLineDraw(data, seriesModel);
 
-        lineDraw.incrementalPrepareUpdate(data);
+        lineDraw.incrementalPrepareUpdate(data as any);
 
         this._clearLayer(api);
 
@@ -118,7 +118,7 @@ class LinesView extends ChartView {
         seriesModel: LinesSeriesModel,
         ecModel: GlobalModel
     ) {
-        this._lineDraw.incrementalUpdate(taskParams, seriesModel.getData());
+        this._lineDraw.incrementalUpdate(taskParams, seriesModel.getData() as any);
 
         this._finished = taskParams.end === seriesModel.getData().count();
     }

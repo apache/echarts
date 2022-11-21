@@ -698,7 +698,7 @@ const clip: {
 
         // When xClipped or yClipped, the element will be marked as `ignore`.
         // But we should also place the element at the edge of the coord sys bounding rect.
-        // Beause if data changed and the bar show again, its transition animaiton
+        // Because if data changed and the bar shows again, its transition animation
         // will begin at this place.
         layout.x = (xClipped && x > coordSysX2) ? x2 : x;
         layout.y = (yClipped && y > coordSysY2) ? y2 : y;
@@ -1146,6 +1146,7 @@ function createLarge(
     const el = new LargePath({
         shape: {points: data.getLayout('largePoints')},
         incremental: !!incremental,
+        ignoreCoarsePointer: true,
         z2: 1
     });
     el.baseDimIdx = baseDimIdx;
