@@ -131,8 +131,8 @@ function calculateStack(stackInfoList: StackInfo[]) {
                         stackStrategy === 'all' // single stack group
                         || (stackStrategy === 'positive' && val > 0)
                         || (stackStrategy === 'negative' && val < 0)
-                        || (stackStrategy === 'samesign' && sum > 0 && val > 0) // All positive stack
-                        || (stackStrategy === 'samesign' && sum < 0 && val < 0) // All negative stack
+                        || (stackStrategy === 'samesign' && sum >= 0 && val > 0) // All positive stack
+                        || (stackStrategy === 'samesign' && sum <= 0 && val < 0) // All negative stack
                     ) {
                         // The sum has to be very small to be affected by the
                         // floating arithmetic problem. An incorrect result will probably
