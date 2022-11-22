@@ -32,6 +32,7 @@ import OrdinalScale from '../scale/Ordinal';
 import { AxisBaseModel } from './AxisBaseModel';
 import type Axis2D from './cartesian/Axis2D';
 import { TimeScaleTick } from '../util/types';
+import * as formatUtil from '../util/format';
 import { BoundingRect } from 'zrender';
 
 type CacheKey = string | number;
@@ -168,7 +169,10 @@ function makeNonOverlappedTimeLabels(axis: Axis, onlyTick?: boolean) {
     const ticks = axis.scale.getTicks() as TimeScaleTick[];
     const ordinalScale = axis.scale as OrdinalScale;
     const labelFormatter = makeLabelFormatter(axis);
-    const font = axis.getLabelModel().getFont();
+    const labelModel = axis.getLabelModel();
+    const font = labelModel.getFont();
+    const padding = formatUtil.normalizeCssArray(labelModel.get('padding') || 0);
+    const paddingH = padding[1] + padding[3];
 
     const result: (MakeLabelsResultObj | number)[] = [];
     const boundingRects: BoundingRect[] = [];
@@ -234,10 +238,8 @@ function makeNonOverlappedTimeLabels(axis: Axis, onlyTick?: boolean) {
                     'center',
                     'top'
                 );
-                // The same magic number as in calculateCategoryInterval
-                const padding = 0.15;
-                rect.x += axis.dataToCoord(tick.value) - rect.width * padding;
-                rect.width *= (1 + padding * 2);
+                rect.x += axis.dataToCoord(tick.value) - padding[3];
+                rect.width += paddingH;
                 if (!isOverlap(rect)) {
                     // Add the tick only if it has no overlap with current ones
                     addItem(tick.value, tick.level);

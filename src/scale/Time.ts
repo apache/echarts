@@ -316,58 +316,6 @@ function isUnitValueSame(
     }
 }
 
-// const primaryUnitGetters = {
-//     year: fullYearGetterName(),
-//     month: monthGetterName(),
-//     day: dateGetterName(),
-//     hour: hoursGetterName(),
-//     minute: minutesGetterName(),
-//     second: secondsGetterName(),
-//     millisecond: millisecondsGetterName()
-// };
-
-// const primaryUnitUTCGetters = {
-//     year: fullYearGetterName(true),
-//     month: monthGetterName(true),
-//     day: dateGetterName(true),
-//     hour: hoursGetterName(true),
-//     minute: minutesGetterName(true),
-//     second: secondsGetterName(true),
-//     millisecond: millisecondsGetterName(true)
-// };
-
-// function moveTick(date: Date, unitName: TimeUnit, step: number, isUTC: boolean) {
-//     step = step || 1;
-//     switch (getPrimaryTimeUnit(unitName)) {
-//         case 'year':
-//             date[fullYearSetterName(isUTC)](date[fullYearGetterName(isUTC)]() + step);
-//             break;
-//         case 'month':
-//             date[monthSetterName(isUTC)](date[monthGetterName(isUTC)]() + step);
-//             break;
-//         case 'day':
-//             date[dateSetterName(isUTC)](date[dateGetterName(isUTC)]() + step);
-//             break;
-//         case 'hour':
-//             date[hoursSetterName(isUTC)](date[hoursGetterName(isUTC)]() + step);
-//             break;
-//         case 'minute':
-//             date[minutesSetterName(isUTC)](date[minutesGetterName(isUTC)]() + step);
-//             break;
-//         case 'second':
-//             date[secondsSetterName(isUTC)](date[secondsGetterName(isUTC)]() + step);
-//             break;
-//         case 'millisecond':
-//             date[millisecondsSetterName(isUTC)](date[millisecondsGetterName(isUTC)]() + step);
-//             break;
-//     }
-//     return date.getTime();
-// }
-
-// const DATE_INTERVALS = [[8, 7.5], [4, 3.5], [2, 1.5]];
-// const MONTH_INTERVALS = [[6, 5.5], [3, 2.5], [2, 1.5]];
-// const MINUTES_SECONDS_INTERVALS = [[30, 30], [20, 20], [15, 15], [10, 10], [5, 5], [2, 2]];
-
 function getDateInterval(approxInterval: number, daysInMonth: number) {
     approxInterval /= ONE_DAY;
     return approxInterval > 16 ? 16
