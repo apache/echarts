@@ -211,6 +211,27 @@ function drawSegment(
     return k;
 }
 
+function getPoints(shape: ECPolygonShape|ECPolylineShape) {
+    let points = Array.from(shape.points);
+
+    if (shape.loop) {
+        if (shape.connectNulls) {
+            const nonNull: number[] = [];
+            for (let i = 0; i < points.length; i += 2) {
+                if (!isPointNull(points[i], points[i + 1])) {
+                    nonNull.push(points[i], points[i + 1]);
+                }
+            }
+            points = [nonNull[nonNull.length - 2], nonNull[nonNull.length - 1], ...points, nonNull[0], nonNull[1]];
+        }
+        else {
+            points = [points[points.length - 2], points[points.length - 1], ...points, points[0], points[1]];
+        }
+    }
+
+    return points;
+}
+
 class ECPolylineShape {
     points: ArrayLike<number>;
     smooth = 0;
@@ -246,16 +267,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolylineShape) {
-        const points = shape.loop
-            ? [
-                shape.points[shape.points.length - 2],
-                shape.points[shape.points.length - 1],
-                ...shape.points as number[],
-                shape.points[0],
-                shape.points[1]
-            ]
-            : shape.points;
-
+        const points = getPoints(shape);
         let i = 0;
         let len = points.length / 2;
 
@@ -378,15 +390,7 @@ export class ECPolygon extends Path {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolygonShape) {
-        const points = shape.loop
-            ? [
-                shape.points[shape.points.length - 2],
-                shape.points[shape.points.length - 1],
-                ...shape.points as number[],
-                shape.points[0],
-                shape.points[1]
-            ]
-            : shape.points;
+        const points = getPoints(shape);
         const stackedOnPoints = shape.stackedOnPoints;
 
         let i = 0;
