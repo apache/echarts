@@ -217,7 +217,7 @@ class ECPolylineShape {
     smoothConstraint = true;
     smoothMonotone: 'x' | 'y' | 'none';
     connectNulls: boolean;
-    closed = false;
+    loop = false;
 }
 
 interface ECPolylineProps extends PathProps {
@@ -246,7 +246,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolylineShape) {
-        const points = shape.closed
+        const points = shape.loop
             ? [
                 shape.points[shape.points.length - 2],
                 shape.points[shape.points.length - 1],
@@ -276,7 +276,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
         }
         while (i < len) {
             i += drawSegment(
-                ctx, points, shape.closed ? i - 1 : i, len, shape.closed ? len - 1 : len,
+                ctx, points, shape.loop ? i - 1 : i, len, shape.loop ? len - 1 : len,
                 1,
                 shape.smooth,
                 shape.smoothMonotone, shape.connectNulls
@@ -378,7 +378,7 @@ export class ECPolygon extends Path {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolygonShape) {
-        const points = shape.closed
+        const points = shape.loop
             ? [
                 shape.points[shape.points.length - 2],
                 shape.points[shape.points.length - 1],
@@ -409,13 +409,13 @@ export class ECPolygon extends Path {
         while (i < len) {
             const k = drawSegment(
                 ctx, points,
-                shape.closed ? i - 1 : i, len, shape.closed ? len - 1 : len,
+                shape.loop ? i - 1 : i, len, shape.loop ? len - 1 : len,
                 1,
                 shape.smooth,
                 smoothMonotone, shape.connectNulls
             );
             drawSegment(
-                ctx, stackedOnPoints, i + k - 1 - (shape.closed ? 1 : 0), k, shape.closed ? len - 1 : len,
+                ctx, stackedOnPoints, i + k - 1 - (shape.loop ? 1 : 0), k, shape.loop ? len - 1 : len,
                 -1,
                 shape.stackedOnSmooth,
                 smoothMonotone, shape.connectNulls

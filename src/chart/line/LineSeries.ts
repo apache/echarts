@@ -121,7 +121,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
 
     triggerLineEvent?: boolean
 
-    closed?: boolean
+    loop?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -154,7 +154,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         clip: true,
 
-        closed: false,
+        loop: false,
 
         label: {
             position: 'top'

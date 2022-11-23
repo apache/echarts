@@ -657,7 +657,7 @@ class LineView extends ChartView {
 
         const connectNulls = seriesModel.get('connectNulls');
 
-        const closed = isCoordSysPolar && seriesModel.get('closed');
+        const loop = isCoordSysPolar && seriesModel.get('loop');
 
         const isIgnoreFunc = showSymbol && !isCoordSysPolar
             && getIsIgnoreFunc(seriesModel, data, coordSys as Cartesian2D);
@@ -727,10 +727,10 @@ class LineView extends ChartView {
                 }
             }
 
-            polyline = this._newPolyline(points, closed);
+            polyline = this._newPolyline(points, loop);
             if (isAreaChart) {
                 polygon = this._newPolygon(
-                    points, stackedOnPoints, closed
+                    points, stackedOnPoints, loop
                 );
             }// If areaStyle is removed
             else if (polygon) {
@@ -751,7 +751,7 @@ class LineView extends ChartView {
             if (isAreaChart && !polygon) {
                 // If areaStyle is added
                 polygon = this._newPolygon(
-                    points, stackedOnPoints, closed
+                    points, stackedOnPoints, loop
                 );
             }
             else if (polygon && !isAreaChart) {
@@ -1021,7 +1021,7 @@ class LineView extends ChartView {
         polygon && setStatesFlag(polygon, toState);
     }
 
-    _newPolyline(points: ArrayLike<number>, closed: boolean) {
+    _newPolyline(points: ArrayLike<number>, loop: boolean) {
         let polyline = this._polyline;
         // Remove previous created polyline
         if (polyline) {
@@ -1031,7 +1031,7 @@ class LineView extends ChartView {
         polyline = new ECPolyline({
             shape: {
                 points,
-                closed
+                loop
             },
             segmentIgnoreThreshold: 2,
             z2: 10
@@ -1044,7 +1044,7 @@ class LineView extends ChartView {
         return polyline;
     }
 
-    _newPolygon(points: ArrayLike<number>, stackedOnPoints: ArrayLike<number>, closed: boolean) {
+    _newPolygon(points: ArrayLike<number>, stackedOnPoints: ArrayLike<number>, loop: boolean) {
         let polygon = this._polygon;
         // Remove previous created polygon
         if (polygon) {
@@ -1054,7 +1054,7 @@ class LineView extends ChartView {
         polygon = new ECPolygon({
             shape: {
                 points,
-                closed,
+                loop,
                 stackedOnPoints: stackedOnPoints
             },
             segmentIgnoreThreshold: 2
