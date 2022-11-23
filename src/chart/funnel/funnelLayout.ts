@@ -246,14 +246,8 @@ function labelLayout(data: SeriesData) {
     });
 }
 
-function overAllRateLabelLayout(data: SeriesData, indices: number[]) {
-    data.each(function (idx) {
-        if (idx !== indices[indices.length - 1]) {
-            return;
-        }
-        const layout = data.getItemLayout(idx);
+function overAllRateLabelLayout(layout: any) {
         const points = layout.ratePoints;
-
         const isLabelInside = true;
 
         const textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
@@ -267,7 +261,6 @@ function overAllRateLabelLayout(data: SeriesData, indices: number[]) {
             textAlign: textAlign,
             inside: isLabelInside
         };
-    });
 }
 
 export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
@@ -533,7 +526,8 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
         labelLayout(data);
         if (showRate && !dynamicHeight) {
-            overAllRateLabelLayout(data, indices);
+            const overAllLayout = data.getItemLayout(indices[indices.length - 1]);
+            overAllRateLabelLayout(overAllLayout);
         }
     });
 }
