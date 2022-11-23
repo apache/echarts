@@ -43,6 +43,10 @@ under the License.
 
     <div id="main0"></div>
     <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+    <div id="main4"></div>
+    <div id="main5"></div>
 
     <script>
 
@@ -111,7 +115,7 @@ under the License.
                 }]
             };
 
-            chart = myChart = testHelper.create(echarts, 'main0', {
+            chart = myChart = testHelper.create(echarts, 'main1', {
                 title: 'bar in log axis with min < 1',
                 option: option,
                 info: option
@@ -141,13 +145,49 @@ under the License.
                     type: 'log'
                 },
                 series: [{
+                    data: [],
+                    type: 'bar'
+                }]
+            };
+
+            chart = myChart = testHelper.create(echarts, 'main2', {
+                title: 'bar in log axis with no data',
+                option: option,
+                info: option
+            });
+        });
+
+    </script>
+
+
+    <script>
+
+        // See <https://github.com/ecomfe/echarts/issues/7412>
+        // Thanks to <https://github.com/CrazyShipOne>
+
+        var chart;
+        var myChart;
+        var option;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'log'
+                },
+                series: [{
                     data: [.2, 5, 10, 4, .1],
                     type: 'pictorialBar',
                     symbol: 'path://M123.78,92.09a41.28,41.28,0,0,1,17.35,3.62c15.68,7.86,24.94,22.78,25.06,39.42V249.74c-2.94,18.22-23.91,13.27-24.42,0V141.52c-1.87-6.17-13.84-3.62-14.13,0v248.4c-3,25.37-36,17.93-36.84-.42V237.39c-2.1-9.82-16-5.36-16.27.42.59,50.56.43,101.13.43,151.69-3.29,25.23-36.08,18.78-36.84.42l-.43-248.4c-1.92-6-13-3.73-13.28,0V249.74C21.47,268,.51,263,0,249.74V135.13c.3-15.93,6.17-31.89,20.13-39.42Q27,92.1,36.84,92.09Zm-.43-52A40.25,40.25,0,1,1,83.1,0,40.15,40.15,0,0,1,123.35,40Z',
                 }]
             };
 
-            chart = myChart = testHelper.create(echarts, 'main0', {
+            chart = myChart = testHelper.create(echarts, 'main3', {
                 title: 'pictorialBar in log axis with min < 1',
                 option: option,
                 info: option
@@ -155,6 +195,79 @@ under the License.
         });
 
     </script>
+    <script>
+
+        // See <https://github.com/ecomfe/echarts/issues/7412>
+        // Thanks to <https://github.com/CrazyShipOne>
+
+        var chart;
+        var myChart;
+        var option;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'log'
+                },
+                series: [{
+                    data: [],
+                    type: 'bar'
+                }, {
+                    data: [.2, 4],
+                    type: 'line'
+                }]
+            };
+
+            chart = myChart = testHelper.create(echarts, 'main4', {
+                title: 'bar in log axis with no data + line with data',
+                option: option,
+                info: option
+            });
+        });
+
+    </script>
+    <script>
+
+        // See <https://github.com/ecomfe/echarts/issues/7412>
+        // Thanks to <https://github.com/CrazyShipOne>
+
+        var chart;
+        var myChart;
+        var option;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'log',
+                    min: .01
+                },
+                series: [{
+                    data: [2, 3, 5, 1],
+                    type: 'bar'
+                }]
+            };
+
+            chart = myChart = testHelper.create(echarts, 'main5', {
+                title: 'bar in log axis with set min <1',
+                option: option,
+                info: option
+            });
+        });
+
+    </script>
+
 
 </body>
 
