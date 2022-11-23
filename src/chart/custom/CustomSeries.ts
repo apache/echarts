@@ -30,6 +30,7 @@ import {
     DimensionLoose,
     ItemStyleOption,
     LabelOption,
+    OptionDataItem,
     OptionDataValue,
     OrdinalRawValue,
     ParsedValue,
@@ -308,6 +309,9 @@ export interface CustomSeriesRenderItemParams {
 
     dataIndexInside: number;
     dataInsideLength: number;
+
+    seriesData: SeriesData<CustomSeriesModel>;
+    seriesDataItem: OptionDataItem;
 
     actionType?: string;
 }

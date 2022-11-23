@@ -635,7 +635,8 @@ function makeRenderItem(
         seriesIndex: customSeries.seriesIndex,
         coordSys: prepareResult.coordSys,
         dataInsideLength: data.count(),
-        encode: wrapEncodeDef(customSeries.getData())
+        encode: wrapEncodeDef(customSeries.getData()),
+        seriesData: data
     } as CustomSeriesRenderItemParams;
 
     // If someday intending to refactor them to a class, should consider do not
@@ -692,6 +693,7 @@ function makeRenderItem(
 
         return renderItem && renderItem(
             defaults({
+                seriesDataItem: data.getRawDataItem(dataIndexInside),
                 dataIndexInside: dataIndexInside,
                 dataIndex: data.getRawIndex(dataIndexInside),
                 // Can be used for optimization when zoom or roam.
