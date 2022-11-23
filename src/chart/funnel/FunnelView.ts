@@ -38,47 +38,24 @@ import ZRText from 'zrender/src/graphic/Text';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
-const rateLabelFetcher = {
-    getFormattedLabel(
-        // In MapDraw case it can be string (region name)
-        labelDataIndex: number,
-        status: DisplayState,
-        dataType?: SeriesDataType,
-        labelDimIndex?: number,
-        formatter?: string | ((params: object) => string),
-        // If provided, the implementation of `getFormattedLabel` can use it
-        // to generate the final label text.
-        extendParams?: {
-            interpolatedValue: InterpolatableValue
-        }
-    ): string {
-        status = status || 'normal';
-        const { layout } = this as unknown as { hostModel: FunnelSeriesModel, layout: any };
-
-        const { rate, nextName, preName, preDataIndex, nextDataIndex } = layout;
-
-        type RateParams = {
-            rate: string,
-            preName: string,
-            nextName: string,
-            preDataIndex: string,
-            nextDataIndex: string
-        };
-
-        const params: RateParams = {
-            rate,
-            preName,
-            nextName,
-            preDataIndex,
-            nextDataIndex
-        };
-
-        if (zrUtil.isFunction(formatter)) {
-            return formatter(params);
-        }
-
-        return '';
+const getFormattedLabel = function (
+    this: { params: any },
+    // In MapDraw case it can be string (region name)
+    labelDataIndex: number,
+    status: DisplayState,
+    dataType?: SeriesDataType,
+    labelDimIndex?: number,
+    formatter?: string | ((params: object) => string),
+    // If provided, the implementation of `getFormattedLabel` can use it
+    // to generate the final label text.
+    extendParams?: {
+        interpolatedValue: InterpolatableValue
     }
+): string {
+    if (zrUtil.isFunction(formatter)) {
+        return formatter(this.params);
+    }
+    return '';
 };
 
 type Accessory = {
@@ -282,17 +259,11 @@ function RatePiece(
         }, seriesModel, idx);
     }
 
-    const rateFetcher = {
-        getFormattedLabel: rateLabelFetcher.getFormattedLabel.bind(
-            { hostModel: data.hostModel, layout }
-        )
-    };
-
     setLabelStyle(
         polygon,
         getLabelStatesModels(itemModel, 'rateLabel'),
         {
-            labelFetcher: rateFetcher,
+            labelFetcher: { getFormattedLabel: getFormattedLabel.bind(layout) },
             labelDataIndex: idx,
             defaultOpacity: rateItemStyle.opacity,
             defaultText: layout.rate
@@ -311,11 +282,6 @@ function RatePiece(
 function OverallRateLabel(data: SeriesData, idx: number, text: ZRText = new graphic.Text()) {
     const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
     const layout = data.getItemLayout(idx);
-    const rateFetcher = {
-        getFormattedLabel: rateLabelFetcher.getFormattedLabel.bind(
-            { hostModel: data.hostModel, layout }
-        )
-    };
     const seriesModel = data.hostModel;
     const labelLayout = layout.rateLabel;
 
@@ -323,7 +289,7 @@ function OverallRateLabel(data: SeriesData, idx: number, text: ZRText = new grap
         text,
         getLabelStatesModels(itemModel, 'overallRateLabel'),
         {
-            labelFetcher: rateFetcher,
+            labelFetcher: { getFormattedLabel: getFormattedLabel.bind(layout) },
             labelDataIndex: idx,
             defaultOpacity: 1,
             defaultText: layout.rate
@@ -350,7 +316,6 @@ const initRate = function (
     data: SeriesData,
     idx: number,
     isLastPiece: boolean
-
 ): Accessory {
     if (isLastPiece) {
         return {

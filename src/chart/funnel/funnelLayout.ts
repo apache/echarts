@@ -28,9 +28,9 @@ import { isFunction } from 'zrender/src/core/util';
 function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
+        width: api.getWidth(),
+        height: api.getHeight()
+    }
     );
 }
 
@@ -246,8 +246,11 @@ function labelLayout(data: SeriesData) {
     });
 }
 
-function rateLabelLayout(data: SeriesData) {
+function overAllRateLabelLayout(data: SeriesData, indices: number[]) {
     data.each(function (idx) {
+        if (idx !== indices[indices.length - 1]) {
+            return;
+        }
         const layout = data.getItemLayout(idx);
         const points = layout.ratePoints;
 
@@ -318,7 +321,6 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         }
 
         const getLinePoints = function (offset: number, itemSize: number) {
-            // do not caculate line width in this func
             if (orient === 'horizontal') {
                 const itemHeight = itemSize;
                 let y0;
@@ -408,38 +410,29 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         ) => void | null = null;
 
         if (showRate) {
-            let firstVal: number;
-            let firstName: string;
-            let firstDataIndex: number;
             // get rate fixed decimal places
             const ratePrecision = seriesModel.get(['rateLabel', 'precision']);
             const overallRatePrecision = seriesModel.get(['overallRateLabel', 'precision']);
             const getConverRate = function (index: number, idx: number, nextIdx: number) {
-                const val = data.get(valueDim, idx) as number || 0;
-                const nextVal = data.get(valueDim, nextIdx) as number || 0;
-                let preName = data.getName(idx);
-                let nextName = data.getName(nextIdx);
-                let preDataIndex = idx;
-                let nextDataIndex = nextIdx;
-                let rate: number | string = nextVal / val;
-                rate = (rate * 100).toFixed(ratePrecision) + '%';
-                if (index === 0) {
-                    firstVal = val;
-                    firstName = data.getName(idx);
-                    firstDataIndex = idx;
+                let preDataIndex: number;
+                let nextDataIndex: number;
+                let precision: number = ratePrecision;
+                if (index === indices.length - 1) {
+                    // over all rate number
+                    preDataIndex = indices[0];
+                    nextDataIndex = indices[indices.length - 1];
+                    precision = overallRatePrecision;
                 }
-                else if (index === indices.length - 1) {
-                    const lastVal = val;
-                    rate = lastVal / firstVal;
-                    rate = (rate * 100).toFixed(overallRatePrecision) + '%';
-                    nextName = preName;
-                    preName = firstName;
-                    preDataIndex = firstDataIndex;
-                    nextDataIndex = idx;
+                else {
+                    preDataIndex = idx;
+                    nextDataIndex = nextIdx;
                 }
-                preDataIndex = preDataIndex + 1;
-                nextDataIndex = nextDataIndex + 1;
-                return { rate, nextName, preName, preDataIndex, nextDataIndex };
+                const preDataName = data.getName(preDataIndex);
+                const nextDataName = data.getName(nextDataIndex);
+                const preDataVal = data.get(valueDim, preDataIndex) as number || 0;
+                const nextDataVal = data.get(valueDim, nextDataIndex) as number || 0;
+                const rate = (nextDataVal / preDataVal * 100).toFixed(precision) + '%';
+                return { rate, nextDataName, preDataName, preDataIndex, nextDataIndex };
             };
             setRatePiecePoint = function (
                 index: number,
@@ -464,16 +457,12 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                 const rateEnd = getLinePoints(pos + pieceHeight, nextSize);
 
                 // rate string about
-                const { rate, nextName, preName, preDataIndex, nextDataIndex } = getConverRate(index, idx, nextIdx);
+                const params = getConverRate(index, idx, nextIdx);
                 data.setItemLayout(idx, {
                     points: dataStart.concat(dataEnd.slice().reverse()),
                     ratePoints: rateStart.concat(rateEnd.slice().reverse()),
                     isLastPiece: index === indices.length - 1,
-                    rate,
-                    nextName,
-                    preName,
-                    preDataIndex,
-                    nextDataIndex
+                    params
                 });
             };
         }
@@ -544,7 +533,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
         labelLayout(data);
         if (showRate && !dynamicHeight) {
-            rateLabelLayout(data);
+            overAllRateLabelLayout(data, indices);
         }
     });
 }
