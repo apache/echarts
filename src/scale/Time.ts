@@ -78,7 +78,7 @@ import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
 import { warn } from '../util/log';
 import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
-import { filter, isNumber, map } from 'zrender/src/core/util';
+import { filter, isNumber, map, indexOf } from 'zrender/src/core/util';
 
 // FIXME 公用？
 const bisect = function (
@@ -102,6 +102,7 @@ const bisect = function (
 type TimeScaleSetting = {
     locale: Model<LocaleOption>;
     useUTC: boolean;
+    formatterMinUnit?: PrimaryTimeUnit;
 };
 
 class TimeScale extends IntervalScale<TimeScaleSetting> {
@@ -139,7 +140,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     ): string {
         const isUTC = this.getSetting('useUTC');
         const lang = this.getSetting('locale');
-        return leveledFormat(tick, idx, labelFormatter, lang, isUTC);
+        const formatterMinUnit = this.getSetting('formatterMinUnit');
+        return leveledFormat(tick, idx, labelFormatter, lang, isUTC, formatterMinUnit);
     }
 
     /**
@@ -161,12 +163,14 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         });
 
         const useUTC = this.getSetting('useUTC');
+        const formatterMinUnit = this.getSetting('formatterMinUnit');
 
         const innerTicks = getIntervalTicks(
             this._minLevelUnit,
             this._approxInterval,
             useUTC,
-            extent
+            extent,
+            formatterMinUnit
         );
 
         ticks = ticks.concat(innerTicks);
@@ -318,11 +322,10 @@ function isUnitValueSame(
 
 function getDateInterval(approxInterval: number, daysInMonth: number) {
     approxInterval /= ONE_DAY;
+    // Don't return an interval too large, that would cause too many ticks.
+    // Even if they don't overlap, it's not good for readability.
     return approxInterval > 16 ? 16
-                // Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick between two months.
-            : approxInterval > 7.5 ? 7  // TODO week 7 or day 8?
-            : approxInterval > 3.5 ? 4
-            : approxInterval > 1.5 ? 2 : 1;
+            : approxInterval > 1.5 ? 7 : 1;
 }
 
 function getMonthInterval(approxInterval: number) {
@@ -378,7 +381,8 @@ function getIntervalTicks(
     bottomUnitName: TimeUnit,
     approxInterval: number,
     isUTC: boolean,
-    extent: number[]
+    extent: number[],
+    formatterMinUnit?: PrimaryTimeUnit
 ): TimeScaleTick[] {
     const safeLimit = 10000;
     const unitNames = timeUnits;
@@ -523,9 +527,17 @@ function getIntervalTicks(
     const levelsTicks: InnerTimeTick[][] = [];
     let currentLevelTicks: InnerTimeTick[] = [];
 
+    const minUnitId = formatterMinUnit
+        ? indexOf(unitNames, formatterMinUnit)
+        : -1;
+
     let tickCount = 0;
     let lastLevelTickCount = 0;
     for (let i = 0; i < unitNames.length && iter++ < safeLimit; ++i) {
+        if (minUnitId >= 0 && i > minUnitId) {
+            break;
+        }
+
         const primaryTimeUnit = getPrimaryTimeUnit(unitNames[i]);
         if (!isPrimaryTimeUnit(unitNames[i])) { // TODO
             continue;

@@ -40,10 +40,13 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main-unit"></div>
         <div id="main3"></div>
         <div id="main4"></div>
         <div id="main5"></div>
         <div id="main6"></div>
+        <div id="main7"></div>
+        <div id="main8"></div>
 
 
         <script>
@@ -128,7 +131,8 @@ under the License.
             var chart = testHelper.create(echarts, 'main1', {
                 title: [
                     'When min/max data is not in year unit',
-                    'Expect 2009 and 2020 not to be displayed'
+                    'showMinLabel/showMaxLabel is displayed when space is enough',
+                    'Expect 11:00 to be displayed at the left and right'
                 ],
                 option: option
                 // height: 300,
@@ -162,9 +166,10 @@ under the License.
                 xAxis: {
                     type: 'time',
                     axisLabel: {
-                        showMaxLabel: true,
-                        showMinLabel: true,
-                        formatter: '{yyyy}'
+                        formatterMinUnit: 'month',
+                        formatter: {
+                            month: '{yyyy}.{MM}'
+                        }
                     }
                 },
                 yAxis: {
@@ -178,8 +183,55 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main2', {
                 title: [
-                    'Force show min and max in the above case',
-                    'Expect 2009 and 2020 to be displayed'
+                    'formatterMinUnit: \'month\'',
+                    'Expect 2009.09 and 2020.03 to be displayed'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            let time = new Date('2010-01-01 10:00:00');
+            const data = [];
+            for (let i = 0; i < 150; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time = new Date(time.getTime() + 1000 * 60 * 20);
+            }
+
+            option = {
+                tooltip: {
+                    show: true,
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        formatterMinUnit: 'day',
+                        showMinLabel: false,
+                        showMaxLabel: false
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main-unit', {
+                title: [
+                    'formatterMinUnit: \'day\'',
+                    'Expect only display 2 and 3 in the axis'
                 ],
                 option: option
                 // height: 300,
@@ -385,11 +437,6 @@ under the License.
                 xAxis: {
                     type: 'time',
                     axisLabel: {
-                        rich: {
-                            monthStyle: {
-                                color: '#f00'
-                            }
-                        }
                     }
                 },
                 yAxis: {
@@ -399,7 +446,8 @@ under the License.
 
             var chart = testHelper.create(echarts, 'main6', {
                 title: [
-                    'Callback formatter'
+                    'It should not overlap each other',
+                    'Month label should always be displayed while date label should be displayed only if have space'
                 ],
                 option: option
                 // height: 300,
@@ -441,9 +489,57 @@ under the License.
                 }
             };
 
-            var chart = testHelper.create(echarts, 'main6', {
+            var chart = testHelper.create(echarts, 'main7', {
                 title: [
-                    'Callback formatter'
+                    'It should not overlap each other with long text'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+            const time = new Date('2010-01-01 00:00:00');
+            const data = [];
+            for (let i = 0; i < 30; ++i) {
+                data.push([time.getTime(), i * 10 + Math.random() * 100]);
+                time.setMonth(time.getMonth() + 1);
+            }
+
+            option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        formatter: function (time) {
+                            const date = new Date(time);
+                            return 'long text long text ' + date.getFullYear() + '-' + (date.getMonth() + 1);
+                        },
+                        padding: [5, 80],
+                        backgroundColor: 'yellow',
+                        borderWidth: 1,
+                        borderColor: 'orange'
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: {
+                    type: 'line',
+                    data: data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main8', {
+                title: [
+                    'Text with padding should not overlap'
                 ],
                 option: option
                 // height: 300,
