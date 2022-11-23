@@ -61,6 +61,7 @@ export interface FunnelCallbackDataParams extends CallbackDataParams {
 }
 export interface FunnelStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
+    rateItemStyle?: ItemStyleOption<TCbParams>
     label?: FunnelLabelOption
     labelLine?: LabelLineOption
     rateLabel?: FunnelRateLabelOption
@@ -75,6 +76,8 @@ export interface FunnelDataItemOption
         width?: number | string
         height?: number | string
     }
+
+    rateItemStyle?: ItemStyleOption
 }
 
 export interface FunnelSeriesOption
