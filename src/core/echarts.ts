@@ -1580,7 +1580,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
-                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) != null;
                 if (isExcluded) {
                     return;
                 };
@@ -1624,7 +1624,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             }, ecIns);
 
             ecModel && ecModel.eachComponent(condition, function (model) {
-                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) != null;
                 if (isExcluded) {
                     return;
                 };
