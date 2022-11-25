@@ -137,8 +137,6 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-const hasWindow = typeof window !== 'undefined';
-
 export const version = '5.4.0';
 
 export const dependencies = {
@@ -417,7 +415,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         if (__DEV__) {
             const root = (
                 /* eslint-disable-next-line */
-                hasWindow ? window : global
+                env.hasGlobalWindow ? window : global
             ) as any;
 
             defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
@@ -705,7 +703,7 @@ class ECharts extends Eventful<ECEventDefinition> {
     getDevicePixelRatio(): number {
         return (this._zr.painter as CanvasPainter).dpr
             /* eslint-disable-next-line */
-            || (hasWindow && window.devicePixelRatio) || 1;
+            || (env.hasGlobalWindow && window.devicePixelRatio) || 1;
     }
 
     /**
