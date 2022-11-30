@@ -21,6 +21,8 @@ import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {extend, each, map} from 'zrender/src/core/util';
 import {BuiltinTextPosition} from 'zrender/src/core/types';
+import {SectorProps} from 'zrender/src/graphic/shape/Sector';
+import {RectProps} from 'zrender/src/graphic/shape/Rect';
 import {
     Rect,
     Sector,
@@ -66,6 +68,7 @@ import { warn } from '../../util/log';
 import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
+import { getSectorCornerRadius } from '../helper/sectorHelper';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
@@ -338,7 +341,7 @@ class BarView extends ChartView {
                     }
                     const bgLayout = getLayout[coord.type](data, newIndex);
                     const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
-                    updateProps(bgEl, { shape }, animationModel, newIndex);
+                    updateProps<RectProps | SectorProps>(bgEl, { shape }, animationModel, newIndex);
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
@@ -971,7 +974,8 @@ function createPolarPositionMapping(isRadial: boolean)
 
 function updateStyle(
     el: BarPossiblePath,
-    data: SeriesData, dataIndex: number,
+    data: SeriesData,
+    dataIndex: number,
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,
     seriesModel: BarSeriesModel,
@@ -981,7 +985,20 @@ function updateStyle(
     const style = data.getItemVisual(dataIndex, 'style');
 
     if (!isPolar) {
-        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'borderRadius']) || 0);
+        const borderRadius = itemModel
+            .get(['itemStyle', 'borderRadius']) as number | number[] || 0;
+        (el as Rect).setShape('r', borderRadius);
+    }
+    else if (!seriesModel.get('roundCap')) {
+        const sector = el as Sector;
+        const sectorShape = (el as Sector).shape;
+        const cornerRadius = getSectorCornerRadius(
+            itemModel.getModel('itemStyle'),
+            sectorShape,
+            true
+        );
+        extend(sectorShape, cornerRadius);
+        sector.setShape(sectorShape);
     }
 
     el.useStyle(style);
