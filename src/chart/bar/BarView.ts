@@ -803,7 +803,7 @@ const elementCreator: {
             const sectorShape = sector.shape;
             const animateProperty = isRadial ? 'r' : 'endAngle' as 'r' | 'endAngle';
             const animateTarget = {} as SectorShape;
-            sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
+            sectorShape[animateProperty] = isRadial ? layout.r0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
             (isUpdate ? updateProps : initProps)(sector, {
                 shape: animateTarget
