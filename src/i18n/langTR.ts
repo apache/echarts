@@ -1,5 +1,3 @@
-
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -19,32 +17,11 @@
 * under the License.
 */
 
-
-/**
- * AUTO-GENERATED FILE. DO NOT MODIFY.
- */
-(function(root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define(['exports'], factory);
-    } else if (
-        typeof exports === 'object' &&
-        typeof exports.nodeName !== 'string'
-    ) {
-        // CommonJS
-        factory(exports);
-    } else {
-        // Browser globals
-        factory({});
-    }
-})(this, function(exports) {
-
-
 /**
  * Language: Türkçe.
  */
 
-var localeObj = {
+export default {
     time: {
         month: [
             'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
@@ -163,11 +140,3 @@ var localeObj = {
         }
     }
 };
-
-    for (var key in localeObj) {
-        if (localeObj.hasOwnProperty(key)) {
-            exports[key] = localeObj[key];
-        }
-    }
-
-});
