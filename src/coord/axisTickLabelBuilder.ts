@@ -344,6 +344,12 @@ function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: numbe
     const labelModel = axis.getLabelModel();
     const result: (MakeLabelsResultObj | number)[] = [];
 
+    // onBand mode, need one more tick
+    // |---1---|---2---|---3---|---4---| need 5 tick
+    if (axis.onBand && ordinalExtent[1]) {
+        ordinalExtent[1]++;
+    }
+
     // TODO: axisType: ordinalTime, pick the tick from each month/day/year/...
 
     const step = Math.max((categoryInterval || 0) + 1, 1);
@@ -411,7 +417,17 @@ function makeLabelsByCustomizedCategoryInterval(axis: Axis, categoryInterval: Ca
     const labelFormatter = makeLabelFormatter(axis);
     const result: (MakeLabelsResultObj | number)[] = [];
 
-    zrUtil.each(ordinalScale.getTicks(), function (tick) {
+    const originTicks = ordinalScale.getTicks();
+    // onBand mode, need one more tick
+    if (axis.onBand && originTicks.length) {
+        // TODO: use array.at(-1) when lib target es2022
+        const lastTicks = originTicks[originTicks.length - 1];
+        originTicks.push({
+            ...lastTicks,
+            value: lastTicks.value + 1
+        });
+    }
+    zrUtil.each(originTicks, function (tick) {
         const rawLabel = ordinalScale.getLabel(tick);
         const tickValue = tick.value;
         if (categoryInterval(tick.value, rawLabel)) {
