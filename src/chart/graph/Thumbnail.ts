@@ -1,265 +1,272 @@
 import * as graphic from '../../util/graphic';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import * as layout from '../../util/layout';
-import { BoxLayoutOptionMixin } from '../../util/types';
-import SymbolClz from '../helper/Symbol';
-import ECLinePath from '../helper/LinePath';
 import GraphSeriesModel from './GraphSeries';
 import * as zrUtil from 'zrender/src/core/util';
 import View from '../../coord/View';
-import SymbolDraw from '../helper/SymbolDraw';
-import LineDraw from '../helper/LineDraw';
+import BoundingRect from 'zrender/src/core/BoundingRect';
+import * as matrix from 'zrender/src/core/matrix';
+import * as vector from 'zrender/src/core/vector';
+import SeriesModel from '../../model/Series';
+import { BoxLayoutOptionMixin, ItemStyleOption } from '../../util/types';
+import RoamController, { RoamEventDefinition, RoamType } from '../../component/helper/RoamController';
+import Eventful from 'zrender/src/core/Eventful';
 
-interface LayoutParams {
-    pos: BoxLayoutOptionMixin
-    box: {
-        width: number,
-        height: number
-    }
+
+// TODO:
+// Thumbnail should not be bound to a single series when used on
+// coordinate system like cartesian and geo/map?
+// Should we make thumbnail as a component like markers/axisPointer/brush did?
+
+
+interface BorderRadiusOption {
+    borderRadius?: number | number[]
 }
 
-function getViewRect(layoutParams: LayoutParams, wrapperShpae: {width: number, height: number}, aspect: number) {
-    const option = zrUtil.extend(layoutParams, {
-        aspect: aspect
-    });
-    return layout.getLayoutRect(option, {
-        width: wrapperShpae.width,
-        height: wrapperShpae.height
-    });
+// TODO: apply to other series
+export interface ThumbnailOption extends BoxLayoutOptionMixin {
+    show?: boolean,
+    itemStyle?: ItemStyleOption & BorderRadiusOption
+    windowStyle?: ItemStyleOption & BorderRadiusOption
 }
 
-class Thumbnail {
+interface WindowRect extends graphic.Rect {
+    __r?: BorderRadiusOption['borderRadius'];
+}
+
+export interface ThumbnailZ2Setting {
+    background: number;
+    window: number;
+}
+
+class Thumbnail extends Eventful<Pick<RoamEventDefinition, 'zoom' | 'pan'>> {
 
     group = new graphic.Group();
 
-    private _selectedRect: graphic.Rect;
+    private _api: ExtensionAPI;
+    private _seriesModel: GraphSeriesModel;
 
-    private _layoutParams: LayoutParams;
+    private _windowRect: WindowRect;
+    private _contentBoundingRect: BoundingRect;
+    private _thumbnailCoordSys: View;
 
-    private _graphModel: GraphSeriesModel;
+    private _mtSeriesToThumbnail: matrix.MatrixArray;
+    private _mtThumbnailToSerise: matrix.MatrixArray;
 
-    private _wrapper: graphic.Rect;
+    private _thumbnailController: RoamController;
+    private _isEnabled: boolean;
 
-    private _coords: View;
+    render(opt: {
+        seriesModel: GraphSeriesModel;
+        api: ExtensionAPI;
+        roamType: RoamType;
+        z2Setting: ThumbnailZ2Setting;
+        seriesBoundingRect: BoundingRect,
+        renderThumbnailContent: (viewGroup: graphic.Group) => void
+    }) {
+        const seriesModel = this._seriesModel = opt.seriesModel;
+        const api = this._api = opt.api;
 
-    constructor(containerGroup: graphic.Group) {
-        containerGroup.add(this.group);
-    }
-
-    render(
-        seriesModel: GraphSeriesModel,
-        api: ExtensionAPI,
-        symbolDraw: SymbolDraw,
-        lineDraw: LineDraw,
-         graph: graphic.Group
-    ) {
-        const model = seriesModel.getModel('thumbnail');
+        const thumbnailModel = seriesModel.getModel('thumbnail');
         const group = this.group;
-        group.removeAll();
-        if (!model.get('show')) {
+
+        this._isEnabled = thumbnailModel.get('show', true) && isSeriesSupported(seriesModel);
+        if (!this._isEnabled) {
+            this._clear();
             return;
         }
-        this._graphModel = seriesModel;
 
-        const symbolNodes = symbolDraw.group.children();
-        const lineNodes = lineDraw.group.children();
+        group.removeAll();
 
-        const lineGroup = new graphic.Group();
-        const symbolGroup = new graphic.Group();
-
-        const zoom = seriesModel.get('zoom', true);
-
-        const itemStyleModel = model.getModel('itemStyle');
+        const z2Setting = opt.z2Setting;
+        const cursor = opt.roamType ? 'pointer' : 'default';
+        const itemStyleModel = thumbnailModel.getModel('itemStyle');
         const itemStyle = itemStyleModel.getItemStyle();
-        const selectStyleModel = model.getModel('selectedAreaStyle');
-        const selectStyle = selectStyleModel.getItemStyle();
-        const thumbnailHeight = this._handleThumbnailShape(model.get('height', true), api, 'height');
-        const thumbnailWidth = this._handleThumbnailShape(model.get('width', true), api, 'width');
+        itemStyle.fill = seriesModel.ecModel.get('backgroundColor') || '#fff';
 
-        this._layoutParams = {
-            pos: {
-                left: model.get('left'),
-                right: model.get('right'),
-                top: model.get('top'),
-                bottom: model.get('bottom')
+        // Try to use border-box in thumbnail, see https://github.com/apache/echarts/issues/18022
+        const boxBorderWidth = itemStyle.lineWidth || 0;
+        const boxContainBorder = layout.getLayoutRect(
+            {
+                left: thumbnailModel.get('left', true),
+                top: thumbnailModel.get('top', true),
+                right: thumbnailModel.get('right', true),
+                bottom: thumbnailModel.get('bottom', true),
+                width: thumbnailModel.get('width', true),
+                height: thumbnailModel.get('height', true)
             },
-            box: {
+            {
                 width: api.getWidth(),
                 height: api.getHeight()
             }
-        };
+        );
+        const borderBoundingRect =
+            layout.applyPedding(boxContainBorder.clone(), boxBorderWidth / 2);
+        const contentBoundingRect = this._contentBoundingRect =
+            layout.applyPedding(boxContainBorder.clone(), boxBorderWidth);
 
-        const layoutParams = this._layoutParams;
+        const clipGroup = new graphic.Group();
+        group.add(clipGroup);
+        clipGroup.setClipPath(new graphic.Rect({
+            shape: contentBoundingRect.plain()
+        }));
 
-        const thumbnailGroup = new graphic.Group();
+        const seriesViewGroup = new graphic.Group();
+        clipGroup.add(seriesViewGroup);
+        opt.renderThumbnailContent(seriesViewGroup);
 
-        for (const node of symbolNodes) {
-            const sub = (node as graphic.Group).children()[0];
-            const x = (node as SymbolClz).x;
-            const y = (node as SymbolClz).y;
-            const subShape = zrUtil.clone((sub as graphic.Path).shape);
-            const shape = zrUtil.extend(subShape, {
-                width: sub.scaleX,
-                height: sub.scaleY,
-                x: x - sub.scaleX / 2,
-                y: y - sub.scaleY / 2
-            });
-            const style = zrUtil.clone((sub as graphic.Path).style);
-            const subThumbnail = new (sub as any).constructor({
-                shape,
-                style,
-                z2: 151
-            });
-            symbolGroup.add(subThumbnail);
-        }
-
-        for (const node of lineNodes) {
-            const line = (node as graphic.Group).children()[0];
-            const style = zrUtil.clone((line as ECLinePath).style);
-            const shape = zrUtil.clone((line as ECLinePath).shape);
-            const lineThumbnail = new ECLinePath({
-                style,
-                shape,
-                z2: 151
-            });
-            lineGroup.add(lineThumbnail);
-        }
-
-        thumbnailGroup.add(symbolGroup);
-        thumbnailGroup.add(lineGroup);
-
-        const thumbnailWrapper = new graphic.Rect({
+        // Draw border and background and shadow of thumbnail box.
+        group.add(new graphic.Rect({
             style: itemStyle,
-            shape: {
-                height: thumbnailHeight,
-                width: thumbnailWidth
-            },
-            z2: 150
-        });
+            shape: zrUtil.extend(borderBoundingRect.plain(), {
+                r: itemStyleModel.get('borderRadius', true)
+            }),
+            cursor,
+            z2: z2Setting.background
+        }));
 
-        this._wrapper = thumbnailWrapper;
-
-        group.add(thumbnailGroup);
-        group.add(thumbnailWrapper);
-
-        layout.positionElement(thumbnailWrapper, layoutParams.pos, layoutParams.box);
-
-        const coordSys = new View();
-        const boundingRect = graph.getBoundingRect();
-        coordSys.setBoundingRect(boundingRect.x, boundingRect.y, boundingRect.width, boundingRect.height);
-
-        this._coords = coordSys;
-
-        const viewRect = getViewRect(layoutParams, thumbnailWrapper.shape, boundingRect.width / boundingRect.height);
-
-        const scaleX = viewRect.width / boundingRect.width;
-        const scaleY = viewRect.height / boundingRect.height;
-        const offsetX = (thumbnailWidth - boundingRect.width * scaleX) / 2;
-        const offsetY = (thumbnailHeight - boundingRect.height * scaleY) / 2;
-
-
-        coordSys.setViewRect(
-            thumbnailWrapper.x + offsetX,
-            thumbnailWrapper.y + offsetY,
-            viewRect.width,
-            viewRect.height
+        const coordSys = this._thumbnailCoordSys = new View();
+        const seriesBoundingRect = opt.seriesBoundingRect;
+        coordSys.setBoundingRect(
+            seriesBoundingRect.x, seriesBoundingRect.y, seriesBoundingRect.width, seriesBoundingRect.height
         );
 
-        const groupNewProp = {
-            x: coordSys.x,
-            y: coordSys.y,
-            scaleX,
-            scaleY
-        };
+        // Find an approperiate rect in contentBoundingRect for the entire graph.
+        const graphViewRect = layout.getLayoutRect(
+            {
+                left: 'center',
+                top: 'center',
+                aspect: seriesBoundingRect.width / seriesBoundingRect.height
+            },
+            contentBoundingRect
+        );
+        coordSys.setViewRect(graphViewRect.x, graphViewRect.y, graphViewRect.width, graphViewRect.height);
+        seriesViewGroup.attr(coordSys.getTransformInfo().raw);
 
-        thumbnailGroup.attr(groupNewProp);
-
-        this._selectedRect = new graphic.Rect({
-            style: selectStyle,
-            x: coordSys.x,
-            y: coordSys.y,
-            // ignore: true,
-            z2: 152
+        const windowStyleModel = thumbnailModel.getModel('windowStyle');
+        const windowRect: WindowRect = this._windowRect = new graphic.Rect({
+            style: windowStyleModel.getItemStyle(),
+            cursor,
+            z2: z2Setting.window
         });
+        windowRect.__r = windowStyleModel.get('borderRadius', true);
+        clipGroup.add(windowRect);
 
-        group.add(this._selectedRect);
+        this._resetRoamController(opt.roamType);
 
-        if (zoom > 1) {
-            this._updateSelectedRect('init');
-        }
+        this.updateWindow();
     }
 
-    _updateSelectedRect(type: 'zoom' | 'pan' | 'init') {
-        const getNewRect = (min = false) => {
-            const {height, width} = this._layoutParams.box;
-            const origin = [0, 0];
-            const end = [width, height];
-            const originData = this._graphModel.coordinateSystem.pointToData(origin);
-            const endData = this._graphModel.coordinateSystem.pointToData(end);
-
-            const thumbnailMain = this._coords.dataToPoint(originData as number[]);
-            const thumbnailMax = this._coords.dataToPoint(endData as number[]);
-
-            const newWidth = thumbnailMax[0] - thumbnailMain[0];
-            const newHeight = thumbnailMax[1] - thumbnailMain[1];
-
-            rect.x = thumbnailMain[0];
-            rect.y = thumbnailMain[1];
-
-            rect.shape.width = newWidth;
-            rect.shape.height = newHeight;
-
-            if (min === false) {
-                rect.dirty();
-            }
-        };
-        const rect = this._selectedRect;
-
-        const {x: rMinX, y: rMinY, shape: {width: rWidth, height: rHeight}} = rect;
-        const {x: wMinX, y: wMinY, shape: {width: wWidth, height: wHeight}} = this._wrapper;
-
-        const [rMaxX, rMaxY] = [rMinX + rWidth, rMinY + rHeight];
-        const [wMaxX, wMaxY] = [wMinX + wWidth, wMinY + wHeight];
-
-        if (type === 'init') {
-            rect.show();
-            getNewRect();
+    /**
+     * Update window by series view roam status.
+     */
+    updateWindow(): void {
+        if (!this._isEnabled) {
             return;
         }
-        else if (type === 'zoom' && rWidth < wWidth / 10) {
-            getNewRect(true);
-            return;
-        }
-        if (rMinX > wMinX && rMinY > wMinY && rMaxX < wMaxX && rMaxY < wMaxY) {
-            this._selectedRect.show();
-            // this._selectedRect.removeClipPath();
-        }
-        else {
-            // this._selectedRect.removeClipPath();
-            // this._selectedRect.setClipPath(this._wrapper);
-            this._selectedRect.hide();
-        }
 
-        getNewRect();
+        this._updateTransform();
+
+        const rect = new BoundingRect(0, 0, this._api.getWidth(), this._api.getHeight());
+        rect.applyTransform(this._mtSeriesToThumbnail);
+        const windowRect = this._windowRect;
+        windowRect.setShape(zrUtil.defaults({r: windowRect.__r}, rect));
     }
 
-    _handleThumbnailShape(size: number | string, api: ExtensionAPI, type: 'height' | 'width') {
-        if (typeof size === 'number') {
-            return size;
+    /**
+     * Create transform that convert pixel vector from
+     * series coordinate system to thumbnail coordinate system.
+     *
+     * TODO: consider other type of series.
+     */
+    private _updateTransform(): void {
+        const seriesCoordSys = this._seriesModel.coordinateSystem as View;
+        this._mtSeriesToThumbnail = matrix.mul([], this._thumbnailCoordSys.transform, seriesCoordSys.invTransform);
+        this._mtThumbnailToSerise = matrix.invert([], this._mtSeriesToThumbnail);
+    }
+
+    private _resetRoamController(roamType: RoamType): void {
+        let thumbnailController = this._thumbnailController;
+        if (!thumbnailController) {
+            thumbnailController = this._thumbnailController = new RoamController(this._api.getZr());
+            thumbnailController.setPointerChecker((e, x, y) => this.contain(x, y));
         }
-        else {
-            const len = size.length;
-            if (size.includes('%') && size.indexOf('%') === len - 1) {
-                const screenSize = type === 'height' ? api.getHeight() : api.getWidth();
-                return +size.slice(0, len - 1) * screenSize / 100;
-            }
-            return 200;
-        }
+
+        thumbnailController.enable(roamType);
+        thumbnailController
+            .off('pan')
+            .off('zoom')
+            .on('pan', (event) => {
+                const transform = this._mtThumbnailToSerise;
+                const oldOffset = vector.applyTransform([], [event.oldX, event.oldY], transform);
+                // reverse old and new because we pan window rather graph in thumbnail.
+                const newOffset = vector.applyTransform([], [event.oldX - event.dx, event.oldY - event.dy], transform);
+                this.trigger('pan', {
+                    dx: newOffset[0] - oldOffset[0],
+                    dy: newOffset[1] - oldOffset[1],
+                    oldX: oldOffset[0],
+                    oldY: oldOffset[1],
+                    newX: newOffset[0],
+                    newY: newOffset[1],
+                    isAvailableBehavior: event.isAvailableBehavior
+                });
+            })
+            .on('zoom', (event) => {
+                const offset = vector.applyTransform([], [event.originX, event.originY], this._mtThumbnailToSerise);
+                this.trigger('zoom', {
+                    scale: 1 / event.scale,
+                    originX: offset[0],
+                    originY: offset[1],
+                    isAvailableBehavior: event.isAvailableBehavior
+                });
+            });
+    }
+
+    contain(x: number, y: number): boolean {
+        return this._contentBoundingRect && this._contentBoundingRect.contain(x, y);
+    }
+
+    private _clear(): void {
+        this.group.removeAll();
+        this._thumbnailController && this._thumbnailController.disable();
     }
 
     remove() {
-        this.group.removeAll();
+        this._clear();
     }
+
+    dispose() {
+        this._clear();
+    }
+
+    static defaultOption: ThumbnailOption = {
+        show: false,
+
+        right: 0,
+        bottom: 0,
+
+        height: '25%',
+        width: '25%',
+
+        itemStyle: {
+            // Use echarts option.backgorundColor by default.
+            borderColor: '#555',
+            borderWidth: 2
+        },
+
+        windowStyle: {
+            borderWidth: 1,
+            color: 'green',
+            borderColor: '#000',
+            opacity: 0.3
+        }
+    };
+}
+
+// TODO: other coordinate system.
+function isSeriesSupported(seriesModel: SeriesModel): boolean {
+    const seriesCoordSys = seriesModel.coordinateSystem;
+    return seriesCoordSys && seriesCoordSys.type === 'view';
 }
 
 export default Thumbnail;

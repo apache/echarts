@@ -43,8 +43,7 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     CallbackDataParams,
-    DefaultEmphasisFocus,
-    ZRColor
+    DefaultEmphasisFocus
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -55,6 +54,7 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
+import Thumbnail, { ThumbnailOption } from './Thumbnail';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -230,13 +230,7 @@ export interface GraphSeriesOption
      */
     autoCurveness?: boolean | number | number[]
 
-    thumbnail?: BoxLayoutOptionMixin & {
-        show?: boolean,
-
-        itemStyle?: ItemStyleOption
-
-        selectedAreaStyle?: ItemStyleOption
-    }
+    thumbnail?: ThumbnailOption
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
@@ -519,27 +513,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             }
         },
 
-        thumbnail: {
-            show: false,
-
-            right: 0,
-            bottom: 0,
-
-            height: '25%',
-            width: '25%',
-
-            itemStyle: {
-                color: 'white',
-                borderColor: 'black'
-            },
-
-            selectedAreaStyle: {
-                color: 'white',
-                borderColor: 'black',
-                borderWidth: 1,
-                opacity: 0.5
-            }
-        }
+        thumbnail: Thumbnail.defaultOption
     };
 }
 

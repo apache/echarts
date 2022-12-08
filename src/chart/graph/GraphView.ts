@@ -19,8 +19,12 @@
 
 import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
-import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
-import * as roamHelper from '../../component/helper/roamHelper';
+import RoamController from '../../component/helper/RoamController';
+import {
+    updateViewOnZoom,
+    updateViewOnPan,
+    RoamControllerHost
+} from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
@@ -39,6 +43,8 @@ import Thumbnail from './Thumbnail';
 
 import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
+import { clone, extend } from 'zrender/src/core/util';
+import ECLinePath from '../helper/LinePath';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -63,7 +69,7 @@ class GraphView extends ChartView {
 
     private _layouting: boolean;
 
-    private _thumbnail: Thumbnail;
+    private _thumbnail: Thumbnail = new Thumbnail();
 
     private _mainGroup: graphic.Group;
 
@@ -218,9 +224,10 @@ class GraphView extends ChartView {
     dispose() {
         this._controller && this._controller.dispose();
         this._controllerHost = null;
+        this._thumbnail.dispose();
     }
 
-    _startForceLayoutIteration(
+    private _startForceLayoutIteration(
         forceLayout: GraphSeriesModel['forceLayout'],
         api: ExtensionAPI,
         layoutAnimation?: boolean
@@ -241,7 +248,7 @@ class GraphView extends ChartView {
         })();
     }
 
-    _updateController(
+    private _updateController(
         seriesModel: GraphSeriesModel,
         ecModel: GlobalModel,
         api: ExtensionAPI
@@ -250,10 +257,11 @@ class GraphView extends ChartView {
         const controllerHost = this._controllerHost;
         const group = this.group;
 
-        controller.setPointerChecker(function (e, x, y) {
+        controller.setPointerChecker((e, x, y) => {
             const rect = group.getBoundingRect();
             rect.applyTransform(group.transform);
             return rect.contain(x, y)
+                && !this._thumbnail.contain(x, y)
                 && !onIrrelevantElement(e, api, seriesModel);
         });
 
@@ -269,34 +277,53 @@ class GraphView extends ChartView {
             .off('pan')
             .off('zoom')
             .on('pan', (e) => {
-                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'graphRoam',
-                    dx: e.dx,
-                    dy: e.dy
-                });
-                this._thumbnail._updateSelectedRect('pan');
+                this._updateViewOnPan(seriesModel, api, e.dx, e.dy);
             })
             .on('zoom', (e) => {
-                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'graphRoam',
-                    zoom: e.scale,
-                    originX: e.originX,
-                    originY: e.originY
-                });
-                this._updateNodeAndLinkScale();
-                adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
-                this._lineDraw.updateLayout();
-                // Only update label layout on zoom
-                api.updateLabelLayout();
-                this._thumbnail._updateSelectedRect('zoom');
+                this._updateViewOnZoom(seriesModel, api, e.scale, e.originX, e.originY);
             });
     }
 
-    _updateNodeAndLinkScale() {
+    private _updateViewOnPan(
+        seriesModel: GraphSeriesModel,
+        api: ExtensionAPI,
+        dx: number,
+        dy: number
+    ): void {
+        updateViewOnPan(this._controllerHost, dx, dy);
+        api.dispatchAction({
+            seriesId: seriesModel.id,
+            type: 'graphRoam',
+            dx: dx,
+            dy: dy
+        });
+        this._thumbnail.updateWindow();
+    }
+
+    private _updateViewOnZoom(
+        seriesModel: GraphSeriesModel,
+        api: ExtensionAPI,
+        scale: number,
+        originX: number,
+        originY: number
+    ) {
+        updateViewOnZoom(this._controllerHost, scale, originX, originY);
+        api.dispatchAction({
+            seriesId: seriesModel.id,
+            type: 'graphRoam',
+            zoom: scale,
+            originX: originX,
+            originY: originY
+        });
+        this._updateNodeAndLinkScale();
+        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
+        this._lineDraw.updateLayout();
+        // Only update label layout on zoom
+        api.updateLabelLayout();
+        this._thumbnail.updateWindow();
+    }
+
+    private _updateNodeAndLinkScale() {
         const seriesModel = this._model;
         const data = seriesModel.getData();
 
@@ -317,19 +344,85 @@ class GraphView extends ChartView {
     remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
-        this._thumbnail && this.group.remove(this._thumbnail.group);
+        this._controller && this._controller.disable();
+        this._thumbnail.remove();
     }
 
+    // TODO: register thumbnail (consider code size).
     private _renderThumbnail(
         seriesModel: GraphSeriesModel,
         api: ExtensionAPI,
         symbolDraw: SymbolDraw,
         lineDraw: LineDraw
     ) {
-        if (this._thumbnail) {
-            this.group.remove(this._thumbnail.group);
-        }
-        (this._thumbnail = new Thumbnail(this.group)).render(seriesModel, api, symbolDraw, lineDraw, this._mainGroup);
+        const thumbnail = this._thumbnail;
+        this.group.add(thumbnail.group);
+
+        const renderThumbnailContent = (viewGroup: graphic.Group) => {
+            const symbolNodes = symbolDraw.group.children();
+            const lineNodes = lineDraw.group.children();
+
+            const lineGroup = new graphic.Group();
+            const symbolGroup = new graphic.Group();
+            viewGroup.add(symbolGroup);
+            viewGroup.add(lineGroup);
+
+            for (let i = 0; i < symbolNodes.length; i++) {
+                const node = symbolNodes[i];
+                const sub = (node as graphic.Group).children()[0];
+                const x = (node as Symbol).x;
+                const y = (node as Symbol).y;
+                const subShape = clone((sub as graphic.Path).shape);
+                const shape = extend(subShape, {
+                    width: sub.scaleX,
+                    height: sub.scaleY,
+                    x: x - sub.scaleX / 2,
+                    y: y - sub.scaleY / 2
+                });
+                const style = clone((sub as graphic.Path).style);
+                const subThumbnail = new (sub as any).constructor({
+                    shape,
+                    style,
+                    z2: 151
+                });
+                symbolGroup.add(subThumbnail);
+            }
+
+            for (let i = 0; i < lineNodes.length; i++) {
+                const node = lineNodes[i];
+                const line = (node as graphic.Group).children()[0];
+                const style = clone((line as ECLinePath).style);
+                const shape = clone((line as ECLinePath).shape);
+                const lineThumbnail = new ECLinePath({
+                    style,
+                    shape,
+                    z2: 151
+                });
+                lineGroup.add(lineThumbnail);
+            }
+        };
+
+        thumbnail.render({
+            seriesModel,
+            api,
+            roamType: seriesModel.get('roam'),
+            z2Setting: {
+                background: 150,
+                window: 160
+            },
+            seriesBoundingRect: this._mainGroup.getBoundingRect(),
+            renderThumbnailContent
+        });
+
+        thumbnail
+            .off('pan')
+            .off('zoom')
+            .on('pan', (event) => {
+                this._updateViewOnPan(seriesModel, api, event.dx, event.dy);
+            })
+            .on('zoom', (event) => {
+                this._updateViewOnZoom(seriesModel, api, event.scale, event.originX, event.originY);
+            });
     }
 }
 
