@@ -19,16 +19,16 @@
 
 import Element from 'zrender/src/Element';
 
-interface ControllerHost {
-    target: Element,
-    zoom?: number
-    zoomLimit?: {min?: number, max?: number}
+export interface RoamControllerHost {
+    target: Element;
+    zoom?: number;
+    zoomLimit?: {min?: number, max?: number};
 }
 
 /**
  * For geo and graph.
  */
-export function updateViewOnPan(controllerHost: ControllerHost, dx: number, dy: number) {
+export function updateViewOnPan(controllerHost: RoamControllerHost, dx: number, dy: number) {
     const target = controllerHost.target;
     target.x += dx;
     target.y += dy;
@@ -38,7 +38,7 @@ export function updateViewOnPan(controllerHost: ControllerHost, dx: number, dy: 
 /**
  * For geo and graph.
  */
-export function updateViewOnZoom(controllerHost: ControllerHost, zoomDelta: number, zoomX: number, zoomY: number) {
+export function updateViewOnZoom(controllerHost: RoamControllerHost, zoomDelta: number, zoomX: number, zoomY: number) {
     const target = controllerHost.target;
     const zoomLimit = controllerHost.zoomLimit;
 
