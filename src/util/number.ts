@@ -18,7 +18,7 @@
 */
 
 /*
-* A third-party license is embeded for some of the code in this file:
+* A third-party license is embedded for some of the code in this file:
 * The method "quantile" was copied from "d3.js".
 * (See more details in the comment of the method below.)
 * The use of the source code of this file is also subject to the terms
@@ -220,7 +220,7 @@ export function getPixelPrecision(dataExtent: [number, number], pixelExtent: [nu
 /**
  * Get a data of given precision, assuring the sum of percentages
  * in valueList is 1.
- * The largest remainer method is used.
+ * The largest remainder method is used.
  * https://en.wikipedia.org/wiki/Largest_remainder_method
  *
  * @param valueList a list of all data
@@ -241,7 +241,7 @@ export function getPercentWithPrecision(valueList: number[], idx: number, precis
 /**
  * Get a data of given precision, assuring the sum of percentages
  * in valueList is 1.
- * The largest remainer method is used.
+ * The largest remainder method is used.
  * https://en.wikipedia.org/wiki/Largest_remainder_method
  *
  * @param valueList a list of all data
@@ -342,7 +342,7 @@ const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(
  *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+8000', '2012-03-01T12:22:33-05:00',
  *     all of which will be treated as local time if time zone is not specified
  *     (see <https://momentjs.com/>).
- *   + Or other string format, including (all of which will be treated as loacal time):
+ *   + Or other string format, including (all of which will be treated as local time):
  *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
  *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
  *   + a timestamp, which represent a time in UTC.
@@ -365,7 +365,7 @@ export function parseDate(value: unknown): Date {
             return new Date(NaN);
         }
 
-        // Use local time when no timezone offset specifed.
+        // Use local time when no timezone offset is specified.
         if (!match[8]) {
             // match[n] can only be string or undefined.
             // But take care of '12' + 1 => '121'.
@@ -583,7 +583,7 @@ export function reformIntervals(list: IntervalItem[]): IntervalItem[] {
 }
 
 /**
- * [Numberic is defined as]:
+ * [Numeric is defined as]:
  *     `parseFloat(val) == val`
  * For example:
  * numeric:
@@ -623,7 +623,7 @@ export function getRandomIdBase(): number {
 }
 
 /**
- * Get the greatest common dividor
+ * Get the greatest common divisor.
  *
  * @param {number} a one number
  * @param {number} b the other number
@@ -636,7 +636,7 @@ export function getGreatestCommonDividor(a: number, b: number): number {
 }
 
 /**
- * Get the least common multiple
+ * Get the least common multiple.
  *
  * @param {number} a one number
  * @param {number} b the other number

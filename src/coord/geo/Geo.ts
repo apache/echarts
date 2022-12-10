@@ -137,7 +137,7 @@ class Geo extends View {
 
         // Ignore default aspect scale if projection exits.
         this.aspectScale = projection ? 1 : zrUtil.retrieve2(opt.aspectScale, defaultParams.aspectScale);
-        // Not invert longitute if projection exits.
+        // Not invert longitude if projection exits.
         this._invertLongitute = projection ? false : defaultParams.invertLongitute;
     }
 
@@ -148,7 +148,7 @@ class Geo extends View {
         rect = rect.clone();
 
         if (invertLongitute) {
-            // Longitute is inverted
+            // Longitude is inverted.
             rect.y = -rect.y - rect.height;
         }
 
@@ -196,7 +196,7 @@ class Geo extends View {
      */
     getGeoCoord(name: string): number[] {
         const region = this._regionsMap.get(name);
-        // calcualte center only on demand.
+        // Calculate center only on demand.
         return this._nameCoordMap.get(name) || (region && region.getCenter());
     }
 

@@ -58,7 +58,7 @@ class ParallelView extends ComponentView {
     }
     /**
      * @internal
-     * @param {Object} [opt] If null, cancle the last action triggering for debounce.
+     * @param {Object} [opt] If null, cancel the last action triggering for debounce.
      */
     _throttledDispatchExpand(this: ParallelView, opt: Omit<ParallelAxisExpandPayload, 'type'>): void {
         this._dispatchExpand(opt);
@@ -105,7 +105,7 @@ const handlers: Partial<Record<ElementEventName, ElementEventHandler>> = {
             && (this._throttledDispatchExpand as ParallelView['_throttledDispatchExpand'] & ThrottleController)
                 .debounceNextCall(model.get('axisExpandDebounce'));
         this._throttledDispatchExpand(behavior === 'none'
-            ? null // Cancle the last trigger, in case that mouse slide out of the area quickly.
+            ? null // Cancel the last trigger, in case that mouse slide out of the area quickly.
             : {
                 axisExpandWindow: result.axisExpandWindow,
                 // Jumping uses animation, and sliding suppresses animation.

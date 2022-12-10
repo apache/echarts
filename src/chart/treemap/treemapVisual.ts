@@ -226,16 +226,16 @@ function buildVisualMapping(
     return mapping;
 }
 
-// Notice: If we dont have the attribute 'colorRange', but only use
+// Notice: If we don't have the attribute 'colorRange', but only use
 // attribute 'color' to represent both concepts of 'colorRange' and 'color',
 // (It means 'colorRange' when 'color' is Array, means 'color' when not array),
 // this problem will be encountered:
-// If a level-1 node dont have children, and its siblings has children,
-// and colorRange is set on level-1, then the node can not be colored.
+// If a level-1 node doesn't have children, and its siblings have children,
+// and colorRange is set on level-1, then the node cannot be colored.
 // So we separate 'colorRange' and 'color' to different attributes.
 function getRangeVisual(nodeModel: NodeModel, name: keyof TreemapVisual) {
     // 'colorRange', 'colorARange', 'colorSRange'.
-    // If not exsits on this node, fetch from levels and series.
+    // If not exists on this node, fetch from levels and series.
     const range = nodeModel.get(name);
     return (isArray(range) && range.length) ? {
         name: name,

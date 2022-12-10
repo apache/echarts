@@ -142,10 +142,10 @@ export function registerShape(name: string, ShapeClass: {new(): Path}) {
  * (2) In the features like `custom series`, `graphic component`, the user input
  * `{tpye: 'xxx'}` does not only specify shapes but also specify other graphic
  * elements like `'group'`, `'text'`, `'image'` or event `'path'`. Those names
- * are reserved names, that is, if some user register a shape named `'image'`,
+ * are reserved names, that is, if some user registers a shape named `'image'`,
  * the shape will not be used. If we intending to add some more reserved names
  * in feature, that might bring break changes (disable some existing user shape
- * names). But that case probably rearly happen. So we dont make more mechanism
+ * names). But that case probably rarely happens. So we don't make more mechanism
  * to resolve this issue here.
  *
  * @param name
@@ -430,8 +430,8 @@ export function groupTransition(
 }
 
 export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike): number[][] {
-    // FIXME: this way migth be incorrect when grpahic clipped by a corner.
-    // and when element have border.
+    // FIXME: This way might be incorrect when graphic clipped by a corner
+    // and when element has a border.
     return map(points, function (point) {
         let x = point[0];
         x = mathMax(x, rect.x);
@@ -527,7 +527,7 @@ export function lineLineIntersect(
     const ny = b2y - b1y;
 
     // `vec_m` and `vec_n` are parallel iff
-    //     exising `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
+    //     existing `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
     const nmCrossProduct = crossProduct2d(nx, ny, mx, my);
     if (nearZero(nmCrossProduct)) {
         return false;
@@ -634,7 +634,7 @@ export function traverseElements(els: Element | Element[] | undefined | null, cb
     }
 }
 
-// Register built-in shapes. These shapes might be overwirtten
+// Register built-in shapes. These shapes might be overwritten
 // by users, although we do not recommend that.
 registerShape('circle', Circle);
 registerShape('ellipse', Ellipse);

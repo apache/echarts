@@ -288,12 +288,12 @@ function constrainTextWidth(
         const oldHeight = textRect.height;
         if (overflow && overflow.match('break')) {
             // Temporarily set background to be null to calculate
-            // the bounding box without backgroud.
+            // the bounding box without background.
             label.setStyle('backgroundColor', null);
             // Set constraining width
             label.setStyle('width', availableWidth - paddingH);
 
-            // This is the real bounding box of the text without padding
+            // This is the real bounding box of the text without padding.
             const innerRect = label.getBoundingRect();
 
             label.setStyle('width', Math.ceil(innerRect.width));

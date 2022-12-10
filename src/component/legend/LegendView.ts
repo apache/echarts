@@ -69,7 +69,7 @@ class LegendView extends ComponentView {
 
     /**
      * If first rendering, `contentGroup.position` is [0, 0], which
-     * does not make sense and may cause unexepcted animation if adopted.
+     * does not make sense and may cause unexpected animation if adopted.
      */
     private _isFirstRender: boolean;
 
@@ -199,7 +199,7 @@ class LegendView extends ComponentView {
                 SeriesModel<SeriesOption & SymbolOptionMixin>;
 
             if (legendDrawnMap.get(name)) {
-                // Have been drawed
+                // Have been drawn
                 return;
             }
 
@@ -663,7 +663,7 @@ function dispatchSelectAction(
         name: seriesName != null ? seriesName : dataName
     });
     // highlight after select
-    // TODO higlight immediately may cause animation loss.
+    // TODO highlight immediately may cause animation loss.
     dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 

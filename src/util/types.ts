@@ -357,7 +357,7 @@ export type OrdinalNumber = number; // The number mapped from each OrdinalRawVal
  * ```js
  * { ordinalNumbers: [2, 5, 3, 4] }
  * ```
- * means that ordinal 2 should be diplayed on tick 0,
+ * means that ordinal 2 should be displayed on tick 0,
  * ordinal 5 should be displayed on tick 1, ...
  */
 export type OrdinalSortInfo = {
@@ -518,7 +518,7 @@ export type SeriesDataType = 'main' | 'node' | 'edge';
  * ```
  */
 export type ECUnitOption = {
-    // Exclude these reserverd word for `ECOption` to avoid to infer to "any".
+    // Exclude these reserved word for `ECOption` to avoid to infer to "any".
     baseOption?: unknown
     options?: unknown
     media?: unknown
@@ -1117,12 +1117,12 @@ export interface SeriesLineLabelOption extends LineLabelOption {
 export interface LabelLayoutOptionCallbackParams {
     /**
      * Index of data which the label represents.
-     * It can be null if label does't represent any data.
+     * It can be null if label doesn't represent any data.
      */
     dataIndex?: number,
     /**
      * Type of data which the label represents.
-     * It can be null if label does't represent any data.
+     * It can be null if label doesn't represent any data.
      */
     dataType?: SeriesDataType,
     seriesIndex: number,
@@ -1336,7 +1336,7 @@ export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
 export type ComponentItemTooltipLabelFormatterParams = {
     componentType: string
     name: string
-    // properies key array like ['name']
+    // properties key array like ['name']
     $vars: string[]
 } & {
     // Other properties
@@ -1378,7 +1378,7 @@ export interface CommonAxisPointerOption {
     triggerTooltip?: boolean
 
     /**
-     * current value. When using axisPointer.handle, value can be set to define the initail position of axisPointer.
+     * current value. When using axisPointer.handle, value can be set to define the initial position of axisPointer.
      */
     value?: ScaleDataValue
 

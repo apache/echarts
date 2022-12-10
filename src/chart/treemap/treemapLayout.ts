@@ -18,7 +18,7 @@
 */
 
 /*
-* A third-party license is embeded for some of the code in this file:
+* A third-party license is embedded for some of the code in this file:
 * The treemap layout implementation was originally copied from
 * "d3.js" with some modifications made for this project.
 * (See more details in the comment of the method "squarify" below.)
@@ -573,7 +573,7 @@ function estimateRootSize(
     containerHeight: number
 ) {
     // If targetInfo.node exists, we zoom to the node,
-    // so estimate whold width and heigth by target node.
+    // so estimate whole width and height by target node.
     let currNode = (targetInfo || {}).node;
     const defaultSize = [containerWidth, containerHeight];
 
@@ -616,7 +616,7 @@ function estimateRootSize(
     return [containerWidth * scale, containerHeight * scale];
 }
 
-// Root postion base on coord of containerGroup
+// Root position based on coord of containerGroup
 function calculateRootPosition(
     layoutInfo: layout.LayoutRect,
     rootRect: RectLike,

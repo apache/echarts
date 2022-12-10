@@ -254,9 +254,9 @@ class TreemapView extends ChartView {
             );
         }
 
-        // Notice: when thisTree and oldTree are the same tree (see list.cloneShallow),
-        // the oldTree is actually losted, so we can not find all of the old graphic
-        // elements from tree. So we use this stragegy: make element storage, move
+        // Notice: When thisTree and oldTree are the same tree (see list.cloneShallow),
+        // the oldTree is actually losted, so we cannot find all of the old graphic
+        // elements from tree. So we use this strategy: make element storage, move
         // from old storage to new storage, clear old storage.
 
         dualTravel(
@@ -684,7 +684,7 @@ class TreemapView extends ChartView {
                 const point = bgEl.transformCoordToLocal(x, y);
                 const shape = bgEl.shape;
 
-                // For performance consideration, dont use 'getBoundingRect'.
+                // For performance consideration, don't use 'getBoundingRect'.
                 if (shape.x <= point[0]
                     && point[0] <= shape.x + shape.width
                     && shape.y <= point[1]
@@ -1098,9 +1098,9 @@ function renderNode(
 
 }
 
-// We can not set all backgroud with the same z, Because the behaviour of
+// We cannot set all background with the same z, because the behaviour of
 // drill down and roll up differ background creation sequence from tree
-// hierarchy sequence, which cause that lowser background element overlap
+// hierarchy sequence, which cause lower background elements to overlap
 // upper ones. So we calculate z based on depth.
 // Moreover, we try to shrink down z interval to [0, 1] to avoid that
 // treemap with large z overlaps other components.
