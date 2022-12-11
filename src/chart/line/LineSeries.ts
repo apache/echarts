@@ -39,9 +39,9 @@ import {
 import SeriesData from '../../data/SeriesData';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
-import {createSymbol, ECSymbol} from '../../util/symbol';
-import {Group} from '../../util/graphic';
-import {LegendIconParams} from '../../component/legend/LegendModel';
+import { createSymbol, ECSymbol } from '../../util/symbol';
+import { Group } from '../../util/graphic';
+import { LegendIconParams } from '../../component/legend/LegendModel';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -51,6 +51,13 @@ interface LineStateOptionMixin {
         scale?: boolean | number
     }
 }
+
+interface LineSegmentCallBackParams {
+    dataIndex: number,
+    dataVal: number
+}
+
+type LineSegmentOption = [number, number] | ((params: LineSegmentCallBackParams) => boolean);
 
 export interface LineStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
@@ -120,6 +127,17 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
     data?: (LineDataValue | LineDataItemOption)[]
 
     triggerLineEvent?: boolean
+
+    linePieces?: {
+        segment: LineSegmentOption,
+        lineStyle: LineStyleOption,
+        areaStyle: AreaStyleOption
+    }[]
+
+    connectNullStyle?: {
+        lineStyle: LineStyleOption,
+        areaStyle: AreaStyleOption
+    }
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -174,11 +192,11 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             scale: true
         },
         // areaStyle: {
-            // origin of areaStyle. Valid values:
-            // `'auto'/null/undefined`: from axisLine to data
-            // `'start'`: from min to data
-            // `'end'`: from data to max
-            // origin: 'auto'
+        // origin of areaStyle. Valid values:
+        // `'auto'/null/undefined`: from axisLine to data
+        // `'start'`: from min to data
+        // `'end'`: from data to max
+        // origin: 'auto'
         // },
         // false, 'start', 'end', 'middle'
         step: false,
