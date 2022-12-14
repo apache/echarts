@@ -494,8 +494,8 @@ export function getPaddingFromTooltipModel(
 export class TooltipMarkupStyleCreator {
     readonly richTextStyles: Dictionary<Dictionary<unknown>> = {};
 
-    // Notice that "generate a style name" usuall happens repeatly when mouse moving and
-    // displaying a tooltip. So we put the `_nextStyleNameId` as a member of each creator
+    // Notice that "generate a style name" usually happens repeatedly when mouse is moving and
+    // a tooltip is displayed. So we put the `_nextStyleNameId` as a member of each creator
     // rather than static shared by all creators (which will cause it increase to fast).
     private _nextStyleNameId: number = getRandomIdBase();
 

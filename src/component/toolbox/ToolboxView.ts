@@ -117,7 +117,7 @@ class ToolboxView extends ComponentView {
             }
             else {
                 feature = features[oldName];
-                // If feature does not exsit.
+                // If feature does not exist.
                 if (!feature) {
                     return;
                 }
@@ -169,7 +169,7 @@ class ToolboxView extends ComponentView {
             const iconStyleModel = featureModel.getModel('iconStyle');
             const iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']);
 
-            // If one feature has mutiple icon. they are orginaized as
+            // If one feature has multiple icons, they are organized as
             // {
             //     icon: {
             //         foo: '',
