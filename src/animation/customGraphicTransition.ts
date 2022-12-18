@@ -221,7 +221,7 @@ export function applyLeaveTransition(
         if (leaveToProps) {
             // TODO TODO use leave after leaveAnimation in series is introduced
             // TODO Data index?
-            const config = getElementAnimationConfig('leave', el, elOption, animatableModel, 0);
+            const config = getElementAnimationConfig('update', el, elOption, animatableModel, 0);
             config.done = () => {
                 parent.remove(el);
                 onRemove && onRemove();
