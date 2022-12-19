@@ -186,19 +186,33 @@ class Grid implements CoordinateSystemMaster {
 
         // Minus label size
         if (isContainLabel) {
+            const multiAxisOffsetMap = {
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+            }
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
                     const labelUnionRect = estimateLabelUnionRect(axis);
                     if (labelUnionRect) {
                         const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
                         const margin = axis.model.get(['axisLabel', 'margin']);
-                        gridRect[dim] -= labelUnionRect[dim] + margin;
+                        const axisSpace = labelUnionRect[dim] + margin
+                        gridRect[dim] -= axisSpace;
+
                         if (axis.position === 'top') {
-                            gridRect.y += labelUnionRect.height + margin;
+                            gridRect.y += axisSpace;
                         }
                         else if (axis.position === 'left') {
-                            gridRect.x += labelUnionRect.width + margin;
+                            gridRect.x += axisSpace;
                         }
+
+                        const autoOffset = multiAxisOffsetMap[axis.position];
+                        if(!axis.model.get(['offset'])) {
+                            axis.model.mergeOption({offset: autoOffset}, axis.model.ecModel);
+                        }
+                        multiAxisOffsetMap[axis.position] += axisSpace;
                     }
                 }
             });
