@@ -1736,3 +1736,18 @@ export interface AriaOption extends AriaLabelOption {
 export interface AriaOptionMixin {
     aria?: AriaOption
 }
+
+// For tell developer or editor this displayable element from which ECharts comp
+export interface EditorInfo {
+    component: string,
+    element: string,
+    componentIndex?: number,
+    dataIndex?: number
+    subType?: string
+}
+
+declare module 'zrender/src/Element' {
+    export default class Element {
+        __editorInfo?: EditorInfo;
+    }
+}

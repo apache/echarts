@@ -21,10 +21,10 @@ import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
-import {onIrrelevantElement} from '../../component/helper/cursorHelper';
+import { onIrrelevantElement } from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
-import {getNodeGlobalScale} from './graphHelper';
+import { getNodeGlobalScale } from './graphHelper';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -38,6 +38,8 @@ import { getECData } from '../../util/innerStore';
 
 import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
+
+import { addEditorInfo } from '../../util/editorInfo';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -63,15 +65,22 @@ class GraphView extends ChartView {
     private _layouting: boolean;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-        const symbolDraw = new SymbolDraw();
-        const lineDraw = new LineDraw();
+        const symbolDraw = new SymbolDraw(undefined, {
+            component: 'series',
+            subType: 'graph',
+            element: 'symbol'
+        });
+        const lineDraw = new LineDraw(undefined, {
+            component: 'series',
+            subType: 'graph',
+            element: 'line'
+        });
         const group = this.group;
 
         this._controller = new RoamController(api.getZr());
         this._controllerHost = {
             target: group
         } as RoamControllerHost;
-
         group.add(symbolDraw.group);
         group.add(lineDraw.group);
 
@@ -88,7 +97,20 @@ class GraphView extends ChartView {
 
         const symbolDraw = this._symbolDraw;
         const lineDraw = this._lineDraw;
-
+        if (__EDITOR__) {
+            addEditorInfo(symbolDraw.group, {
+                component: 'series',
+                subType: 'graph',
+                element: 'node',
+                componentIndex: seriesModel.componentIndex
+            });
+            addEditorInfo(lineDraw.group, {
+                component: 'series',
+                subType: 'graph',
+                element: 'line',
+                componentIndex: seriesModel.componentIndex
+            });
+        }
         const group = this.group;
 
         if (isViewCoordSys(coordSys)) {
@@ -107,11 +129,11 @@ class GraphView extends ChartView {
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         const data = seriesModel.getData();
-        symbolDraw.updateData(data as ListForSymbolDraw);
+        symbolDraw.updateData(data as ListForSymbolDraw, undefined, seriesModel.componentIndex);
 
         const edgeData = seriesModel.getEdgeData();
         // TODO: TYPE
-        lineDraw.updateData(edgeData as SeriesData);
+        lineDraw.updateData(edgeData as SeriesData, seriesModel.componentIndex);
 
         this._updateNodeAndLinkScale();
 

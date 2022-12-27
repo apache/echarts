@@ -66,6 +66,7 @@ import { warn } from '../../util/log';
 import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
@@ -238,6 +239,14 @@ class BarView extends ChartView {
         function createBackground(dataIndex: number) {
             const bgLayout = getLayout[coord.type](data, dataIndex);
             const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
+            if (__EDITOR__) {
+                addEditorInfo(bgEl, {
+                    component: 'series',
+                    subType: 'bar',
+                    element: 'background',
+                    componentIndex: seriesModel.componentIndex
+                });
+            }
             bgEl.useStyle(backgroundModel.getItemStyle());
             // Only cartesian2d support borderRadius.
             if (coord.type === 'cartesian2d') {
@@ -310,11 +319,19 @@ class BarView extends ChartView {
                     );
                 }
                 else {
-                    initProps(el, {shape: layout} as any, seriesModel, dataIndex);
+                    initProps(el, { shape: layout } as any, seriesModel, dataIndex);
                 }
 
                 data.setItemGraphicEl(dataIndex, el);
-
+                if (__EDITOR__) {
+                    addEditorInfo(el, {
+                        component: 'series',
+                        subType: 'bar',
+                        element: 'bar',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex
+                    });
+                }
                 group.add(el);
                 el.ignore = isClipped;
             })
@@ -495,7 +512,7 @@ class BarView extends ChartView {
                             ? shape.height
                             : shape.width
                     )
-                // If data is NaN, shape.xxx may be NaN, so use || 0 here in case
+                    // If data is NaN, shape.xxx may be NaN, so use || 0 here in case
                 )) || 0;
             };
             this._onRendered = () => {
@@ -574,7 +591,7 @@ class BarView extends ChartView {
 
         let tickNum = Math.max(0, extent[0]);
         const tickMax = Math.min(extent[1], scale.getOrdinalMeta().categories.length - 1);
-        for (;tickNum <= tickMax; ++tickNum) {
+        for (; tickNum <= tickMax; ++tickNum) {
             if (orderInfo.ordinalNumbers[tickNum] !== scale.getRawOrdinalNumber(tickNum)) {
                 return true;
             }
@@ -1012,6 +1029,14 @@ function updateStyle(
             inheritColor: style.fill as ColorString,
             defaultOpacity: style.opacity,
             defaultOutsidePosition: labelPositionOutside as BuiltinTextPosition
+        },
+        undefined,
+        {
+            component: 'series',
+            subType: 'bar',
+            element: 'label',
+            componentIndex: seriesModel.componentIndex,
+            dataIndex
         }
     );
 
@@ -1144,7 +1169,7 @@ function createLarge(
     }
 
     const el = new LargePath({
-        shape: {points: data.getLayout('largePoints')},
+        shape: { points: data.getLayout('largePoints') },
         incremental: !!incremental,
         ignoreCoarsePointer: true,
         z2: 1

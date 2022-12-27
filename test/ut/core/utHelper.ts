@@ -18,7 +18,7 @@
 */
 
 import { init, EChartsType } from '../../../src/echarts.all';
-
+import Displayable from 'zrender/src/graphic/Displayable';
 import {
     curry as zrUtilCurry,
     bind as zrUtilBind,

@@ -50,7 +50,8 @@ build({
     footer: umdWrapperTail,
     define: {
         'process.env.NODE_ENV': '"development"',
-        '__DEV__': 'true'
+        '__DEV__': 'true',
+        '__EDITOR__': 'true'
     },
     watch: {
         async onRebuild(error) {

@@ -32,6 +32,7 @@ import { getSectorCornerRadius } from '../helper/pieHelper';
 import {createOrUpdatePatternFromDecal} from '../../util/decal';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -172,6 +173,15 @@ class SunburstPiece extends graphic.Sector {
 
         const sector = this;
         const label = sector.getTextContent();
+        if (__EDITOR__) {
+            addEditorInfo(label, {
+                component: 'series',
+                subType: 'sunburst',
+                element: 'label',
+                componentIndex: seriesModel.componentIndex,
+                dataIndex: this.node.dataIndex
+            });
+        }
         const dataIndex = this.node.dataIndex;
         const labelMinAngle = normalLabelModel.get('minAngle') / 180 * Math.PI;
         const isNormalShown = normalLabelModel.get('show')

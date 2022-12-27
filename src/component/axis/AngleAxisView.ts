@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import {createTextStyle} from '../../label/labelStyle';
+import { createTextStyle } from '../../label/labelStyle';
 import Model from '../../model/Model';
 import AxisView from './AxisView';
 import AxisBuilder from './AxisBuilder';
@@ -30,6 +30,7 @@ import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
 import { getECData } from '../../util/innerStore';
 import OrdinalScale from '../../scale/Ordinal';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const elementList = [
     'axisLine',
@@ -155,6 +156,14 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 z2: 1,
                 silent: true
             });
+            if (__EDITOR__) {
+                addEditorInfo(shape, {
+                    component: angleAxisModel.mainType,
+                    componentIndex: angleAxisModel.componentIndex,
+                    subType: angleAxisModel.subType,
+                    element: 'axisLine'
+                });
+            }
         }
         else {
             shape = new graphic.Ring({
@@ -168,6 +177,14 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 z2: 1,
                 silent: true
             });
+            if (__EDITOR__) {
+                addEditorInfo(shape, {
+                    component: angleAxisModel.mainType,
+                    componentIndex: angleAxisModel.componentIndex,
+                    subType: angleAxisModel.subType,
+                    element: 'axisLine'
+                });
+            }
         }
         shape.style.fill = null;
         group.add(shape);
@@ -184,16 +201,24 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 shape: getAxisLineShape(polar, [radius, radius + tickLen], tickAngleItem.coord)
             });
         });
-        group.add(graphic.mergePath(
+        const axisTick = graphic.mergePath(
             lines, {
-                style: zrUtil.defaults(
-                    tickModel.getModel('lineStyle').getLineStyle(),
-                    {
-                        stroke: angleAxisModel.get(['axisLine', 'lineStyle', 'color'])
-                    }
-                )
-            }
-        ));
+            style: zrUtil.defaults(
+                tickModel.getModel('lineStyle').getLineStyle(),
+                {
+                    stroke: angleAxisModel.get(['axisLine', 'lineStyle', 'color'])
+                }
+            )
+        });
+        if (__EDITOR__) {
+            addEditorInfo(axisTick, {
+                component: angleAxisModel.mainType,
+                componentIndex: angleAxisModel.componentIndex,
+                subType: angleAxisModel.subType,
+                element: 'axisTick'
+            });
+        }
+        group.add(axisTick);
     },
 
     minorTick(group, angleAxisModel, polar, tickAngles, minorTickAngles, radiusExtent) {
@@ -211,23 +236,32 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
         for (let i = 0; i < minorTickAngles.length; i++) {
             for (let k = 0; k < minorTickAngles[i].length; k++) {
-                lines.push(new graphic.Line({
+                const line = new graphic.Line({
                     shape: getAxisLineShape(polar, [radius, radius + tickLen], minorTickAngles[i][k].coord)
-                }));
+                });
+                if (__EDITOR__) {
+                    addEditorInfo(line, {
+                        component: angleAxisModel.mainType,
+                        componentIndex: angleAxisModel.componentIndex,
+                        subType: angleAxisModel.subType,
+                        element: 'minorTick'
+                    });
+                }
+                lines.push(line);
             }
         }
 
         group.add(graphic.mergePath(
             lines, {
-                style: zrUtil.defaults(
-                    minorTickModel.getModel('lineStyle').getLineStyle(),
-                    zrUtil.defaults(
-                        tickModel.getLineStyle(), {
-                            stroke: angleAxisModel.get(['axisLine', 'lineStyle', 'color'])
-                        }
-                    )
+            style: zrUtil.defaults(
+                minorTickModel.getModel('lineStyle').getLineStyle(),
+                zrUtil.defaults(
+                    tickModel.getLineStyle(), {
+                    stroke: angleAxisModel.get(['axisLine', 'lineStyle', 'color'])
+                }
                 )
-            }
+            )
+        }
         ));
     },
 
@@ -260,7 +294,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     labelModel = new Model(
                         rawCategoryItem.textStyle, commonLabelModel, commonLabelModel.ecModel
                     );
-                    }
+                }
             }
 
             const textEl = new graphic.Text({
@@ -275,6 +309,14 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     verticalAlign: labelTextVerticalAlign
                 })
             });
+            if (__EDITOR__) {
+                addEditorInfo(textEl, {
+                    component: angleAxisModel.mainType,
+                    element: 'axisLabel',
+                    componentIndex: angleAxisModel.componentIndex,
+                    subType: angleAxisModel.subType
+                });
+            }
             group.add(textEl);
 
             // Pack data for mouse event
@@ -309,13 +351,22 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         // Simple optimization
         // Batching the lines if color are the same
         for (let i = 0; i < splitLines.length; i++) {
-            group.add(graphic.mergePath(splitLines[i], {
+            const splitLine = graphic.mergePath(splitLines[i], {
                 style: zrUtil.defaults({
                     stroke: lineColors[i % lineColors.length]
                 }, lineStyleModel.getLineStyle()),
                 silent: true,
                 z: angleAxisModel.get('z')
-            }));
+            });
+            if (__EDITOR__) {
+                addEditorInfo(splitLine, {
+                    component: angleAxisModel.mainType,
+                    componentIndex: angleAxisModel.componentIndex,
+                    subType: angleAxisModel.subType,
+                    element: 'splitLine'
+                });
+            }
+            group.add(splitLine);
         }
     },
 
@@ -336,12 +387,20 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 }));
             }
         }
-
-        group.add(graphic.mergePath(lines, {
+        const minorSplitLine = graphic.mergePath(lines, {
             style: lineStyleModel.getLineStyle(),
             silent: true,
             z: angleAxisModel.get('z')
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(minorSplitLine, {
+                component: angleAxisModel.mainType,
+                element: 'minorSplitLine',
+                componentIndex: angleAxisModel.componentIndex,
+                subType: angleAxisModel.subType
+            });
+        }
+        group.add(minorSplitLine);
     },
 
     splitArea(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
@@ -387,12 +446,21 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         // Simple optimization
         // Batching the lines if color are the same
         for (let i = 0; i < splitAreas.length; i++) {
-            group.add(graphic.mergePath(splitAreas[i], {
+            const splitArea = graphic.mergePath(splitAreas[i], {
                 style: zrUtil.defaults({
                     fill: areaColors[i % areaColors.length]
                 }, areaStyleModel.getAreaStyle()),
                 silent: true
-            }));
+            });
+            if (__EDITOR__) {
+                addEditorInfo(splitArea, {
+                    component: angleAxisModel.mainType,
+                    componentIndex: angleAxisModel.componentIndex,
+                    subType: angleAxisModel.subType,
+                    element: 'splitArea'
+                });
+            }
+            group.add(splitArea);
         }
     }
 };

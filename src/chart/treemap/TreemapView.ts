@@ -58,6 +58,7 @@ import { ColorString, ECElement } from '../../util/types';
 import { windowOpen } from '../../util/format';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const Group = graphic.Group;
 const Rect = graphic.Rect;
@@ -895,7 +896,15 @@ function renderNode(
             bg.ensureState('select').style = selectStyle;
             setDefaultStateProxy(bg);
         }
-
+        if (__EDITOR__) {
+            addEditorInfo(bg, {
+                component: 'series',
+                subType: 'treemap',
+                element: 'background',
+                componentIndex: seriesModel.componentIndex,
+                dataIndex: ecData.dataIndex
+            });
+        }
         group.add(bg);
     }
 
@@ -943,7 +952,15 @@ function renderNode(
             content.ensureState('select').style = selectStyle;
             setDefaultStateProxy(content);
         }
-
+        if (__EDITOR__) {
+            addEditorInfo(content, {
+                component: 'series',
+                subType: 'treemap',
+                element: 'rect',
+                componentIndex: seriesModel.componentIndex,
+                dataIndex: ecData.dataIndex
+            });
+        }
         group.add(content);
     }
 
@@ -977,6 +994,13 @@ function renderNode(
                 defaultOpacity: visualOpacity,
                 labelFetcher: seriesModel,
                 labelDataIndex: thisNode.dataIndex
+            }, undefined,
+            {
+                component: 'series',
+                subType: 'treemap',
+                componentIndex: seriesModel.componentIndex,
+                element: 'label',
+                dataIndex: thisNode.dataIndex
             }
         );
 
