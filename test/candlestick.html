@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -20,7 +19,7 @@ under the License.
 
 <html>
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
@@ -28,7 +27,9 @@ under the License.
     </head>
     <body>
         <style>
-            html, body, #main {
+            html,
+            body,
+            #main {
                 width: 100%;
                 height: 100%;
             }
@@ -37,7 +38,6 @@ under the License.
         <div id="info"></div>
         <div id="main"></div>
         <script>
-
             /**
              * @see <https://en.wikipedia.org/wiki/Michelson%E2%80%93Morley_experiment>
              * @see <http://bl.ocks.org/mbostock/4061502>
@@ -45,216 +45,133 @@ under the License.
             var chart;
             var data;
 
-            require([
-                'echarts',
-                'data/security-sh-2013.json.js'
-            ], function (echarts, rawData) {
-
-                chart = echarts.init(document.getElementById('main'), null, {
-
-                });
+            require(["echarts", "data/security-sh-2013.json.js"], function (
+                echarts,
+                rawData
+            ) {
+                chart = echarts.init(document.getElementById("main"), null, {});
                 data = splitData(rawData);
 
                 update();
 
-                chart.on('click', function (info) {
+                chart.on("click", function (info) {
                     console.log(info);
                     if (info.data && info.data.length === 4) {
-                        alert([
-                            'clicked on: ',
-                            'DATA: ' + info.name,
-                            'OPEN: ' + info.data[0],
-                            'CLOSE: ' + info.data[1],
-                            'LOWEST: ' + info.data[2],
-                            'HIGHEST: ' + info.data[3]
-                        ].join('\n'));
-                    }
-                    else if (info.data && info.data.length === 2) {
+                        alert(
+                            [
+                                "clicked on: ",
+                                "DATA: " + info.name,
+                                "OPEN: " + info.data[0],
+                                "CLOSE: " + info.data[1],
+                                "LOWEST: " + info.data[2],
+                                "HIGHEST: " + info.data[3],
+                            ].join("\n")
+                        );
+                    } else if (info.data && info.data.length === 2) {
                         // Markpoint
-                        alert('mark point');
+                        alert("mark point");
                     }
                 });
-            })
+            });
 
             function splitData(rawData) {
                 var categoryData = [];
-                var values = []
+                var values = [];
                 for (var i = 0; i < rawData.length; i++) {
                     categoryData.push(rawData[i].splice(0, 1)[0]);
-                    values.push(rawData[i])
+                    values.push(rawData[i]);
                 }
                 return {
                     categoryData: categoryData,
-                    values: values
+                    values: values,
                 };
             }
 
             function parseDate(timestamp) {
                 var date = new Date(timestamp);
-                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+                return (
+                    date.getFullYear() +
+                    "-" +
+                    (date.getMonth() + 1) +
+                    "-" +
+                    date.getDate()
+                );
             }
 
             function update() {
-
                 chart.setOption({
                     legend: {
-                        data: ['上证指数', '开盘']
+                        data: ["上证指数", "开盘"],
                     },
                     tooltip: {
-                        trigger: 'axis',
+                        trigger: "axis",
                         axisPointer: {
-                            type: 'line'
-                        }
+                            type: "line",
+                        },
                     },
                     grid: {
-                        left: '10%',
-                        right: '10%',
-                        bottom: '15%'
+                        left: "10%",
+                        right: "10%",
+                        bottom: "15%",
                     },
                     xAxis: {
-                        type: 'category',
+                        type: "category",
                         data: data.categoryData,
                         scale: true,
-                        boundaryGap : false,
-                        axisLine: {onZero: false},
-                        splitLine: {show: false},
+                        boundaryGap: false,
+                        axisLine: { onZero: false },
+                        splitLine: { show: false },
                         splitNumber: 20,
-                        min: 'dataMin',
-                        max: 'dataMax'
+                        min: "dataMin",
+                        max: "dataMax",
                     },
                     yAxis: {
                         scale: true,
                         splitArea: {
-                            show: true
-                        }
+                            show: true,
+                        },
                     },
                     dataZoom: [
                         {
-                            type: 'inside',
+                            type: "inside",
                             start: 50,
-                            end: 100
+                            end: 100,
+                            minSpan: 10
                         },
                         {
                             show: true,
-                            type: 'slider',
-                            y: '90%',
+                            type: "slider",
+                            y: "90%",
                             start: 50,
-                            end: 100
-                        }
+                            end: 100,
+                        },
                     ],
                     series: [
                         {
-                            name: '开盘',
-                            type: 'line',
+                            name: "开盘",
+                            type: "line",
                             data: (function () {
                                 opens = [];
-                                for (var i = 0, len = data.values.length; i < len; i++) {
+                                for (
+                                    var i = 0, len = data.values.length;
+                                    i < len;
+                                    i++
+                                ) {
                                     opens.push(data.values[i][0]);
                                 }
                                 return opens;
                             })(),
                             smooth: true,
                             lineStyle: {
-                                normal: {color: '#aaa'}
-                            }
+                                normal: { color: "#aaa" },
+                            },
                         },
                         {
-                            name: '上证指数',
-                            type: 'candlestick',
+                            name: "上证指数",
+                            type: "candlestick",
                             data: data.values,
-                            // itemStyle: {
-                            //     borderColor: '#345',
-                            //     borderColor0: '#998',
-                            //     borderWidth: 2
-                            // },
-                            // encode: {
-                            //     tooltip: [0, 1, 2, 3]
-                            // },
-                            // tooltip: {
-                            //     formatter: function (param) {
-                            //         var param = param[0];
-                            //         return [
-                            //             '日期：' + param.name + '<hr size=1 style="margin: 3px 0">',
-                            //             '开盘：' + param.data[0] + '<br/>',
-                            //             '收盘：' + param.data[1] + '<br/>',
-                            //             '日最低：' + param.data[2] + '<br/>',
-                            //             '日最高：' + param.data[3] + '<br/>'
-                            //         ].join('')
-                            //     }
-                            // },
-                            markPoint: {
-                                data: [
-                                    {
-                                        name: '某个坐标',
-                                        coord: ['2013/5/21', 2300]
-                                    },
-                                    {
-                                        name: '某个屏幕坐标',
-                                        x: 100,
-                                        y: 200,
-                                        label: {
-                                            normal: {
-                                                show: false
-                                            },
-                                            emphasis: {
-                                                show: true,
-                                                position: 'top',
-                                                formatter: 'zxcv'
-                                            }
-                                        }
-                                    },
-                                    {
-                                        name: 'max value (default)',
-                                        type: 'max'
-                                    },
-                                    {
-                                        name: 'min value (default)',
-                                        type: 'min'
-                                    },
-                                    {
-                                        name: 'max value (dim:close)',
-                                        type: 'max',
-                                        valueDim: 'close'
-                                    },
-                                    {
-                                        name: 'average value (dim:close)',
-                                        type: 'average',
-                                        valueDim: 'close'
-                                    }
-                                ],
-                                tooltip: {
-                                    formatter: function (param) {
-                                        return param.name + '<br>' + (param.data.coord || '');
-                                    }
-                                }
-                            },
-                            markLine: {
-                                data: [
-                                    [
-                                        {name: '两个坐标之间的标线', coord: ['2013/4/25', 2130]},
-                                        {coord: ['2013/5/27', 2220]}
-                                    ],
-                                    [
-                                        {name: '两个屏幕坐标之间的标线', x: 100, y: 100},
-                                        {x: 250, y: 130}
-                                    ],
-                                    [
-                                        {name: 'max - min', type: 'max'},
-                                        {type: 'min'}
-                                    ],
-                                    {
-                                        name: 'min line',
-                                        type: 'min'
-                                    },
-                                    {
-                                        name: 'max line on dim:open',
-                                        type: 'max',
-                                        valueDim: 'open'
-                                    }
-                                ]
-                            }
-                        }
-                    ]
+                        },
+                    ],
                 });
 
                 // setTimeout(function () {
@@ -266,7 +183,6 @@ under the License.
                 //     });
                 // }, 1000);
             }
-
         </script>
     </body>
 </html>
