@@ -60,7 +60,8 @@
     "checktype": "tsc --noEmit",
     "lint": "npx eslint src/**/*.ts extension-src/**/*.ts",
     "lint:fix": "npx eslint --fix src/**/*.ts extension-src/**/*.ts",
-    "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
+    "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js",
+    "rn": "rm -rf dist && yarn prepublish && node build/build.js --type all --min &&  node build/react-native/index.js"
   },
   "dependencies": {
     "tslib": "2.3.0",
