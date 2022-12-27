@@ -34,17 +34,19 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 import { saveOldStyle } from '../../animation/basicTransition';
 import { getBasicPieLayout, getSeriesLayoutData } from './pieLayout';
+import { addEditorInfo } from '../../util/editorInfo';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
  */
 class PiePiece extends graphic.Sector {
+    private _componentIndex?: number;
 
-    constructor(data: SeriesData, idx: number, startAngle: number) {
+    constructor(data: SeriesData, idx: number, startAngle: number, _componentIndex?: number) {
         super();
 
         this.z2 = 2;
-
+        this._componentIndex = _componentIndex;
         const text = new graphic.Text();
 
         this.setTextContent(text);
@@ -153,7 +155,6 @@ class PiePiece extends graphic.Sector {
 
         const labelLine = sector.getTextGuideLine();
         const labelText = sector.getTextContent();
-
         labelLine && extend(labelLine.ensureState('select'), {
             x: dx,
             y: dy
@@ -177,7 +178,6 @@ class PiePiece extends graphic.Sector {
         const style = data.getItemVisual(idx, 'style');
         const visualColor = style && style.fill as ColorString;
         const visualOpacity = style && style.opacity;
-
         setLabelStyle(
             sector,
             getLabelStatesModels(itemModel),
@@ -188,10 +188,26 @@ class PiePiece extends graphic.Sector {
                 defaultOpacity: visualOpacity,
                 defaultText: seriesModel.getFormattedLabel(idx, 'normal')
                     || data.getName(idx)
+            },
+            undefined,
+            {
+                component: 'series',
+                subType: 'pie',
+                componentIndex: this._componentIndex,
+                element: 'label',
+                dataIndex: idx
             }
         );
         const labelText = sector.getTextContent();
-
+        if (__EDITOR__) {
+            labelText && addEditorInfo(labelText, {
+                component: 'series',
+                subType: 'pie',
+                element: 'label',
+                componentIndex: this._componentIndex,
+                dataIndex: idx
+            });
+        }
         // Set textConfig on sector.
         sector.setTextConfig({
             // reset position, rotation
@@ -221,6 +237,15 @@ class PiePiece extends graphic.Sector {
                 stroke: visualColor,
                 opacity: retrieve3(labelLineModel.get(['lineStyle', 'opacity']), visualOpacity, 1)
             });
+            if (__EDITOR__) {
+                polyline && addEditorInfo(polyline, {
+                    component: 'series',
+                    subType: 'pie',
+                    element: 'labelLine',
+                    componentIndex: this._componentIndex,
+                    dataIndex: idx
+                });
+            }
         }
     }
 }
@@ -243,6 +268,9 @@ class PieView extends ChartView {
         const group = this.group;
 
         let startAngle: number;
+
+        const componentIndex = seriesModel.componentIndex;
+
         // First render
         if (!oldData && data.count() > 0) {
             let shape = data.getItemLayout(0) as graphic.Sector['shape'];
@@ -266,15 +294,30 @@ class PieView extends ChartView {
             });
             sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
             this._emptyCircleSector = sector;
+            if (__EDITOR__) {
+                addEditorInfo(sector, {
+                    component: 'series',
+                    subType: 'pie',
+                    element: 'sector',
+                    componentIndex: componentIndex
+                });
+            }
             group.add(sector);
         }
-
         data.diff(oldData)
             .add(function (idx) {
-                const piePiece = new PiePiece(data, idx, startAngle);
+                const piePiece = new PiePiece(data, idx, startAngle, componentIndex);
 
                 data.setItemGraphicEl(idx, piePiece);
-
+                if (__EDITOR__) {
+                    addEditorInfo(piePiece, {
+                        component: 'series',
+                        subType: 'pie',
+                        element: 'piece',
+                        componentIndex: componentIndex,
+                        dataIndex: idx
+                    });
+                }
                 group.add(piePiece);
             })
             .update(function (newIdx, oldIdx) {
@@ -283,7 +326,15 @@ class PieView extends ChartView {
                 piePiece.updateData(data, newIdx, startAngle);
 
                 piePiece.off('click');
-
+                if (__EDITOR__) {
+                    addEditorInfo(piePiece, {
+                        component: 'series',
+                        subType: 'pie',
+                        element: 'piece',
+                        componentIndex: componentIndex,
+                        dataIndex: newIdx
+                    });
+                }
                 group.add(piePiece);
                 data.setItemGraphicEl(newIdx, piePiece);
             })

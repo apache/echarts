@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
 import { LoadingEffect } from '../util/types';
 import ExtensionAPI from '../core/ExtensionAPI';
+import { addEditorInfo } from '../util/editorInfo';
 
 const PI = Math.PI;
 
@@ -72,6 +73,12 @@ export default function defaultLoading(
         zlevel: opts.zlevel,
         z: 10000
     });
+    if (__EDITOR__) {
+        addEditorInfo(mask, {
+            component: 'loading',
+            element: 'mask'
+        });
+    }
     group.add(mask);
 
     const textContent = new graphic.Text({
@@ -86,7 +93,12 @@ export default function defaultLoading(
         zlevel: opts.zlevel,
         z: 10001
     });
-
+    if (__EDITOR__) {
+        addEditorInfo(textContent, {
+            component: 'loading',
+            element: 'text'
+        });
+    }
     const labelRect = new graphic.Rect({
         style: {
             fill: 'none'
@@ -99,6 +111,12 @@ export default function defaultLoading(
         zlevel: opts.zlevel,
         z: 10001
     });
+    if (__EDITOR__) {
+        addEditorInfo(labelRect, {
+            component: 'loading',
+            element: 'labelRect'
+        });
+    }
     group.add(labelRect);
     let arc: graphic.Arc;
 
@@ -117,6 +135,12 @@ export default function defaultLoading(
             zlevel: opts.zlevel,
             z: 10001
         });
+        if (__EDITOR__) {
+            addEditorInfo(arc, {
+                component: 'loading',
+                element: 'arc'
+            });
+        }
         arc.animateShape(true)
             .when(1000, {
                 endAngle: PI * 3 / 2

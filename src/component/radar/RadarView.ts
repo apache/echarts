@@ -25,6 +25,7 @@ import RadarModel from '../../coord/radar/RadarModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ZRColor } from '../../util/types';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -181,7 +182,7 @@ class RadarView extends ComponentView {
         const areaStyle = areaStyleModel.getAreaStyle();
         // Add splitArea before splitLine
         zrUtil.each(splitAreas, function (splitAreas, idx) {
-            this.group.add(graphic.mergePath(
+            const splitArea = graphic.mergePath(
                 splitAreas, {
                     style: zrUtil.defaults({
                         stroke: 'none',
@@ -189,11 +190,18 @@ class RadarView extends ComponentView {
                     }, areaStyle),
                     silent: true
                 }
-            ));
+            );
+            if (__EDITOR__) {
+                addEditorInfo(splitArea, {
+                    component: 'radar',
+                    element: 'splitArea'
+                });
+            }
+            this.group.add(splitArea);
         }, this);
 
         zrUtil.each(splitLines, function (splitLines, idx) {
-            this.group.add(graphic.mergePath(
+            const splitLine = graphic.mergePath(
                 splitLines, {
                     style: zrUtil.defaults({
                         fill: 'none',
@@ -201,7 +209,14 @@ class RadarView extends ComponentView {
                     }, lineStyle),
                     silent: true
                 }
-            ));
+            );
+            if (__EDITOR__) {
+                addEditorInfo(splitLine, {
+                    component: 'radar',
+                    element: 'splitLine'
+                });
+            }
+            this.group.add(splitLine);
         }, this);
 
     }

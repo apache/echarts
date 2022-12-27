@@ -758,5 +758,4 @@ function getCurrentTask(seriesModel: SeriesModel): GeneralTask {
     }
 }
 
-
 export default SeriesModel;
