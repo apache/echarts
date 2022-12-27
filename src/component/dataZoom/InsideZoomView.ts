@@ -24,12 +24,14 @@ import InsideZoomModel from './InsideZoomModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { bind } from 'zrender/src/core/util';
-import RoamController, {RoamEventParams} from '../helper/RoamController';
+import RoamController, { RoamEventParams } from '../helper/RoamController';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import Polar from '../../coord/polar/Polar';
 import SingleAxis from '../../coord/single/SingleAxis';
 import { DataZoomCoordSysMainType, DataZoomReferCoordSysInfo } from './helper';
 
+const zoom_version = "zoom_version_v1"
+console.log(zoom_version)
 
 class InsideZoomView extends DataZoomView {
     static type = 'dataZoom.inside';
@@ -79,7 +81,7 @@ class InsideZoomView extends DataZoomView {
 
 interface DataZoomGetRangeHandler<
     T extends RoamEventParams['zoom'] | RoamEventParams['scrollMove'] | RoamEventParams['pan']
-> {
+    > {
     (
         coordSysInfo: DataZoomReferCoordSysInfo,
         coordSysMainType: DataZoomCoordSysMainType,
@@ -111,7 +113,7 @@ const getRangeHandlers: {
             directionInfo.signal > 0
                 ? (directionInfo.pixelStart + directionInfo.pixelLength - directionInfo.pixel)
                 : (directionInfo.pixel - directionInfo.pixelStart)
-            ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
+        ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
         const scale = Math.max(1 / e.scale, 0);
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
@@ -119,13 +121,24 @@ const getRangeHandlers: {
 
         // Restrict range.
         const minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+        const currentSpan = Math.abs(range[0] - range[1]);
 
-        sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
+        // disable zoom when range into small
+        const isSpanTooSmall = Math.round(currentSpan) <= 0;
 
-        this.range = range;
+        // handle prevent zoom  when range into min span
+        const { minSpan } = minMaxSpan;
+        const isMinSpan = !!minSpan && minSpan > currentSpan;
 
-        if (lastRange[0] !== range[0] || lastRange[1] !== range[1]) {
-            return range;
+        const preventZoom = isSpanTooSmall || isMinSpan;
+
+        if (!preventZoom) {
+            this.range = range;
+            sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
+
+            if (lastRange[0] !== range[0] || lastRange[1] !== range[1]) {
+                return range;
+            }
         }
     },
 
@@ -141,12 +154,12 @@ const getRangeHandlers: {
 
     scrollMove: makeMover(
         function (range, axisModel, coordSysInfo, coordSysMainType, controller, e: RoamEventParams['scrollMove']
-    ) {
-        const directionInfo = getDirectionInfo[coordSysMainType](
-            [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordSysInfo
-        );
-        return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
-    })
+        ) {
+            const directionInfo = getDirectionInfo[coordSysMainType](
+                [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordSysInfo
+            );
+            return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
+        })
 };
 
 export type DataZoomGetRangeHandlers = typeof getRangeHandlers;
@@ -158,7 +171,7 @@ function makeMover(
         coordSysInfo: DataZoomReferCoordSysInfo,
         coordSysMainType: DataZoomCoordSysMainType,
         controller: RoamController,
-        e: RoamEventParams['scrollMove']| RoamEventParams['pan']
+        e: RoamEventParams['scrollMove'] | RoamEventParams['pan']
     ) => number
 ) {
     return function (
@@ -166,7 +179,7 @@ function makeMover(
         coordSysInfo: DataZoomReferCoordSysInfo,
         coordSysMainType: DataZoomCoordSysMainType,
         controller: RoamController,
-        e: RoamEventParams['scrollMove']| RoamEventParams['pan']
+        e: RoamEventParams['scrollMove'] | RoamEventParams['pan']
     ): [number, number] {
         const lastRange = this.range;
         const range = lastRange.slice() as [number, number];
