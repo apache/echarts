@@ -73,6 +73,8 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
     className?: string
 
     order?: TooltipOrderMode
+
+    closeOnMove?:boolean
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {

@@ -207,6 +207,7 @@ class TooltipView extends ComponentView {
         tooltipContent.setEnterable(tooltipModel.get('enterable'));
 
         this._initGlobalListener();
+        this._initMouseOver();
 
         this._keepShow();
 
@@ -241,6 +242,20 @@ class TooltipView extends ComponentView {
                         this._hide(dispatchAction);
                     }
                 }
+            }, this)
+        );
+    }
+
+    private _initMouseOver() {
+        const tooltipModel = this._tooltipModel;
+        const closeOnMove = tooltipModel.get('closeOnMove');
+        globalListener.register(
+            'mouseover',
+            this._api,
+            bind(function (currTrigger, e, dispatchAction) {
+               if (closeOnMove) {
+                this._hide(dispatchAction);
+               }
             }, this)
         );
     }
