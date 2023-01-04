@@ -400,18 +400,22 @@ class GraphNode {
               continue;
             }
 
-            zrUtil.indexOf(dataIndices.edge, adjacentEdge.dataIndex) < 0
-            ? dataIndices.edge.push(adjacentEdge.dataIndex) : null;
+            if (zrUtil.indexOf(dataIndices.edge, adjacentEdge.dataIndex) < 0) {
+                dataIndices.edge.push(adjacentEdge.dataIndex);
+            }
+
             const sourceNodesQueue = [adjacentEdge.node1];
             const targetNodesQueue = [adjacentEdge.node2];
 
             while (sourceNodesQueue.length > 0) {
               const sourceNode = sourceNodesQueue.shift();
-              dataIndices.node.indexOf(sourceNode.dataIndex) === -1
-              ? dataIndices.node.push(sourceNode.dataIndex) : null;
+              if (dataIndices.node.indexOf(sourceNode.dataIndex)) {
+                dataIndices.node.push(sourceNode.dataIndex);
+              }
               for (let j = 0; j < sourceNode.inEdges.length; j++) {
-                dataIndices.edge.indexOf(sourceNode.inEdges[j].dataIndex) === -1
-                ? dataIndices.edge.push(sourceNode.inEdges[j].dataIndex) : null;
+                if (dataIndices.edge.indexOf(sourceNode.inEdges[j].dataIndex) === -1) {
+                    dataIndices.edge.push(sourceNode.inEdges[j].dataIndex);
+                }
                 sourceNodesQueue.push(sourceNode.inEdges[j].node1);
               }
             }
@@ -485,21 +489,26 @@ class GraphEdge {
 
         while (sourceNodes.length > 0) {
           const sourceNode = sourceNodes.shift();
-          dataIndices.node.indexOf(sourceNode.dataIndex) === -1 ? dataIndices.node.push(sourceNode.dataIndex) : null;
+          if (dataIndices.node.indexOf(sourceNode.dataIndex) === -1) {
+            dataIndices.node.push(sourceNode.dataIndex);
+          }
           for (let j = 0; j < sourceNode.inEdges.length; j++) {
-            dataIndices.edge.indexOf(sourceNode.inEdges[j].dataIndex) === -1
-            ? dataIndices.edge.push(sourceNode.inEdges[j].dataIndex) : null;
+            if (dataIndices.edge.indexOf(sourceNode.inEdges[j].dataIndex) === -1) {
+                dataIndices.edge.push(sourceNode.inEdges[j].dataIndex);
+            }
             sourceNodes.push(sourceNode.inEdges[j].node1);
           }
         }
 
         while (targetNodes.length > 0) {
           const targetNode = targetNodes.shift();
-          dataIndices.node.indexOf(targetNode.dataIndex) === -1
-          ? dataIndices.node.push(targetNode.dataIndex) : null;
+          if (dataIndices.node.indexOf(targetNode.dataIndex) === -1) {
+            dataIndices.node.push(targetNode.dataIndex);
+          }
           for (let j = 0; j < targetNode.outEdges.length; j++) {
-            dataIndices.edge.indexOf(targetNode.outEdges[j].dataIndex) === -1
-            ? dataIndices.edge.push(targetNode.outEdges[j].dataIndex) : null;
+            if (dataIndices.edge.indexOf(targetNode.outEdges[j].dataIndex) === -1) {
+                dataIndices.edge.push(targetNode.outEdges[j].dataIndex);
+            }
             targetNodes.push(targetNode.outEdges[j].node2);
           }
         }
