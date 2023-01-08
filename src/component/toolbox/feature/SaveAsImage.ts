@@ -19,6 +19,8 @@
 
 /* global Uint8Array, document */
 
+import * as echarts from '../../../core/echarts';
+import ToolboxView from '../ToolboxView';
 import env from 'zrender/src/core/env';
 import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ZRColor } from '../../../util/types';
@@ -146,5 +148,16 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         return defaultOption;
     }
 }
+
+echarts.registerAction(
+    'saveAsImage',
+    function (payload, ecModel, api) {
+        const toolboxModel = ecModel.getComponent('toolbox');
+        if (toolboxModel) {
+            ((api.getViewOfComponentModel(toolboxModel) as ToolboxView)._features?.saveAsImage as SaveAsImage)
+                ?.onclick(ecModel, api);
+        }
+    }
+);
 
 export default SaveAsImage;
