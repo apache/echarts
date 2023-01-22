@@ -67788,7 +67788,7 @@
               x: pmin[0],
               y: pmin[1],
               width:  candleWidth ,
-              height:  pmax[1] - pmin[1] 
+              height:  pmax[1] - pmin[1]
             };
           }
 
@@ -80047,8 +80047,13 @@
               for (var i = 0; i < dataDims.length; i++) {
                 var value = store_1.get(dataDimIndices_1[i], dataIndex);
                 var thisHasValue = !isNaN(value);
-                var thisLeftOut = value < valueWindow[0];
-                var thisRightOut = value > valueWindow[1];
+                if(seriesModel.subType === 'bar') {
+                    var thisLeftOut = value < valueWindow[0];
+                    var thisRightOut = value > valueWindow[1];
+                } else {
+                    var thisLeftOut = value < valueWindow[0] && seriesData.get(dataDims[i], dataIndex+1) < valueWindow[0];
+                    var thisRightOut = value > valueWindow[1] && seriesData.get(dataDims[i], dataIndex-1) > valueWindow[1];
+                  }
 
                 if (thisHasValue && !thisLeftOut && !thisRightOut) {
                   return true;
