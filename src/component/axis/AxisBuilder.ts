@@ -152,7 +152,7 @@ class AxisBuilder {
         );
 
 
-        // FIXME Not use a seperate text group?
+        // FIXME Not use a separate text group?
         const transformGroup = new graphic.Group({
             x: opt.position[0],
             y: opt.position[1],
@@ -796,7 +796,7 @@ function buildAxisLabel(
                         // in category axis.
                         // (2) Compatible with previous version, which always use formatted label as
                         // input. But in interval scale the formatted label is like '223,445', which
-                        // maked user repalce ','. So we modify it to return original val but remain
+                        // maked user replace ','. So we modify it to return original val but remain
                         // it as 'string' to avoid error in replacing.
                         axis.type === 'category'
                             ? rawLabel

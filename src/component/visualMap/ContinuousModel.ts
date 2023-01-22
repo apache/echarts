@@ -46,7 +46,7 @@ export interface ContinousVisualMapOption extends VisualMapOption {
     /**
      * selected range. In default case `range` is [min, max]
      * and can auto change along with modification of min max,
-     * util user specifid a range.
+     * until user specified a range.
      */
     range?: number[]
     /**
@@ -121,7 +121,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         const range = this.option.range;
 
         if (!range || (range as RangeWithAuto).auto) {
-            // `range` should always be array (so we dont use other
+            // `range` should always be array (so we don't use other
             // value like 'auto') for user-friend. (consider getOption).
             (dataExtent as RangeWithAuto).auto = 1;
             this.option.range = dataExtent;

@@ -116,7 +116,7 @@ class SunburstPiece extends graphic.Sector {
         if (firstCreate) {
             sector.setShape(sectorShape);
             sector.shape.r = layout.r0;
-            graphic.updateProps(
+            graphic.initProps(
                 sector,
                 {
                     shape: {

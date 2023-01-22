@@ -142,7 +142,7 @@ export default function prepareSeriesDataSchema(
             const userDimName = dimDefItem.name;
             if (userDimName != null && dataDimNameMap.get(userDimName) != null) {
                 // Only if `series.dimensions` is defined in option
-                // displayName, will be set, and dimension will be diplayed vertically in
+                // displayName, will be set, and dimension will be displayed vertically in
                 // tooltip by default.
                 resultItem.name = resultItem.displayName = userDimName;
             }
@@ -313,8 +313,8 @@ export default function prepareSeriesDataSchema(
                     //    ]},
                     //    series: {type: 'pie'}
                     // }
-                    // The first colum should better be treated as a "ordinal" although it
-                    // might not able to be detected as an "ordinal" by `guessOrdinal`.
+                    // The first column should better be treated as a "ordinal" although it
+                    // might not be detected as an "ordinal" by `guessOrdinal`.
                     || (resultItem.isExtraCoord
                         && (resultItem.otherDims.itemName != null
                             || resultItem.otherDims.seriesName != null

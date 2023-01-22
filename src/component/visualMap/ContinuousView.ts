@@ -296,7 +296,7 @@ class ContinuousView extends VisualMapView {
             draggable: true,
             drift: onDrift,
             onmousemove(e) {
-                // Fot mobile devicem, prevent screen slider on the button.
+                // For mobile device, prevent screen slider on the button.
                 eventTool.stop(e.event);
             },
             ondragend: onDragEnd,
@@ -453,7 +453,7 @@ class ContinuousView extends VisualMapView {
             handleEnds,
             sizeExtent,
             handleIndex,
-            // cross is forbiden
+            // cross is forbidden
             0
         );
 
@@ -532,7 +532,7 @@ class ContinuousView extends VisualMapView {
         }
     ) {
         // Considering colorHue, which is not linear, so we have to sample
-        // to calculate gradient color stops, but not only caculate head
+        // to calculate gradient color stops, but not only calculate head
         // and tail.
         const sampleNumber = 100; // Arbitrary value.
         const colorStops: LinearGradientObject['colorStops'] = [];
@@ -930,7 +930,7 @@ function createPolygon(
         cursor: cursor,
         drift: onDrift,
         onmousemove(e) {
-            // Fot mobile devicem, prevent screen slider on the button.
+            // For mobile device, prevent screen slider on the button.
             eventTool.stop(e.event);
         },
         ondragend: onDragEnd

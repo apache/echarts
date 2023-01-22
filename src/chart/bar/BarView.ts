@@ -698,7 +698,7 @@ const clip: {
 
         // When xClipped or yClipped, the element will be marked as `ignore`.
         // But we should also place the element at the edge of the coord sys bounding rect.
-        // Beause if data changed and the bar show again, its transition animaiton
+        // Because if data changed and the bar shows again, its transition animation
         // will begin at this place.
         layout.x = (xClipped && x > coordSysX2) ? x2 : x;
         layout.y = (yClipped && y > coordSysY2) ? y2 : y;
@@ -803,7 +803,7 @@ const elementCreator: {
             const sectorShape = sector.shape;
             const animateProperty = isRadial ? 'r' : 'endAngle' as 'r' | 'endAngle';
             const animateTarget = {} as SectorShape;
-            sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
+            sectorShape[animateProperty] = isRadial ? layout.r0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
             (isUpdate ? updateProps : initProps)(sector, {
                 shape: animateTarget
