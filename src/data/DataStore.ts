@@ -161,7 +161,7 @@ class DataStore {
 
     private _provider: DataProvider;
 
-    // It will not be calculated untill needed.
+    // It will not be calculated until needed.
     private _rawExtent: [number, number][] = [];
 
     private _extent: [number, number][] = [];
