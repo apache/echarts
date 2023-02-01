@@ -94,6 +94,7 @@ interface SetLabelStyleOpt<TLabelDataIndex> extends TextCommonParams {
     };
     labelDataIndex?: TLabelDataIndex;
     labelDimIndex?: number;
+    labelValue?: number;
 
     /**
      * Inject a setter of text for the text animation case.
@@ -135,9 +136,17 @@ function getLabelText<TLabelDataIndex>(
     const labelFetcher = opt.labelFetcher;
     const labelDataIndex = opt.labelDataIndex;
     const labelDimIndex = opt.labelDimIndex;
+    const labelValue = opt.labelValue;
     const normalModel = stateModels.normal;
     let baseText;
+    let extendParams = null;
     if (labelFetcher) {
+        if (labelValue != undefined && labelValue != null) {
+            extendParams = {
+                interpolatedValue: labelValue
+            };
+        }
+
         baseText = labelFetcher.getFormattedLabel(
             labelDataIndex, 'normal',
             null,
@@ -145,7 +154,7 @@ function getLabelText<TLabelDataIndex>(
             normalModel && normalModel.get('formatter'),
             interpolatedValue != null ? {
                 interpolatedValue: interpolatedValue
-            } : null
+            } : extendParams
         );
     }
     if (baseText == null) {
