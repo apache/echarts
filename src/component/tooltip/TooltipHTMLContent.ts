@@ -337,7 +337,7 @@ class TooltipHTMLContent {
             self._inContent = false;
 
             if (self._enterable) {
-                if (self._show && !self._alwaysShowContent) {
+                if (self._show) {
                     self.hideLater(self._hideDelay);
                 }
             }
@@ -492,7 +492,7 @@ class TooltipHTMLContent {
     }
 
     hideLater(time?: number) {
-        if (this._show && !(this._inContent && this._enterable)) {
+        if (this._show && !(this._inContent && this._enterable) && !this._alwaysShowContent) {
             if (time) {
                 this._hideDelay = time;
                 // Set show false to avoid invoke hideLater multiple times
