@@ -139,22 +139,13 @@ function getLabelText<TLabelDataIndex>(
     const labelValue = opt.labelValue;
     const normalModel = stateModels.normal;
     let baseText;
-    let extendParams = null;
     if (labelFetcher) {
-        if (labelValue != undefined && labelValue != null) {
-            extendParams = {
-                interpolatedValue: labelValue
-            };
-        }
-
         baseText = labelFetcher.getFormattedLabel(
             labelDataIndex, 'normal',
             null,
             labelDimIndex,
             normalModel && normalModel.get('formatter'),
-            interpolatedValue != null ? {
-                interpolatedValue: interpolatedValue
-            } : extendParams
+             {interpolatedValue: retrieve2(interpolatedValue, labelValue)}
         );
     }
     if (baseText == null) {
