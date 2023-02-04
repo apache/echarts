@@ -252,7 +252,7 @@ class SunburstPiece extends graphic.Sector {
             let rotate = 0;
             if (rotateType === 'radial') {
                 rotate = -midAngle;
-                if (rotate < -Math.PI / 2) {
+                if (rotate < -Math.PI / 2 || rotate > Math.PI / 2) {
                     rotate += Math.PI;
                 }
             }
