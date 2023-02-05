@@ -20,27 +20,39 @@
 const babel = require('@babel/core');
 const parser = require('@babel/parser');
 
-function transformDEVPlugin ({types, template}) {
-    return {
-        visitor: {
-            Identifier: {
-                enter(path, state) {
-                    if (path.isIdentifier({ name: '__DEV__' }) && path.scope.hasGlobal('__DEV__')) {
-                        path.replaceWith(
-                            parser.parseExpression(state.opts.expr)
-                        );
+function getTransformPluginByEnv(env){
+    return function({types, template}){
+        return {
+            visitor: {
+                Identifier: {
+                    enter(path, state) {
+                        if (path.isIdentifier({ name: env }) && path.scope.hasGlobal(env)) {
+                            path.replaceWith(
+                                parser.parseExpression(state.opts.expr)
+                            );
+                        }
                     }
                 }
             }
         }
-    };
+    }
+}
+
+function getTransformDEVPlugin () {
+    return getTransformPluginByEnv("__DEV__");
+};
+
+function getTransformEDITORPlugin () {
+    return getTransformPluginByEnv("__EDITOR__");
 };
 
 
 module.exports.transform = function (sourceCode, sourcemap, expr) {
     let {code, map} = babel.transformSync(sourceCode, {
-        plugins: [ [transformDEVPlugin, {
+        plugins: [ [getTransformDEVPlugin(), {
             expr: expr || 'process.env.NODE_ENV !== \'production\''
+        }], [getTransformEDITORPlugin(), {
+            expr: expr || 'process.env.NODE_ENV !== \'production\' \|\| process.env.E_CHARTS_ENV === \'editor\''
         }] ],
         compact: false,
         sourceMaps: sourcemap

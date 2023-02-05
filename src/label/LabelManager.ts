@@ -53,6 +53,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
 import { labelInner, animateLabelValue } from './labelStyle';
+import { addEditorInfo } from '../util/editorInfo';
 
 interface LabelDesc {
     label: ZRText
@@ -494,7 +495,16 @@ class LabelManager {
             const labelLineModel = itemModel.getModel('labelLine');
 
             setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
-
+            if (__EDITOR__) {
+                const polyline = el.getTextGuideLine();
+                polyline && addEditorInfo(polyline, {
+                    component: seriesModel.mainType,
+                    subType: seriesModel.subType,
+                    element: 'labelLine',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex
+                });
+            }
             updateLabelLinePoints(el, labelLineModel);
         }
     }

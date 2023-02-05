@@ -17,16 +17,16 @@
 * under the License.
 */
 
-import {retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction} from 'zrender/src/core/util';
+import { retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import {getECData} from '../../util/innerStore';
-import {createTextStyle} from '../../label/labelStyle';
+import { getECData } from '../../util/innerStore';
+import { createTextStyle } from '../../label/labelStyle';
 import Model from '../../model/Model';
-import {isRadianAroundZero, remRadian} from '../../util/number';
-import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
+import { isRadianAroundZero, remRadian } from '../../util/number';
+import { createSymbol, normalizeSymbolOffset } from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
-import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {shouldShowAllLabels} from '../../coord/axisHelper';
+import { applyTransform as v2ApplyTransform } from 'zrender/src/core/vector';
+import { shouldShowAllLabels } from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
@@ -34,6 +34,7 @@ import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
 import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const PI = Math.PI;
 
@@ -49,8 +50,8 @@ type AxisEventData = {
     dataIndex?: number
     tickIndex?: number
 } & {
-    [key in AxisIndexKey]?: number
-};
+        [key in AxisIndexKey]?: number
+    };
 
 type AxisLabelText = graphic.Text & {
     __fullText: string
@@ -235,7 +236,7 @@ interface AxisElementsBuilder {
         axisModel: AxisBaseModel,
         group: graphic.Group,
         transformGroup: graphic.Group
-    ):void
+    ): void
 }
 
 const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBuilder> = {
@@ -280,6 +281,14 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             silent: true,
             z2: 1
         });
+        if (__EDITOR__) {
+            addEditorInfo(line, {
+                component: axisModel.mainType,
+                componentIndex: axisModel.componentIndex,
+                subType: axisModel.subType,
+                element: 'axisLine'
+            });
+        }
         graphic.subPixelOptimizeLine(line.shape, line.style.lineWidth);
         line.anid = 'line';
         group.add(line);
@@ -335,6 +344,14 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                         silent: true,
                         z2: 11
                     });
+                    if (__EDITOR__) {
+                        addEditorInfo(symbol, {
+                            component: axisModel.mainType,
+                            componentIndex: axisModel.componentIndex,
+                            subType: axisModel.subType,
+                            element: 'axisLineSymbol'
+                        });
+                    }
                     group.add(symbol);
                 }
             });
@@ -382,8 +399,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             nameLocation === 'start'
                 ? extent[0] - gapSignal * gap
                 : nameLocation === 'end'
-                ? extent[1] + gapSignal * gap
-                : (extent[0] + extent[1]) / 2, // 'middle'
+                    ? extent[1] + gapSignal * gap
+                    : (extent[0] + extent[1]) / 2, // 'middle'
             // Reuse labelOffset.
             isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
         ];
@@ -446,7 +463,14 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             }),
             z2: 1
         }) as AxisLabelText;
-
+        if (__EDITOR__) {
+            addEditorInfo(textEl, {
+                component: axisModel.mainType,
+                element: 'axisName',
+                componentIndex: axisModel.componentIndex,
+                subType: axisModel.subType
+            });
+        }
         graphic.setTooltipConfig({
             el: textEl,
             componentModel: axisModel,
@@ -677,6 +701,14 @@ function buildAxisMajorTicks(
     ), 'ticks');
 
     for (let i = 0; i < ticksEls.length; i++) {
+        if (__EDITOR__) {
+            addEditorInfo(ticksEls[i], {
+                component: axisModel.mainType,
+                componentIndex: axisModel.componentIndex,
+                subType: axisModel.subType,
+                element: 'majorTicks'
+            });
+        }
         group.add(ticksEls[i]);
     }
 
@@ -720,6 +752,14 @@ function buildAxisMinorTicks(
             minorTicksCoords[i], transformGroup.transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i
         );
         for (let k = 0; k < minorTicksEls.length; k++) {
+            if (__EDITOR__) {
+                addEditorInfo(minorTicksEls[k], {
+                    component: axisModel.mainType,
+                    element: 'minorTicks',
+                    componentIndex: axisModel.componentIndex,
+                    subType: axisModel.subType
+                });
+            }
             group.add(minorTicksEls[k]);
         }
     }
@@ -801,13 +841,21 @@ function buildAxisLabel(
                         axis.type === 'category'
                             ? rawLabel
                             : axis.type === 'value'
-                            ? tickValue + ''
-                            : tickValue,
+                                ? tickValue + ''
+                                : tickValue,
                         index
                     )
                     : textColor as string
             })
         });
+        if (__EDITOR__) {
+            addEditorInfo(textEl, {
+                element: 'axisLabel',
+                component: axisModel.mainType,
+                componentIndex: axisModel.componentIndex,
+                subType: axisModel.subType
+            });
+        }
         textEl.anid = 'label_' + tickValue;
 
 

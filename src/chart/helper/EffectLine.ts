@@ -59,7 +59,10 @@ class EffectLine extends graphic.Group {
     }
 
     createLine(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope): graphic.Group {
-        return new Line(lineData, idx, seriesScope);
+        return new Line(lineData, idx, seriesScope, {
+            component: 'marker',
+            element: 'line'
+        });
     }
 
     private _updateEffectSymbol(lineData: SeriesData, idx: number) {

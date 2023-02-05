@@ -50,6 +50,7 @@ import {LineStyleProps} from '../../model/mixin/lineStyle';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -314,7 +315,12 @@ class LegendView extends ComponentView {
                     });
                 }
             });
-
+            if (__EDITOR__) {
+                addEditorInfo(labelText, {
+                    component: 'legend',
+                    element: 'selectorText'
+                });
+            }
             selectorGroup.add(labelText);
 
             const labelModel = legendModel.getModel('selectorLabel');
@@ -324,6 +330,11 @@ class LegendView extends ComponentView {
                 labelText, { normal: labelModel, emphasis: emphasisLabelModel },
                 {
                     defaultText: selectorItem.title
+                }, undefined,
+                {
+                    component: 'legend',
+                    componentIndex: legendModel.componentIndex,
+                    element: 'label'
                 }
             );
             enableHoverEmphasis(labelText);
@@ -372,7 +383,7 @@ class LegendView extends ComponentView {
             && (!legendIconType || legendIconType === 'inherit')
         ) {
             // Series has specific way to define legend icon
-            itemGroup.add(seriesModel.getLegendIcon({
+            const legendIconEl = seriesModel.getLegendIcon({
                 itemWidth,
                 itemHeight,
                 icon: legendIcon,
@@ -380,7 +391,14 @@ class LegendView extends ComponentView {
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle,
                 symbolKeepAspect
-            }));
+            });
+            if (__EDITOR__) {
+                addEditorInfo(legendIconEl, {
+                    component: 'legend',
+                    element: 'legendIcon'
+                });
+            }
+            itemGroup.add(legendIconEl);
         }
         else {
             // Use default legend icon policy for most series
@@ -390,7 +408,7 @@ class LegendView extends ComponentView {
                     : iconRotate
                 )
                 : 0; // No rotation for no icon
-            itemGroup.add(getDefaultLegendIcon({
+            const legendIconEl = getDefaultLegendIcon({
                 itemWidth,
                 itemHeight,
                 icon: legendIcon,
@@ -398,7 +416,14 @@ class LegendView extends ComponentView {
                 itemStyle: style.itemStyle,
                 lineStyle: style.lineStyle,
                 symbolKeepAspect
-            }));
+            });
+            if (__EDITOR__) {
+                addEditorInfo(legendIconEl, {
+                    component: 'legend',
+                    element: 'icon'
+                });
+            }
+            itemGroup.add(legendIconEl);
         }
 
         const textX = itemAlign === 'left' ? itemWidth + 5 : -5;
@@ -414,7 +439,7 @@ class LegendView extends ComponentView {
         }
 
         const inactiveColor = legendItemModel.get('inactiveColor');
-        itemGroup.add(new graphic.Text({
+        const item = new graphic.Text({
             style: createTextStyle(textStyleModel, {
                 text: content,
                 x: textX,
@@ -423,14 +448,26 @@ class LegendView extends ComponentView {
                 align: textAlign,
                 verticalAlign: 'middle'
             })
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(item, {
+                component: 'legend',
+                element: 'text'
+            });
+        }
+        itemGroup.add(item);
 
         // Add a invisible rect to increase the area of mouse hover
         const hitRect = new graphic.Rect({
             shape: itemGroup.getBoundingRect(),
             invisible: true
         });
-
+        if (__EDITOR__) {
+            addEditorInfo(hitRect, {
+                component: 'legend',
+                element: 'hitRect'
+            });
+        }
         const tooltipModel =
             legendItemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;
         if (tooltipModel.get('show')) {

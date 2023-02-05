@@ -59,6 +59,7 @@ import { convertToColorString } from '../../util/format';
 import { lerp } from 'zrender/src/tool/color';
 import Element from 'zrender/src/Element';
 
+import { addEditorInfo } from '../../util/editorInfo';
 
 type PolarArea = ReturnType<Polar['getArea']>;
 type Cartesian2DArea = ReturnType<Cartesian2D['getArea']>;
@@ -619,7 +620,11 @@ class LineView extends ChartView {
     init() {
         const lineGroup = new graphic.Group();
 
-        const symbolDraw = new SymbolDraw();
+        const symbolDraw = new SymbolDraw(undefined, {
+            component: 'series',
+            subType: 'line',
+            element: 'symbol'
+        });
         this.group.add(symbolDraw.group);
 
         this._symbolDraw = symbolDraw;
@@ -708,7 +713,7 @@ class LineView extends ChartView {
                 getSymbolPoint(idx) {
                     return [points[idx * 2], points[idx * 2 + 1]];
                 }
-            });
+            }, seriesModel.componentIndex);
 
             hasAnimation && this._initSymbolLabelAnimation(
                 data,
@@ -726,10 +731,26 @@ class LineView extends ChartView {
             }
 
             polyline = this._newPolyline(points);
+            if (__EDITOR__) {
+                addEditorInfo(polyline, {
+                    component: 'series',
+                    subType: 'line',
+                    element: 'polyline',
+                    componentIndex: seriesModel.componentIndex
+                });
+            }
             if (isAreaChart) {
                 polygon = this._newPolygon(
                     points, stackedOnPoints
                 );
+                if (__EDITOR__) {
+                    addEditorInfo(polygon, {
+                        component: 'series',
+                        subType: 'line',
+                        element: 'polygon',
+                        componentIndex: seriesModel.componentIndex
+                    });
+                }
             }// If areaStyle is removed
             else if (polygon) {
                 lineGroup.remove(polygon);
@@ -751,6 +772,14 @@ class LineView extends ChartView {
                 polygon = this._newPolygon(
                     points, stackedOnPoints
                 );
+                if (__EDITOR__) {
+                    addEditorInfo(polygon, {
+                        component: 'series',
+                        subType: 'line',
+                        element: 'polygon',
+                        componentIndex: seriesModel.componentIndex
+                    });
+                }
             }
             else if (polygon && !isAreaChart) {
                 // If areaStyle is removed
@@ -786,7 +815,7 @@ class LineView extends ChartView {
                 getSymbolPoint(idx) {
                     return [points[idx * 2], points[idx * 2 + 1]];
                 }
-            });
+            }, seriesModel.componentIndex);
 
             // In the case data zoom triggered refreshing frequently
             // Data may not change if line has a category axis. So it should animate nothing.
@@ -1033,7 +1062,6 @@ class LineView extends ChartView {
             segmentIgnoreThreshold: 2,
             z2: 10
         });
-
         this._lineGroup.add(polyline);
 
         this._polyline = polyline;
@@ -1055,7 +1083,6 @@ class LineView extends ChartView {
             },
             segmentIgnoreThreshold: 2
         });
-
         this._lineGroup.add(polygon);
 
         this._polygon = polygon;
@@ -1185,6 +1212,14 @@ class LineView extends ChartView {
                 endLabel = this._endLabel = new graphic.Text({
                     z2: 200 // should be higher than item symbol
                 });
+                if (__EDITOR__) {
+                    addEditorInfo(endLabel, {
+                        component: 'series',
+                        subType: 'line',
+                        element: 'endLabel',
+                        componentIndex: seriesModel.componentIndex
+                    });
+                }
                 endLabel.ignoreClip = true;
                 polyline.setTextContent(this._endLabel);
                 (polyline as ECElement).disableLabelAnimation = true;
@@ -1207,7 +1242,14 @@ class LineView extends ChartView {
                         },
                         enableTextSetter: true
                     },
-                    getEndLabelStateSpecified(endLabelModel, coordSys)
+                    getEndLabelStateSpecified(endLabelModel, coordSys),
+                    {
+                        component: 'series',
+                        subType: 'line',
+                        componentIndex: seriesModel.componentIndex,
+                        element: 'label',
+                        dataIndex
+                    }
                 );
                 polyline.textConfig.position = null;
             }
