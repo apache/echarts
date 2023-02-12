@@ -153,7 +153,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
 
     fontSize
         // @ts-ignore, leave it to the tooltip refactor.
-        && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
+        && cssText.push('line-height:1.5');
 
     const shadowColor = textStyleModel.get('textShadowColor');
     const shadowBlur = textStyleModel.get('textShadowBlur') || 0;

@@ -51,19 +51,22 @@ function getTooltipTextStyle(
     valueStyle: TextStyle
 } {
     const nameFontColor = textStyle.color || '#6e7079';
-    const nameFontSize = textStyle.fontSize || 12;
+    let nameFontSize = textStyle.fontSize || '12px';
     const nameFontWeight = textStyle.fontWeight || '400';
     const valueFontColor = textStyle.color || '#464646';
-    const valueFontSize = textStyle.fontSize || 14;
+    let valueFontSize = textStyle.fontSize || '14px';
     const valueFontWeight = textStyle.fontWeight || '900';
 
     if (renderMode === 'html') {
+        nameFontSize = isNaN(Number(nameFontSize)) ? String(nameFontSize) : `${nameFontSize}px`;
+        valueFontSize = isNaN(Number(valueFontSize)) ? String(valueFontSize) : `${valueFontSize}px`;
+
         // `textStyle` is probably from user input, should be encoded to reduce security risk.
         return {
             // eslint-disable-next-line max-len
-            nameStyle: `font-size:${encodeHTML(nameFontSize + '')}px;color:${encodeHTML(nameFontColor)};font-weight:${encodeHTML(nameFontWeight + '')}`,
+            nameStyle: `font-size:${encodeHTML(nameFontSize)};color:${encodeHTML(nameFontColor)};font-weight:${encodeHTML(nameFontWeight + '')}`,
             // eslint-disable-next-line max-len
-            valueStyle: `font-size:${encodeHTML(valueFontSize + '')}px;color:${encodeHTML(valueFontColor)};font-weight:${encodeHTML(valueFontWeight + '')}`
+            valueStyle: `font-size:${encodeHTML(valueFontSize)};color:${encodeHTML(valueFontColor)};font-weight:${encodeHTML(valueFontWeight + '')}`
         };
     }
     else {
