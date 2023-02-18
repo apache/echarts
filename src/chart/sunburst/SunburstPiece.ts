@@ -94,7 +94,7 @@ class SunburstPiece extends graphic.Sector {
         const normalStyle = node.getVisual('style') as PathStyleProps;
         normalStyle.lineJoin = 'bevel';
 
-        const decal = node.getVisual('decal');
+        const decal = node.getDecal('decal');
         if (decal) {
             normalStyle.decal = createOrUpdatePatternFromDecal(decal, api);
         }
