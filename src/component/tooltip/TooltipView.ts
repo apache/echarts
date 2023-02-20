@@ -882,8 +882,15 @@ class TooltipView extends ComponentView {
         params: TooltipCallbackDataParams | TooltipCallbackDataParams[],
         el?: Element
     ) {
-        const viewWidth = this._api.getWidth();
-        const viewHeight = this._api.getHeight();
+        let viewWidth: number;
+        let viewHeight: number;
+        try {
+            viewWidth = this._api.getWidth();
+            viewHeight = this._api.getHeight();
+        } catch {
+            console.warn('tooltip width or height not obtained.');
+            return;
+        }
 
         positionExpr = positionExpr || tooltipModel.get('position');
 
