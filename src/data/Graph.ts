@@ -389,50 +389,48 @@ class GraphNode {
     }
 
     getFullPathDataIndices(): {node: number[], edge: number[]} {
-        const dataIndices = {
-            edge: [] as number[],
-            node: [] as number[]
-        };
+        const connectedEdgesMap: {[key: number]: boolean} = {};
+        const connectedNodesMap: {[key: number]: boolean} = {};
 
         for (let i = 0; i < this.edges.length; i++) {
             const adjacentEdge = this.edges[i];
             if (adjacentEdge.dataIndex < 0) {
-              continue;
+                continue;
             }
 
-            if (zrUtil.indexOf(dataIndices.edge, adjacentEdge.dataIndex) < 0) {
-                dataIndices.edge.push(adjacentEdge.dataIndex);
-            }
+            connectedEdgesMap[adjacentEdge.dataIndex] = true;
 
             const sourceNodesQueue = [adjacentEdge.node1];
             const targetNodesQueue = [adjacentEdge.node2];
 
-            while (sourceNodesQueue.length > 0) {
-              const sourceNode = sourceNodesQueue.shift();
-              if (dataIndices.node.indexOf(sourceNode.dataIndex)) {
-                dataIndices.node.push(sourceNode.dataIndex);
-              }
-              for (let j = 0; j < sourceNode.inEdges.length; j++) {
-                if (dataIndices.edge.indexOf(sourceNode.inEdges[j].dataIndex) === -1) {
-                    dataIndices.edge.push(sourceNode.inEdges[j].dataIndex);
+            let nodeIteratorIndex = 0;
+            while (nodeIteratorIndex < sourceNodesQueue.length) {
+                const sourceNode = sourceNodesQueue[nodeIteratorIndex];
+                nodeIteratorIndex++;
+                connectedNodesMap[sourceNode.dataIndex] = true;
+
+                for (let j = 0; j < sourceNode.inEdges.length; j++) {
+                    connectedEdgesMap[sourceNode.inEdges[j].dataIndex] = true;
+                    sourceNodesQueue.push(sourceNode.inEdges[j].node1);
                 }
-                sourceNodesQueue.push(sourceNode.inEdges[j].node1);
-              }
             }
 
-            while (targetNodesQueue.length > 0) {
-              const targetNode = targetNodesQueue.shift();
-              dataIndices.node.indexOf(targetNode.dataIndex) === -1
-              ? dataIndices.node.push(targetNode.dataIndex) : null;
-              for (let j = 0; j < targetNode.outEdges.length; j++) {
-                dataIndices.edge.indexOf(targetNode.outEdges[j].dataIndex) === -1
-                ? dataIndices.edge.push(targetNode.outEdges[j].dataIndex) : null;
-                targetNodesQueue.push(targetNode.outEdges[j].node2);
-              }
+            nodeIteratorIndex = 0;
+            while (nodeIteratorIndex < targetNodesQueue.length) {
+                const targetNode = targetNodesQueue[nodeIteratorIndex];
+                nodeIteratorIndex++;
+                connectedNodesMap[targetNode.dataIndex] = true;
+                for (let j = 0; j < targetNode.outEdges.length; j++) {
+                    connectedEdgesMap[targetNode.outEdges[j].dataIndex] = true;
+                    targetNodesQueue.push(targetNode.outEdges[j].node2);
+                }
             }
         }
 
-        return dataIndices;
+        return {
+            edge: Object.keys(connectedEdgesMap).map(Number),
+            node: Object.keys(connectedNodesMap).map(Number)
+        };
     }
 }
 
@@ -478,42 +476,44 @@ class GraphEdge {
     }
 
     getFullPathDataIndices(): {node: number[], edge: number[]} {
-        const dataIndices = {
-          edge: [] as number[],
-          node: [] as number[]
-        };
+        const connectedEdgesMap: {[key: number]: boolean} = {};
+        const connectedNodesMap: {[key: number]: boolean} = {};
 
-        dataIndices.edge.push(this.dataIndex);
+        connectedEdgesMap[this.dataIndex] = true;
+
         const sourceNodes = [this.node1];
         const targetNodes = [this.node2];
 
-        while (sourceNodes.length > 0) {
-          const sourceNode = sourceNodes.shift();
-          if (dataIndices.node.indexOf(sourceNode.dataIndex) === -1) {
-            dataIndices.node.push(sourceNode.dataIndex);
-          }
-          for (let j = 0; j < sourceNode.inEdges.length; j++) {
-            if (dataIndices.edge.indexOf(sourceNode.inEdges[j].dataIndex) === -1) {
-                dataIndices.edge.push(sourceNode.inEdges[j].dataIndex);
+        let nodeIteratorIndex = 0;
+        while (nodeIteratorIndex < sourceNodes.length) {
+            const sourceNode = sourceNodes[nodeIteratorIndex];
+            nodeIteratorIndex++;
+
+            connectedNodesMap[sourceNode.dataIndex] = true;
+
+            for (let j = 0; j < sourceNode.inEdges.length; j++) {
+                connectedEdgesMap[sourceNode.inEdges[j].dataIndex] = true;
+                sourceNodes.push(sourceNode.inEdges[j].node1);
             }
-            sourceNodes.push(sourceNode.inEdges[j].node1);
-          }
         }
 
-        while (targetNodes.length > 0) {
-          const targetNode = targetNodes.shift();
-          if (dataIndices.node.indexOf(targetNode.dataIndex) === -1) {
-            dataIndices.node.push(targetNode.dataIndex);
-          }
-          for (let j = 0; j < targetNode.outEdges.length; j++) {
-            if (dataIndices.edge.indexOf(targetNode.outEdges[j].dataIndex) === -1) {
-                dataIndices.edge.push(targetNode.outEdges[j].dataIndex);
+        nodeIteratorIndex = 0;
+        while (nodeIteratorIndex < targetNodes.length) {
+            const targetNode = targetNodes[nodeIteratorIndex];
+            nodeIteratorIndex++;
+
+            connectedNodesMap[targetNode.dataIndex] = true;
+
+            for (let j = 0; j < targetNode.outEdges.length; j++) {
+                connectedEdgesMap[targetNode.outEdges[j].dataIndex] = true;
+                targetNodes.push(targetNode.outEdges[j].node2);
             }
-            targetNodes.push(targetNode.outEdges[j].node2);
-          }
         }
 
-      return dataIndices;
+        return {
+            edge: Object.keys(connectedEdgesMap).map(Number),
+            node: Object.keys(connectedNodesMap).map(Number)
+        };
     }
 }
 
