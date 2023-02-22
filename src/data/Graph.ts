@@ -388,9 +388,9 @@ class GraphNode {
         return dataIndices;
     }
 
-    getFullPathDataIndices(): {node: number[], edge: number[]} {
-        const connectedEdgesMap: {[key: number]: boolean} = {};
-        const connectedNodesMap: {[key: number]: boolean} = {};
+    getTrajectoryDataIndices(): {node: number[], edge: number[]} {
+        const connectedEdgesMap = zrUtil.createHashMap<boolean, number>();
+        const connectedNodesMap = zrUtil.createHashMap<boolean, number>();
 
         for (let i = 0; i < this.edges.length; i++) {
             const adjacentEdge = this.edges[i];
@@ -398,7 +398,7 @@ class GraphNode {
                 continue;
             }
 
-            connectedEdgesMap[adjacentEdge.dataIndex] = true;
+            connectedEdgesMap.set(adjacentEdge.dataIndex, true);
 
             const sourceNodesQueue = [adjacentEdge.node1];
             const targetNodesQueue = [adjacentEdge.node2];
@@ -407,10 +407,10 @@ class GraphNode {
             while (nodeIteratorIndex < sourceNodesQueue.length) {
                 const sourceNode = sourceNodesQueue[nodeIteratorIndex];
                 nodeIteratorIndex++;
-                connectedNodesMap[sourceNode.dataIndex] = true;
+                connectedNodesMap.set(sourceNode.dataIndex, true);
 
                 for (let j = 0; j < sourceNode.inEdges.length; j++) {
-                    connectedEdgesMap[sourceNode.inEdges[j].dataIndex] = true;
+                    connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
                     sourceNodesQueue.push(sourceNode.inEdges[j].node1);
                 }
             }
@@ -419,17 +419,17 @@ class GraphNode {
             while (nodeIteratorIndex < targetNodesQueue.length) {
                 const targetNode = targetNodesQueue[nodeIteratorIndex];
                 nodeIteratorIndex++;
-                connectedNodesMap[targetNode.dataIndex] = true;
+                connectedNodesMap.set(targetNode.dataIndex, true);
                 for (let j = 0; j < targetNode.outEdges.length; j++) {
-                    connectedEdgesMap[targetNode.outEdges[j].dataIndex] = true;
+                    connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
                     targetNodesQueue.push(targetNode.outEdges[j].node2);
                 }
             }
         }
 
         return {
-            edge: Object.keys(connectedEdgesMap).map(Number),
-            node: Object.keys(connectedNodesMap).map(Number)
+            edge: connectedEdgesMap.keys(),
+            node: connectedNodesMap.keys()
         };
     }
 }
@@ -475,11 +475,11 @@ class GraphEdge {
         };
     }
 
-    getFullPathDataIndices(): {node: number[], edge: number[]} {
-        const connectedEdgesMap: {[key: number]: boolean} = {};
-        const connectedNodesMap: {[key: number]: boolean} = {};
+    getTrajectoryDataIndices(): {node: number[], edge: number[]} {
+        const connectedEdgesMap = zrUtil.createHashMap<boolean, number>();
+        const connectedNodesMap = zrUtil.createHashMap<boolean, number>();
 
-        connectedEdgesMap[this.dataIndex] = true;
+        connectedEdgesMap.set(this.dataIndex, true);
 
         const sourceNodes = [this.node1];
         const targetNodes = [this.node2];
@@ -489,10 +489,10 @@ class GraphEdge {
             const sourceNode = sourceNodes[nodeIteratorIndex];
             nodeIteratorIndex++;
 
-            connectedNodesMap[sourceNode.dataIndex] = true;
+            connectedNodesMap.set(sourceNode.dataIndex, true);
 
             for (let j = 0; j < sourceNode.inEdges.length; j++) {
-                connectedEdgesMap[sourceNode.inEdges[j].dataIndex] = true;
+                connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
                 sourceNodes.push(sourceNode.inEdges[j].node1);
             }
         }
@@ -502,17 +502,17 @@ class GraphEdge {
             const targetNode = targetNodes[nodeIteratorIndex];
             nodeIteratorIndex++;
 
-            connectedNodesMap[targetNode.dataIndex] = true;
+            connectedNodesMap.set(targetNode.dataIndex, true);
 
             for (let j = 0; j < targetNode.outEdges.length; j++) {
-                connectedEdgesMap[targetNode.outEdges[j].dataIndex] = true;
+                connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
                 targetNodes.push(targetNode.outEdges[j].node2);
             }
         }
 
         return {
-            edge: Object.keys(connectedEdgesMap).map(Number),
-            node: Object.keys(connectedNodesMap).map(Number)
+            edge: connectedEdgesMap.keys(),
+            node: connectedNodesMap.keys()
         };
     }
 }
