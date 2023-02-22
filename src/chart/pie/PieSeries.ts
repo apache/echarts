@@ -20,7 +20,7 @@
 import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import * as modelUtil from '../../util/model';
-import { getPercentWithPrecision } from '../../util/number';
+import { getPercentSeats } from '../../util/number';
 import { makeSeriesEncodeForNameBased } from '../../data/helper/sourceHelper';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import SeriesModel from '../../model/Series';
@@ -38,7 +38,7 @@ import {
     SeriesLabelOption,
     DefaultEmphasisFocus
 } from '../../util/types';
-import SeriesData from '../../data/SeriesData';
+import type SeriesData from '../../data/SeriesData';
 
 interface PieItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // can be 10
@@ -100,13 +100,15 @@ export interface PieDataItemOption extends
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption<PieCallbackDataParams>, ExtraStateOption>, 'labelLine'>,
     PieStateOption<PieCallbackDataParams>,
-    CircleLayoutOptionMixin,
+    Omit<CircleLayoutOptionMixin, 'center'>,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 
     type?: 'pie'
 
     roseType?: 'radius' | 'area'
+
+    center?: string | number | (string | number)[]
 
     clockwise?: boolean
     startAngle?: number
@@ -128,6 +130,10 @@ export interface PieSeriesOption extends
 
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
+
+const innerData = modelUtil.makeInner<{
+    seats?: number[]
+}, SeriesData>();
 
 class PieSeriesModel extends SeriesModel<PieSeriesOption> {
 
@@ -170,20 +176,19 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      */
     getDataParams(dataIndex: number): PieCallbackDataParams {
         const data = this.getData();
+        // update seats when data is changed
+        const dataInner = innerData(data);
+        let seats = dataInner.seats;
+        if (!seats) {
+            const valueList: number[] = [];
+            data.each(data.mapDimension('value'), function (value: number) {
+                valueList.push(value);
+            });
+            seats = dataInner.seats = getPercentSeats(valueList, data.hostModel.get('percentPrecision'));
+        }
         const params = super.getDataParams(dataIndex) as PieCallbackDataParams;
-        // FIXME toFixed?
-
-        const valueList: number[] = [];
-        data.each(data.mapDimension('value'), function (value: number) {
-            valueList.push(value);
-        });
-
-        params.percent = getPercentWithPrecision(
-            valueList,
-            dataIndex,
-            data.hostModel.get('percentPrecision')
-        );
-
+        // seats may be empty when sum is 0
+        params.percent = seats[dataIndex] || 0;
         params.$vars.push('percent');
         return params;
     }
@@ -258,8 +263,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             bleedMargin: 10,
             // Distance between text and label line.
             distanceToLabelLine: 5
-            // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-            // 默认使用全局文本样式，详见TEXTSTYLE
+            // formatter: 标签文本格式器，同 tooltip.formatter，不支持异步回调
+            // 默认使用全局文本样式，详见 textStyle
             // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
         },
         // Enabled when label.normal.position is 'outer'

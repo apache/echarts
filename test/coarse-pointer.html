@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <h3>__ECHARTS__DEFAULT__COARSE_POINTER: <span id="debug"></span></h3>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var debug = document.getElementById('debug');
+            debug.innerText = window.__ECHARTS__DEFAULT__COARSE_POINTER;
+
+            var option;
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                series: {
+                    type: 'scatter',
+                    data: [[11, 22], [33, 44]],
+                    symbol: 'pin',
+                    symbolSize: 100,
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
+                },
+                tooltip: {
+                    show: true
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'By default, pointer size feature is turned **off** for non-mobile devices.',
+                    'So in this tese case, tooltip should **not show** if mouse position is near by but not on the data point.'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                series: {
+                    type: 'scatter',
+                    data: [[11, 22], [33, 44]],
+                    symbol: 'pin',
+                    symbolSize: 100,
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
+                },
+                tooltip: {
+                    show: true
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'If pointer size feature is turned **on** for non-mobile devices,',
+                    'like in this tese case, tooltip should **show** if mouse position is near by but not on the data point.'
+                ],
+                option: option,
+                useCoarsePointer: true
+            });
+        });
+        </script>
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {},
+                yAxis: {},
+                series: {
+                    type: 'scatter',
+                    data: [[11, 22], [33, 44]],
+                    symbol: 'pin',
+                    symbolSize: 100,
+                    emphasis: {
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }
+                },
+                tooltip: {
+                    show: true
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'In this case, the pointer size is set to be 200 so it should have a larger responsive area.'
+                ],
+                option: option,
+                useCoarsePointer: true,
+                pointerSize: 200
+            });
+        });
+        </script>
+
+
+    </body>
+</html>

@@ -54,7 +54,7 @@ interface GraphicComponentBaseElementOption extends
     >>,
     /**
      * left/right/top/bottom: (like 12, '22%', 'center', default undefined)
-     * If left/rigth is set, shape.x/shape.cx/position will not be used.
+     * If left/right is set, shape.x/shape.cx/position will not be used.
      * If top/bottom is set, shape.y/shape.cy/position will not be used.
      * This mechanism is useful when you want to position a group/element
      * against the right side or the center of this container.
@@ -132,8 +132,8 @@ export interface GraphicComponentGroupOption
 
     /**
      * width/height: (can only be pixel value, default 0)
-     * Only be used to specify contianer(group) size, if needed. And
-     * can not be percentage value (like '33%'). See the reason in the
+     * Is only used to specify container (group) size, if needed. And
+     * cannot be a percentage value (like '33%'). See the reason in the
      * layout algorithm below.
      */
     width?: number;
@@ -163,7 +163,7 @@ export interface GraphicComponentImageOption
 // interface GraphicComponentImageOptionOnState extends GraphicComponentDisplayableOptionOnState {
 //     style?: ImageStyleProps;
 // }
-interface GraphicComponentTextOption
+export interface GraphicComponentTextOption
     extends Omit<GraphicComponentDisplayableOption, 'textContent' | 'textConfig'>, TransitionOptionMixin<TextProps> {
     type?: 'text';
     style?: TextStyleProps & TransitionOptionMixin<TextStyleProps>;
@@ -316,9 +316,9 @@ function setLayoutInfoToExist(
         return;
     }
     existItem.hv = newElOption.hv = [
-        // Rigid body, dont care `width`.
+        // Rigid body, don't care about `width`.
         isSetLoc(newElOption, ['left', 'right']),
-        // Rigid body, dont care `height`.
+        // Rigid body, don't care about `height`.
         isSetLoc(newElOption, ['top', 'bottom'])
     ];
     // Give default group size. Otherwise layout error may occur.

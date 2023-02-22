@@ -295,7 +295,7 @@ export class GeoSVGRegion extends Region {
     readonly type = 'geoSVG';
 
     // Can only be used to calculate, but not be modified.
-    // Becuase this el may not belongs to this view,
+    // Because this el may not belong to this view,
     // but been displaying on some other view.
     private _elOnlyForCalculate: Element;
 

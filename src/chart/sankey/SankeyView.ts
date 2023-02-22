@@ -220,6 +220,16 @@ class SankeyView extends ChartView {
                     }
             }
 
+            setLabelStyle(
+                curve, getLabelStatesModels(edgeModel, 'edgeLabel'),
+                {
+                    labelFetcher: seriesModel,
+                    labelDataIndex: edge.dataIndex,
+                    defaultText: `${edgeModel.get('value')}`
+                }
+            );
+            curve.setTextConfig({ position: 'inside' });
+
             const emphasisModel = edgeModel.getModel('emphasis');
 
             setStatesStylesFromModel(curve, edgeModel, 'lineStyle', (model) => model.getItemStyle());

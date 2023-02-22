@@ -286,7 +286,7 @@ class SliderZoomView extends DataZoomView {
             ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: -1 }
             : (orient === VERTICAL && !inverse)
             ? {scaleY: otherAxisInverse ? -1 : 1, scaleX: 1, rotation: Math.PI / 2}
-            // Dont use Math.PI, considering shadow direction.
+            // Don't use Math.PI, considering shadow direction.
             : {scaleY: otherAxisInverse ? -1 : 1, scaleX: -1, rotation: Math.PI / 2}
         );
 
@@ -359,7 +359,8 @@ class SliderZoomView extends DataZoomView {
         const oldSize = this._shadowSize || [];
         const seriesModel = info.series;
         const data = seriesModel.getRawData();
-        const otherDim: string = seriesModel.getShadowDim
+        const candlestickDim = seriesModel.getShadowDim && seriesModel.getShadowDim();
+        const otherDim: string = candlestickDim && data.getDimensionInfo(candlestickDim)
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
 
@@ -1054,7 +1055,7 @@ class SliderZoomView extends DataZoomView {
     }
 
     private _findCoordRect() {
-        // Find the grid coresponding to the first axis referred by dataZoom.
+        // Find the grid corresponding to the first axis referred by dataZoom.
         let rect: RectLike;
         const coordSysInfoList = collectReferCoordSysModelInfo(this.dataZoomModel).infoList;
 

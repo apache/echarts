@@ -75,7 +75,7 @@ class MapView extends ChartView {
                 this._mapDraw = mapDraw;
             }
             else {
-                // Remove drawed map
+                // Remove drawn map
                 this._mapDraw && this._mapDraw.remove();
                 this._mapDraw = null;
             }
@@ -165,8 +165,8 @@ class MapView extends ChartView {
                 // FIXME
                 // If this is not the `mainSeries`, the item model (like label formatter)
                 // set on original data item will never get. But it has been working
-                // like that from the begining, and this scenario is rarely encountered.
-                // So it won't be fixed until have to.
+                // like that from the beginning, and this scenario is rarely encountered.
+                // So it won't be fixed until we have to.
 
                 setLabelStyle(circle, getLabelStatesModels(itemModel), {
                     labelFetcher: {

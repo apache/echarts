@@ -399,7 +399,7 @@ export function getRawSourceDataCounter(
 ): RawSourceDataCounter {
     const method = rawSourceDataCounterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
     if (__DEV__) {
-        assert(method, 'Do not suppport count on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+        assert(method, 'Do not support count on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
     }
     return method;
 }
@@ -446,7 +446,7 @@ const rawSourceValueGetterMap: Partial<Record<SourceFormat, RawSourceValueGetter
 export function getRawSourceValueGetter(sourceFormat: SourceFormat): RawSourceValueGetter {
     const method = rawSourceValueGetterMap[sourceFormat];
     if (__DEV__) {
-        assert(method, 'Do not suppport get value on "' + sourceFormat + '".');
+        assert(method, 'Do not support get value on "' + sourceFormat + '".');
     }
     return method;
 }

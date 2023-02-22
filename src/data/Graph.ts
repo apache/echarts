@@ -109,7 +109,7 @@ class Graph {
         const nodesMap = this._nodesMap;
         const edgesMap = this._edgesMap;
 
-        // PNEDING
+        // PENDING
         if (zrUtil.isNumber(n1)) {
             n1 = this.nodes[n1];
         }

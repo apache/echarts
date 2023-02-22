@@ -17,10 +17,14 @@
 * under the License.
 */
 
-import GlobalModel from '../../model/Global';
-import ExtensionAPI from '../../core/ExtensionAPI';
-import BoxplotSeriesModel from './BoxplotSeries';
+const fs = require('fs');
 
-export default function boxplotVisual(ecModel: GlobalModel, api: ExtensionAPI) {
+const root = __dirname + '/../../';
+const echartsPkg = JSON.parse(fs.readFileSync(root + 'package.json'), 'utf-8');
+const zrenderPkg = JSON.parse(fs.readFileSync(root + 'node_modules/zrender/package.json', 'utf-8'));
 
-}
+const echartsCorePath = root + 'src/core/echarts.ts';
+const echartsCoreFile = fs.readFileSync(echartsCorePath, 'utf-8')
+    .replace(/export const version = '\S+'/, `export const version = '${echartsPkg.version}'`)
+    .replace(/(export const dependencies = {\s+zrender: ')\S+('\s+})/, `$1${zrenderPkg.version}$2`);
+fs.writeFileSync(echartsCorePath, echartsCoreFile, 'utf-8');

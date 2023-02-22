@@ -171,7 +171,7 @@ const Arrow = graphic.Path.extend({
 });
 
 /**
- * Map of path contructors
+ * Map of path constructors
  */
 // TODO Use function to build symbol path.
 const symbolCtors: Dictionary<SymbolCtor> = {

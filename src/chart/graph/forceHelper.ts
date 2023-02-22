@@ -18,7 +18,7 @@
 */
 
 /*
-* A third-party license is embeded for some of the code in this file:
+* A third-party license is embedded for some of the code in this file:
 * Some formulas were originally copied from "d3.js" with some
 * modifications made for this project.
 * (See more details in the comment of the method "step" below.)

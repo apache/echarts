@@ -82,7 +82,7 @@ export interface TreeSeriesLeavesOption
 
 export interface TreeSeriesOption extends
     SeriesOption<TreeSeriesStateOption, TreeStatesMixin>, TreeSeriesStateOption,
-    SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
+    SymbolOptionMixin<CallbackDataParams>, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 
     layout?: 'orthogonal' | 'radial'
@@ -146,7 +146,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
      */
     getInitialData(option: TreeSeriesOption): SeriesData {
 
-        //create an virtual root
+        // create a virtual root
         const root: TreeSeriesNodeItemOption = {
             name: option.name,
             children: option.data

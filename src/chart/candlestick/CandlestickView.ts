@@ -358,17 +358,26 @@ function createLarge(
 
     const elP = new LargeBoxPath({
         shape: {points: largePoints},
-        __sign: 1
+        __sign: 1,
+        ignoreCoarsePointer: true
     });
     group.add(elP);
     const elN = new LargeBoxPath({
         shape: {points: largePoints},
-        __sign: -1
+        __sign: -1,
+        ignoreCoarsePointer: true
     });
     group.add(elN);
+    const elDoji = new LargeBoxPath({
+        shape: {points: largePoints},
+        __sign: 0,
+        ignoreCoarsePointer: true
+    });
+    group.add(elDoji);
 
     setLargeStyle(1, elP, seriesModel, data);
     setLargeStyle(-1, elN, seriesModel, data);
+    setLargeStyle(0, elDoji, seriesModel, data);
 
     if (incremental) {
         elP.incremental = true;
@@ -382,8 +391,12 @@ function createLarge(
 
 function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickSeriesModel, data: SeriesData) {
     // TODO put in visual?
-    const borderColor = seriesModel.get(['itemStyle', sign > 0 ? 'borderColor' : 'borderColor0'])
+    let borderColor = seriesModel.get(['itemStyle', sign > 0 ? 'borderColor' : 'borderColor0'])
+        // Use color for border color by default.
         || seriesModel.get(['itemStyle', sign > 0 ? 'color' : 'color0']);
+    if (sign === 0) {
+        borderColor = seriesModel.get(['itemStyle', 'borderColorDoji']);
+    }
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
@@ -397,4 +410,3 @@ function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickS
 
 
 export default CandlestickView;
-

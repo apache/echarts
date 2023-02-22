@@ -42,10 +42,10 @@ class KDTreeNode<T> {
  * @constructor
  * @alias module:echarts/data/KDTree
  * @param {Array} points List of points.
- * each point needs an array property to repesent the actual data
+ * each point needs an array property to represent the actual data
  * @param {Number} [dimension]
  *        Point dimension.
- *        Default will use the first point's length as dimensiont
+ *        Default will use the first point's length as dimension.
  */
 
 class KDTree<T extends KDTreePoint> {
@@ -76,7 +76,7 @@ class KDTree<T extends KDTreePoint> {
     }
 
     /**
-     * Resursively build the tree
+     * Recursively build the tree.
      */
     private _buildTree(points: T[], left: number, right: number, axis: number): KDTreeNode<T> {
         if (right < left) {

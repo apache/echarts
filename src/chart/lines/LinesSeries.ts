@@ -93,8 +93,8 @@ export interface LinesStateOption<TCbParams = never> {
     label?: SeriesLineLabelOption
 }
 
-export interface LinesDataItemOption extends LinesStateOption<CallbackDataParams>,
-    StatesOptionMixin<LinesStateOption<CallbackDataParams>, LinesStatesMixin> {
+export interface LinesDataItemOption extends LinesStateOption,
+    StatesOptionMixin<LinesStateOption, LinesStatesMixin> {
     name?: string
 
     fromName?: string
@@ -111,7 +111,7 @@ export interface LinesDataItemOption extends LinesStateOption<CallbackDataParams
 }
 
 export interface LinesSeriesOption
-    extends SeriesOption<LinesStateOption, LinesStatesMixin>, LinesStateOption,
+    extends SeriesOption<LinesStateOption, LinesStatesMixin>, LinesStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
     SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
 
@@ -306,7 +306,7 @@ class LinesSeriesModel extends SeriesModel<LinesSeriesOption> {
         if (__DEV__) {
             const CoordSys = CoordinateSystem.get(option.coordinateSystem);
             if (!CoordSys) {
-                throw new Error('Unkown coordinate system ' + option.coordinateSystem);
+                throw new Error('Unknown coordinate system ' + option.coordinateSystem);
             }
         }
 

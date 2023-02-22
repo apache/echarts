@@ -209,7 +209,7 @@ export function setStatesFlag(el: ECElement, stateName: DisplayState) {
 
 /**
  * If we reuse elements when rerender.
- * DONT forget to clearStates before we update the style and shape.
+ * DON'T forget to clearStates before we update the style and shape.
  * Or we may update on the wrong state instead of normal state.
  */
 export function clearStates(el: Element) {
@@ -239,7 +239,7 @@ function getFromStateStyle(
     for (let i = 0; i < el.animators.length; i++) {
         const animator = el.animators[i];
         if (animator.__fromStateTransition
-            // Dont consider the animation to emphasis state.
+            // Don't consider the animation to emphasis state.
             && animator.__fromStateTransition.indexOf(toStateName) < 0
             && animator.targetName === 'style') {
             animator.saveTo(fromState, props);
@@ -365,7 +365,8 @@ function elementStateProxy(this: Displayable, stateName: string, targetStates?: 
     }
     return state;
 }
-/**FI
+
+/**
  * Set hover style (namely "emphasis style") of element.
  * @param el Should not be `zrender/graphic/Group`.
  * @param focus 'self' | 'selfInSeries' | 'series'
@@ -842,7 +843,7 @@ export function setStatesStylesFromModel(
 /**
  *
  * Set element as highlight / downplay dispatcher.
- * It will be checked when element recieved mouseover event or from highlight action.
+ * It will be checked when element received mouseover event or from highlight action.
  * It's in change of all highlight/downplay behavior of it's children.
  *
  * @param el
@@ -898,9 +899,9 @@ export function enableComponentHighDownFeatures(
 }
 
 /**
- * Support hightlight/downplay record on each elements.
+ * Support highlight/downplay record on each elements.
  * For the case: hover highlight/downplay (legend, visualMap, ...) and
- * user triggerred hightlight/downplay should not conflict.
+ * user triggered highlight/downplay should not conflict.
  * Only all of the highlightDigit cleared, return to normal.
  * @param {string} highlightKey
  * @return {number} highlightDigit

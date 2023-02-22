@@ -32,7 +32,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerSeriesModel(BarSeries);
 
     registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, zrUtil.curry(layout, 'bar'));
-    // Do layout after other overall layout, which can preapre some informations.
+    // Do layout after other overall layout, which can prepare some information.
     registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout('bar'));
 
     // Down sample after filter

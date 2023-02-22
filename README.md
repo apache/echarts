@@ -4,7 +4,7 @@
     <img style="vertical-align: top;" src="./asset/logo.png?raw=true" alt="logo" height="50px">
 </a>
 
-Apache ECharts is a free, powerful charting and visualization library offering an easy way of adding intuitive, interactive, and highly customizable charts to your commercial products. It is written in pure JavaScript and based on <a href="https://github.com/ecomfe/zrender">zrender</a>, which is a whole new lightweight canvas library.
+Apache ECharts is a free, powerful charting and visualization library offering easy ways to add intuitive, interactive, and highly customizable charts to your commercial products. It is written in pure JavaScript and based on <a href="https://github.com/ecomfe/zrender">zrender</a>, which is a whole new lightweight canvas library.
 
 **[中文官网](https://echarts.apache.org/zh/index.html)** | **[ENGLISH HOMEPAGE](https://echarts.apache.org/en/index.html)**
 
@@ -45,9 +45,12 @@ Execute the instructions in the root directory of the echarts:
 npm install
 
 # Rebuild source code immediately in watch mode when changing the source code.
+# It opens the `./test` directory, and you may open `-cases.html` to get the list
+# of all test cases.
+# If you wish to create a test case, run `npm run mktest:help` to learn more.
 npm run dev
 
-# Check correctness of TypeScript code.
+# Check the correctness of TypeScript code.
 npm run checktype
 
 # If intending to build and get all types of the "production" files:
@@ -58,7 +61,7 @@ Then the "production" files are generated in the `dist` directory.
 
 ## Contribution
 
-If you wish to debug locally or make pull requests, please refer to the [contributing](https://github.com/apache/echarts/blob/master/CONTRIBUTING.md) document.
+Please refer to the [contributing](https://github.com/apache/echarts/blob/master/CONTRIBUTING.md) document if you wish to debug locally or make pull requests.
 
 ## Resources
 
