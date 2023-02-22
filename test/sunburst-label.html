@@ -211,19 +211,23 @@ under the License.
             });
 
             var config = {
-                startAngle: 0
+                startAngle: 0,
+                clockwise: true
             };
 
             function update() {
                 chart.setOption({
                     series: [{
-                        startAngle: config.startAngle
+                        startAngle: config.startAngle,
+                        clockwise: config.clockwise
                     }]
                 });
             }
 
             var gui = new dat.GUI();
                 gui.add(config, 'startAngle', 0, 360)
+                    .onChange(update);
+                gui.add(config, 'clockwise')
                     .onChange(update);
         });
     </script>
