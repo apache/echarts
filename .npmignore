@@ -10,5 +10,6 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+/asset/contributing-inspect.png
 # Hidden files
 .*
