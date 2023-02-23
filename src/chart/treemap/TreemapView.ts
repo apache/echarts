@@ -30,9 +30,11 @@ import {
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
-import RoamController, { RoamEventParams } from '../../component/helper/RoamController';
+import RoamController, { RoamEventParams, RoamControllerHost } from '../../component/helper/RoamController';
+import * as roamHelper from '../../component/helper/roamHelper';
+import View from '../../coord/View';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
-import * as matrix from 'zrender/src/core/matrix';
+// import * as matrix from 'zrender/src/core/matrix';
 import * as animationUtil from '../../util/animation';
 import makeStyleMapper from '../../model/mixin/makeStyleMapper';
 import ChartView from '../../view/Chart';
@@ -153,6 +155,7 @@ class TreemapView extends ChartView {
     private _containerGroup: graphic.Group;
     private _breadcrumb: Breadcrumb;
     private _controller: RoamController;
+    private _controllerHost: RoamControllerHost;
 
     private _oldTree: Tree;
 
@@ -182,6 +185,8 @@ class TreemapView extends ChartView {
         }
 
         this.seriesModel = seriesModel;
+        this.seriesModel.coordinateSystem = new View();
+
         this.api = api;
         this.ecModel = ecModel;
 
@@ -471,13 +476,27 @@ class TreemapView extends ChartView {
 
     private _resetController(api: ExtensionAPI) {
         let controller = this._controller;
+        let controllerHost = this._controllerHost;
 
         // Init controller.
         if (!controller) {
             controller = this._controller = new RoamController(api.getZr());
             controller.enable(this.seriesModel.get('roam'));
             controller.on('pan', bind(this._onPan, this));
-            controller.on('zoom', bind(this._onZoom, this));
+            controller.on('zoom', bind((e) => {
+                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
+                this._onZoom(e);
+            }, this));
+        }
+
+        if (!controllerHost) {
+            controllerHost = this._controllerHost = {
+                target: this.group
+            } as RoamControllerHost;
+            this.seriesModel.setZoom(this.seriesModel.get('zoom'));
+            this.seriesModel.coordinateSystem.zoomLimit = this.seriesModel.get('scaleLimit');
+            controllerHost.zoomLimit = this.seriesModel.get('scaleLimit');
+            controllerHost.zoom = this.seriesModel.coordinateSystem.getZoom();
         }
 
         const rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
@@ -492,6 +511,7 @@ class TreemapView extends ChartView {
             controller.dispose();
             controller = null;
         }
+        this._controllerHost = null;
     }
 
     private _onPan(e: RoamEventParams['pan']) {
@@ -524,8 +544,8 @@ class TreemapView extends ChartView {
     }
 
     private _onZoom(e: RoamEventParams['zoom']) {
-        let mouseX = e.originX;
-        let mouseY = e.originY;
+        // let mouseX = e.originX;
+        // let mouseY = e.originY;
 
         if (this._state !== 'animating') {
             // These param must not be cached.
@@ -544,19 +564,19 @@ class TreemapView extends ChartView {
             const rect = new BoundingRect(
                 rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height
             );
-            const layoutInfo = this.seriesModel.layoutInfo;
+            // const layoutInfo = this.seriesModel.layoutInfo;
 
             // Transform mouse coord from global to containerGroup.
-            mouseX -= layoutInfo.x;
-            mouseY -= layoutInfo.y;
+            // mouseX -= layoutInfo.x;
+            // mouseY -= layoutInfo.y;
 
             // Scale root bounding rect.
-            const m = matrix.create();
-            matrix.translate(m, m, [-mouseX, -mouseY]);
-            matrix.scale(m, m, [e.scale, e.scale]);
-            matrix.translate(m, m, [mouseX, mouseY]);
+            // const m = matrix.create();
+            // matrix.translate(m, m, [-mouseX, -mouseY]);
+            // matrix.scale(m, m, [e.scale, e.scale]);
+            // matrix.translate(m, m, [mouseX, mouseY]);
 
-            rect.applyTransform(m);
+            // rect.applyTransform(m);
 
             this.api.dispatchAction({
                 type: 'treemapRender',
