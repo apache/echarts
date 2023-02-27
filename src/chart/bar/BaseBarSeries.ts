@@ -99,13 +99,13 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
             if (startingAtTick) {
                 each(coordSys.getAxes(), function (axis: Axis2D, idx: number) {
                     // If axis type is category, use tick coords instead
-                    if (axis.type === 'category') {
+                    if (axis.type === 'category' && dims != null) {
                         const tickCoords = axis.getTicksCoords();
 
                         let targetTickId = clampData[idx];
                         // The index of rightmost tick of markArea is 1 larger than x1/y1 index
                         const isEnd = dims[idx] === 'x1' || dims[idx] === 'y1';
-                        if (dims && isEnd) {
+                        if (isEnd) {
                             targetTickId += 1;
                         }
 
