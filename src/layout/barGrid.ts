@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { each, defaults, keys } from 'zrender/src/core/util';
+import { each, defaults, keys, retrieve2 } from 'zrender/src/core/util';
 import { parsePercent } from '../util/number';
 import { isDimensionStacked } from '../data/helper/dataStackHelper';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
@@ -463,7 +463,11 @@ export function layout(seriesType: string, ecModel: GlobalModel) {
 
 // TODO: Do not support stack in large mode yet.
 export function createProgressiveLayout(seriesType: string): StageHandler {
-    let lastStackCoords: number[] = [];
+    // FIXME: if they are defined here, the stack coords are not inited when
+    // a stacked series is shown in legend.
+    const lastStackCoordsNonNegative: number[] = [];
+    const lastStackCoordsNegative: number[] = [];
+
     return {
         seriesType,
 
@@ -473,6 +477,10 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
             if (!isOnCartesian(seriesModel)) {
                 return;
             }
+
+            // FIXME: if lastStackCoordsNonNegative and lastStackCoordsNegative
+            // are defined here, the stack coords are not preserved when click
+            // magic stacked bars in the toolbox.
 
             const data = seriesModel.getData();
 
@@ -495,10 +503,6 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
             // Layout info.
             const columnWidth = data.getLayout('size');
             const columnOffset = data.getLayout('offset');
-
-            if (!stacked) {
-                lastStackCoords = [];
-            }
 
             return {
                 progress: function (params, data) {
@@ -532,13 +536,19 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         let width;
                         let height;
 
+                        const stackCoords = value >= 0
+                            ? lastStackCoordsNonNegative
+                            : lastStackCoordsNegative;
+                        const base = stacked
+                            ? retrieve2(stackCoords[baseValue], baseCoord)
+                            : baseCoord;
                         if (isValueAxisH) {
                             const coord = cartesian.dataToPoint([value, baseValue]);
                             if (stacked) {
                                 const startCoord = cartesian.dataToPoint([startValue, baseValue]);
                                 baseCoord = startCoord[0];
                             }
-                            x = lastStackCoords[baseValue] || baseCoord;
+                            x = base;
                             y = coord[1] + columnOffset;
                             width = coord[0] - baseCoord;
                             height = columnWidth;
@@ -546,10 +556,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                             if (Math.abs(width) < barMinHeight) {
                                 width = (width < 0 ? -1 : 1) * barMinHeight;
                             }
-                            if (!lastStackCoords[baseValue]) {
-                                lastStackCoords[baseValue] = baseCoord;
-                            }
-                            lastStackCoords[baseValue] += width;
+                            stackCoords[baseValue] = x + width;
                         }
                         else {
                             const coord = cartesian.dataToPoint([baseValue, value]);
@@ -558,7 +565,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                                 baseCoord = startCoord[1];
                             }
                             x = coord[0] + columnOffset;
-                            y = lastStackCoords[baseValue] || baseCoord;
+                            y = base;
                             width = columnWidth;
                             height = coord[1] - baseCoord;
 
@@ -566,10 +573,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                                 // Include zero to has a positive bar
                                 height = (height <= 0 ? -1 : 1) * barMinHeight;
                             }
-                            if (!lastStackCoords[baseValue]) {
-                                lastStackCoords[baseValue] = baseCoord;
-                            }
-                            lastStackCoords[baseValue] += height;
+                            stackCoords[baseValue] = y + height;
                         }
 
                         if (!isLarge) {
