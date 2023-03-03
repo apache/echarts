@@ -147,8 +147,6 @@ class TooltipView extends ComponentView {
 
     private _api: ExtensionAPI;
 
-    private _alwaysShowContent: boolean;
-
     private _tooltipContent: TooltipHTMLContent | TooltipRichContent;
 
     private _refreshUpdateTimeout: number;
@@ -195,12 +193,6 @@ class TooltipView extends ComponentView {
         this._ecModel = ecModel;
 
         this._api = api;
-
-        /**
-         * @private
-         * @type {boolean}
-         */
-        this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
         const tooltipContent = this._tooltipContent;
         tooltipContent.update(tooltipModel);
@@ -396,7 +388,7 @@ class TooltipView extends ComponentView {
     ) {
         const tooltipContent = this._tooltipContent;
 
-        if (!this._alwaysShowContent && this._tooltipModel) {
+        if (this._tooltipModel) {
             tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
         }
 
