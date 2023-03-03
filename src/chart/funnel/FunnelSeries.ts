@@ -48,6 +48,10 @@ type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
         | 'outer' | 'inner' | 'center' | 'rightTop' | 'rightBottom' | 'leftTop' | 'leftBottom'
 };
 
+type FunnelRateLabelOption = Omit<SeriesLabelOption, 'position'> & {
+    precision: number
+};
+
 interface FunnelStatesMixin {
     emphasis?: DefaultStatesMixinEmphasis
 }
@@ -59,6 +63,8 @@ export interface FunnelStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
     label?: FunnelLabelOption
     labelLine?: LabelLineOption
+    rateLabel?: FunnelRateLabelOption
+    overallRateLabel?: FunnelRateLabelOption
 }
 
 export interface FunnelDataItemOption
@@ -95,6 +101,12 @@ export interface FunnelSeriesOption
     funnelAlign?: HorizontalAlign | VerticalAlign
 
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | FunnelDataItemOption)[]
+
+    exitWidth?: string
+
+    showRate?: boolean
+
+    dynamicHeight?: boolean
 }
 
 class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
@@ -171,6 +183,14 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
             show: true,
             position: 'outer'
             // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+        },
+        rateLabel: {
+            show: true,
+            precision: 2
+        },
+        overallRateLabel: {
+            show: true,
+            precision: 2
         },
         labelLine: {
             show: true,

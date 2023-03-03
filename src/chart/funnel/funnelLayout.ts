@@ -246,26 +246,78 @@ function labelLayout(data: SeriesData) {
     });
 }
 
+function rateLabelLayout(data: SeriesData) {
+    data.each(function (idx) {
+        const layout = data.getItemLayout(idx);
+        const points = layout.ratePoints;
+
+        const isLabelInside = true;
+
+        const textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
+        const textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
+        const textAlign = 'center';
+
+        const linePoints = [
+            [textX, textY], [textX, textY]
+        ];
+
+        layout.rateLabel = {
+            linePoints: linePoints,
+            x: textX,
+            y: textY,
+            verticalAlign: 'middle',
+            textAlign: textAlign,
+            inside: isLabelInside
+        };
+    });
+}
+
 export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('funnel', function (seriesModel: FunnelSeriesModel) {
+        // data about
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
+        const valueArr = data.mapArray(valueDim, function (val: number) {
+            return val;
+        });
+        const valueSum = valueArr.reduce((pre, cur) => pre + cur);
+        // direction about
         const sort = seriesModel.get('sort');
-        const viewRect = getViewRect(seriesModel, api);
         const orient = seriesModel.get('orient');
+
+        // size and pos about
+        const viewRect = getViewRect(seriesModel, api);
         const viewWidth = viewRect.width;
         const viewHeight = viewRect.height;
-        let indices = getSortedIndices(data, sort);
         let x = viewRect.x;
         let y = viewRect.y;
 
-        const sizeExtent = orient === 'horizontal' ? [
-            parsePercent(seriesModel.get('minSize'), viewHeight),
-            parsePercent(seriesModel.get('maxSize'), viewHeight)
-        ] : [
-                parsePercent(seriesModel.get('minSize'), viewWidth),
-                parsePercent(seriesModel.get('maxSize'), viewWidth)
-            ];
+        let indices = getSortedIndices(data, sort);
+
+        let gap = seriesModel.get('gap');
+        const gapSum = gap * (data.count() - 1);
+
+        // mapping mode about
+        const dynamicHeight = seriesModel.get('dynamicHeight');
+        const showRate = seriesModel.get('showRate');
+        // size extent based on orient and mapping mode
+        // determine the width extent of the funnel piece  when dynamicHeight is false
+        // determine the height extent of the funnel piece when dynamicHeight if true
+        const isHorizontal = orient === 'horizontal';
+        const size = dynamicHeight ? (
+            isHorizontal ? viewWidth - gapSum : viewHeight - gapSum
+        ) : (
+            isHorizontal ? viewHeight : viewWidth
+        );
+        const sizeExtent = [
+            parsePercent(seriesModel.get('minSize'), size),
+            size
+        ];
+        if (!dynamicHeight) {
+            sizeExtent[1] = parsePercent(seriesModel.get('maxSize'), size);
+        }
+
+        // data extent
         const dataExtent = data.getDataExtent(valueDim);
         let min = seriesModel.get('min');
         let max = seriesModel.get('max');
@@ -276,16 +328,36 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             max = dataExtent[1];
         }
 
-        const funnelAlign = seriesModel.get('funnelAlign');
-        let gap = seriesModel.get('gap');
-        const viewSize = orient === 'horizontal' ? viewWidth : viewHeight;
-        let itemSize = (viewSize - gap * (data.count() - 1)) / data.count();
+        // determine the height of the funnel
+        let viewSize = dynamicHeight ? (isHorizontal ? viewHeight : viewWidth
+        ) : (
+            isHorizontal ? viewWidth : viewHeight);
+        let itemSize = (viewSize - gapSum) / data.count();
 
-        const getLinePoints = function (idx: number, offset: number) {
-            // End point index is data.count() and we assign it 0
+        if (dynamicHeight) {
+            viewSize = parsePercent(seriesModel.get('maxSize'), viewSize);
+        }
+
+        const funnelAlign = seriesModel.get('funnelAlign');
+
+        // adjust related param
+        if (sort === 'ascending') {
+            // From bottom to top
+            itemSize = -itemSize;
+            gap = -gap;
             if (orient === 'horizontal') {
-                const val = data.get(valueDim, idx) as number || 0;
-                const itemHeight = linearMap(val, [min, max], sizeExtent, true);
+                x += viewWidth;
+            }
+            else {
+                y += viewHeight;
+            }
+            indices = indices.reverse();
+        }
+
+        const getLinePoints = function (offset: number, itemSize: number) {
+            // do not caculate line width in this func
+            if (orient === 'horizontal') {
+                const itemHeight = itemSize;
                 let y0;
                 switch (funnelAlign) {
                     case 'top':
@@ -304,8 +376,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
                     [offset, y0 + itemHeight]
                 ];
             }
-            const val = data.get(valueDim, idx) as number || 0;
-            const itemWidth = linearMap(val, [min, max], sizeExtent, true);
+            const itemWidth = itemSize;
             let x0;
             switch (funnelAlign) {
                 case 'left':
@@ -324,18 +395,177 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             ];
         };
 
-        if (sort === 'ascending') {
-            // From bottom to top
-            itemSize = -itemSize;
-            gap = -gap;
-            if (orient === 'horizontal') {
-                x += viewWidth;
+        const getItemSize = function (idx: number) {
+            const itemVal = data.get(valueDim, idx) as number || 0;
+            const itemSize = linearMap(itemVal, [min, max], sizeExtent, true);
+            return itemSize;
+        };
+
+        // exit shape control
+        const exitWidth = parsePercent(seriesModel.get('exitWidth'), 100);
+
+        // dy height funnel piece about
+        let setDynamicHeightPoints:
+            (
+                index: number,
+                idx: number,
+                pos: number,
+                pieceHeight: number
+            ) => void | null = null;
+
+        if (dynamicHeight) {
+            setDynamicHeightPoints = (function () {
+                const dyminSize = parsePercent(seriesModel.get('minSize'), 100);
+                const dymaxSize = dyminSize < 100 ? sizeExtent[1] * 100 / (100 - dyminSize) : sizeExtent[1];
+                let resSize = dymaxSize;
+                return function (index: number, idx: number, pos: number, pieceHeight: number) {
+                    const start = getLinePoints(pos, resSize / dymaxSize * viewSize);
+                    index === indices.length - 1 && exitWidth === 100
+                        || (
+                            resSize += sort === 'ascending' ? pieceHeight : -pieceHeight
+                        );
+                    const end = getLinePoints(pos + pieceHeight, resSize / dymaxSize * viewSize);
+
+                    data.setItemLayout(idx, {
+                        points: start.concat(end.slice().reverse())
+                    });
+                };
+            })();
+        }
+
+        // rate funnel about
+        let setRatePiecePoint: (
+            index: number,
+            idx: number,
+            nextIdx: number,
+            pos: number,
+            pieceHeight: number
+        ) => void | null = null;
+
+        if (showRate) {
+            const getConverRate = (function () {
+                let firstVal: number;
+                let firstName: string;
+                let firstDataIndex: number;
+                // get rate fixed decimal places
+                const ratePrecision = seriesModel.get(['rateLabel', 'precision']);
+                const overallRatePrecision = seriesModel.get(['overallRateLabel', 'precision']);
+                return function (index: number, idx: number, nextIdx: number) {
+                    const val = data.get(valueDim, idx) as number || 0;
+                    const nextVal = data.get(valueDim, nextIdx) as number || 0;
+                    let preName = data.getName(idx);
+                    let nextName = data.getName(nextIdx);
+                    let preDataIndex = idx;
+                    let nextDataIndex = nextIdx;
+                    let rate: number | string = nextVal / val;
+                    rate = (rate * 100).toFixed(ratePrecision) + '%';
+                    if (index === 0) {
+                        firstVal = val;
+                        firstName = data.getName(idx);
+                        firstDataIndex = idx;
+                    }
+                    else if (index === indices.length - 1) {
+                        const lastVal = val;
+                        rate = lastVal / firstVal;
+                        rate = (rate * 100).toFixed(overallRatePrecision) + '%';
+                        nextName = preName;
+                        preName = firstName;
+                        preDataIndex = firstDataIndex;
+                        nextDataIndex = idx;
+                    }
+                    preDataIndex = preDataIndex + 1;
+                    nextDataIndex = nextDataIndex + 1;
+                    return { rate, nextName, preName, preDataIndex, nextDataIndex };
+                };
+            })();
+            setRatePiecePoint = function (
+                index: number,
+                idx: number,
+                nextIdx: number,
+                pos: number,
+                pieceHeight: number
+            ) {
+                // get this size
+                const itemSize = getItemSize(idx);
+                let exitSize = itemSize;
+                if (exitWidth != null && index === indices.length - 1) {
+                    exitSize = itemSize * (exitWidth > 100 ? 100 : exitWidth) / 100;
+                }
+                // data piece
+                const dataStart = getLinePoints(pos, itemSize);
+                const dataEnd = getLinePoints(pos + pieceHeight / 2, exitSize);
+                // rate piece
+                const nextSize = getItemSize(index === indices.length - 1 && exitWidth === 100 ? idx : nextIdx);
+
+                const rateStart = getLinePoints(pos + pieceHeight / 2, itemSize);
+                const rateEnd = getLinePoints(pos + pieceHeight, nextSize);
+
+                // rate string about
+                const { rate, nextName, preName, preDataIndex, nextDataIndex } = getConverRate(index, idx, nextIdx);
+                data.setItemLayout(idx, {
+                    points: dataStart.concat(dataEnd.slice().reverse()),
+                    ratePoints: rateStart.concat(rateEnd.slice().reverse()),
+                    isLastPiece: index === indices.length - 1,
+                    rate,
+                    nextName,
+                    preName,
+                    preDataIndex,
+                    nextDataIndex
+                });
+            };
+
+        }
+
+        // get the height of funnel piece
+        const getPieceHeight = function (pieceHeight: number | string, idx?: number): number {
+            // get funnel piece height pass to getLinePoints func based on data value
+            const val = data.get(valueDim, idx) as number || 0;
+
+            if (dynamicHeight) {
+                // in dy height, user can't set itemHeight or itemWidth
+                pieceHeight = linearMap(val, [0, valueSum], [0, size], true);
+                pieceHeight = sort === 'ascending' ? -pieceHeight : pieceHeight;
+                return pieceHeight;
+            }
+
+            // default mapping or show rate pieceHeight
+            if (pieceHeight == null) {
+                pieceHeight = itemSize;
             }
             else {
-                y += viewHeight;
+                pieceHeight = parsePercent(pieceHeight, orient === 'horizontal' ? viewWidth : viewHeight);
+                pieceHeight = sort === 'ascending' ? -pieceHeight : pieceHeight;
             }
-            indices = indices.reverse();
-        }
+            return pieceHeight;
+        };
+
+        // set the line piont of the funnel piece
+        const setLayoutPoints = function (
+            index: number,
+            idx: number,
+            nextIdx: number,
+            pieceHeight: number,
+            pos: number
+        ): void {
+            // The subsequent funnel shape modification will be done in this func.
+            // We don’t need to concern direction when we use this function to set points.
+            if (dynamicHeight) {
+                setDynamicHeightPoints(index, idx, pos, pieceHeight);
+                return;
+            }
+            else if (showRate && sort !== 'none') {
+                setRatePiecePoint(index, idx, nextIdx, pos, pieceHeight);
+                return;
+            }
+            const start = getLinePoints(pos, getItemSize(idx));
+            // get end line width;
+            const nIdx = index === indices.length - 1 && exitWidth === 100 ? idx : nextIdx;
+            const end = getLinePoints(pos + pieceHeight, getItemSize(nIdx));
+
+            data.setItemLayout(idx, {
+                points: start.concat(end.slice().reverse())
+            });
+        };
 
         for (let i = 0; i < indices.length; i++) {
             const idx = indices[i];
@@ -343,49 +573,20 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
             const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
 
             if (orient === 'horizontal') {
-                let width = itemModel.get(['itemStyle', 'width']);
-                if (width == null) {
-                    width = itemSize;
-                }
-                else {
-                    width = parsePercent(width, viewWidth);
-                    if (sort === 'ascending') {
-                        width = -width;
-                    }
-                }
-
-                const start = getLinePoints(idx, x);
-                const end = getLinePoints(nextIdx, x + width);
-
+                const width = getPieceHeight(itemModel.get(['itemStyle', 'width']), idx);
+                setLayoutPoints(i, idx, nextIdx, width, x);
                 x += width + gap;
-
-                data.setItemLayout(idx, {
-                    points: start.concat(end.slice().reverse())
-                });
             }
             else {
-                let height = itemModel.get(['itemStyle', 'height']);
-                if (height == null) {
-                    height = itemSize;
-                }
-                else {
-                    height = parsePercent(height, viewHeight);
-                    if (sort === 'ascending') {
-                        height = -height;
-                    }
-                }
-
-                const start = getLinePoints(idx, y);
-                const end = getLinePoints(nextIdx, y + height);
-
+                const height = getPieceHeight(itemModel.get(['itemStyle', 'height']), idx);
+                setLayoutPoints(i, idx, nextIdx, height, y);
                 y += height + gap;
-
-                data.setItemLayout(idx, {
-                    points: start.concat(end.slice().reverse())
-                });
             }
         }
 
         labelLayout(data);
+        if (showRate && !dynamicHeight && sort !== 'none') {
+            rateLabelLayout(data);
+        }
     });
 }
