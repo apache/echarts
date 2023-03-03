@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'apache' }}
+    if: ${{ github.repository_owner == 'appflow-ai' }}
 
     strategy:
       matrix:
@@ -22,7 +22,7 @@ jobs:
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          registry-url: https://registry.npmjs.org/
+          registry-url: https://npm.pkg.github.com/
       - name: Setup and publish nightly
         run: |
           node build/nightly/prepare.js
@@ -35,4 +35,4 @@ jobs:
           npm run test:dts
           npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

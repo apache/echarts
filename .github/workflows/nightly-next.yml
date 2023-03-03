@@ -25,7 +25,7 @@ jobs:
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
-          registry-url: https://registry.npmjs.org/
+          registry-url: https://npm.pkg.github.com/
       - name: Setup and publish nightly
         run: |
           node build/nightly/prepare.js --next
@@ -38,4 +38,4 @@ jobs:
           npm run test:dts
           npm publish --tag next
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
