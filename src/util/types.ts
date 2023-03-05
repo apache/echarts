@@ -1064,8 +1064,8 @@ export interface LabelOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
 }
 
-export interface SeriesLabelOption extends LabelOption {
-    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+export interface SeriesLabelOption<T extends CallbackDataParams = CallbackDataParams> extends LabelOption {
+    formatter?: string | LabelFormatterCallback<T>
 }
 
 /**
