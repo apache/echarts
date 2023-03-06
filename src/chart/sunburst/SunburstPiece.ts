@@ -28,7 +28,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
-import { getSectorCornerRadius } from '../helper/pieHelper';
+import { getSectorCornerRadius } from '../helper/sectorHelper';
 import {createOrUpdatePatternFromDecal} from '../../util/decal';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { saveOldStyle } from '../../animation/basicTransition';
