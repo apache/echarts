@@ -246,6 +246,9 @@ class BarView extends ChartView {
             if (coord.type === 'cartesian2d') {
                 (bgEl as Rect).setShape('r', barBorderRadius);
             }
+            else {
+                (bgEl as Sector).setShape('cornerRadius', barBorderRadius);
+            }
             bgEls[dataIndex] = bgEl;
             return bgEl;
         };
@@ -336,6 +339,9 @@ class BarView extends ChartView {
                         // Only cartesian2d support borderRadius.
                         if (coord.type === 'cartesian2d') {
                             (bgEl as Rect).setShape('r', barBorderRadius);
+                        }
+                        else {
+                            (bgEl as Sector).setShape('cornerRadius', barBorderRadius);
                         }
                         bgEls[newIndex] = bgEl;
                     }
@@ -990,7 +996,6 @@ function updateStyle(
         (el as Rect).setShape('r', borderRadius);
     }
     else if (!seriesModel.get('roundCap')) {
-        const sector = el as Sector;
         const sectorShape = (el as Sector).shape;
         const cornerRadius = getSectorCornerRadius(
             itemModel.getModel('itemStyle'),
@@ -998,7 +1003,7 @@ function updateStyle(
             true
         );
         extend(sectorShape, cornerRadius);
-        sector.setShape(sectorShape);
+        (el as Sector).setShape(sectorShape);
     }
 
     el.useStyle(style);
