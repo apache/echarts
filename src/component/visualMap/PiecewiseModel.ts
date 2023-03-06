@@ -531,7 +531,7 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
             }
             else {
                 // `min` `max` is legacy option.
-                // `lt` `gt` `lte` `gte` is recommanded.
+                // `lt` `gt` `lte` `gte` is recommended.
                 const interval = item.interval = [] as unknown as [number, number];
                 const close: typeof item.close = item.close = [0, 0];
 

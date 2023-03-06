@@ -644,7 +644,7 @@ class LineView extends ChartView {
 
         const lineGroup = this._lineGroup;
 
-        const hasAnimation = seriesModel.get('animation');
+        const hasAnimation = !ecModel.ssr && seriesModel.isAnimationEnabled();
 
         const isAreaChart = !areaStyleModel.isEmpty();
 
@@ -1085,10 +1085,10 @@ class LineView extends ChartView {
         if (zrUtil.isFunction(seriesDuration)) {
             seriesDuration = seriesDuration(null);
         }
-        const seriesDalay = seriesModel.get('animationDelay') || 0;
-        const seriesDalayValue = zrUtil.isFunction(seriesDalay)
-            ? seriesDalay(null)
-            : seriesDalay;
+        const seriesDelay = seriesModel.get('animationDelay') || 0;
+        const seriesDelayValue = zrUtil.isFunction(seriesDelay)
+            ? seriesDelay(null)
+            : seriesDelay;
 
         data.eachItemGraphicEl(function (symbol: SymbolExtended, idx) {
             const el = symbol;
@@ -1131,8 +1131,8 @@ class LineView extends ChartView {
                     ratio = 1 - ratio;
                 }
 
-                const delay = zrUtil.isFunction(seriesDalay) ? seriesDalay(idx)
-                    : (seriesDuration * ratio) + seriesDalayValue;
+                const delay = zrUtil.isFunction(seriesDelay) ? seriesDelay(idx)
+                    : (seriesDuration * ratio) + seriesDelayValue;
 
                 const symbolPath = el.getSymbolPath();
                 const text = symbolPath.getTextContent();

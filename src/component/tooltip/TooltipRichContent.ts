@@ -37,6 +37,8 @@ class TooltipRichContent {
 
     private _hideTimeout: number;
 
+    private _alwaysShowContent: boolean = false;
+
     private _enterable = true;
 
     private _inContent: boolean;
@@ -56,6 +58,9 @@ class TooltipRichContent {
     update(tooltipModel: Model<TooltipOption>) {
         const alwaysShowContent = tooltipModel.get('alwaysShowContent');
         alwaysShowContent && this._moveIfResized();
+
+        // update alwaysShowContent
+        this._alwaysShowContent = alwaysShowContent;
     }
 
     show() {
@@ -190,7 +195,7 @@ class TooltipRichContent {
     }
 
     hideLater(time?: number) {
-        if (this._show && !(this._inContent && this._enterable)) {
+        if (this._show && !(this._inContent && this._enterable) && !this._alwaysShowContent) {
             if (time) {
                 this._hideDelay = time;
                 // Set show false to avoid invoke hideLater multiple times
