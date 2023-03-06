@@ -18,74 +18,42 @@
 */
 
 
+// Import required modules
 const fs = require('fs');
 const preamble = require('./preamble');
 const pathTool = require('path');
 const chalk = require('chalk');
 
-// In the `.headerignore`, each line is a pattern in RegExp.
-// all relative path (based on the echarts base directory) is tested.
-// The pattern should match the relative path completely.
+// Define path variables
 const excludesPath = pathTool.join(__dirname, '../.headerignore');
 const ecBasePath = pathTool.join(__dirname, '../');
 
+// Check if script is run in verbose mode
 const isVerbose = process.argv[2] === '--verbose';
 
-// const lists = [
-//     '../src/**/*.js',
-//     '../build/*.js',
-//     '../benchmark/src/*.js',
-//     '../benchmark/src/gulpfile.js',
-//     '../extension-src/**/*.js',
-//     '../extension/**/*.js',
-//     '../map/js/**/*.js',
-//     '../test/build/**/*.js',
-//     '../test/node/**/*.js',
-//     '../test/ut/core/*.js',
-//     '../test/ut/spe/*.js',
-//     '../test/ut/ut.js',
-//     '../test/*.js',
-//     '../theme/*.js',
-//     '../theme/tool/**/*.js',
-//     '../echarts.all.js',
-//     '../echarts.blank.js',
-//     '../echarts.common.js',
-//     '../echarts.simple.js',
-//     '../index.js',
-//     '../index.common.js',
-//     '../index.simple.js'
-// ];
-
+// Main function that runs the script
 function run() {
+    // Define arrays to keep track of updated, passed, and pending files
     const updatedFiles = [];
     const passFiles = [];
     const pendingFiles = [];
 
-    eachFile(function (absolutePath, fileExt) {
-        const fileStr = fs.readFileSync(absolutePath, 'utf-8');
+    // Get the list of exclude patterns from the .headerignore file
+    const excludePatterns = getExcludePatterns();
 
-        const existLicense = preamble.extractLicense(fileStr, fileExt);
+    // Regular expression to match file extensions
+    const extReg = /\.([a-zA-Z0-9_-]+)$/;
 
-        if (existLicense) {
-            passFiles.push(absolutePath);
-            return;
-        }
+    // Start traversing the directory tree
+    travel('./');
 
-        // Conside binary files, only add for files with known ext.
-        if (!preamble.hasPreamble(fileExt)) {
-            pendingFiles.push(absolutePath);
-            return;
-        }
-
-        fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt), 'utf-8');
-        updatedFiles.push(absolutePath);
-    });
-
+    // Print results
     console.log('\n');
     console.log('----------------------------');
     console.log(' Files that exists license: ');
     console.log('----------------------------');
     if (passFiles.length) {
+        // If there are files that passed, print them
         if (isVerbose) {
             passFiles.forEach(function (path) {
                 console.log(chalk.green(path));
@@ -96,6 +64,7 @@ function run() {
         }
     }
     else {
+        // If there are no files that passed, print "Nothing."
         console.log('Nothing.');
     }
 
@@ -104,11 +73,13 @@ function run() {
     console.log(' License added for: ');
     console.log('--------------------');
     if (updatedFiles.length) {
+        // If there are updated files, print them
         updatedFiles.forEach(function (path) {
             console.log(chalk.green(path));
         });
     }
     else {
+        // If there are no updated files, print "Nothing."
         console.log('Nothing.');
     }
 
@@ -117,35 +88,50 @@ function run() {
     console.log(' Pending files: ');
     console.log('----------------');
     if (pendingFiles.length) {
+        // If there are pending files, print them
         pendingFiles.forEach(function (path) {
             console.log(chalk.red(path));
         });
     }
     else {
+        // If there are no pending files, print "Nothing."
         console.log('Nothing.');
     }
 
     console.log('\nDone.');
-}
 
-function eachFile(visit) {
-
-    const excludePatterns = [];
-    const extReg = /\.([a-zA-Z0-9_-]+)$/;
-
-    prepareExcludePatterns();
-    travel('./');
-
+    // Recursive function to traverse the directory tree
     function travel(relativePath) {
+        // Check if the current file or directory should be excluded
         if (isExclude(relativePath)) {
             return;
         }
 
+        // Get the absolute path of the current file or directory
         const absolutePath = pathTool.join(ecBasePath, relativePath);
+
+        // Get the file/directory stats
         const stat = fs.statSync(absolutePath);
 
         if (stat.isFile()) {
-            visit(absolutePath, getExt(absolutePath));
+            // If the current item is a file, check if it has a license
+            const fileExt = getExt(absolutePath);
+            const fileStr = fs.readFileSync(absolutePath, 'utf-8');
+            const existLicense = preamble.extractLicense(fileStr, fileExt);
+
+            if (existLicense) {
+                // If the file already has a license, add it to the "passFiles" array
+                passFiles.push(absolutePath);
+            }
+            else if (preamble.hasPreamble(fileExt)) {
+                // If the file does not have a license but requires one, add the license to the file
+                fs.writeFileSync(absolutePath, preamble.addPreamble(fileStr, fileExt),
+'utf-8');
+                updatedFiles.push(absolutePath);
+            }
+            else {
+                pendingFiles.push(absolutePath);
+            }
         }
         else if (stat.isDirectory()) {
             fs.readdirSync(relativePath).forEach(function (file) {
@@ -154,14 +140,16 @@ function eachFile(visit) {
         }
     }
 
-    function prepareExcludePatterns() {
-        const content = fs.readFileSync(excludesPath, {encoding: 'utf-8'});
+    function getExcludePatterns() {
+        const excludePatterns = [];
+        const content = fs.readFileSync(excludesPath, { encoding: 'utf-8' });
         content.replace(/\r/g, '\n').split('\n').forEach(function (line) {
             line = line.trim();
             if (line && line.charAt(0) !== '#') {
                 excludePatterns.push(new RegExp(line));
             }
         });
+        return excludePatterns;
     }
 
     function isExclude(relativePath) {
@@ -170,14 +158,4 @@ function eachFile(visit) {
                 return true;
             }
         }
-    }
-
-    function getExt(path) {
-        if (path) {
-            const mathResult = path.match(extReg);
-            return mathResult && mathResult[1];
-        }
-    }
-}
-
-run();
+        return false
