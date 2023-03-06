@@ -105,7 +105,7 @@ export function dataTransform(
 
     const data = seriesModel.getData();
     const coordSys = seriesModel.coordinateSystem;
-    const dims = coordSys?.dimensions;
+    const dims = coordSys && coordSys.dimensions;
 
     // 1. If not specify the position with pixel directly
     // 2. If `coord` is not a data array. Which uses `xAxis`,
