@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    title: {
+                        text: '<s1\'&fr\"u>3<'
+                    },
+                    xAxis: {
+                        type: "category",
+                        data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                    },
+                    yAxis: {
+                        type: "value"
+                    },
+                    series: [
+                        {
+                            data: [120, 200, 150, 80, 70, 110, 130],
+                            type: "line",
+                            label: {
+                                show: true
+                            },
+                            stack: 'a'
+                        },
+                        {
+                            data: [110, 202, 151, 86, 72, 113, 146],
+                            type: "line",
+                            label: {
+                                show: true
+                            },
+                            stack: 'a'
+                        }
+                    ]
+                };
+                const container = document.getElementById('main0');
+                var chart = echarts.init(null, null, {
+                    width: 500,
+                    height: 500,
+                    renderer: 'svg',
+                    ssr: true
+                });
+                const nativeSetOption = chart.setOption;
+                chart.setOption = function () {
+                    nativeSetOption.apply(this, arguments);
+                    chartContainer.innerHTML = chart.renderToSVGString();
+                };
+
+                const chartContainer = document.createElement('div');
+                const title = document.createElement('div')
+                title.innerHTML = [
+                    'The label should be visible',
+                    'Click the <b>Update to step line</b> button, the line and symbols should be displayed correctly'
+                ].join('<br>');
+                const updateBtn = document.createElement('button');
+                updateBtn.innerHTML = 'Update to step line';
+                updateBtn.onclick = function () {
+                    chart.setOption({
+                        series: [
+                            {
+                                step: true,
+                                data: [120, 400, 150, 80, 70, 110, 130],
+                            }
+                        ]
+                    });
+                };
+                container.appendChild(title);
+                container.appendChild(updateBtn);
+                container.appendChild(chartContainer);
+
+                chart.setOption(option);
+            });
+
+        </script>
+
+
+    </body>
+</html>

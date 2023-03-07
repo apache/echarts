@@ -135,7 +135,7 @@ class BaseAxisPointer implements AxisPointer {
         this._axisPointerModel = axisPointerModel;
         this._api = api;
 
-        // Optimize: `render` will be called repeatly during mouse move.
+        // Optimize: `render` will be called repeatedly during mouse move.
         // So it is power consuming if performing `render` each time,
         // especially on mobile device.
         if (!forceRender
@@ -251,7 +251,7 @@ class BaseAxisPointer implements AxisPointer {
         axisPointerModel: AxisPointerModel,
         api: ExtensionAPI
     ) {
-        // Shoule be implemenented by sub-class.
+        // Should be implemenented by sub-class.
     }
 
     /**
@@ -360,7 +360,7 @@ class BaseAxisPointer implements AxisPointer {
                     cursor: 'move',
                     draggable: true,
                     onmousemove(e) {
-                        // Fot mobile devicem, prevent screen slider on the button.
+                        // For mobile device, prevent screen slider on the button.
                         eventTool.stop(e.event);
                     },
                     onmousedown: bind(this._onHandleDragMove, this, 0, 0),
