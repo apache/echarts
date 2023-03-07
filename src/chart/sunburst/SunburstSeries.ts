@@ -164,7 +164,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
     static readonly type = 'series.sunburst';
     readonly type = SunburstSeriesModel.type;
 
-    ignoreStyleOnData = true;
+    ignoreStyleOnData = false;
 
     private _viewRoot: TreeNode;
     private _levelModels: Model<SunburstSeriesLevelOption>[];

@@ -41,49 +41,45 @@ under the License.
                 chart = echarts.init(document.getElementById("main"), null, {
                     // renderer: 'svg'
                 });
-
                 var data = [
                     {
                         name: "Parent",
-                        value: 2,
-                        // this does not work for sunburst, only for pie
-                        itemStyle: {
-                            decal: { symbol: "arrow", color: "green" },
-                        },
                         children: [
                             {
                                 name: "Base decal",
                                 value: 1,
-                                itemStyle: {
-                                    decal: { symbol: "circle" },
-                                },
+                                itemStyle: { decal: { symbol: "none" } },
                             },
                             {
                                 name: "Changed decal",
                                 value: 1,
                                 itemStyle: {
-                                    decal: { symbol: "rect" },
+                                    decal: {
+                                        symbol: "rect",
+                                    },
                                 },
                             },
                         ],
                     },
                 ];
                 option = {
-                    // this overwrites all in sunburst
                     aria: {
                         enabled: true,
                         decal: {
                             show: true,
-                            decals: { symbol: "diamond" },
+                            decals: {
+                                symbol: "circle",
+                            },
                         },
                     },
                     series: {
                         type: "sunburst",
-                        //    type: 'pie',
                         data: data,
                         radius: [0, "90%"],
-                        label: { rotate: "radial" },
-                        itemStyle: { decal: { symbol: "arrow", color: "red" } },
+                        label: {
+                            rotate: "radial",
+                        },
+                        // itemStyle: { decal: { symbol: "arrow" } },
                     },
                 };
 
