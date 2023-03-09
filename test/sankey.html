@@ -37,6 +37,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -140,7 +141,44 @@ under the License.
             });
         </script>
 
+        <script>
+            require([
+                'echarts',
+                './data/energy.json'
+            ], function (echarts, data) {
 
+                var option = {
+                    series: [
+                        {
+                            type: 'sankey',
+                            nodes: data.nodes,
+                            links: data.links,
+                            lineStyle: {
+                                color: 'gradient',
+                                curveness: 0.5
+                            },
+                            emphasis: {
+                                focus: 'trajectory'
+                            }
+                        }
+                    ]
+                }
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: 'emphasis trajectory',
+                    option: option
+                });
+            
+                if (chart) {
+                    window.onresize = function () {
+                        chart.resize();
+                    };
+                    chart.on('click', function (params) {
+                       console.log(params, params.data);
+                    });
+                }
+            });
+        </script>
 
     </body>
 </html>
