@@ -107,6 +107,7 @@ export interface ComponentTypeInfo {
 export interface ECElement extends Element {
     highDownSilentOnTouch?: boolean;
     onHoverStateChange?: (toState: DisplayState) => void;
+    onElSelectedChange?: (toState: boolean) => void;
 
     // 0: normal
     // 1: blur
