@@ -159,6 +159,7 @@ var localeObj = {
         }
     }
 };
+
     echarts.registerLocale('ZH', localeObj);
         
 });
