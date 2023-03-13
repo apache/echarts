@@ -137,7 +137,7 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-export const version = '5.4.3';
+export const version = '5.4.2';
 
 export const dependencies = {
     zrender: '5.4.3'

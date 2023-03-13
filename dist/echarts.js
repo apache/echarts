@@ -28144,7 +28144,7 @@
       return implsStore[name];
     }
 
-    var version$1 = '5.4.3';
+    var version$1 = '5.4.2';
     var dependencies = {
       zrender: '5.4.3'
     };
