@@ -67,6 +67,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
             indicatorAxis.name = indicatorModel.get('name');
             // Inject model and axis
             indicatorAxis.model = indicatorModel;
+            indicatorAxis.inverse = indicatorModel.get('inverse');
             indicatorModel.axis = indicatorAxis;
             this.dimensions.push(dim);
             return indicatorAxis;
