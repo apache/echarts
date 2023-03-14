@@ -70,7 +70,19 @@ export const setCommonECData = (seriesIndex: number, dataType: SeriesDataType, d
                 childECData.seriesIndex = seriesIndex;
                 childECData.dataIndex = dataIdx;
                 childECData.dataType = dataType;
+                child.__metaData = {
+                    type: 'seriesItem',
+                    seriesIndex,
+                    dataIndex: dataIdx
+                };
             });
+        }
+        else {
+            el.__metaData = {
+                type: 'seriesItem',
+                seriesIndex,
+                dataIndex: dataIdx
+            };
         }
     }
 };
