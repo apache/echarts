@@ -71,7 +71,7 @@ describe('custom_series', function () {
 
     it('should pass user defined data to event handlers', async () => {
         const data = [
-            [10, 16,],
+            [10, 16],
             [20, 18],
             [30, 26],
             [40, 32],
