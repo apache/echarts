@@ -225,6 +225,15 @@ class LegendView extends ComponentView {
                     .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
+                itemGroup.eachChild(child => {
+                    console.log(child.type, child.id);
+                    child.__metaData = {
+                        type: 'legendItem',
+                        seriesIndex: seriesModel.seriesIndex,
+                        dataIndex
+                    };
+                });
+
                 legendDrawnMap.set(name, true);
             }
             else {
@@ -268,6 +277,15 @@ class LegendView extends ComponentView {
                             // more than one pie series.
                             .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
                             .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
+
+                        itemGroup.eachChild(child => {
+                            console.log(child.type, child.id);
+                            child.__metaData = {
+                                type: 'legendItem',
+                                seriesIndex: seriesModel.seriesIndex,
+                                dataIndex
+                            };
+                        });
 
                         legendDrawnMap.set(name, true);
                     }
@@ -430,6 +448,12 @@ class LegendView extends ComponentView {
             shape: itemGroup.getBoundingRect(),
             invisible: true
         });
+        console.log(hitRect.id)
+        hitRect.__metaData = {
+            type: 'legendItem',
+            seriesIndex: seriesModel.seriesIndex,
+            dataIndex
+        };
 
         const tooltipModel =
             legendItemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;

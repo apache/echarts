@@ -33,6 +33,38 @@ under the License.
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
+    <script>
+const events = ['mouseover', 'mouseout'];
+
+const echartsHydration = (dom, options) => {
+    const svgRoot = dom.querySelector('svg');
+    const children = svgRoot.children;
+
+    const events = options.on;
+    if (events) {
+        for (let eventName in events) {
+            if (typeof events[eventName] === 'function') {
+                for (let i = 0; i < children.length; i++) {
+                    const child = children[i];
+                    const type = child.getAttribute('ecmeta_type');
+                    if (type) {
+                        child.addEventListener(eventName, e => {
+                            events[eventName]({
+                                type: eventName,
+                                nodeType: type,
+                                seriesIndex: child.getAttribute('ecmeta_seriesindex'),
+                                dataIndex: child.getAttribute('ecmeta_dataindex'),
+                                event: e,
+                            });
+                        });
+                    }
+                }
+            }
+        }
+    }
+};
+
+    </script>
     <body>
         <style>
             body, #main, svg {
@@ -53,49 +85,85 @@ under the License.
         <script>
             require(['echarts'/*, 'map/js/china' */], function (echarts) {
                 // During transition
-                var chart = echarts.init(null, null, {
+                const serverChart = echarts.init(null, null, {
                     width: 500,
-                    height: 500,
+                    height: 300,
                     renderer: 'svg',
                     ssr: true
                 })
 
-                const width = chart.getWidth();
-                const height = chart.getHeight();
+                const width = serverChart.getWidth();
+                const height = serverChart.getHeight();
 
-                chart.setOption({
+                const seriesData = [{
+                        type: 'bar',
+                        name: 'a',
+                        data: [31, 43, 23, 54, 65, 23, 43]
+                    }, {
+                        type: 'bar',
+                        name: 'b',
+                        data: [63, 53, 73, 23, 43, 23, 43]
+                    }];
+                let aShow = true;
+                let bShow = true;
+
+                const option = {
+                    legend: {
+                        data: ['a', 'b']
+                    },
                     xAxis: {
                         type: 'category',
-                        data: ['Mon', 'Tue', 'Wed']
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        // show: false
                     },
                     yAxis: {
+                        // show: false
                     },
-                    series: {
-                        type: 'bar',
-                        data: [31, {
-                            value: 43,
-                            emphasis: {
-                                itemStyle: {
-                                    color: 'red',
-                                    borderColor: 'green',
-                                    borderWidth: 3
-                                }
-                            }
-                        }, {
-                            value: 23,
-                            emphasis: {
-                                itemStyle: {
-                                    color: 'red',
-                                    borderColor: 'green',
-                                    borderWidth: 3
-                                }
-                            }
-                        }],
-                    }
-                });
+                    series: seriesData
+                };
+
+                serverChart.setOption(option);
 
                 const main = document.getElementById('main');
-                main.innerHTML = chart.renderToSVGString();
+
+                update();
+
+                function update() {
+                    main.innerHTML = serverChart.renderToSVGString();
+                    console.log(main.innerHTML)
+
+                    const clientChart = echartsHydration(main, {
+                        on: {
+                            mouseover: (params) => {
+                                // console.log(params);
+                            },
+                            mouseout: (params) => {
+                                // console.log(params);
+                            },
+                            click: (params) => {
+                                if (params.nodeType === 'legendItem') {
+                                    serverChart.dispatchAction({
+                                        type: 'legendToggleSelect',
+                                        name: params.seriesIndex === '0' ? 'a' : 'b'
+                                    });
+                                    update();
+                                }
+                                else {
+                                    serverChart.setOption({
+                                        series: [{
+                                            name: 'a',
+                                            data: [31, 43, 23, 54, 65, 23, 43].map(v => v + Math.random() * 10)
+                                        }, {
+                                            name: 'b',
+                                            data: [63, 53, 73, 23, 43, 23, 43].map(v => v + Math.random() * 10)
+                                        }]
+                                    });
+                                    update();
+                                }
+                            }
+                        }
+                    });
+                }
             });
         </script>
     </body>
