@@ -78,7 +78,7 @@ function makeSymbolTypeValue(name: 'fromSymbol' | 'toSymbol', lineData: LineList
 
     const symbolOffsetArr = symbolUtil.normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
 
-    return symbolType + symbolSizeArr + symbolOffsetArr + (symbolRotate || '') + (symbolKeepAspect || '')
+    return symbolType + symbolSizeArr + symbolOffsetArr + (symbolRotate || '') + (symbolKeepAspect || '');
 }
 
 /**
