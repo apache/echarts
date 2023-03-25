@@ -501,12 +501,10 @@ class MapDraw {
         this._controllerHost = null;
     }
 
-    findHighDownDispatchers(name: string, geoModel: GeoModel): Element[] {
+    findHighDownDispatchers(name: string, geo: Geo): Element[] {
         if (name == null) {
             return [];
         }
-
-        const geo = geoModel.coordinateSystem;
 
         if (geo.resourceType === 'geoJSON') {
             const regionsGroupByName = this._regionsGroupByName;

@@ -20,14 +20,14 @@
 
 import * as graphic from '../../util/graphic';
 import MapDraw from '../../component/helper/MapDraw';
-import ChartView from '../../view/Chart';
+import ChartView, {elSetHighlightState, getHighlightDigitFromPayload} from '../../view/Chart';
 import MapSeries, { MapDataItemOption } from './MapSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { setStatesFlag, Z2_EMPHASIS_LIFT } from '../../util/states';
-
+import SeriesModel from '../../model/Series';
 
 class MapView extends ChartView {
 
@@ -35,6 +35,37 @@ class MapView extends ChartView {
     readonly type = MapView.type;
 
     private _mapDraw: MapDraw;
+
+    private toggleHighlight(mapSeries: MapSeries, payload: Payload, state: DisplayState) {
+        const highlightDigit = getHighlightDigitFromPayload(payload);
+
+        const name = payload.name;
+        if (typeof name === 'string') {
+            const elements = this._mapDraw.findHighDownDispatchers(name, mapSeries.coordinateSystem);
+            for (const element of elements) {
+                elSetHighlightState(element, state, highlightDigit);
+            }
+        }
+    }
+
+
+    highlight(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+        if (seriesModel instanceof MapSeries) {
+            this.toggleHighlight(seriesModel, payload, 'emphasis');
+        }
+        else {
+            super.highlight(seriesModel, ecModel, api, payload);
+        }
+    }
+
+    downplay(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload) {
+        if (seriesModel instanceof MapSeries) {
+            this.toggleHighlight(seriesModel, payload, 'normal');
+        }
+        else {
+            super.highlight(seriesModel, ecModel, api, payload);
+        }
+    }
 
     render(
         mapModel: MapSeries,

@@ -95,6 +95,7 @@ interface ChartView {
         eventType: string, query: EventQueryItem, targetEl: Element, packedEvent: ECActionEvent | ECElementEvent
     ): boolean;
 }
+
 class ChartView {
 
     // [Caution]: Because this class or desecendants can be used as `XXX.extend(subProto)`,
@@ -230,27 +231,33 @@ class ChartView {
 /**
  * Set state of single element
  */
-function elSetState(el: Element, state: DisplayState, highlightDigit: number) {
+export function elSetHighlightState(el: Element, state: DisplayState, highlightDigit: number | undefined) {
     if (el && isHighDownDispatcher(el)) {
         (state === 'emphasis' ? enterEmphasis : leaveEmphasis)(el, highlightDigit);
     }
 }
 
+export function getHighlightDigitFromPayload(payload: Payload): number | undefined {
+    const highlightKey = payload?.highlightKey;
+    if (typeof highlightKey === 'number') {
+        return getHighlightDigit(highlightKey);
+    }
+    return undefined;
+}
+
 function toggleHighlight(data: SeriesData, payload: Payload, state: DisplayState) {
     const dataIndex = modelUtil.queryDataIndex(data, payload);
 
-    const highlightDigit = (payload && payload.highlightKey != null)
-        ? getHighlightDigit(payload.highlightKey)
-        : null;
+    const highlightDigit = getHighlightDigitFromPayload(payload);
 
     if (dataIndex != null) {
         each(modelUtil.normalizeToArray(dataIndex), function (dataIdx) {
-            elSetState(data.getItemGraphicEl(dataIdx), state, highlightDigit);
+            elSetHighlightState(data.getItemGraphicEl(dataIdx), state, highlightDigit);
         });
     }
     else {
         data.eachItemGraphicEl(function (el) {
-            elSetState(el, state, highlightDigit);
+            elSetHighlightState(el, state, highlightDigit);
         });
     }
 }
