@@ -67,6 +67,8 @@ export class TreeNode {
 
     isExpand: boolean = false;
 
+    isSelected: boolean = false;
+
     readonly hostTree: Tree<Model>;
 
     constructor(name: string, hostTree: Tree<Model>) {
