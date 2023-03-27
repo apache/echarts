@@ -1,0 +1,645 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<!-- <html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+</head>
+
+<body>
+    <style>
+        html,
+        body,
+        #main {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+    Test
+    <div id="main"></div>
+    <script>
+
+        require([
+            'echarts',
+            'theme/vintage'
+        ], function (echarts) {
+
+            var chart = echarts.init(document.getElementById('main'), 'vintage');
+            option = {
+                animationDurationUpdate: 1500,
+                label: {
+                    normal: {
+                        show: true,
+                        textStyle: {
+                            fontSize: 12
+                        },
+                    }
+                },
+                series: [
+                    {
+                        type: 'graph',
+                        layout: 'none',
+                        symbol: 'rect',
+                        symbolSize: 100,
+                        zoom: 1,
+                        label: {
+                            show: true
+                        },
+                        roam: true,
+                        itemStyle: {
+                            color: 'rgba(0, 0, 0, 0)',
+                            borderWidth: 3,
+                            borderColor: '000'
+                        },
+                        //edgeSymbol: ['circle','arrow'],
+                        // edgeSymbolSize: [4, 10],
+                        // edgeLabel: {
+                        //     fontSize: 12
+                        // },
+                        data: [
+                        {
+                            name: 'node1',
+                            x: 50,
+                            y: 0
+                        },
+                        {
+                            name: 'node2',
+                            x: 100,
+                            y: 0
+                        },
+                        {
+                            name: 'node3',
+                            x: 80,
+                            y: 50
+                        }
+                    ],
+                        links: [
+                            {
+                                source: 'node1',
+                                target: 'node2',
+                                lineStyle: {
+                                    offset: 5,
+                                    //curveness: .2,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: 1,
+                                    //curveness: .2,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: -1,
+                                    //curveness: .2,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: 2,
+                                    //curveness: .2,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: -2,
+                                    //curveness: .2,
+                                }
+                            },
+                            // {
+                            //     source: 'node1',
+                            //     target: 'node3',
+                            //     lineStyle: {
+                            //         offset: -2,
+                            //         // curveness: .2,
+                            //     }
+                            // },
+                            // {
+                            //     source: 'node3',
+                            //     target: 'node1',
+                            //     lineStyle: {
+                            //         offset: -5
+                            //     }
+                            // }
+                        ],
+                        lineStyle: {
+                            opacity: 0.9,
+                            width: 2
+                        }
+                    }
+                ]
+            };
+
+            chart.setOption(option);
+        });
+    </script>
+</body>
+
+</html> -->
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <style>
+    </style>
+
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+
+    <script>
+
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+
+            option = {
+                animationDurationUpdate: 1500,
+                label: {
+                    normal: {
+                        show: true,
+                        textStyle: {
+                            fontSize: 12
+                        },
+                    }
+                },
+                series: [
+                    {
+                        type: 'graph',
+                        layout: 'none',
+                        symbol: 'rect',
+                        symbolSize: 50,
+                        label: {
+                            show: true
+                        },
+                        roam: true,
+                        data: [
+                            {
+                                name: 'node1',
+                                draggable: true,
+                                x: 50,
+                                y: 0
+                            },
+                            {
+                                name: 'node2',
+                                x: 100,
+                                y: 0
+                            },
+                            {
+                                name: 'node3',
+                                x: 80,
+                                y: 50
+                            }
+                        ],
+                        links: [
+                            {
+                                source: 'node1',
+                                target: 'node2',
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node2',
+                                lineStyle: {
+                                    offset: 1,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node2',
+                                lineStyle: {
+                                    offset: 2,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: 1,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: -1,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: 2,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: -2,
+                                }
+                            },
+                        ],
+                        lineStyle: {
+                            opacity: 0.9,
+                            width: 2
+                        }
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'graph edge offset test case for **layout: none**',
+                    'edges should be correctly offseted',
+                    '**node 1** is draggable'
+                ],
+                option: option
+            });
+
+        });
+    </script>
+    <script>
+
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+
+            option = {
+                animationDurationUpdate: 1500,
+                label: {
+                    normal: {
+                        show: true,
+                        textStyle: {
+                            fontSize: 12
+                        },
+                    }
+                },
+                series: [
+                    {
+                        type: 'graph',
+                        layout: 'none',
+                        symbol: 'rect',
+                        symbolSize: 5,
+                        roam: true,
+                        data: [
+                            {
+                                name: 'node1',
+                                x: 50,
+                                y: 0
+                            },
+                            {
+                                name: 'node2',
+                                x: 70,
+                                y: 0
+                            },
+                        ],
+                        links: [
+                            {
+                                source: 'node1',
+                                target: 'node2',
+                                lineStyle: {
+                                    offset: 1,
+                                }
+                            },
+                        ],
+                        lineStyle: {
+                            opacity: 0.9,
+                            width: 2
+                        }
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'graph edge offset test case for **layout: none**',
+                    'edge should not be offseted because offset is greater than node size'
+                ],
+                option: option
+            });
+
+        });
+    </script>
+    <script>
+
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+
+            option = {
+                animationDurationUpdate: 1500,
+                label: {
+                    normal: {
+                        show: true,
+                        textStyle: {
+                            fontSize: 12
+                        },
+                    }
+                },
+                series: [
+                    {
+                        type: 'graph',
+                        layout: 'force',
+                        force: {
+                            repulsion: 100,
+                            edgeLength: 100
+                        },
+                        zoom: 3.5,
+                        symbol: 'rect',
+                        symbolSize: 25,
+                        label: {
+                            show: true
+                        },
+                        roam: true,
+                        data: [
+                            {
+                                name: 'node1',
+                                draggable: true
+                            },
+                            {
+                                name: 'node2'
+                            },
+                            {
+                                name: 'node3'
+                            }
+                        ],
+                        links: [
+                            {
+                                source: 'node1',
+                                target: 'node2',
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node2',
+                                lineStyle: {
+                                    offset: 1,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node2',
+                                lineStyle: {
+                                    offset: 2,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: 1,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: -1,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: 2,
+                                }
+                            },
+                            {
+                                source: 'node1',
+                                target: 'node3',
+                                lineStyle: {
+                                    offset: -2,
+                                }
+                            },
+                        ],
+                        lineStyle: {
+                            opacity: 0.9,
+                            width: 2
+                        }
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'graph edge offset test case for **layout: force**',
+                    'edges should be correctly offseted',
+                    '**node 1** is draggable'
+                ],
+                option: option
+            });
+
+        });
+    </script>
+    <script>
+
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var option;
+
+
+            option = {
+                animationDurationUpdate: 1500,
+                label: {
+                    normal: {
+                        show: true,
+                        textStyle: {
+                            fontSize: 12
+                        },
+                    }
+                },
+                series: [
+                    {
+                        type: 'graph',
+                        name: 'Gene',
+                        layout: 'circular',
+                        circular: {
+                            rotateLabel: true
+                        },
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        label: {
+                            show: true
+                        },
+                        lineStyle: {
+                            color: 'source',
+                            curveness: 0.3
+                        },
+                        emphasis: {
+                            label: {
+                                color: 'blue'
+                            },
+                            lineStyle: {
+                                width: 10
+                            }
+                        },
+                        data: [
+                            {
+                                itemStyle: null,
+                                name: 'DRD2',
+                                value: 40,
+                                symbolSize: 40,
+                                draggable: true,
+                                itemStyle: {
+                                    color: '#91cc75'
+                                }
+                            },
+                            {
+                                itemStyle: null,
+                                name: 'ADORA2A',
+                                value: 0,
+                                symbolSize: 20,
+                                draggable: true,
+                                itemStyle: {
+                                    color: '#91cc75'
+                                }
+                            },
+                            {
+                                itemStyle: null,
+                                name: 'ARRB2',
+                                value: 30,
+                                symbolSize: 20,
+                            },
+                            {
+                                itemStyle: null,
+                                name: 'CALM1',
+                                value: 20,
+                                symbolSize: 40
+                            },
+                            {
+                                itemStyle: null,
+                                name: 'CALM2',
+                                value: 0,
+                                symbolSize: 20
+                            },
+                            {
+                                itemStyle: null,
+                                name: 'FLNA',
+                                value: 0,
+                                symbolSize: 20
+                            },
+                            {
+                                itemStyle: null,
+                                name: 'NSF',
+                                value: 0,
+                                symbolSize: 20
+                            }
+                        ],
+                        links: [
+                            {
+                                source: 'DRD2',
+                                target: 'ADORA2A',
+                                lineStyle: {
+                                    offset: -3,
+                                    color: "orange"
+                                }
+                            },
+                            {
+                                source: 'DRD2',
+                                target: 'ARRB2',
+                                lineStyle: {
+                                    offset: -8,
+                                    color: "orange"
+                                }
+                            },
+                            {
+                                source: 'DRD2',
+                                target: 'CALM1'
+                            },
+                            {
+                                source: 'DRD2',
+                                target: 'CALM2'
+                            },
+                            {
+                                source: 'DRD2',
+                                target: 'FLNA'
+                            },
+                            {
+                                source: 'DRD2',
+                                target: 'NSF'
+                            },
+                            {
+                                source: 'CALM1',
+                                target: 'ADORA2A'
+                            },
+                            {
+                                source: 'CALM1',
+                                target: 'ARRB2'
+                            },
+                            {
+                                source: 'CALM1',
+                                target: 'CALM2'
+                            },
+                            {
+                                source: 'CALM1',
+                                target: 'FLNA'
+                            },
+                            {
+                                source: 'CALM1',
+                                target: 'NSF'
+                            },
+                        ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'graph edge offset test case for **layout: circular**',
+                    '**orange** edges should be correctly offseted',
+                ],
+                option: option
+            });
+
+        });
+    </script>
+</body>
+
+</html>

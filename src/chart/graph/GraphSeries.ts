@@ -60,6 +60,7 @@ type GraphDataValue = OptionDataValue | OptionDataValue[];
 
 interface GraphEdgeLineStyleOption extends LineStyleOption {
     curveness?: number
+    offset?: number
 }
 
 export interface GraphNodeStateOption<TCbParams = never> {
@@ -229,6 +230,8 @@ export interface GraphSeriesOption
      * auto curveness for multiple edge, invalid when `lineStyle.curveness` is set
      */
     autoCurveness?: boolean | number | number[]
+
+    autoOffset?: boolean | number | number[]
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {

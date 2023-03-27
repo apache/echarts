@@ -22,7 +22,8 @@ import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './Gr
 import Graph from '../../data/Graph';
 import * as zrUtil from 'zrender/src/core/util';
 import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
-
+import * as matrix from 'zrender/src/core/matrix';
+import { getNodeGlobalScale, getSymbolSize } from './graphHelper';
 
 export function simpleLayout(seriesModel: GraphSeriesModel) {
     const coordSys = seriesModel.coordinateSystem;
@@ -46,9 +47,33 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             -getCurvenessForEdge(edge, seriesModel, index, true),
             0
         );
+        const offset = zrUtil.retrieve3(
+            edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'offset']),
+            0,
+            0
+        );
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
         const points = [p1, p2];
+        const nodesSizes = [edge.node1, edge.node2].map(node => {
+            let symbolSize = node.getModel<GraphNodeItemOption>().get('symbolSize');
+            if (symbolSize instanceof Array) {
+                symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
+            }
+            return +symbolSize;
+        });
+        const minimumSize = Math.min(...nodesSizes) * getNodeGlobalScale(seriesModel);
+        if (+offset && Math.abs(offset) < minimumSize/2) {
+            // const adjustedOffset = offset/100 * minimumSize;
+            const adjustedOffset = offset;
+            const direction: number[] = [];
+            vec2.sub(direction, p2, p1);
+            const normalVector = [-direction[1], direction[0]]; // or [direction[1], -direction[0]]
+            vec2.normalize(normalVector, normalVector);
+            const offsetVector = [normalVector[0] * adjustedOffset, normalVector[1] * adjustedOffset];
+            vec2.add(points[0], p1, offsetVector);
+            vec2.add(points[1], p2, offsetVector); 
+        }
         if (+curveness) {
             points.push([
                 (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness,
