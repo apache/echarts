@@ -167,9 +167,11 @@ function singleLeaveBlur(el: ECElement) {
 
 function singleEnterSelect(el: ECElement) {
     el.selected = true;
+    el.onElSelectedChange && el.onElSelectedChange(true);
 }
 function singleLeaveSelect(el: ECElement) {
     el.selected = false;
+    el.onElSelectedChange && el.onElSelectedChange(false);
 }
 
 function updateElementState<T>(

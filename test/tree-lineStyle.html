@@ -1,0 +1,127 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                padding: 0;
+                margin: 0;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+            var formatUtil;
+
+            require([
+                'echarts',
+                './data/flare.json'
+            ], function (echarts, data) {
+                formatUtil = echarts.format;
+                var chart = echarts.init(document.getElementById('main'));
+
+                window.onresize = function () {
+                    chart.resize();
+                };
+
+                echarts.util.each(data.children, function (datum, index) {
+                    index % 2 === 0 && (datum.collapsed = true);
+                });
+
+                chart.setOption({
+                    series:[
+                        {
+                            type: 'tree',
+                            data: [{
+                                name: "root",
+                                children: [
+                                {
+                                    name: "Child A",
+                                    children: [{
+                                        name: "Leaf C"
+                                    }, {
+                                        name: "Leaf D"
+                                    }, {
+                                        name: "Leaf E"
+                                    }, {
+                                        name: "Leaf F"
+                                    }]
+                                }, {
+                                    name: "Child B",
+                                    children: [{
+                                        name: "Leaf G"
+                                    }, {
+                                        name: "Leaf H"
+                                    }]
+                                }, {
+                                    name: "Child D"
+                                }, {
+                                    name: "Child F",
+                                    children: [{
+                                        name: "Leaf J"
+                                    }, {
+                                        name: "Leaf K"
+                                    }]
+                                }]
+                            }],
+                            label: {
+                                position: "inside",
+                                show: true,
+                                borderWidth: 0,
+                                overflow: "truncate",
+                                offset: [0, 13],
+                            },
+                            symbolSize: [60, 20],
+                            selectedMode: "single",
+                            select: {
+                                itemStyle: {
+                                    color: "red"
+                                },
+                                lineStyle: {
+                                    width: 10,
+                                    color: "rgba(236, 114, 17, 1)" // it is not work
+                                }
+                            },
+                            itemStyle: {
+                                color: "rgba(255, 153, 0, 0.1)",
+                            },
+                            lineStyle: {
+                                width: 5,
+                                // color: "rgba(236, 114, 17, 1)" // it is work
+                            },
+                            // expandAndCollapse: false,
+                            animationDuration: 550,
+                            animationDurationUpdate: 750
+                        }
+                    ]
+                })
+            });
+        </script>
+    </body>
+</html>
