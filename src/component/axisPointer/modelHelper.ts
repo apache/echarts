@@ -130,8 +130,8 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
             result.coordSysAxesInfo[coordSysKey] = {};
         result.coordSysMap[coordSysKey] = coordSys;
 
-        // Set tooltip (like 'cross') is a convienent way to show axisPointer
-        // for user. So we enable seting tooltip on coordSys model.
+        // Set tooltip (like 'cross') is a convenient way to show axisPointer
+        // for user. So we enable setting tooltip on coordSys model.
         const coordSysModel = coordSys.model as ComponentModel<ComponentOption & {
             tooltip: TooltipOption  // TODO: Same with top level tooltip?
         }>;
@@ -250,8 +250,8 @@ function makeAxisPointerModel(
     // triggered from tooltip and trigger tooltip.
     volatileOption.snap = axis.type !== 'category' && !!triggerTooltip;
 
-    // Compatibel with previous behavior, tooltip axis do not show label by default.
-    // Only these properties can be overrided from tooltip to axisPointer.
+    // Compatible with previous behavior, tooltip axis does not show label by default.
+    // Only these properties can be overridden from tooltip to axisPointer.
     if (tooltipAxisPointerModel.get('type') === 'cross') {
         volatileOption.type = 'line';
     }

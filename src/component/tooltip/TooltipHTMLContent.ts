@@ -262,6 +262,7 @@ class TooltipHTMLContent {
     private _enterable = true;
     private _zr: ZRenderType;
 
+    private _alwaysShowContent: boolean = false;
     private _hideTimeout: number;
     /**
      * Hide delay time
@@ -359,6 +360,9 @@ class TooltipHTMLContent {
         // move tooltip if chart resized
         const alwaysShowContent = tooltipModel.get('alwaysShowContent');
         alwaysShowContent && this._moveIfResized();
+
+        // update alwaysShowContent
+        this._alwaysShowContent = alwaysShowContent;
 
         // update className
         this.el.className = tooltipModel.get('className') || '';
@@ -488,7 +492,7 @@ class TooltipHTMLContent {
     }
 
     hideLater(time?: number) {
-        if (this._show && !(this._inContent && this._enterable)) {
+        if (this._show && !(this._inContent && this._enterable) && !this._alwaysShowContent) {
             if (time) {
                 this._hideDelay = time;
                 // Set show false to avoid invoke hideLater multiple times

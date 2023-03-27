@@ -28,10 +28,11 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
-import { getSectorCornerRadius } from '../helper/pieHelper';
+import { getSectorCornerRadius } from '../helper/sectorHelper';
 import {createOrUpdatePatternFromDecal} from '../../util/decal';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { normalizeRadian } from 'zrender/src/contain/util';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -251,8 +252,8 @@ class SunburstPiece extends graphic.Sector {
             const rotateType = getLabelAttr(labelStateModel, 'rotate');
             let rotate = 0;
             if (rotateType === 'radial') {
-                rotate = -midAngle;
-                if (rotate < -Math.PI / 2) {
+                rotate = normalizeRadian(-midAngle);
+                if (((rotate > Math.PI / 2 && rotate < Math.PI * 1.5))) {
                     rotate += Math.PI;
                 }
             }
