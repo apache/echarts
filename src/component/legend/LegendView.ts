@@ -422,7 +422,7 @@ class LegendView extends ComponentView {
                 fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
                 align: textAlign,
                 verticalAlign: 'middle'
-            })
+            },{inheritColor: isSelected ? textStyleModel.getTextColor() : inactiveColor})
         }));
 
         // Add a invisible rect to increase the area of mouse hover
