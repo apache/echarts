@@ -137,10 +137,10 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-export const version = '5.4.1';
+export const version = '5.4.2';
 
 export const dependencies = {
-    zrender: '5.4.1'
+    zrender: '5.4.3'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -1065,7 +1065,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                         if (ecData && ecData.dataIndex != null) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                             params = (
-                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
+                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
                             ) as ECElementEvent;
                             return true;
                         }

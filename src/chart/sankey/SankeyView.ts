@@ -275,6 +275,7 @@ class SankeyView extends ChartView {
                 {
                     labelFetcher: seriesModel,
                     labelDataIndex: node.dataIndex,
+                    labelValue: layout.value,
                     defaultText: node.id
                 }
             );
