@@ -212,14 +212,14 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
 }
 
 // If not able to make, do not modify the input `out`.
-function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, zrX: number, zrY: number) {
+function makeStyleCoord(out: number[], zr: ZRenderType, customContainer: HTMLElement | null, zrX: number, zrY: number) {
     const zrPainter = zr && zr.painter;
 
-    if (appendToBody) {
+    if (customContainer) {
         const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
-            transformLocalCoord(out, zrViewportRoot, document.body, zrX, zrY);
+            transformLocalCoord(out, zrViewportRoot, customContainer, zrX, zrY);
         }
     }
     else {
@@ -257,7 +257,7 @@ class TooltipHTMLContent {
     private _show: boolean = false;
 
     private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
-    private _appendToBody: boolean;
+    private _customContainer: HTMLElement | null;
 
     private _enterable = true;
     private _zr: ZRenderType;
@@ -291,14 +291,21 @@ class TooltipHTMLContent {
         (el as any).domBelongToZr = true;
         this.el = el;
         const zr = this._zr = api.getZr();
-        const appendToBody = this._appendToBody = opt && opt.appendToBody;
 
-        makeStyleCoord(this._styleCoord, zr, appendToBody, api.getWidth() / 2, api.getHeight() / 2);
-
-        if (appendToBody) {
-            document.body.appendChild(el);
+        let customContainer: HTMLElement | null
+        if (opt && opt.appendToBody) {
+            customContainer = this._customContainer = document.body
+        } else if (opt && opt.getAppendElement) {
+            customContainer = this._customContainer = opt.getAppendElement(container) || null;
+        } else {
+            customContainer = this._customContainer = null
         }
-        else {
+
+        makeStyleCoord(this._styleCoord, zr, customContainer, api.getWidth() / 2, api.getHeight() / 2);
+
+        if (customContainer) {
+            customContainer.appendChild(el);
+        } else {
             container.appendChild(el);
         }
 
@@ -456,7 +463,7 @@ class TooltipHTMLContent {
 
     moveTo(zrX: number, zrY: number) {
         const styleCoord = this._styleCoord;
-        makeStyleCoord(styleCoord, this._zr, this._appendToBody, zrX, zrY);
+        makeStyleCoord(styleCoord, this._zr, this._customContainer, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
             const style = this.el.style;
