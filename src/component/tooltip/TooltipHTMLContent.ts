@@ -252,12 +252,12 @@ class TooltipHTMLContent {
 
     el: HTMLDivElement;
 
-    private _container: HTMLElement;
+    private _api: ExtensionAPI;
+    private _container: HTMLElement | null = null;
 
     private _show: boolean = false;
 
     private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
-    private _customContainer: HTMLElement | null;
 
     private _enterable = true;
     private _zr: ZRenderType;
@@ -278,7 +278,6 @@ class TooltipHTMLContent {
     private _longHideTimeout: number;
 
     constructor(
-        container: HTMLElement,
         api: ExtensionAPI,
         opt: TooltipContentOption
     ) {
@@ -292,23 +291,22 @@ class TooltipHTMLContent {
         this.el = el;
         const zr = this._zr = api.getZr();
 
-        let customContainer: HTMLElement | null
+        let container: HTMLElement | null = null;
         if (opt && opt.appendToBody) {
-            customContainer = this._customContainer = document.body
-        } else if (opt && opt.getAppendElement) {
-            customContainer = this._customContainer = opt.getAppendElement(container) || null;
-        } else {
-            customContainer = this._customContainer = null
+            container = this._container = document.body
+        } else if (opt && opt.teleport) {
+            container = this._customContainer = opt.teleport(api.getDom()) || null;
         }
 
-        makeStyleCoord(this._styleCoord, zr, customContainer, api.getWidth() / 2, api.getHeight() / 2);
+        makeStyleCoord(this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2);
 
-        if (customContainer) {
-            customContainer.appendChild(el);
-        } else {
+        if (container) {
             container.appendChild(el);
+        } else {
+            api.getDom().appendChild(el);
         }
 
+        this._api = api
         this._container = container;
 
         // FIXME
@@ -357,7 +355,7 @@ class TooltipHTMLContent {
     update(tooltipModel: Model<TooltipOption>) {
         // FIXME
         // Move this logic to ec main?
-        const container = this._container;
+        const container = this._api.getDom();
         const position = getComputedStyle(container, 'position');
         const domStyle = container.style;
         if (domStyle.position !== 'absolute' && position !== 'absolute') {
@@ -463,7 +461,7 @@ class TooltipHTMLContent {
 
     moveTo(zrX: number, zrY: number) {
         const styleCoord = this._styleCoord;
-        makeStyleCoord(styleCoord, this._zr, this._customContainer, zrX, zrY);
+        makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
             const style = this.el.style;
