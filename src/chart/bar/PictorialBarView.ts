@@ -41,6 +41,9 @@ import { getECData } from '../../util/innerStore';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
+const mathMax = Math.max;
+const mathMin = Math.min;
+
 // index: +isHorizontal
 const LAYOUT_ATTRS = [
     {xy: 'x', wh: 'width', index: 0, posDesc: ['left', 'right']},
@@ -55,6 +58,7 @@ type ItemModel = Model<PictorialBarDataItemOption> & {
 };
 type RectShape = graphic.Rect['shape'];
 type RectLayout = RectShape;
+type CartesianCoordArea = ReturnType<Cartesian2D['getArea']>;
 
 type PictorialSymbol = ReturnType<typeof createSymbol> & {
     __pictorialAnimationIndex: number
@@ -267,6 +271,10 @@ function getSymbolMeta(
         z2: itemModel.getShallow('z', true) || 0
     } as SymbolMeta;
 
+    const coordSysClipArea = opt.coordSys && opt.coordSys.getArea && opt.coordSys.getArea();
+
+    clipCartesian2d(coordSysClipArea, layout);
+
     prepareBarLength(itemModel, symbolRepeat, layout, opt, symbolMeta);
 
     prepareSymbolSize(
@@ -286,6 +294,54 @@ function getSymbolMeta(
     );
 
     return symbolMeta;
+}
+
+function clipCartesian2d(
+    coordSysBoundingRect: CartesianCoordArea,
+    layout: RectLayout
+) {
+    const signWidth = layout.width < 0 ? -1 : 1;
+        const signHeight = layout.height < 0 ? -1 : 1;
+        // Needs positive width and height
+        if (signWidth < 0) {
+            layout.x += layout.width;
+            layout.width = -layout.width;
+        }
+        if (signHeight < 0) {
+            layout.y += layout.height;
+            layout.height = -layout.height;
+        }
+
+        const coordSysX2 = coordSysBoundingRect.x + coordSysBoundingRect.width;
+        const coordSysY2 = coordSysBoundingRect.y + coordSysBoundingRect.height;
+        const x = mathMax(layout.x, coordSysBoundingRect.x);
+        const x2 = mathMin(layout.x + layout.width, coordSysX2);
+        const y = mathMax(layout.y, coordSysBoundingRect.y);
+        const y2 = mathMin(layout.y + layout.height, coordSysY2);
+
+        const xClipped = x2 < x;
+        const yClipped = y2 < y;
+
+        // When xClipped or yClipped, the element will be marked as `ignore`.
+        // But we should also place the element at the edge of the coord sys bounding rect.
+        // Because if data changed and the bar shows again, its transition animation
+        // will begin at this place.
+        layout.x = (xClipped && x > coordSysX2) ? x2 : x;
+        layout.y = (yClipped && y > coordSysY2) ? y2 : y;
+        layout.width = xClipped ? 0 : x2 - x;
+        layout.height = yClipped ? 0 : y2 - y;
+
+        // Reverse back
+        if (signWidth < 0) {
+            layout.x += layout.width;
+            layout.width = -layout.width;
+        }
+        if (signHeight < 0) {
+            layout.y += layout.height;
+            layout.height = -layout.height;
+        }
+
+        return xClipped || yClipped;
 }
 
 // bar length can be negative.
