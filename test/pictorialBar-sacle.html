@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="data/pie-texture.js"></script>
+        <script src="data/symbols.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            body {
+            }
+            .chart {
+                position: relative;
+                height: 500px;
+                max-width: 1000px;
+                margin: 0 auto;
+            }
+            h2 {
+                text-align: center;
+                font-size: 16px;
+                line-height: 30px;
+                font-weight: normal;
+                background: #dde;
+                margin: 0;
+            }
+            strong {
+                color: #971f3c;
+            }
+        </style>
+
+        <h2>pictorialBar | scale</h2>
+        <div class="chart" id="paper-and-hill"></div>
+
+        <script>
+
+            function makeChart(id, option, cb) {
+                require([
+                    'echarts'
+                ], function (echarts) {
+
+                    if (typeof option === 'function') {
+                        option = option(echarts);
+                    }
+
+                    var main = document.getElementById(id);
+                    if (main) {
+                        var chartMain = document.createElement('div');
+                        chartMain.style.cssText = 'height:100%';
+                        main.appendChild(chartMain);
+                        var chart = echarts.init(chartMain);
+                        chart.setOption(option);
+
+                        window.addEventListener('resize', chart.resize);
+
+                        cb && cb(echarts, chart);
+                    }
+
+                });
+            }
+
+        </script>
+
+
+        <script>
+            makeChart('paper-and-hill', {
+            xAxis: {
+                type: 'category',
+                data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            },
+            yAxis: {
+                name: '',
+                nameLocation: 'end',
+                nameGap: 50,
+                nameTextStyle: {
+                    fontSize: 12,
+                    fontFamily: 'SourceHanSansCN-Regular',
+                    color: '#A9DDD5',
+                    // align: 'left',
+                    padding: [0, 50, 0, 20]
+                },
+                type: 'value',
+                scale: true,
+                // min: 0,
+                axisLine: {
+                    show: false,
+                    lineStyle: {
+                        color: '#7B8EA2',
+                        width: 0.5
+                    }
+                },
+                axisTick: {
+                    show: false
+                },
+                axisLabel: {
+                    show: true,
+                    fontSize: 12,
+                    fontFamily: 'SourceHanSansCN-Regular',
+                    color: '#A9DDD5',
+                    margin: 12
+
+                },
+                splitLine: {
+                    show: true,
+                    lineStyle: {
+                        color: 'rgba(26,245,248,0.2)',
+                        width: 0.5,
+                        type: 'dashed'
+                    }
+                }
+            },
+            series: [
+                {
+                    data: [120, 200, 150, 80, 70, 110, 130],
+                    name: '',
+                    type: 'pictorialBar',
+                    animationDuration: 10,
+                    legendHoverLink: false,
+                    symbolRepeat: 'true',
+                    symbolMargin: '20%',
+                    symbol: 'rect',
+                    symbolSize: [14, 5],
+                    itemStyle: {
+                        color: '#FFBA60'
+                    },
+                    z: 1,
+                    animationEasing: '',
+                }
+            ]
+        });
+        </script>
+
+
+
+    </body>
+</html>
