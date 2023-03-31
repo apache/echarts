@@ -212,14 +212,14 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
 }
 
 // If not able to make, do not modify the input `out`.
-function makeStyleCoord(out: number[], zr: ZRenderType, customContainer: HTMLElement | null, zrX: number, zrY: number) {
+function makeStyleCoord(out: number[], zr: ZRenderType, container: HTMLElement | null, zrX: number, zrY: number) {
     const zrPainter = zr && zr.painter;
 
-    if (customContainer) {
+    if (container) {
         const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
-            transformLocalCoord(out, zrViewportRoot, customContainer, zrX, zrY);
+            transformLocalCoord(out, zrViewportRoot, container, zrX, zrY);
         }
     }
     else {
