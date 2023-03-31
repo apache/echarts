@@ -172,7 +172,7 @@ class TooltipView extends ComponentView {
         this._tooltipContent = renderMode === 'richText'
             ? new TooltipRichContent(api)
             : new TooltipHTMLContent(api, {
-		 appendTo: tooltipModel.get('appendToBody', true) ? 'body' : tooltipModel.get('getAppendElement', true),
+		 appendTo: tooltipModel.get('appendToBody', true) ? 'body' : tooltipModel.get('appendTo', true),
             });
     }
 
