@@ -34,53 +34,61 @@ under the License.
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <script>
-const events = ['mouseover', 'mouseout'];
+    const echartsHydration = (dom, options) => {
+        const svgRoot = dom.querySelector('svg');
+        const children = svgRoot.children;
 
-const echartsHydration = (dom, options) => {
-    const svgRoot = dom.querySelector('svg');
-    const children = svgRoot.children;
-
-    const events = options.on;
-    if (events) {
-        for (let eventName in events) {
-            if (typeof events[eventName] === 'function') {
-                for (let i = 0; i < children.length; i++) {
-                    const child = children[i];
-                    const type = child.getAttribute('ecmeta_type');
-                    if (type) {
-                        child.addEventListener(eventName, e => {
-                            events[eventName]({
-                                type: eventName,
-                                nodeType: type,
-                                seriesIndex: child.getAttribute('ecmeta_seriesindex'),
-                                dataIndex: child.getAttribute('ecmeta_dataindex'),
-                                event: e,
+        const events = options.on;
+        if (events) {
+            for (let eventName in events) {
+                if (typeof events[eventName] === 'function') {
+                    for (let i = 0; i < children.length; i++) {
+                        const child = children[i];
+                        const type = child.getAttribute('ecmeta_type');
+                        if (type) {
+                            child.addEventListener(eventName, e => {
+                                events[eventName]({
+                                    type: eventName,
+                                    nodeType: type,
+                                    seriesIndex: child.getAttribute('ecmeta_seriesindex'),
+                                    dataIndex: child.getAttribute('ecmeta_dataindex'),
+                                    event: e,
+                                });
                             });
-                        });
+                        }
                     }
                 }
             }
         }
-    }
-};
-
+    };
     </script>
     <body>
         <style>
             body, #main, svg {
                 margin: 0;
                 width: 100%;
-                height: 100%;
+                height: 400px;
             }
             img {
                 position: absolute;
                 left: 0;
                 top: 0;
             }
+            h2 {
+                font-size: 16px;
+            }
         </style>
 
-
+        <h2>
+            1. It should have initial animation<br>
+            2. It should use lighter color when hovering on the bars<br>
+            3. It should toggle the series when clicking the legend<br>
+            4. It should update the series when clicking the bars<br>
+        </h2>
         <div id="main"></div>
+
+        <h2>Big data render time</h2>
+        <div id="big-data"></div>
 
         <script>
             require(['echarts'/*, 'map/js/china' */], function (echarts) {
@@ -130,7 +138,6 @@ const echartsHydration = (dom, options) => {
 
                 function update() {
                     main.innerHTML = serverChart.renderToSVGString();
-                    console.log(main.innerHTML)
 
                     const clientChart = echartsHydration(main, {
                         on: {
@@ -141,6 +148,10 @@ const echartsHydration = (dom, options) => {
                                 // console.log(params);
                             },
                             click: (params) => {
+                                // This is for demo only. In practice, the
+                                // client should call API to get the new chart
+                                // and `serverChart.dispatchAction` should be
+                                // done on the server.
                                 if (params.nodeType === 'legendItem') {
                                     serverChart.dispatchAction({
                                         type: 'legendToggleSelect',
@@ -164,6 +175,58 @@ const echartsHydration = (dom, options) => {
                         }
                     });
                 }
+            });
+        </script>
+
+        <script>
+            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+                // During transition
+                const serverChart = echarts.init(null, null, {
+                    width: 500,
+                    height: 300,
+                    renderer: 'svg',
+                    ssr: true
+                })
+
+                const width = serverChart.getWidth();
+                const height = serverChart.getHeight();
+
+                const xData = [];
+                const data = [];
+                for (let i = 0; i < 1000; ++i) {
+                    xData.push(i + '');
+                    data.push(Math.ceil(Math.random() * 1000));
+                }
+
+                const seriesData = [{
+                        type: 'line',
+                        name: 'a',
+                        data
+                    }];
+                let aShow = true;
+                let bShow = true;
+
+                const option = {
+                    xAxis: {
+                        type: 'category',
+                        data: xData
+                        // show: false
+                    },
+                    yAxis: {
+                        // show: false
+                    },
+                    series: seriesData
+                };
+
+                serverChart.setOption(option);
+
+                const main = document.getElementById('big-data');
+
+                console.time('renderToSVGString');
+                main.innerHTML = serverChart.renderToSVGString();
+                console.timeEnd('renderToSVGString');
+                const size = main.innerHTML.length;
+                console.log('SVG size:', size > 1e6 ? (size / 1e6).toFixed(1) + 'M' : (size / 1e3).toFixed(1) + 'K');
             });
         </script>
     </body>
