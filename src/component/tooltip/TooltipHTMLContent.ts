@@ -241,11 +241,13 @@ function makeStyleCoord(out: number[], zr: ZRenderType, customContainer: HTMLEle
 
 interface TooltipContentOption {
     /**
-     * `false`: the DOM element will be inside the container. Default value.
-     * `true`: the DOM element will be appended to HTML body, which avoid
-     *  some overflow clip but intrude outside of the container.
+     * Choose a DOM element which the tooltip element will be located in order to 
+     * avoid some overflow clip but intrude outside of the container.
+     * 
+     * this config can be either a DomElement, a function to choose a element
+     * or a selector string used by query delector to local a element
      */
-    appendToBody: boolean
+    appendTo: Function | HTMLElement | string
 }
 
 class TooltipHTMLContent {
@@ -292,10 +294,14 @@ class TooltipHTMLContent {
         const zr = this._zr = api.getZr();
 
         let container: HTMLElement | null = null;
-        if (opt && opt.appendToBody) {
-            container = this._container = document.body
-        } else if (opt && opt.teleport) {
-            container = this._customContainer = opt.teleport(api.getDom()) || null;
+        if (opt && opt.appendTo) {
+	    if(typeof opt.appendTo === 'string') {
+	    	container = document.querySelector(opt.appendTo)
+	    } else if (typeof opt.appendTo === 'function') {
+	    	container = opt.appendTo(api.getDom())
+	    } else if (opt.appendTo instanceof HTMLElement) {
+                container = opt.appendTo
+	    }
         }
 
         makeStyleCoord(this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2);
