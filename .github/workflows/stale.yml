@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.repository_owner == 'apache' }}
     steps:
       - name: Close Stale Issues
-        uses: actions/stale@v6
+        uses: actions/stale@v8
         with:
           days-before-stale: 730
           days-before-close: 7
@@ -29,3 +29,15 @@ jobs:
           exempt-all-milestones: true
           operations-per-run: 500
           ascending: true
+
+      - name: Close Inactive Issues That Awaiting Author's Response
+        uses: actions/stale@v8
+        with:
+          days-before-stale: 3
+          # stale bot only adds the label
+          # echarts bot will close it and leave message
+          days-before-close: -1
+          only-issue-labels: 'waiting-for: author'
+          stale-issue-label: 'inactive'
+          exempt-issue-labels: 'FAQ,priority: high'
+          exempt-all-milestones: true
