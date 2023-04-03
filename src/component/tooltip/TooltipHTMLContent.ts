@@ -299,12 +299,14 @@ class TooltipHTMLContent {
                 ? document.querySelector(appendTo)
                 : isDom(appendTo)
                     ? appendTo
-                    : isFunction(appendTo) && appendTo()
-        ) || api.getDom();
+                    : isFunction(appendTo) && appendTo(api.getDom())
+        );
 
         makeStyleCoord(this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2);
 
         container.appendChild(el);
+
+        this._api = api;
         this._container = container;
 
         // FIXME
