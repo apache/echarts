@@ -212,7 +212,13 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
 }
 
 // If not able to make, do not modify the input `out`.
-function makeStyleCoord(out: number[], zr: ZRenderType, container: HTMLElement | null, zrX: number, zrY: number) {
+function makeStyleCoord(
+    out: number[],
+    zr: ZRenderType,
+    container: HTMLElement | null | undefined,
+    zrX: number,
+    zrY: number
+) {
     const zrPainter = zr && zr.painter;
 
     if (container) {
@@ -255,7 +261,7 @@ class TooltipHTMLContent {
     el: HTMLDivElement;
 
     private _api: ExtensionAPI;
-    private _container: HTMLElement;
+    private _container: HTMLElement | undefined | null;
 
     private _show: boolean = false;
 
@@ -294,7 +300,7 @@ class TooltipHTMLContent {
         const zr = this._zr = api.getZr();
 
         const appendTo = opt.appendTo;
-        const container: HTMLElement = (
+        const container: HTMLElement | null | undefined = (
             isString(appendTo)
                 ? document.querySelector(appendTo)
                 : isDom(appendTo)
@@ -355,11 +361,13 @@ class TooltipHTMLContent {
     update(tooltipModel: Model<TooltipOption>) {
         // FIXME
         // Move this logic to ec main?
-        const container = this._api.getDom();
-        const position = getComputedStyle(container, 'position');
-        const domStyle = container.style;
-        if (domStyle.position !== 'absolute' && position !== 'absolute') {
-            domStyle.position = 'relative';
+        if (!this._container) {
+            const container = this._api.getDom();
+            const position = getComputedStyle(container, 'position');
+            const domStyle = container.style;
+            if (domStyle.position !== 'absolute' && position !== 'absolute') {
+                domStyle.position = 'relative';
+            }
         }
 
         // move tooltip if chart resized
