@@ -304,7 +304,7 @@ class TooltipHTMLContent {
 
         makeStyleCoord(this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2);
 
-        container.appendChild(el);
+        (container || api.getDom()).appendChild(el);
 
         this._api = api;
         this._container = container;
