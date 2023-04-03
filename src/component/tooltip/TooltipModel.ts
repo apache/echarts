@@ -61,8 +61,8 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
     renderMode?: 'auto' | TooltipRenderMode   // TODO richText renamed canvas?
 
     /**
-     * If append popup dom to document.body
-     * Only available when renderMode is html
+     * @deprecated
+     * use appendTo: 'body' instead
      */
     appendToBody?: boolean
 
@@ -70,7 +70,7 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      * If append popup dom to some other dom element
      * Only available when renderMode is html
      */
-    appendTo?: Function | string | HTMLElement
+    appendTo?: ((el?: HTMLElement) => HTMLElement | undefined | null) | string | HTMLElement
 
 
     /**

@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isString, indexOf, each, bind, isArray, isDom } from 'zrender/src/core/util';
+import { isString, indexOf, each, bind, isFunction, isArray, isDom } from 'zrender/src/core/util';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
@@ -212,14 +212,14 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
 }
 
 // If not able to make, do not modify the input `out`.
-function makeStyleCoord(out: number[], zr: ZRenderType, customContainer: HTMLElement | null, zrX: number, zrY: number) {
+function makeStyleCoord(out: number[], zr: ZRenderType, container: HTMLElement | null, zrX: number, zrY: number) {
     const zrPainter = zr && zr.painter;
 
-    if (customContainer) {
+    if (container) {
         const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
-            transformLocalCoord(out, zrViewportRoot, customContainer, zrX, zrY);
+            transformLocalCoord(out, zrViewportRoot, container, zrX, zrY);
         }
     }
     else {
@@ -241,11 +241,13 @@ function makeStyleCoord(out: number[], zr: ZRenderType, customContainer: HTMLEle
 
 interface TooltipContentOption {
     /**
-     * `false`: the DOM element will be inside the container. Default value.
-     * `true`: the DOM element will be appended to HTML body, which avoid
-     *  some overflow clip but intrude outside of the container.
+     * Choose a DOM element which the tooltip element will be located in order to
+     * avoid some overflow clip but intrude outside of the container.
+     *
+     * this config can be either a DomElement, a function to choose a element
+     * or a selector string used by query delector to local a element
      */
-    appendToBody: boolean
+    appendTo: ((el?: HTMLElement) => HTMLElement | undefined | null) | HTMLElement | string
 }
 
 class TooltipHTMLContent {
@@ -253,7 +255,7 @@ class TooltipHTMLContent {
     el: HTMLDivElement;
 
     private _api: ExtensionAPI;
-    private _container: HTMLElement | null = null;
+    private _container: HTMLElement;
 
     private _show: boolean = false;
 
@@ -291,22 +293,18 @@ class TooltipHTMLContent {
         this.el = el;
         const zr = this._zr = api.getZr();
 
-        let container: HTMLElement | null = null;
-        if (opt && opt.appendToBody) {
-            container = this._container = document.body
-        } else if (opt && opt.teleport) {
-            container = this._customContainer = opt.teleport(api.getDom()) || null;
-        }
+        const appendTo = opt.appendTo;
+        const container: HTMLElement = (
+            isString(appendTo)
+                ? document.querySelector(appendTo)
+                : isDom(appendTo)
+                    ? appendTo
+                    : isFunction(appendTo) && appendTo()
+        ) || api.getDom();
 
         makeStyleCoord(this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2);
 
-        if (container) {
-            container.appendChild(el);
-        } else {
-            api.getDom().appendChild(el);
-        }
-
-        this._api = api
+        container.appendChild(el);
         this._container = container;
 
         // FIXME
