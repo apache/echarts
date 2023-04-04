@@ -23,11 +23,9 @@ import {circularLayout} from './circularLayoutHelper';
 import {linearMap} from '../../util/number';
 import * as vec2 from 'zrender/src/core/vector';
 import * as zrUtil from 'zrender/src/core/util';
-import * as matrix from 'zrender/src/core/matrix';
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
-import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
-import { getNodeGlobalScale } from './graphHelper';
+import {getCurvenessForEdge, getOffsetForEdge} from '../helper/multipleGraphEdgeHelper';
 
 export interface ForceLayoutInstance {
     step(cb: (stopped: boolean) => void): void
@@ -101,10 +99,10 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                     -getCurvenessForEdge(edge, graphSeries, idx, true),
                     0
                 );
-                // TODO: add getOffsetForEdge
+
                 const offset = zrUtil.retrieve3(
                     edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'offset']),
-                    0,
+                    getOffsetForEdge(edge, graphSeries, idx),
                     0
                 );
 
@@ -154,22 +152,12 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                     points[1] = points[1] || [];
                     vec2.copy(points[0], p1);
                     vec2.copy(points[1], p2);
-                    const nodesSizes = [edge.node1, edge.node2].map(node => {
-                        let symbolSize = node.getModel<GraphNodeItemOption>().get('symbolSize');
-                        if (symbolSize instanceof Array) {
-                            symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
-                        }
-                        return +symbolSize;
-                    });
-                    const minimumSize = Math.min(...nodesSizes) * getNodeGlobalScale(graphSeries);
-                    if (+e.offset && Math.abs(e.offset) < minimumSize/2) {
-                        // const adjustedOffset = offset/100 * minimumSize;
-                        const adjustedOffset = e.offset;
+                    if (+e.offset) {
                         const direction: number[] = [];
                         vec2.sub(direction, p2, p1);
-                        const normalVector = [-direction[1], direction[0]]; // or [direction[1], -direction[0]]
+                        const normalVector = [-direction[1], direction[0]];
                         vec2.normalize(normalVector, normalVector);
-                        const offsetVector = [normalVector[0] * adjustedOffset, normalVector[1] * adjustedOffset];
+                        const offsetVector = [normalVector[0] * e.offset, normalVector[1] * e.offset];
                         vec2.add(points[0], p1, offsetVector);
                         vec2.add(points[1], p2, offsetVector); 
                     }

@@ -21,10 +21,10 @@ import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
-import {onIrrelevantElement} from '../../component/helper/cursorHelper';
+import { onIrrelevantElement } from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
-import {getNodeGlobalScale} from './graphHelper';
+import { getNodeGlobalScale } from './graphHelper';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -266,6 +266,7 @@ class GraphView extends ChartView {
                 });
             })
             .on('zoom', (e) => {
+                const layout = seriesModel.get('layout');
                 roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
                 api.dispatchAction({
                     seriesId: seriesModel.id,
@@ -277,6 +278,19 @@ class GraphView extends ChartView {
                 this._updateNodeAndLinkScale();
                 adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
                 this._lineDraw.updateLayout();
+                switch (layout) {
+                    case 'force':
+                        break;                        
+                    case 'circular':
+                        circularLayout(seriesModel, 'symbolSize');
+                        this.updateLayout(seriesModel);
+                        break;
+                    case 'none':
+                    default:
+                        simpleLayoutEdge(seriesModel.getGraph(), seriesModel);
+                        this.updateLayout(seriesModel);
+                        break;
+                }
                 // Only update label layout on zoom
                 api.updateLabelLayout();
             });
