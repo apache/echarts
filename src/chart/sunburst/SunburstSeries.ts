@@ -36,7 +36,6 @@ import {
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import Model from '../../model/Model';
-import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
 interface SunburstItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // can be 10
@@ -164,7 +163,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
     static readonly type = 'series.sunburst';
     readonly type = SunburstSeriesModel.type;
 
-    ignoreStyleOnData = false;
 
     private _viewRoot: TreeNode;
     private _levelModels: Model<SunburstSeriesLevelOption>[];
@@ -312,9 +310,6 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
         }
     }
 
-    enableAriaDecal() {
-        enableAriaDecalForTree(this);
-    }
 }
 
 

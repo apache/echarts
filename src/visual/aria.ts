@@ -82,10 +82,13 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                 if (ecModel.isSeriesFiltered(seriesModel)) {
                     return;
                 }
-
+            if (zrUtil.isFunction(seriesModel.enableAriaDecal)) {
+             // Let series define how to use decal palette on data
+                    return;
+                }
                 const data = seriesModel.getData();
 
-                if (seriesModel.isColorBySeries()) {
+                if (!seriesModel.isColorBySeries()) {
                     const dataAll = seriesModel.getRawData();
                     const idxMap: Dictionary<number> = {};
                     const decalScope = inner(seriesModel).scope;

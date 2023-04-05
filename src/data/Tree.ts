@@ -265,10 +265,6 @@ export class TreeNode {
     getVisual(key: string): unknown {
         return this.hostTree.data.getItemVisual(this.dataIndex, key as any);
     }
-     getDecal(): unknown {
-        return this.hostTree.data.getVisual('decal');
-    }
-
     getRawIndex(): number {
         return this.hostTree.data.getRawIndex(this.dataIndex);
     }
