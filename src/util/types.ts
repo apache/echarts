@@ -143,7 +143,9 @@ export interface DataHost {
     getData(dataType?: SeriesDataType): SeriesData;
 }
 
-export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {
+    getDataParams(dataIndex: number, dataType?: SeriesDataType, el?: Element): CallbackDataParams;
+}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
