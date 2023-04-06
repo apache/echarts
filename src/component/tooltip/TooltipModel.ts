@@ -70,7 +70,7 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      * If append popup dom to some other dom element
      * Only available when renderMode is html
      */
-    appendTo?: ((el?: HTMLElement) => HTMLElement | undefined | null) | string | HTMLElement
+    appendTo?: ((chartContainer?: HTMLElement) => HTMLElement | undefined | null) | string | HTMLElement
 
 
     /**
