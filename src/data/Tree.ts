@@ -265,6 +265,7 @@ export class TreeNode {
     getVisual(key: string): unknown {
         return this.hostTree.data.getItemVisual(this.dataIndex, key as any);
     }
+
     getRawIndex(): number {
         return this.hostTree.data.getRawIndex(this.dataIndex);
     }

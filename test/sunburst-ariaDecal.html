@@ -43,21 +43,99 @@ under the License.
                 });
                 var data = [
                     {
-                        name: "Parent",
+                        name: "Grandpa",
+                        itemStyle: { decal: { symbol: "arrow" } },
                         children: [
                             {
-                                name: "Base decal",
-                                value: 1,
-                                itemStyle: { decal: { symbol: "none" } },
+                                name: "Uncle Leo",
+                                value: 15,
+                                children: [
+                                    {
+                                        name: "Cousin Jack",
+                                        value: 2,
+                                    },
+                                    {
+                                        name: "Cousin Mary",
+                                        value: 5,
+                                        children: [
+                                            {
+                                                name: "Jackson",
+                                                value: 2,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        name: "Cousin Ben",
+                                        value: 4,
+                                    },
+                                ],
                             },
                             {
-                                name: "Changed decal",
-                                value: 1,
-                                itemStyle: {
-                                    decal: {
-                                        symbol: "rect",
+                                name: "Aunt Jane",
+                                children: [
+                                    {
+                                        name: "Cousin Kate",
+                                        value: 4,
                                     },
-                                },
+                                ],
+                            },
+                            {
+                                name: "Father",
+                                value: 10,
+                                children: [
+                                    {
+                                        name: "Me",
+                                        value: 5,
+                                    },
+                                    {
+                                        name: "Brother Peter",
+                                        value: 1,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        name: "Mike",
+                        itemStyle: { decal: { symbol: "rect" } },
+                        children: [
+                            {
+                                name: "Uncle Dan",
+                                children: [
+                                    {
+                                        name: "Cousin Lucy",
+                                        value: 3,
+                                    },
+                                    {
+                                        name: "Cousin Luck",
+                                        value: 4,
+                                        children: [
+                                            {
+                                                name: "Nephew",
+                                                value: 2,
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        name: "Nancy",
+                        itemStyle: { decal: { symbol: "diamond" } },
+                        children: [
+                            {
+                                name: "Uncle Nike",
+                                children: [
+                                    {
+                                        name: "Cousin Betty",
+                                        value: 1,
+                                    },
+                                    {
+                                        name: "Cousin Jenny",
+                                        value: 2,
+                                    },
+                                ],
                             },
                         ],
                     },
