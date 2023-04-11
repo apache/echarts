@@ -493,10 +493,7 @@ class TreemapView extends ChartView {
             controllerHost = this._controllerHost = {
                 target: this.group
             } as RoamControllerHost;
-            this.seriesModel.setZoom(this.seriesModel.get('zoom'));
-            this.seriesModel.coordinateSystem.zoomLimit = this.seriesModel.get('scaleLimit');
             controllerHost.zoomLimit = this.seriesModel.get('scaleLimit');
-            controllerHost.zoom = this.seriesModel.coordinateSystem.getZoom();
         }
 
         const rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());

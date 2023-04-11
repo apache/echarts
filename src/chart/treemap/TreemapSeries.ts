@@ -45,7 +45,6 @@ import SeriesData from '../../data/SeriesData';
 import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
-import View from '../../coord/View';
 
 // Only support numeric value.
 type TreemapSeriesDataValue = number | number[];
@@ -218,8 +217,6 @@ export interface TreemapSeriesOption
 
 class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
-    coordinateSystem: View;
-
     static type = 'series.treemap';
     type = TreemapSeriesModel.type;
 
@@ -234,6 +231,11 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
     private _viewRoot: TreeNode;
     private _idIndexMap: zrUtil.HashMap<number>;
     private _idIndexMapCount: number;
+
+    zoomLimit: {
+        max?: number;
+        min?: number;
+    };
 
     static defaultOption: TreemapSeriesOption = {
         coordinateSystem: 'view',
@@ -255,7 +257,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
         zoomToNodeRatio: 0.32 * 0.32,
 
-        zoom: 1,
+        scaleLimit: null,
 
         roam: true,
         nodeClick: 'zoomToNode',
@@ -510,10 +512,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
     enableAriaDecal() {
         enableAriaDecalForTree(this);
-    }
-
-    setZoom(zoom: number) {
-        this.option.zoom = zoom;
     }
 }
 
