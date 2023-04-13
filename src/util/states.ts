@@ -506,6 +506,11 @@ export function blurSeries(
         )) {
             const view = api.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
+                // For the elements that have been triggered by other components, and are still required to be highlighted,
+                // because the current is directly forced to blur the element, it will cause the focus self to be unable to highlight, so skip the blur of this element.
+                if ((child as ExtendedElement).__highByOuter && sameSeries && focus === 'self') {
+                    return;
+                }
                 singleEnterBlur(child);
             });
 

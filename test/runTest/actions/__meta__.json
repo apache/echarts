@@ -89,6 +89,7 @@
   "ec-event": 4,
   "emphasis-disabled": 13,
   "emphasis-inherit": 1,
+  "emphasis-self": 1,
   "funnel": 2,
   "gauge-simple": 2,
   "geo-map": 4,
