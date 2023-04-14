@@ -51,9 +51,9 @@ export default function sunburstVisual(ecModel: GlobalModel) {
             const model = node.getModel<SunburstSeriesNodeItemOption>();
             const style = model.getModel('itemStyle').getItemStyle();
 
-            if (!style.fill) {
-                style.fill = pickColor(node, seriesModel, tree.root.height);
-            }
+            // if (!style.fill) {
+                // // style.fill = pickColor(node, seriesModel, tree.root.height);
+            // }
 
             const existsStyle = data.ensureUniqueItemVisual(node.dataIndex, 'style');
             extend(existsStyle, style);
