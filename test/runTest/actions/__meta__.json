@@ -188,7 +188,7 @@
   "tooltip": 10,
   "tooltip-appendToBody": 4,
   "tooltip-axisPointer": 20,
-  "tooltip-axisPointer2": 2,
+  "tooltip-axisPointer2": 4,
   "tooltip-cascade": 4,
   "tooltip-component": 6,
   "tooltip-domnode": 1,

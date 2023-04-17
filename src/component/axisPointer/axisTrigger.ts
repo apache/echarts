@@ -462,7 +462,7 @@ function dispatchHighDownActually(
     // Build hash map and remove duplicate incidentally.
     each(axesInfo, function (axisInfo, key) {
         const option = axisInfo.axisPointerModel.option;
-        option.status === 'show' && each(option.seriesDataIndices, function (batchItem) {
+        option.status === 'show' && axisInfo.triggerEmphasis && each(option.seriesDataIndices, function (batchItem) {
             const key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
             newHighlights[key] = batchItem;
         });
