@@ -198,7 +198,7 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
             const snap = axisPointerModel.get('snap');
             const triggerEmphasis = axisPointerModel.get('triggerEmphasis');
             const axisKey = makeKey(axis.model);
-            const involveSeries = triggerTooltip || triggerEmphasis || snap || axis.type === 'category';
+            const involveSeries = triggerTooltip || snap || axis.type === 'category';
 
             // If result.axesInfo[key] exist, override it (tooltip has higher priority).
             const axisInfo: AxisInfo = result.axesInfo[axisKey] = {
