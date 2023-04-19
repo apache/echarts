@@ -1376,6 +1376,8 @@ export interface CommonAxisPointerOption {
 
     triggerTooltip?: boolean
 
+    triggerEmphasis?: boolean
+
     /**
      * current value. When using axisPointer.handle, value can be set to define the initial position of axisPointer.
      */
