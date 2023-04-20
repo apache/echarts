@@ -483,10 +483,7 @@ class TreemapView extends ChartView {
             controller = this._controller = new RoamController(api.getZr());
             controller.enable(this.seriesModel.get('roam'));
             controller.on('pan', bind(this._onPan, this));
-            controller.on('zoom', bind((e) => {
-                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
-                this._onZoom(e);
-            }, this));
+            controller.on('zoom', bind(this._onZoom, this));
         }
 
         if (!controllerHost) {
@@ -561,6 +558,7 @@ class TreemapView extends ChartView {
             const rect = new BoundingRect(
                 rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height
             );
+            roamHelper.updateViewOnZoom(this._controllerHost, e.scale, e.originX, e.originY);
             // const layoutInfo = this.seriesModel.layoutInfo;
 
             // Transform mouse coord from global to containerGroup.
