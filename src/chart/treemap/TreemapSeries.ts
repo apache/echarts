@@ -238,7 +238,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
     };
 
     static defaultOption: TreemapSeriesOption = {
-        coordinateSystem: 'view',
         // Disable progressive rendering
         progressive: 0,
         // size: ['80%', '80%'],            // deprecated, compatible with ec2.

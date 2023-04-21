@@ -32,7 +32,6 @@ import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
 import RoamController, { RoamEventParams, RoamControllerHost } from '../../component/helper/RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
-import View from '../../coord/View';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 // import * as matrix from 'zrender/src/core/matrix';
 import * as animationUtil from '../../util/animation';
@@ -185,8 +184,6 @@ class TreemapView extends ChartView {
         }
 
         this.seriesModel = seriesModel;
-        this.seriesModel.coordinateSystem = new View();
-
         this.api = api;
         this.ecModel = ecModel;
 
