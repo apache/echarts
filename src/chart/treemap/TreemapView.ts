@@ -559,7 +559,10 @@ class TreemapView extends ChartView {
             );
 
             // scaleLimit
-            const zoomLimit = controllerHost.zoomLimit;
+            let zoomLimit = null;
+            if (controllerHost) {
+                zoomLimit = controllerHost.zoomLimit;
+            }
 
             let newZoom = controllerHost.zoom = controllerHost.zoom || 1;
             newZoom *= zoomDelta;
