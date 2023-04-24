@@ -89,7 +89,7 @@
     "fs-extra": "^10.0.0",
     "glob": "7.0.0",
     "globby": "11.0.0",
-    "husky": "^4.2.5",
+    "husky": "^8.0.3",
     "jest": "^26.6.1",
     "jest-canvas-mock": "^2.5.0",
     "jshint": "2.13.5",
