@@ -41,11 +41,15 @@ const mathLog = Math.log;
 /**
  * symmetric log, allowing negative values for logarithmic scales
  */
+
+const C = mathLog(10)
+
 function symMathLog(x: number): number {
     if (x >= 0) {
-        return mathLog(x);
+        return mathLog(1 + x / C);
     }
-    return -mathLog(-x);
+    
+    return -mathLog(1 - x / C);
 }
 
 /**
