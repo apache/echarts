@@ -560,11 +560,10 @@ class TreemapView extends ChartView {
 
             // scaleLimit
             let zoomLimit = null;
-            if (controllerHost) {
-                zoomLimit = controllerHost.zoomLimit;
-            }
+            const _controllerHost = controllerHost ? controllerHost : this._controllerHost;
+            zoomLimit = _controllerHost.zoomLimit;
 
-            let newZoom = controllerHost.zoom = controllerHost.zoom || 1;
+            let newZoom = _controllerHost.zoom = _controllerHost.zoom || 1;
             newZoom *= zoomDelta;
             if (zoomLimit) {
                 const zoomMin = zoomLimit.min || 0;
@@ -574,8 +573,8 @@ class TreemapView extends ChartView {
                     zoomMin
                 );
             }
-            const zoomScale = newZoom / controllerHost.zoom;
-            controllerHost.zoom = newZoom;
+            const zoomScale = newZoom / _controllerHost.zoom;
+            _controllerHost.zoom = newZoom;
             const layoutInfo = this.seriesModel.layoutInfo;
 
             // Transform mouse coord from global to containerGroup.
