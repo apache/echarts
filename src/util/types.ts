@@ -1059,6 +1059,8 @@ export interface LabelOption extends TextCommonOption {
     minMargin?: number
 
     overflow?: TextStyleProps['overflow']
+    ellipsis?: TextStyleProps['ellipsis']
+
     silent?: boolean
     precision?: number | 'auto'
     valueAnimation?: boolean
@@ -1378,6 +1380,8 @@ export interface CommonAxisPointerOption {
     snap?: boolean
 
     triggerTooltip?: boolean
+
+    triggerEmphasis?: boolean
 
     /**
      * current value. When using axisPointer.handle, value can be set to define the initial position of axisPointer.
