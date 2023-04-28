@@ -2638,8 +2638,8 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
  * @param opts.useDirtyRect Enable dirty rectangle rendering or not.
  */
 export function init(
-    dom: HTMLElement,
-    theme?: string | object,
+    dom?: HTMLElement | null,
+    theme?: string | object | null,
     opts?: EChartsInitOpts
 ): EChartsType {
     const isClient = !(opts && opts.ssr);
