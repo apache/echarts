@@ -274,6 +274,14 @@ class TreemapView extends ChartView {
         this._oldTree = thisTree;
         this._storage = thisStorage;
 
+        if (this._controllerHost) {
+            const _oldRootLayout = this.seriesModel.layoutInfo;
+            const rootLayout = thisTree.root.getLayout();
+            if (rootLayout.width === _oldRootLayout.width && rootLayout.height === _oldRootLayout.height) {
+                this._controllerHost.zoom = 1;
+            }
+        }
+
         return {
             lastsForAnimation,
             willDeleteEls,
@@ -488,7 +496,7 @@ class TreemapView extends ChartView {
             controllerHost.zoomLimit = this.seriesModel.get('scaleLimit');
             controllerHost.zoom = this.seriesModel.get('zoom');
             controller.on('pan', bind(this._onPan, this));
-            controller.on('zoom', bind((e) => this._onZoom(e, controllerHost), this));
+            controller.on('zoom', bind(this._onZoom, this));
         }
 
         const rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
@@ -535,7 +543,7 @@ class TreemapView extends ChartView {
         }
     }
 
-    private _onZoom(e: RoamEventParams['zoom'], controllerHost?: RoamControllerHost) {
+    private _onZoom(e: RoamEventParams['zoom']) {
         let mouseX = e.originX;
         let mouseY = e.originY;
         const zoomDelta = e.scale;
@@ -560,7 +568,7 @@ class TreemapView extends ChartView {
 
             // scaleLimit
             let zoomLimit = null;
-            const _controllerHost = controllerHost ? controllerHost : this._controllerHost;
+            const _controllerHost = this._controllerHost;
             zoomLimit = _controllerHost.zoomLimit;
 
             let newZoom = _controllerHost.zoom = _controllerHost.zoom || 1;
