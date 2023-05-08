@@ -38,6 +38,7 @@ import { getECData } from '../../util/innerStore';
 
 import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
+import graphForceLayout from './forceLayout';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -280,6 +281,7 @@ class GraphView extends ChartView {
                 this._lineDraw.updateLayout();
                 switch (layout) {
                     case 'force':
+                        graphForceLayout(ecModel);
                         break;                        
                     case 'circular':
                         circularLayout(seriesModel, 'symbolSize');

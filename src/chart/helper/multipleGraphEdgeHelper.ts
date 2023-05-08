@@ -90,8 +90,8 @@ const createOffsets = function (seriesModel, appendLength, offsetStep) {
     // make sure the length is odd
     const len = length % 2 ? length : length + 1;
 
-    for (let i = 1; i < len/2; i++) {
-        offsetList.push(-i*offsetStep, i*offsetStep);
+    for (let i = 1; i < len / 2; i++) {
+        offsetList.push(-i * offsetStep, i * offsetStep);
     }
     seriesModel.__offsetList = offsetList;
 }
@@ -295,9 +295,10 @@ export function getOffsetForEdge(edge, seriesModel, index) {
         }
         return +symbolSize;
     });
-    const minimumSize = Math.min(...nodesSizes) * getNodeGlobalScale(seriesModel);
-    if(totalLen <= minimumSize + 1){
+    const minimumSize = Math.floor(Math.min(...nodesSizes) * getNodeGlobalScale(seriesModel));
+    const offsetStep = 2;
         const offsetStep = totalLen > 1 ? Math.floor(totalLen % 2 ? minimumSize / (totalLen-1) : minimumSize / totalLen) : totalLen;
+    if((totalLen-1)*offsetStep < minimumSize){
         createOffsets(seriesModel, totalLen, offsetStep);
         edge.lineStyle = edge.lineStyle || {};
         // if is opposite edge, must set curvenss to opposite number
@@ -306,7 +307,7 @@ export function getOffsetForEdge(edge, seriesModel, index) {
 
         // if pass array no need parity
         const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
-    
+
         if (!edgeArray.isForward) {
             // the opposite edge show outside
             const oppositeKey = getOppositeKey(curKey);
