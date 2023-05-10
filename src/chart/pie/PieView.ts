@@ -238,6 +238,7 @@ class PieView extends ChartView {
 
     render(seriesModel: PieSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         const data = seriesModel.getData();
+        const valueDim = data.mapDimension('value');
 
         const oldData = this._data;
         const group = this.group;
@@ -259,7 +260,21 @@ class PieView extends ChartView {
             group.remove(this._emptyCircleSector);
         }
         // when all data are filtered, show lightgray empty circle
-        if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+        // when data sum is zero and showEmptyCircle is true
+        // and roseType is not area, show empty circle
+        const isNeedShowEmptyCircle = (
+            (
+                data.count() === 0
+                || (
+                    data.getSum(valueDim) === 0
+                    && !seriesModel.get('stillShowZeroSum')
+                    && seriesModel.get('roseType') !== 'area'
+                )
+            )
+            && seriesModel.get('showEmptyCircle')
+        );
+
+        if (isNeedShowEmptyCircle) {
             const sector = new graphic.Sector({
                 shape: getBasicPieLayout(seriesModel, api)
             });
