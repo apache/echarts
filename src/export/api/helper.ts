@@ -128,3 +128,5 @@ export function createTextStyle(
     opts = opts || {};
     return innerCreateTextStyle(textStyleModel, null, null, opts.state !== 'normal');
 }
+
+export { CallbackDataParams } from "../../util/types";
