@@ -55,7 +55,7 @@ export interface ParallelStateOption<TCbParams = never> {
 
 export interface ParallelSeriesDataItemOption extends ParallelStateOption,
     StatesOptionMixin<ParallelStateOption, ParallelStatesMixin> {
-    value?: ParallelSeriesDataValue[]
+    value?: ParallelSeriesDataValue
 }
 export interface ParallelSeriesOption extends
     SeriesOption<ParallelStateOption<CallbackDataParams>, ParallelStatesMixin>,

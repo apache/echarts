@@ -39,7 +39,8 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
-
+        <div id="main3"></div>
+        <div id="main4"></div>
 
         <script>
 
@@ -1590,5 +1591,218 @@ under the License.
 
         </script>
 
+        <script>
+
+            var option;
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                option = {
+                    tooltip: {
+                        trigger: "axis",
+                    },
+                    legend: {
+                        data: ["Email", "Union Ads", "Video Ads", "Direct", "Search Engine"]
+                    },
+                    grid: {
+                        left: "3%",
+                        right: "4%",
+                        bottom: "3%",
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: "category",
+                        boundaryGap: false,
+                        data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                        axisPointer: {
+                            triggerEmphasis: true
+                        }
+                    },
+                    yAxis: {
+                        type: "value",
+                    },
+                    series: [
+                        {
+                            name: "Email",
+                            type: "line",
+                            stack: "Total",
+                            data: [120, 132, 101, 134, 90, 230, 210],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        },
+                        {
+                            name: "Union Ads",
+                            type: "line",
+                            stack: "Total",
+                            data: [220, 182, 191, 234, 290, 330, 310],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        },
+                        {
+                            name: "Video Ads",
+                            type: "line",
+                            stack: "Total",
+                            data: [150, 232, 201, 154, 190, 330, 410],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        },
+                        {
+                            name: "Direct",
+                            type: "line",
+                            stack: "Total",
+                            data: [320, 332, 301, 334, 390, 330, 320],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        },
+                        {
+                            name: "Search Engine",
+                            type: "line",
+                            stack: "Total",
+                            data: [820, 932, 901, 934, 1290, 1330, 1320],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'tooltip.axisPointer.triggerEmphasis: true',
+                        'all lines should highlight on mouseover with axis pointer'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
+
+        <script>
+
+            var option;
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                option = {
+                    tooltip: {
+                        trigger: "axis",
+                    },
+                    legend: {
+                        data: ["Email", "Union Ads", "Video Ads", "Direct", "Search Engine"]
+                    },
+                    grid: {
+                        left: "3%",
+                        right: "4%",
+                        bottom: "3%",
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: "category",
+                        boundaryGap: false,
+                        data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                        axisPointer: {
+                            triggerEmphasis: false
+                        }
+                    },
+                    yAxis: {
+                        type: "value",
+                    },
+                    series: [
+                        {
+                            name: "Email",
+                            type: "line",
+                            stack: "Total",
+                            data: [120, 132, 101, 134, 90, 230, 210],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        },
+                        {
+                            name: "Union Ads",
+                            type: "line",
+                            stack: "Total",
+                            data: [220, 182, 191, 234, 290, 330, 310],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        },
+                        {
+                            name: "Video Ads",
+                            type: "line",
+                            stack: "Total",
+                            data: [150, 232, 201, 154, 190, 330, 410],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        },
+                        {
+                            name: "Direct",
+                            type: "line",
+                            stack: "Total",
+                            data: [320, 332, 301, 334, 390, 330, 320],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        },
+                        {
+                            name: "Search Engine",
+                            type: "line",
+                            stack: "Total",
+                            data: [820, 932, 901, 934, 1290, 1330, 1320],
+                            emphasis: {
+                                focus: "series",
+                                lineStyle: {
+                                    width: 10
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'tooltip.axisPointer.triggerEmphasis: false',
+                        'lines should only highlight individually on exact mouseover of the line'
+                    ],
+                    option: option
+                });
+            });
+
+        </script>
     </body>
 </html>

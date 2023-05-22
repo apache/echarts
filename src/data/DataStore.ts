@@ -161,7 +161,7 @@ class DataStore {
 
     private _provider: DataProvider;
 
-    // It will not be calculated util needed.
+    // It will not be calculated until needed.
     private _rawExtent: [number, number][] = [];
 
     private _extent: [number, number][] = [];
@@ -601,7 +601,7 @@ class DataStore {
                 // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
                 // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
                 // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
-                // So we chose the one that `diff >= 0` in this csae.
+                // So we choose the one that `diff >= 0` in this case.
                 // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
                 // should be push to `nearestIndices`.
                 if (dist < minDist
@@ -970,7 +970,7 @@ class DataStore {
 
             let firstNaNIndex = -1;
             let countNaN = 0;
-            // Find a point from current frame that construct a triangel with largest area with previous selected point
+            // Find a point from current frame that construct a triangle with largest area with previous selected point
             // And the average of next frame.
             for (let idx = frameStart; idx < frameEnd; idx++) {
                 const rawIndex = this.getRawIndex(idx);

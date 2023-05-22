@@ -163,6 +163,7 @@ var localeObj = {
         }
     }
 };
+
     echarts.registerLocale('SI', localeObj);
         
 });

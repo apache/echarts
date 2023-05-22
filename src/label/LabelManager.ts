@@ -487,10 +487,11 @@ class LabelManager {
 
             const defaultStyle: PathStyleProps = {};
             const visualStyle = data.getItemVisual(dataIndex, 'style');
-            const visualType = data.getVisual('drawType');
-            // Default to be same with main color
-            defaultStyle.stroke = visualStyle[visualType];
-
+            if (visualStyle) {
+                const visualType = data.getVisual('drawType');
+                // Default to be same with main color
+                defaultStyle.stroke = visualStyle[visualType];
+            }
             const labelLineModel = itemModel.getModel('labelLine');
 
             setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
@@ -592,3 +593,4 @@ class LabelManager {
 
 
 export default LabelManager;
+

@@ -109,7 +109,7 @@ class Graph {
         const nodesMap = this._nodesMap;
         const edgesMap = this._edgesMap;
 
-        // PNEDING
+        // PENDING
         if (zrUtil.isNumber(n1)) {
             n1 = this.nodes[n1];
         }
@@ -387,6 +387,51 @@ class GraphNode {
         }
         return dataIndices;
     }
+
+    getTrajectoryDataIndices(): {node: number[], edge: number[]} {
+        const connectedEdgesMap = zrUtil.createHashMap<boolean, number>();
+        const connectedNodesMap = zrUtil.createHashMap<boolean, number>();
+
+        for (let i = 0; i < this.edges.length; i++) {
+            const adjacentEdge = this.edges[i];
+            if (adjacentEdge.dataIndex < 0) {
+                continue;
+            }
+
+            connectedEdgesMap.set(adjacentEdge.dataIndex, true);
+
+            const sourceNodesQueue = [adjacentEdge.node1];
+            const targetNodesQueue = [adjacentEdge.node2];
+
+            let nodeIteratorIndex = 0;
+            while (nodeIteratorIndex < sourceNodesQueue.length) {
+                const sourceNode = sourceNodesQueue[nodeIteratorIndex];
+                nodeIteratorIndex++;
+                connectedNodesMap.set(sourceNode.dataIndex, true);
+
+                for (let j = 0; j < sourceNode.inEdges.length; j++) {
+                    connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
+                    sourceNodesQueue.push(sourceNode.inEdges[j].node1);
+                }
+            }
+
+            nodeIteratorIndex = 0;
+            while (nodeIteratorIndex < targetNodesQueue.length) {
+                const targetNode = targetNodesQueue[nodeIteratorIndex];
+                nodeIteratorIndex++;
+                connectedNodesMap.set(targetNode.dataIndex, true);
+                for (let j = 0; j < targetNode.outEdges.length; j++) {
+                    connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
+                    targetNodesQueue.push(targetNode.outEdges[j].node2);
+                }
+            }
+        }
+
+        return {
+            edge: connectedEdgesMap.keys(),
+            node: connectedNodesMap.keys()
+        };
+    }
 }
 
 
@@ -427,6 +472,47 @@ class GraphEdge {
         return {
             edge: [this.dataIndex],
             node: [this.node1.dataIndex, this.node2.dataIndex]
+        };
+    }
+
+    getTrajectoryDataIndices(): {node: number[], edge: number[]} {
+        const connectedEdgesMap = zrUtil.createHashMap<boolean, number>();
+        const connectedNodesMap = zrUtil.createHashMap<boolean, number>();
+
+        connectedEdgesMap.set(this.dataIndex, true);
+
+        const sourceNodes = [this.node1];
+        const targetNodes = [this.node2];
+
+        let nodeIteratorIndex = 0;
+        while (nodeIteratorIndex < sourceNodes.length) {
+            const sourceNode = sourceNodes[nodeIteratorIndex];
+            nodeIteratorIndex++;
+
+            connectedNodesMap.set(sourceNode.dataIndex, true);
+
+            for (let j = 0; j < sourceNode.inEdges.length; j++) {
+                connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
+                sourceNodes.push(sourceNode.inEdges[j].node1);
+            }
+        }
+
+        nodeIteratorIndex = 0;
+        while (nodeIteratorIndex < targetNodes.length) {
+            const targetNode = targetNodes[nodeIteratorIndex];
+            nodeIteratorIndex++;
+
+            connectedNodesMap.set(targetNode.dataIndex, true);
+
+            for (let j = 0; j < targetNode.outEdges.length; j++) {
+                connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
+                targetNodes.push(targetNode.outEdges[j].node2);
+            }
+        }
+
+        return {
+            edge: connectedEdgesMap.keys(),
+            node: connectedNodesMap.keys()
         };
     }
 }

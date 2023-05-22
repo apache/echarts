@@ -143,7 +143,9 @@ export interface DataHost {
     getData(dataType?: SeriesDataType): SeriesData;
 }
 
-export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {
+    getDataParams(dataIndex: number, dataType?: SeriesDataType, el?: Element): CallbackDataParams;
+}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
@@ -1054,6 +1056,8 @@ export interface LabelOption extends TextCommonOption {
     minMargin?: number
 
     overflow?: TextStyleProps['overflow']
+    ellipsis?: TextStyleProps['ellipsis']
+
     silent?: boolean
     precision?: number | 'auto'
     valueAnimation?: boolean
@@ -1064,8 +1068,8 @@ export interface LabelOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
 }
 
-export interface SeriesLabelOption extends LabelOption {
-    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+export interface SeriesLabelOption<T extends CallbackDataParams = CallbackDataParams> extends LabelOption {
+    formatter?: string | LabelFormatterCallback<T>
 }
 
 /**
@@ -1373,6 +1377,8 @@ export interface CommonAxisPointerOption {
     snap?: boolean
 
     triggerTooltip?: boolean
+
+    triggerEmphasis?: boolean
 
     /**
      * current value. When using axisPointer.handle, value can be set to define the initial position of axisPointer.

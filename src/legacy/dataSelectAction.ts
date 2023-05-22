@@ -28,7 +28,7 @@ import { queryDataIndex } from '../util/model';
 import ExtensionAPI from '../core/ExtensionAPI';
 
 // Legacy data selection action.
-// Inlucdes: pieSelect, pieUnSelect, pieToggleSelect, mapSelect, mapUnSelect, mapToggleSelect
+// Includes: pieSelect, pieUnSelect, pieToggleSelect, mapSelect, mapUnSelect, mapToggleSelect
 export function createLegacyDataSelectAction(seriesType: string, ecRegisterAction: typeof registerAction) {
 
     function getSeriesIndices(ecModel: GlobalModel, payload: Payload) {
