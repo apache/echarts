@@ -71,21 +71,21 @@ const createCurveness = function (seriesModel, appendLength) {
     seriesModel.__curvenessList = curvenessList;
 };
 
-const createOffsets = function (seriesModel, appendLength, offsetStep) {
+const createOffsets = function (seriesModel, appendLength) {
     const autoOffsetParams = getAutoOffsetParams(seriesModel);
-    let length = 20;
+    let length = appendLength;
     let offsetList = [0];
 
     if (zrUtil.isNumber(autoOffsetParams)) {
-        length = autoOffsetParams;
+        offsetStep = autoOffsetParams;
     }
     if (zrUtil.isArray(autoOffsetParams)) {
         seriesModel.__offsetList = autoOffsetParams;
         return;
     }
-    if (appendLength > length) {
-        length = appendLength;
-    }
+    // if (appendLength > length) {
+    //     length = appendLength;
+    // }
 
     // make sure the length is odd
     const len = length % 2 ? length : length + 1;
@@ -296,18 +296,15 @@ export function getOffsetForEdge(edge, seriesModel, index) {
         return +symbolSize;
     });
     const minimumSize = Math.floor(Math.min(...nodesSizes) * getNodeGlobalScale(seriesModel));
-    const offsetStep = 2;
-        const offsetStep = totalLen > 1 ? Math.floor(totalLen % 2 ? minimumSize / (totalLen-1) : minimumSize / totalLen) : totalLen;
-    if((totalLen-1)*offsetStep < minimumSize){
-        createOffsets(seriesModel, totalLen, offsetStep);
+    const totalSpaceBetweenEdges = isArrayParam ? autoOffsetParams.slice(0,totalLen).reduce((total, item) => total + item) : (totalLen-1) * autoOffsetParams
+    if(totalSpaceBetweenEdges < minimumSize){
+        createOffsets(seriesModel, totalLen);
         edge.lineStyle = edge.lineStyle || {};
         // if is opposite edge, must set curvenss to opposite number
         const curKey = getKeyOfEdges(edge.node1, edge.node2, seriesModel);
         const offsetList = seriesModel.__offsetList;
-
         // if pass array no need parity
         const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
-
         if (!edgeArray.isForward) {
             // the opposite edge show outside
             const oppositeKey = getOppositeKey(curKey);

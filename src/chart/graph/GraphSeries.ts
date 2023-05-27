@@ -231,7 +231,7 @@ export interface GraphSeriesOption
      */
     autoCurveness?: boolean | number | number[]
 
-    autoOffset?: boolean | number | number[]
+    autoOffset?: number | number[]
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
