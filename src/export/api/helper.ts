@@ -37,7 +37,7 @@ import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getECData } from '../../util/innerStore';
 import { createTextStyle as innerCreateTextStyle } from '../../label/labelStyle';
-import { DisplayState, TextCommonOption } from '../../util/types';
+import { CallbackDataParams, DisplayState, TextCommonOption } from '../../util/types';
 
 /**
  * Create a multi dimension List structure from seriesModel.
@@ -129,4 +129,4 @@ export function createTextStyle(
     return innerCreateTextStyle(textStyleModel, null, null, opts.state !== 'normal');
 }
 
-export { CallbackDataParams } from "../../util/types";
+export {CallbackDataParams};
