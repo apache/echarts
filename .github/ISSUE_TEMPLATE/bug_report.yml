@@ -41,10 +41,12 @@ body:
   attributes:
     label: Link to Minimal Reproduction
     description: |
-      If the reproduction does not need a build setup, please provide a link to [JSFiddle](https://jsfiddle.net/plainheart/e46ozpqj/7/), [JSBin](https://jsbin.com/) or [CodePen](https://codepen.io/Ovilia/pen/dyYWXWM). If it requires a build setup, you can use [CodeSandbox](https://codesandbox.io/s/echarts-basic-example-template-mpfz1s) or provide a GitHub repo.
+      If the reproduction does not need a build setup, please provide a link to [Official Editor](https://echarts.apache.org/examples/editor.html), [JSFiddle](https://jsfiddle.net/plainheart/e46ozpqj/7/), [JSBin](https://jsbin.com/) or [CodePen](https://codepen.io/Ovilia/pen/dyYWXWM). If it requires a build setup, you can use [CodeSandbox](https://codesandbox.io/s/echarts-basic-example-template-mpfz1s) or provide a GitHub repo.
+      The reproduction should be **minimal** - i.e. it should contain only the bare minimum amount of code needed to show the bug.
+      Please do not just fill in a random link. The issue will be closed if no valid reproduction is provided. [Why?](https://antfu.me/posts/why-reproductions-are-required)
 
   validations:
-    required: false
+    required: true
 
 - type: textarea
   attributes:
