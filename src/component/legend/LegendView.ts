@@ -226,10 +226,11 @@ class LegendView extends ComponentView {
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
                 itemGroup.eachChild(child => {
-                    child.__metaData = {
+                    child.__metaData = child.__metaData || {
                         type: 'legendItem',
-                        seriesIndex: seriesModel.seriesIndex,
-                        dataIndex
+                        series_index: seriesModel.seriesIndex,
+                        data_index: dataIndex,
+                        name
                     };
                 });
 
@@ -278,10 +279,11 @@ class LegendView extends ComponentView {
                             .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
 
                         itemGroup.eachChild(child => {
-                            child.__metaData = {
+                            child.__metaData = child.__metaData || {
                                 type: 'legendItem',
-                                seriesIndex: seriesModel.seriesIndex,
-                                dataIndex
+                                series_index: seriesModel.seriesIndex,
+                                data_index: dataIndex,
+                                name
                             };
                         });
 
@@ -444,13 +446,11 @@ class LegendView extends ComponentView {
         // Add a invisible rect to increase the area of mouse hover
         const hitRect = new graphic.Rect({
             shape: itemGroup.getBoundingRect(),
-            invisible: true
+            style: {
+                // Cannot use 'invisible' because SVG SSR will miss the node
+                fill: 'transparent'
+            }
         });
-        hitRect.__metaData = {
-            type: 'legendItem',
-            seriesIndex: seriesModel.seriesIndex,
-            dataIndex
-        };
 
         const tooltipModel =
             legendItemModel.getModel('tooltip') as Model<CommonTooltipOption<LegendTooltipFormatterParams>>;

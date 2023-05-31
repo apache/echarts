@@ -38,6 +38,16 @@ under the License.
         const svgRoot = dom.querySelector('svg');
         const children = svgRoot.children;
 
+        function getIndex(child, attr) {
+            const index = child.getAttribute(attr);
+            if (index) {
+                return parseInt(index, 10);
+            }
+            else {
+                return null;
+            }
+        }
+
         const events = options.on;
         if (events) {
             for (let eventName in events) {
@@ -50,8 +60,9 @@ under the License.
                                 events[eventName]({
                                     type: eventName,
                                     nodeType: type,
-                                    seriesIndex: child.getAttribute('ecmeta_seriesindex'),
-                                    dataIndex: child.getAttribute('ecmeta_dataindex'),
+                                    seriesIndex: getIndex(child, 'ecmeta_series_index'),
+                                    dataIndex: getIndex(child, 'ecmeta_data_index'),
+                                    name: child.getAttribute('ecmeta_name'),
                                     event: e,
                                 });
                             });
@@ -84,6 +95,7 @@ under the License.
             2. It should use lighter color when hovering on the bars<br>
             3. It should toggle the series when clicking the legend<br>
             4. It should update the series when clicking the bars<br>
+            5. The third series is silent so it cannot be lighter when hovering<br>
         </h2>
         <div id="main"></div>
 
@@ -111,6 +123,11 @@ under the License.
                         type: 'bar',
                         name: 'b',
                         data: [63, 53, 73, 23, 43, 23, 43]
+                    }, {
+                        type: 'bar',
+                        name: 'silent',
+                        data: [32, 55, 31, 65, 54, 43, 65],
+                        silent: true
                     }];
                 let aShow = true;
                 let bShow = true;
@@ -155,7 +172,7 @@ under the License.
                                 if (params.nodeType === 'legendItem') {
                                     serverChart.dispatchAction({
                                         type: 'legendToggleSelect',
-                                        name: params.seriesIndex === '0' ? 'a' : 'b'
+                                        name: params.name
                                     });
                                     update();
                                 }
