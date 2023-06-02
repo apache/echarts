@@ -71,6 +71,7 @@ export class DataFormatMixin {
         const mainType = this.mainType;
         const isSeries = mainType === 'series';
         const userOutput = data.userOutput && data.userOutput.get();
+        const graphicEl = data.getItemGraphicEl(dataIndex);
 
         return {
             componentType: mainType,
@@ -89,6 +90,8 @@ export class DataFormatMixin {
             borderColor: borderColor,
             dimensionNames: userOutput ? userOutput.fullDimensions : null,
             encode: userOutput ? userOutput.encode : null,
+            x: graphicEl?.x,
+            y: graphicEl?.y,
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
             $vars: ['seriesName', 'name', 'value']

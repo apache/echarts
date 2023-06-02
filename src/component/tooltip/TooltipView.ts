@@ -829,7 +829,7 @@ class TooltipView extends ComponentView {
                     }
                 }, this);
                 this._ticket = asyncTicket;
-                html = formatter(params, asyncTicket, callback);
+                html = formatter(params, asyncTicket, callback, [x, y]);
             }
             else {
                 html = formatter;
