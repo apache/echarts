@@ -9,6 +9,7 @@
     "pngjs": "3.4.0",
     "puppeteer": "^9.1.1",
     "serve-handler": "6.1.1",
+    "slugify": "^1.3.4",
     "socket.io": "2.5.0"
   }
 }
