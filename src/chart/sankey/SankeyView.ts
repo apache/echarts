@@ -29,7 +29,7 @@ import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
-import { isString } from 'zrender/src/core/util';
+import { isString, retrieve3 } from 'zrender/src/core/util';
 
 class SankeyPathShape {
     x1 = 0;
@@ -220,18 +220,30 @@ class SankeyView extends ChartView {
                     }
             }
 
+            const defaultEdgeLabelText = `${edgeModel.get('value')}`;
+            const edgeLabelStateModels = getLabelStatesModels(edgeModel, 'edgeLabel');
+
             setLabelStyle(
-                curve, getLabelStatesModels(edgeModel, 'edgeLabel'),
+                curve, edgeLabelStateModels,
                 {
                     labelFetcher: {
                         getFormattedLabel(dataIndex, stateName, dataType, labelDimIndex, formatter, extendParams) {
                             return seriesModel.getFormattedLabel(
-                                dataIndex, stateName, 'edge', labelDimIndex, formatter, extendParams
+                                dataIndex, stateName, 'edge',
+                                labelDimIndex,
+                                // ensure edgeLabel formatter is provided
+                                // to prevent the inheritance from `label.formatter` of the series
+                                retrieve3(
+                                    formatter,
+                                    edgeLabelStateModels.normal && edgeLabelStateModels.normal.get('formatter'),
+                                    defaultEdgeLabelText
+                                ),
+                                extendParams
                             );
                         }
                     },
                     labelDataIndex: edge.dataIndex,
-                    defaultText: `${edgeModel.get('value')}`
+                    defaultText: defaultEdgeLabelText
                 }
             );
             curve.setTextConfig({ position: 'inside' });

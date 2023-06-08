@@ -80,7 +80,12 @@ under the License.
                             formatter: (params) => {
                                 return params.name + ': ' + params.value;
                             },
-                            // formatter: '{c}'
+                            // formatter: 'value: {c}'
+                        },
+                        emphasis: {
+                            edgeLabel: {
+                                // formatter: 'emphasis----{c}'
+                            }
                         }
                     }],
                     tooltip: {trigger: 'item', triggerOn: 'mousemove'}
