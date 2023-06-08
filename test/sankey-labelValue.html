@@ -68,14 +68,22 @@ under the License.
                         lineStyle: {color: 'gradient', curveness: 0.5},
                         emphasis: {focus: 'adjacency'},
                         data: getNames(),
-                        links: sankeyData
-                    }],
-                    tooltip: {trigger: 'item', triggerOn: 'mousemove'},
-                    label: {
-                        formatter: (params) => {
-                            return params.name + ' ' + params.value + 'kW·h';
+                        links: sankeyData,
+                        label: {
+                            formatter: (params) => {
+                                return params.name + ': ' + params.value + ' kW·h';
+                            },
+                            fontWeight: 'bold'
+                        },
+                        edgeLabel: {
+                            show: true,
+                            formatter: (params) => {
+                                return params.name + ': ' + params.value;
+                            },
+                            // formatter: '{c}'
                         }
-                    }
+                    }],
+                    tooltip: {trigger: 'item', triggerOn: 'mousemove'}
                 };
 
                 chart.setOption(option);

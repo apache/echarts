@@ -223,7 +223,13 @@ class SankeyView extends ChartView {
             setLabelStyle(
                 curve, getLabelStatesModels(edgeModel, 'edgeLabel'),
                 {
-                    labelFetcher: seriesModel,
+                    labelFetcher: {
+                        getFormattedLabel(dataIndex, stateName, dataType, labelDimIndex, formatter, extendParams) {
+                            return seriesModel.getFormattedLabel(
+                                dataIndex, stateName, 'edge', labelDimIndex, formatter, extendParams
+                            );
+                        }
+                    },
                     labelDataIndex: edge.dataIndex,
                     defaultText: `${edgeModel.get('value')}`
                 }
@@ -247,8 +253,6 @@ class SankeyView extends ChartView {
                 emphasisModel.get('blurScope'),
                 emphasisModel.get('disabled')
             );
-
-            getECData(curve).dataType = 'edge';
         });
 
         // Generate a rect for each node
@@ -273,9 +277,12 @@ class SankeyView extends ChartView {
             setLabelStyle(
                 rect, getLabelStatesModels(itemModel),
                 {
-                    labelFetcher: seriesModel,
+                    labelFetcher: {
+                        getFormattedLabel(dataIndex, stateName) {
+                            return seriesModel.getFormattedLabel(dataIndex, stateName, 'node');
+                        }
+                    },
                     labelDataIndex: node.dataIndex,
-                    labelValue: layout.value,
                     defaultText: node.id
                 }
             );
