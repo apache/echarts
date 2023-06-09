@@ -76,19 +76,35 @@ under the License.
                             },
                             {
                                 value: 300, name: 'Direct'
-                            },
-                            {
-                                value: 1348,
-                                name: 'Placeholder',
-                                itemStyle: {
-                                    color: 'rgba(135,206,250,0)'
-                                }
                             }
                         ]
                     }
                 ]
             };
 
+            var series = option.series[0].data;
+            var placeholder = {
+                value: 0,
+                itemStyle: {
+                    color: 'none',
+                    decal: {
+                        symbol: 'none'
+                    }
+                }
+            };
+            var sum = 0;
+            series.forEach((item) => {
+                sum += item.value;
+            });
+            if (sum > 0) {
+                placeholder.value = sum;
+                option.series[0].data.push(placeholder);
+            }
+            if (sum === 0) {
+                series.forEach((item) => {
+                    option.series[0].data.push(placeholder);
+                })
+            }
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
