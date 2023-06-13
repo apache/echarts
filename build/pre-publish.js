@@ -67,6 +67,14 @@ const extensionSrcGlobby = {
 };
 const extensionSrcDir = nodePath.resolve(ecDir, 'extension-src');
 const extensionESMDir = nodePath.resolve(ecDir, 'extension');
+const ssrClientGlobby = {
+    patterns: [
+        'ssr/client/src/**/*.ts'
+    ],
+    cwd: ecDir
+};
+const ssrClientSrcDir = nodePath.resolve(ecDir, 'ssr/client/src');
+const ssrClientESMDir = nodePath.resolve(ecDir, 'ssr/client/lib');
 
 const typesDir = nodePath.resolve(ecDir, 'types');
 const esmDir = 'lib';
@@ -134,6 +142,26 @@ const compileWorkList = [
         },
         after: async function () {
             await transformLibFiles(extensionESMDir, 'lib');
+        }
+    },
+    {
+        logLabel: 'ssr client ts -> js-esm',
+        compilerOptionsOverride: {
+            module: 'ES2015',
+            declaration: false,
+            rootDir: ssrClientSrcDir,
+            outDir: ssrClientESMDir
+        },
+        srcGlobby: ssrClientGlobby,
+        transformOptions: {
+            filesGlobby: {patterns: ['**/*.js'], cwd: ssrClientESMDir},
+            transformDEV: true
+        },
+        before: async function () {
+            fsExtra.removeSync(ssrClientESMDir);
+        },
+        after: async function () {
+            await transformLibFiles(ssrClientESMDir, 'lib');
         }
     }
 ];
@@ -221,7 +249,7 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
         && compilerOptionsOverride.rootDir
         && compilerOptionsOverride.outDir
     );
-
+    console.log(compilerOptionsOverride, srcPathList)
     let compilerOptions = {
         ...tsConfig.compilerOptions,
         ...compilerOptionsOverride,

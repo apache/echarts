@@ -33,46 +33,6 @@ under the License.
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
-    <script>
-    const echartsHydration = (dom, options) => {
-        const svgRoot = dom.querySelector('svg');
-        const children = svgRoot.children;
-
-        function getIndex(child, attr) {
-            const index = child.getAttribute(attr);
-            if (index) {
-                return parseInt(index, 10);
-            }
-            else {
-                return null;
-            }
-        }
-
-        const events = options.on;
-        if (events) {
-            for (let eventName in events) {
-                if (typeof events[eventName] === 'function') {
-                    for (let i = 0; i < children.length; i++) {
-                        const child = children[i];
-                        const type = child.getAttribute('ecmeta_ssr_type');
-                        const silent = child.getAttribute('ecmeta_silent') === 'true';
-                        if (type && !silent) {
-                            child.addEventListener(eventName, e => {
-                                events[eventName]({
-                                    type: eventName,
-                                    ssrType: type,
-                                    seriesIndex: getIndex(child, 'ecmeta_series_index'),
-                                    dataIndex: getIndex(child, 'ecmeta_data_index'),
-                                    event: e,
-                                });
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    };
-    </script>
     <body>
         <style>
             body, #main, svg {
@@ -103,7 +63,7 @@ under the License.
         <div id="big-data"></div>
 
         <script>
-            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            require(['echarts', 'ssrClient'], function (echarts) {
                 // During transition
                 const serverChart = echarts.init(null, null, {
                     width: 500,
@@ -154,10 +114,10 @@ under the License.
                 function update() {
                     main.innerHTML = serverChart.renderToSVGString();
 
-                    const clientChart = echartsHydration(main, {
+                    const clientChart = ssrClient(main, {
                         on: {
                             mouseover: (params) => {
-                                // console.log(params);
+                                console.log(params);
                             },
                             mouseout: (params) => {
                                 // console.log(params);

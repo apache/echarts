@@ -174,3 +174,19 @@ exports.createMyTransform = function (opt) {
         )
     };
 };
+
+exports.createSSRClient = function (opt) {
+    const input = nodePath.resolve(ecDir, `ssr/client/lib/index.js`);
+
+    return {
+        plugins: [nodeResolvePlugin()],
+        input: input,
+        output: createOutputs(
+            nodePath.resolve(ecDir, `ssr/client/dist/index`),
+            opt,
+            {
+                name: 'echarts-ssr-client'
+            }
+        )
+    };
+};
