@@ -50,6 +50,7 @@ import {LineStyleProps} from '../../model/mixin/lineStyle';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
+import { getECData } from '../../util/innerStore';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -226,12 +227,10 @@ class LegendView extends ComponentView {
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
                 itemGroup.eachChild(child => {
-                    child.__metaData = child.__metaData || {
-                        type: 'legendItem',
-                        series_index: seriesModel.seriesIndex,
-                        data_index: dataIndex,
-                        name
-                    };
+                    const ecData = getECData(child);
+                    ecData.seriesIndex = seriesModel.seriesIndex;
+                    ecData.dataIndex = dataIndex;
+                    ecData.ssrType = 'legend';
                 });
 
                 legendDrawnMap.set(name, true);
@@ -279,12 +278,10 @@ class LegendView extends ComponentView {
                             .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
 
                         itemGroup.eachChild(child => {
-                            child.__metaData = child.__metaData || {
-                                type: 'legendItem',
-                                series_index: seriesModel.seriesIndex,
-                                data_index: dataIndex,
-                                name
-                            };
+                            const ecData = getECData(child);
+                            ecData.seriesIndex = seriesModel.seriesIndex;
+                            ecData.dataIndex = dataIndex;
+                            ecData.ssrType = 'legend';
                         });
 
                         legendDrawnMap.set(name, true);
