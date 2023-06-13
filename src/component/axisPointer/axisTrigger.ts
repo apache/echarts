@@ -166,13 +166,14 @@ export default function axisTrigger(
         each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
             const axis = axisInfo.axis;
             const inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
+            const triggerOnNull = axisInfo.triggerOnNull;
             // If no inputAxesInfo, no axis is restricted.
-            if (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
+            if (triggerOnNull || (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo))) {
                 let val = inputAxisInfo && inputAxisInfo.value;
-                if (val == null && !isIllegalPoint) {
+                if (triggerOnNull || (val == null && !isIllegalPoint)) {
                     val = axis.pointToData(point);
                 }
-                val != null && processOnAxis(axisInfo, val, updaters, false, outputPayload);
+                (triggerOnNull || val != null) && processOnAxis(axisInfo, val, updaters, false, outputPayload);
             }
         });
     });
