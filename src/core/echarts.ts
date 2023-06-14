@@ -2724,17 +2724,15 @@ export function connect(groupId: string | EChartsType[]): string {
     return groupId as string;
 }
 
-/**
- * @deprecated
- */
-export function disConnect(groupId: string): void {
+export function disconnect(groupId: string): void {
     connectedGroups[groupId] = false;
 }
 
 /**
  * Alias and backward compatibility
+ * @deprecated
  */
-export const disconnect = disConnect;
+export const disConnect = disconnect;
 
 /**
  * Dispose a chart instance
