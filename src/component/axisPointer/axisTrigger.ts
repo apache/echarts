@@ -170,7 +170,7 @@ export default function axisTrigger(
             // If no inputAxesInfo, no axis is restricted.
             if (triggerOnNull || (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo))) {
                 let val = inputAxisInfo && inputAxisInfo.value;
-                if (triggerOnNull || (val == null && !isIllegalPoint)) {
+                if (val == null && !isIllegalPoint) {
                     val = axis.pointToData(point);
                 }
                 (triggerOnNull || val != null) && processOnAxis(axisInfo, val, updaters, false, outputPayload);
