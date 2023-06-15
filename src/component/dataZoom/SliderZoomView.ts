@@ -43,6 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import { doDataSampling } from '../../processor/dataSample';
 
 const Rect = graphic.Rect;
 
@@ -393,10 +394,34 @@ class SliderZoomView extends DataZoomView {
             // Optimize for large data shadow
             const stride = Math.round(data.count() / size[0]);
             let lastIsEmpty: boolean;
-            data.each([otherDim], function (value: ParsedValue, index) {
-                if (stride > 0 && (index % stride)) {
-                    thisCoord += step;
-                    return;
+
+            const coordSys = seriesModel.coordinateSystem;
+            const sampling = this.dataZoomModel.get('sampling');
+            let sampledData = data;
+
+            let useOldSampling = true;
+            if (data.count() > 10 && coordSys.type === 'cartesian2d' && (sampling && sampling !== 'none')) {
+                const downsampled = doDataSampling(
+                    data,
+                    sampling,
+                    seriesModel.coordinateSystem,
+                    this.api.getDevicePixelRatio()
+                );
+                if (downsampled) {
+                    useOldSampling = false;
+                    sampledData = downsampled;
+                }
+            }
+
+            sampledData.each([otherDim], function (value: ParsedValue, index) {
+                if (useOldSampling) {
+                    if (stride > 0 && (index % stride)) {
+                        thisCoord += step;
+                        return;
+                    }
+                }
+                else {
+                    thisCoord = index;
                 }
 
                 // FIXME
