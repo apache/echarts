@@ -16,6 +16,8 @@
   "axis-minorTick": 1,
   "axis-multiple": 1,
   "axis-style": 2,
+  "axisPointer-triggerOnNull": 1,
+  "axisPointer-triggerOnNull-snap": 1,
   "axisPosition": 2,
   "bar": 2,
   "bar-background": 3,
