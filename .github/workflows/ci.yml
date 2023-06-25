@@ -90,6 +90,11 @@ jobs:
       #- name: Test generated DTS
       #  run: npm run test:dts
 
+      - uses: actions/upload-artifact@v3
+        with:
+         name: pr-files
+         path: ./**/*
+
   pr-preview:
     runs-on: ubuntu-latest
     #if: ${{ github.repository_owner == 'apache' }}
@@ -97,6 +102,10 @@ jobs:
     needs: ['build']
 
     steps:
+      - uses: actions/download-artifact@v2
+        with:
+         name: pr-files
+
       - name: Package npm tarball
         run: |
           export NPM_PKG_DIR='.npm-pkg'
