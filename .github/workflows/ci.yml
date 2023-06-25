@@ -107,9 +107,11 @@ jobs:
         with:
           key: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
           path: ${{ steps.pack-tarball.outputs.PR_DIST_DIR }}
+          restore-keys: ''
 
     outputs:
       PR_DIST_CACHE_KEY: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
+      PR_DIST_DIR: ${{ steps.pack-tarball.outputs.PR_DIST_DIR }}
 
   pr-preview:
     runs-on: ubuntu-latest
@@ -121,7 +123,8 @@ jobs:
       - name: Fetch cached PR dist files
         uses: actions/cache@v3
         with:
-          restore-keys: ${{ needs.build.outputs.PR_DIST_CACHE_KEY }}
+          key: ${{ needs.build.outputs.PR_DIST_CACHE_KEY }}
+          path: ${{ needs.build.outputs.PR_DIST_DIR }}
           fail-on-cache-miss: true
 
       - name: Deploy dist files
