@@ -121,8 +121,7 @@ jobs:
       - name: Fetch cached PR dist files
         uses: actions/cache@v3
         with:
-          key: ${{ needs.build.outputs.PR_DIST_CACHE_KEY }}
-          path: .
+          restore-keys: ${{ needs.build.outputs.PR_DIST_CACHE_KEY }}
           fail-on-cache-miss: true
 
       - name: Deploy dist files
