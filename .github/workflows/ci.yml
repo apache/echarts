@@ -92,7 +92,9 @@ jobs:
 
   pr-preview:
     runs-on: ubuntu-latest
-    if: jobs.build.result == 'success'
+    #if: ${{ github.repository_owner == 'apache' }}
+    if: needs.build.result == 'success'
+    needs: ['build']
 
     steps:
       - name: Package npm tarball
