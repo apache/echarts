@@ -92,7 +92,7 @@ jobs:
 
   pr-preview:
     runs-on: ubuntu-latest
-    if: ${{ jobs.build.result === 'success' }}
+    if: jobs.build.result == 'success'
 
     steps:
       - name: Package npm tarball
