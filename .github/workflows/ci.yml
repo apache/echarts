@@ -105,7 +105,9 @@ jobs:
           npx surge --project ${{ env.NPM_PKG_DIR }} --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
 
       - name: Install action dependencies
-        run: npm i -D github:actions-cool/maintain-one-comment
+        run: |
+          cd node_modules
+          git clone https://github.com/actions-cool/maintain-one-comment.git --depth=1
 
       - name: Create comment for PR preview
         uses: ./node_modules/maintain-one-comment
