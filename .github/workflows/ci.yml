@@ -91,18 +91,18 @@ jobs:
       #  run: npm run test:dts
         
       - name: Package npm tarball
-        env:
-          NPM_PKG_DIR: '.npm-pkg'
         run: |
+          export NPM_PKG_DIR='.npm-pkg'
           mkdir $NPM_PKG_DIR
           npm pack -pack-destination $NPM_PKG_DIR
           cd $NPM_PKG_DIR
           find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
+          echo "NPM_PKG_DIR=$NPM_PKG_DIR/package >> $GITHUB_ENV
 
       - name: Deploy dist files
         run: |
           export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
-          npx surge --project $NPM_PKG_DIR/package --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
+          npx surge --project ${{ env.NPM_PKG_DIR }} --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
 
       - name: Install action dependencies
         run: npm i -D github:actions-cool/maintain-one-comment
