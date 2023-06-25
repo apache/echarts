@@ -81,11 +81,24 @@ jobs:
         if: steps.cache-dep.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Unit Test
+        run: npm run test
+
       - name: Build release
         run: npm run release
 
       - name: Test generated DTS
         run: npm run test:dts
+        
+      - name: Package npm tarball
+        run: |
+          export NPM_PKG_DIR='.npm-pkg'
+          mkdir $NPM_PKG_DIR
+          npm pack -pack-destination $NPM_PKG_DIR
+          cd $NPM_PKG_DIR
+          find $NPM_PKG_DIR -type f -regex ".*\.tgz" -exec tar xvzf {} \;
 
-      - name: Unit Test
-        run: npm run test
+      - name: Deploy dist files
+        run: |
+          export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
+          npx surge --project ./package --domain $SURGE_DOMAIN --token $SURGE_TOKEN
