@@ -91,21 +91,25 @@ jobs:
       #  run: npm run test:dts
       
       - name: Package npm tarball
+        id: pack-tarball
         run: |
           export NPM_PKG_DIR='.npm-pkg'
           mkdir $NPM_PKG_DIR
           npm pack -pack-destination $NPM_PKG_DIR
           cd $NPM_PKG_DIR
           find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
-          echo "PR_DIST_DIR=$NPM_PKG_DIR/package" >> $GITHUB_ENV
-          echo "PR_DIST_CACHE_KEY=pr-${{ github.event.number }}-dist-cache" >> $GITHUB_ENV
+          echo "PR_DIST_DIR=$NPM_PKG_DIR/package" >> $GITHUB_OUTPUT
+          echo "PR_DIST_CACHE_KEY=echarts-pr-dist-cache-${{ github.event.number }}" >> $GITHUB_OUTPUT
 
       - name: Cache PR dist files
         uses: actions/cache@v3
         id: cache-pr-dist
         with:
-          key: ${{ env.PR_DIST_CACHE_KEY }}
-          path: ${{ env.PR_DIST_DIR }}
+          key: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
+          path: ${{ steps.pack-tarball.outputs.PR_DIST_DIR }}
+
+    outputs:
+      PR_DIST_CACHE_KEY: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
 
   pr-preview:
     runs-on: ubuntu-latest
@@ -117,7 +121,7 @@ jobs:
       - name: Fetch cached PR dist files
         uses: actions/cache@v3
         with:
-          key: ${{ env.PR_DIST_CACHE_KEY }}
+          key: ${{ needs.build.outputs.PR_DIST_CACHE_KEY }}
           path: .
           fail-on-cache-miss: true
 
