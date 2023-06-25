@@ -96,9 +96,9 @@ jobs:
           mkdir $NPM_PKG_DIR
           npm pack -pack-destination $NPM_PKG_DIR
           cd $NPM_PKG_DIR
-          find $NPM_PKG_DIR -type f -regex ".*\.tgz" -exec tar xvzf {} \;
+          find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
 
       - name: Deploy dist files
         run: |
           export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
-          npx surge --project ./package --domain $SURGE_DOMAIN --token $SURGE_TOKEN
+          npx surge --project ./package --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
