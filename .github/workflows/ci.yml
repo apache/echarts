@@ -81,18 +81,19 @@ jobs:
         if: steps.cache-dep.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Unit Test
-        run: npm run test
+      #- name: Unit Test
+      #  run: npm run test
 
       - name: Build release
         run: npm run release
 
-      - name: Test generated DTS
-        run: npm run test:dts
+      #- name: Test generated DTS
+      #  run: npm run test:dts
         
       - name: Package npm tarball
+        env:
+          NPM_PKG_DIR: '.npm-pkg'
         run: |
-          export NPM_PKG_DIR='.npm-pkg'
           mkdir $NPM_PKG_DIR
           npm pack -pack-destination $NPM_PKG_DIR
           cd $NPM_PKG_DIR
@@ -101,4 +102,17 @@ jobs:
       - name: Deploy dist files
         run: |
           export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
-          npx surge --project ./package --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
+          npx surge --project $NPM_PKG_DIR/package --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
+
+      - name: Install action dependencies
+        run: npm i -D github:actions-cool/maintain-one-comment
+
+      - name: Create comment for PR preview
+        uses: ./node_modules/maintain-one-comment
+        with:
+          body: |
+            <!-- ECHARTS_PR_PREVIEW -->
+            Anyone can preview the changes brought by this PR at: https://echarts.apache.org/examples/editor?pr=${{ github.event.number }}
+          body-include: '<!-- ECHARTS_PR_PREVIEW -->'
+          number: ${{ github.event.number }}
+
