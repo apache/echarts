@@ -98,14 +98,13 @@ jobs:
           cd $NPM_PKG_DIR
           find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
           echo "PR_DIST_DIR=$NPM_PKG_DIR/package" >> $GITHUB_ENV
+          echo "PR_DIST_CACHE_KEY=pr-${{ github.event.number }}-dist-cache" >> $GITHUB_ENV
 
       - name: Cache PR dist files
         uses: actions/cache@v3
         id: cache-pr-dist
-        env:
-          cache-name: pr-${{ github.event.number }}-dist-cache
         with:
-          key: ${{ env.cache-name }}
+          key: ${{ env.PR_DIST_CACHE_KEY }}
           path: ${{ env.PR_DIST_DIR }}
 
   pr-preview:
@@ -118,7 +117,8 @@ jobs:
       - name: Fetch cached PR dist files
         uses: actions/cache@v3
         with:
-          key: pr-${{ github.event.number }}-dist-cache
+          key: ${{ env.PR_DIST_CACHE_KEY }}
+          path: .
           fail-on-cache-miss: true
 
       - name: Deploy dist files
