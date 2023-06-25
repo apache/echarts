@@ -89,7 +89,12 @@ jobs:
 
       #- name: Test generated DTS
       #  run: npm run test:dts
-        
+
+  pr-preview:
+    runs-on: ubuntu-latest
+    if: ${{ jobs.build.result === 'success' }}
+
+    steps:
       - name: Package npm tarball
         run: |
           export NPM_PKG_DIR='.npm-pkg'
