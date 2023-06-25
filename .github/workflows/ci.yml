@@ -89,11 +89,24 @@ jobs:
 
       #- name: Test generated DTS
       #  run: npm run test:dts
+      
+      - name: Package npm tarball
+        run: |
+          export NPM_PKG_DIR='.npm-pkg'
+          mkdir $NPM_PKG_DIR
+          npm pack -pack-destination $NPM_PKG_DIR
+          cd $NPM_PKG_DIR
+          find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
+          echo "PR_DIST_DIR=$NPM_PKG_DIR/package" >> $GITHUB_ENV
 
-      - uses: actions/upload-artifact@v3
+      - name: Cache PR dist files
+        uses: actions/cache@v3
+        id: cache-pr-dist
+        env:
+          cache-name: pr-${{ github.event.number }}-dist-cache
         with:
-         name: pr-files
-         path: ./**/*
+          key: ${{ env.cache-name }}
+          path: ${{ env.PR_DIST_DIR }}
 
   pr-preview:
     runs-on: ubuntu-latest
@@ -102,23 +115,16 @@ jobs:
     needs: ['build']
 
     steps:
-      - uses: actions/download-artifact@v2
+      - name: Fetch cached PR dist files
+        uses: actions/cache@v3
         with:
-         name: pr-files
-
-      - name: Package npm tarball
-        run: |
-          export NPM_PKG_DIR='.npm-pkg'
-          mkdir $NPM_PKG_DIR
-          npm pack -pack-destination $NPM_PKG_DIR
-          cd $NPM_PKG_DIR
-          find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
-          echo "NPM_PKG_DIR=$NPM_PKG_DIR/package" >> $GITHUB_ENV
+          key: pr-${{ github.event.number }}-dist-cache
+          fail-on-cache-miss: true
 
       - name: Deploy dist files
         run: |
           export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
-          npx surge --project ${{ env.NPM_PKG_DIR }} --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
+          npx surge --project ./ --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
 
       - name: Install action dependencies
         run: |
