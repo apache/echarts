@@ -97,7 +97,7 @@ jobs:
           npm pack -pack-destination $NPM_PKG_DIR
           cd $NPM_PKG_DIR
           find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
-          echo "NPM_PKG_DIR=$NPM_PKG_DIR/package >> $GITHUB_ENV
+          echo "NPM_PKG_DIR=$NPM_PKG_DIR/package" >> $GITHUB_ENV
 
       - name: Deploy dist files
         run: |
