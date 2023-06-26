@@ -156,6 +156,16 @@ jobs:
     if: ${{ github.event.action == 'closed' && github.pull_request.merged != true }}
     continue-on-error: true
     steps:
+      - name: Install action dependencies
+        run: git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
+
+      - name: Delete PR preview comment
+        uses: ./maintain-one-comment
+        with:
+          body-include: '<!-- ECHARTS_PR_PREVIEW -->'
+          delete: true
+          number: ${{ github.event.number }}
+
       - name: Teardown closed PR preview
         run: |
           export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
