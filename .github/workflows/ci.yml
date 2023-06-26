@@ -2,7 +2,7 @@ name: Node CI
 
 on:
   pull_request:
-    types: [opened, synchronize, edited]
+    types: [opened, synchronize, edited, closed]
 
 jobs:
   lint:
@@ -148,3 +148,12 @@ jobs:
           body-include: '<!-- ECHARTS_PR_PREVIEW -->'
           number: ${{ github.event.number }}
 
+  teardown-preview:
+    runs-on: ubuntu-latest
+    #if: ${{ github.repository_owner == 'apache' }}
+    if: ${{ github.event.action == 'closed' && !github.pull_request.merged }}
+    steps:
+      - name: Teardown closed PR preview
+        run: |
+          export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
+          npx surge teardown $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
