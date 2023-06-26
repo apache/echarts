@@ -107,7 +107,7 @@ jobs:
         with:
           key: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
           path: ${{ steps.pack-tarball.outputs.PR_DIST_DIR }}
-          restore-keys: |
+          restore-keys: false
 
     outputs:
       PR_DIST_CACHE_KEY: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
