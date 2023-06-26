@@ -150,7 +150,7 @@ jobs:
         with:
           body: |
             <!-- ECHARTS_PR_PREVIEW -->
-            The changes brought by this PR can be previewed at: https://echarts.apache.org/examples/editor?pr=${{ github.event.number }}@${{ env.GH_SHA_SHORT }}
+            The changes brought by this PR can be previewed at: https://echarts.apache.org/examples/editor?version=PR-${{ github.event.number }}@${{ env.GH_SHA_SHORT }}
           body-include: '<!-- ECHARTS_PR_PREVIEW -->'
           number: ${{ github.event.number }}
 
