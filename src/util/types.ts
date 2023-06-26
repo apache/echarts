@@ -1476,12 +1476,13 @@ export interface DefaultStatesMixin {
     blur?: any
 }
 
-export type DefaultEmphasisFocus = 'none' | 'self' | 'series';
+export type DefaultEmphasisFocus = 'none' | 'self' | 'series' | 'category';
 
 export interface DefaultStatesMixinEmphasis {
     /**
      * self: Focus self and blur all others.
      * series: Focus series and blur all other series.
+     * category: Focus category and blur all other categories
      */
     focus?: DefaultEmphasisFocus
 }
