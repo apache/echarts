@@ -99,7 +99,7 @@ jobs:
           cd $NPM_PKG_DIR
           find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
           echo "PR_DIST_DIR=$NPM_PKG_DIR/package" >> $GITHUB_OUTPUT
-          echo "PR_DIST_CACHE_KEY=echarts-pr-dist-cache-${{ github.event.number }}@${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "PR_DIST_CACHE_KEY=echarts-pr-dist-cache-${{ github.event.number }}@${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
 
       - name: Cache PR dist files
         uses: actions/cache@v3
@@ -137,14 +137,14 @@ jobs:
           cd .actions
           git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
 
-          echo "GH_SHA_SHORT=$(echo ${{ github.sha }} | cut -c 1-7)" >> $GITHUB_ENV
+          echo "GH_SHA_SHORT=$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7)" >> $GITHUB_ENV
 
       - name: Create comment for PR preview
         uses: ./.actions/maintain-one-comment
         with:
           body: |
             <!-- ECHARTS_PR_PREVIEW -->
-            Anyone can preview the changes brought by this PR at: https://echarts.apache.org/examples/editor?pr=${{ github.event.number }}&_pv=${{ env.GH_SHA_SHORT }}
+            Anyone can preview the changes brought by this PR at: https://echarts.apache.org/examples/editor?pr=${{ github.event.number }}@${{ env.GH_SHA_SHORT }}
           body-include: '<!-- ECHARTS_PR_PREVIEW -->'
           number: ${{ github.event.number }}
 
