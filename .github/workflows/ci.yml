@@ -134,13 +134,10 @@ jobs:
 
       - name: Install action dependencies
         run: |
-          export ACTIONS_DIR='.actions'
-          mkdir $ACTIONS_DIR
-          git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git $ACTIONS_DIR
-          echo "ACTIONS_DIR=$ACTIONS_DIR" >> $GITHUB_ENV
+          git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git .actions
 
       - name: Create comment for PR preview
-        uses: ${{ env.ACTIONS_DIR }}/maintain-one-comment
+        uses: ./.actions/maintain-one-comment
         with:
           body: |
             <!-- ECHARTS_PR_PREVIEW -->
