@@ -81,16 +81,16 @@ jobs:
         if: steps.cache-dep.outputs.cache-hit != 'true'
         run: npm ci
 
-      #- name: Unit Test
-      #  run: npm run test
+      - name: Unit Test
+        run: npm run test
 
       - name: Build release
         run: npm run release
 
-      #- name: Test generated DTS
-      #  run: npm run test:dts
-      
-      - name: Package npm tarball
+      - name: Test generated DTS
+        run: npm run test:dts
+
+      - name: Pack npm tarball
         id: pack-tarball
         run: |
           export NPM_PKG_DIR='.npm-pkg'
