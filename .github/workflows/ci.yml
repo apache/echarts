@@ -4,8 +4,12 @@ on:
   pull_request:
     types: [opened, synchronize, edited, closed]
 
+env:
+    PR_WAS_CLOSED: ${{ github.event.action == 'closed' && !github.pull_request.merged }}
+
 jobs:
   lint:
+    if: ${{ !env.PR_WAS_CLOSED }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -54,6 +58,7 @@ jobs:
         run: npm run checktype
 
   build:
+    if: ${{ !env.PR_WAS_CLOSED }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -151,7 +156,7 @@ jobs:
   teardown-preview:
     runs-on: ubuntu-latest
     #if: ${{ github.repository_owner == 'apache' }}
-    if: ${{ github.event.action == 'closed' && !github.pull_request.merged }}
+    if: ${{ env.PR_WAS_CLOSED }}
     steps:
       - name: Teardown closed PR preview
         run: |
