@@ -137,12 +137,14 @@ jobs:
           cd .actions
           git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
 
+          echo "GH_SHA_SHORT=$(echo ${{ github.sha }} | cut -c 1-7)" >> $GITHUB_ENV
+
       - name: Create comment for PR preview
         uses: ./.actions/maintain-one-comment
         with:
           body: |
             <!-- ECHARTS_PR_PREVIEW -->
-            Anyone can preview the changes brought by this PR at: https://echarts.apache.org/examples/editor?pr=${{ github.event.number }}&_pv=${{ github.sha.slice(0, 7) }}
+            Anyone can preview the changes brought by this PR at: https://echarts.apache.org/examples/editor?pr=${{ github.event.number }}&_pv=${{ env.GH_SHA_SHORT }}
           body-include: '<!-- ECHARTS_PR_PREVIEW -->'
           number: ${{ github.event.number }}
 
