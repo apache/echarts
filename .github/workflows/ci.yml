@@ -5,11 +5,12 @@ on:
     types: [opened, synchronize, edited, closed]
 
 env:
-    PR_WAS_CLOSED: ${{ github.event.action == 'closed' && !github.pull_request.merged }}
+  PR_WAS_CLOSED: ${{ github.event.action == 'closed' && !github.pull_request.merged }}
+  PR_WAS_REOPENED: ${{ github.event.action == 'reopened' }}
 
 jobs:
   lint:
-    if: ${{ !env.PR_WAS_CLOSED }}
+    if: "!${{ env.PR_WAS_CLOSED }}"
     runs-on: ubuntu-latest
 
     strategy:
@@ -58,7 +59,7 @@ jobs:
         run: npm run checktype
 
   build:
-    if: ${{ !env.PR_WAS_CLOSED }}
+    if: "!${{ env.PR_WAS_CLOSED }}"
     runs-on: ubuntu-latest
 
     strategy:
