@@ -99,7 +99,7 @@ jobs:
           cd $NPM_PKG_DIR
           find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
           echo "PR_DIST_DIR=$NPM_PKG_DIR/package" >> $GITHUB_OUTPUT
-          echo "PR_DIST_CACHE_KEY=echarts-pr-dist-cache-${{ github.event.number }}" >> $GITHUB_OUTPUT
+          echo "PR_DIST_CACHE_KEY=echarts-pr-dist-cache-${{ github.event.number }}@${{ github.sha }}" >> $GITHUB_OUTPUT
 
       - name: Cache PR dist files
         uses: actions/cache@v3
@@ -107,7 +107,6 @@ jobs:
         with:
           key: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
           path: ${{ steps.pack-tarball.outputs.PR_DIST_DIR }}
-          restore-keys: false
 
     outputs:
       PR_DIST_CACHE_KEY: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
