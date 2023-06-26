@@ -134,7 +134,9 @@ jobs:
 
       - name: Install action dependencies
         run: |
-          git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git .actions
+          mkdir .actions
+          cd .actions
+          git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
 
       - name: Create comment for PR preview
         uses: ./.actions/maintain-one-comment
