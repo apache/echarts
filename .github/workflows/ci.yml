@@ -2,7 +2,7 @@ name: Node CI
 
 on:
   pull_request:
-    types: [opened, synchronize, edited, closed]
+    types: [opened, reopened, synchronize, closed]
 
 jobs:
   lint:
