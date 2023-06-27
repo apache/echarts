@@ -428,16 +428,18 @@ class LegendView extends ComponentView {
             content = formatter(name);
         }
 
-        const inactiveColor = legendItemModel.get('inactiveColor');
+        const textColor = isSelected
+            ? textStyleModel.getTextColor() : legendItemModel.get('inactiveColor');
+
         itemGroup.add(new graphic.Text({
             style: createTextStyle(textStyleModel, {
                 text: content,
                 x: textX,
                 y: itemHeight / 2,
-                fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
+                fill: textColor,
                 align: textAlign,
                 verticalAlign: 'middle'
-            })
+            }, {inheritColor: textColor})
         }));
 
         // Add a invisible rect to increase the area of mouse hover
