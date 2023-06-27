@@ -29,7 +29,7 @@ export interface ECSSRClientOptions {
 
 export type ECSSREvent = 'mouseover' | 'mouseout' | 'click';
 
-export function initEChartsSSRClient(dom: HTMLElement, options: ECSSRClientOptions) {
+export function hydrate(dom: HTMLElement, options: ECSSRClientOptions) {
     const svgRoot = dom.querySelector('svg');
     if (!svgRoot) {
         console.error('No SVG element found in the DOM.');
@@ -58,7 +58,7 @@ export function initEChartsSSRClient(dom: HTMLElement, options: ECSSRClientOptio
                     const silent = child.getAttribute('ecmeta_silent') === 'true';
                     if (type && !silent) {
                         child.addEventListener(eventName, e => {
-                            events[eventName as ECSSREvent]({
+                            (events[eventName as ECSSREvent] as Function)({
                                 type: eventName,
                                 ssrType: type,
                                 seriesIndex: getIndex(child, 'ecmeta_series_index'),

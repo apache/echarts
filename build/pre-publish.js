@@ -249,7 +249,7 @@ async function tsCompile(compilerOptionsOverride, srcPathList) {
         && compilerOptionsOverride.rootDir
         && compilerOptionsOverride.outDir
     );
-    console.log(compilerOptionsOverride, srcPathList)
+
     let compilerOptions = {
         ...tsConfig.compilerOptions,
         ...compilerOptionsOverride,

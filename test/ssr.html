@@ -63,7 +63,8 @@ under the License.
         <div id="big-data"></div>
 
         <script>
-            require(['echarts', 'ssrClient'], function (echarts) {
+            require(['echarts', 'ssrClient'], function (echarts, ssrClient) {
+                console.log(ssrClient)
                 // During transition
                 const serverChart = echarts.init(null, null, {
                     width: 500,
@@ -114,10 +115,10 @@ under the License.
                 function update() {
                     main.innerHTML = serverChart.renderToSVGString();
 
-                    const clientChart = ssrClient(main, {
+                    const clientChart = ssrClient.hydrate(main, {
                         on: {
                             mouseover: (params) => {
-                                console.log(params);
+                                // console.log(params);
                             },
                             mouseout: (params) => {
                                 // console.log(params);
@@ -154,7 +155,7 @@ under the License.
         </script>
 
         <script>
-            require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            require(['echarts', 'ssrClient'], function (echarts, ssrClient) {
                 // During transition
                 const serverChart = echarts.init(null, null, {
                     width: 500,
