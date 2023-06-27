@@ -701,14 +701,17 @@ class LineView extends ChartView {
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
         ) {
-            showSymbol && symbolDraw.updateData(data, {
-                isIgnore: isIgnoreFunc,
-                clipShape: clipShapeForSymbol,
-                disableAnimation: true,
-                getSymbolPoint(idx) {
-                    return [points[idx * 2], points[idx * 2 + 1]];
-                }
-            });
+            if (showSymbol || !connectNulls) {
+                symbolDraw.updateData(data, {
+                    showSingleSymbol: showSymbol === false && !connectNulls,
+                    isIgnore: isIgnoreFunc,
+                    clipShape: clipShapeForSymbol,
+                    disableAnimation: true,
+                    getSymbolPoint(idx) {
+                        return [points[idx * 2], points[idx * 2 + 1]];
+                    }
+                });
+            }
 
             hasAnimation && this._initSymbolLabelAnimation(
                 data,
@@ -779,14 +782,17 @@ class LineView extends ChartView {
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed.
-            showSymbol && symbolDraw.updateData(data, {
-                isIgnore: isIgnoreFunc,
-                clipShape: clipShapeForSymbol,
-                disableAnimation: true,
-                getSymbolPoint(idx) {
-                    return [points[idx * 2], points[idx * 2 + 1]];
-                }
-            });
+            if (showSymbol || !connectNulls) {
+                symbolDraw.updateData(data, {
+                    showSingleSymbol: showSymbol === false && !connectNulls,
+                    isIgnore: isIgnoreFunc,
+                    clipShape: clipShapeForSymbol,
+                    disableAnimation: true,
+                    getSymbolPoint(idx) {
+                        return [points[idx * 2], points[idx * 2 + 1]];
+                    }
+                });
+            }
 
             // In the case data zoom triggered refreshing frequently
             // Data may not change if line has a category axis. So it should animate nothing.
