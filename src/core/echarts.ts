@@ -2767,10 +2767,6 @@ export function getInstanceById(key: string): EChartsType | undefined {
     return instances[key];
 }
 
-export function registerSSRDataGetter() {
-
-}
-
 /**
  * Register theme
  */
