@@ -270,7 +270,7 @@ class SunburstPiece extends graphic.Sector {
                 rotate = rotateType * Math.PI / 180;
             }
 
-            state.rotation = rotate;
+            state.rotation = normalizeRadian(rotate);
         });
 
 
