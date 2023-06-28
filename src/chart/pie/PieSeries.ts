@@ -112,6 +112,7 @@ export interface PieSeriesOption extends
 
     clockwise?: boolean
     startAngle?: number
+    angleRange?: number
     minAngle?: number
     minShowLabelAngle?: number
 
@@ -217,6 +218,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // 默认顺时针
         clockwise: true,
         startAngle: 90,
+        angleRange: 360,
         // 最小角度改为0
         minAngle: 0,
 

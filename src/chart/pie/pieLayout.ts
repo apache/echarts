@@ -93,6 +93,8 @@ export default function pieLayout(
 
         const startAngle = -seriesModel.get('startAngle') * RADIAN;
 
+        const angleRange = seriesModel.get('angleRange') * RADIAN || PI2;
+
         const minAngle = seriesModel.get('minAngle') * RADIAN;
 
         let validDataCount = 0;
@@ -114,7 +116,7 @@ export default function pieLayout(
         extent[0] = 0;
 
         // In the case some sector angle is smaller than minAngle
-        let restAngle = PI2;
+        let restAngle = angleRange;
         let valueSumLargerThanMinAngle = 0;
 
         let currentAngle = startAngle;
@@ -146,7 +148,7 @@ export default function pieLayout(
                     ? unitRadian : (value * unitRadian);
             }
             else {
-                angle = PI2 / validDataCount;
+                angle = angleRange / validDataCount;
             }
 
             if (angle < minAngle) {
@@ -180,7 +182,7 @@ export default function pieLayout(
             // Average the angle if rest angle is not enough after all angles is
             // Constrained by minAngle
             if (restAngle <= 1e-3) {
-                const angle = PI2 / validDataCount;
+                const angle = angleRange / validDataCount;
                 data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
                         const layout = data.getItemLayout(idx);
