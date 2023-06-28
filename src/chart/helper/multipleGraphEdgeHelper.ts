@@ -296,7 +296,8 @@ export function getOffsetForEdge(edge, seriesModel, index) {
         return +symbolSize;
     });
     const minimumSize = Math.floor(Math.min(...nodesSizes) * getNodeGlobalScale(seriesModel));
-    const totalSpaceBetweenEdges = isArrayParam ? autoOffsetParams.slice(0,totalLen).reduce((total, item) => total + item) : (totalLen-1) * autoOffsetParams
+    const parityCorrectionSpace = totalLen % 2 ? 1 : 0;
+    const totalSpaceBetweenEdges = isArrayParam ? autoOffsetParams.slice(0,totalLen).reduce((total, item) => total + item) : (totalLen-parityCorrectionSpace) * autoOffsetParams
     if(totalSpaceBetweenEdges < minimumSize){
         createOffsets(seriesModel, totalLen);
         edge.lineStyle = edge.lineStyle || {};
