@@ -24,7 +24,7 @@ import { getNodeGlobalScale } from '../graph/graphHelper';
 const KEY_DELIMITER = '-->';
 
 /**
- * params handler
+ * curveness params handler
  * @param {module:echarts/model/SeriesModel} seriesModel
  * @returns {*}
  */
@@ -32,6 +32,11 @@ const getAutoCurvenessParams = function (seriesModel) {
     return seriesModel.get('autoCurveness') || null;
 };
 
+/**
+ * offset params handler
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @returns {*}
+ */
 const getAutoOffsetParams = function (seriesModel) {
     return seriesModel.get('autoOffset') || null;
 };
@@ -71,6 +76,12 @@ const createCurveness = function (seriesModel, appendLength) {
     seriesModel.__curvenessList = curvenessList;
 };
 
+/**
+ * Generates a list of edge offsets
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @param {number} appendLength
+ * @return  appendLength => [0, -offset, offset, -2*offset, 2*offset, ...]
+ */
 const createOffsets = function (seriesModel, appendLength) {
     const autoOffsetParams = getAutoOffsetParams(seriesModel);
     let length = appendLength;
@@ -83,9 +94,6 @@ const createOffsets = function (seriesModel, appendLength) {
         seriesModel.__offsetList = autoOffsetParams;
         return;
     }
-    // if (appendLength > length) {
-    //     length = appendLength;
-    // }
 
     // make sure the length is odd
     const len = length % 2 ? length : length + 1;
