@@ -34,9 +34,6 @@ under the License.
     </style>
 
     <div id="main"></div>
-    <div id="main2"></div>
-    <div id="main3"></div>
-    <div id="main4"></div>
 
     <script>
         require([
@@ -47,8 +44,7 @@ under the License.
             var config = {
                 clockwise: true,
                 startAngle: 90,
-                angleRange: 270,
-                minAngle: 0,
+                endAngle: 360,
             };
 
             function update() {
@@ -56,9 +52,8 @@ under the License.
                     series: {
                         type: "pie",
                         startAngle: config.startAngle,
-                        angleRange: config.angleRange,
+                        endAngle: config.endAngle,
                         clockwise: config.clockwise,
-                        minAngle: config.minAngle,
                         data: [{
                             value: 335,
                             name: "Apple"
@@ -84,16 +79,12 @@ under the License.
                 .onChange(update);
             gui.add(config, 'startAngle', 0, 360)
                 .onChange(update);
-            gui.add(config, 'angleRange', 0, 360)
-                .onChange(update);
-            gui.add(config, 'minAngle', 0, 360)
+            gui.add(config, 'endAngle', 0, 360)
                 .onChange(update);
 
             update();
-
         });
     </script>
-
 </body>
 
 </html>
