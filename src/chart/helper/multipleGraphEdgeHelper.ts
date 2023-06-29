@@ -20,6 +20,7 @@
 // @ts-nocheck
 import * as zrUtil from 'zrender/src/core/util';
 import { getNodeGlobalScale } from '../graph/graphHelper';
+import { GraphNodeItemOption } from './GraphSeries';
 
 const KEY_DELIMITER = '-->';
 
@@ -84,8 +85,9 @@ const createCurveness = function (seriesModel, appendLength) {
  */
 const createOffsets = function (seriesModel, appendLength) {
     const autoOffsetParams = getAutoOffsetParams(seriesModel);
-    let length = appendLength;
-    let offsetList = [0];
+    const length = appendLength;
+    const offsetList = [0];
+    let offsetStep = 0;
 
     if (zrUtil.isNumber(autoOffsetParams)) {
         offsetStep = autoOffsetParams;
@@ -102,7 +104,7 @@ const createOffsets = function (seriesModel, appendLength) {
         offsetList.push(-i * offsetStep, i * offsetStep);
     }
     seriesModel.__offsetList = offsetList;
-}
+};
 
 /**
  * Create different cache key data in the positive and negative directions, in order to set the curvature later
@@ -196,7 +198,7 @@ export function createEdgeMapForCurveness(n1, n2, seriesModel, index) {
         edgeMap[key].isForward = true;
     }
     else if (oppositeEdges && edgeMap[key]) {
-        //NOTE: not necessary
+        // NOTE: not necessary
         oppositeEdges.isForward = true;
         edgeMap[key].isForward = false;
     }
@@ -305,8 +307,10 @@ export function getOffsetForEdge(edge, seriesModel, index) {
     });
     const minimumSize = Math.floor(Math.min(...nodesSizes) * getNodeGlobalScale(seriesModel));
     const parityCorrectionSpace = totalLen % 2 ? 1 : 0;
-    const totalSpaceBetweenEdges = isArrayParam ? autoOffsetParams.slice(0,totalLen).reduce((total, item) => total + item) : (totalLen-parityCorrectionSpace) * autoOffsetParams
-    if(totalSpaceBetweenEdges < minimumSize){
+    const totalSpaceBetweenEdges = isArrayParam
+        ? autoOffsetParams.slice(0, totalLen).reduce((total, item) => total + item)
+        : (totalLen - parityCorrectionSpace) * autoOffsetParams;
+    if (totalSpaceBetweenEdges < minimumSize) {
         createOffsets(seriesModel, totalLen);
         edge.lineStyle = edge.lineStyle || {};
         // if is opposite edge, must set curvenss to opposite number
@@ -323,7 +327,8 @@ export function getOffsetForEdge(edge, seriesModel, index) {
         else {
             return offsetList[parityCorrection + edgeIndex];
         }
-    } else {
+    }
+    else {
         return 0;
     }
 }

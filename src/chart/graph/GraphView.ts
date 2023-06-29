@@ -282,7 +282,7 @@ class GraphView extends ChartView {
                 switch (layout) {
                     case 'force':
                         graphForceLayout(ecModel);
-                        break;                        
+                        break;
                     case 'circular':
                         circularLayout(seriesModel, 'symbolSize');
                         this.updateLayout(seriesModel);

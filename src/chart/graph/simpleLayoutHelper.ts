@@ -60,7 +60,7 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             vec2.normalize(normalVector, normalVector);
             const offsetVector = [normalVector[0] * offset, normalVector[1] * offset];
             vec2.add(points[0], p1, offsetVector);
-            vec2.add(points[1], p2, offsetVector); 
+            vec2.add(points[1], p2, offsetVector);
         }
         if (+curveness) {
             points.push([

@@ -116,7 +116,7 @@ export function circularLayout(
             vec2.normalize(normalVector, normalVector);
             const offsetVector = [normalVector[0] * offset, normalVector[1] * offset];
             vec2.add(p1, p1, offsetVector);
-            vec2.add(p2, p2, offsetVector); 
+            vec2.add(p2, p2, offsetVector);
         }
         if (+curveness) {
             curveness *= 3;

@@ -159,7 +159,7 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                         vec2.normalize(normalVector, normalVector);
                         const offsetVector = [normalVector[0] * e.offset, normalVector[1] * e.offset];
                         vec2.add(points[0], p1, offsetVector);
-                        vec2.add(points[1], p2, offsetVector); 
+                        vec2.add(points[1], p2, offsetVector);
                     }
                     if (+e.curveness) {
                         points[2] = [
