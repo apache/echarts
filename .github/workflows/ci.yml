@@ -156,7 +156,7 @@ jobs:
 
   teardown-preview:
     runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'apache' && github.event.action == 'closed' && github.pull_request.merged != true }}
+    if: ${{ github.repository_owner == 'apache' && github.event.action == 'closed' && github.event.pull_request.merged != true }}
     continue-on-error: true
     steps:
       - name: Install action dependencies
