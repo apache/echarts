@@ -2,15 +2,16 @@ name: Node CI
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, closed]
+    types: [opened, reopened, synchronize]
 
 concurrency:
+  # Note that the `teardown-pr-preview` workflow needs the same group name
+  # to cancel the running `ci` workflows
   group: ${{ github.workflow }}-${{ github.event.number }}
   cancel-in-progress: true
 
 jobs:
   lint:
-    if: ${{ github.event.action != 'closed' }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -59,7 +60,6 @@ jobs:
         run: npm run checktype
 
   build:
-    if: ${{ github.event.action != 'closed' }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -97,79 +97,33 @@ jobs:
         run: npm run test:dts
 
       - name: Pack npm tarball
+        if: ${{ github.repository_owner == 'apache' }}
         id: pack-tarball
         run: |
-          export NPM_PKG_DIR='.npm-pkg'
-          mkdir $NPM_PKG_DIR
-          npm pack -pack-destination $NPM_PKG_DIR
-          cd $NPM_PKG_DIR
+          export PR_PREVIEW_DIR='echarts-pr-preview'
+          mkdir -p $PR_PREVIEW_DIR
+          npm pack -pack-destination $PR_PREVIEW_DIR
+          echo "PR_PREVIEW_DIR=$PR_PREVIEW_DIR" >> $GITHUB_ENV
+
+      - name: Save PR metadata and dist files
+        if: ${{ steps.pack-tarball.outcome == 'success' }}
+        id: save-pr-data
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_PREVIEW_DIR: ${{ env.PR_PREVIEW_DIR }}
+        run: |
+          cd $PR_PREVIEW_DIR
+          echo $PR_NUMBER > ./pr_number
+          echo $PR_COMMIT_SHA > ./pr_commit_sha
           find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
-          echo "PR_DIST_DIR=$NPM_PKG_DIR/package" >> $GITHUB_OUTPUT
-          echo "PR_DIST_CACHE_KEY=echarts-pr-dist-cache-${{ github.event.number }}@${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+          rm -f *.tgz
+          echo -e "Dist files: \n$(ls -l)"
 
-      - name: Cache PR dist files
-        uses: actions/cache@v3
-        id: cache-pr-dist
+      - uses: actions/upload-artifact@v3
+        if: ${{ steps.save-pr-data.outcome == 'success' }}
         with:
-          key: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
-          path: ${{ steps.pack-tarball.outputs.PR_DIST_DIR }}
-
-    outputs:
-      PR_DIST_CACHE_KEY: ${{ steps.pack-tarball.outputs.PR_DIST_CACHE_KEY }}
-      PR_DIST_DIR: ${{ steps.pack-tarball.outputs.PR_DIST_DIR }}
-
-  pr-preview:
-    runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'apache'  && needs.build.result == 'success' }}
-    needs: ['build']
-
-    steps:
-      - name: Fetch cached PR dist files
-        uses: actions/cache@v3
-        with:
-          key: ${{ needs.build.outputs.PR_DIST_CACHE_KEY }}
-          path: ${{ needs.build.outputs.PR_DIST_DIR }}
-          fail-on-cache-miss: true
-
-      - name: Deploy dist files
-        run: |
-          cd ${{ needs.build.outputs.PR_DIST_DIR }}
-          export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
-          npx surge --project ./ --domain $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
-
-      - name: Install action dependencies
-        run: |
-          mkdir .actions
-          cd .actions
-          git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
-
-          echo "GH_SHA_SHORT=$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7)" >> $GITHUB_ENV
-
-      - name: Create comment for PR preview
-        uses: ./.actions/maintain-one-comment
-        with:
-          body: |
-            <!-- ECHARTS_PR_PREVIEW -->
-            The changes brought by this PR can be previewed at: https://echarts.apache.org/examples/editor?version=PR-${{ github.event.number }}@${{ env.GH_SHA_SHORT }}
-          body-include: '<!-- ECHARTS_PR_PREVIEW -->'
-          number: ${{ github.event.number }}
-
-  teardown-preview:
-    runs-on: ubuntu-latest
-    if: ${{ github.repository_owner == 'apache' && github.event.action == 'closed' && github.event.pull_request.merged != true }}
-    continue-on-error: true
-    steps:
-      - name: Install action dependencies
-        run: git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
-
-      - name: Delete PR preview comment
-        uses: ./maintain-one-comment
-        with:
-          body-include: '<!-- ECHARTS_PR_PREVIEW -->'
-          delete: true
-          number: ${{ github.event.number }}
-
-      - name: Teardown closed PR preview
-        run: |
-          export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
-          npx surge teardown $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
+          name: pr_preview
+          path: ${{ env.PR_PREVIEW_DIR }}
+          retention-days: 1
+          if-no-files-found: error
