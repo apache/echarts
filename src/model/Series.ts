@@ -66,7 +66,7 @@ const inner = modelUtil.makeInner<{
 }, SeriesModel>();
 
 function getSelectionKey(data: SeriesData, dataIndex: number): string {
-    return data.getName(dataIndex) || data.getId(dataIndex);
+    return data.getId(dataIndex) || data.getName(dataIndex);
 }
 
 export const SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
