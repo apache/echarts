@@ -167,6 +167,7 @@
   "radar4": 1,
   "resize-animation": 1,
   "sankey-depth": 1,
+  "sankey-emphasis-lineStyle": 1,
   "sankey-jump": 1,
   "sankey-level": 1,
   "scatter-random-stream-fix-axis": 1,

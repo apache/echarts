@@ -20,7 +20,7 @@
 import * as graphic from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import { LayoutOrient, ECElement } from '../../util/types';
-import { PathProps } from 'zrender/src/graphic/Path';
+import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption } from './SankeySeries';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
@@ -30,6 +30,7 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { isString, retrieve3 } from 'zrender/src/core/util';
+import { GraphEdge } from '../../data/Graph';
 
 class SankeyPathShape {
     x1 = 0;
@@ -195,30 +196,32 @@ class SankeyView extends ChartView {
 
             curve.useStyle(lineStyleModel.getItemStyle());
             // Special color, use source node color or target node color
-            switch (curve.style.fill) {
-                case 'source':
-                    curve.style.fill = edge.node1.getVisual('color');
-                    curve.style.decal = edge.node1.getVisual('style').decal;
-                    break;
-                case 'target':
-                    curve.style.fill = edge.node2.getVisual('color');
-                    curve.style.decal = edge.node2.getVisual('style').decal;
-                    break;
-                case 'gradient':
-                    const sourceColor = edge.node1.getVisual('color');
-                    const targetColor = edge.node2.getVisual('color');
-                    if (isString(sourceColor) && isString(targetColor)) {
-                        curve.style.fill = new graphic.LinearGradient(
-                            0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
-                                color: sourceColor,
-                                offset: 0
-                            }, {
-                                color: targetColor,
-                                offset: 1
-                            }]
-                        );
-                    }
-            }
+            applyCurveStyle(curve.style, orient, edge);
+            // switch (curve.style.fill) {
+            //     case 'source':
+            //         curve.style.fill = edge.node1.getVisual('color');
+            //         curve.style.decal = edge.node1.getVisual('style').decal;
+            //         break;
+            //     case 'target':
+            //         curve.style.fill = edge.node2.getVisual('color');
+            //         curve.style.decal = edge.node2.getVisual('style').decal;
+            //         break;
+            //     case 'gradient':
+            //         const sourceColor = edge.node1.getVisual('color');
+            //         const targetColor = edge.node2.getVisual('color');
+            //         if (isString(sourceColor) && isString(targetColor)) {
+            //             curve.style.fill = new graphic.LinearGradient(
+            //                 0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
+            //                     color: sourceColor,
+            //                     offset: 0
+            //                 }, {
+            //                     color: targetColor,
+            //                     offset: 1
+            //                 }]
+            //             );
+            //         }
+            // }
+
 
             const defaultEdgeLabelText = `${edgeModel.get('value')}`;
             const edgeLabelStateModels = getLabelStatesModels(edgeModel, 'edgeLabel');
@@ -250,7 +253,13 @@ class SankeyView extends ChartView {
 
             const emphasisModel = edgeModel.getModel('emphasis');
 
-            setStatesStylesFromModel(curve, edgeModel, 'lineStyle', (model) => model.getItemStyle());
+            setStatesStylesFromModel(curve, edgeModel, 'lineStyle', (model) => {
+                const style = model.getItemStyle();
+
+                applyCurveStyle(style, orient, edge);
+
+                return style;
+            });
 
             group.add(curve);
 
@@ -359,6 +368,39 @@ class SankeyView extends ChartView {
     }
 
     dispose() {
+    }
+}
+
+/**
+ * Special color, use source node color or target node color
+ * @param curveProps curve's style to parse
+ * @param orient direction
+ * @param edge current curve data
+ */
+function applyCurveStyle(curveProps: PathStyleProps, orient: 'horizontal' | 'vertical', edge: GraphEdge) {
+    switch (curveProps.fill) {
+        case 'source':
+            curveProps.fill = edge.node1.getVisual('color');
+            curveProps.decal = edge.node1.getVisual('style').decal;
+            break;
+        case 'target':
+            curveProps.fill = edge.node2.getVisual('color');
+            curveProps.decal = edge.node2.getVisual('style').decal;
+            break;
+        case 'gradient':
+            const sourceColor = edge.node1.getVisual('color');
+            const targetColor = edge.node2.getVisual('color');
+            if (isString(sourceColor) && isString(targetColor)) {
+                curveProps.fill = new graphic.LinearGradient(
+                    0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
+                        color: sourceColor,
+                        offset: 0
+                    }, {
+                        color: targetColor,
+                        offset: 1
+                    }]
+                );
+            }
     }
 }
 
