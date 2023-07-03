@@ -24,7 +24,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import PieSeriesModel from './PieSeries';
 import { SectorShape } from 'zrender/src/graphic/shape/Sector';
-import { normalizeRadian } from 'zrender/src/contain/util';
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 
 const PI2 = Math.PI * 2;
@@ -94,9 +93,8 @@ export default function pieLayout(
         const { cx, cy, r, r0 } = getBasicPieLayout(seriesModel, api);
 
         let startAngle = -seriesModel.get('startAngle') * RADIAN;
-        let endAngle = startAngle - PI2;
-
-        const endAngleModel = seriesModel.get('endAngle');
+        let endAngle = seriesModel.get('endAngle');
+        endAngle = endAngle === 'auto' ? startAngle - PI2 : -endAngle * RADIAN;
 
         const minAngle = seriesModel.get('minAngle') * RADIAN;
 
@@ -117,10 +115,6 @@ export default function pieLayout(
         // [0...max]
         const extent = data.getDataExtent(valueDim);
         extent[0] = 0;
-
-        if (endAngleModel !== 'auto') {
-            endAngle = -endAngleModel * RADIAN;
-        }
 
         const dir = clockwise ? 1 : -1;
         const angles = [startAngle, endAngle];
