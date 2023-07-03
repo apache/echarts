@@ -49,6 +49,7 @@ interface AxisInfo {
     coordSys: CoordinateSystemMaster
     axisPointerModel: Model<CommonAxisPointerOption>
     triggerTooltip: boolean
+    triggerEmphasis: boolean
     involveSeries: boolean
     snap: boolean
     useHandle: boolean
@@ -87,6 +88,7 @@ export function collect(ecModel: GlobalModel, api: ExtensionAPI) {
          *      coordSys,
          *      axisPointerModel,
          *      triggerTooltip,
+         *      triggerEmphasis,
          *      involveSeries,
          *      snap,
          *      seriesModels,
@@ -194,6 +196,7 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
                 : axisPointerModel;
 
             const snap = axisPointerModel.get('snap');
+            const triggerEmphasis = axisPointerModel.get('triggerEmphasis');
             const axisKey = makeKey(axis.model);
             const involveSeries = triggerTooltip || snap || axis.type === 'category';
 
@@ -204,6 +207,7 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
                 coordSys: coordSys,
                 axisPointerModel: axisPointerModel,
                 triggerTooltip: triggerTooltip,
+                triggerEmphasis: triggerEmphasis,
                 involveSeries: involveSeries,
                 snap: snap,
                 useHandle: isHandleTrigger(axisPointerModel),

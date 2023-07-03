@@ -1065,7 +1065,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                         if (ecData && ecData.dataIndex != null) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                             params = (
-                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
+                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
                             ) as ECElementEvent;
                             return true;
                         }
@@ -2638,8 +2638,8 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
  * @param opts.useDirtyRect Enable dirty rectangle rendering or not.
  */
 export function init(
-    dom: HTMLElement,
-    theme?: string | object,
+    dom?: HTMLElement | null,
+    theme?: string | object | null,
     opts?: EChartsInitOpts
 ): EChartsType {
     const isClient = !(opts && opts.ssr);
@@ -2724,17 +2724,15 @@ export function connect(groupId: string | EChartsType[]): string {
     return groupId as string;
 }
 
-/**
- * @deprecated
- */
-export function disConnect(groupId: string): void {
+export function disconnect(groupId: string): void {
     connectedGroups[groupId] = false;
 }
 
 /**
  * Alias and backward compatibility
+ * @deprecated
  */
-export const disconnect = disConnect;
+export const disConnect = disconnect;
 
 /**
  * Dispose a chart instance
