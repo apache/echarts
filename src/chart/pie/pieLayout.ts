@@ -24,6 +24,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import PieSeriesModel from './PieSeries';
 import { SectorShape } from 'zrender/src/graphic/shape/Sector';
+import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 
 const PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
@@ -91,7 +92,9 @@ export default function pieLayout(
 
         const { cx, cy, r, r0 } = getBasicPieLayout(seriesModel, api);
 
-        const startAngle = -seriesModel.get('startAngle') * RADIAN;
+        let startAngle = -seriesModel.get('startAngle') * RADIAN;
+        let endAngle = seriesModel.get('endAngle');
+        endAngle = endAngle === 'auto' ? startAngle - PI2 : -endAngle * RADIAN;
 
         const minAngle = seriesModel.get('minAngle') * RADIAN;
 
@@ -113,12 +116,19 @@ export default function pieLayout(
         const extent = data.getDataExtent(valueDim);
         extent[0] = 0;
 
+        const dir = clockwise ? 1 : -1;
+        const angles = [startAngle, endAngle];
+        normalizeArcAngles(angles, !clockwise);
+
+        [startAngle, endAngle] = angles;
+
+        const angleRange = Math.abs(endAngle - startAngle);
+
         // In the case some sector angle is smaller than minAngle
-        let restAngle = PI2;
+        let restAngle = angleRange;
         let valueSumLargerThanMinAngle = 0;
 
         let currentAngle = startAngle;
-        const dir = clockwise ? 1 : -1;
 
         data.setLayout({ viewRect, r });
 
@@ -146,7 +156,7 @@ export default function pieLayout(
                     ? unitRadian : (value * unitRadian);
             }
             else {
-                angle = PI2 / validDataCount;
+                angle = angleRange / validDataCount;
             }
 
             if (angle < minAngle) {
@@ -180,7 +190,7 @@ export default function pieLayout(
             // Average the angle if rest angle is not enough after all angles is
             // Constrained by minAngle
             if (restAngle <= 1e-3) {
-                const angle = PI2 / validDataCount;
+                const angle = angleRange / validDataCount;
                 data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
                         const layout = data.getItemLayout(idx);
