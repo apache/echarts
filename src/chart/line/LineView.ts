@@ -1300,7 +1300,7 @@ class LineView extends ChartView {
             }
             if (valueAnimation) {
                 const inner = labelInner(endLabel);
-                if (inner && typeof inner.setLabelText === 'function') {
+                if (typeof inner.setLabelText === 'function') {
                     inner.setLabelText(value);
                 }
             }
