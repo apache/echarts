@@ -2087,12 +2087,12 @@ class ECharts extends Eventful<ECEventDefinition> {
             };
             const componentZLevels: ZLevelItem[] = [];
             const seriesZLevels: ZLevelItem[] = [];
-            let hasSeperateZLevel = false;
+            let hasSeparateZLevel = false;
             ecModel.eachComponent(function (componentType, componentModel) {
                 const zlevel = componentModel.get('zlevel') || 0;
                 const z = componentModel.get('z') || 0;
                 const zlevelKey = componentModel.getZLevelKey();
-                hasSeperateZLevel = hasSeperateZLevel || !!zlevelKey;
+                hasSeparateZLevel = hasSeparateZLevel || !!zlevelKey;
                 (componentType === 'series' ? seriesZLevels : componentZLevels).push({
                     zlevel,
                     z,
@@ -2102,7 +2102,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             });
 
-            if (hasSeperateZLevel) {
+            if (hasSeparateZLevel) {
                 // Series after component
                 const zLevels: ZLevelItem[] = componentZLevels.concat(seriesZLevels);
                 let lastSeriesZLevel: number;
