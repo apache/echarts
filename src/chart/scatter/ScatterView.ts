@@ -103,8 +103,8 @@ class ScatterView extends ChartView {
             return;
         }
         const coordSys = seriesModel.coordinateSystem;
-        // PENDING make `1e-2` configurable, for example, `clipTolerance`?
-        return coordSys && coordSys.getArea && coordSys.getArea(1e-2);
+        // PENDING make `0.1` configurable, for example, `clipTolerance`?
+        return coordSys && coordSys.getArea && coordSys.getArea(.1);
     }
 
     _updateSymbolDraw(data: SeriesData, seriesModel: ScatterSeriesModel) {
