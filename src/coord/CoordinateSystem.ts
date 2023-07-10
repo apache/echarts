@@ -149,7 +149,7 @@ export interface CoordinateSystem {
 
     getRoamTransform?: () => MatrixArray;
 
-    getArea?: () => CoordinateSystemClipArea
+    getArea?: (tolerance?: number) => CoordinateSystemClipArea
 
     // Only `coord/View.js` implements `getBoundingRect`.
     // But if other coord sys implement it, should follow this signature.
