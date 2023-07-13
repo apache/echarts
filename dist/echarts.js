@@ -5455,7 +5455,10 @@
             var needLocalTransform = this.needLocalTransform();
             var m = this.transform;
             if (!(needLocalTransform || parentTransform)) {
-                m && mIdentity(m);
+                if (m) {
+                    mIdentity(m);
+                    this.invTransform = null;
+                }
                 return;
             }
             m = m || create$1();
@@ -7270,7 +7273,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.4.3';
+    var version = '5.4.4';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -12735,6 +12738,14 @@
         )) {
           var view = api.getViewOfSeriesModel(seriesModel);
           view.group.traverse(function (child) {
+            // For the elements that have been triggered by other components,
+            // and are still required to be highlighted,
+            // because the current is directly forced to blur the element,
+            // it will cause the focus self to be unable to highlight, so skip the blur of this element.
+            if (child.__highByOuter && sameSeries && focus === 'self') {
+              return;
+            }
+
             singleEnterBlur(child);
           });
 
@@ -15651,7 +15662,7 @@
     }
 
     var TEXT_PROPS_WITH_GLOBAL = ['fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'];
-    var TEXT_PROPS_SELF = ['align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'];
+    var TEXT_PROPS_SELF = ['align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign', 'ellipsis'];
     var TEXT_PROPS_BOX = ['padding', 'borderWidth', 'borderRadius', 'borderDashOffset', 'backgroundColor', 'borderColor', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'];
 
     function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, isBlock, inRich) {
@@ -16705,7 +16716,7 @@
       var monthAbbr = timeModel.get('monthAbbr');
       var dayOfWeek = timeModel.get('dayOfWeek');
       var dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
-      return (template || '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, y % 100 + '').replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
+      return (template || '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, pad(y % 100 + '', 2)).replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
     }
     function leveledFormat(tick, idx, formatter, lang, isUTC) {
       var template = null;
@@ -28144,9 +28155,9 @@
       return implsStore[name];
     }
 
-    var version$1 = '5.4.2';
+    var version$1 = '5.4.3';
     var dependencies = {
-      zrender: '5.4.3'
+      zrender: '5.4.4'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800; // Some data processors depends on the stack result dimension (to calculate data extent).
@@ -28858,7 +28869,7 @@
 
                 if (ecData && ecData.dataIndex != null) {
                   var dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
-                  params = dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {};
+                  params = dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {};
                   return true;
                 } // If element has custom eventData of components
                 else if (ecData.eventData) {
@@ -30382,18 +30393,15 @@
       connectedGroups[groupId] = true;
       return groupId;
     }
-    /**
-     * @deprecated
-     */
-
-    function disConnect(groupId) {
+    function disconnect(groupId) {
       connectedGroups[groupId] = false;
     }
     /**
      * Alias and backward compatibility
+     * @deprecated
      */
 
-    var disconnect = disConnect;
+    var disConnect = disconnect;
     /**
      * Dispose a chart instance
      */
@@ -36958,7 +36966,7 @@
       if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {
-          coord: axisExtent[0]
+          coord: axisExtent[1]
         };
       } else {
         var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
@@ -37988,6 +37996,7 @@
           dummyTransformable.scaleX = dummyTransformable.scaleY = 1;
         }
 
+        dummyTransformable.rotation = normalizeRadian(dummyTransformable.rotation);
         var host = label.__hostTarget;
         var hostRect;
 
@@ -38241,9 +38250,13 @@
           var itemModel = data.getItemModel(dataIndex);
           var defaultStyle = {};
           var visualStyle = data.getItemVisual(dataIndex, 'style');
-          var visualType = data.getVisual('drawType'); // Default to be same with main color
 
-          defaultStyle.stroke = visualStyle[visualType];
+          if (visualStyle) {
+            var visualType = data.getVisual('drawType'); // Default to be same with main color
+
+            defaultStyle.stroke = visualStyle[visualType];
+          }
+
           var labelLineModel = itemModel.getModel('labelLine');
           setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
           updateLabelLinePoints(el, labelLineModel);
@@ -43290,7 +43303,11 @@
           }
 
           if (valueAnimation) {
-            labelInner(endLabel).setLabelText(value);
+            var inner = labelInner(endLabel);
+
+            if (typeof inner.setLabelText === 'function') {
+              inner.setLabelText(value);
+            }
           }
         }
       };
@@ -48805,6 +48822,7 @@
          *      coordSys,
          *      axisPointerModel,
          *      triggerTooltip,
+         *      triggerEmphasis,
          *      involveSeries,
          *      snap,
          *      seriesModels,
@@ -48884,6 +48902,7 @@
 
           axisPointerModel = fromTooltip ? makeAxisPointerModel(axis, baseTooltipModel, globalAxisPointerModel, ecModel, fromTooltip, triggerTooltip) : axisPointerModel;
           var snap = axisPointerModel.get('snap');
+          var triggerEmphasis = axisPointerModel.get('triggerEmphasis');
           var axisKey = makeKey(axis.model);
           var involveSeries = triggerTooltip || snap || axis.type === 'category'; // If result.axesInfo[key] exist, override it (tooltip has higher priority).
 
@@ -48893,6 +48912,7 @@
             coordSys: coordSys,
             axisPointerModel: axisPointerModel,
             triggerTooltip: triggerTooltip,
+            triggerEmphasis: triggerEmphasis,
             involveSeries: involveSeries,
             snap: snap,
             useHandle: isHandleTrigger(axisPointerModel),
@@ -60196,6 +60216,22 @@
     function makeSymbolTypeKey(symbolCategory) {
       return '_' + symbolCategory + 'Type';
     }
+
+    function makeSymbolTypeValue(name, lineData, idx) {
+      var symbolType = lineData.getItemVisual(idx, name);
+
+      if (!symbolType || symbolType === 'none') {
+        return symbolType;
+      }
+
+      var symbolSize = lineData.getItemVisual(idx, name + 'Size');
+      var symbolRotate = lineData.getItemVisual(idx, name + 'Rotate');
+      var symbolOffset = lineData.getItemVisual(idx, name + 'Offset');
+      var symbolKeepAspect = lineData.getItemVisual(idx, name + 'KeepAspect');
+      var symbolSizeArr = normalizeSymbolSize(symbolSize);
+      var symbolOffsetArr = normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
+      return symbolType + symbolSizeArr + symbolOffsetArr + (symbolRotate || '') + (symbolKeepAspect || '');
+    }
     /**
      * @inner
      */
@@ -60276,7 +60312,7 @@
           // Or symbol position and rotation update in line#beforeUpdate will be one frame slow
 
           this.add(symbol);
-          this[makeSymbolTypeKey(symbolCategory)] = lineData.getItemVisual(idx, symbolCategory);
+          this[makeSymbolTypeKey(symbolCategory)] = makeSymbolTypeValue(symbolCategory, lineData, idx);
         }, this);
 
         this._updateCommonStl(lineData, idx, seriesScope);
@@ -60293,7 +60329,7 @@
         setLinePoints(target.shape, linePoints);
         updateProps(line, target, seriesModel, idx);
         each(SYMBOL_CATEGORIES, function (symbolCategory) {
-          var symbolType = lineData.getItemVisual(idx, symbolCategory);
+          var symbolType = makeSymbolTypeValue(symbolCategory, lineData, idx);
           var key = makeSymbolTypeKey(symbolCategory); // Symbol changed
 
           if (this[key] !== symbolType) {
@@ -61482,6 +61518,53 @@
         return dataIndices;
       };
 
+      GraphNode.prototype.getTrajectoryDataIndices = function () {
+        var connectedEdgesMap = createHashMap();
+        var connectedNodesMap = createHashMap();
+
+        for (var i = 0; i < this.edges.length; i++) {
+          var adjacentEdge = this.edges[i];
+
+          if (adjacentEdge.dataIndex < 0) {
+            continue;
+          }
+
+          connectedEdgesMap.set(adjacentEdge.dataIndex, true);
+          var sourceNodesQueue = [adjacentEdge.node1];
+          var targetNodesQueue = [adjacentEdge.node2];
+          var nodeIteratorIndex = 0;
+
+          while (nodeIteratorIndex < sourceNodesQueue.length) {
+            var sourceNode = sourceNodesQueue[nodeIteratorIndex];
+            nodeIteratorIndex++;
+            connectedNodesMap.set(sourceNode.dataIndex, true);
+
+            for (var j = 0; j < sourceNode.inEdges.length; j++) {
+              connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
+              sourceNodesQueue.push(sourceNode.inEdges[j].node1);
+            }
+          }
+
+          nodeIteratorIndex = 0;
+
+          while (nodeIteratorIndex < targetNodesQueue.length) {
+            var targetNode = targetNodesQueue[nodeIteratorIndex];
+            nodeIteratorIndex++;
+            connectedNodesMap.set(targetNode.dataIndex, true);
+
+            for (var j = 0; j < targetNode.outEdges.length; j++) {
+              connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
+              targetNodesQueue.push(targetNode.outEdges[j].node2);
+            }
+          }
+        }
+
+        return {
+          edge: connectedEdgesMap.keys(),
+          node: connectedNodesMap.keys()
+        };
+      };
+
       return GraphNode;
     }();
 
@@ -61510,6 +61593,44 @@
         return {
           edge: [this.dataIndex],
           node: [this.node1.dataIndex, this.node2.dataIndex]
+        };
+      };
+
+      GraphEdge.prototype.getTrajectoryDataIndices = function () {
+        var connectedEdgesMap = createHashMap();
+        var connectedNodesMap = createHashMap();
+        connectedEdgesMap.set(this.dataIndex, true);
+        var sourceNodes = [this.node1];
+        var targetNodes = [this.node2];
+        var nodeIteratorIndex = 0;
+
+        while (nodeIteratorIndex < sourceNodes.length) {
+          var sourceNode = sourceNodes[nodeIteratorIndex];
+          nodeIteratorIndex++;
+          connectedNodesMap.set(sourceNode.dataIndex, true);
+
+          for (var j = 0; j < sourceNode.inEdges.length; j++) {
+            connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
+            sourceNodes.push(sourceNode.inEdges[j].node1);
+          }
+        }
+
+        nodeIteratorIndex = 0;
+
+        while (nodeIteratorIndex < targetNodes.length) {
+          var targetNode = targetNodes[nodeIteratorIndex];
+          nodeIteratorIndex++;
+          connectedNodesMap.set(targetNode.dataIndex, true);
+
+          for (var j = 0; j < targetNode.outEdges.length; j++) {
+            connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
+            targetNodes.push(targetNode.outEdges[j].node2);
+          }
+        }
+
+        return {
+          edge: connectedEdgesMap.keys(),
+          node: connectedNodesMap.keys()
         };
       };
 
@@ -65796,50 +65917,33 @@
           });
           curve.useStyle(lineStyleModel.getItemStyle()); // Special color, use source node color or target node color
 
-          switch (curve.style.fill) {
-            case 'source':
-              curve.style.fill = edge.node1.getVisual('color');
-              curve.style.decal = edge.node1.getVisual('style').decal;
-              break;
-
-            case 'target':
-              curve.style.fill = edge.node2.getVisual('color');
-              curve.style.decal = edge.node2.getVisual('style').decal;
-              break;
-
-            case 'gradient':
-              var sourceColor = edge.node1.getVisual('color');
-              var targetColor = edge.node2.getVisual('color');
-
-              if (isString(sourceColor) && isString(targetColor)) {
-                curve.style.fill = new LinearGradient(0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
-                  color: sourceColor,
-                  offset: 0
-                }, {
-                  color: targetColor,
-                  offset: 1
-                }]);
+          applyCurveStyle(curve.style, orient, edge);
+          var defaultEdgeLabelText = "" + edgeModel.get('value');
+          var edgeLabelStateModels = getLabelStatesModels(edgeModel, 'edgeLabel');
+          setLabelStyle(curve, edgeLabelStateModels, {
+            labelFetcher: {
+              getFormattedLabel: function (dataIndex, stateName, dataType, labelDimIndex, formatter, extendParams) {
+                return seriesModel.getFormattedLabel(dataIndex, stateName, 'edge', labelDimIndex, // ensure edgeLabel formatter is provided
+                // to prevent the inheritance from `label.formatter` of the series
+                retrieve3(formatter, edgeLabelStateModels.normal && edgeLabelStateModels.normal.get('formatter'), defaultEdgeLabelText), extendParams);
               }
-
-          }
-
-          setLabelStyle(curve, getLabelStatesModels(edgeModel, 'edgeLabel'), {
-            labelFetcher: seriesModel,
+            },
             labelDataIndex: edge.dataIndex,
-            defaultText: "" + edgeModel.get('value')
+            defaultText: defaultEdgeLabelText
           });
           curve.setTextConfig({
             position: 'inside'
           });
           var emphasisModel = edgeModel.getModel('emphasis');
           setStatesStylesFromModel(curve, edgeModel, 'lineStyle', function (model) {
-            return model.getItemStyle();
+            var style = model.getItemStyle();
+            applyCurveStyle(style, orient, edge);
+            return style;
           });
           group.add(curve);
           edgeData.setItemGraphicEl(edge.dataIndex, curve);
           var focus = emphasisModel.get('focus');
-          toggleHoverEmphasis(curve, focus === 'adjacency' ? edge.getAdjacentDataIndices() : focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
-          getECData(curve).dataType = 'edge';
+          toggleHoverEmphasis(curve, focus === 'adjacency' ? edge.getAdjacentDataIndices() : focus === 'trajectory' ? edge.getTrajectoryDataIndices() : focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
         }); // Generate a rect for each node
 
         graph.eachNode(function (node) {
@@ -65859,7 +65963,11 @@
             z2: 10
           });
           setLabelStyle(rect, getLabelStatesModels(itemModel), {
-            labelFetcher: seriesModel,
+            labelFetcher: {
+              getFormattedLabel: function (dataIndex, stateName) {
+                return seriesModel.getFormattedLabel(dataIndex, stateName, 'node');
+              }
+            },
             labelDataIndex: node.dataIndex,
             defaultText: node.id
           });
@@ -65871,7 +65979,7 @@
           nodeData.setItemGraphicEl(node.dataIndex, rect);
           getECData(rect).dataType = 'node';
           var focus = emphasisModel.get('focus');
-          toggleHoverEmphasis(rect, focus === 'adjacency' ? node.getAdjacentDataIndices() : focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
+          toggleHoverEmphasis(rect, focus === 'adjacency' ? node.getAdjacentDataIndices() : focus === 'trajectory' ? node.getTrajectoryDataIndices() : focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
         });
         nodeData.eachItemGraphicEl(function (el, dataIndex) {
           var itemModel = nodeData.getItemModel(dataIndex);
@@ -65913,7 +66021,43 @@
 
       SankeyView.type = 'sankey';
       return SankeyView;
-    }(ChartView); // Add animation to the view
+    }(ChartView);
+    /**
+     * Special color, use source node color or target node color
+     * @param curveProps curve's style to parse
+     * @param orient direction
+     * @param edge current curve data
+     */
+
+
+    function applyCurveStyle(curveProps, orient, edge) {
+      switch (curveProps.fill) {
+        case 'source':
+          curveProps.fill = edge.node1.getVisual('color');
+          curveProps.decal = edge.node1.getVisual('style').decal;
+          break;
+
+        case 'target':
+          curveProps.fill = edge.node2.getVisual('color');
+          curveProps.decal = edge.node2.getVisual('style').decal;
+          break;
+
+        case 'gradient':
+          var sourceColor = edge.node1.getVisual('color');
+          var targetColor = edge.node2.getVisual('color');
+
+          if (isString(sourceColor) && isString(targetColor)) {
+            curveProps.fill = new LinearGradient(0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
+              color: sourceColor,
+              offset: 0
+            }, {
+              color: targetColor,
+              offset: 1
+            }]);
+          }
+
+      }
+    } // Add animation to the view
 
 
     function createGridClipShape$1(rect, seriesModel, cb) {
@@ -71510,7 +71654,7 @@
             rotate = rotateType * Math.PI / 180;
           }
 
-          state.rotation = rotate;
+          state.rotation = normalizeRadian(rotate);
         });
 
         function getLabelAttr(model, name) {
@@ -75016,6 +75160,7 @@
         // see `modelHelper`.
         snap: false,
         triggerTooltip: true,
+        triggerEmphasis: true,
         value: null,
         status: null,
         link: [],
@@ -75585,7 +75730,7 @@
 
       each(axesInfo, function (axisInfo, key) {
         var option = axisInfo.axisPointerModel.option;
-        option.status === 'show' && each(option.seriesDataIndices, function (batchItem) {
+        option.status === 'show' && axisInfo.triggerEmphasis && each(option.seriesDataIndices, function (batchItem) {
           var key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
           newHighlights[key] = batchItem;
         });
@@ -88039,15 +88184,17 @@
           content = formatter(name);
         }
 
-        var inactiveColor = legendItemModel.get('inactiveColor');
+        var textColor = isSelected ? textStyleModel.getTextColor() : legendItemModel.get('inactiveColor');
         itemGroup.add(new ZRText({
           style: createTextStyle(textStyleModel, {
             text: content,
             x: textX,
             y: itemHeight / 2,
-            fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
+            fill: textColor,
             align: textAlign,
             verticalAlign: 'middle'
+          }, {
+            inheritColor: textColor
           })
         })); // Add a invisible rect to increase the area of mouse hover
 
@@ -95548,7 +95695,7 @@
     // });
 
     use(install$g); // `calendar` coordinate system. for example,
-    // chart.setOptionp({
+    // chart.setOption({
     //     calendar: {...},
     //     series: [{
     //         coordinateSystem: 'calendar'
@@ -95624,7 +95771,7 @@
     use(install$J); // `dataZoom` component including both `dataZoomInside` and `dataZoomSlider`.
 
     use(install$M); // `dataZoom` component providing drag, pinch, wheel behaviors
-    // inside coodinate system, for example:
+    // inside coordinate system, for example:
     // chart.setOption({
     //     dataZoom: {type: 'inside'}
     // });
