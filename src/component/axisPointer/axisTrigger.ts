@@ -168,7 +168,7 @@ export default function axisTrigger(
             const inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
             const triggerOnNull = axisInfo.triggerOnNull;
             // If no inputAxesInfo, no axis is restricted.
-            if (triggerOnNull || (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo))) {
+            if (coordSysContainsPoint && (triggerOnNull || (!shouldHide && (!inputAxesInfo || inputAxisInfo)))) {
                 let val = inputAxisInfo && inputAxisInfo.value;
                 if (val == null && !isIllegalPoint) {
                     val = axis.pointToData(point);
