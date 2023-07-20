@@ -341,6 +341,16 @@ class AxisProxy {
                         const range: Dictionary<[number, number]> = {};
                         range[dim] = valueWindow;
 
+                        /**
+                         * @see https://github.com/apache/echarts/issues/18850
+                         * use the raw data to reset the range, in case some data are filtered because of nagetive value in stackData
+                         */
+                        seriesData.each((idx) => {
+                            const item = Number(seriesData.getRawDataItem(idx));
+                            range[dim][0] = Math.min(range[dim][0], item);
+                            range[dim][1] = Math.max(range[dim][1], item);
+                        });
+
                         // console.time('select');
                         seriesData.selectRange(range);
                         // console.timeEnd('select');
