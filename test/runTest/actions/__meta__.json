@@ -200,6 +200,7 @@
   "tooltip-domnode": 1,
   "tooltip-event": 1,
   "tooltip-link": 2,
+  "tooltip-opacity": 1,
   "tooltip-rich": 1,
   "tooltip-setOption": 2,
   "tooltip-valueFormatter": 3,

@@ -149,6 +149,7 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     // If `!markerType`, tooltip marker is not used.
     markerType?: TooltipMarkerType;
     markerColor?: ColorString;
+    opacity?: number;
     name?: string;
     // Also support value is `[121, 555, 94.2]`.
     value?: unknown | unknown[];
@@ -324,7 +325,8 @@ function buildNameValue(
         : ctx.markupStyleCreator.makeTooltipMarker(
             fragment.markerType,
             fragment.markerColor || '#333',
-            renderMode
+            renderMode,
+            fragment.opacity
         );
     const readableName = noName
         ? ''
@@ -473,6 +475,16 @@ export function retrieveVisualColorForTooltipMarker(
     return convertToColorString(color);
 }
 
+export function retrieveVisualOpacityForTooltipMarker(
+    series: SeriesModel,
+    dataIndex: number
+): number {
+    const style = series.getData().getItemVisual(dataIndex, 'style');
+    const opacity = style.opacity;
+    return opacity;
+}
+
+
 export function getPaddingFromTooltipModel(
     model: Model<TooltipOption>,
     renderMode: TooltipRenderMode
@@ -506,7 +518,8 @@ export class TooltipMarkupStyleCreator {
     makeTooltipMarker(
         markerType: TooltipMarkerType,
         colorStr: ColorString,
-        renderMode: TooltipRenderMode
+        renderMode: TooltipRenderMode,
+        opacity?: number
     ): string {
         const markerId = renderMode === 'richText'
             ? this._generateStyleName()
@@ -515,7 +528,8 @@ export class TooltipMarkupStyleCreator {
             color: colorStr,
             type: markerType,
             renderMode,
-            markerId: markerId
+            markerId: markerId,
+            opacity: opacity
         });
         if (isString(marker)) {
             return marker;

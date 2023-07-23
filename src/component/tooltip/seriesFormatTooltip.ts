@@ -24,7 +24,8 @@ import {
     retrieveVisualColorForTooltipMarker,
     TooltipMarkupBlockFragment,
     createTooltipMarkup,
-    TooltipMarkupSection
+    TooltipMarkupSection,
+    retrieveVisualOpacityForTooltipMarker
 } from './tooltipMarkup';
 import { retrieveRawValue } from '../../data/helper/dataProvider';
 import { isNameSpecified } from '../../util/model';
@@ -47,6 +48,7 @@ export function defaultSeriesFormatTooltip(opt: {
     const value = series.getRawValue(dataIndex) as any;
     const isValueArr = isArray(value);
     const markerColor = retrieveVisualColorForTooltipMarker(series, dataIndex);
+    const markerOpacity = retrieveVisualOpacityForTooltipMarker(series, dataIndex);
 
     // Complicated rule for pretty tooltip.
     let inlineValue;
@@ -86,6 +88,7 @@ export function defaultSeriesFormatTooltip(opt: {
             createTooltipMarkup('nameValue', {
                 markerType: 'item',
                 markerColor: markerColor,
+                opacity: markerOpacity,
                 // Do not mix display seriesName and itemName in one tooltip,
                 // which might confuses users.
                 name: inlineName,
