@@ -35,7 +35,7 @@ export default function sunburstVisual(ecModel: GlobalModel) {
         while (current && current.depth > 1) {
             current = current.parentNode;
         }
-         let color = seriesModel.getColorFromPalette((current.name || current.dataIndex + ''), paletteScope);
+        let color = seriesModel.getColorFromPalette((current.name || current.dataIndex + ''), paletteScope);
         if (node.depth > 1 && isString(color)) {
             // Lighter on the deeper level.
             color = lift(color, (node.depth - 1) / (treeHeight - 1) * 0.5);
