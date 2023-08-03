@@ -1031,7 +1031,7 @@ class LineView extends ChartView {
                 points
             },
             segmentIgnoreThreshold: 2,
-            z2: 10
+            z2: 1
         });
 
         this._lineGroup.add(polyline);
