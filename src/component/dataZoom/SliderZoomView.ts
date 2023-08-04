@@ -603,7 +603,8 @@ class SliderZoomView extends DataZoomView {
             this._handleHeight = parsePercent(handleSize, this._size[1]);
             this._handleWidth = bRect.width / bRect.height * this._handleHeight;
 
-            path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
+            const handleStyleModel = dataZoomModel.getModel('handleStyle');
+            path.setStyle(handleStyleModel.getItemStyle());
             path.style.strokeNoScale = true;
             path.rectHover = true;
 
@@ -611,7 +612,7 @@ class SliderZoomView extends DataZoomView {
             enableHoverEmphasis(path);
 
             const handleColor = dataZoomModel.get('handleColor' as any); // deprecated option
-            // Compatitable with previous version
+            // Compatible with previous version
             if (handleColor != null) {
                 path.style.fill = handleColor;
             }
@@ -640,11 +641,12 @@ class SliderZoomView extends DataZoomView {
         let actualMoveZone: Displayable = filler;
         if (brushSelect) {
             const moveHandleHeight = parsePercent(dataZoomModel.get('moveHandleSize'), size[1]);
+            const moveHandleStyleModel = dataZoomModel.getModel('moveHandleStyle');
             const moveHandle = displayables.moveHandle = new graphic.Rect({
-                style: dataZoomModel.getModel('moveHandleStyle').getItemStyle(),
+                style: moveHandleStyleModel.getItemStyle(),
                 silent: true,
                 shape: {
-                    r: [0, 0, 2, 2],
+                    r: moveHandleStyleModel.get('borderRadius'),
                     y: size[1] - 0.5,
                     height: moveHandleHeight
                 }
@@ -659,9 +661,15 @@ class SliderZoomView extends DataZoomView {
             moveHandleIcon.silent = true;
             moveHandleIcon.y = size[1] + moveHandleHeight / 2 - 0.5;
 
-            moveHandle.ensureState('emphasis').style = dataZoomModel.getModel(
-                ['emphasis', 'moveHandleStyle']
-            ).getItemStyle();
+            const moveHandleEmphasisStyle = dataZoomModel.getModel(['emphasis', 'moveHandleStyle']);
+            const moveHandleEmphasisState = moveHandle.ensureState('emphasis');
+            moveHandleEmphasisState.style = moveHandleEmphasisStyle.getItemStyle();
+            const moveHandleEmphasisBorderRadius = moveHandleEmphasisStyle.get('borderRadius');
+            if (moveHandleEmphasisBorderRadius != null) {
+                moveHandleEmphasisState.shape = {
+                    r: moveHandleEmphasisBorderRadius
+                };
+            }
 
             const moveZoneExpandSize = Math.min(size[1] / 2, Math.max(moveHandleHeight, 10));
             actualMoveZone = displayables.moveZone = new graphic.Rect({
