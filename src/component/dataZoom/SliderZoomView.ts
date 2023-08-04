@@ -788,7 +788,9 @@ class SliderZoomView extends DataZoomView {
                 x: segIntervals[i],
                 y: 0,
                 width: segIntervals[i + 1] - segIntervals[i],
-                height: size[1]
+                height: size[1],
+                // prevent shadow from overflow when `borderRadius` is set
+                r: this.dataZoomModel.get('borderRadius') || 0
             });
         }
 
