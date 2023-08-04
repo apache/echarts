@@ -43,6 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import { normalizeCssArray } from '../../util/format';
 
 const Rect = graphic.Rect;
 
@@ -785,9 +786,11 @@ class SliderZoomView extends DataZoomView {
         const dataShadowSegs = displaybles.dataShadowSegs;
         const segIntervals = [0, handleInterval[0], handleInterval[1], size[0]];
 
-        for (let i = 0; i < dataShadowSegs.length; i++) {
+        const borderRadius = normalizeCssArray(this.dataZoomModel.get('borderRadius') || 0);
+        const segNum = dataShadowSegs.length;
+        for (let i = 0; i < segNum; i++) {
             const segGroup = dataShadowSegs[i];
-            let clipPath = segGroup.getClipPath();
+            let clipPath = segGroup.getClipPath() as graphic.Rect;
             if (!clipPath) {
                 clipPath = new graphic.Rect();
                 segGroup.setClipPath(clipPath);
@@ -796,10 +799,14 @@ class SliderZoomView extends DataZoomView {
                 x: segIntervals[i],
                 y: 0,
                 width: segIntervals[i + 1] - segIntervals[i],
-                height: size[1],
-                // prevent shadow from overflow when `borderRadius` is set
-                r: this.dataZoomModel.get('borderRadius') || 0
+                height: size[1]
             });
+            // prevent shadow from overflow when `borderRadius` is set
+            if (i === 0 || i === segNum - 1) {
+                clipPath.shape.r = i === 0
+                    ? [borderRadius[0], 0, 0, borderRadius[3]]
+                    : [0, borderRadius[1], borderRadius[2], 0];
+            }
         }
 
         this._updateDataInfo(nonRealtime);
