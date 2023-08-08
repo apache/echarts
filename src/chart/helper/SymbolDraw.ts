@@ -43,7 +43,6 @@ import Element from 'zrender/src/Element';
 import SeriesModel from '../../model/Series';
 
 interface UpdateOpt {
-    showSingleSymbol?: boolean;
     isIgnore?(idx: number): boolean
     clipShape?: CoordinateSystemClipArea,
     getSymbolPoint?(idx: number): number[]
@@ -61,17 +60,6 @@ interface SymbolLikeCtor {
 }
 
 function symbolNeedsDraw(data: SeriesData, point: number[], idx: number, opt: UpdateOpt) {
-    if (opt.showSingleSymbol) {
-        const dataCount = data.count();
-        if (
-            data.getRawDataItem(idx) === null
-            || (idx !== 0 && data.getRawDataItem(idx - 1) !== null)
-            || (idx !== dataCount - 1 && data.getRawDataItem(idx + 1) !== null)
-        ) {
-            return false;
-        }
-    }
-
     return point && !isNaN(point[0]) && !isNaN(point[1])
         && !(opt.isIgnore && opt.isIgnore(idx))
         // We do not set clipShape on group, because it will cut part of

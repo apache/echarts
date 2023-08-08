@@ -400,6 +400,43 @@ function getIsIgnoreFunc(
     };
 }
 
+function getIsSingleSymbolIgnore(
+    seriesModel: LineSeriesModel,
+    data: SeriesData,
+    coordSys: Cartesian2D
+) {
+    const intervalAxis = coordSys.getAxesByScale('interval')[0];
+
+    if (!intervalAxis) {
+        return;
+    }
+
+    const intervalDataDim = data.mapDimension(intervalAxis.dim);
+
+    const count = data.count();
+
+    const singleDataIdxStateList: boolean[] = [];
+
+    for (let i = 0; i < count; i++) {
+        const intervalValue = data.get(intervalDataDim, i);
+
+        if (typeof intervalValue === 'number' && isNaN(intervalValue)) {
+            singleDataIdxStateList[i] = false;
+        }
+        else {
+            singleDataIdxStateList[i] = true;
+        }
+
+    }
+
+
+    return function (dataIndex: number) {
+        return singleDataIdxStateList[dataIndex - 1]
+                || !singleDataIdxStateList[dataIndex]
+                || singleDataIdxStateList[dataIndex + 1];
+    };
+}
+
 function canShowAllSymbolForCategory(
     categoryAxis: Axis2D,
     data: SeriesData
@@ -657,8 +694,13 @@ class LineView extends ChartView {
 
         const connectNulls = seriesModel.get('connectNulls');
 
-        const isIgnoreFunc = showSymbol && !isCoordSysPolar
-            && getIsIgnoreFunc(seriesModel, data, coordSys as Cartesian2D);
+        const isIgnoreFunc = showSymbol ? !isCoordSysPolar
+            && getIsIgnoreFunc(seriesModel, data, coordSys as Cartesian2D)
+            : (
+                !isCoordSysPolar
+                && !connectNulls
+                && getIsSingleSymbolIgnore(seriesModel, data, coordSys as Cartesian2D)
+            );
 
         // Remove temporary symbols
         const oldData = this._data;
@@ -703,7 +745,6 @@ class LineView extends ChartView {
         ) {
             if (showSymbol || !connectNulls) {
                 symbolDraw.updateData(data, {
-                    showSingleSymbol: showSymbol === false && !connectNulls,
                     isIgnore: isIgnoreFunc,
                     clipShape: clipShapeForSymbol,
                     disableAnimation: true,
@@ -784,7 +825,6 @@ class LineView extends ChartView {
             // because points are not changed.
             if (showSymbol || !connectNulls) {
                 symbolDraw.updateData(data, {
-                    showSingleSymbol: showSymbol === false && !connectNulls,
                     isIgnore: isIgnoreFunc,
                     clipShape: clipShapeForSymbol,
                     disableAnimation: true,
