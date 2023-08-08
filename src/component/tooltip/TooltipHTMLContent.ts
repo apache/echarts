@@ -524,6 +524,9 @@ class TooltipHTMLContent {
 
     dispose() {
         this.el.parentNode.removeChild(this.el);
+        this.el = null;
+        this._container = null;
+        this._api = null;
     }
 
 }
