@@ -253,7 +253,7 @@ interface TooltipContentOption {
      * this config can be either a DomElement, a function to choose a element
      * or a selector string used by query delector to local a element
      */
-    appendTo: ((chartContainer?: HTMLElement) => HTMLElement | undefined | null) | HTMLElement | string
+    appendTo: ((chartContainer: HTMLElement) => HTMLElement | undefined | null) | HTMLElement | string
 }
 
 class TooltipHTMLContent {
