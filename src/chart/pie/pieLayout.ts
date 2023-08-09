@@ -176,9 +176,11 @@ export default function pieLayout(
                 cx: cx,
                 cy: cy,
                 r0: r0,
-                r: roseType
-                    ? linearMap(value, extent, [r0, r])
-                    : r
+                r: roseType === 'area'
+                    // calculate square root of value and extent, and map to range between r0 and r
+                    ? linearMap(Math.sqrt(value), extent.map(Math.sqrt), [r0, r])
+                    // map value to range between r0 and r if roseType is not null, otherwise set r to r
+                    : (roseType ? linearMap(value, extent, [r0, r]) : r)
             });
 
             currentAngle = endAngle;
