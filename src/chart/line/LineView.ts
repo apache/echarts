@@ -692,13 +692,15 @@ class LineView extends ChartView {
 
         const showSymbol = seriesModel.get('showSymbol');
 
+        const showDisconnectSymbol = seriesModel.get('showDisconnectSymbol');
+
         const connectNulls = seriesModel.get('connectNulls');
 
         const isIgnoreFunc = showSymbol ? !isCoordSysPolar
             && getIsIgnoreFunc(seriesModel, data, coordSys as Cartesian2D)
             : (
                 !isCoordSysPolar
-                && !connectNulls
+                && showDisconnectSymbol === true
                 && getIsSingleSymbolIgnore(seriesModel, data, coordSys as Cartesian2D)
             );
 
@@ -743,7 +745,7 @@ class LineView extends ChartView {
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
         ) {
-            if (showSymbol || !connectNulls) {
+            if (showSymbol || showDisconnectSymbol === true) {
                 symbolDraw.updateData(data, {
                     isIgnore: isIgnoreFunc,
                     clipShape: clipShapeForSymbol,
@@ -823,7 +825,7 @@ class LineView extends ChartView {
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed.
-            if (showSymbol || !connectNulls) {
+            if (showSymbol || showDisconnectSymbol === true) {
                 symbolDraw.updateData(data, {
                     isIgnore: isIgnoreFunc,
                     clipShape: clipShapeForSymbol,
