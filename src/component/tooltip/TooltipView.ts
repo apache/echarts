@@ -547,7 +547,7 @@ class TooltipView extends ComponentView {
                 );
                 const axisSectionMarkup = createTooltipMarkup('section', {
                     header: axisValueLabel,
-                    noHeader: !trim(axisValueLabel),
+                    noHeader: !trim(String(axisValueLabel)),
                     sortBlocks: true,
                     blocks: []
                 });

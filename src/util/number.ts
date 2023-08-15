@@ -34,7 +34,7 @@ const RADIAN_EPSILON = 1e-4;
 const ROUND_SUPPORTED_PRECISION_MAX = 20;
 
 function _trim(str: string): string {
-    return str.replace(/^\s+|\s+$/g, '');
+    return String(str).replace(/^\s+|\s+$/g, '');
 }
 
 /**

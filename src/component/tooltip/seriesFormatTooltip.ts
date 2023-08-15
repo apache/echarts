@@ -91,7 +91,7 @@ export function defaultSeriesFormatTooltip(opt: {
                 name: inlineName,
                 // name dimension might be auto assigned, where the name might
                 // be not readable. So we check trim here.
-                noName: !trim(inlineName),
+                noName: !trim(String(inlineName)),
                 value: inlineValue,
                 valueType: inlineValueType
             })

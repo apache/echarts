@@ -181,7 +181,7 @@ function getContentFromModel(ecModel: GlobalModel) {
 
 
 function trim(str: string) {
-    return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+    return String(str).replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
 /**
  * If a block is tsv format
@@ -200,7 +200,7 @@ const itemSplitRegex = new RegExp('[' + ITEM_SPLITER + ']+', 'g');
  * @return {Object}
  */
 function parseTSVContents(tsv: string) {
-    const tsvLines = tsv.split(/\n+/g);
+    const tsvLines = String(tsv).split(/\n+/g);
     const headers = trim(tsvLines.shift()).split(itemSplitRegex);
 
     const categories: string[] = [];
@@ -224,7 +224,7 @@ function parseTSVContents(tsv: string) {
 }
 
 function parseListContents(str: string) {
-    const lines = str.split(/\n+/g);
+    const lines = String(str).split(/\n+/g);
     const seriesName = trim(lines.shift());
 
     const data: DataList = [];
