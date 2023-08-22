@@ -42,7 +42,7 @@ export interface InsideDataZoomOption extends DataZoomOption {
      * Whether enable touchpad, if open this,
      * other options such as `zoomOnMouseWheel` `moveOnMouseMove` will be ignored.
      */
-    gestureOnTouchPad?: boolean
+    natureMoveOnMouseWheel?: boolean
 
     preventDefaultMouseMove?: boolean
 

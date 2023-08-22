@@ -42,7 +42,7 @@ interface RoamOption {
      * Whether enable touchpad, if open this,
      * other options such as `zoomOnMouseWheel` `moveOnMouseMove` will be ignored.
      */
-    gestureOnTouchPad?: boolean
+    natureMoveOnMouseWheel?: boolean
 }
 
 type RoamEventType = keyof RoamEventParams;
@@ -138,7 +138,7 @@ class RoamController extends Eventful<{
                 // By default, wheel do not trigger move.
                 moveOnMouseWheel: false,
                 preventDefaultMouseMove: true,
-                gestureOnTouchPad: false
+                natureMoveOnMouseWheel: false
             });
 
             if (controlType == null) {
@@ -244,7 +244,7 @@ class RoamController extends Eventful<{
     private _mousewheelHandler(e: ZRElementEvent) {
         const shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
         const shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
-        const gestureOnTouchPad = this._opt.gestureOnTouchPad;
+        const natureMoveOnMouseWheel = this._opt.natureMoveOnMouseWheel;
         const wheelDelta = e.wheelDelta;
         const absWheelDeltaDelta = Math.abs(wheelDelta);
         const originX = e.offsetX;
@@ -259,43 +259,43 @@ class RoamController extends Eventful<{
         // their event both, and the final behavior is determined
         // by event listener themselves.
 
-        if (gestureOnTouchPad) {
-          const WindowScrollSpeedFactor = .3;
-          const zoomFactor = 1.1;
-          const wheelZoomSpeed = 1 / 23;
-          // FIXME zrender type error
-          const wheelEvent = e.event as unknown as WheelEvent;
-          if (wheelEvent.ctrlKey) {
-            shouldZoom && checkPointerAndTrigger(this, 'zoom', 'zoomOnMouseWheel', e, {
-              scale: 1 / Math.pow(zoomFactor, wheelEvent.deltaY * wheelZoomSpeed),
-              originX,
-              originY,
-              isAvailableBehavior: null
-            });
-          }
-          else {
-            let offsetY = 0;
-            let offsetX = 0;
-            if (wheelEvent.deltaY) {
-              offsetY = Math.round(wheelEvent.deltaY * WindowScrollSpeedFactor);
+        if (natureMoveOnMouseWheel) {
+            const WindowScrollSpeedFactor = .3;
+            const zoomFactor = 1.1;
+            const wheelZoomSpeed = 1 / 23;
+            // FIXME zrender type error
+            const wheelEvent = e.event as unknown as WheelEvent;
+            if (wheelEvent.ctrlKey) {
+                shouldZoom && checkPointerAndTrigger(this, 'zoom', 'zoomOnMouseWheel', e, {
+                scale: 1 / Math.pow(zoomFactor, wheelEvent.deltaY * wheelZoomSpeed),
+                originX,
+                originY,
+                isAvailableBehavior: null
+                });
             }
-            if (wheelEvent.deltaX) {
-              offsetX = Math.round(wheelEvent.deltaX * WindowScrollSpeedFactor);
+            else {
+                let offsetY = 0;
+                let offsetX = 0;
+                if (wheelEvent.deltaY) {
+                offsetY = Math.round(wheelEvent.deltaY * WindowScrollSpeedFactor);
+                }
+                if (wheelEvent.deltaX) {
+                offsetX = Math.round(wheelEvent.deltaX * WindowScrollSpeedFactor);
+                }
+                shouldMove && checkPointerAndTrigger(this, 'pan', 'moveOnMouseMove', e, {
+                // @ts-nocheck
+                originX,
+                originY,
+                oldX: originX,
+                oldY: originY,
+                dx: -offsetX,
+                dy: -offsetY,
+                newX: originX - offsetX,
+                newY: originY - offsetY,
+                isAvailableBehavior: null
+                } as RoamEventParams['pan']);
             }
-            shouldMove && checkPointerAndTrigger(this, 'pan', 'moveOnMouseMove', e, {
-              // @ts-nocheck
-              originX,
-              originY,
-              oldX: originX,
-              oldY: originY,
-              dx: -offsetX,
-              dy: -offsetY,
-              newX: originX - offsetX,
-              newY: originY - offsetY,
-              isAvailableBehavior: null
-            } as RoamEventParams['pan']);
-          }
-          return;
+            return;
         }
         if (shouldZoom) {
             // Convenience:
