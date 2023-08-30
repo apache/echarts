@@ -180,6 +180,14 @@ function getContentFromModel(ecModel: GlobalModel) {
 }
 
 
+/**
+ * As we cant Trust the user's input unconditionally, 
+ * type check is essential for prevent ecahrt-components from further cyber-attack
+ * for example:attacker can structure a class which have a function named `replace` , lead echart eval its method.
+ *
+ * @param {string} str
+ * @return {*} 
+ */
 function trim(str: string) {
     return String(str).replace(/^\s\s*/, '').replace(/\s\s*$/, '');
 }
