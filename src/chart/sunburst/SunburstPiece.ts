@@ -33,6 +33,7 @@ import {createOrUpdatePatternFromDecal} from '../../util/decal';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { saveOldStyle } from '../../animation/basicTransition';
 import { normalizeRadian } from 'zrender/src/contain/util';
+import { isRadianAroundZero } from '../../util/number';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -231,13 +232,13 @@ class SunburstPiece extends graphic.Sector {
                 }
                 else if (textAlign === 'left') {
                     r = layout.r0 + labelPadding;
-                    if (midAngle > Math.PI / 2) {
+                    if (midAngle > Math.PI / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
                         textAlign = 'right';
                     }
                 }
                 else if (textAlign === 'right') {
                     r = layout.r - labelPadding;
-                    if (midAngle > Math.PI / 2) {
+                    if (midAngle > Math.PI / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
                         textAlign = 'left';
                     }
                 }
