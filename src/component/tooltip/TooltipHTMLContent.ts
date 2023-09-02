@@ -297,9 +297,9 @@ class TooltipHTMLContent {
         const zr = this._zr = api.getZr();
 
         const appendTo = opt.appendTo;
-        const container: HTMLElement | null | undefined = (
+        const container: HTMLElement | null | undefined = appendTo && (
             isString(appendTo)
-                ? appendTo && document.querySelector(appendTo)
+                ? document.querySelector(appendTo)
                 : isDom(appendTo)
                     ? appendTo
                     : isFunction(appendTo) && appendTo(api.getDom())
