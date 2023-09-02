@@ -67,14 +67,13 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
     appendToBody?: boolean
 
     /**
-     * If append popup dom to some other dom element
+     * If append the tooltip element to another DOM element.
      * Only available when renderMode is html
      */
     appendTo?: ((chartContainer: HTMLElement) => HTMLElement | undefined | null) | string | HTMLElement
 
-
     /**
-     * specified class name of tooltip dom
+     * Specify the class name of tooltip element
      * Only available when renderMode is html
      */
     className?: string

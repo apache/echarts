@@ -247,11 +247,8 @@ function makeStyleCoord(
 
 interface TooltipContentOption {
     /**
-     * Choose a DOM element which the tooltip element will be located in order to
-     * avoid some overflow clip but intrude outside of the container.
-     *
-     * this config can be either a DomElement, a function to choose a element
-     * or a selector string used by query delector to local a element
+     * Specify target container of the tooltip element.
+     * Can either be an HTMLElement, CSS selector string, or a function that returns an HTMLElement.
      */
     appendTo: ((chartContainer: HTMLElement) => HTMLElement | undefined | null) | HTMLElement | string
 }
@@ -524,9 +521,7 @@ class TooltipHTMLContent {
 
     dispose() {
         this.el.parentNode.removeChild(this.el);
-        this.el = null;
-        this._container = null;
-        this._api = null;
+        this.el = this._container = null;
     }
 
 }
