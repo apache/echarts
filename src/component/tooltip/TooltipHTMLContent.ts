@@ -299,7 +299,7 @@ class TooltipHTMLContent {
         const appendTo = opt.appendTo;
         const container: HTMLElement | null | undefined = (
             isString(appendTo)
-                ? document.querySelector(appendTo)
+                ? appendTo && document.querySelector(appendTo)
                 : isDom(appendTo)
                     ? appendTo
                     : isFunction(appendTo) && appendTo(api.getDom())
