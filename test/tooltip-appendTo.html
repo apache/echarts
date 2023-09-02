@@ -500,7 +500,7 @@ under the License.
                 xAxis: {},
                 yAxis: {},
                 tooltip: {
-                    appendTo: () => document.querySelector('#config'),
+                    appendTo: document.querySelector('#config'),
                     className: 'mark',
                     formatter: [
                         '1_aaaaaaaaaaaaaa',
@@ -534,7 +534,7 @@ under the License.
                     data: [[11, 92], [33, 44]]
                 }]
             };
-    
+
             var chart = testHelper.create(echarts, 'main6', {
                 title: [
                     'use element',
