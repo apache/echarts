@@ -103,8 +103,6 @@ under the License.
             })
         </script>
 
-
-
         <div class="chart" id="scatter-clip-polar"></div>
         <script>
             require([
@@ -118,13 +116,13 @@ under the License.
 
                 data1.push({
                     value: [5, 82],
-                    name: 'This point shouldn\'t be clipped',
+                    name: 'Shrink the page, this poi👆nt shouldn\'t be clipped',
                     itemStyle: {
                         color: 'red'
                     },
                     label: {
                         show: true,
-                        formatter: '👆{b}👆',
+                        formatter: '{b}',
                         position: 'bottom'
                     }
                 });
@@ -150,7 +148,7 @@ under the License.
                     }]
                 };
                 var chart = testHelper.create(echarts, 'scatter-clip-polar', {
-                    title: ['Scatter Clip on Polar', 'Shrink the page, this red point shouldn\'t be clipped'],
+                    title: 'Scatter Clip on Polar',
                     option: option,
                     height: 400,
                     buttons: makeToggleChartButtons(function (clip) {

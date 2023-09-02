@@ -94,7 +94,6 @@ interface SetLabelStyleOpt<TLabelDataIndex> extends TextCommonParams {
     };
     labelDataIndex?: TLabelDataIndex;
     labelDimIndex?: number;
-    labelValue?: number;
 
     /**
      * Inject a setter of text for the text animation case.
@@ -136,7 +135,6 @@ function getLabelText<TLabelDataIndex>(
     const labelFetcher = opt.labelFetcher;
     const labelDataIndex = opt.labelDataIndex;
     const labelDimIndex = opt.labelDimIndex;
-    const labelValue = opt.labelValue;
     const normalModel = stateModels.normal;
     let baseText;
     if (labelFetcher) {
@@ -145,7 +143,9 @@ function getLabelText<TLabelDataIndex>(
             null,
             labelDimIndex,
             normalModel && normalModel.get('formatter'),
-             {interpolatedValue: retrieve2(interpolatedValue, labelValue)}
+            interpolatedValue != null ? {
+                interpolatedValue
+            } : null
         );
     }
     if (baseText == null) {
@@ -460,7 +460,7 @@ const TEXT_PROPS_WITH_GLOBAL = [
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
 ] as const;
 const TEXT_PROPS_SELF = [
-    'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'
+    'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign', 'ellipsis'
 ] as const;
 const TEXT_PROPS_BOX = [
     'padding', 'borderWidth', 'borderRadius', 'borderDashOffset',

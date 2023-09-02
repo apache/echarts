@@ -17,10 +17,21 @@
 * under the License.
 */
 
+const chalk = require('chalk');
+
+process.on('uncaughtException', (err) => {
+    if (err.message.includes('Cannot find module')) {
+        console.error(chalk.red(err.message.split('\n')[0]));
+        console.log();
+        console.error(`Please run \`${chalk.yellow('npm install')}\` in \`${chalk.green('test/runTest')}\` folder first!`);
+        console.log();
+    }
+    process.exit(1);
+});
+
 const handler = require('serve-handler');
 const http = require('http');
 const path = require('path');
-// const open = require('open');
 const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
