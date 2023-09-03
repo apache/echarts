@@ -94,9 +94,13 @@ export default function pieLayout(
 
         let startAngle = -seriesModel.get('startAngle') * RADIAN;
         let endAngle = seriesModel.get('endAngle');
+        const padAngle = seriesModel.get('padAngle') * RADIAN;
+
         endAngle = endAngle === 'auto' ? startAngle - PI2 : -endAngle * RADIAN;
 
         const minAngle = seriesModel.get('minAngle') * RADIAN;
+
+        const minAndPadAngle = minAngle + padAngle;
 
         let validDataCount = 0;
         data.each(valueDim, function (value: number) {
@@ -118,6 +122,7 @@ export default function pieLayout(
 
         const dir = clockwise ? 1 : -1;
         const angles = [startAngle, endAngle];
+        const halfPadAngle = dir * padAngle / 2;
         normalizeArcAngles(angles, !clockwise);
 
         [startAngle, endAngle] = angles;
@@ -159,19 +164,34 @@ export default function pieLayout(
                 angle = angleRange / validDataCount;
             }
 
-            if (angle < minAngle) {
-                angle = minAngle;
-                restAngle -= minAngle;
+
+            if (angle < minAndPadAngle) {
+                angle = minAndPadAngle;
+                restAngle -= minAndPadAngle;
             }
             else {
                 valueSumLargerThanMinAngle += value;
             }
 
             const endAngle = currentAngle + dir * angle;
+
+            // calculate display angle
+            let actualStartAngle = 0;
+            let actualEndAngle = 0;
+
+            if (padAngle > angle) {
+                actualStartAngle = currentAngle + dir * angle / 2;
+                actualEndAngle = actualStartAngle;
+            }
+            else {
+                actualStartAngle = currentAngle + halfPadAngle;
+                actualEndAngle = endAngle - halfPadAngle;
+            }
+
             data.setItemLayout(idx, {
                 angle: angle,
-                startAngle: currentAngle,
-                endAngle: endAngle,
+                startAngle: actualStartAngle,
+                endAngle: actualEndAngle,
                 clockwise: clockwise,
                 cx: cx,
                 cy: cy,
@@ -184,19 +204,32 @@ export default function pieLayout(
             currentAngle = endAngle;
         });
 
-        // Some sector is constrained by minAngle
+        // Some sector is constrained by minAngle and padAngle
         // Rest sectors needs recalculate angle
         if (restAngle < PI2 && validDataCount) {
             // Average the angle if rest angle is not enough after all angles is
-            // Constrained by minAngle
+            // Constrained by minAngle and padAngle
             if (restAngle <= 1e-3) {
                 const angle = angleRange / validDataCount;
                 data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
                         const layout = data.getItemLayout(idx);
                         layout.angle = angle;
-                        layout.startAngle = startAngle + dir * idx * angle;
-                        layout.endAngle = startAngle + dir * (idx + 1) * angle;
+
+                        let actualStartAngle = 0;
+                        let actualEndAngle = 0;
+
+                        if (angle < padAngle) {
+                            actualStartAngle = startAngle + dir * (idx + 1 / 2) * angle;
+                            actualEndAngle = actualStartAngle;
+                        }
+                        else {
+                             actualStartAngle = startAngle + dir * idx * angle + halfPadAngle;
+                             actualEndAngle = startAngle + dir * (idx + 1) * angle - halfPadAngle;
+                        }
+
+                        layout.startAngle = actualStartAngle;
+                        layout.endAngle = actualEndAngle;
                     }
                 });
             }
@@ -206,10 +239,23 @@ export default function pieLayout(
                 data.each(valueDim, function (value: number, idx: number) {
                     if (!isNaN(value)) {
                         const layout = data.getItemLayout(idx);
-                        const angle = layout.angle === minAngle
-                            ? minAngle : value * unitRadian;
-                        layout.startAngle = currentAngle;
-                        layout.endAngle = currentAngle + dir * angle;
+                        const angle = layout.angle === minAndPadAngle
+                            ? minAndPadAngle : value * unitRadian;
+
+                        let actualStartAngle = 0;
+                        let actualEndAngle = 0;
+
+                        if (angle < padAngle) {
+                            actualStartAngle = currentAngle + dir * angle / 2;
+                            actualEndAngle = actualStartAngle;
+                        }
+                        else {
+                            actualStartAngle = currentAngle + halfPadAngle;
+                            actualEndAngle = currentAngle + dir * angle - halfPadAngle;
+                        }
+
+                        layout.startAngle = actualStartAngle;
+                        layout.endAngle = actualEndAngle;
                         currentAngle += dir * angle;
                     }
                 });
