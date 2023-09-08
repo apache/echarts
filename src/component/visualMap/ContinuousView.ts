@@ -110,10 +110,15 @@ class ContinuousView extends VisualMapView {
 
     private _api: ExtensionAPI;
 
-    private _eventHandler: {
-        _hoverLinkFromSeriesMouseOver?: (e: ElementEvent) => void;
-        _hideIndicator?: () => void;
-    } = {};
+    private _onHoverLinkFromSeriesMouseOver: (e: ElementEvent) => void;
+    private _onHideIndicator: () => void;
+
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
+        super.init(ecModel, api);
+
+        this._onHoverLinkFromSeriesMouseOver = this._hoverLinkFromSeriesMouseOver.bind(this);
+        this._onHideIndicator = this._hideIndicator.bind(this);
+    }
 
 
     doRender(
@@ -755,11 +760,8 @@ class ContinuousView extends VisualMapView {
         const zr = this.api.getZr();
 
         if (this.visualMapModel.option.hoverLink) {
-            this._eventHandler._hoverLinkFromSeriesMouseOver = (e) => this._hoverLinkFromSeriesMouseOver(e);
-            this._eventHandler._hideIndicator = () => this._hideIndicator();
-
-            zr.on('mouseover', this._eventHandler._hoverLinkFromSeriesMouseOver, this);
-            zr.on('mouseout', this._eventHandler._hideIndicator, this);
+            zr.on('mouseover', this._onHoverLinkFromSeriesMouseOver, this);
+            zr.on('mouseout', this._onHideIndicator, this);
         }
         else {
             this._clearHoverLinkFromSeries();
@@ -883,12 +885,8 @@ class ContinuousView extends VisualMapView {
 
         const zr = this.api.getZr();
 
-        if (this._eventHandler._hoverLinkFromSeriesMouseOver) {
-            zr.off('mouseover', this._eventHandler._hoverLinkFromSeriesMouseOver);
-        }
-        if (this._eventHandler._hideIndicator) {
-            zr.off('mouseout', this._eventHandler._hideIndicator);
-        }
+        zr.off('mouseover', this._onHoverLinkFromSeriesMouseOver);
+        zr.off('mouseout', this._onHideIndicator);
     }
     private _applyTransform(vertex: number[], element: Element, inverse?: boolean, global?: boolean): number[]
     private _applyTransform(vertex: Direction, element: Element, inverse?: boolean, global?: boolean): Direction
