@@ -19651,7 +19651,7 @@
 
           if (item == null) {
             continue;
-          } else if (isArray(item)) {
+          } else if (isArray(item) || isTypedArray(item)) {
             sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
             break;
           } else if (isObject(item)) {
@@ -28423,12 +28423,12 @@
         function allocateZlevels(ecModel) {
           var componentZLevels = [];
           var seriesZLevels = [];
-          var hasSeperateZLevel = false;
+          var hasSeparateZLevel = false;
           ecModel.eachComponent(function (componentType, componentModel) {
             var zlevel = componentModel.get('zlevel') || 0;
             var z = componentModel.get('z') || 0;
             var zlevelKey = componentModel.getZLevelKey();
-            hasSeperateZLevel = hasSeperateZLevel || !!zlevelKey;
+            hasSeparateZLevel = hasSeparateZLevel || !!zlevelKey;
             (componentType === 'series' ? seriesZLevels : componentZLevels).push({
               zlevel: zlevel,
               z: z,
@@ -28438,7 +28438,7 @@
             });
           });
 
-          if (hasSeperateZLevel) {
+          if (hasSeparateZLevel) {
             // Series after component
             var zLevels = componentZLevels.concat(seriesZLevels);
             var lastSeriesZLevel_1;
@@ -41519,6 +41519,8 @@
             r0 = _a.r0;
 
         var startAngle = -seriesModel.get('startAngle') * RADIAN;
+        var endAngle = seriesModel.get('endAngle');
+        endAngle = endAngle === 'auto' ? startAngle - PI2$6 : -endAngle * RADIAN;
         var minAngle = seriesModel.get('minAngle') * RADIAN;
         var validDataCount = 0;
         data.each(valueDim, function (value) {
@@ -41532,12 +41534,16 @@
         var stillShowZeroSum = seriesModel.get('stillShowZeroSum'); // [0...max]
 
         var extent = data.getDataExtent(valueDim);
-        extent[0] = 0; // In the case some sector angle is smaller than minAngle
+        extent[0] = 0;
+        var dir = clockwise ? 1 : -1;
+        var angles = [startAngle, endAngle];
+        normalizeArcAngles(angles, !clockwise);
+        startAngle = angles[0], endAngle = angles[1];
+        var angleRange = Math.abs(endAngle - startAngle); // In the case some sector angle is smaller than minAngle
 
-        var restAngle = PI2$6;
+        var restAngle = angleRange;
         var valueSumLargerThanMinAngle = 0;
         var currentAngle = startAngle;
-        var dir = clockwise ? 1 : -1;
         data.setLayout({
           viewRect: viewRect,
           r: r
@@ -41563,7 +41569,7 @@
           if (roseType !== 'area') {
             angle = sum === 0 && stillShowZeroSum ? unitRadian : value * unitRadian;
           } else {
-            angle = PI2$6 / validDataCount;
+            angle = angleRange / validDataCount;
           }
 
           if (angle < minAngle) {
@@ -41592,7 +41598,7 @@
           // Average the angle if rest angle is not enough after all angles is
           // Constrained by minAngle
           if (restAngle <= 1e-3) {
-            var angle_1 = PI2$6 / validDataCount;
+            var angle_1 = angleRange / validDataCount;
             data.each(valueDim, function (value, idx) {
               if (!isNaN(value)) {
                 var layout_1 = data.getItemLayout(idx);
@@ -42644,6 +42650,7 @@
         // 默认顺时针
         clockwise: true,
         startAngle: 90,
+        endAngle: 'auto',
         // 最小角度改为0
         minAngle: 0,
         // If the angle of a sector less than `minShowLabelAngle`,
@@ -43266,13 +43273,14 @@
        */
 
 
-      Cartesian2D.prototype.getArea = function () {
+      Cartesian2D.prototype.getArea = function (tolerance) {
+        tolerance = tolerance || 0;
         var xExtent = this.getAxis('x').getGlobalExtent();
         var yExtent = this.getAxis('y').getGlobalExtent();
-        var x = Math.min(xExtent[0], xExtent[1]);
-        var y = Math.min(yExtent[0], yExtent[1]);
-        var width = Math.max(xExtent[0], xExtent[1]) - x;
-        var height = Math.max(yExtent[0], yExtent[1]) - y;
+        var x = Math.min(xExtent[0], xExtent[1]) - tolerance;
+        var y = Math.min(yExtent[0], yExtent[1]) - tolerance;
+        var width = Math.max(xExtent[0], xExtent[1]) - x + tolerance;
+        var height = Math.max(yExtent[0], yExtent[1]) - y + tolerance;
         return new BoundingRect(x, y, width, height);
       };
 
