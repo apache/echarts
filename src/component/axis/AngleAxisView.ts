@@ -142,8 +142,10 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         // extent id of the axis radius (r0 and r)
         const rId = getRadiusIdx(polar);
         const r0Id = rId ? 0 : 1;
-        const toRadian = (angle: number) => angle * Math.PI / 180;
         let shape;
+
+        const startAngle = (angleAxisModel.get('startAngle') - 90) / zrUtil.RADIAN_TO_DEGREE;
+        const endAngle = (angleAxisModel.get('endAngle') - 90) / zrUtil.RADIAN_TO_DEGREE;
 
 
         if (radiusExtent[r0Id] === 0) {
@@ -152,8 +154,8 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     cx: polar.cx,
                     cy: polar.cy,
                     r: radiusExtent[rId],
-                    startAngle: toRadian(angleAxisModel.get('startAngle') - 90),
-                    endAngle: toRadian(angleAxisModel.get('endAngle') - 90)
+                    startAngle,
+                    endAngle
                 },
                 style: lineStyleModel.getLineStyle(),
                 z2: 1,
@@ -167,6 +169,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     cy: polar.cy,
                     r: radiusExtent[rId],
                     r0: radiusExtent[r0Id]
+
                 },
                 style: lineStyleModel.getLineStyle(),
                 z2: 1,
