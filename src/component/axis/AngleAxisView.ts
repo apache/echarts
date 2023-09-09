@@ -142,14 +142,18 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         // extent id of the axis radius (r0 and r)
         const rId = getRadiusIdx(polar);
         const r0Id = rId ? 0 : 1;
-
+        const toRadian = (angle: number) => angle * Math.PI / 180;
         let shape;
+
+
         if (radiusExtent[r0Id] === 0) {
-            shape = new graphic.Circle({
+            shape = new graphic.Arc({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
-                    r: radiusExtent[rId]
+                    r: radiusExtent[rId],
+                    startAngle: toRadian(angleAxisModel.get('startAngle') - 90),
+                    endAngle: toRadian(angleAxisModel.get('endAngle') - 90)
                 },
                 style: lineStyleModel.getLineStyle(),
                 z2: 1,

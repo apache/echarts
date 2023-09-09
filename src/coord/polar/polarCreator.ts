@@ -122,6 +122,7 @@ function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
     axis.inverse = axisModel.get('inverse');
 
     if (isAngleAxisModel(axisModel)) {
+        console.log('coucou')
         axis.inverse = axis.inverse !== axisModel.get('clockwise');
         const startAngle = axisModel.get('startAngle');
         const endAndle = axisModel.get('endAngle')
