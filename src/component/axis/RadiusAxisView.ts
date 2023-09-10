@@ -104,9 +104,10 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const lineStyleModel = splitLineModel.getModel('lineStyle');
         let lineColors = lineStyleModel.get('color');
         let lineCount = 0;
-        const angleAxis = polar.getAngleAxis().model;
-        const startAngle = (angleAxis.get('startAngle') - 90) / zrUtil.RADIAN_TO_DEGREE;
-        const endAngle = (angleAxis.get('endAngle') - 90) / zrUtil.RADIAN_TO_DEGREE;
+
+        const angleAxis = polar.getAngleAxis();
+        const RADIAN = Math.PI / 180;
+        const angleExtent = angleAxis.getExtent();
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
@@ -121,8 +122,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     cy: polar.cy,
                     // ensure circle radius >= 0
                     r: Math.max(ticksCoords[i].coord, 0),
-                    startAngle,
-                    endAngle
+                    startAngle: -angleExtent[0] * RADIAN,
+                    endAngle: -angleExtent[1] * RADIAN,
+                    clockwise: angleAxis.inverse
                 }
             }));
         }

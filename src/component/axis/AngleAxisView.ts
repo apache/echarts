@@ -138,15 +138,14 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
     axisLine(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
         const lineStyleModel = angleAxisModel.getModel(['axisLine', 'lineStyle']);
+        const angleAxis = polar.getAngleAxis();
+        const RADIAN = Math.PI / 180;
+        const angleExtent = angleAxis.getExtent();
 
         // extent id of the axis radius (r0 and r)
         const rId = getRadiusIdx(polar);
         const r0Id = rId ? 0 : 1;
         let shape;
-
-        const startAngle = (angleAxisModel.get('startAngle') - 90) / zrUtil.RADIAN_TO_DEGREE;
-        const endAngle = (angleAxisModel.get('endAngle') - 90) / zrUtil.RADIAN_TO_DEGREE;
-
 
         if (radiusExtent[r0Id] === 0) {
             shape = new graphic.Arc({
@@ -154,8 +153,9 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     cx: polar.cx,
                     cy: polar.cy,
                     r: radiusExtent[rId],
-                    startAngle,
-                    endAngle
+                    startAngle: -angleExtent[0] * RADIAN,
+                    endAngle: -angleExtent[1] * RADIAN,
+                    clockwise: angleAxis.inverse
                 },
                 style: lineStyleModel.getLineStyle(),
                 z2: 1,
@@ -169,7 +169,6 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     cy: polar.cy,
                     r: radiusExtent[rId],
                     r0: radiusExtent[r0Id]
-
                 },
                 style: lineStyleModel.getLineStyle(),
                 z2: 1,
