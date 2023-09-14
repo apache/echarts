@@ -151,7 +151,7 @@ export default function pieLayout(
             }
 
             // FIXME 兼容 2.0 但是 roseType 是 area 的时候才是这样？
-            if (roseType !== 'area') {
+            if (roseType !== 'area' && roseType !== 'scaledArea') {
                 angle = (sum === 0 && stillShowZeroSum)
                     ? unitRadian : (value * unitRadian);
             }
@@ -176,7 +176,7 @@ export default function pieLayout(
                 cx: cx,
                 cy: cy,
                 r0: r0,
-                r: roseType === 'area'
+                r: roseType === 'scaledArea'
                     // calculate square root of value and extent, and map to range between r0 and r
                     ? linearMap(Math.sqrt(value), extent.map(Math.sqrt), [r0, r])
                     // map value to range between r0 and r if roseType is not null, otherwise set r to r

@@ -106,7 +106,7 @@ export interface PieSeriesOption extends
 
     type?: 'pie'
 
-    roseType?: 'radius' | 'area'
+    roseType?: 'radius' | 'area' | 'scaledArea'
 
     center?: string | number | (string | number)[]
 
