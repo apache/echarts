@@ -318,7 +318,7 @@ type ECEventDefinition = {
     // TODO: Use ECActionEvent
     [key: string]: (...args: unknown[]) => void | boolean
 };
-type EChartsInitOpts = {
+export type EChartsInitOpts = {
     locale?: string | LocaleOption,
     renderer?: RendererType,
     devicePixelRatio?: number,
