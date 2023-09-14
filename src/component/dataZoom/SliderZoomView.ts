@@ -43,6 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import * as history from './history';
 
 const Rect = graphic.Rect;
 
@@ -131,6 +132,7 @@ class SliderZoomView extends DataZoomView {
     private _shadowSize: number[];
     private _shadowPolygonPts: number[][];
     private _shadowPolylinePts: number[][];
+    private _firstRender: boolean = true;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -150,6 +152,11 @@ class SliderZoomView extends DataZoomView {
         }
     ) {
         super.render.apply(this, arguments as any);
+
+        if (this._firstRender) {
+            this._firstRender = false;
+            this._saveHistory();
+        }
 
         throttle.createOrUpdate(
             this,
@@ -922,6 +929,7 @@ class SliderZoomView extends DataZoomView {
     }
 
     private _onDragEnd() {
+        this._saveHistory();
         this._dragging = false;
         this._showDataInfo(false);
 
@@ -929,6 +937,16 @@ class SliderZoomView extends DataZoomView {
         // drag end will cause the whole view rerender, which is unnecessary.
         const realtime = this.dataZoomModel.get('realtime');
         !realtime && this._dispatchZoomAction(false);
+    }
+
+    private _saveHistory() {
+        const snapshot: history.DataZoomStoreSnapshot = {};
+        snapshot[this.dataZoomModel.id] = {
+            dataZoomId: this.dataZoomModel.id,
+            start: this.dataZoomModel.getPercentRange()[0],
+            end: this.dataZoomModel.getPercentRange()[1]
+        };
+        history.push(this.ecModel, snapshot);
     }
 
     private _onClickPanel(e: ZRElementEvent) {

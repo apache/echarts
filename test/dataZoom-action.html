@@ -53,6 +53,7 @@ under the License.
         <div id="main2"></div>
         <div id="main3"></div>
         <div id="main4"></div>
+        <div id="main5"></div>
 
 
 
@@ -652,6 +653,93 @@ under the License.
 
         </script>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var base = +new Date(1990, 9, 3);
+            var oneDay = 24 * 3600 * 1000;
+            var startValue = Math.random() * 300;
+            var data1 = [];
+            var category = []
+
+            for (var i = 0; i < 1000; i++) {
+                var now = new Date(base += oneDay);
+                category.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-'));
+                value = Math.round((Math.random() - 0.5) * 20 + (!i ? startValue : data1[i - 1]));
+                data1.push(value);
+            }
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: 'none'
+                        },
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                xAxis: [{
+                    type: 'category',
+                    boundaryGap: false,
+                    data: category
+                }],
+                yAxis: [{
+                    type: 'value',
+                    boundaryGap: [0, '100%']
+                }],
+                dataZoom: [{
+                    type: 'inside',
+                    id: 'dz-in',
+                    start: 0,
+                    end: 10,
+                }, {
+                    id: 'dz-s',
+                    start: 0,
+                    end: 10,
+                }],
+                series: [{
+                    type:'line',
+                    symbolSize: 10,
+                    data: data1
+                }]
+            };
+
+            var ctx = {};
+            ctx.chart = testHelper.create(echarts, 'main5', {
+                title: [
+                    'Zoom reset should undo all zooming event one by one',
+                    'not just click and hold Zoom',
+                    'but zoom events from the SliderDataZoom and mouse scroll as well',
+                    'Fix: #19118',
+                    '(1) use SliderDataZoom to change zoom',
+                    '(2) use click and hold Zoom to change zoom',
+                    '(3) use mouse scroll to change zoom',
+                    "(4) press 'zoom reset' button until zoom range returns to its original value",
+                ],
+                option: option,
+                height: 200,
+                buttons: makeButtons(ctx)
+            });
+
+        </script>
 
 
 

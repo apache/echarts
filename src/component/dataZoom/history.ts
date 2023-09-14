@@ -72,22 +72,8 @@ export function push(ecModel: GlobalModel, newSnapshot: DataZoomStoreSnapshot) {
 
 export function pop(ecModel: GlobalModel) {
     const storedSnapshots = getStoreSnapshots(ecModel);
-    const head = storedSnapshots[storedSnapshots.length - 1];
     storedSnapshots.length > 1 && storedSnapshots.pop();
-
-    // Find top for all dataZoom.
-    const snapshot: DataZoomStoreSnapshot = {};
-    each(head, function (batchItem, dataZoomId) {
-        for (let i = storedSnapshots.length - 1; i >= 0; i--) {
-            batchItem = storedSnapshots[i][dataZoomId];
-            if (batchItem) {
-                snapshot[dataZoomId] = batchItem;
-                break;
-            }
-        }
-    });
-
-    return snapshot;
+    return storedSnapshots.length > 1 ? storedSnapshots[storedSnapshots.length - 1] : {};
 }
 
 export function clear(ecModel: GlobalModel) {

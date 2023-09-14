@@ -29,7 +29,7 @@ import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import Polar from '../../coord/polar/Polar';
 import SingleAxis from '../../coord/single/SingleAxis';
 import { DataZoomCoordSysMainType, DataZoomReferCoordSysInfo } from './helper';
-
+import * as history from './history';
 
 class InsideZoomView extends DataZoomView {
     static type = 'dataZoom.inside';
@@ -119,6 +119,14 @@ const getRangeHandlers: {
 
         // Restrict range.
         const minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+
+        const snapshot: history.DataZoomStoreSnapshot = {};
+        snapshot[this.dataZoomModel.id] = {
+            dataZoomId: this.dataZoomModel.id,
+            start: range[0],
+            end: range[1]
+        };
+        history.push(this.ecModel, snapshot);
 
         sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
 
