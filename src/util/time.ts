@@ -133,7 +133,7 @@ export function format(
 
     return (template || '')
         .replace(/{yyyy}/g, y + '')
-        .replace(/{yy}/g, y % 100 + '')
+        .replace(/{yy}/g, pad(y % 100 + '', 2))
         .replace(/{Q}/g, q + '')
         .replace(/{MMMM}/g, month[M - 1])
         .replace(/{MMM}/g, monthAbbr[M - 1])

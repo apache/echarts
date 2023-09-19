@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "5.4.0",
+  "version": "5.4.3",
   "description": "Apache ECharts is a powerful, interactive charting and data visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
@@ -47,7 +47,7 @@
     "build:extension": "node build/build.js --type extension",
     "dev:fast": "node build/build-i18n.js && node build/dev-fast.js",
     "dev": "npx -y concurrently -n build,server \"npm run dev:fast\" \"npx -y http-server -c-1 -s -o test\"",
-    "prepublish": "npm run build:lib",
+    "prepare": "npm run build:lib && husky install",
     "release": "npm run build:lib && npm run build:i18n && npm run build && npm run build:esm && npm run build:extension",
     "help": "node build/build.js --help",
     "test:visual": "node test/runTest/server.js",
@@ -58,13 +58,13 @@
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "checktype": "tsc --noEmit",
-    "lint": "npx eslint src/**/*.ts extension-src/**/*.ts",
+    "lint": "npx eslint --cache --cache-location node_modules/.cache/eslint src/**/*.ts extension-src/**/*.ts",
     "lint:fix": "npx eslint --fix src/**/*.ts extension-src/**/*.ts",
     "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "npm:zrender-nightly@^5.4.1-dev.20221104"
+    "zrender": "5.4.4"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
@@ -82,29 +82,22 @@
     "@typescript-eslint/parser": "^4.33.0",
     "chalk": "^3.0.0",
     "commander": "2.11.0",
-    "cwebp-bin": "^6.1.1",
     "dtslint": "^4.0.5",
     "esbuild": "^0.8.39",
     "eslint": "^7.15.0",
     "fs-extra": "^10.0.0",
-    "glob": "7.0.0",
     "globby": "11.0.0",
-    "husky": "^4.2.5",
+    "husky": "^8.0.3",
     "jest": "^26.6.1",
-    "jest-canvas-mock": "^2.2.0",
+    "jest-canvas-mock": "^2.5.0",
     "jshint": "2.13.5",
     "magic-string": "^0.25.7",
     "open": "6.4.0",
-    "pixelmatch": "5.0.2",
-    "pngjs": "3.4.0",
     "rollup": "2.34.2",
     "rollup-plugin-terser": "^7.0.2",
     "seedrandom": "3.0.3",
     "semver": "6.3.0",
-    "serve-handler": "6.1.1",
-    "slugify": "1.3.4",
-    "socket.io": "2.5.0",
-    "terser": "^5.3.8",
+    "terser": "^5.16.1",
     "ts-jest": "^26.4.3",
     "typescript": "4.4.3"
   }

@@ -201,7 +201,7 @@ use(SingleAxisComponent);
 use(ParallelComponent);
 
 // `calendar` coordinate system. for example,
-// chart.setOptionp({
+// chart.setOption({
 //     calendar: {...},
 //     series: [{
 //         coordinateSystem: 'calendar'
@@ -295,7 +295,7 @@ use(LegendComponent);
 use(DataZoomComponent);
 
 // `dataZoom` component providing drag, pinch, wheel behaviors
-// inside coodinate system, for example:
+// inside coordinate system, for example:
 // chart.setOption({
 //     dataZoom: {type: 'inside'}
 // });

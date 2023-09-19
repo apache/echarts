@@ -146,7 +146,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // @readonly
     seriesIndex: number;
 
-    // coodinateSystem will be injected in the echarts/CoordinateSystem
+    // coordinateSystem will be injected in the echarts/CoordinateSystem
     coordinateSystem: CoordinateSystem;
 
     // Injected outside
@@ -718,7 +718,7 @@ function dataTaskReset(context: SeriesTaskContext) {
 }
 
 function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTaskContext): void {
-    // Avoid repead cloneShallow when data just created in reset.
+    // Avoid repeat cloneShallow when data just created in reset.
     if (context.outputData && param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
     }

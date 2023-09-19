@@ -19,7 +19,7 @@
 
 import {
     isTypedArray, HashMap, clone, createHashMap, isArray, isObject, isArrayLike,
-    hasOwn, assert, each, map, isNumber, isString
+    hasOwn, assert, each, map, isNumber, isString, keys
 } from 'zrender/src/core/util';
 import {
     SourceFormat, SeriesLayoutBy, DimensionDefinition,
@@ -271,7 +271,7 @@ export function detectSourceFormat(data: DatasetOption['source']): SourceFormat 
             if (item == null) {
                 continue;
             }
-            else if (isArray(item)) {
+            else if (isArray(item) || isTypedArray(item)) {
                 sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
                 break;
             }
@@ -405,11 +405,7 @@ function objectRowsCollectDimensions(data: OptionSourceDataObjectRows): Dimensio
     let obj;
     while (firstIndex < data.length && !(obj = data[firstIndex++])) {} // jshint ignore: line
     if (obj) {
-        const dimensions: DimensionDefinitionLoose[] = [];
-        each(obj, function (value, key) {
-            dimensions.push(key);
-        });
-        return dimensions;
+        return keys(obj);
     }
 }
 

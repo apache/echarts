@@ -189,8 +189,13 @@ class AxisProxy {
 
             // valueWindow[idx] = round(boundValue);
             // percentWindow[idx] = round(boundPercent);
-            valueWindow[idx] = boundValue;
-            percentWindow[idx] = boundPercent;
+            // fallback to extent start/end when parsed value or percent is invalid
+            valueWindow[idx] = boundValue == null || isNaN(boundValue)
+                ? dataExtent[idx]
+                : boundValue;
+            percentWindow[idx] = boundPercent == null || isNaN(boundPercent)
+                ? percentExtent[idx]
+                : boundPercent;
         });
 
         asc(valueWindow);

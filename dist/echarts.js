@@ -175,8 +175,8 @@
                 else {
                     text = text || '';
                     font = font || DEFAULT_FONT;
-                    var res = /^([0-9]*?)px$/.exec(font);
-                    var fontSize = +(res && res[1]) || DEFAULT_FONT_SIZE;
+                    var res = /(\d+)px/.exec(font);
+                    var fontSize = res && +res[1] || DEFAULT_FONT_SIZE;
                     var width = 0;
                     if (font.indexOf('mono') >= 0) {
                         width = fontSize * text.length;
@@ -629,11 +629,48 @@
     function isPrimitive(obj) {
         return obj[primitiveKey];
     }
+    var MapPolyfill = (function () {
+        function MapPolyfill() {
+            this.data = {};
+        }
+        MapPolyfill.prototype["delete"] = function (key) {
+            var existed = this.has(key);
+            if (existed) {
+                delete this.data[key];
+            }
+            return existed;
+        };
+        MapPolyfill.prototype.has = function (key) {
+            return this.data.hasOwnProperty(key);
+        };
+        MapPolyfill.prototype.get = function (key) {
+            return this.data[key];
+        };
+        MapPolyfill.prototype.set = function (key, value) {
+            this.data[key] = value;
+            return this;
+        };
+        MapPolyfill.prototype.keys = function () {
+            return keys(this.data);
+        };
+        MapPolyfill.prototype.forEach = function (callback) {
+            var data = this.data;
+            for (var key in data) {
+                if (data.hasOwnProperty(key)) {
+                    callback(data[key], key);
+                }
+            }
+        };
+        return MapPolyfill;
+    }());
+    var isNativeMapSupported = typeof Map === 'function';
+    function maybeNativeMap() {
+        return (isNativeMapSupported ? new Map() : new MapPolyfill());
+    }
     var HashMap = (function () {
         function HashMap(obj) {
-            this.data = {};
             var isArr = isArray(obj);
-            this.data = {};
+            this.data = maybeNativeMap();
             var thisMap = this;
             (obj instanceof HashMap)
                 ? obj.each(visit)
@@ -642,24 +679,29 @@
                 isArr ? thisMap.set(value, key) : thisMap.set(key, value);
             }
         }
+        HashMap.prototype.hasKey = function (key) {
+            return this.data.has(key);
+        };
         HashMap.prototype.get = function (key) {
-            return this.data.hasOwnProperty(key) ? this.data[key] : null;
+            return this.data.get(key);
         };
         HashMap.prototype.set = function (key, value) {
-            return (this.data[key] = value);
+            this.data.set(key, value);
+            return value;
         };
         HashMap.prototype.each = function (cb, context) {
-            for (var key in this.data) {
-                if (this.data.hasOwnProperty(key)) {
-                    cb.call(context, this.data[key], key);
-                }
-            }
+            this.data.forEach(function (value, key) {
+                cb.call(context, value, key);
+            });
         };
         HashMap.prototype.keys = function () {
-            return keys(this.data);
+            var keys = this.data.keys();
+            return isNativeMapSupported
+                ? Array.from(keys)
+                : keys;
         };
         HashMap.prototype.removeKey = function (key) {
-            delete this.data[key];
+            this.data["delete"](key);
         };
         return HashMap;
     }());
@@ -4179,7 +4221,7 @@
     var encodeBase64 = (function () {
         if (env.hasGlobalWindow && isFunction(window.btoa)) {
             return function (str) {
-                return window.btoa(unescape(str));
+                return window.btoa(unescape(encodeURIComponent(str)));
             };
         }
         if (typeof Buffer !== 'undefined') {
@@ -5413,7 +5455,10 @@
             var needLocalTransform = this.needLocalTransform();
             var m = this.transform;
             if (!(needLocalTransform || parentTransform)) {
-                m && mIdentity(m);
+                if (m) {
+                    mIdentity(m);
+                    this.invTransform = null;
+                }
                 return;
             }
             m = m || create$1();
@@ -7228,7 +7273,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.4.0';
+    var version = '5.4.4';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -7418,7 +7463,7 @@
     /**
      * Get a data of given precision, assuring the sum of percentages
      * in valueList is 1.
-     * The largest remainer method is used.
+     * The largest remainder method is used.
      * https://en.wikipedia.org/wiki/Largest_remainder_method
      *
      * @param valueList a list of all data
@@ -7438,7 +7483,7 @@
     /**
      * Get a data of given precision, assuring the sum of percentages
      * in valueList is 1.
-     * The largest remainer method is used.
+     * The largest remainder method is used.
      * https://en.wikipedia.org/wiki/Largest_remainder_method
      *
      * @param valueList a list of all data
@@ -7537,7 +7582,7 @@
      *     + time zone: '2012-03-01T12:22:33Z', '2012-03-01T12:22:33+8000', '2012-03-01T12:22:33-05:00',
      *     all of which will be treated as local time if time zone is not specified
      *     (see <https://momentjs.com/>).
-     *   + Or other string format, including (all of which will be treated as loacal time):
+     *   + Or other string format, including (all of which will be treated as local time):
      *     '2012', '2012-3-1', '2012/3/1', '2012/03/01',
      *     '2009/6/12 2:00', '2009/6/12 2:05:08', '2009/6/12 2:05:08.123'
      *   + a timestamp, which represent a time in UTC.
@@ -7558,7 +7603,7 @@
         if (!match) {
           // return Invalid Date.
           return new Date(NaN);
-        } // Use local time when no timezone offset specifed.
+        } // Use local time when no timezone offset is specified.
 
 
         if (!match[8]) {
@@ -7745,7 +7790,7 @@
       }
     }
     /**
-     * [Numberic is defined as]:
+     * [Numeric is defined as]:
      *     `parseFloat(val) == val`
      * For example:
      * numeric:
@@ -7784,7 +7829,7 @@
       return Math.round(Math.random() * 9);
     }
     /**
-     * Get the greatest common dividor
+     * Get the greatest common divisor.
      *
      * @param {number} a one number
      * @param {number} b the other number
@@ -7798,7 +7843,7 @@
       return getGreatestCommonDividor(b, a % b);
     }
     /**
-     * Get the least common multiple
+     * Get the least common multiple.
      *
      * @param {number} a one number
      * @param {number} b the other number
@@ -7975,9 +8020,9 @@
     // ]);
 
     /**
-     * The method do not ensure performance.
+     * The method does not ensure performance.
      * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
-     * This helper method retieves value from data.
+     * This helper method retrieves value from data.
      */
 
     function getDataItemValue(dataItem) {
@@ -8004,17 +8049,17 @@
      *
      * Mode "replaceMege":
      *     (1) Only the id mapped components will be merged.
-     *     (2) Other existing components (except internal compoonets) will be removed.
+     *     (2) Other existing components (except internal components) will be removed.
      *     (3) Other new options will be used to create new component.
-     *     (4) The index of the existing compoents will not be modified.
+     *     (4) The index of the existing components will not be modified.
      *     That means their might be "hole" after the removal.
      *     The new components are created first at those available index.
      *
      * Mode "replaceAll":
      *     This mode try to support that reproduce an echarts instance from another
      *     echarts instance (via `getOption`) in some simple cases.
-     *     In this senario, the `result` index are exactly the consistent with the `newCmptOptions`,
-     *     which ensures the compoennt index referring (like `xAxisIndex: ?`) corrent. That is,
+     *     In this scenario, the `result` index are exactly the consistent with the `newCmptOptions`,
+     *     which ensures the component index referring (like `xAxisIndex: ?`) corrent. That is,
      *     the "hole" in `newCmptOptions` will also be kept.
      *     On the contrary, other modes try best to eliminate holes.
      *     PENDING: This is an experimental mode yet.
@@ -8065,7 +8110,7 @@
       }
 
       makeIdAndName(result); // The array `result` MUST NOT contain elided items, otherwise the
-      // forEach will ommit those items and result in incorrect result.
+      // forEach will omit those items and result in incorrect result.
 
       return result;
     }
@@ -8076,7 +8121,7 @@
       if (mode === 'replaceAll') {
         return result;
       } // Do not use native `map` to in case that the array `existings`
-      // contains elided items, which will be ommited.
+      // contains elided items, which will be omitted.
 
 
       for (var index = 0; index < existings.length; index++) {
@@ -8186,7 +8231,7 @@
     function mappingInReplaceAllMode(result, newCmptOptions) {
       each(newCmptOptions, function (cmptOption) {
         // The feature "reproduce" requires "hole" will also reproduced
-        // in case that compoennt index referring are broken.
+        // in case that component index referring are broken.
         result.push({
           newOption: cmptOption,
           brandNew: true,
@@ -8231,13 +8276,13 @@
 
         if (!isObject(opt)) {
           return;
-        } // name can be overwitten. Consider case: axis.name = '20km'.
+        } // Name can be overwritten. Consider case: axis.name = '20km'.
         // But id generated by name will not be changed, which affect
         // only in that case: setOption with 'not merge mode' and view
         // instance will be recreated, which can be accepted.
 
 
-        keyInfo.name = opt.name != null ? makeComparableKey(opt.name) : existing ? existing.name // Avoid diffferent series has the same name,
+        keyInfo.name = opt.name != null ? makeComparableKey(opt.name) : existing ? existing.name // Avoid that different series has the same name,
         // because name may be used like in color pallet.
         : DUMMY_COMPONENT_NAME_PREFIX + index;
 
@@ -8785,12 +8830,12 @@
       target.isInstance = function (obj) {
         return !!(obj && obj[classAttr]);
       };
-    } // superCall should have class info, which can not be fetch from 'this'.
+    } // superCall should have class info, which can not be fetched from 'this'.
     // Consider this case:
     // class A has method f,
     // class B inherits class A, overrides method f, f call superApply('f'),
-    // class C inherits class B, do not overrides method f,
-    // then when method of class C is called, dead loop occured.
+    // class C inherits class B, does not override method f,
+    // then when method of class C is called, dead loop occurred.
 
     function superCall(context, methodName) {
       var args = [];
@@ -8828,11 +8873,11 @@
       var storage = {};
 
       target.registerClass = function (clz) {
-        // `type` should not be a "instance memeber".
+        // `type` should not be a "instance member".
         // If using TS class, should better declared as `static type = 'series.pie'`.
         // otherwise users have to mount `type` on prototype manually.
         // For backward compat and enable instance visit type via `this.type`,
-        // we stil support fetch `type` from prototype.
+        // we still support fetch `type` from prototype.
         var componentFullType = clz.type || clz.prototype.type;
 
         if (componentFullType) {
@@ -9389,16 +9434,19 @@
             }
         }
     }
-    function isLatin(ch) {
+    function isAlphabeticLetter(ch) {
         var code = ch.charCodeAt(0);
-        return code >= 0x21 && code <= 0x17F;
+        return code >= 0x20 && code <= 0x24F
+            || code >= 0x370 && code <= 0x10FF
+            || code >= 0x1200 && code <= 0x13FF
+            || code >= 0x1E00 && code <= 0x206F;
     }
     var breakCharMap = reduce(',&?/;] '.split(''), function (obj, ch) {
         obj[ch] = true;
         return obj;
     }, {});
     function isWordBreakChar(ch) {
-        if (isLatin(ch)) {
+        if (isAlphabeticLetter(ch)) {
             if (breakCharMap[ch]) {
                 return true;
             }
@@ -12453,7 +12501,7 @@
       for (var i = 0; i < el.animators.length; i++) {
         var animator = el.animators[i];
 
-        if (animator.__fromStateTransition // Dont consider the animation to emphasis state.
+        if (animator.__fromStateTransition // Don't consider the animation to emphasis state.
         && animator.__fromStateTransition.indexOf(toStateName) < 0 && animator.targetName === 'style') {
           animator.saveTo(fromState, props);
         }
@@ -12568,7 +12616,7 @@
 
       return state;
     }
-    /**FI
+    /**
      * Set hover style (namely "emphasis style") of element.
      * @param el Should not be `zrender/graphic/Group`.
      * @param focus 'self' | 'selfInSeries' | 'series'
@@ -12690,6 +12738,14 @@
         )) {
           var view = api.getViewOfSeriesModel(seriesModel);
           view.group.traverse(function (child) {
+            // For the elements that have been triggered by other components,
+            // and are still required to be highlighted,
+            // because the current is directly forced to blur the element,
+            // it will cause the focus self to be unable to highlight, so skip the blur of this element.
+            if (child.__highByOuter && sameSeries && focus === 'self') {
+              return;
+            }
+
             singleEnterBlur(child);
           });
 
@@ -12988,7 +13044,7 @@
     /**
      *
      * Set element as highlight / downplay dispatcher.
-     * It will be checked when element recieved mouseover event or from highlight action.
+     * It will be checked when element received mouseover event or from highlight action.
      * It's in change of all highlight/downplay behavior of it's children.
      *
      * @param el
@@ -13040,9 +13096,9 @@
       ecData.componentHighDownName = componentHighDownName;
     }
     /**
-     * Support hightlight/downplay record on each elements.
+     * Support highlight/downplay record on each elements.
      * For the case: hover highlight/downplay (legend, visualMap, ...) and
-     * user triggerred hightlight/downplay should not conflict.
+     * user triggered highlight/downplay should not conflict.
      * Only all of the highlightDigit cleared, return to normal.
      * @param {string} highlightKey
      * @return {number} highlightDigit
@@ -14797,10 +14853,10 @@
      * (2) In the features like `custom series`, `graphic component`, the user input
      * `{tpye: 'xxx'}` does not only specify shapes but also specify other graphic
      * elements like `'group'`, `'text'`, `'image'` or event `'path'`. Those names
-     * are reserved names, that is, if some user register a shape named `'image'`,
+     * are reserved names, that is, if some user registers a shape named `'image'`,
      * the shape will not be used. If we intending to add some more reserved names
      * in feature, that might bring break changes (disable some existing user shape
-     * names). But that case probably rearly happen. So we dont make more mechanism
+     * names). But that case probably rarely happens. So we don't make more mechanism
      * to resolve this issue here.
      *
      * @param name
@@ -15048,8 +15104,8 @@
       });
     }
     function clipPointsByRect(points, rect) {
-      // FIXME: this way migth be incorrect when grpahic clipped by a corner.
-      // and when element have border.
+      // FIXME: This way might be incorrect when graphic clipped by a corner
+      // and when element has a border.
       return map(points, function (point) {
         var x = point[0];
         x = mathMax$4(x, rect.x);
@@ -15130,7 +15186,7 @@
       var my = a2y - a1y;
       var nx = b2x - b1x;
       var ny = b2y - b1y; // `vec_m` and `vec_n` are parallel iff
-      //     exising `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
+      //     existing `k` such that `vec_m = k · vec_n`, equivalent to `vec_m X vec_n = 0`.
 
       var nmCrossProduct = crossProduct2d(nx, ny, mx, my);
 
@@ -15231,7 +15287,7 @@
           traverseElement(els, cb);
         }
       }
-    } // Register built-in shapes. These shapes might be overwirtten
+    } // Register built-in shapes. These shapes might be overwritten
     // by users, although we do not recommend that.
 
     registerShape('circle', Circle);
@@ -15409,7 +15465,7 @@
           }
         } // PENDING: if there is many requirements that emphasis position
         // need to be different from normal position, we might consider
-        // auto slient is those cases.
+        // auto silent is those cases.
 
 
         textContent.silent = !!normalModel.getShallow('silent'); // Keep x and y
@@ -15606,7 +15662,7 @@
     }
 
     var TEXT_PROPS_WITH_GLOBAL = ['fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'];
-    var TEXT_PROPS_SELF = ['align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'];
+    var TEXT_PROPS_SELF = ['align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign', 'ellipsis'];
     var TEXT_PROPS_BOX = ['padding', 'borderWidth', 'borderRadius', 'borderDashOffset', 'backgroundColor', 'borderColor', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'];
 
     function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, isBlock, inRich) {
@@ -16248,23 +16304,23 @@
      */
 
     /*
-    * Licensed to the Apache Software Foundation (ASF) under one
-    * or more contributor license agreements.  See the NOTICE file
-    * distributed with this work for additional information
-    * regarding copyright ownership.  The ASF licenses this file
-    * to you under the Apache License, Version 2.0 (the
-    * "License"); you may not use this file except in compliance
-    * with the License.  You may obtain a copy of the License at
-    *
-    *   http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing,
-    * software distributed under the License is distributed on an
-    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    * KIND, either express or implied.  See the License for the
-    * specific language governing permissions and limitations
-    * under the License.
-    */
+     * Licensed to the Apache Software Foundation (ASF) under one
+     * or more contributor license agreements.  See the NOTICE file
+     * distributed with this work for additional information
+     * regarding copyright ownership.  The ASF licenses this file
+     * to you under the Apache License, Version 2.0 (the
+     * "License"); you may not use this file except in compliance
+     * with the License.  You may obtain a copy of the License at
+     *
+     *   http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing,
+     * software distributed under the License is distributed on an
+     * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     * KIND, either express or implied.  See the License for the
+     * specific language governing permissions and limitations
+     * under the License.
+     */
 
     /**
      * Language: English.
@@ -16660,7 +16716,7 @@
       var monthAbbr = timeModel.get('monthAbbr');
       var dayOfWeek = timeModel.get('dayOfWeek');
       var dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
-      return (template || '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, y % 100 + '').replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
+      return (template || '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, pad(y % 100 + '', 2)).replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
     }
     function leveledFormat(tick, idx, formatter, lang, isUTC) {
       var template = null;
@@ -16970,7 +17026,7 @@
       } else {
         // Should better not to auto generate style name by auto-increment number here.
         // Because this util is usually called in tooltip formatter, which is probably
-        // called repeatly when mouse move and the auto-increment number increases fast.
+        // called repeatedly when mouse move and the auto-increment number increases fast.
         // Users can make their own style name by theirselves, make it unique and readable.
         var markerId = opt.markerId || 'markerX';
         return {
@@ -17289,13 +17345,13 @@
      * Logic:
      *     1. Scale (against origin point in parent coord)
      *     2. Rotate (against origin point in parent coord)
-     *     3. Traslate (with el.position by this method)
-     * So this method only fixes the last step 'Traslate', which does not affect
+     *     3. Translate (with el.position by this method)
+     * So this method only fixes the last step 'Translate', which does not affect
      * scaling and rotating.
      *
-     * If be called repeatly with the same input el, the same result will be gotten.
+     * If be called repeatedly with the same input el, the same result will be gotten.
      *
-     * Return true if the layout happend.
+     * Return true if the layout happened.
      *
      * @param el Should have `getBoundingRect` method.
      * @param positionInfo
@@ -17940,9 +17996,9 @@
           pushDim(encodeSeriesName, start, count);
           datasetRecord.valueWayDim += count; // ??? TODO give a better default series name rule?
           // especially when encode x y specified.
-          // consider: when mutiple series share one dimension
+          // consider: when multiple series share one dimension
           // category axis, series name should better use
-          // the other dimsion name. On the other hand, use
+          // the other dimension name. On the other hand, use
           // both dimensions name.
         } // In category way, the first category axis.
         else if (baseCategoryDimIndex === coordDimIdx) {
@@ -18049,8 +18105,8 @@
       if (idxResult) {
         encode.value = [idxResult.v]; // `potentialNameDimIndex` has highest priority.
 
-        var nameDimIndex = potentialNameDimIndex != null ? potentialNameDimIndex : idxResult.n; // By default, label use itemName in charts.
-        // So we dont set encodeLabel here.
+        var nameDimIndex = potentialNameDimIndex != null ? potentialNameDimIndex : idxResult.n; // By default, label uses itemName in charts.
+        // So we don't set encodeLabel here.
 
         encode.itemName = [nameDimIndex];
         encode.seriesName = [nameDimIndex];
@@ -18465,7 +18521,7 @@
           this.restoreData();
         } // By design, if `setOption(option2)` at the second time, and `option2` is a `ECUnitOption`,
         // it should better not have the same props with `MediaUnit['option']`.
-        // Becuase either `option2` or `MediaUnit['option']` will be always merged to "current option"
+        // Because either `option2` or `MediaUnit['option']` will be always merged to "current option"
         // rather than original "baseOption". If they both override a prop, the result might be
         // unexpected when media state changed after `setOption` called.
         // If we really need to modify a props in each `MediaUnit['option']`, use the full version
@@ -18591,7 +18647,7 @@
                     if (seriesImportName) {
                       error("Series " + subType + " is used but not imported.\nimport { " + seriesImportName + " } from 'echarts/charts';\necharts.use([" + seriesImportName + "]);");
                     } else {
-                      error("Unkown series " + subType);
+                      error("Unknown series " + subType);
                     }
                   }
                 }
@@ -18897,7 +18953,7 @@
       };
       /**
        * After filtering, series may be different
-       * frome raw series.
+       * from raw series.
        */
 
 
@@ -18924,7 +18980,7 @@
       };
       /**
        * After filtering, series may be different.
-       * frome raw series.
+       * from raw series.
        */
 
 
@@ -19007,8 +19063,8 @@
         };
 
         initBase = function (ecModel, baseOption) {
-          // Using OPTION_INNER_KEY to mark that this option can not be used outside,
-          // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
+          // Using OPTION_INNER_KEY to mark that this option cannot be used outside,
+          // i.e. `chart.setOption(chart.getModel().option);` is forbidden.
           ecModel.option = {};
           ecModel.option[OPTION_INNER_KEY] = OPTION_INNER_VALUE; // Init with series: [], in case of calling findSeries method
           // before series initialized.
@@ -19142,8 +19198,8 @@
 
       CoordinateSystemManager.prototype.create = function (ecModel, api) {
         var coordinateSystems = [];
-        each(coordinateSystemCreators, function (creater, type) {
-          var list = creater.create(ecModel, api);
+        each(coordinateSystemCreators, function (creator, type) {
+          var list = creator.create(ecModel, api);
           coordinateSystems = coordinateSystems.concat(list || []);
         });
         this._coordinateSystems = coordinateSystems;
@@ -19228,7 +19284,7 @@
           // the restore merge solution is essentially incorrect.
           // the mapping can not be 100% consistent with ecModel, which probably brings
           // potential bug!
-          // The first merge is delayed, becuase in most cases, users do not call `setOption` twice.
+          // The first merge is delayed, because in most cases, users do not call `setOption` twice.
           // let fakeCmptsMap = this._fakeCmptsMap;
           // if (!fakeCmptsMap) {
           //     fakeCmptsMap = this._fakeCmptsMap = createHashMap();
@@ -19239,7 +19295,7 @@
           // );
           // For simplicity, timeline options and media options do not support merge,
           // that is, if you `setOption` twice and both has timeline options, the latter
-          // timeline opitons will not be merged to the formers, but just substitude them.
+          // timeline options will not be merged to the former, but just substitute them.
           if (newParsedOption.timelineOptions.length) {
             optionBackup.timelineOptions = newParsedOption.timelineOptions;
           }
@@ -19480,10 +19536,10 @@
       var realMap = {
         width: ecWidth,
         height: ecHeight,
-        aspectratio: ecWidth / ecHeight // lowser case for convenientce.
+        aspectratio: ecWidth / ecHeight // lower case for convenience.
 
       };
-      var applicatable = true;
+      var applicable = true;
       each(query, function (value, attr) {
         var matched = attr.match(QUERY_REG);
 
@@ -19495,10 +19551,10 @@
         var realAttr = matched[2].toLowerCase();
 
         if (!compare(realMap[realAttr], value, operator)) {
-          applicatable = false;
+          applicable = false;
         }
       });
-      return applicatable;
+      return applicable;
     }
 
     function compare(real, expect, operator) {
@@ -20334,7 +20390,7 @@
     // in `dataset` or `series`
     dimensionsDefine) {
       var dimensionsDetectedCount;
-      var startIndex; // PEDING: could data be null/undefined here?
+      var startIndex; // PENDING: Could data be null/undefined here?
       // currently, if `dataset.source` not specified, error thrown.
       // if `series.data` not specified, nothing rendered without error thrown.
       // Should test these cases.
@@ -20412,15 +20468,11 @@
 
 
       if (obj) {
-        var dimensions_1 = [];
-        each(obj, function (value, key) {
-          dimensions_1.push(key);
-        });
-        return dimensions_1;
+        return keys(obj);
       }
     } // Consider dimensions defined like ['A', 'price', 'B', 'price', 'C', 'price'],
     // which is reasonable. But dimension name is duplicated.
-    // Returns undefined or an array contains only object without null/undefiend or string.
+    // Returns undefined or an array contains only object without null/undefined or string.
 
 
     function normalizeDimensionsOption(dimensionsDefine) {
@@ -20440,8 +20492,8 @@
           displayName: rawItem.displayName,
           type: rawItem.type
         }; // User can set null in dimensions.
-        // We dont auto specify name, othewise a given name may
-        // cause it be refered unexpectedly.
+        // We don't auto specify name, otherwise a given name may
+        // cause it to be referred unexpectedly.
 
         if (item.name == null) {
           return item;
@@ -20783,7 +20835,7 @@
       var method = rawSourceDataCounterMap[getMethodMapKey(sourceFormat, seriesLayoutBy)];
 
       if ("development" !== 'production') {
-        assert(method, 'Do not suppport count on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
+        assert(method, 'Do not support count on "' + sourceFormat + '", "' + seriesLayoutBy + '".');
       }
 
       return method;
@@ -20805,7 +20857,7 @@
       var method = rawSourceValueGetterMap[sourceFormat];
 
       if ("development" !== 'production') {
-        assert(method, 'Do not suppport get value on "' + sourceFormat + '".');
+        assert(method, 'Do not support get value on "' + sourceFormat + '".');
       }
 
       return method;
@@ -20992,8 +21044,8 @@
     // compat it?
     // type TooltipFormatResultLegacyObject = {
     //     // `html` means the markup language text, either in 'html' or 'richText'.
-    //     // The name `html` is not appropriate becuase in 'richText' it is not a HTML
-    //     // string. But still support it for backward compat.
+    //     // The name `html` is not appropriate because in 'richText' it is not a HTML
+    //     // string. But still support it for backward compatibility.
     //     html: string;
     //     markers: Dictionary<ColorString>;
     // };
@@ -21251,11 +21303,11 @@
       };
 
       Task.prototype.setOutputEnd = function (end) {
-        // This only happend in dataTask, dataZoom, map, currently.
+        // This only happens in dataTask, dataZoom, map, currently.
         // where dataZoom do not set end each time, but only set
-        // when reset. So we should record the setted end, in case
+        // when reset. So we should record the set end, in case
         // that the stub of dataZoom perform again and earse the
-        // setted end by upstream.
+        // set end by upstream.
         this._outputDueEnd = this._settedOutputEnd = end;
       };
 
@@ -21292,7 +21344,7 @@
         current++;
         return result;
       }
-    }(); ///////////////////////////////////////////////////////////
+    }(); // -----------------------------------------------------------------------------
     // For stream debug (Should be commented out after used!)
     // @usage: printTask(this, 'begin');
     // @usage: printTask(this, null, {someExtraProp});
@@ -21383,7 +21435,7 @@
      * [Performance sensitive]
      *
      * [Caution]: this is the key logic of user value parser.
-     * For backward compatibiliy, do not modify it until have to!
+     * For backward compatibility, do not modify it until you have to!
      */
 
     function parseDataValue(value, // For high performance, do not omit the second param.
@@ -21412,7 +21464,7 @@
     }
     var valueParserMap = createHashMap({
       'number': function (val) {
-        // Do not use `numericToNumber` here. We have by defualt `numericToNumber`.
+        // Do not use `numericToNumber` here. We have `numericToNumber` by default.
         // Here the number parser can have loose rule:
         // enable to cut suffix: "120px" => 120, "14%" => 14.
         return parseFloat(val);
@@ -21474,10 +21526,10 @@
     /** @class */
     function () {
       /**
-       * @param order by defualt: 'asc'
-       * @param incomparable by defualt: Always on the tail.
+       * @param order by default: 'asc'
+       * @param incomparable by default: Always on the tail.
        *        That is, if 'asc' => 'max', if 'desc' => 'min'
-       *        See the definition of "incomparable" in [SORT_COMPARISON_RULE]
+       *        See the definition of "incomparable" in [SORT_COMPARISON_RULE].
        */
       function SortOrderComparator(order, incomparable) {
         var isDesc = order === 'desc';
@@ -21578,14 +21630,14 @@
      * "non-numeric-string" vs "others": "others" is treated as "incomparable".
      * "incomparable" will be seen as -Infinity or Infinity (depends on the settings).
      * MEMO:
-     *   non-numeric string sort make sence when need to put the items with the same tag together.
+     *   Non-numeric string sort makes sense when we need to put the items with the same tag together.
      *   But if we support string sort, we still need to avoid the misleading like `'2' > '12'`,
      *   So we treat "numeric-string" sorted by number order rather than string comparison.
      *
      *
      * [CHECK_LIST_OF_THE_RULE_DESIGN]
      * + Do not support string comparison until required. And also need to
-     *   void the misleading of "2" > "12".
+     *   avoid the misleading of "2" > "12".
      * + Should avoid the misleading case:
      *   `" 22 " gte "22"` is `true` but `" 22 " eq "22"` is `false`.
      * + JS bad case should be avoided: null <= 0, [] <= 0, ' ' <= 0, ...
@@ -21652,7 +21704,7 @@
       /**
        * Only support by dimension index.
        * No need to support by dimension name in transform function,
-       * becuase transform function is not case-specific, no need to use name literally.
+       * because transform function is not case-specific, no need to use name literally.
        */
 
 
@@ -21690,8 +21742,8 @@
       } // [MEMO]
       // Create a new dimensions structure for exposing.
       // Do not expose all dimension info to users directly.
-      // Becuase the dimension is probably auto detected from data and not might reliable.
-      // Should not lead the transformers to think that is relialbe and return it.
+      // Because the dimension is probably auto detected from data and not might reliable.
+      // Should not lead the transformers to think that is reliable and return it.
       // See [DIMENSION_INHERIT_RULE] in `sourceManager.ts`.
 
 
@@ -21707,12 +21759,12 @@
             name: name,
             displayName: dimDef.displayName
           };
-          dimensions.push(dimDefExt); // Users probably not sepcify dimension name. For simplicity, data transform
-          // do not generate dimension name.
+          dimensions.push(dimDefExt); // Users probably do not specify dimension name. For simplicity, data transform
+          // does not generate dimension name.
 
           if (name != null) {
             // Dimension name should not be duplicated.
-            // For simplicity, data transform forbid name duplication, do not generate
+            // For simplicity, data transform forbids name duplication, do not generate
             // new name like module `completeDimensions.ts` did, but just tell users.
             var errMsg_1 = '';
 
@@ -22016,7 +22068,7 @@
         if (firstUpSource && resultIndex === 0 // If transformer returns `dimensions`, it means that the transformer has different
         // dimensions definitions. We do not inherit anything from upstream.
         && !result.dimensions) {
-          var startIndex = firstUpSource.startIndex; // We copy the header of upstream to the result becuase:
+          var startIndex = firstUpSource.startIndex; // We copy the header of upstream to the result, because:
           // (1) The returned data always does not contain header line and can not be used
           // as dimension-detection. In this case we can not use "detected dimensions" of
           // upstream directly, because it might be detected based on different `seriesLayoutBy`.
@@ -22115,7 +22167,7 @@
     /** @class */
     function () {
       function DataStore() {
-        this._chunks = []; // It will not be calculated util needed.
+        this._chunks = []; // It will not be calculated until needed.
 
         this._rawExtent = [];
         this._extent = [];
@@ -22458,7 +22510,7 @@
         return len === 0 ? 0 : len % 2 === 1 ? sortedDimDataArray[(len - 1) / 2] : (sortedDimDataArray[len / 2] + sortedDimDataArray[len / 2 - 1]) / 2;
       };
       /**
-       * Retreive the index with given raw data index
+       * Retrieve the index with given raw data index.
        */
 
 
@@ -22498,11 +22550,11 @@
         return -1;
       };
       /**
-       * Retreive the index of nearest value
+       * Retrieve the index of nearest value.
        * @param dim
        * @param value
        * @param [maxDistance=Infinity]
-       * @return If and only if multiple indices has
+       * @return If and only if multiple indices have
        *         the same value, they are put to the result.
        */
 
@@ -22533,7 +22585,7 @@
             // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
             // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
             // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
-            // So we chose the one that `diff >= 0` in this csae.
+            // So we choose the one that `diff >= 0` in this case.
             // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
             // should be push to `nearestIndices`.
             if (dist < minDist || dist === minDist && diff >= 0 && minDiff < 0) {
@@ -22885,7 +22937,7 @@
           maxArea = -1;
           nextRawIndex = frameStart;
           var firstNaNIndex = -1;
-          var countNaN = 0; // Find a point from current frame that construct a triangel with largest area with previous selected point
+          var countNaN = 0; // Find a point from current frame that construct a triangle with largest area with previous selected point
           // And the average of next frame.
 
           for (var idx = frameStart; idx < frameEnd; idx++) {
@@ -23220,7 +23272,7 @@
      * (3) Transforms should specify `metaRawOption` in each output, just like they can be
      * declared in `root-dataset`.
      * (4) At present only support visit source in `SERIES_LAYOUT_BY_COLUMN` in transforms.
-     * That is for reducing complexity in transfroms.
+     * That is for reducing complexity in transforms.
      * PENDING: Whether to provide transposition transform?
      *
      * [IMPLEMENTAION_MEMO]:
@@ -23397,7 +23449,7 @@
           // but series need `seriesLayoutBy: 'row'`.
 
           var dimensions = retrieve2(newMetaRawOption.dimensions, upMetaRawOption.dimensions); // We share source with dataset as much as possible
-          // to avoid extra memroy cost of high dimensional data.
+          // to avoid extra memory cost of high dimensional data.
 
           var needsCreateSource = seriesLayoutBy !== upMetaRawOption.seriesLayoutBy || !!sourceHeader !== !!upMetaRawOption.sourceHeader || dimensions;
           resultSourceList = needsCreateSource ? [createSource(data, {
@@ -23486,7 +23538,7 @@
       SourceManager.prototype._isDirty = function () {
         if (this._dirty) {
           return true;
-        } // All sourceList is from the some upsteam.
+        } // All sourceList is from the some upstream.
 
 
         var upSourceMgrList = this._getUpstreamSourceManagers();
@@ -23502,8 +23554,8 @@
         }
       };
       /**
-       * @param sourceIndex By defualt 0, means "main source".
-       *                    Most cases there is only one source.
+       * @param sourceIndex By default 0, means "main source".
+       *                    In most cases there is only one source.
        */
 
 
@@ -23568,7 +23620,7 @@
         return cachedStore;
       };
       /**
-       * PEDING: Is it fast enough?
+       * PENDING: Is it fast enough?
        * If no upstream, return empty array.
        */
 
@@ -23576,7 +23628,7 @@
       SourceManager.prototype._getUpstreamSourceManagers = function () {
         // Always get the relationship from the raw option.
         // Do not cache the link of the dependency graph, so that
-        // no need to update them when change happen.
+        // there is no need to update them when change happens.
         var sourceHost = this._sourceHost;
 
         if (isSeries(sourceHost)) {
@@ -23616,7 +23668,7 @@
 
       return SourceManager;
     }();
-    // disable the transform merge, but do not disable transfrom clone from rawOption.
+    // disable the transform merge, but do not disable transform clone from rawOption.
 
     function disableTransformOptionMerge(datasetModel) {
       var transformOption = datasetModel.option.transform;
@@ -23876,8 +23928,8 @@
     /** @class */
     function () {
       function TooltipMarkupStyleCreator() {
-        this.richTextStyles = {}; // Notice that "generate a style name" usuall happens repeatly when mouse moving and
-        // displaying a tooltip. So we put the `_nextStyleNameId` as a member of each creator
+        this.richTextStyles = {}; // Notice that "generate a style name" usually happens repeatedly when mouse is moving and
+        // a tooltip is displayed. So we put the `_nextStyleNameId` as a member of each creator
         // rather than static shared by all creators (which will cause it increase to fast).
 
         this._nextStyleNameId = getRandomIdBase();
@@ -23982,8 +24034,8 @@
       var inlineName = multipleSeries ? seriesName : itemName;
       return createTooltipMarkup('section', {
         header: seriesName,
-        // When series name not specified, do not show a header line with only '-'.
-        // This case alway happen in tooltip.trigger: 'item'.
+        // When series name is not specified, do not show a header line with only '-'.
+        // This case always happens in tooltip.trigger: 'item'.
         noHeader: multipleSeries || !seriesNameSpecified,
         sortParam: sortParam,
         blocks: [createTooltipMarkup('nameValue', {
@@ -24058,7 +24110,7 @@
       __extends(SeriesModel, _super);
 
       function SeriesModel() {
-        // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+        // [Caution]: Because this class or desecendants can be used as `XXX.extend(subProto)`,
         // the class members must not be initialized in constructor or declaration place.
         // Otherwise there is bad case:
         //   class A {xxx = 1;}
@@ -24179,7 +24231,7 @@
       };
       /**
        * Init a data structure from data related option in series
-       * Must be overriden.
+       * Must be overridden.
        */
 
 
@@ -24290,7 +24342,7 @@
       /**
        * Get base axis if has coordinate system and has axis.
        * By default use coordSys.getBaseAxis();
-       * Can be overrided for some chart.
+       * Can be overridden for some chart.
        * @return {type} description
        */
 
@@ -24493,7 +24545,7 @@
           var selectedMap = option.selectedMap;
 
           for (var i = 0; i < len; i++) {
-            var dataIndex = innerDataIndices[i]; // TODO diffrent types of data share same object.
+            var dataIndex = innerDataIndices[i]; // TODO different types of data share same object.
 
             var nameOrId = getSelectionKey(data, dataIndex);
             selectedMap[nameOrId] = true;
@@ -24595,7 +24647,7 @@
     }
 
     function dataTaskProgress(param, context) {
-      // Avoid repead cloneShallow when data just created in reset.
+      // Avoid repeat cloneShallow when data just created in reset.
       if (context.outputData && param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
       }
@@ -25097,7 +25149,7 @@
       var styleMapper = seriesModel.visualStyleMapper || defaultStyleMappers[stylePath];
 
       if (!styleMapper) {
-        console.warn("Unkown style type '" + stylePath + "'.");
+        console.warn("Unknown style type '" + stylePath + "'.");
         return defaultStyleMappers.itemStyle;
       }
 
@@ -25109,7 +25161,7 @@
       var colorKey = seriesModel.visualDrawType || defaultColorKey[stylePath];
 
       if (!colorKey) {
-        console.warn("Unkown style type '" + stylePath + "'.");
+        console.warn("Unknown style type '" + stylePath + "'.");
         return 'fill';
       }
 
@@ -25141,8 +25193,8 @@
         var hasAutoColor = globalStyle.fill === 'auto' || globalStyle.stroke === 'auto'; // Get from color palette by default.
 
         if (!globalStyle[colorKey] || colorCallback || hasAutoColor) {
-          // Note: if some series has color specified (e.g., by itemStyle.color), we DO NOT
-          // make it effect palette. Bacause some scenarios users need to make some series
+          // Note: If some series has color specified (e.g., by itemStyle.color), we DO NOT
+          // make it effect palette. Because some scenarios users need to make some series
           // transparent or as background, which should better not effect the palette.
           var colorPalette = seriesModel.getColorFromPalette( // TODO series count changed.
           seriesModel.name, null, ecModel.getSeriesCount());
@@ -25215,8 +25267,8 @@
     var dataColorPaletteTask = {
       performRawSeries: true,
       overallReset: function (ecModel) {
-        // Each type of series use one scope.
-        // Pie and funnel are using diferrent scopes
+        // Each type of series uses one scope.
+        // Pie and funnel are using different scopes.
         var paletteScopeGroupByType = createHashMap();
         ecModel.eachSeries(function (seriesModel) {
           var colorBy = seriesModel.getColorBy();
@@ -25597,12 +25649,12 @@
               }
 
               var performArgs = scheduler.getPerformArgs(task, opt.block); // FIXME
-              // if intending to decalare `performRawSeries` in handlers, only
+              // if intending to declare `performRawSeries` in handlers, only
               // stream-independent (specifically, data item independent) operations can be
-              // performed. Because is a series is filtered, most of the tasks will not
+              // performed. Because if a series is filtered, most of the tasks will not
               // be performed. A stream-dependent operation probably cause wrong biz logic.
               // Perhaps we should not provide a separate callback for this case instead
-              // of providing the config `performRawSeries`. The stream-dependent operaions
+              // of providing the config `performRawSeries`. The stream-dependent operations
               // and stream-independent operations should better not be mixed.
 
               performArgs.skip = !stageHandler.performRawSeries && ecModel.isSeriesFiltered(task.context.model);
@@ -25723,7 +25775,7 @@
         var errMsg = '';
 
         if ("development" !== 'production') {
-          errMsg = '"createOnAllSeries" do not supported for "overallReset", ' + 'becuase it will block all streams.';
+          errMsg = '"createOnAllSeries" is not supported for "overallReset", ' + 'because it will block all streams.';
         }
 
         assert(!stageHandler.createOnAllSeries, errMsg);
@@ -25732,10 +25784,10 @@
           ecModel.eachRawSeriesByType(seriesType, createStub);
         } else if (getTargetSeries) {
           getTargetSeries(ecModel, api).each(createStub);
-        } // Otherwise, (usually it is legancy case), the overall task will only be
-        // executed when upstream dirty. Otherwise the progressive rendering of all
+        } // Otherwise, (usually it is legacy case), the overall task will only be
+        // executed when upstream is dirty. Otherwise the progressive rendering of all
         // pipelines will be disabled unexpectedly. But it still needs stubs to receive
-        // dirty info from upsteam.
+        // dirty info from upstream.
         else {
             overallProgress = false;
             each(ecModel.getSeries(), createStub);
@@ -26268,7 +26320,7 @@
       };
 
       ECEventProcessor.prototype.afterTrigger = function () {
-        // Make sure the eventInfo wont be used in next trigger.
+        // Make sure the eventInfo won't be used in next trigger.
         this.eventInfo = null;
       };
 
@@ -26483,7 +26535,7 @@
       }
     }
 
-    // Inlucdes: pieSelect, pieUnSelect, pieToggleSelect, mapSelect, mapUnSelect, mapToggleSelect
+    // Includes: pieSelect, pieUnSelect, pieToggleSelect, mapSelect, mapUnSelect, mapToggleSelect
 
     function createLegacyDataSelectAction(seriesType, ecRegisterAction) {
       function getSeriesIndices(ecModel, payload) {
@@ -26780,7 +26832,7 @@
       }
     });
     /**
-     * Map of path contructors
+     * Map of path constructors
      */
     // TODO Use function to build symbol path.
 
@@ -27742,7 +27794,7 @@
         pattern.svgWidth = pSize.width;
         pattern.svgHeight = pSize.height;
         /**
-         * Get minumum length that can make a repeatable pattern.
+         * Get minimum length that can make a repeatable pattern.
          *
          * @return {Object} pattern width and height
          */
@@ -27754,7 +27806,7 @@
            * |-- -- -- -- -- -- -- -- ...
            * |---  ---  ---  ---  --- ...
            * |-- -- -- -- -- -- -- -- ...
-           * So the minumum length of X is 15,
+           * So the minimum length of X is 15,
            * which is the least common multiple of `3 + 2` and `2 + 1`
            * |---  ---  ---  |---  --- ...
            * |-- -- -- -- -- |-- -- -- ...
@@ -28022,7 +28074,7 @@
      * For example, a line with [4, 1] has a dash line of 4 and a space of 1 after
      * that, so the block length of this line is 5.
      *
-     * @param {number[][]} dash dash arrary of X or Y
+     * @param {number[][]} dash dash array of X or Y
      * @return {number[]} block length of each line
      */
 
@@ -28079,7 +28131,7 @@
 
     var lifecycle = new Eventful();
 
-    // The implentations will be registered when installing the component.
+    // The implementations will be registered when installing the component.
     // Avoid these code being bundled to the core module.
 
     var implsStore = {}; // TODO Type
@@ -28103,17 +28155,16 @@
       return implsStore[name];
     }
 
-    var hasWindow = typeof window !== 'undefined';
-    var version$1 = '5.4.0';
+    var version$1 = '5.4.3';
     var dependencies = {
-      zrender: '5.4.0'
+      zrender: '5.4.4'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800; // Some data processors depends on the stack result dimension (to calculate data extent).
     // So data stack stage should be in front of data processing stage.
 
     var PRIORITY_PROCESSOR_DATASTACK = 900; // "Data filter" will block the stream, so it should be
-    // put at the begining of data processing.
+    // put at the beginning of data processing.
 
     var PRIORITY_PROCESSOR_FILTER = 1000;
     var PRIORITY_PROCESSOR_DEFAULT = 2000;
@@ -28267,7 +28318,7 @@
         if ("development" !== 'production') {
           var root =
           /* eslint-disable-next-line */
-          hasWindow ? window : global;
+          env.hasGlobalWindow ? window : global;
           defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
           defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
           var devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
@@ -28363,8 +28414,8 @@
               scheduler.performDataProcessorTasks(ecModel);
               updateStreamModes(this, ecModel); // Do not update coordinate system here. Because that coord system update in
               // each frame is not a good user experience. So we follow the rule that
-              // the extent of the coordinate system is determin in the first frame (the
-              // frame is executed immedietely after task reset.
+              // the extent of the coordinate system is determined in the first frame (the
+              // frame is executed immediately after task reset.
               // this._coordSysMgr.update(ecModel, api);
               // console.log('--- ec frame visual ---', remainTime);
 
@@ -28507,7 +28558,7 @@
       ECharts.prototype.getDevicePixelRatio = function () {
         return this._zr.painter.dpr
         /* eslint-disable-next-line */
-        || hasWindow && window.devicePixelRatio || 1;
+        || env.hasGlobalWindow && window.devicePixelRatio || 1;
       };
       /**
        * Get canvas which has all thing rendered
@@ -28736,12 +28787,12 @@
                 result = result || view.containPoint(value, model);
               } else {
                 if ("development" !== 'production') {
-                  console.warn(key + ': ' + (view ? 'The found component do not support containPoint.' : 'No view mapping to the found component.'));
+                  warn(key + ': ' + (view ? 'The found component do not support containPoint.' : 'No view mapping to the found component.'));
                 }
               }
             } else {
               if ("development" !== 'production') {
-                console.warn(key + ': containPoint is not supported');
+                warn(key + ': containPoint is not supported');
               }
             }
           }, this);
@@ -28774,7 +28825,7 @@
 
         if ("development" !== 'production') {
           if (!seriesModel) {
-            console.warn('There is no specified seires model');
+            warn('There is no specified series model');
           }
         }
 
@@ -28818,7 +28869,7 @@
 
                 if (ecData && ecData.dataIndex != null) {
                   var dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
-                  params = dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {};
+                  params = dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {};
                   return true;
                 } // If element has custom eventData of components
                 else if (ecData.eventData) {
@@ -28856,7 +28907,7 @@
                 // be missed, otherwise there is no way to distinguish source component.
                 // See `dataFormat.getDataParams`.
                 if (!isGlobalOut && !(model && view)) {
-                  console.warn('model or view can not be found by params');
+                  warn('model or view can not be found by params');
                 }
               }
 
@@ -29022,7 +29073,7 @@
 
         if (!loadingEffects[name]) {
           if ("development" !== 'production') {
-            console.warn('Loading effects ' + name + ' not exists.');
+            warn('Loading effects ' + name + ' not exists.');
           }
 
           return;
@@ -29099,9 +29150,9 @@
         if (flush) {
           this._zr.flush();
         } else if (flush !== false && env.browser.weChat) {
-          // In WeChat embeded browser, `requestAnimationFrame` and `setInterval`
+          // In WeChat embedded browser, `requestAnimationFrame` and `setInterval`
           // hang when sliding page (on touch event), which cause that zr does not
-          // refresh util user interaction finished, which is not expected.
+          // refresh until user interaction finished, which is not expected.
           // But `dispatchAction` may be called too frequently when pan on touch
           // screen, which impacts performance if do not throttle them.
           this._throttledZrFlush();
@@ -29178,7 +29229,7 @@
           }) : ecModel.eachSeries(doPrepare);
 
           function doPrepare(model) {
-            // By defaut view will be reused if possible for the case that `setOption` with "notMerge"
+            // By default view will be reused if possible for the case that `setOption` with "notMerge"
             // mode and need to enable transition animation. (Usually, when they have the same id, or
             // especially no id but have the same type & name & index. See the `model.id` generation
             // rule in `makeIdAndName` and `viewId` generation rule here).
@@ -29279,7 +29330,7 @@
 
 
           ecModel && ecModel.eachComponent(condition, function (model) {
-            var isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+            var isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) != null;
 
             if (isExcluded) {
               return;
@@ -29319,7 +29370,7 @@
             }
           }, ecIns);
           ecModel && ecModel.eachComponent(condition, function (model) {
-            var isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+            var isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) != null;
 
             if (isExcluded) {
               return;
@@ -29359,17 +29410,17 @@
             // Save total ecModel here for undo/redo (after restoring data and before processing data).
             // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
             // Create new coordinate system each update
-            // In LineView may save the old coordinate system and use it to get the orignal point
+            // In LineView may save the old coordinate system and use it to get the original point.
 
             coordSysMgr.create(ecModel, api);
             scheduler.performDataProcessorTasks(ecModel, payload); // Current stream render is not supported in data process. So we can update
             // stream modes after data processing, where the filtered data is used to
-            // deteming whether use progressive rendering.
+            // determine whether to use progressive rendering.
 
             updateStreamModes(this, ecModel); // We update stream modes before coordinate system updated, then the modes info
             // can be fetched when coord sys updating (consider the barGrid extent fix). But
             // the drawback is the full coord info can not be fetched. Fortunately this full
-            // coord is not requied in stream mode updater currently.
+            // coord is not required in stream mode updater currently.
 
             coordSysMgr.update(ecModel, api);
             clearColorPalette(ecModel);
@@ -29521,7 +29572,7 @@
           }
 
           if ("development" !== 'production') {
-            console.warn('No coordinate system that supports ' + methodName + ' found by the given finder.');
+            warn('No coordinate system that supports ' + methodName + ' found by the given finder.');
           }
         };
 
@@ -29668,8 +29719,8 @@
 
         bindRenderedEvent = function (zr, ecIns) {
           zr.on('rendered', function (params) {
-            ecIns.trigger('rendered', params); // The `finished` event should not be triggered repeatly,
-            // so it should only be triggered when rendering indeed happend
+            ecIns.trigger('rendered', params); // The `finished` event should not be triggered repeatedly,
+            // so it should only be triggered when rendering indeed happens
             // in zrender. (Consider the case that dipatchAction is keep
             // triggering when mouse move).
 
@@ -29841,7 +29892,7 @@
             }
 
             chartView.group.silent = !!seriesModel.get('silent'); // Should not call markRedraw on group, because it will disable zrender
-            // increamental render (alway render from the __startIndex each frame)
+            // incremental render (always render from the __startIndex each frame)
             // chartView.group.markRedraw();
 
             updateBlend(seriesModel, chartView);
@@ -29949,7 +30000,7 @@
           chartView.eachRendered(function (el) {
             // FIXME marker and other components
             if (!el.isGroup) {
-              // DONT mark the element dirty. In case element is incremental and don't wan't to rerender.
+              // DON'T mark the element dirty. In case element is incremental and don't want to rerender.
               el.style.blend = blendMode;
             }
           });
@@ -30062,7 +30113,7 @@
 
               if (el instanceof Path) {
                 savePathStates(el);
-              } // Only updated on changed element. In case element is incremental and don't wan't to rerender.
+              } // Only updated on changed element. In case element is incremental and don't want to rerender.
               // TODO, a more proper way?
 
 
@@ -30087,7 +30138,7 @@
                 if (textGuide) {
                   textGuide.stateTransition = stateTransition;
                 }
-              } // The use higlighted and selected flag to toggle states.
+              } // Use highlighted and selected flag to toggle states.
 
 
               if (el.__dirty) {
@@ -30238,7 +30289,7 @@
 
     function disposedWarning(id) {
       if ("development" !== 'production') {
-        console.warn('Instance ' + id + ' has been disposed');
+        warn('Instance ' + id + ' has been disposed');
       }
     }
 
@@ -30283,7 +30334,7 @@
 
         if (existInstance) {
           if ("development" !== 'production') {
-            console.warn('There is a chart instance already initialized on the dom.');
+            warn('There is a chart instance already initialized on the dom.');
           }
 
           return existInstance;
@@ -30291,7 +30342,7 @@
 
         if ("development" !== 'production') {
           if (isDom(dom) && dom.nodeName.toUpperCase() !== 'CANVAS' && (!dom.clientWidth && (!opts || opts.width == null) || !dom.clientHeight && (!opts || opts.height == null))) {
-            console.warn('Can\'t get DOM width or height. Please check ' + 'dom.clientWidth and dom.clientHeight. They should not be 0.' + 'For example, you may need to call this in the callback ' + 'of window.onload.');
+            warn('Can\'t get DOM width or height. Please check ' + 'dom.clientWidth and dom.clientHeight. They should not be 0.' + 'For example, you may need to call this in the callback ' + 'of window.onload.');
           }
         }
       }
@@ -30342,18 +30393,15 @@
       connectedGroups[groupId] = true;
       return groupId;
     }
-    /**
-     * @deprecated
-     */
-
-    function disConnect(groupId) {
+    function disconnect(groupId) {
       connectedGroups[groupId] = false;
     }
     /**
-     * Alias and backword compat
+     * Alias and backward compatibility
+     * @deprecated
      */
 
-    var disconnect = disConnect;
+    var disConnect = disconnect;
     /**
      * Dispose a chart instance
      */
@@ -30555,7 +30603,7 @@
     //         chart.dispatchAction(payload, opt);
     //     }
     // }
-    // Buitlin global visual
+    // Builtin global visual
 
     registerVisual(PRIORITY_VISUAL_GLOBAL, seriesStyleTask);
     registerVisual(PRIORITY_VISUAL_CHART_DATA_CUSTOM, dataStyleTask);
@@ -31050,8 +31098,8 @@
         return data.getDimensionInfo(dimName).storeDimIndex;
       });
       summary.encodeFirstDimNotExtra = encodeFirstDimNotExtra;
-      var encodeLabel = encode.label; // FIXME `encode.label` is not recommanded, because formatter can not be set
-      // in this way. Use label.formatter instead. May be remove this approach someday.
+      var encodeLabel = encode.label; // FIXME `encode.label` is not recommended, because formatter cannot be set
+      // in this way. Use label.formatter instead. Maybe remove this approach someday.
 
       if (encodeLabel && encodeLabel.length) {
         defaultedLabel = encodeLabel.slice();
@@ -31260,8 +31308,8 @@
             ordinalMeta: ordinalMeta
           }); // If retrieving data by index,
           //   use <index, type, ordinalMeta> to determine whether data can be shared.
-          //   (Becuase in this case there might be no dimension name defined in dataset, but indices always exists).
-          //   (indices are always 0, 1, 2, ..., so we can ignore them to shorten the hash).
+          //   (Because in this case there might be no dimension name defined in dataset, but indices always exists).
+          //   (Indices are always 0, 1, 2, ..., so we can ignore them to shorten the hash).
           // Otherwise if retrieving data by property name (like `data: [{aa: 123, bb: 765}, ...]`),
           //   use <property, type, ordinalMeta> in hash.
 
@@ -31361,7 +31409,7 @@
     var isObject$2 = isObject;
     var map$1 = map;
     var CtorInt32Array$1 = typeof Int32Array === 'undefined' ? Array : Int32Array; // Use prefix to avoid index to be the same as otherIdList[idx],
-    // which will cause weird udpate animation.
+    // which will cause weird update animation.
 
     var ID_PREFIX = 'e\0\0';
     var INDEX_NOT_FOUND = -1; // type SeriesDimensionIndex = DimensionIndex;
@@ -31396,13 +31444,13 @@
         // private _optionModels: Model[] = [];
         // Global visual properties after visual coding
 
-        this._visual = {}; // Globel layout properties.
+        this._visual = {}; // Global layout properties.
 
         this._layout = {}; // Item visual properties after visual coding
 
         this._itemVisuals = []; // Item layout properties after layout
 
-        this._itemLayouts = []; // Graphic elemnents
+        this._itemLayouts = []; // Graphic elements
 
         this._graphicEls = []; // key: dim, value: extent
 
@@ -31506,7 +31554,7 @@
        * Because only those dimensions will have auto-generated dimension names if not
        * have a user-specified name, and other dimensions will get a return of null/undefined.
        *
-       * @notice Becuause of this reason, should better use `getDimensionIndex` instead, for examples:
+       * @notice Because of this reason, should better use `getDimensionIndex` instead, for examples:
        * ```js
        * const val = data.getStore().get(data.getDimensionIndex(dim), dataIdx);
        * ```
@@ -31526,7 +31574,7 @@
 
         if (!this._dimOmitted) {
           return this.dimensions[dimIdx];
-        } // Retrieve from series dimension definition becuase it probably contains
+        } // Retrieve from series dimension definition because it probably contains
         // generated dimension name (like 'x', 'y').
 
 
@@ -31572,7 +31620,7 @@
        *     + If there is the same concrete dim name defined in `series.dimensions` or `dataset.dimensions`,
        *        it means that concrete name.
        *     + If not, it will be converted to a number, which means the index of the dimension.
-       *        (why? because of the backward compatbility. We have been tolerating number-like string in
+       *        (why? because of the backward compatibility. We have been tolerating number-like string in
        *        dimension setting, although now it seems that it is not a good idea.)
        *     For example, `visualMap[i].dimension: "1"` is the same meaning as `visualMap[i].dimension: 1`,
        *     if no dimension name is defined as `"1"`.
@@ -31580,7 +31628,7 @@
        *   For example, it can be be default name `"x"`, `"y"`, `"z"`, `"lng"`, `"lat"`, `"angle"`, `"radius"`,
        *   or customized in `dimensions` property of option like `"age"`.
        *
-       * @return recogonized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
+       * @return recognized `DimensionIndex`. Otherwise return null/undefined (means that dim is `DimensionName`).
        */
 
 
@@ -31596,7 +31644,7 @@
 
         if ("development" !== 'production') {
           if (dimIdx == null) {
-            throw new Error('Unkown dimension ' + dim);
+            throw new Error('Unknown dimension ' + dim);
           }
         }
 
@@ -31721,7 +31769,7 @@
        *            [NaN, 43, 1],
        *            ['-', 'asdf', 0]
        *        ]
-       *        Each item is exaclty cooresponding to a dimension.
+       *        Each item is exactly corresponding to a dimension.
        */
 
 
@@ -31843,7 +31891,7 @@
       };
       /**
        * Calculate extent on a filtered data might be time consuming.
-       * Approximate extent is only used for: calculte extent of filtered data outside.
+       * Approximate extent is only used for: calculate extent of filtered data outside.
        */
 
 
@@ -31860,7 +31908,7 @@
         isObject$2(key) ? extend(this._calculationInfo, key) : this._calculationInfo[key] = value;
       };
       /**
-       * @return Never be null/undefined. `number` will be converted to string. Becuase:
+       * @return Never be null/undefined. `number` will be converted to string. Because:
        * In most cases, name is used in display, where returning a string is more convenient.
        * In other cases, name is used in query (see `indexOfName`), where we can keep the
        * rule that name `2` equals to name `'2'`.
@@ -31894,7 +31942,7 @@
         return ordinal;
       };
       /**
-       * @return Never null/undefined. `number` will be converted to string. Becuase:
+       * @return Never null/undefined. `number` will be converted to string. Because:
        * In all cases having encountered at present, id is used in making diff comparison, which
        * are usually based on hash map. We can keep the rule that the internal id are always string
        * (treat `2` is the same as `'2'`) to make the related logic simple.
@@ -31962,7 +32010,7 @@
         }), idx) : store.getValues(dimensions);
       };
       /**
-       * If value is NaN. Inlcuding '-'
+       * If value is NaN. Including '-'
        * Only check the coord dimensions.
        */
 
@@ -31982,7 +32030,7 @@
         return true;
       };
       /**
-       * Retreive the index with given name
+       * Retrieve the index with given name
        */
 
 
@@ -32030,7 +32078,7 @@
         return rawIndex;
       };
       /**
-       * Retreive the index of nearest value
+       * Retrieve the index of nearest value
        * @param dim
        * @param value
        * @param [maxDistance=Infinity]
@@ -32138,8 +32186,8 @@
         }
 
         var dimIndices = map$1(normalizeDimensions(dims), this._getStoreDimIndex, this); // If do shallow clone here, if there are too many stacked series,
-        // it still cost lots of memory, becuase `_store.dimensions` are not shared.
-        // We should consider there probably be shallow clone happen in each sereis
+        // it still cost lots of memory, because `_store.dimensions` are not shared.
+        // We should consider there probably be shallow clone happen in each series
         // in consequent filter/map.
 
         this._store.modify(dimIndices, fCtx ? bind(cb, fCtx) : cb);
@@ -32443,7 +32491,7 @@
           return dimensions;
         };
         /**
-         * Data in excludeDimensions is copied, otherwise transfered.
+         * Data in excludeDimensions is copied, otherwise transferred.
          */
 
 
@@ -32531,7 +32579,7 @@
       var dimsDef = opt.dimensionsDefine || source.dimensionsDefine || [];
       var coordDimNameMap = createHashMap();
       var resultList = [];
-      var dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount); // Try to ignore unsed dimensions if sharing a high dimension datastore
+      var dimCount = getDimCount(source, sysDims, dimsDef, opt.dimensionsCount); // Try to ignore unused dimensions if sharing a high dimension datastore
       // 30 is an experience value.
 
       var omitUnusedDimensions = opt.canOmitUnusedDimensions && shouldOmitUnusedDimensions(dimCount);
@@ -32563,7 +32611,7 @@
 
           if (userDimName != null && dataDimNameMap.get(userDimName) != null) {
             // Only if `series.dimensions` is defined in option
-            // displayName, will be set, and dimension will be diplayed vertically in
+            // displayName, will be set, and dimension will be displayed vertically in
             // tooltip by default.
             resultItem.name = resultItem.displayName = userDimName;
           }
@@ -32607,7 +32655,7 @@
             applyDim(getResultItem(resultDimIdx), coordDim, idx);
           }
         });
-      }); // Apply templetes and default order from `sysDims`.
+      }); // Apply templates and default order from `sysDims`.
 
       var availDimIdx = 0;
       each(sysDims, function (sysDimItemRaw) {
@@ -32728,8 +32776,8 @@
           //    ]},
           //    series: {type: 'pie'}
           // }
-          // The first colum should better be treated as a "ordinal" although it
-          // might not able to be detected as an "ordinal" by `guessOrdinal`.
+          // The first column should better be treated as a "ordinal" although it
+          // might not be detected as an "ordinal" by `guessOrdinal`.
           || resultItem.isExtraCoord && (resultItem.otherDims.itemName != null || resultItem.otherDims.seriesName != null))) {
             resultItem.type = 'ordinal';
           }
@@ -32778,7 +32826,7 @@
     // But
     // (1) custom series should be considered. where other dims
     // may be visited.
-    // (2) sometimes user need to calcualte bubble size or use visualMap
+    // (2) sometimes user need to calculate bubble size or use visualMap
     // on other dimensions besides coordSys needed.
     // So, dims that is not used by system, should be shared in data store?
 
@@ -32798,12 +32846,10 @@
     }
 
     function genCoordDimName(name, map, fromZero) {
-      var mapData = map.data;
-
-      if (fromZero || mapData.hasOwnProperty(name)) {
+      if (fromZero || map.hasKey(name)) {
         var i = 0;
 
-        while (mapData.hasOwnProperty(name + i)) {
+        while (map.hasKey(name + i)) {
           i++;
         }
 
@@ -33763,8 +33809,8 @@
       };
 
       IntervalScale.prototype.setInterval = function (interval) {
-        this._interval = interval; // Dropped auto calculated niceExtent and use user setted extent
-        // We assume user wan't to set both interval, min, max to get a better result
+        this._interval = interval; // Dropped auto calculated niceExtent and use user-set extent.
+        // We assume user wants to set both interval, min, max to get a better result.
 
         this._niceExtent = this._extent.slice();
         this._intervalPrecision = getIntervalPrecision(interval);
@@ -34238,7 +34284,7 @@
 
             if (maxWidth && maxWidth < finalWidth) {
               finalWidth = Math.min(maxWidth, remainedWidth);
-            } // `minWidth` has higher priority. `minWidth` decide that wheter the
+            } // `minWidth` has higher priority. `minWidth` decide that whether the
             // bar is able to be visible. So `minWidth` should not be restricted
             // by `maxWidth` or `remainedWidth` (which is from `bandWidth`). In
             // the extreme cases for `value` axis, bars are allowed to overlap
@@ -34256,7 +34302,7 @@
             }
           } else {
             // `barMinWidth/barMaxWidth` has higher priority than `barWidth`, as
-            // CSS does. Becuase barWidth can be a percent value, where
+            // CSS does. Because barWidth can be a percent value, where
             // `barMaxWidth` can be used to restrict the final width.
             var finalWidth = column.width;
 
@@ -34731,7 +34777,7 @@
 
     function getDateInterval(approxInterval, daysInMonth) {
       approxInterval /= ONE_DAY;
-      return approxInterval > 16 ? 16 // Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick betwen two month.
+      return approxInterval > 16 ? 16 // Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick between two months.
       : approxInterval > 7.5 ? 7 // TODO week 7 or day 8?
       : approxInterval > 3.5 ? 4 : approxInterval > 1.5 ? 2 : 1;
     }
@@ -35174,7 +35220,7 @@
         this._prepareParams(scale, model, originalExtent);
       }
       /**
-       * Parameters depending on ouside (like model, user callback)
+       * Parameters depending on outside (like model, user callback)
        * are prepared and fixed here.
        */
 
@@ -35192,7 +35238,7 @@
         var modelMinRaw = this._modelMinRaw = model.get('min', true);
 
         if (isFunction(modelMinRaw)) {
-          // This callback alway provide users the full data extent (before data filtered).
+          // This callback always provides users the full data extent (before data is filtered).
           this._modelMinNum = parseAxisModelMinMax(scale, modelMinRaw({
             min: dataExtent[0],
             max: dataExtent[1]
@@ -35204,7 +35250,7 @@
         var modelMaxRaw = this._modelMaxRaw = model.get('max', true);
 
         if (isFunction(modelMaxRaw)) {
-          // This callback alway provide users the full data extent (before data filtered).
+          // This callback always provides users the full data extent (before data is filtered).
           this._modelMaxNum = parseAxisModelMinMax(scale, modelMaxRaw({
             min: dataExtent[0],
             max: dataExtent[1]
@@ -35363,7 +35409,7 @@
      * (3) `coordSys.update` use it to finally decide the scale extent.
      * But the callback of `min`/`max` should not be called multiple times.
      * The code below should not be implemented repeatedly either.
-     * So we cache the result in the scale instance, which will be recreated at the begining
+     * So we cache the result in the scale instance, which will be recreated at the beginning
      * of the workflow (because `scale` instance will be recreated each round of the workflow).
      */
 
@@ -35413,7 +35459,7 @@
       var ecModel = model.ecModel;
 
       if (ecModel && scaleType === 'time'
-      /*|| scaleType === 'interval' */
+      /* || scaleType === 'interval' */
       ) {
         var barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
         var isBaseAxisAndHasBarSeries_1 = false;
@@ -35478,7 +35524,7 @@
         max: max
       };
     } // Precondition of calling this method:
-    // The scale extent has been initailized using series data extent via
+    // The scale extent has been initialized using series data extent via
     // `scale.setExtent` or `scale.unionExtentFromData`;
 
 
@@ -35676,7 +35722,7 @@
     }
     /**
      * Set `categoryInterval` as 0 implicitly indicates that
-     * show all labels reguardless of overlap.
+     * show all labels regardless of overlap.
      * @param {Object} axis axisModel.axis
      */
 
@@ -35776,7 +35822,7 @@
     }();
 
     /**
-     * Create a muti dimension List structure from seriesModel.
+     * Create a multi dimension List structure from seriesModel.
      */
 
     function createList(seriesModel) {
@@ -35801,9 +35847,9 @@
         axisModel = new Model(option); // FIXME
         // Currently AxisModelCommonMixin has nothing to do with the
         // the requirements of `axisHelper.createScaleByModel`. For
-        // example the method `getCategories` and `getOrdinalMeta`
-        // are required for `'category'` axis, and ecModel are required
-        // for `'time'` axis. But occationally echarts-gl happened
+        // example the methods `getCategories` and `getOrdinalMeta`
+        // are required for `'category'` axis, and ecModel is required
+        // for `'time'` axis. But occasionally echarts-gl happened
         // to only use `'value'` axis.
         // zrUtil.mixin(axisModel, AxisModelCommonMixin);
       }
@@ -35816,7 +35862,7 @@
     /**
      * Mixin common methods to axis model,
      *
-     * Inlcude methods
+     * Include methods
      * `getFormattedLabels() => Array.<string>`
      * `getCategories() => Array.<string>`
      * `getMin(origin: boolean) => number`
@@ -36428,7 +36474,7 @@
       } else {
         numericLabelInterval = optionLabelInterval === 'auto' ? makeAutoCategoryInterval(axis) : optionLabelInterval;
         labels = makeLabelsByNumericCategoryInterval(axis, numericLabelInterval);
-      } // Cache to avoid calling interval function repeatly.
+      } // Cache to avoid calling interval function repeatedly.
 
 
       return listCacheSet(labelsCache, optionLabelInterval, {
@@ -36468,7 +36514,7 @@
         } else {
           tickCategoryInterval = optionTickInterval;
           ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
-        } // Cache to avoid calling interval function repeatly.
+        } // Cache to avoid calling interval function repeatedly.
 
 
       return listCacheSet(ticksCache, optionTickInterval, {
@@ -36493,7 +36539,7 @@
     }
 
     function getListCache(axis, prop) {
-      // Because key can be funciton, and cache size always be small, we use array cache.
+      // Because key can be a function, and cache size always is small, we use array cache.
       return inner$5(axis)[prop] || (inner$5(axis)[prop] = []);
     }
 
@@ -36588,7 +36634,7 @@
       if (lastAutoInterval != null && lastTickCount != null && Math.abs(lastAutoInterval - interval) <= 1 && Math.abs(lastTickCount - tickCount) <= 1 // Always choose the bigger one, otherwise the critical
       // point is not the same when zooming in or zooming out.
       && lastAutoInterval > interval // If the axis change is caused by chart resize, the cache should not
-      // be used. Otherwise some hiden labels might not be shown again.
+      // be used. Otherwise some hidden labels might not be shown again.
       && cache.axisExtent0 === axisExtent[0] && cache.axisExtent1 === axisExtent[1]) {
         interval = lastAutoInterval;
       } // Only update cache if cache not used, otherwise the
@@ -36853,7 +36899,7 @@
        * Notice here we only get the default tick model. For splitLine
        * or splitArea, we should pass the splitLineModel or splitAreaModel
        * manually when calling `getTicksCoords`.
-       * In GL, this method may be overrided to:
+       * In GL, this method may be overridden to:
        * `axisModel.getModel('axisTick', grid3DModel.getModel('axisTick'));`
        */
 
@@ -36877,7 +36923,7 @@
       };
       /**
        * Only be called in category axis.
-       * Can be overrided, consider other axes like in 3D.
+       * Can be overridden, consider other axes like in 3D.
        * @return Auto interval for cateogry axis tick and label
        */
 
@@ -36920,7 +36966,7 @@
       if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {
-          coord: axisExtent[0]
+          coord: axisExtent[1]
         };
       } else {
         var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
@@ -36960,7 +37006,7 @@
 
       function littleThan(a, b) {
         // Avoid rounding error cause calculated tick coord different with extent.
-        // It may cause an extra unecessary tick added.
+        // It may cause an extra unnecessary tick added.
         a = round(a);
         b = round(b);
         return inverse ? a > b : a < b;
@@ -36970,7 +37016,7 @@
     // Should use `ComponentModel.extend` or `class XXXX extend ComponentModel` to create class.
     // Then use `registerComponentModel` in `install` parameter when `use` this extension. For example:
     // class Bar3DModel extends ComponentModel {}
-    // export function install(registers) { regsiters.registerComponentModel(Bar3DModel); }
+    // export function install(registers) { registers.registerComponentModel(Bar3DModel); }
     // echarts.use(install);
 
     function extendComponentModel(proto) {
@@ -37241,7 +37287,7 @@
       }
 
       return minDist;
-    } // Temporal varible for intermediate usage.
+    } // Temporal variable for intermediate usage.
 
 
     var pt0 = new Point();
@@ -37950,6 +37996,7 @@
           dummyTransformable.scaleX = dummyTransformable.scaleY = 1;
         }
 
+        dummyTransformable.rotation = normalizeRadian(dummyTransformable.rotation);
         var host = label.__hostTarget;
         var hostRect;
 
@@ -38203,9 +38250,13 @@
           var itemModel = data.getItemModel(dataIndex);
           var defaultStyle = {};
           var visualStyle = data.getItemVisual(dataIndex, 'style');
-          var visualType = data.getVisual('drawType'); // Default to be same with main color
 
-          defaultStyle.stroke = visualStyle[visualType];
+          if (visualStyle) {
+            var visualType = data.getVisual('drawType'); // Default to be same with main color
+
+            defaultStyle.stroke = visualStyle[visualType];
+          }
+
           var labelLineModel = itemModel.getModel('labelLine');
           setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
           updateLabelLinePoints(el, labelLineModel);
@@ -38550,9 +38601,9 @@
         opts = opts || {};
         var S = opts.newline ? '\n' : '';
         function convertElToString(el) {
-            var children = el.children, tag = el.tag, attrs = el.attrs;
+            var children = el.children, tag = el.tag, attrs = el.attrs, text = el.text;
             return createElementOpen(tag, attrs)
-                + encodeHTML(el.text)
+                + (tag !== 'style' ? encodeHTML(text) : text || '')
                 + (children ? "" + S + map(children, function (child) { return convertElToString(child); }).join(S) + S : '')
                 + createElementClose(tag);
         }
@@ -38944,7 +38995,7 @@
             }
         };
     }
-    var buitinShapesDef = {
+    var builtinShapesDef = {
         circle: [createAttrsConvert(['cx', 'cy', 'r'])],
         polyline: [convertPolyShape, validatePolyShape],
         polygon: [convertPolyShape, validatePolyShape]
@@ -38961,7 +39012,7 @@
     function brushSVGPath(el, scope) {
         var style = el.style;
         var shape = el.shape;
-        var builtinShpDef = buitinShapesDef[el.type];
+        var builtinShpDef = builtinShapesDef[el.type];
         var attrs = {};
         var needsAnimate = scope.animation;
         var svgElType = 'path';
@@ -38977,11 +39028,12 @@
             builtinShpDef[0](shape, attrs, mul);
         }
         else {
+            var needBuildPath = !el.path || el.shapeChanged();
             if (!el.path) {
                 el.createPathProxy();
             }
             var path = el.path;
-            if (el.shapeChanged()) {
+            if (needBuildPath) {
                 path.beginPath();
                 el.buildPath(path, el.shape);
                 el.pathUpdated();
@@ -39201,9 +39253,12 @@
     }
     function setPattern(el, attrs, target, scope) {
         var val = el.style[target];
-        var patternAttrs = {
-            'patternUnits': 'userSpaceOnUse'
-        };
+        var boundingRect = el.getBoundingRect();
+        var patternAttrs = {};
+        var repeat = val.repeat;
+        var noRepeat = repeat === 'no-repeat';
+        var repeatX = repeat === 'repeat-x';
+        var repeatY = repeat === 'repeat-y';
         var child;
         if (isImagePattern(val)) {
             var imageWidth_1 = val.imageWidth;
@@ -39228,8 +39283,20 @@
                 var setSizeToVNode_1 = function (vNode, img) {
                     if (vNode) {
                         var svgEl = vNode.elm;
-                        var width = (vNode.attrs.width = imageWidth_1 || img.width);
-                        var height = (vNode.attrs.height = imageHeight_1 || img.height);
+                        var width = imageWidth_1 || img.width;
+                        var height = imageHeight_1 || img.height;
+                        if (vNode.tag === 'pattern') {
+                            if (repeatX) {
+                                height = 1;
+                                width /= boundingRect.width;
+                            }
+                            else if (repeatY) {
+                                width = 1;
+                                height /= boundingRect.height;
+                            }
+                        }
+                        vNode.attrs.width = width;
+                        vNode.attrs.height = height;
                         if (svgEl) {
                             svgEl.setAttribute('width', width);
                             svgEl.setAttribute('height', height);
@@ -39237,7 +39304,7 @@
                     }
                 };
                 var createdImage = createOrUpdateImage(imageSrc, null, el, function (img) {
-                    setSizeToVNode_1(patternVNode, img);
+                    noRepeat || setSizeToVNode_1(patternVNode, img);
                     setSizeToVNode_1(child, img);
                 });
                 if (createdImage && createdImage.width && createdImage.height) {
@@ -39261,7 +39328,30 @@
         if (!child) {
             return;
         }
-        patternAttrs.patternTransform = getSRTTransformString(val);
+        var patternWidth;
+        var patternHeight;
+        if (noRepeat) {
+            patternWidth = patternHeight = 1;
+        }
+        else if (repeatX) {
+            patternHeight = 1;
+            patternWidth = patternAttrs.width / boundingRect.width;
+        }
+        else if (repeatY) {
+            patternWidth = 1;
+            patternHeight = patternAttrs.height / boundingRect.height;
+        }
+        else {
+            patternAttrs.patternUnits = 'userSpaceOnUse';
+        }
+        if (patternWidth != null && !isNaN(patternWidth)) {
+            patternAttrs.width = patternWidth;
+        }
+        if (patternHeight != null && !isNaN(patternHeight)) {
+            patternAttrs.height = patternHeight;
+        }
+        var patternTransform = getSRTTransformString(val);
+        patternTransform && (patternAttrs.patternTransform = patternTransform);
         var patternVNode = createVNode('pattern', '', patternAttrs, [child]);
         var patternKey = vNodeToString(patternVNode);
         var patternCache = scope.patternCache;
@@ -39613,7 +39703,6 @@
         SVGPainter.prototype.renderToVNode = function (opts) {
             opts = opts || {};
             var list = this.storage.getDisplayList(true);
-            var bgColor = this._backgroundColor;
             var width = this._width;
             var height = this._height;
             var scope = createBrushScope(this._id);
@@ -39621,22 +39710,8 @@
             scope.willUpdate = opts.willUpdate;
             scope.compress = opts.compress;
             var children = [];
-            if (bgColor && bgColor !== 'none') {
-                var _a = normalizeColor(bgColor), color = _a.color, opacity = _a.opacity;
-                this._bgVNode = createVNode('rect', 'bg', {
-                    width: width,
-                    height: height,
-                    x: '0',
-                    y: '0',
-                    id: '0',
-                    fill: color,
-                    'fill-opacity': opacity
-                });
-                children.push(this._bgVNode);
-            }
-            else {
-                this._bgVNode = null;
-            }
+            var bgVNode = this._bgVNode = createBackgroundVNode(width, height, this._backgroundColor, scope);
+            bgVNode && children.push(bgVNode);
             var mainVNode = !opts.compress
                 ? (this._mainVNode = createVNode('g', 'main', {}, [])) : null;
             this._paintList(list, scope, mainVNode ? mainVNode.children : children);
@@ -39665,14 +39740,6 @@
         };
         SVGPainter.prototype.setBackgroundColor = function (backgroundColor) {
             this._backgroundColor = backgroundColor;
-            var bgVNode = this._bgVNode;
-            if (bgVNode && bgVNode.elm) {
-                var _a = normalizeColor(backgroundColor), color = _a.color, opacity = _a.opacity;
-                bgVNode.elm.setAttribute('fill', color);
-                if (opacity < 1) {
-                    bgVNode.elm.setAttribute('fill-opacity', opacity);
-                }
-            }
         };
         SVGPainter.prototype.getSvgRoot = function () {
             return this._mainVNode && this._mainVNode.elm;
@@ -39737,10 +39804,20 @@
                     viewportStyle.width = width + 'px';
                     viewportStyle.height = height + 'px';
                 }
-                var svgDom = this._svgDom;
-                if (svgDom) {
-                    svgDom.setAttribute('width', width);
-                    svgDom.setAttribute('height', height);
+                if (!isPattern(this._backgroundColor)) {
+                    var svgDom = this._svgDom;
+                    if (svgDom) {
+                        svgDom.setAttribute('width', width);
+                        svgDom.setAttribute('height', height);
+                    }
+                    var bgEl = this._bgVNode && this._bgVNode.elm;
+                    if (bgEl) {
+                        bgEl.setAttribute('width', width);
+                        bgEl.setAttribute('height', height);
+                    }
+                }
+                else {
+                    this.refresh();
                 }
             }
         };
@@ -39768,13 +39845,13 @@
             this._oldVNode = null;
         };
         SVGPainter.prototype.toDataURL = function (base64) {
-            var str = encodeURIComponent(this.renderToString());
+            var str = this.renderToString();
             var prefix = 'data:image/svg+xml;';
             if (base64) {
                 str = encodeBase64(str);
                 return str && prefix + 'base64,' + str;
             }
-            return prefix + 'charset=UTF-8,' + str;
+            return prefix + 'charset=UTF-8,' + encodeURIComponent(str);
         };
         return SVGPainter;
     }());
@@ -39784,6 +39861,36 @@
                 logError('In SVG mode painter not support method "' + method + '"');
             }
         };
+    }
+    function createBackgroundVNode(width, height, backgroundColor, scope) {
+        var bgVNode;
+        if (backgroundColor && backgroundColor !== 'none') {
+            bgVNode = createVNode('rect', 'bg', {
+                width: width,
+                height: height,
+                x: '0',
+                y: '0',
+                id: '0'
+            });
+            if (isGradient(backgroundColor)) {
+                setGradient({ fill: backgroundColor }, bgVNode.attrs, 'fill', scope);
+            }
+            else if (isPattern(backgroundColor)) {
+                setPattern({
+                    style: {
+                        fill: backgroundColor
+                    },
+                    dirty: noop,
+                    getBoundingRect: function () { return ({ width: width, height: height }); }
+                }, bgVNode.attrs, 'fill', scope);
+            }
+            else {
+                var _a = normalizeColor(backgroundColor), color = _a.color, opacity = _a.opacity;
+                bgVNode.attrs.fill = color;
+                opacity < 1 && (bgVNode.attrs['fill-opacity'] = opacity);
+            }
+        }
+        return bgVNode;
     }
 
     function install(registers) {
@@ -40028,7 +40135,10 @@
                 if (clearColor && clearColor !== 'transparent') {
                     var clearColorGradientOrPattern = void 0;
                     if (isGradientObject(clearColor)) {
-                        clearColorGradientOrPattern = clearColor.__canvasGradient
+                        var shouldCache = clearColor.global || (clearColor.__width === width
+                            && clearColor.__height === height);
+                        clearColorGradientOrPattern = shouldCache
+                            && clearColor.__canvasGradient
                             || getCanvasGradient(ctx, clearColor, {
                                 x: 0,
                                 y: 0,
@@ -40036,6 +40146,8 @@
                                 height: height
                             });
                         clearColor.__canvasGradient = clearColorGradientOrPattern;
+                        clearColor.__width = width;
+                        clearColor.__height = height;
                     }
                     else if (isImagePatternObject(clearColor)) {
                         clearColor.scaleX = clearColor.scaleX || dpr;
@@ -41393,7 +41505,7 @@
       var stackResultDim = data.getCalculationInfo('stackResultDimension');
 
       if (isDimensionStacked(data, dims[0]
-      /*, dims[1]*/
+      /* , dims[1] */
       )) {
         // jshint ignore:line
         stacked = true;
@@ -41401,7 +41513,7 @@
       }
 
       if (isDimensionStacked(data, dims[1]
-      /*, dims[0]*/
+      /* , dims[0] */
       )) {
         // jshint ignore:line
         stacked = true;
@@ -42427,7 +42539,7 @@
     }
 
     function canShowAllSymbolForCategory(categoryAxis, data) {
-      // In mose cases, line is monotonous on category axis, and the label size
+      // In most cases, line is monotonous on category axis, and the label size
       // is close with each other. So we check the symbol size and some of the
       // label size alone with the category axis to estimate whether all symbol
       // can be shown without overlap.
@@ -42620,7 +42732,7 @@
         var polyline = this._polyline;
         var polygon = this._polygon;
         var lineGroup = this._lineGroup;
-        var hasAnimation = seriesModel.get('animation');
+        var hasAnimation = !ecModel.ssr && seriesModel.isAnimationEnabled();
         var isAreaChart = !areaStyleModel.isEmpty();
         var valueOrigin = areaStyleModel.get('origin');
         var dataCoordInfo = prepareDataCoordInfo(coordSys, data, valueOrigin);
@@ -42726,7 +42838,7 @@
           } else {
             lineGroup.setClipPath(createLineClipPath(this, coordSys, true, seriesModel));
           } // Always update, or it is wrong in the case turning on legend
-          // because points are not changed
+          // because points are not changed.
 
 
           showSymbol && symbolDraw.updateData(data, {
@@ -42736,8 +42848,8 @@
             getSymbolPoint: function (idx) {
               return [points[idx * 2], points[idx * 2 + 1]];
             }
-          }); // In the case data zoom triggerred refreshing frequently
-          // Data may not change if line has a category axis. So it should animate nothing
+          }); // In the case data zoom triggered refreshing frequently
+          // Data may not change if line has a category axis. So it should animate nothing.
 
           if (!isPointsSame(this._stackedOnPoints, stackedOnPoints) || !isPointsSame(this._points, points)) {
             if (hasAnimation) {
@@ -42870,7 +42982,7 @@
             if (isNaN(x) || isNaN(y)) {
               // Null data
               return;
-            } // fix #11360: should't draw symbol outside clipShapeForSymbol
+            } // fix #11360: shouldn't draw symbol outside clipShapeForSymbol
 
 
             if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(x, y)) {
@@ -43000,8 +43112,8 @@
           seriesDuration = seriesDuration(null);
         }
 
-        var seriesDalay = seriesModel.get('animationDelay') || 0;
-        var seriesDalayValue = isFunction(seriesDalay) ? seriesDalay(null) : seriesDalay;
+        var seriesDelay = seriesModel.get('animationDelay') || 0;
+        var seriesDelayValue = isFunction(seriesDelay) ? seriesDelay(null) : seriesDelay;
         data.eachItemGraphicEl(function (symbol, idx) {
           var el = symbol;
 
@@ -43046,7 +43158,7 @@
               ratio = 1 - ratio;
             }
 
-            var delay = isFunction(seriesDalay) ? seriesDalay(idx) : seriesDuration * ratio + seriesDalayValue;
+            var delay = isFunction(seriesDelay) ? seriesDelay(idx) : seriesDuration * ratio + seriesDelayValue;
             var symbolPath = el.getSymbolPath();
             var text = symbolPath.getTextContent();
             el.attr({
@@ -43191,7 +43303,11 @@
           }
 
           if (valueAnimation) {
-            labelInner(endLabel).setLabelText(value);
+            var inner = labelInner(endLabel);
+
+            if (typeof inner.setLabelText === 'function') {
+              inner.setLabelText(value);
+            }
           }
         }
       };
@@ -43539,18 +43655,91 @@
         });
       };
 
-      BaseBarSeriesModel.prototype.getMarkerPosition = function (value) {
+      BaseBarSeriesModel.prototype.getMarkerPosition = function (value, dims, startingAtTick) {
         var coordSys = this.coordinateSystem;
 
         if (coordSys && coordSys.clampData) {
           // PENDING if clamp ?
-          var pt = coordSys.dataToPoint(coordSys.clampData(value));
-          var data = this.getData();
-          var offset = data.getLayout('offset');
-          var size = data.getLayout('size');
-          var offsetIndex = coordSys.getBaseAxis().isHorizontal() ? 0 : 1;
-          pt[offsetIndex] += offset + size / 2;
-          return pt;
+          var clampData_1 = coordSys.clampData(value);
+          var pt_1 = coordSys.dataToPoint(clampData_1);
+
+          if (startingAtTick) {
+            each(coordSys.getAxes(), function (axis, idx) {
+              // If axis type is category, use tick coords instead
+              if (axis.type === 'category' && dims != null) {
+                var tickCoords = axis.getTicksCoords();
+                var targetTickId = clampData_1[idx]; // The index of rightmost tick of markArea is 1 larger than x1/y1 index
+
+                var isEnd = dims[idx] === 'x1' || dims[idx] === 'y1';
+
+                if (isEnd) {
+                  targetTickId += 1;
+                } // The only contains one tick, tickCoords is
+                // like [{coord: 0, tickValue: 0}, {coord: 0}]
+                // to the length should always be larger than 1
+
+
+                if (tickCoords.length < 2) {
+                  return;
+                } else if (tickCoords.length === 2) {
+                  // The left value and right value of the axis are
+                  // the same. coord is 0 in both items. Use the max
+                  // value of the axis as the coord
+                  pt_1[idx] = axis.toGlobalCoord(axis.getExtent()[isEnd ? 1 : 0]);
+                  return;
+                }
+
+                var leftCoord = void 0;
+                var coord = void 0;
+                var stepTickValue = 1;
+
+                for (var i = 0; i < tickCoords.length; i++) {
+                  var tickCoord = tickCoords[i].coord; // The last item of tickCoords doesn't contain
+                  // tickValue
+
+                  var tickValue = i === tickCoords.length - 1 ? tickCoords[i - 1].tickValue + stepTickValue : tickCoords[i].tickValue;
+
+                  if (tickValue === targetTickId) {
+                    coord = tickCoord;
+                    break;
+                  } else if (tickValue < targetTickId) {
+                    leftCoord = tickCoord;
+                  } else if (leftCoord != null && tickValue > targetTickId) {
+                    coord = (tickCoord + leftCoord) / 2;
+                    break;
+                  }
+
+                  if (i === 1) {
+                    // Here we assume the step of category axes is
+                    // the same
+                    stepTickValue = tickValue - tickCoords[0].tickValue;
+                  }
+                }
+
+                if (coord == null) {
+                  if (!leftCoord) {
+                    // targetTickId is smaller than all tick ids in the
+                    // visible area, use the leftmost tick coord
+                    coord = tickCoords[0].coord;
+                  } else if (leftCoord) {
+                    // targetTickId is larger than all tick ids in the
+                    // visible area, use the rightmost tick coord
+                    coord = tickCoords[tickCoords.length - 1].coord;
+                  }
+                }
+
+                pt_1[idx] = axis.toGlobalCoord(coord);
+              }
+            });
+          } else {
+            var data = this.getData();
+            var offset = data.getLayout('offset');
+            var size = data.getLayout('size');
+            var offsetIndex = coordSys.getBaseAxis().isHorizontal() ? 0 : 1;
+            pt_1[offsetIndex] += offset + size / 2;
+          }
+
+          return pt_1;
         }
 
         return [NaN, NaN];
@@ -43915,6 +44104,27 @@
       return distance * Math.cos(angle) * (isEnd ? 1 : -1);
     }
 
+    function getSectorCornerRadius(model, shape, zeroIfNull) {
+      var cornerRadius = model.get('borderRadius');
+
+      if (cornerRadius == null) {
+        return zeroIfNull ? {
+          cornerRadius: 0
+        } : null;
+      }
+
+      if (!isArray(cornerRadius)) {
+        cornerRadius = [cornerRadius, cornerRadius, cornerRadius, cornerRadius];
+      }
+
+      var dr = Math.abs(shape.r || 0 - shape.r0 || 0);
+      return {
+        cornerRadius: map(cornerRadius, function (cr) {
+          return parsePercent(cr, dr);
+        })
+      };
+    }
+
     var mathMax$6 = Math.max;
     var mathMin$6 = Math.min;
 
@@ -44047,6 +44257,8 @@
 
           if (coord.type === 'cartesian2d') {
             bgEl.setShape('r', barBorderRadius);
+          } else {
+            bgEl.setShape('cornerRadius', barBorderRadius);
           }
 
           bgEls[dataIndex] = bgEl;
@@ -44119,6 +44331,8 @@
 
               if (coord.type === 'cartesian2d') {
                 bgEl.setShape('r', barBorderRadius);
+              } else {
+                bgEl.setShape('cornerRadius', barBorderRadius);
               }
 
               bgEls[newIndex] = bgEl;
@@ -44435,7 +44649,7 @@
         var xClipped = x2 < x;
         var yClipped = y2 < y; // When xClipped or yClipped, the element will be marked as `ignore`.
         // But we should also place the element at the edge of the coord sys bounding rect.
-        // Beause if data changed and the bar show again, its transition animaiton
+        // Because if data changed and the bar shows again, its transition animation
         // will begin at this place.
 
         layout.x = xClipped && x > coordSysX2 ? x2 : x;
@@ -44512,7 +44726,7 @@
           var sectorShape = sector.shape;
           var animateProperty = isRadial ? 'r' : 'endAngle';
           var animateTarget = {};
-          sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
+          sectorShape[animateProperty] = isRadial ? layout.r0 : layout.startAngle;
           animateTarget[animateProperty] = layout[animateProperty];
           (isUpdate ? updateProps : initProps)(sector, {
             shape: animateTarget // __value: typeof dataValue === 'string' ? parseInt(dataValue, 10) : dataValue
@@ -44662,7 +44876,13 @@
       var style = data.getItemVisual(dataIndex, 'style');
 
       if (!isPolar) {
-        el.setShape('r', itemModel.get(['itemStyle', 'borderRadius']) || 0);
+        var borderRadius = itemModel.get(['itemStyle', 'borderRadius']) || 0;
+        el.setShape('r', borderRadius);
+      } else if (!seriesModel.get('roundCap')) {
+        var sectorShape = el.shape;
+        var cornerRadius = getSectorCornerRadius(itemModel.getModel('itemStyle'), sectorShape, true);
+        extend(sectorShape, cornerRadius);
+        el.setShape(sectorShape);
       }
 
       el.useStyle(style);
@@ -44888,7 +45108,7 @@
     function install$3(registers) {
       registers.registerChartView(BarView);
       registers.registerSeriesModel(BarSeriesModel);
-      registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, curry(layout, 'bar')); // Do layout after other overall layout, which can preapre some informations.
+      registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, curry(layout, 'bar')); // Do layout after other overall layout, which can prepare some information.
 
       registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout('bar')); // Down sample after filter
 
@@ -44931,16 +45151,13 @@
     }
 
     function getBasicPieLayout(seriesModel, api) {
-      var viewRect = getViewRect(seriesModel, api);
+      var viewRect = getViewRect(seriesModel, api); // center can be string or number when coordinateSystem is specified
+
       var center = seriesModel.get('center');
       var radius = seriesModel.get('radius');
 
       if (!isArray(radius)) {
         radius = [0, radius];
-      }
-
-      if (!isArray(center)) {
-        center = [center, center];
       }
 
       var width = parsePercent$1(viewRect.width, api.getWidth());
@@ -44958,6 +45175,10 @@
         cx = point[0] || 0;
         cy = point[1] || 0;
       } else {
+        if (!isArray(center)) {
+          center = [center, center];
+        }
+
         cx = parsePercent$1(center[0], width) + viewRect.x;
         cy = parsePercent$1(center[1], height) + viewRect.y;
       }
@@ -45366,10 +45587,10 @@
 
         if (overflow && overflow.match('break')) {
           // Temporarily set background to be null to calculate
-          // the bounding box without backgroud.
+          // the bounding box without background.
           label.setStyle('backgroundColor', null); // Set constraining width
 
-          label.setStyle('width', availableWidth - paddingH); // This is the real bounding box of the text without padding
+          label.setStyle('width', availableWidth - paddingH); // This is the real bounding box of the text without padding.
 
           var innerRect = label.getBoundingRect();
           label.setStyle('width', Math.ceil(innerRect.width));
@@ -45457,8 +45678,13 @@
 
         if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
           each(label.states, setNotShow);
-          each(labelLine.states, setNotShow);
-          label.ignore = labelLine.ignore = true;
+          label.ignore = true;
+
+          if (labelLine) {
+            each(labelLine.states, setNotShow);
+            labelLine.ignore = true;
+          }
+
           return;
         }
 
@@ -45633,27 +45859,6 @@
           }
         }
       }
-    }
-
-    function getSectorCornerRadius(model, shape, zeroIfNull) {
-      var cornerRadius = model.get('borderRadius');
-
-      if (cornerRadius == null) {
-        return zeroIfNull ? {
-          cornerRadius: 0
-        } : null;
-      }
-
-      if (!isArray(cornerRadius)) {
-        cornerRadius = [cornerRadius, cornerRadius, cornerRadius, cornerRadius];
-      }
-
-      var dr = Math.abs(shape.r || 0 - shape.r0 || 0);
-      return {
-        cornerRadius: map(cornerRadius, function (cr) {
-          return parsePercent(cr, dr);
-        })
-      };
     }
 
     /**
@@ -46031,6 +46236,8 @@
       return LegendVisualProvider;
     }();
 
+    var innerData = makeInner();
+
     var PieSeriesModel =
     /** @class */
     function (_super) {
@@ -46067,16 +46274,10 @@
 
 
       PieSeriesModel.prototype.getInitialData = function () {
-        var data = createSeriesDataSimply(this, {
+        return createSeriesDataSimply(this, {
           coordDimensions: ['value'],
           encodeDefaulter: curry(makeSeriesEncodeForNameBased, this)
         });
-        var valueList = [];
-        data.each(data.mapDimension('value'), function (value) {
-          valueList.push(value);
-        });
-        this.seats = getPercentSeats(valueList, data.hostModel.get('percentPrecision'));
-        return data;
       };
       /**
        * @overwrite
@@ -46084,9 +46285,23 @@
 
 
       PieSeriesModel.prototype.getDataParams = function (dataIndex) {
-        var params = _super.prototype.getDataParams.call(this, dataIndex);
+        var data = this.getData(); // update seats when data is changed
 
-        params.percent = this.seats[dataIndex];
+        var dataInner = innerData(data);
+        var seats = dataInner.seats;
+
+        if (!seats) {
+          var valueList_1 = [];
+          data.each(data.mapDimension('value'), function (value) {
+            valueList_1.push(value);
+          });
+          seats = dataInner.seats = getPercentSeats(valueList_1, data.hostModel.get('percentPrecision'));
+        }
+
+        var params = _super.prototype.getDataParams.call(this, dataIndex); // seats may be empty when sum is 0
+
+
+        params.percent = seats[dataIndex] || 0;
         params.$vars.push('percent');
         return params;
       };
@@ -46150,8 +46365,8 @@
           // Works only position is 'outer' and alignTo is not 'edge'.
           bleedMargin: 10,
           // Distance between text and label line.
-          distanceToLabelLine: 5 // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-          // 默认使用全局文本样式，详见TEXTSTYLE
+          distanceToLabelLine: 5 // formatter: 标签文本格式器，同 tooltip.formatter，不支持异步回调
+          // 默认使用全局文本样式，详见 textStyle
           // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
 
         },
@@ -46912,7 +47127,7 @@
         show: false,
         // Split number of minor ticks. The value should be in range of (0, 100)
         splitNumber: 5,
-        // Lenght of minor tick
+        // Length of minor tick
         length: 3,
         // Line style
         lineStyle: {// Default to be same with axisTick
@@ -47768,7 +47983,7 @@
         var axesCount = {
           x: 0,
           y: 0
-        }; /// Create axis
+        }; // Create axis
 
         ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
         ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
@@ -47780,7 +47995,7 @@
           return;
         }
 
-        this._axesMap = axesMap; /// Create cartesian2d
+        this._axesMap = axesMap; // Create cartesian2d
 
         each(axesMap.x, function (xAxis, xAxisIndex) {
           each(axesMap.y, function (yAxis, yAxisIndex) {
@@ -48058,7 +48273,7 @@
           handleAutoShown: function () {
             return true;
           }
-        }); // FIXME Not use a seperate text group?
+        }); // FIXME Not use a separate text group?
 
         var transformGroup = new Group({
           x: opt.position[0],
@@ -48566,7 +48781,7 @@
             // in category axis.
             // (2) Compatible with previous version, which always use formatted label as
             // input. But in interval scale the formatted label is like '223,445', which
-            // maked user repalce ','. So we modify it to return original val but remain
+            // maked user replace ','. So we modify it to return original val but remain
             // it as 'string' to avoid error in replacing.
             axis.type === 'category' ? rawLabel : axis.type === 'value' ? tickValue + '' : tickValue, index) : textColor
           })
@@ -48607,6 +48822,7 @@
          *      coordSys,
          *      axisPointerModel,
          *      triggerTooltip,
+         *      triggerEmphasis,
          *      involveSeries,
          *      snap,
          *      seriesModels,
@@ -48644,8 +48860,8 @@
 
         var coordSysKey = makeKey(coordSys.model);
         var axesInfoInCoordSys = result.coordSysAxesInfo[coordSysKey] = {};
-        result.coordSysMap[coordSysKey] = coordSys; // Set tooltip (like 'cross') is a convienent way to show axisPointer
-        // for user. So we enable seting tooltip on coordSys model.
+        result.coordSysMap[coordSysKey] = coordSys; // Set tooltip (like 'cross') is a convenient way to show axisPointer
+        // for user. So we enable setting tooltip on coordSys model.
 
         var coordSysModel = coordSys.model;
         var baseTooltipModel = coordSysModel.getModel('tooltip', globalTooltipModel);
@@ -48686,6 +48902,7 @@
 
           axisPointerModel = fromTooltip ? makeAxisPointerModel(axis, baseTooltipModel, globalAxisPointerModel, ecModel, fromTooltip, triggerTooltip) : axisPointerModel;
           var snap = axisPointerModel.get('snap');
+          var triggerEmphasis = axisPointerModel.get('triggerEmphasis');
           var axisKey = makeKey(axis.model);
           var involveSeries = triggerTooltip || snap || axis.type === 'category'; // If result.axesInfo[key] exist, override it (tooltip has higher priority).
 
@@ -48695,6 +48912,7 @@
             coordSys: coordSys,
             axisPointerModel: axisPointerModel,
             triggerTooltip: triggerTooltip,
+            triggerEmphasis: triggerEmphasis,
             involveSeries: involveSeries,
             snap: snap,
             useHandle: isHandleTrigger(axisPointerModel),
@@ -48727,8 +48945,8 @@
       // has value can not be hovered. value/time/log axis default snap if
       // triggered from tooltip and trigger tooltip.
 
-      volatileOption.snap = axis.type !== 'category' && !!triggerTooltip; // Compatibel with previous behavior, tooltip axis do not show label by default.
-      // Only these properties can be overrided from tooltip to axisPointer.
+      volatileOption.snap = axis.type !== 'category' && !!triggerTooltip; // Compatible with previous behavior, tooltip axis does not show label by default.
+      // Only these properties can be overridden from tooltip to axisPointer.
 
       if (tooltipAxisPointerModel.get('type') === 'cross') {
         volatileOption.type = 'line';
@@ -51270,7 +51488,7 @@
      * no common parents but both of them need to display label "lung" inside.
      */
 
-    var REGION_AVAILABLE_SVG_TAG_MAP = createHashMap(['rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path', // <text> <tspan> are also enabled becuase some SVG might paint text itself,
+    var REGION_AVAILABLE_SVG_TAG_MAP = createHashMap(['rect', 'circle', 'line', 'ellipse', 'polygon', 'polyline', 'path', // <text> <tspan> are also enabled because some SVG might paint text itself,
     // but still need to trigger events or tooltip.
     'text', 'tspan', // <g> is also enabled because this case: if multiple tags share one name
     // and need label displayed, every tags will display the name, which is not
@@ -51365,7 +51583,7 @@
         // If both `svgWidth/svgHeight/viewBox` are specified in a SVG file, the transform rule will be:
         // 0. `boundingRect` is `(0, 0, svgWidth, svgHeight)`. Set it to Geo['_rect'] (View['_rect']).
         // 1. Make a transform from `viewBox` to `boundingRect`.
-        //    Note: only suport `preserveAspectRatio 'xMidYMid'` here. That is, this transform will preserve
+        //    Note: only support `preserveAspectRatio 'xMidYMid'` here. That is, this transform will preserve
         //    the aspect ratio.
         // 2. Make a transform from boundingRect to Geo['_viewRect'] (View['_viewRect'])
         //    (`Geo`/`View` will do this job).
@@ -51468,7 +51686,7 @@
 
 
       GeoSVGResource.prototype.useGraphic = function (hostKey
-      /*, nameMap: NameMap */
+      /* , nameMap: NameMap */
       ) {
         var usedRootMap = this._usedGraphicMap;
         var svgGraphic = usedRootMap.get(hostKey);
@@ -51642,7 +51860,7 @@
       '广东': [0, -10],
       '香港': [10, 5],
       '澳门': [-10, 10],
-      //'北京': [-10, 0],
+      // '北京': [-10, 0],
       '天津': [5, 5]
     };
     function fixTextCoords(mapType, region) {
@@ -52217,10 +52435,10 @@
 
       MapDraw.prototype._enableBlurEntireSVG = function (focusSelf, viewBuildCtx) {
         // It's a little complicated to support blurring the entire geoSVG in series-map.
-        // So do not suport it until some requirements come.
+        // So do not support it until some requirements come.
         // At present, in series-map, only regions can be blurred.
         if (focusSelf && viewBuildCtx.isGeo) {
-          var blurStyle = viewBuildCtx.mapOrGeoModel.getModel(['blur', 'itemStyle']).getItemStyle(); // Only suport `opacity` here. Because not sure that other props are suitable for
+          var blurStyle = viewBuildCtx.mapOrGeoModel.getModel(['blur', 'itemStyle']).getItemStyle(); // Only support `opacity` here. Because not sure that other props are suitable for
           // all of the elements generated by SVG (especially for Text/TSpan/Image/... ).
 
           var opacity_1 = blurStyle.opacity;
@@ -52369,7 +52587,7 @@
        * `ignore` might have been modified by `LabelManager`, and `LabelManager#addLabelsOfSeries`
        * will subsequently cache `defaultAttr` like `ignore`. If do not do this reset, the modified
        * props will have no chance to be restored.
-       * Note: this reset should be after `clearStates` in `renderSeries` becuase `useStates` in
+       * Note: This reset should be after `clearStates` in `renderSeries` because `useStates` in
        * `renderSeries` will cache the modified `ignore` to `el._normalState`.
        * TODO:
        * Use clone/immutable in `LabelManager`?
@@ -52409,17 +52627,17 @@
     }();
 
     function applyOptionStyleForRegion(viewBuildCtx, el, dataIndex, regionModel) {
-      // All of the path are using `itemStyle`, becuase
+      // All of the path are using `itemStyle`, because
       // (1) Some SVG also use fill on polyline (The different between
       // polyline and polygon is "open" or "close" but not fill or not).
       // (2) For the common props like opacity, if some use itemStyle
       // and some use `lineStyle`, it might confuse users.
-      // (3) Most SVG use <path>, where can not detect wether draw a "line"
+      // (3) Most SVG use <path>, where can not detect whether to draw a "line"
       // or a filled shape, so use `itemStyle` for <path>.
       var normalStyleModel = regionModel.getModel('itemStyle');
       var emphasisStyleModel = regionModel.getModel(['emphasis', 'itemStyle']);
       var blurStyleModel = regionModel.getModel(['blur', 'itemStyle']);
-      var selectStyleModel = regionModel.getModel(['select', 'itemStyle']); // NOTE: DONT use 'style' in visual when drawing map.
+      var selectStyleModel = regionModel.getModel(['select', 'itemStyle']); // NOTE: DON'T use 'style' in visual when drawing map.
       // This component is used for drawing underlying map for both geo component and map series.
 
       var normalStyle = getFixedItemStyle(normalStyleModel);
@@ -52657,7 +52875,7 @@
             mapDraw.draw(mapModel, ecModel, api, this, payload);
             this._mapDraw = mapDraw;
           } else {
-            // Remove drawed map
+            // Remove drawn map
             this._mapDraw && this._mapDraw.remove();
             this._mapDraw = null;
           }
@@ -52736,8 +52954,8 @@
             // FIXME
             // If this is not the `mainSeries`, the item model (like label formatter)
             // set on original data item will never get. But it has been working
-            // like that from the begining, and this scenario is rarely encountered.
-            // So it won't be fixed until have to.
+            // like that from the beginning, and this scenario is rarely encountered.
+            // So it won't be fixed until we have to.
 
             setLabelStyle(circle, getLabelStatesModels(itemModel), {
               labelFetcher: {
@@ -52942,9 +53160,9 @@
         // for geoSVG source: 1,
         // for geoJSON source: 0.75.
         aspectScale: null,
-        ///// Layout with center and size
-        // If you wan't to put map in a fixed size box with right aspect ratio
-        // This two properties may more conveninet
+        // Layout with center and size
+        // If you want to put map in a fixed size box with right aspect ratio
+        // This two properties may be more convenient.
         // layoutCenter: [50%, 50%]
         // layoutSize: 100
         showLegendSymbol: true,
@@ -53268,9 +53486,9 @@
 
       View.prototype.getTransformInfo = function () {
         var rawTransformable = this._rawTransformable;
-        var roamTransformable = this._roamTransformable; // Becuase roamTransformabel has `originX/originY` modified,
+        var roamTransformable = this._roamTransformable; // Because roamTransformabel has `originX/originY` modified,
         // but the caller of `getTransformInfo` can not handle `originX/originY`,
-        // so need to recalcualte them.
+        // so need to recalculate them.
 
         var dummyTransformable = new Transformable();
         dummyTransformable.transform = roamTransformable.transform;
@@ -53423,7 +53641,7 @@
         // Ignore default aspect scale if projection exits.
 
 
-        _this.aspectScale = projection ? 1 : retrieve2(opt.aspectScale, defaultParams.aspectScale); // Not invert longitute if projection exits.
+        _this.aspectScale = projection ? 1 : retrieve2(opt.aspectScale, defaultParams.aspectScale); // Not invert longitude if projection exits.
 
         _this._invertLongitute = projection ? false : defaultParams.invertLongitute;
         return _this;
@@ -53435,7 +53653,7 @@
         rect = rect.clone();
 
         if (invertLongitute) {
-          // Longitute is inverted
+          // Longitude is inverted.
           rect.y = -rect.y - rect.height;
         }
 
@@ -53482,7 +53700,7 @@
 
 
       Geo.prototype.getGeoCoord = function (name) {
-        var region = this._regionsMap.get(name); // calcualte center only on demand.
+        var region = this._regionsMap.get(name); // Calculate center only on demand.
 
 
         return this._nameCoordMap.get(name) || region && region.getCenter();
@@ -53901,9 +54119,9 @@
         // for geoSVG source: 1,
         // for geoJSON source: 0.75.
         aspectScale: null,
-        ///// Layout with center and size
-        // If you wan't to put map in a fixed size box with right aspect ratio
-        // This two properties may more conveninet
+        // /// Layout with center and size
+        // If you want to put map in a fixed size box with right aspect ratio
+        // This two properties may be more convenient
         // layoutCenter: [50%, 50%]
         // layoutSize: 100
         silent: false,
@@ -55715,7 +55933,7 @@
 
 
       TreeSeriesModel.prototype.getInitialData = function (option) {
-        //create an virtual root
+        // create a virtual root
         var root = {
           name: option.name,
           children: option.data
@@ -56376,7 +56594,7 @@
           },
           emphasis: {
             itemStyle: {
-              color: 'rgba(0,0,0,0.9)' //'#5793f3',
+              color: 'rgba(0,0,0,0.9)' // '#5793f3',
 
             }
           }
@@ -56934,9 +57152,9 @@
 
         function doRenderNode(thisNode, oldNode, parentGroup, depth) {
           return renderNode(seriesModel, thisStorage, oldStorage, reRoot, lastsForAnimation, willInvisibleEls, thisNode, oldNode, parentGroup, depth);
-        } // Notice: when thisTree and oldTree are the same tree (see list.cloneShallow),
-        // the oldTree is actually losted, so we can not find all of the old graphic
-        // elements from tree. So we use this stragegy: make element storage, move
+        } // Notice: When thisTree and oldTree are the same tree (see list.cloneShallow),
+        // the oldTree is actually losted, so we cannot find all of the old graphic
+        // elements from tree. So we use this strategy: make element storage, move
         // from old storage to new storage, clear old storage.
 
 
@@ -57346,7 +57564,7 @@
 
           if (bgEl) {
             var point = bgEl.transformCoordToLocal(x, y);
-            var shape = bgEl.shape; // For performance consideration, dont use 'getBoundingRect'.
+            var shape = bgEl.shape; // For performance consideration, don't use 'getBoundingRect'.
 
             if (shape.x <= point[0] && point[0] <= shape.x + shape.width && shape.y <= point[1] && point[1] <= shape.y + shape.height) {
               targetInfo = {
@@ -57713,9 +57931,9 @@
 
         lastCfg.fadein = !isGroup;
       }
-    } // We can not set all backgroud with the same z, Because the behaviour of
+    } // We cannot set all background with the same z, because the behaviour of
     // drill down and roll up differ background creation sequence from tree
-    // hierarchy sequence, which cause that lowser background element overlap
+    // hierarchy sequence, which cause lower background elements to overlap
     // upper ones. So we calculate z based on depth.
     // Moreover, we try to shrink down z interval to [0, 1] to avoid that
     // treemap with large z overlaps other components.
@@ -57793,7 +58011,7 @@
         return VisualMapping.visualHandlers.hasOwnProperty(visualType);
       };
       /**
-       * Convinent method.
+       * Convenient method.
        * Visual can be Object or Array or primary type.
        */
 
@@ -58360,18 +58578,18 @@
       var mapping = new VisualMapping(opt);
       inner$9(mapping).drColorMappingBy = colorMappingBy;
       return mapping;
-    } // Notice: If we dont have the attribute 'colorRange', but only use
+    } // Notice: If we don't have the attribute 'colorRange', but only use
     // attribute 'color' to represent both concepts of 'colorRange' and 'color',
     // (It means 'colorRange' when 'color' is Array, means 'color' when not array),
     // this problem will be encountered:
-    // If a level-1 node dont have children, and its siblings has children,
-    // and colorRange is set on level-1, then the node can not be colored.
+    // If a level-1 node doesn't have children, and its siblings have children,
+    // and colorRange is set on level-1, then the node cannot be colored.
     // So we separate 'colorRange' and 'color' to different attributes.
 
 
     function getRangeVisual(nodeModel, name) {
       // 'colorRange', 'colorARange', 'colorSRange'.
-      // If not exsits on this node, fetch from levels and series.
+      // If not exists on this node, fetch from levels and series.
       var range = nodeModel.get(name);
       return isArray(range) && range.length ? {
         name: name,
@@ -58784,7 +59002,7 @@
 
     function estimateRootSize(seriesModel, targetInfo, viewRoot, containerWidth, containerHeight) {
       // If targetInfo.node exists, we zoom to the node,
-      // so estimate whold width and heigth by target node.
+      // so estimate whole width and height by target node.
       var currNode = (targetInfo || {}).node;
       var defaultSize = [containerWidth, containerHeight];
 
@@ -58824,7 +59042,7 @@
       area < viewArea && (area = viewArea);
       var scale = Math.pow(area / viewArea, 0.5);
       return [containerWidth * scale, containerHeight * scale];
-    } // Root postion base on coord of containerGroup
+    } // Root position based on coord of containerGroup
 
 
     function calculateRootPosition(layoutInfo, rootRect, targetInfo) {
@@ -59998,6 +60216,22 @@
     function makeSymbolTypeKey(symbolCategory) {
       return '_' + symbolCategory + 'Type';
     }
+
+    function makeSymbolTypeValue(name, lineData, idx) {
+      var symbolType = lineData.getItemVisual(idx, name);
+
+      if (!symbolType || symbolType === 'none') {
+        return symbolType;
+      }
+
+      var symbolSize = lineData.getItemVisual(idx, name + 'Size');
+      var symbolRotate = lineData.getItemVisual(idx, name + 'Rotate');
+      var symbolOffset = lineData.getItemVisual(idx, name + 'Offset');
+      var symbolKeepAspect = lineData.getItemVisual(idx, name + 'KeepAspect');
+      var symbolSizeArr = normalizeSymbolSize(symbolSize);
+      var symbolOffsetArr = normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
+      return symbolType + symbolSizeArr + symbolOffsetArr + (symbolRotate || '') + (symbolKeepAspect || '');
+    }
     /**
      * @inner
      */
@@ -60078,7 +60312,7 @@
           // Or symbol position and rotation update in line#beforeUpdate will be one frame slow
 
           this.add(symbol);
-          this[makeSymbolTypeKey(symbolCategory)] = lineData.getItemVisual(idx, symbolCategory);
+          this[makeSymbolTypeKey(symbolCategory)] = makeSymbolTypeValue(symbolCategory, lineData, idx);
         }, this);
 
         this._updateCommonStl(lineData, idx, seriesScope);
@@ -60095,7 +60329,7 @@
         setLinePoints(target.shape, linePoints);
         updateProps(line, target, seriesModel, idx);
         each(SYMBOL_CATEGORIES, function (symbolCategory) {
-          var symbolType = lineData.getItemVisual(idx, symbolCategory);
+          var symbolType = makeSymbolTypeValue(symbolCategory, lineData, idx);
           var key = makeSymbolTypeKey(symbolCategory); // Symbol changed
 
           if (this[key] !== symbolType) {
@@ -60825,7 +61059,7 @@
             });
           }
 
-          el.setDraggable(draggable && !!forceLayout, !!itemModel.get('cursor'));
+          el.setDraggable(draggable, !!itemModel.get('cursor'));
           var focus = itemModel.get(['emphasis', 'focus']);
 
           if (focus === 'adjacency') {
@@ -61018,7 +61252,7 @@
 
       Graph.prototype.addEdge = function (n1, n2, dataIndex) {
         var nodesMap = this._nodesMap;
-        var edgesMap = this._edgesMap; // PNEDING
+        var edgesMap = this._edgesMap; // PENDING
 
         if (isNumber(n1)) {
           n1 = this.nodes[n1];
@@ -61284,6 +61518,53 @@
         return dataIndices;
       };
 
+      GraphNode.prototype.getTrajectoryDataIndices = function () {
+        var connectedEdgesMap = createHashMap();
+        var connectedNodesMap = createHashMap();
+
+        for (var i = 0; i < this.edges.length; i++) {
+          var adjacentEdge = this.edges[i];
+
+          if (adjacentEdge.dataIndex < 0) {
+            continue;
+          }
+
+          connectedEdgesMap.set(adjacentEdge.dataIndex, true);
+          var sourceNodesQueue = [adjacentEdge.node1];
+          var targetNodesQueue = [adjacentEdge.node2];
+          var nodeIteratorIndex = 0;
+
+          while (nodeIteratorIndex < sourceNodesQueue.length) {
+            var sourceNode = sourceNodesQueue[nodeIteratorIndex];
+            nodeIteratorIndex++;
+            connectedNodesMap.set(sourceNode.dataIndex, true);
+
+            for (var j = 0; j < sourceNode.inEdges.length; j++) {
+              connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
+              sourceNodesQueue.push(sourceNode.inEdges[j].node1);
+            }
+          }
+
+          nodeIteratorIndex = 0;
+
+          while (nodeIteratorIndex < targetNodesQueue.length) {
+            var targetNode = targetNodesQueue[nodeIteratorIndex];
+            nodeIteratorIndex++;
+            connectedNodesMap.set(targetNode.dataIndex, true);
+
+            for (var j = 0; j < targetNode.outEdges.length; j++) {
+              connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
+              targetNodesQueue.push(targetNode.outEdges[j].node2);
+            }
+          }
+        }
+
+        return {
+          edge: connectedEdgesMap.keys(),
+          node: connectedNodesMap.keys()
+        };
+      };
+
       return GraphNode;
     }();
 
@@ -61312,6 +61593,44 @@
         return {
           edge: [this.dataIndex],
           node: [this.node1.dataIndex, this.node2.dataIndex]
+        };
+      };
+
+      GraphEdge.prototype.getTrajectoryDataIndices = function () {
+        var connectedEdgesMap = createHashMap();
+        var connectedNodesMap = createHashMap();
+        connectedEdgesMap.set(this.dataIndex, true);
+        var sourceNodes = [this.node1];
+        var targetNodes = [this.node2];
+        var nodeIteratorIndex = 0;
+
+        while (nodeIteratorIndex < sourceNodes.length) {
+          var sourceNode = sourceNodes[nodeIteratorIndex];
+          nodeIteratorIndex++;
+          connectedNodesMap.set(sourceNode.dataIndex, true);
+
+          for (var j = 0; j < sourceNode.inEdges.length; j++) {
+            connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
+            sourceNodes.push(sourceNode.inEdges[j].node1);
+          }
+        }
+
+        nodeIteratorIndex = 0;
+
+        while (nodeIteratorIndex < targetNodes.length) {
+          var targetNode = targetNodes[nodeIteratorIndex];
+          nodeIteratorIndex++;
+          connectedNodesMap.set(targetNode.dataIndex, true);
+
+          for (var j = 0; j < targetNode.outEdges.length; j++) {
+            connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
+            targetNodes.push(targetNode.outEdges[j].node2);
+          }
+        }
+
+        return {
+          edge: connectedEdgesMap.keys(),
+          node: connectedNodesMap.keys()
         };
       };
 
@@ -61838,6 +62157,7 @@
         endAngle = angles[1];
         var angleRangeSpan = endAngle - startAngle;
         var prevEndAngle = startAngle;
+        var sectors = [];
 
         for (var i = 0; showAxis && i < colorList.length; i++) {
           // Clamp
@@ -61861,9 +62181,14 @@
           sector.setStyle(lineStyleModel.getLineStyle( // Because we use sector to simulate arc
           // so the properties for stroking are useless
           ['color', 'width']));
-          group.add(sector);
+          sectors.push(sector);
           prevEndAngle = endAngle;
         }
+
+        sectors.reverse();
+        each(sectors, function (sector) {
+          return group.add(sector);
+        });
 
         var getColor = function (percent) {
           // Less than 0
@@ -63548,7 +63873,7 @@
       };
       /**
        * @internal
-       * @param {Object} [opt] If null, cancle the last action triggering for debounce.
+       * @param {Object} [opt] If null, cancel the last action triggering for debounce.
        */
 
 
@@ -63607,7 +63932,7 @@
         var behavior = result.behavior;
         behavior === 'jump' && this._throttledDispatchExpand.debounceNextCall(model.get('axisExpandDebounce'));
 
-        this._throttledDispatchExpand(behavior === 'none' ? null // Cancle the last trigger, in case that mouse slide out of the area quickly.
+        this._throttledDispatchExpand(behavior === 'none' ? null // Cancel the last trigger, in case that mouse slide out of the area quickly.
         : {
           axisExpandWindow: result.axisExpandWindow,
           // Jumping uses animation, and sliding suppresses animation.
@@ -64181,7 +64506,7 @@
             behavior: 'none',
             axisExpandWindow: axisExpandWindow
           };
-        } // Conver the point from global to expand coordinates.
+        } // Convert the point from global to expand coordinates.
 
 
         var pointCoord = point[pixelDimIndex] - layoutInfo.layoutBase - layoutInfo.axisExpandWindow0Pos; // For dragging operation convenience, the window should not be
@@ -64567,7 +64892,7 @@
 
         function addOrUpdate(newIndex, oldIndex) {
           var newBrushInternal = coverConfigList[newIndex]; // Consider setOption in event listener of brushSelect,
-          // where updating cover when creating should be forbiden.
+          // where updating cover when creating should be forbidden.
 
           if (oldIndex != null && oldCovers[oldIndex] === creatingCover) {
             newCovers[newIndex] = oldCovers[oldIndex];
@@ -65053,7 +65378,7 @@
         var eventParams = updateCoverByMouse(controller, e, localCursorPoint, true);
         controller._dragging = false;
         controller._track = [];
-        controller._creatingCover = null; // trigger event shoule be at final, after procedure will be nested.
+        controller._creatingCover = null; // trigger event should be at final, after procedure will be nested.
 
         eventParams && trigger$1(controller, eventParams);
       }
@@ -65592,42 +65917,33 @@
           });
           curve.useStyle(lineStyleModel.getItemStyle()); // Special color, use source node color or target node color
 
-          switch (curve.style.fill) {
-            case 'source':
-              curve.style.fill = edge.node1.getVisual('color');
-              curve.style.decal = edge.node1.getVisual('style').decal;
-              break;
-
-            case 'target':
-              curve.style.fill = edge.node2.getVisual('color');
-              curve.style.decal = edge.node2.getVisual('style').decal;
-              break;
-
-            case 'gradient':
-              var sourceColor = edge.node1.getVisual('color');
-              var targetColor = edge.node2.getVisual('color');
-
-              if (isString(sourceColor) && isString(targetColor)) {
-                curve.style.fill = new LinearGradient(0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
-                  color: sourceColor,
-                  offset: 0
-                }, {
-                  color: targetColor,
-                  offset: 1
-                }]);
+          applyCurveStyle(curve.style, orient, edge);
+          var defaultEdgeLabelText = "" + edgeModel.get('value');
+          var edgeLabelStateModels = getLabelStatesModels(edgeModel, 'edgeLabel');
+          setLabelStyle(curve, edgeLabelStateModels, {
+            labelFetcher: {
+              getFormattedLabel: function (dataIndex, stateName, dataType, labelDimIndex, formatter, extendParams) {
+                return seriesModel.getFormattedLabel(dataIndex, stateName, 'edge', labelDimIndex, // ensure edgeLabel formatter is provided
+                // to prevent the inheritance from `label.formatter` of the series
+                retrieve3(formatter, edgeLabelStateModels.normal && edgeLabelStateModels.normal.get('formatter'), defaultEdgeLabelText), extendParams);
               }
-
-          }
-
+            },
+            labelDataIndex: edge.dataIndex,
+            defaultText: defaultEdgeLabelText
+          });
+          curve.setTextConfig({
+            position: 'inside'
+          });
           var emphasisModel = edgeModel.getModel('emphasis');
           setStatesStylesFromModel(curve, edgeModel, 'lineStyle', function (model) {
-            return model.getItemStyle();
+            var style = model.getItemStyle();
+            applyCurveStyle(style, orient, edge);
+            return style;
           });
           group.add(curve);
           edgeData.setItemGraphicEl(edge.dataIndex, curve);
           var focus = emphasisModel.get('focus');
-          toggleHoverEmphasis(curve, focus === 'adjacency' ? edge.getAdjacentDataIndices() : focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
-          getECData(curve).dataType = 'edge';
+          toggleHoverEmphasis(curve, focus === 'adjacency' ? edge.getAdjacentDataIndices() : focus === 'trajectory' ? edge.getTrajectoryDataIndices() : focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
         }); // Generate a rect for each node
 
         graph.eachNode(function (node) {
@@ -65647,7 +65963,11 @@
             z2: 10
           });
           setLabelStyle(rect, getLabelStatesModels(itemModel), {
-            labelFetcher: seriesModel,
+            labelFetcher: {
+              getFormattedLabel: function (dataIndex, stateName) {
+                return seriesModel.getFormattedLabel(dataIndex, stateName, 'node');
+              }
+            },
             labelDataIndex: node.dataIndex,
             defaultText: node.id
           });
@@ -65659,7 +65979,7 @@
           nodeData.setItemGraphicEl(node.dataIndex, rect);
           getECData(rect).dataType = 'node';
           var focus = emphasisModel.get('focus');
-          toggleHoverEmphasis(rect, focus === 'adjacency' ? node.getAdjacentDataIndices() : focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
+          toggleHoverEmphasis(rect, focus === 'adjacency' ? node.getAdjacentDataIndices() : focus === 'trajectory' ? node.getTrajectoryDataIndices() : focus, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
         });
         nodeData.eachItemGraphicEl(function (el, dataIndex) {
           var itemModel = nodeData.getItemModel(dataIndex);
@@ -65701,7 +66021,43 @@
 
       SankeyView.type = 'sankey';
       return SankeyView;
-    }(ChartView); // Add animation to the view
+    }(ChartView);
+    /**
+     * Special color, use source node color or target node color
+     * @param curveProps curve's style to parse
+     * @param orient direction
+     * @param edge current curve data
+     */
+
+
+    function applyCurveStyle(curveProps, orient, edge) {
+      switch (curveProps.fill) {
+        case 'source':
+          curveProps.fill = edge.node1.getVisual('color');
+          curveProps.decal = edge.node1.getVisual('style').decal;
+          break;
+
+        case 'target':
+          curveProps.fill = edge.node2.getVisual('color');
+          curveProps.decal = edge.node2.getVisual('style').decal;
+          break;
+
+        case 'gradient':
+          var sourceColor = edge.node1.getVisual('color');
+          var targetColor = edge.node2.getVisual('color');
+
+          if (isString(sourceColor) && isString(targetColor)) {
+            curveProps.fill = new LinearGradient(0, 0, +(orient === 'horizontal'), +(orient === 'vertical'), [{
+              color: sourceColor,
+              offset: 0
+            }, {
+              color: targetColor,
+              offset: 1
+            }]);
+          }
+
+      }
+    } // Add animation to the view
 
 
     function createGridClipShape$1(rect, seriesModel, cb) {
@@ -65884,6 +66240,10 @@
           position: 'right',
           fontSize: 12
         },
+        edgeLabel: {
+          show: false,
+          fontSize: 12
+        },
         levels: [],
         nodeAlign: 'justify',
         lineStyle: {
@@ -65976,7 +66336,7 @@
       // the value is 0, otherwise it is 1.
       var remainEdges = []; // Storage each node's indegree.
 
-      var indegreeArr = []; //Used to storage the node with indegree is equal to 0.
+      var indegreeArr = []; // Used to storage the node with indegree is equal to 0.
 
       var zeroIndegrees = [];
       var nextTargetNode = [];
@@ -66425,6 +66785,7 @@
       ecModel.eachSeriesByType('sankey', function (seriesModel) {
         var graph = seriesModel.getGraph();
         var nodes = graph.nodes;
+        var edges = graph.edges;
 
         if (nodes.length) {
           var minValue_1 = Infinity;
@@ -66461,6 +66822,13 @@
                 fill: mapValueToColor
               });
             }
+          });
+        }
+
+        if (edges.length) {
+          each(edges, function (edge) {
+            var edgeStyle = edge.getModel().get('lineStyle');
+            edge.setVisual('style', edgeStyle);
           });
         }
       });
@@ -66807,50 +67175,6 @@
       });
     }
 
-    /*
-    * Licensed to the Apache Software Foundation (ASF) under one
-    * or more contributor license agreements.  See the NOTICE file
-    * distributed with this work for additional information
-    * regarding copyright ownership.  The ASF licenses this file
-    * to you under the Apache License, Version 2.0 (the
-    * "License"); you may not use this file except in compliance
-    * with the License.  You may obtain a copy of the License at
-    *
-    *   http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing,
-    * software distributed under the License is distributed on an
-    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    * KIND, either express or implied.  See the License for the
-    * specific language governing permissions and limitations
-    * under the License.
-    */
-
-
-    /**
-     * AUTO-GENERATED FILE. DO NOT MODIFY.
-     */
-
-    /*
-    * Licensed to the Apache Software Foundation (ASF) under one
-    * or more contributor license agreements.  See the NOTICE file
-    * distributed with this work for additional information
-    * regarding copyright ownership.  The ASF licenses this file
-    * to you under the Apache License, Version 2.0 (the
-    * "License"); you may not use this file except in compliance
-    * with the License.  You may obtain a copy of the License at
-    *
-    *   http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing,
-    * software distributed under the License is distributed on an
-    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    * KIND, either express or implied.  See the License for the
-    * specific language governing permissions and limitations
-    * under the License.
-    */
-    function boxplotVisual(ecModel, api) {}
-
     var each$6 = each;
     function boxplotLayout(ecModel) {
       var groupResult = groupSeriesByAxis(ecModel);
@@ -67093,7 +67417,6 @@
     function install$j(registers) {
       registers.registerSeriesModel(BoxplotSeriesModel);
       registers.registerChartView(BoxplotView);
-      registers.registerVisual(boxplotVisual);
       registers.registerLayout(boxplotLayout);
       registers.registerTransform(boxplotTransform);
     }
@@ -67410,8 +67733,17 @@
         ignoreCoarsePointer: true
       });
       group.add(elN);
+      var elDoji = new LargeBoxPath({
+        shape: {
+          points: largePoints
+        },
+        __sign: 0,
+        ignoreCoarsePointer: true
+      });
+      group.add(elDoji);
       setLargeStyle(1, elP, seriesModel);
       setLargeStyle(-1, elN, seriesModel);
+      setLargeStyle(0, elDoji, seriesModel);
 
       if (incremental) {
         elP.incremental = true;
@@ -67425,8 +67757,14 @@
 
     function setLargeStyle(sign, el, seriesModel, data) {
       // TODO put in visual?
-      var borderColor = seriesModel.get(['itemStyle', sign > 0 ? 'borderColor' : 'borderColor0']) || seriesModel.get(['itemStyle', sign > 0 ? 'color' : 'color0']); // Color must be excluded.
+      var borderColor = seriesModel.get(['itemStyle', sign > 0 ? 'borderColor' : 'borderColor0']) // Use color for border color by default.
+      || seriesModel.get(['itemStyle', sign > 0 ? 'color' : 'color0']);
+
+      if (sign === 0) {
+        borderColor = seriesModel.get(['itemStyle', 'borderColorDoji']);
+      } // Color must be excluded.
       // Because symbol provide setColor individually to set fill and stroke
+
 
       var itemStyle = seriesModel.getModel('itemStyle').getItemStyle(SKIP_PROPS);
       el.useStyle(itemStyle);
@@ -67489,6 +67827,7 @@
           color0: '#47b262',
           borderColor: '#eb5454',
           borderColor0: '#47b262',
+          borderColorDoji: null,
           // borderColor: '#d24040',
           // borderColor0: '#398f4f',
           borderWidth: 1
@@ -67530,6 +67869,7 @@
 
     var positiveBorderColorQuery = ['itemStyle', 'borderColor'];
     var negativeBorderColorQuery = ['itemStyle', 'borderColor0'];
+    var dojiBorderColorQuery = ['itemStyle', 'borderColorDoji'];
     var positiveColorQuery = ['itemStyle', 'color'];
     var negativeColorQuery = ['itemStyle', 'color0'];
     var candlestickVisual = {
@@ -67543,7 +67883,7 @@
         }
 
         function getBorderColor(sign, model) {
-          return model.get(sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery);
+          return model.get(sign === 0 ? dojiBorderColorQuery : sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery);
         } // Only visible series has each data be visual encoded
 
 
@@ -67620,8 +67960,10 @@
             addBodyEnd(ends, ocHighPoint, 0);
             addBodyEnd(ends, ocLowPoint, 1);
             ends.push(subPixelOptimizePoint(highestPoint), subPixelOptimizePoint(ocHighPoint), subPixelOptimizePoint(lowestPoint), subPixelOptimizePoint(ocLowPoint));
+            var itemModel = data.getItemModel(dataIndex);
+            var hasDojiColor = !!itemModel.get(['itemStyle', 'borderColorDoji']);
             data.setItemLayout(dataIndex, {
-              sign: getSign(store, dataIndex, openVal, closeVal, closeDimI),
+              sign: getSign(store, dataIndex, openVal, closeVal, closeDimI, hasDojiColor),
               initBaseline: openVal > closeVal ? ocHighPoint[vDimIdx] : ocLowPoint[vDimIdx],
               ends: ends,
               brushRect: makeBrushRect(lowestVal, highestVal, axisDimVal)
@@ -67671,6 +68013,7 @@
           var tmpOut = [];
           var dataIndex;
           var store = data.getStore();
+          var hasDojiColor = !!seriesModel.get(['itemStyle', 'borderColorDoji']);
 
           while ((dataIndex = params.next()) != null) {
             var axisDimVal = store.get(cDimI, dataIndex);
@@ -67685,7 +68028,7 @@
               continue;
             }
 
-            points[offset++] = getSign(store, dataIndex, openVal, closeVal, closeDimI);
+            points[offset++] = getSign(store, dataIndex, openVal, closeVal, closeDimI, hasDojiColor);
             tmpIn[cDimIdx] = axisDimVal;
             tmpIn[vDimIdx] = lowestVal;
             point = coordSys.dataToPoint(tmpIn, null, tmpOut);
@@ -67700,8 +68043,15 @@
         }
       }
     };
+    /**
+     * Get the sign of a single data.
+     *
+     * @returns 0 for doji with hasDojiColor: true,
+     *          1 for positive,
+     *          -1 for negative.
+     */
 
-    function getSign(store, dataIndex, openVal, closeVal, closeDimI) {
+    function getSign(store, dataIndex, openVal, closeVal, closeDimI, hasDojiColor) {
       var sign;
 
       if (openVal > closeVal) {
@@ -67709,7 +68059,8 @@
       } else if (openVal < closeVal) {
         sign = 1;
       } else {
-        sign = dataIndex > 0 // If close === open, compare with close of last record
+        sign = hasDojiColor // When doji color is set, use it instead of color/color0.
+        ? 0 : dataIndex > 0 // If close === open, compare with close of last record
         ? store.get(closeDimI, dataIndex - 1) <= closeVal ? 1 : -1 : // No record of previous, set to be positive
         1;
       }
@@ -69188,7 +69539,7 @@
           var CoordSys = CoordinateSystemManager.get(option.coordinateSystem);
 
           if (!CoordSys) {
-            throw new Error('Unkown coordinate system ' + option.coordinateSystem);
+            throw new Error('Unknown coordinate system ' + option.coordinateSystem);
           }
         }
 
@@ -69572,7 +69923,7 @@
     }
 
     function isGeoCoordSys(coordSys) {
-      var dimensions = coordSys.dimensions; // Not use coorSys.type === 'geo' because coordSys maybe extended
+      var dimensions = coordSys.dimensions; // Not use coordSys.type === 'geo' because coordSys maybe extended
 
       return dimensions[0] === 'lng' && dimensions[1] === 'lat';
     }
@@ -69690,7 +70041,7 @@
             var dataDimX = data.get(dataDims[0], idx);
             var dataDimY = data.get(dataDims[1], idx); // Ignore empty data and out of extent data
 
-            if (isNaN(data.get(dataDims[2], idx)) || dataDimX < xAxisExtent[0] || dataDimX > xAxisExtent[1] || dataDimY < yAxisExtent[0] || dataDimY > yAxisExtent[1]) {
+            if (isNaN(data.get(dataDims[2], idx)) || isNaN(dataDimX) || isNaN(dataDimY) || dataDimX < xAxisExtent[0] || dataDimX > xAxisExtent[1] || dataDimY < yAxisExtent[0] || dataDimY > yAxisExtent[1]) {
               continue;
             }
 
@@ -69715,7 +70066,7 @@
               shape: coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape,
               style: style
             });
-          } // Optimization for large datset
+          } // Optimization for large dataset
 
 
           if (data.hasItemOption) {
@@ -70568,7 +70919,7 @@
     function install$o(registers) {
       registers.registerChartView(PictorialBarView);
       registers.registerSeriesModel(PictorialBarSeriesModel);
-      registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, curry(layout, 'pictorialBar')); // Do layout after other overall layout, which can preapre some informations.
+      registers.registerLayout(registers.PRIORITY.VISUAL.LAYOUT, curry(layout, 'pictorialBar')); // Do layout after other overall layout, which can prepare some information.
 
       registers.registerLayout(registers.PRIORITY.VISUAL.PROGRESSIVE_LAYOUT, createProgressiveLayout('pictorialBar'));
     }
@@ -70807,7 +71158,7 @@
       };
       /**
        * @override
-       * @param  option  the initial option that user gived
+       * @param  option  the initial option that user gave
        * @param  ecModel  the model object for themeRiver option
        */
 
@@ -71172,7 +71523,7 @@
         if (firstCreate) {
           sector.setShape(sectorShape);
           sector.shape.r = layout.r0;
-          updateProps(sector, {
+          initProps(sector, {
             shape: {
               r: layout.r
             }
@@ -71286,9 +71637,9 @@
           var rotate = 0;
 
           if (rotateType === 'radial') {
-            rotate = -midAngle;
+            rotate = normalizeRadian(-midAngle);
 
-            if (rotate < -Math.PI / 2) {
+            if (rotate > Math.PI / 2 && rotate < Math.PI * 1.5) {
               rotate += Math.PI;
             }
           } else if (rotateType === 'tangential') {
@@ -71303,7 +71654,7 @@
             rotate = rotateType * Math.PI / 180;
           }
 
-          state.rotation = rotate;
+          state.rotation = normalizeRadian(rotate);
         });
 
         function getLabelAttr(model, name) {
@@ -71680,7 +72031,7 @@
           rotate: 'radial',
           show: true,
           opacity: 1,
-          // 'left' is for inner side of inside, and 'right' is for outter
+          // 'left' is for inner side of inside, and 'right' is for outer
           // side for inside
           align: 'center',
           position: 'inside',
@@ -71708,7 +72059,7 @@
             opacity: 0.1
           }
         },
-        // Animation type canbe expansion, scale
+        // Animation type can be expansion, scale.
         animationType: 'expansion',
         animationDuration: 1000,
         animationDurationUpdate: 500,
@@ -72286,7 +72637,7 @@
       // So we provide:
       // `legacy: true` force make compat.
       // `legacy: false`, force do not compat.
-      // `legacy` not set: auto detect wheter legacy.
+      // `legacy` not set: auto detect whether legacy.
       //     But in this case we do not compat (difficult to detect and rare case):
       //     Becuse custom series and graphic component support "merge", users may firstly
       //     only set `textStrokeWidth` style or secondly only set `text`.
@@ -72296,7 +72647,7 @@
     /**
      * `EC4CompatibleStyle` is style that might be in echarts4 format or echarts5 format.
      * @param hostStyle The properties might be modified.
-     * @return If be text el, `textContentStyle` and `textConfig` will not be retured.
+     * @return If be text el, `textContentStyle` and `textConfig` will not be returned.
      *         Otherwise a `textContentStyle` and `textConfig` will be created, whose props area
      *         retried from the `hostStyle`.
      */
@@ -72322,11 +72673,11 @@
         textContent = {
           type: 'text',
           style: textContentStyle,
-          // ec4 do not support rectText trigger.
-          // And when text postion is different in normal and emphasis
+          // ec4 does not support rectText trigger.
+          // And when text position is different in normal and emphasis
           // => hover text trigger emphasis;
           // => text position changed, leave mouse pointer immediately;
-          // That might cause state incorrect.
+          // That might cause incorrect state.
           silent: true
         };
         textConfig = {};
@@ -72365,7 +72716,7 @@
       // on a rect means `borderColor: 4` on the rect and `borderColor: 10` on an attached
       // richText in ec5.
       // (2) `out === richItem` if and only if `out` is text el or rich item.
-      // So we can overwite existing props in `out` since textXXX has higher priority.
+      // So we can overwrite existing props in `out` since textXXX has higher priority.
 
 
       richItem.font = richItem.textFont || richItem.font;
@@ -72794,12 +73145,12 @@
       if (!el) {
         return;
       } // If el is remove from zr by reason like legend, during still need to called,
-      // becuase el will be added back to zr and the prop value should not be incorrect.
+      // because el will be added back to zr and the prop value should not be incorrect.
 
 
       var latestUserDuring = transitionInnerStore(el).userDuring;
       var scopeUserDuring = scope.userDuring; // Ensured a during is only called once in each animation frame.
-      // If a during is called multiple times in one frame, maybe some users' calulation logic
+      // If a during is called multiple times in one frame, maybe some users' calculation logic
       // might be wrong (not sure whether this usage exists).
       // The case of a during might be called twice can be: by default there is a animator for
       // 'x', 'y' when init. Before the init animation finished, call `setOption` to start
@@ -73250,7 +73601,7 @@
         if (elementName == null || targetEl.name === elementName) {
           return true;
         } // Enable to give a name on a group made by `renderItem`, and listen
-        // events that triggerd by its descendents.
+        // events that are triggered by its descendents.
 
 
         while ((targetEl = targetEl.__hostTarget || targetEl.parent) && targetEl !== this.group) {
@@ -73392,7 +73743,7 @@
             existingEmphasisState.style = null;
           }
         } else {
-          // style is needed to enable defaut emphasis.
+          // style is needed to enable default emphasis.
           stateObj.style = styleOpt || null;
         } // If `elOption.styleEmphasis` or `elOption.emphasis.style` is `false`,
         // remove hover style.
@@ -73556,9 +73907,9 @@
         return ordinalMeta ? ordinalMeta.categories[val] : val;
       }
       /**
-       * @deprecated The orgininal intention of `api.style` is enable to set itemStyle
-       * like other series. But it not necessary and not easy to give a strict definition
-       * of what it return. And since echarts5 it needs to be make compat work. So
+       * @deprecated The original intention of `api.style` is enable to set itemStyle
+       * like other series. But it is not necessary and not easy to give a strict definition
+       * of what it returns. And since echarts5 it needs to be make compat work. So
        * deprecates it since echarts5.
        *
        * By default, `visual` is applied to style (to support visualMap).
@@ -73591,7 +73942,7 @@
         var opt = {
           inheritColor: isString(visualColor) ? visualColor : '#000'
         };
-        var labelModel = getLabelModel(dataIndexInside, NORMAL); // Now that the feture of "auto adjust text fill/stroke" has been migrated to zrender
+        var labelModel = getLabelModel(dataIndexInside, NORMAL); // Now that the feature of "auto adjust text fill/stroke" has been migrated to zrender
         // since ec5, we should set `isAttached` as `false` here and make compat in
         // `convertToEC4StyleForCustomSerise`.
 
@@ -73861,14 +74212,14 @@
     }
 
     function doCreateOrUpdateAttachedTx(el, dataIndex, elOption, seriesModel, isInit, attachedTxInfo) {
-      // group do not support textContent temporarily untill necessary.
+      // Group does not support textContent temporarily until necessary.
       if (el.isGroup) {
         return;
       } // Normal must be called before emphasis, for `isLegacy` detection.
 
 
       processTxInfo(elOption, null, attachedTxInfo);
-      processTxInfo(elOption, EMPHASIS, attachedTxInfo); // If `elOption.textConfig` or `elOption.textContent` is null/undefined, it does not make sence.
+      processTxInfo(elOption, EMPHASIS, attachedTxInfo); // If `elOption.textConfig` or `elOption.textContent` is null/undefined, it does not make sense.
       // So for simplicity, if "elOption hasOwnProperty of them but be null/undefined", we do not
       // trade them as set to null to el.
       // Especially:
@@ -73947,7 +74298,7 @@
         !txConOptNormal_1.type && (txConOptNormal_1.type = 'text');
 
         if ("development" !== 'production') {
-          // Do not tolerate incorret type for forward compat.
+          // Do not tolerate incorrcet type for forward compat.
           assert(txConOptNormal_1.type === 'text', 'textContent.type must be "text"');
         }
       }
@@ -73986,9 +74337,9 @@
     //     the element at the same index, if exists. On the other hand, if the new
     //     child is and empty object `{}`, it means to keep the element not changed.
     //
-    // For implementation simpleness, do not provide a direct way to remove sinlge
-    // child (otherwise the total indicies of the children array have to be modified).
-    // User can remove a single child by set its `ignore` as `true`.
+    // For implementation simpleness, do not provide a direct way to remove single
+    // child (otherwise the total indices of the children array have to be modified).
+    // User can remove a single child by setting its `ignore` to `true`.
 
 
     function mergeChildren(api, el, dataIndex, elOption, seriesModel) {
@@ -74129,7 +74480,7 @@
 
         this._axisModel = axisModel;
         this._axisPointerModel = axisPointerModel;
-        this._api = api; // Optimize: `render` will be called repeatly during mouse move.
+        this._api = api; // Optimize: `render` will be called repeatedly during mouse move.
         // So it is power consuming if performing `render` each time,
         // especially on mobile device.
 
@@ -74238,7 +74589,7 @@
        */
 
 
-      BaseAxisPointer.prototype.makeElOption = function (elOption, value, axisModel, axisPointerModel, api) {// Shoule be implemenented by sub-class.
+      BaseAxisPointer.prototype.makeElOption = function (elOption, value, axisModel, axisPointerModel, api) {// Should be implemenented by sub-class.
       };
       /**
        * @protected
@@ -74333,7 +74684,7 @@
             cursor: 'move',
             draggable: true,
             onmousemove: function (e) {
-              // Fot mobile devicem, prevent screen slider on the button.
+              // For mobile device, prevent screen slider on the button.
               stop(e.event);
             },
             onmousedown: bind$1(this._onHandleDragMove, this, 0, 0),
@@ -74575,7 +74926,7 @@
           padding: paddings,
           backgroundColor: bgColor
         }),
-        // Lable should be over axisPointer.
+        // Label should be over axisPointer.
         z2: 10
       };
     } // Do not overflow ec container
@@ -74809,6 +75160,7 @@
         // see `modelHelper`.
         snap: false,
         triggerTooltip: true,
+        triggerEmphasis: true,
         value: null,
         status: null,
         link: [],
@@ -75346,8 +75698,8 @@
         });
         return;
       } // In most case only one axis (or event one series is used). It is
-      // convinient to fetch payload.seriesIndex and payload.dataIndex
-      // dirtectly. So put the first seriesIndex and dataIndex of the first
+      // convenient to fetch payload.seriesIndex and payload.dataIndex
+      // directly. So put the first seriesIndex and dataIndex of the first
       // axis on the payload.
 
 
@@ -75368,7 +75720,7 @@
 
     function dispatchHighDownActually(axesInfo, dispatchAction, api) {
       // FIXME
-      // highlight status modification shoule be a stage of main process?
+      // highlight status modification should be a stage of main process?
       // (Consider confilct (e.g., legend and axisPointer) and setOption)
       var zr = api.getZr();
       var highDownKey = 'axisPointerLastHighlights';
@@ -75378,7 +75730,7 @@
 
       each(axesInfo, function (axisInfo, key) {
         var option = axisInfo.axisPointerModel.option;
-        option.status === 'show' && each(option.seriesDataIndices, function (batchItem) {
+        option.status === 'show' && axisInfo.triggerEmphasis && each(option.seriesDataIndices, function (batchItem) {
           var key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
           newHighlights[key] = batchItem;
         });
@@ -76584,7 +76936,7 @@
         var valueDim = data.mapDimension(valueAxis.dim);
         var baseDim = data.mapDimension(baseAxis.dim);
         var stacked = isDimensionStacked(data, valueDim
-        /*, baseDim*/
+        /* , baseDim */
         );
         var clampLayout = baseAxis.dim !== 'radius' || !seriesModel.get('roundCap', true);
         var valueAxisStart = valueAxis.dataToCoord(0);
@@ -78484,8 +78836,8 @@
         return;
       }
 
-      existItem.hv = newElOption.hv = [// Rigid body, dont care `width`.
-      isSetLoc(newElOption, ['left', 'right']), // Rigid body, dont care `height`.
+      existItem.hv = newElOption.hv = [// Rigid body, don't care about `width`.
+      isSetLoc(newElOption, ['left', 'right']), // Rigid body, don't care about `height`.
       isSetLoc(newElOption, ['top', 'bottom'])]; // Give default group size. Otherwise layout error may occur.
 
       if (existItem.type === 'group') {
@@ -79021,8 +79373,8 @@
               elements: graphicOption
             }];
           } else {
-            // Only one graphic instance can be instantiated. (We dont
-            // want that too many views are created in echarts._viewMap)
+            // Only one graphic instance can be instantiated. (We don't
+            // want that too many views are created in echarts._viewMap.)
             option.graphic = [option.graphic[0]];
           }
         } else if (graphicOption && !graphicOption.elements) {
@@ -79248,7 +79600,7 @@
       };
 
       DataZoomModel.prototype.mergeOption = function (newOption) {
-        var inputRawOption = retrieveRawOption(newOption); //FIX #2591
+        var inputRawOption = retrieveRawOption(newOption); // FIX #2591
 
         merge(this.option, newOption, true);
         merge(this.settledOption, inputRawOption, true);
@@ -79304,7 +79656,7 @@
         each(DATA_ZOOM_AXIS_DIMENSIONS, function (axisDim) {
           var refering = this.getReferringComponents(getAxisMainType(axisDim), MULTIPLE_REFERRING); // When user set axisIndex as a empty array, we think that user specify axisIndex
           // but do not want use auto mode. Because empty array may be encountered when
-          // some error occured.
+          // some error occurred.
 
           if (!refering.specified) {
             return;
@@ -79609,8 +79961,8 @@
       return DataZoomModel;
     }(ComponentModel);
     /**
-     * Retrieve the those raw params from option, which will be cached separately.
-     * becasue they will be overwritten by normalized/calculated values in the main
+     * Retrieve those raw params from option, which will be cached separately,
+     * because they will be overwritten by normalized/calculated values in the main
      * process.
      */
 
@@ -79792,14 +80144,15 @@
             boundPercent = linearMap(boundValue, dataExtent, percentExtent);
           } // valueWindow[idx] = round(boundValue);
           // percentWindow[idx] = round(boundPercent);
+          // fallback to extent start/end when parsed value or percent is invalid
 
 
-          valueWindow[idx] = boundValue;
-          percentWindow[idx] = boundPercent;
+          valueWindow[idx] = boundValue == null || isNaN(boundValue) ? dataExtent[idx] : boundValue;
+          percentWindow[idx] = boundPercent == null || isNaN(boundPercent) ? percentExtent[idx] : boundPercent;
         });
         asc$1(valueWindow);
         asc$1(percentWindow); // The windows from user calling of `dispatchAction` might be out of the extent,
-        // or do not obey the `min/maxSpan`, `min/maxValueSpan`. But we dont restrict window
+        // or do not obey the `min/maxSpan`, `min/maxValueSpan`. But we don't restrict window
         // by `zoomLock` here, because we see `zoomLock` just as a interaction constraint,
         // where API is able to initialize/modify the window size even though `zoomLock`
         // specified.
@@ -79823,8 +80176,8 @@
         };
       };
       /**
-       * Notice: reset should not be called before series.restoreData() called,
-       * so it is recommanded to be called in "process stage" but not "model init
+       * Notice: reset should not be called before series.restoreData() is called,
+       * so it is recommended to be called in "process stage" but not "model init
        * stage".
        */
 
@@ -80343,7 +80696,7 @@
 
             features[featureName] = feature;
           } else {
-            feature = features[oldName]; // If feature does not exsit.
+            feature = features[oldName]; // If feature does not exist.
 
             if (!feature) {
               return;
@@ -80388,7 +80741,7 @@
 
         function createIconPaths(featureModel, feature, featureName) {
           var iconStyleModel = featureModel.getModel('iconStyle');
-          var iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']); // If one feature has mutiple icon. they are orginaized as
+          var iconStyleEmphasisModel = featureModel.getModel(['emphasis', 'iconStyle']); // If one feature has multiple icons, they are organized as
           // {
           //     icon: {
           //         foo: '',
@@ -81497,7 +81850,7 @@
           area.range = area.range || []; // convert coordRange to global range and set panelId.
 
           if (targetInfo && targetInfo !== true) {
-            area.panelId = targetInfo.panelId; // (1) area.range shoule always be calculate from coordRange but does
+            area.panelId = targetInfo.panelId; // (1) area.range should always be calculate from coordRange but does
             // not keep its original value, for the sake of the dataZoom scenario,
             // where area.coordRange remains unchanged but area.range may be changed.
             // (2) Only support converting one coordRange to pixel range in brush
@@ -81532,7 +81885,7 @@
       };
       /**
        * If return Object, a coord found.
-       * If reutrn true, global found.
+       * If return true, global found.
        * Otherwise nothing found.
        */
 
@@ -82155,7 +82508,7 @@
       var arrowOffset = Math.round(((rotatedWH - Math.SQRT2 * borderWidth) / 2 + Math.SQRT2 * borderWidth - (rotatedWH - arrowWH) / 2) * 100) / 100;
       positionStyle += ";" + arrowPos + ":-" + arrowOffset + "px";
       var borderStyle = borderColor + " solid " + borderWidth + "px;";
-      var styleCss = ["position:absolute;width:" + arrowSize + "px;height:" + arrowSize + "px;", positionStyle + ";" + transformStyle + ";", "border-bottom:" + borderStyle, "border-right:" + borderStyle, "background-color:" + backgroundColor + ";"];
+      var styleCss = ["position:absolute;width:" + arrowSize + "px;height:" + arrowSize + "px;z-index:-1;", positionStyle + ";" + transformStyle + ";", "border-bottom:" + borderStyle, "border-right:" + borderStyle, "background-color:" + backgroundColor + ";"];
       return "<div style=\"" + styleCss.join('') + "\"></div>";
     }
 
@@ -82286,6 +82639,7 @@
         this._show = false;
         this._styleCoord = [0, 0, 0, 0];
         this._enterable = true;
+        this._alwaysShowContent = false;
         this._firstShow = true;
         this._longHide = true;
 
@@ -82369,7 +82723,9 @@
 
 
         var alwaysShowContent = tooltipModel.get('alwaysShowContent');
-        alwaysShowContent && this._moveIfResized(); // update className
+        alwaysShowContent && this._moveIfResized(); // update alwaysShowContent
+
+        this._alwaysShowContent = alwaysShowContent; // update className
 
         this.el.className = tooltipModel.get('className') || ''; // Hide the tooltip
         // PENDING
@@ -82490,7 +82846,7 @@
       };
 
       TooltipHTMLContent.prototype.hideLater = function (time) {
-        if (this._show && !(this._inContent && this._enterable)) {
+        if (this._show && !(this._inContent && this._enterable) && !this._alwaysShowContent) {
           if (time) {
             this._hideDelay = time; // Set show false to avoid invoke hideLater multiple times
 
@@ -82519,6 +82875,7 @@
       function TooltipRichContent(api) {
         this._show = false;
         this._styleCoord = [0, 0, 0, 0];
+        this._alwaysShowContent = false;
         this._enterable = true;
         this._zr = api.getZr();
         makeStyleCoord$1(this._styleCoord, this._zr, api.getWidth() / 2, api.getHeight() / 2);
@@ -82530,7 +82887,9 @@
 
       TooltipRichContent.prototype.update = function (tooltipModel) {
         var alwaysShowContent = tooltipModel.get('alwaysShowContent');
-        alwaysShowContent && this._moveIfResized();
+        alwaysShowContent && this._moveIfResized(); // update alwaysShowContent
+
+        this._alwaysShowContent = alwaysShowContent;
       };
 
       TooltipRichContent.prototype.show = function () {
@@ -82656,7 +83015,7 @@
       };
 
       TooltipRichContent.prototype.hideLater = function (time) {
-        if (this._show && !(this._inContent && this._enterable)) {
+        if (this._show && !(this._inContent && this._enterable) && !this._alwaysShowContent) {
           if (time) {
             this._hideDelay = time; // Set show false to avoid invoke hideLater multiple times
 
@@ -82745,12 +83104,6 @@
         this._tooltipModel = tooltipModel;
         this._ecModel = ecModel;
         this._api = api;
-        /**
-         * @private
-         * @type {boolean}
-         */
-
-        this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
         var tooltipContent = this._tooltipContent;
         tooltipContent.update(tooltipModel);
         tooltipContent.setEnterable(tooltipModel.get('enterable'));
@@ -82918,7 +83271,7 @@
       TooltipView.prototype.manuallyHideTip = function (tooltipModel, ecModel, api, payload) {
         var tooltipContent = this._tooltipContent;
 
-        if (!this._alwaysShowContent && this._tooltipModel) {
+        if (this._tooltipModel) {
           tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
         }
 
@@ -83187,8 +83540,8 @@
         if (cmpt) {
           tooltipModelCascade.push(cmpt);
         } // In most cases, component tooltip formatter has different params with series tooltip formatter,
-        // so that they can not share the same formatter. Since the global tooltip formatter is used for series
-        // by convension, we do not use it as the default formatter for component.
+        // so that they cannot share the same formatter. Since the global tooltip formatter is used for series
+        // by convention, we do not use it as the default formatter for component.
 
 
         tooltipModelCascade.push({
@@ -83469,7 +83822,7 @@
 
       if (gapH != null) {
         // Add extra 2 pixels for this case:
-        // At present the "values" in defaut tooltip are using CSS `float: right`.
+        // At present the "values" in default tooltip are using CSS `float: right`.
         // When the right edge of the tooltip box is on the right side of the
         // viewport, the `float` layout might push the "values" to the second line.
         if (x + width + gapH + 2 > viewWidth) {
@@ -85330,7 +85683,7 @@
         var data = timelineModel.getData(); // Show all ticks, despite ignoring strategy.
 
         var ticks = axis.scale.getTicks();
-        this._tickSymbols = []; // The value is dataIndex, see the costomized scale.
+        this._tickSymbols = []; // The value is dataIndex, see the customized scale.
 
         each(ticks, function (tick) {
           var tickCoord = axis.dataToCoord(tick.value);
@@ -85373,7 +85726,7 @@
         var labels = axis.getViewLabels();
         this._tickLabels = [];
         each(labels, function (labelItem) {
-          // The tickValue is dataIndex, see the costomized scale.
+          // The tickValue is dataIndex, see the customized scale.
           var dataIndex = labelItem.tickValue;
           var itemModel = data.getItemModel(dataIndex);
           var normalLabelModel = itemModel.getModel('label');
@@ -85487,9 +85840,12 @@
 
         this._currentPointer.markRedraw();
 
-        this._progressLine.shape.x2 = toCoord;
+        var progressLine = this._progressLine;
 
-        this._progressLine.dirty();
+        if (progressLine) {
+          progressLine.shape.x2 = toCoord;
+          progressLine.dirty();
+        }
 
         var targetDataIndex = this._findNearestTick(toCoord);
 
@@ -86031,8 +86387,8 @@
         z: 5,
         symbol: 'pin',
         symbolSize: 50,
-        //symbolRotate: 0,
-        //symbolOffset: [0, 0]
+        // symbolRotate: 0,
+        // symbolOffset: [0, 0]
         tooltip: {
           trigger: 'item'
         },
@@ -86063,7 +86419,7 @@
     function markerTypeCalculatorWithExtent(markerType, data, otherDataDim, targetDataDim, otherCoordIndex, targetCoordIndex) {
       var coordArr = [];
       var stacked = isDimensionStacked(data, targetDataDim
-      /*, otherDataDim*/
+      /* , otherDataDim */
       );
       var calcDataDim = stacked ? data.getCalculationInfo('stackResultDimension') : targetDataDim;
       var value = numCalculate(data, calcDataDim, markerType);
@@ -86096,14 +86452,18 @@
      */
 
     function dataTransform(seriesModel, item) {
+      if (!item) {
+        return;
+      }
+
       var data = seriesModel.getData();
-      var coordSys = seriesModel.coordinateSystem; // 1. If not specify the position with pixel directly
+      var coordSys = seriesModel.coordinateSystem;
+      var dims = coordSys && coordSys.dimensions; // 1. If not specify the position with pixel directly
       // 2. If `coord` is not a data array. Which uses `xAxis`,
       // `yAxis` to specify the coord on each dimension
       // parseFloat first because item.x and item.y can be percent string like '20%'
 
-      if (item && !hasXAndY(item) && !isArray(item.coord) && coordSys) {
-        var dims = coordSys.dimensions;
+      if (!hasXAndY(item) && !isArray(item.coord) && isArray(dims)) {
         var axisInfo = getAxisInfo$1(item, data, coordSys, seriesModel); // Clone the option
         // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
 
@@ -86119,15 +86479,21 @@
           item.value = coordInfo[1];
         } else {
           // FIXME Only has one of xAxis and yAxis.
-          var coord = [item.xAxis != null ? item.xAxis : item.radiusAxis, item.yAxis != null ? item.yAxis : item.angleAxis]; // Each coord support max, min, average
+          item.coord = [item.xAxis != null ? item.xAxis : item.radiusAxis, item.yAxis != null ? item.yAxis : item.angleAxis];
+        }
+      } // x y is provided
 
-          for (var i = 0; i < 2; i++) {
-            if (markerTypeCalculator[coord[i]]) {
-              coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i]);
-            }
+
+      if (item.coord == null || !isArray(dims)) {
+        item.coord = [];
+      } else {
+        // Each coord support max, min, average
+        var coord = item.coord;
+
+        for (var i = 0; i < 2; i++) {
+          if (markerTypeCalculator[coord[i]]) {
+            coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i]);
           }
-
-          item.coord = coord;
         }
       }
 
@@ -86453,7 +86819,7 @@
         z: 5,
         symbol: ['circle', 'arrow'],
         symbolSize: [8, 16],
-        //symbolRotate: 0,
+        // symbolRotate: 0,
         symbolOffset: 0,
         precision: 2,
         tooltip: {
@@ -86890,8 +87256,16 @@
     var inner$j = makeInner();
 
     var markAreaTransform = function (seriesModel, coordSys, maModel, item) {
-      var lt = dataTransform(seriesModel, item[0]);
-      var rb = dataTransform(seriesModel, item[1]); // FIXME make sure lt is less than rb
+      // item may be null
+      var item0 = item[0];
+      var item1 = item[1];
+
+      if (!item0 || !item1) {
+        return;
+      }
+
+      var lt = dataTransform(seriesModel, item0);
+      var rb = dataTransform(seriesModel, item1); // FIXME make sure lt is less than rb
 
       var ltCoord = lt.coord;
       var rbCoord = rb.coord;
@@ -86942,11 +87316,11 @@
         // }
         if (fromCoord && toCoord && (ifMarkAreaHasOnlyDim(1, fromCoord, toCoord) || ifMarkAreaHasOnlyDim(0, fromCoord, toCoord))) {
           return true;
-        } //Directly returning true may also do the work,
-        //because markArea will not be shown automatically
-        //when it's not included in coordinate system.
-        //But filtering ahead can avoid keeping rendering markArea
-        //when there are too many of them.
+        } // Directly returning true may also do the work,
+        // because markArea will not be shown automatically
+        // when it's not included in coordinate system.
+        // But filtering ahead can avoid keeping rendering markArea
+        // when there are too many of them.
 
 
         return zoneFilter(coordSys, item0, item1);
@@ -86968,8 +87342,28 @@
       } else {
         // Chart like bar may have there own marker positioning logic
         if (seriesModel.getMarkerPosition) {
-          // Use the getMarkerPosition
-          point = seriesModel.getMarkerPosition(data.getValues(dims, idx));
+          // Consider the case that user input the right-bottom point first
+          // Pick the larger x and y as 'x1' and 'y1'
+          var pointValue0 = data.getValues(['x0', 'y0'], idx);
+          var pointValue1 = data.getValues(['x1', 'y1'], idx);
+          var clampPointValue0 = coordSys.clampData(pointValue0);
+          var clampPointValue1 = coordSys.clampData(pointValue1);
+          var pointValue = [];
+
+          if (dims[0] === 'x0') {
+            pointValue[0] = clampPointValue0[0] > clampPointValue1[0] ? pointValue1[0] : pointValue0[0];
+          } else {
+            pointValue[0] = clampPointValue0[0] > clampPointValue1[0] ? pointValue0[0] : pointValue1[0];
+          }
+
+          if (dims[1] === 'y0') {
+            pointValue[1] = clampPointValue0[1] > clampPointValue1[1] ? pointValue1[1] : pointValue0[1];
+          } else {
+            pointValue[1] = clampPointValue0[1] > clampPointValue1[1] ? pointValue0[1] : pointValue1[1];
+          } // Use the getMarkerPosition
+
+
+          point = seriesModel.getMarkerPosition(pointValue, dims, true);
         } else {
           var x = data.get(dims[0], idx);
           var y = data.get(dims[1], idx);
@@ -87239,7 +87633,7 @@
         _this.layoutMode = {
           type: 'box',
           // legend.width/height are maxWidth/maxHeight actually,
-          // whereas realy width/height is calculated by its content.
+          // whereas real width/height is calculated by its content.
           // (Setting {left: 10, right: 10} does not make sense).
           // So consider the case:
           // `setOption({legend: {left: 10});`
@@ -87339,10 +87733,11 @@
          * @private
          */
 
-        this._availableNames = availableNames; // If legend.data not specified in option, use availableNames as data,
-        // which is convinient for user preparing option.
+        this._availableNames = availableNames; // If legend.data is not specified in option, use availableNames as data,
+        // which is convenient for user preparing option.
 
         var rawData = this.get('data') || potentialData;
+        var legendNameMap = createHashMap();
         var legendData = map(rawData, function (dataItem) {
           // Can be string or number
           if (isString(dataItem) || isNumber(dataItem)) {
@@ -87351,6 +87746,12 @@
             };
           }
 
+          if (legendNameMap.get(dataItem.name)) {
+            // remove legend name duplicate
+            return null;
+          }
+
+          legendNameMap.set(dataItem.name, true);
           return new Model(dataItem, this, this.ecModel);
         }, this);
         /**
@@ -87358,7 +87759,9 @@
          * @private
          */
 
-        this._data = legendData;
+        this._data = filter(legendData, function (item) {
+          return !!item;
+        });
       };
 
       LegendModel.prototype.getData = function () {
@@ -87629,7 +88032,7 @@
           var seriesModel = ecModel.getSeriesByName(name)[0];
 
           if (legendDrawnMap.get(name)) {
-            // Have been drawed
+            // Have been drawn
             return;
           } // Legend to control series.
 
@@ -87781,15 +88184,17 @@
           content = formatter(name);
         }
 
-        var inactiveColor = legendItemModel.get('inactiveColor');
+        var textColor = isSelected ? textStyleModel.getTextColor() : legendItemModel.get('inactiveColor');
         itemGroup.add(new ZRText({
           style: createTextStyle(textStyleModel, {
             text: content,
             x: textX,
             y: itemHeight / 2,
-            fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
+            fill: textColor,
             align: textAlign,
             verticalAlign: 'middle'
+          }, {
+            inheritColor: textColor
           })
         })); // Add a invisible rect to increase the area of mouse hover
 
@@ -87846,7 +88251,7 @@
             selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
           } else {
             contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
-          } //Always align selector to content as 'middle'
+          } // Always align selector to content as 'middle'
 
 
           selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
@@ -87983,7 +88388,7 @@
         type: 'legendToggleSelect',
         name: seriesName != null ? seriesName : dataName
       }); // highlight after select
-      // TODO higlight immediately may cause animation loss.
+      // TODO highlight immediately may cause animation loss.
 
       dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
     }
@@ -88885,7 +89290,7 @@
         var apiInner = inner$k(api);
         var coordSysRecordMap = apiInner.coordSysRecordMap || (apiInner.coordSysRecordMap = createHashMap());
         coordSysRecordMap.each(function (coordSysRecord) {
-          // `coordSysRecordMap` always exists (becuase it hold the `roam controller`, which should
+          // `coordSysRecordMap` always exists (because it holds the `roam controller`, which should
           // better not re-create each time), but clear `dataZoomInfoMap` each round of the workflow.
           coordSysRecord.dataZoomInfoMap = null;
         });
@@ -89368,7 +89773,7 @@
           scaleY: otherAxisInverse ? -1 : 1,
           scaleX: 1,
           rotation: Math.PI / 2
-        } // Dont use Math.PI, considering shadow direction.
+        } // Don't use Math.PI, considering shadow direction.
         : {
           scaleY: otherAxisInverse ? -1 : 1,
           scaleX: -1,
@@ -90034,7 +90439,7 @@
       };
 
       SliderZoomView.prototype._findCoordRect = function () {
-        // Find the grid coresponding to the first axis referred by dataZoom.
+        // Find the grid corresponding to the first axis referred by dataZoom.
         var rect;
         var coordSysInfoList = collectReferCoordSysModelInfo(this.dataZoomModel).infoList;
 
@@ -90316,7 +90721,7 @@
        * PENDING:
        * delete this method if no outer usage.
        *
-       * Return  Concrete dimention. If return null/undefined, no dimension used.
+       * Return  Concrete dimension. If null/undefined is returned, no dimension is used.
        */
       // getDataDimension(data: SeriesData) {
       //     const optDim = this.option.dimension;
@@ -90388,7 +90793,7 @@
             base.inRange = {
               color: thisOption.color.slice().reverse()
             };
-          } // Compatible with previous logic, always give a defautl color, otherwise
+          } // Compatible with previous logic, always give a default color, otherwise
           // simple config with no inRange and outOfRange will not work.
           // Originally we use visualMap.color as the default color, but setOption at
           // the second time the default color will be erased. So we change to use
@@ -90608,7 +91013,7 @@
         var range = this.option.range;
 
         if (!range || range.auto) {
-          // `range` should always be array (so we dont use other
+          // `range` should always be array (so we don't use other
           // value like 'auto') for user-friend. (consider getOption).
           dataExtent.auto = 1;
           this.option.range = dataExtent;
@@ -91161,7 +91566,7 @@
           draggable: true,
           drift: onDrift,
           onmousemove: function (e) {
-            // Fot mobile devicem, prevent screen slider on the button.
+            // For mobile device, prevent screen slider on the button.
             stop(e.event);
           },
           ondragend: onDragEnd,
@@ -91289,7 +91694,7 @@
         var visualMapModel = this.visualMapModel;
         var handleEnds = this._handleEnds;
         var sizeExtent = [0, visualMapModel.itemSize[1]];
-        sliderMove(delta, handleEnds, sizeExtent, handleIndex, // cross is forbiden
+        sliderMove(delta, handleEnds, sizeExtent, handleIndex, // cross is forbidden
         0);
         var dataExtent = visualMapModel.getExtent(); // Update data interval.
 
@@ -91340,7 +91745,7 @@
 
       ContinuousView.prototype._makeColorGradient = function (dataInterval, opts) {
         // Considering colorHue, which is not linear, so we have to sample
-        // to calculate gradient color stops, but not only caculate head
+        // to calculate gradient color stops, but not only calculate head
         // and tail.
         var sampleNumber = 100; // Arbitrary value.
 
@@ -91702,7 +92107,7 @@
         cursor: cursor,
         drift: onDrift,
         onmousemove: function (e) {
-          // Fot mobile devicem, prevent screen slider on the button.
+          // For mobile device, prevent screen slider on the button.
           stop(e.event);
         },
         ondragend: onDragEnd
@@ -92318,7 +92723,7 @@
             item.close = [1, 1];
           } else {
             // `min` `max` is legacy option.
-            // `lt` `gt` `lte` `gte` is recommanded.
+            // `lt` `gt` `lte` `gte` is recommended.
             var interval = item.interval = [];
             var close_1 = item.close = [0, 0];
             var closeList = [1, 0, 1];
@@ -92609,7 +93014,7 @@
 
         if (useDecal) {
           // Each type of series use one scope.
-          // Pie and funnel are using diferrent scopes
+          // Pie and funnel are using different scopes.
           var paletteScopeGroupByType_1 = createHashMap();
           ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.isColorBySeries()) {
@@ -92825,8 +93230,8 @@
       '>=': 'gte',
       '=': 'eq',
       '!=': 'ne',
-      '<>': 'ne' // Might mileading for sake of the different between '==' and '===',
-      // So dont support them.
+      '<>': 'ne' // Might be misleading for sake of the difference between '==' and '===',
+      // so don't support them.
       // '==': 'eq',
       // '===': 'seq',
       // '!==': 'sne'
@@ -93100,12 +93505,12 @@
 
     var filterTransform = {
       type: 'echarts:filter',
-      // PEDING: enhance to filter by index rather than create new data
+      // PENDING: enhance to filter by index rather than create new data
       transform: function (params) {
         // [Caveat] Fail-Fast:
-        // Do not return the whole dataset unless user config indicate it explicitly.
-        // For example, if no condition specified by mistake, return an empty result
-        // is better than return the entire raw soruce for user to find the mistake.
+        // Do not return the whole dataset unless user config indicates it explicitly.
+        // For example, if no condition is specified by mistake, returning an empty result
+        // is better than returning the entire raw source for the user to find the mistake.
         var upstream = params.upstream;
         var rawItem;
         var condition = parseConditionalExpression(params.config, {
@@ -94662,6 +95067,7 @@
 
         for (var dataIndex = 0; dataIndex < indices.length; dataIndex++) {
           items.push({
+            dataGroupId: seriesInfo.dataGroupId,
             data: data,
             dim: seriesInfo.dim || groupDim,
             divide: seriesInfo.divide,
@@ -94780,7 +95186,7 @@
           // If group id not exits. Use id instead. If so, only one to one transition will be applied.
 
 
-          var dataGroupId = data.hostModel && data.hostModel.get('dataGroupId'); // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
+          var dataGroupId = diffItem.dataGroupId; // If specified key dimension(itemGroupId by default). Use this same dimension from other data.
           // PENDING: If only use key dimension of newData.
 
           var keyDim = isOld ? oldKeyDim || newKeyDim : newKeyDim || oldKeyDim;
@@ -94997,17 +95403,22 @@
 
       var oldDataMapForSplit = createHashMap();
       each(globalStore.oldSeries, function (series, idx) {
+        var oldDataGroupId = globalStore.oldDataGroupIds[idx];
         var oldData = globalStore.oldData[idx];
         var transitionKey = getSeriesTransitionKey(series);
         var transitionKeyStr = convertArraySeriesKeyToString(transitionKey);
-        oldDataMap.set(transitionKeyStr, oldData);
+        oldDataMap.set(transitionKeyStr, {
+          dataGroupId: oldDataGroupId,
+          data: oldData
+        });
 
         if (isArray(transitionKey)) {
           // Same key can't in different array seriesKey.
           each(transitionKey, function (key) {
             oldDataMapForSplit.set(key, {
-              data: oldData,
-              key: transitionKeyStr
+              key: transitionKeyStr,
+              dataGroupId: oldDataGroupId,
+              data: oldData
             });
           });
         }
@@ -95021,6 +95432,7 @@
 
       each(params.updatedSeries, function (series) {
         if (series.isUniversalTransitionEnabled() && series.isAnimationEnabled()) {
+          var newDataGroupId = series.get('dataGroupId');
           var newData = series.getData();
           var transitionKey = getSeriesTransitionKey(series);
           var transitionKeyStr = convertArraySeriesKeyToString(transitionKey); // Only transition between series with same id.
@@ -95035,10 +95447,12 @@
 
             updateBatches.set(transitionKeyStr, {
               oldSeries: [{
-                divide: getDivideShapeFromData(oldData),
-                data: oldData
+                dataGroupId: oldData.dataGroupId,
+                divide: getDivideShapeFromData(oldData.data),
+                data: oldData.data
               }],
               newSeries: [{
+                dataGroupId: newDataGroupId,
                 divide: getDivideShapeFromData(newData),
                 data: newData
               }]
@@ -95054,10 +95468,11 @@
               each(transitionKey, function (key) {
                 var oldData = oldDataMap.get(key);
 
-                if (oldData) {
+                if (oldData.data) {
                   oldSeries_1.push({
-                    divide: getDivideShapeFromData(oldData),
-                    data: oldData
+                    dataGroupId: oldData.dataGroupId,
+                    divide: getDivideShapeFromData(oldData.data),
+                    data: oldData.data
                   });
                 }
               });
@@ -95066,6 +95481,7 @@
                 updateBatches.set(transitionKeyStr, {
                   oldSeries: oldSeries_1,
                   newSeries: [{
+                    dataGroupId: newDataGroupId,
                     data: newData,
                     divide: getDivideShapeFromData(newData)
                   }]
@@ -95081,6 +95497,7 @@
                 if (!batch) {
                   batch = {
                     oldSeries: [{
+                      dataGroupId: oldData_1.dataGroupId,
                       data: oldData_1.data,
                       divide: getDivideShapeFromData(oldData_1.data)
                     }],
@@ -95090,6 +95507,7 @@
                 }
 
                 batch.newSeries.push({
+                  dataGroupId: newDataGroupId,
                   data: newData,
                   divide: getDivideShapeFromData(newData)
                 });
@@ -95119,6 +95537,7 @@
 
         if (idx >= 0) {
           from.push({
+            dataGroupId: globalStore.oldDataGroupIds[idx],
             data: globalStore.oldData[idx],
             // TODO can specify divideShape in transition.
             divide: getDivideShapeFromData(globalStore.oldData[idx]),
@@ -95132,6 +95551,7 @@
         if (idx >= 0) {
           var data = params.updatedSeries[idx].getData();
           to.push({
+            dataGroupId: globalStore.oldDataGroupIds[idx],
             data: data,
             divide: getDivideShapeFromData(data),
             dim: finder.dimension
@@ -95191,6 +95611,7 @@
 
         var allSeries = ecModel.getSeries();
         var savedSeries = globalStore.oldSeries = [];
+        var savedDataGroupIds = globalStore.oldDataGroupIds = [];
         var savedData = globalStore.oldData = [];
 
         for (var i = 0; i < allSeries.length; i++) {
@@ -95199,6 +95620,7 @@
 
           if (data.count() < DATA_COUNT_THRESHOLD) {
             savedSeries.push(allSeries[i]);
+            savedDataGroupIds.push(allSeries[i].get('dataGroupId'));
             savedData.push(data);
           }
         }
@@ -95273,7 +95695,7 @@
     // });
 
     use(install$g); // `calendar` coordinate system. for example,
-    // chart.setOptionp({
+    // chart.setOption({
     //     calendar: {...},
     //     series: [{
     //         coordinateSystem: 'calendar'
@@ -95349,7 +95771,7 @@
     use(install$J); // `dataZoom` component including both `dataZoomInside` and `dataZoomSlider`.
 
     use(install$M); // `dataZoom` component providing drag, pinch, wheel behaviors
-    // inside coodinate system, for example:
+    // inside coordinate system, for example:
     // chart.setOption({
     //     dataZoom: {type: 'inside'}
     // });

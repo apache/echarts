@@ -129,7 +129,7 @@ export function buildLabelElOption(
             padding: paddings,
             backgroundColor: bgColor as ColorString
         }),
-        // Lable should be over axisPointer.
+        // Label should be over axisPointer.
         z2: 10
     };
 }

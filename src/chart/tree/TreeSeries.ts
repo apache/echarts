@@ -82,7 +82,7 @@ export interface TreeSeriesLeavesOption
 
 export interface TreeSeriesOption extends
     SeriesOption<TreeSeriesStateOption, TreeStatesMixin>, TreeSeriesStateOption,
-    SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
+    SymbolOptionMixin<CallbackDataParams>, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 
     layout?: 'orthogonal' | 'radial'
