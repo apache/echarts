@@ -693,6 +693,7 @@ export interface CallbackDataParams {
     dataType?: SeriesDataType;
     value: OptionDataItem | OptionDataValue;
     color?: ZRColor;
+    opacity?: number;
     borderColor?: string;
     dimensionNames?: DimensionName[];
     encode?: DimensionUserOuputEncode;
