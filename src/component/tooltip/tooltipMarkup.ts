@@ -163,6 +163,7 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     // null/undefined/NaN/''... (displayed as '-').
     noName?: boolean;
     noValue?: boolean;
+    dataIndex?: number;
 
     valueFormatter?: CommonTooltipOption<unknown>['valueFormatter']
 }
@@ -332,7 +333,9 @@ function buildNameValue(
         ? ''
         : makeValueReadable(name, 'ordinal', useUTC);
     const valueTypeOption = fragment.valueType;
-    const readableValueList = noValue ? [] : valueFormatter(fragment.value as OptionDataValue);
+    const readableValueList = noValue
+        ? []
+        : valueFormatter(fragment.value as OptionDataValue, fragment.dataIndex);
     const valueAlignRight = !noMarker || !noName;
     // It little weird if only value next to marker but far from marker.
     const valueCloseToMarker = !noMarker && noName;
