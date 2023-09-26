@@ -146,9 +146,10 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         const rId = getRadiusIdx(polar);
         const r0Id = rId ? 0 : 1;
         let shape;
+        const shapeType = Math.abs(angleExtent[1] - angleExtent[0]) === 360 ? 'Circle' : 'Arc';
 
         if (radiusExtent[r0Id] === 0) {
-            shape = new graphic.Arc({
+            shape = new graphic[shapeType]({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,

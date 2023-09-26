@@ -108,6 +108,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const angleAxis = polar.getAngleAxis();
         const RADIAN = Math.PI / 180;
         const angleExtent = angleAxis.getExtent();
+        const shapeType = Math.abs(angleExtent[1] - angleExtent[0]) === 360 ? 'Circle' : 'Arc';
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
@@ -116,7 +117,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         for (let i = 0; i < ticksCoords.length; i++) {
             const colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
-            splitLines[colorIndex].push(new graphic.Arc({
+            splitLines[colorIndex].push(new graphic[shapeType]({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
