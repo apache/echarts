@@ -637,7 +637,7 @@ export interface GraphEdgeItemObject<
      */
     target?: string | number
 }
-export type OptionDataValue = string | number | Date;
+export type OptionDataValue = string | number | Date | null | undefined;
 
 export type OptionDataValueNumeric = number | '-';
 export type OptionDataValueCategory = string;
