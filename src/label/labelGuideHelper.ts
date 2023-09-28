@@ -593,6 +593,7 @@ export function setLabelLineStyle(
     defaultStyle?: Polyline['style']
 ) {
     let labelLine = targetEl.getTextGuideLine();
+    labelLine && labelLine.ensureState('emphasis');
     const label = targetEl.getTextContent();
     if (!label) {
         // Not show label line if there is no label.
@@ -627,6 +628,7 @@ export function setLabelLineStyle(
             // Create labelLine if not exists
             if (!labelLine) {
                 labelLine = new Polyline();
+                labelLine.ensureState('emphasis');
                 targetEl.setTextGuideLine(labelLine);
                 // Reset state of normal because it's new created.
                 // NOTE: NORMAL should always been the first!
