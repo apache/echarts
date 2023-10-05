@@ -294,10 +294,10 @@ class SeriesData<
 
             const dimensionInfo: SeriesDimensionDefine =
                 zrUtil.isString(dimInfoInput)
-                ? new SeriesDimensionDefine({name: dimInfoInput})
-                : !(dimInfoInput instanceof SeriesDimensionDefine)
-                ? new SeriesDimensionDefine(dimInfoInput)
-                : dimInfoInput;
+                    ? new SeriesDimensionDefine({name: dimInfoInput})
+                    : !(dimInfoInput instanceof SeriesDimensionDefine)
+                        ? new SeriesDimensionDefine(dimInfoInput)
+                        : dimInfoInput;
 
             const dimensionName = dimensionInfo.name;
             dimensionInfo.type = dimensionInfo.type || 'float';
@@ -406,8 +406,8 @@ class SeriesData<
         return dimInfo
             ? dimInfo.storeDimIndex
             : this._dimOmitted
-            ? this._schema.getSourceDimensionIndex(dim as DimensionName)
-            : -1;
+                ? this._schema.getSourceDimensionIndex(dim as DimensionName)
+                : -1;
     }
 
     /**
@@ -1124,8 +1124,8 @@ class SeriesData<
      */
     // TODO: Type of data item
     getItemModel<ItemOpts extends unknown = unknown>(idx: number): Model<ItemOpts
-        // Extract item option with value key. FIXME will cause incompatible issue
-        // Extract<HostModel['option']['data'][number], { value?: any }>
+    // Extract item option with value key. FIXME will cause incompatible issue
+    // Extract<HostModel['option']['data'][number], { value?: any }>
     > {
         const hostModel = this.hostModel;
         const dataItem = this.getRawDataItem(idx) as ModelOption;
@@ -1184,8 +1184,18 @@ class SeriesData<
      */
     // eslint-disable-next-line
     getItemVisual<K extends keyof Visual>(idx: number, key: K): Visual[K] {
-        const itemVisual = this._itemVisuals[idx] as Visual;
-        const val = itemVisual && itemVisual[key];
+        let itemVisual = this._itemVisuals[idx] as Visual;
+
+        let val = itemVisual && itemVisual[key];
+        if (this.tree && !val) {
+            let current = this.tree.getNodeByDataIndex(idx);
+
+            while (current && current.depth > 1 && !val) {
+                current = current.parentNode;
+                itemVisual = this._itemVisuals[current.dataIndex] as Visual;
+                val = itemVisual && itemVisual[key];
+            }
+        }
         if (val == null) {
             // Use global visual property
             return this.getVisual(key);

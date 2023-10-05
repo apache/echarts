@@ -84,7 +84,6 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                 }
                 if (zrUtil.isFunction(seriesModel.enableAriaDecal)) {
                     // Let series define how to use decal palette on data
-                    seriesModel.enableAriaDecal();
                     return;
                 }
 
