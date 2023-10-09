@@ -618,10 +618,7 @@ export function setLabelLineStyle(
             if (isLabelIgnored  // Not show when label is not shown in this state.
                 || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
             ) {
-                const stateObj = isNormal ? labelLine : (labelLine && labelLine.states[stateName]);
-                if (stateObj) {
-                    stateObj.ignore = true;
-                }
+                setLabelLineState(labelLine, true, stateName, stateModel);
                 continue;
             }
             // Create labelLine if not exists
