@@ -212,9 +212,13 @@ function drawSegment(
 }
 
 function getPoints(shape: ECPolygonShape|ECPolylineShape) {
-    let points = Array.from(shape.points);
+    if (!shape.loop) {
+        return shape.points;
+    }
 
     if (shape.loop) {
+        let points = (shape.points as number[]);
+
         if (shape.connectNulls) {
             const nonNull: number[] = [];
             for (let i = 0; i < points.length; i += 2) {
@@ -222,14 +226,11 @@ function getPoints(shape: ECPolygonShape|ECPolylineShape) {
                     nonNull.push(points[i], points[i + 1]);
                 }
             }
-            points = [nonNull[nonNull.length - 2], nonNull[nonNull.length - 1], ...points, nonNull[0], nonNull[1]];
+            points = nonNull;
         }
-        else {
-            points = [points[points.length - 2], points[points.length - 1], ...points, points[0], points[1]];
-        }
-    }
 
-    return points;
+        return [points[points.length - 2], points[points.length - 1], ...points, points[0], points[1]];
+    }
 }
 
 class ECPolylineShape {
