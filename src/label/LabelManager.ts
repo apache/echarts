@@ -53,6 +53,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
 import { labelInner, animateLabelValue } from './labelStyle';
+import { normalizeRadian } from 'zrender/src/contain/util';
 
 interface LabelDesc {
     label: ZRText
@@ -218,6 +219,8 @@ class LabelManager {
                 dummyTransformable.originX = dummyTransformable.originY = 0;
             dummyTransformable.scaleX = dummyTransformable.scaleY = 1;
         }
+
+        dummyTransformable.rotation = normalizeRadian(dummyTransformable.rotation);
 
         const host = label.__hostTarget;
         let hostRect;
@@ -487,10 +490,11 @@ class LabelManager {
 
             const defaultStyle: PathStyleProps = {};
             const visualStyle = data.getItemVisual(dataIndex, 'style');
-            const visualType = data.getVisual('drawType');
-            // Default to be same with main color
-            defaultStyle.stroke = visualStyle[visualType];
-
+            if (visualStyle) {
+                const visualType = data.getVisual('drawType');
+                // Default to be same with main color
+                defaultStyle.stroke = visualStyle[visualType];
+            }
             const labelLineModel = itemModel.getModel('labelLine');
 
             setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
@@ -592,3 +596,4 @@ class LabelManager {
 
 
 export default LabelManager;
+

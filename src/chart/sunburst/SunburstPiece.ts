@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { toggleHoverEmphasis, SPECIAL_STATES, DISPLAY_STATES } from '../../util/states';
-import {createTextStyle} from '../../label/labelStyle';
+import { createTextStyle } from '../../label/labelStyle';
 import { TreeNode } from '../../data/Tree';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption, SunburstSeriesOption } from './SunburstSeries';
 import GlobalModel from '../../model/Global';
@@ -28,10 +28,12 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ColorString } from '../../util/types';
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
-import { getSectorCornerRadius } from '../helper/pieHelper';
-import {createOrUpdatePatternFromDecal} from '../../util/decal';
+import { getSectorCornerRadius } from '../helper/sectorHelper';
+import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { normalizeRadian } from 'zrender/src/contain/util';
+import { isRadianAroundZero } from '../../util/number';
 
 const DEFAULT_SECTOR_Z = 2;
 const DEFAULT_TEXT_Z = 4;
@@ -116,7 +118,7 @@ class SunburstPiece extends graphic.Sector {
         if (firstCreate) {
             sector.setShape(sectorShape);
             sector.shape.r = layout.r0;
-            graphic.updateProps(
+            graphic.initProps(
                 sector,
                 {
                     shape: {
@@ -151,8 +153,8 @@ class SunburstPiece extends graphic.Sector {
 
         const focusOrIndices =
             focus === 'ancestor' ? node.getAncestorsIndices()
-            : focus === 'descendant' ? node.getDescendantIndices()
-            : focus;
+                : focus === 'descendant' ? node.getDescendantIndices()
+                    : focus;
 
         toggleHoverEmphasis(this, focusOrIndices, emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
     }
@@ -215,7 +217,12 @@ class SunburstPiece extends graphic.Sector {
             let textAlign = getLabelAttr(labelStateModel, 'align');
             if (labelPosition === 'outside') {
                 r = layout.r + labelPadding;
-                textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
+                if (layout.clockwise) {
+                    textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
+                }
+                else {
+                    textAlign = midAngle > -Math.PI * 3 / 2 ? 'right' : 'left';
+                }
             }
             else {
                 if (!textAlign || textAlign === 'center') {
@@ -230,14 +237,28 @@ class SunburstPiece extends graphic.Sector {
                 }
                 else if (textAlign === 'left') {
                     r = layout.r0 + labelPadding;
-                    if (midAngle > Math.PI / 2) {
-                        textAlign = 'right';
+                    if (layout.clockwise) {
+                        if (midAngle > Math.PI / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
+                            textAlign = 'right';
+                        }
+                    }
+                    else {
+                        if (midAngle > -Math.PI * 3 / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
+                            textAlign = 'right';
+                        }
                     }
                 }
                 else if (textAlign === 'right') {
                     r = layout.r - labelPadding;
-                    if (midAngle > Math.PI / 2) {
-                        textAlign = 'left';
+                    if (layout.clockwise) {
+                        if (midAngle > Math.PI / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
+                            textAlign = 'left';
+                        }
+                    }
+                    else {
+                        if (midAngle > -Math.PI * 3 / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
+                            textAlign = 'left';
+                        }
                     }
                 }
             }
@@ -251,8 +272,8 @@ class SunburstPiece extends graphic.Sector {
             const rotateType = getLabelAttr(labelStateModel, 'rotate');
             let rotate = 0;
             if (rotateType === 'radial') {
-                rotate = -midAngle;
-                if (rotate < -Math.PI / 2) {
+                rotate = normalizeRadian(-midAngle);
+                if (((rotate > Math.PI / 2 && rotate < Math.PI * 1.5))) {
                     rotate += Math.PI;
                 }
             }
@@ -269,7 +290,7 @@ class SunburstPiece extends graphic.Sector {
                 rotate = rotateType * Math.PI / 180;
             }
 
-            state.rotation = rotate;
+            state.rotation = normalizeRadian(rotate);
         });
 
 

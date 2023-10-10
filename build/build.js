@@ -149,11 +149,11 @@ function validateIO(input, output) {
  */
 async function build(configs) {
     console.log(chalk.yellow(`
-    NOTICE: If you are using 'npm run build'. Run 'npm run prepublish' before build !!!
+    NOTICE: If you are using 'npm run build'. Run 'npm run prepare' before build !!!
 `));
 
     console.log(chalk.yellow(`
-    NOTICE: If you are using syslink on zrender. Run 'npm run prepublish' in zrender first !!
+    NOTICE: If you are using syslink on zrender. Run 'npm run prepare' in zrender first !!
 `));
 
     for (let singleConfig of configs) {

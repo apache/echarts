@@ -67,6 +67,7 @@ export class DataFormatMixin {
         const itemOpt = data.getRawDataItem(dataIndex);
         const style = data.getItemVisual(dataIndex, 'style');
         const color = style && style[data.getItemVisual(dataIndex, 'drawType') || 'fill'] as ZRColor;
+        const opacity = style && style.opacity;
         const borderColor = style && style.stroke as ColorString;
         const mainType = this.mainType;
         const isSeries = mainType === 'series';
@@ -87,6 +88,7 @@ export class DataFormatMixin {
             value: rawValue,
             color: color,
             borderColor: borderColor,
+            opacity: opacity,
             dimensionNames: userOutput ? userOutput.fullDimensions : null,
             encode: userOutput ? userOutput.encode : null,
 
@@ -211,8 +213,8 @@ type TooltipFormatResult =
 // compat it?
 // type TooltipFormatResultLegacyObject = {
 //     // `html` means the markup language text, either in 'html' or 'richText'.
-//     // The name `html` is not appropriate becuase in 'richText' it is not a HTML
-//     // string. But still support it for backward compat.
+//     // The name `html` is not appropriate because in 'richText' it is not a HTML
+//     // string. But still support it for backward compatibility.
 //     html: string;
 //     markers: Dictionary<ColorString>;
 // };

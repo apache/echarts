@@ -32,10 +32,10 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 
 
 /**
- * BrushController not only used in "brush component",
- * but also used in "tooltip DataZoom", and other possible
- * futher brush behavior related scenarios.
- * So `BrushController` should not depends on "brush component model".
+ * BrushController is not only used in "brush component",
+ * but is also used in "tooltip DataZoom", and other possible
+ * further brush behavior related scenarios.
+ * So `BrushController` should not depend on "brush component model".
  */
 
 
@@ -410,7 +410,7 @@ class BrushController extends Eventful<{
         function addOrUpdate(newIndex: number, oldIndex?: number): void {
             const newBrushInternal = coverConfigList[newIndex];
             // Consider setOption in event listener of brushSelect,
-            // where updating cover when creating should be forbiden.
+            // where updating cover when creating should be forbidden.
             if (oldIndex != null && oldCovers[oldIndex] === creatingCover) {
                 newCovers[newIndex] = oldCovers[oldIndex];
             }
@@ -998,7 +998,7 @@ function handleDragEnd(controller: BrushController, e: ElementEvent) {
         controller._track = [];
         controller._creatingCover = null;
 
-        // trigger event shoule be at final, after procedure will be nested.
+        // trigger event should be at final, after procedure will be nested.
         eventParams && trigger(controller, eventParams);
     }
 }

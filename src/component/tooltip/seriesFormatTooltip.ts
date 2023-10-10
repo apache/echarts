@@ -24,7 +24,8 @@ import {
     retrieveVisualColorForTooltipMarker,
     TooltipMarkupBlockFragment,
     createTooltipMarkup,
-    TooltipMarkupSection
+    TooltipMarkupSection,
+    retrieveVisualOpacityForTooltipMarker
 } from './tooltipMarkup';
 import { retrieveRawValue } from '../../data/helper/dataProvider';
 import { isNameSpecified } from '../../util/model';
@@ -47,6 +48,7 @@ export function defaultSeriesFormatTooltip(opt: {
     const value = series.getRawValue(dataIndex) as any;
     const isValueArr = isArray(value);
     const markerColor = retrieveVisualColorForTooltipMarker(series, dataIndex);
+    const markerOpacity = retrieveVisualOpacityForTooltipMarker(series, dataIndex);
 
     // Complicated rule for pretty tooltip.
     let inlineValue;
@@ -78,14 +80,15 @@ export function defaultSeriesFormatTooltip(opt: {
 
     return createTooltipMarkup('section', {
         header: seriesName,
-        // When series name not specified, do not show a header line with only '-'.
-        // This case alway happen in tooltip.trigger: 'item'.
+        // When series name is not specified, do not show a header line with only '-'.
+        // This case always happens in tooltip.trigger: 'item'.
         noHeader: multipleSeries || !seriesNameSpecified,
         sortParam: sortParam,
         blocks: [
             createTooltipMarkup('nameValue', {
                 markerType: 'item',
                 markerColor: markerColor,
+                opacity: markerOpacity,
                 // Do not mix display seriesName and itemName in one tooltip,
                 // which might confuses users.
                 name: inlineName,
@@ -93,7 +96,8 @@ export function defaultSeriesFormatTooltip(opt: {
                 // be not readable. So we check trim here.
                 noName: !trim(inlineName),
                 value: inlineValue,
-                valueType: inlineValueType
+                valueType: inlineValueType,
+                dataIndex
             })
         ].concat(subBlocks || [] as any)
     });

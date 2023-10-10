@@ -152,7 +152,7 @@ class AxisBuilder {
         );
 
 
-        // FIXME Not use a seperate text group?
+        // FIXME Not use a separate text group?
         const transformGroup = new graphic.Group({
             x: opt.position[0],
             y: opt.position[1],
@@ -269,8 +269,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         );
 
         const line = new graphic.Line({
-            // Id for animation
-            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -282,6 +280,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             silent: true,
             z2: 1
         });
+        graphic.subPixelOptimizeLine(line.shape, line.style.lineWidth);
         line.anid = 'line';
         group.add(line);
 
@@ -343,7 +342,6 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
     },
 
     axisTickLabel(opt, axisModel, group, transformGroup) {
-
         const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt);
         const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt);
 
@@ -630,7 +628,6 @@ function createTicks(
         }
         // Tick line, Not use group transform to have better line draw
         const tickEl = new graphic.Line({
-            subPixelOptimize: true,
             shape: {
                 x1: pt1[0],
                 y1: pt1[1],
@@ -642,6 +639,7 @@ function createTicks(
             autoBatch: true,
             silent: true
         });
+        graphic.subPixelOptimizeLine(tickEl.shape, tickEl.style.lineWidth);
         tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;
         tickEls.push(tickEl);
     }
@@ -798,7 +796,7 @@ function buildAxisLabel(
                         // in category axis.
                         // (2) Compatible with previous version, which always use formatted label as
                         // input. But in interval scale the formatted label is like '223,445', which
-                        // maked user repalce ','. So we modify it to return original val but remain
+                        // maked user replace ','. So we modify it to return original val but remain
                         // it as 'string' to avoid error in replacing.
                         axis.type === 'category'
                             ? rawLabel

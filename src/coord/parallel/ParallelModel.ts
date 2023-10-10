@@ -70,7 +70,7 @@ class ParallelModel extends ComponentModel<ParallelCoordinateSystemOption> {
     dimensions: DimensionName[];
 
     /**
-     * Coresponding to dimensions.
+     * Corresponding to dimensions.
      */
     parallelAxisIndex: number[];
 

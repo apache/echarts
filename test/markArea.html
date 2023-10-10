@@ -23,23 +23,18 @@ under the License.
         <meta charset="utf-8">
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
-        <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-            }
-        </style>
-        <div id="main0" style="height:500px"></div>
-        <div id="main1" style="height:500px"></div>
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
         <script>
 
             require([
                 'echarts'
             ], function (echarts) {
-
-                var chart = echarts.init(document.getElementById('main0'));
 
                 var xAxisData = [];
                 var data1 = [];
@@ -51,7 +46,7 @@ under the License.
                     data2.push(+Math.random().toFixed(2));
                 }
 
-                chart.setOption({
+                option = {
                     legend: {
                         data: ['line', 'line2']
                     },
@@ -135,8 +130,11 @@ under the License.
                     grid: {
                         right: 300
                     }
-                });
+                };
 
+                var chart = testHelper.create(echarts, 'main0', {
+                    option: option
+                });
             });
 
         </script>
@@ -146,7 +144,7 @@ under the License.
                 'echarts'
             ], function (echarts) {
 
-                let option = {
+                var option = {
                     title: {
                         text: 'Distribution of Electricity',
                         subtext: 'Fake Data'
@@ -220,13 +218,136 @@ under the License.
                     ]
                 };
 
-                var chartDom = document.getElementById('main1');
-                var myChart = echarts.init(chartDom);
-
-                option && myChart.setOption(option);
+                var chart = testHelper.create(echarts, 'main1', {
+                    option: option
+                });
 
             });
 
         </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [10, 52, 200, 334, 390, 330, 220],
+                        itemStyle: {
+                            opacity: .1
+                        },
+                        markArea: {
+                            data: [
+                                [
+                                    {
+                                        name: '所有数据范围区间',
+                                        coord: ['min', 'min'],
+                                        itemStyle: {
+                                            color: 'lightgray',
+                                            borderWidth: 2,
+                                            borderColor: 'gray'
+                                        },
+                                        label: {
+                                            position: 'insideLeft',
+                                        }
+                                    },
+                                    {
+                                        coord: ['max', 'max']
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '[average, min] to [max, median]',
+                                        coord: ['average', 'min'],
+                                        itemStyle: {
+                                            color: '#14c4ba',
+                                            opacity: .5
+                                        }
+                                    },
+                                    {
+                                        coord: ['max', 'median']
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '平均值到最大值',
+                                        type: 'average',
+                                        itemStyle: {
+                                            color: 'lightblue',
+                                            borderWidth: 2,
+                                            borderColor: 'lightblue'
+                                        }
+                                    },
+                                    {
+                                        type: 'max'
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '两个坐标之间的标域',
+                                        coord: [1, 20]
+                                    },
+                                    {
+                                        coord: ['c', 30]
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: 'yAxis 120~130',
+                                        yAxis: 120
+                                    },
+                                    {
+                                        yAxis: 130
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '两个屏幕坐标之间的标域 px',
+                                        x: 80,
+                                        y: 50,
+                                        itemStyle: {
+                                            color: 'lightgreen'
+                                        }
+                                    },
+                                    {
+                                        x: 100,
+                                        y: 100
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '两个屏幕坐标之间的标域 px & %',
+                                        x: 100,
+                                        y: '20%'
+                                    },
+                                    {
+                                        x: '90%',
+                                        y: '30%'
+                                    }
+                                ]
+                            ]
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        '**两个屏幕坐标之间的标域** should be displayed',
+                        '**所有数据范围区间** should be displayed',
+                        'Other mark areas should also be displayed',
+                        'should have no errors in the console'
+                    ],
+                    option: option
+                });
+            });
+            </script>
     </body>
 </html>

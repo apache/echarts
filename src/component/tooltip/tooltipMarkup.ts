@@ -149,6 +149,7 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     // If `!markerType`, tooltip marker is not used.
     markerType?: TooltipMarkerType;
     markerColor?: ColorString;
+    opacity?: number;
     name?: string;
     // Also support value is `[121, 555, 94.2]`.
     value?: unknown | unknown[];
@@ -162,6 +163,7 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     // null/undefined/NaN/''... (displayed as '-').
     noName?: boolean;
     noValue?: boolean;
+    dataIndex?: number;
 
     valueFormatter?: CommonTooltipOption<unknown>['valueFormatter']
 }
@@ -324,13 +326,16 @@ function buildNameValue(
         : ctx.markupStyleCreator.makeTooltipMarker(
             fragment.markerType,
             fragment.markerColor || '#333',
-            renderMode
+            renderMode,
+            fragment.opacity
         );
     const readableName = noName
         ? ''
         : makeValueReadable(name, 'ordinal', useUTC);
     const valueTypeOption = fragment.valueType;
-    const readableValueList = noValue ? [] : valueFormatter(fragment.value as OptionDataValue);
+    const readableValueList = noValue
+        ? []
+        : valueFormatter(fragment.value as OptionDataValue, fragment.dataIndex);
     const valueAlignRight = !noMarker || !noName;
     // It little weird if only value next to marker but far from marker.
     const valueCloseToMarker = !noMarker && noName;
@@ -473,6 +478,16 @@ export function retrieveVisualColorForTooltipMarker(
     return convertToColorString(color);
 }
 
+export function retrieveVisualOpacityForTooltipMarker(
+    series: SeriesModel,
+    dataIndex: number
+): number {
+    const style = series.getData().getItemVisual(dataIndex, 'style');
+    const opacity = style.opacity;
+    return opacity;
+}
+
+
 export function getPaddingFromTooltipModel(
     model: Model<TooltipOption>,
     renderMode: TooltipRenderMode
@@ -494,8 +509,8 @@ export function getPaddingFromTooltipModel(
 export class TooltipMarkupStyleCreator {
     readonly richTextStyles: Dictionary<Dictionary<unknown>> = {};
 
-    // Notice that "generate a style name" usuall happens repeatly when mouse moving and
-    // displaying a tooltip. So we put the `_nextStyleNameId` as a member of each creator
+    // Notice that "generate a style name" usually happens repeatedly when mouse is moving and
+    // a tooltip is displayed. So we put the `_nextStyleNameId` as a member of each creator
     // rather than static shared by all creators (which will cause it increase to fast).
     private _nextStyleNameId: number = getRandomIdBase();
 
@@ -506,7 +521,8 @@ export class TooltipMarkupStyleCreator {
     makeTooltipMarker(
         markerType: TooltipMarkerType,
         colorStr: ColorString,
-        renderMode: TooltipRenderMode
+        renderMode: TooltipRenderMode,
+        opacity?: number
     ): string {
         const markerId = renderMode === 'richText'
             ? this._generateStyleName()
@@ -515,7 +531,8 @@ export class TooltipMarkupStyleCreator {
             color: colorStr,
             type: markerType,
             renderMode,
-            markerId: markerId
+            markerId: markerId,
+            opacity: opacity
         });
         if (isString(marker)) {
             return marker;

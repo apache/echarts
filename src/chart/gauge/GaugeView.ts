@@ -31,7 +31,7 @@ import SeriesData from '../../data/SeriesData';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
-import {extend, isFunction, isString, isNumber} from 'zrender/src/core/util';
+import { extend, isFunction, isString, isNumber, each } from 'zrender/src/core/util';
 import {setCommonECData} from '../../util/innerStore';
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 
@@ -127,6 +127,7 @@ class GaugeView extends ChartView {
 
         let prevEndAngle = startAngle;
 
+        const sectors: (Sausage | graphic.Sector)[] = [];
         for (let i = 0; showAxis && i < colorList.length; i++) {
             // Clamp
             const percent = Math.min(Math.max(colorList[i][0], 0), 1);
@@ -154,10 +155,13 @@ class GaugeView extends ChartView {
                 ['color', 'width']
             ));
 
-            group.add(sector);
+            sectors.push(sector);
 
             prevEndAngle = endAngle;
         }
+
+        sectors.reverse();
+        each(sectors, sector => group.add(sector));
 
         const getColor = function (percent: number) {
             // Less than 0

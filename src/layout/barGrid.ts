@@ -347,7 +347,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
                 if (maxWidth && maxWidth < finalWidth) {
                     finalWidth = Math.min(maxWidth, remainedWidth);
                 }
-                // `minWidth` has higher priority. `minWidth` decide that wheter the
+                // `minWidth` has higher priority. `minWidth` decide that whether the
                 // bar is able to be visible. So `minWidth` should not be restricted
                 // by `maxWidth` or `remainedWidth` (which is from `bandWidth`). In
                 // the extreme cases for `value` axis, bars are allowed to overlap
@@ -363,7 +363,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             }
             else {
                 // `barMinWidth/barMaxWidth` has higher priority than `barWidth`, as
-                // CSS does. Becuase barWidth can be a percent value, where
+                // CSS does. Because barWidth can be a percent value, where
                 // `barMaxWidth` can be used to restrict the final width.
                 let finalWidth = column.width;
                 if (maxWidth) {

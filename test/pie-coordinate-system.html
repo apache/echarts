@@ -1,0 +1,471 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <script src="lib/testHelper.js"></script>
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+        <div id="main7"></div>
+        <div id="main8"></div>
+        <div id="main9"></div>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var pieRadius = 20;
+                var option = {
+                    calendar: {
+                        top: 'middle',
+                        left: 'center',
+                        cellSize: pieRadius * 3,
+                        orient: 'vertical',
+                        range: ['2022-05']
+                    },
+                    tooltip: {},
+                    series: [
+                        {
+                            type: 'pie',
+                            name: 'Calendar',
+                            coordinateSystem: 'calendar',
+                            radius: pieRadius,
+                            // center is date when displayed on calendar
+                            center: '2022-05-16',
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ],
+                            label: {
+                                show: false
+                            }
+                        },
+                        {
+                            type: 'pie',
+                            name: 'Calendar',
+                            coordinateSystem: 'calendar',
+                            radius: pieRadius,
+                            center: '2022-05-05',
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ],
+                            label: {
+                                show: false
+                            }
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'main1', {
+                    title: ['Pie series on Calendar'],
+                    option: option
+                })
+
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                'map/js/china'
+            ], function (echarts) {
+                var option = {
+                    geo: {
+                        map: 'china',
+                        roam: true
+                    },
+                    tooltip: {},
+                    series: [
+                        {
+                            type: 'pie',
+                            name: 'Geo',
+                            coordinateSystem: 'geo',
+                            radius: 20,
+                            center: [120, 30],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        },
+                        {
+                            type: 'pie',
+                            name: 'Geo',
+                            coordinateSystem: 'geo',
+                            radius: 20,
+                            center: '北京',
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'main2', {
+                    title: ['Pie series on Geo Map'],
+                    option: option
+                })
+
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                'data/svg/Map_of_Iceland.svg'
+            ], function (echarts, svg) {
+                echarts.registerMap('Map_of_Iceland', {
+                    svg: svg
+                });
+                var option = {
+                    geo: {
+                        map: 'Map_of_Iceland',
+                        roam: true,
+                    },
+                    tooltip: {},
+                    series: [
+                        {
+                            type: 'pie',
+                            name: 'Geo SVG',
+                            coordinateSystem: 'geo',
+                            radius: 20,
+                            center: [1062, 955],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'main3', {
+                    title: ['Pie series on Geo SVG'],
+                    option: option
+                })
+
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    tooltip: {},
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+                    },
+                    series: [
+                        {
+                            type: 'pie',
+                            name: 'Cartesian2D(Category Axes)',
+                            coordinateSystem: 'cartesian2d',
+                            radius: 20,
+                            center: ['Tue', 'E'],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'main4', {
+                    title: ['Pie series on Cartesian2D', 'Category Axes'],
+                    option: option
+                })
+
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    tooltip: {},
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            type: 'pie',
+                            name: 'Cartesian2D(category axis & value axis)',
+                            coordinateSystem: 'cartesian2d',
+                            radius: 20,
+                            center: ['Tue', 230],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        },
+                        {
+                            // currently it needs data to calculate axis extend
+                            data: [150, 230, 224, 218, 135, 147, 260],
+                            type: 'line',
+                            showSymbol: false,
+                            lineStyle: {
+                                width: 0
+                            }
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'main5', {
+                    title: ['Pie series on Cartesian2D', 'category axis & value axis (not perfectly supported)'],
+                    option: option
+                })
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                'data/usa.json'
+            ], function (echarts, usaJSON) {
+                echarts.registerMap('USA', usaJSON, {
+                    Alaska: {
+                        left: -131,
+                        top: 25,
+                        width: 15
+                    },
+                    Hawaii: {
+                        left: -110,
+                        top: 28,
+                        width: 5
+                    },
+                    'Puerto Rico': {
+                        left: -76,
+                        top: 26,
+                        width: 2
+                    }
+                });
+
+                function randomPieSeries(center, radius) {
+                    const data = ['A', 'B', 'C', 'D'].map((t) => {
+                        return {
+                            value: Math.round(Math.random() * 100),
+                            name: 'Category ' + t
+                        };
+                    });
+                    return {
+                        type: 'pie',
+                        coordinateSystem: 'geo',
+                        tooltip: {
+                            formatter: '{b}: {c} ({d}%)'
+                        },
+                        label: {
+                            show: false
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        animationDuration: 0,
+                        radius,
+                        center,
+                        data
+                    };
+                }
+
+                var option = {
+                    geo: {
+                        map: 'USA',
+                        roam: true,
+                        itemStyle: {
+                            areaColor: '#e7e8ea'
+                        }
+                    },
+                    tooltip: {},
+                    legend: {},
+                    series: [
+                        randomPieSeries([-86.753504, 33.01077], 15),
+                        randomPieSeries([-116.853504, 39.8], 25),
+                        randomPieSeries([-99, 31.5], 30),
+                        // This name string should work
+                        randomPieSeries('Alaska', 20)
+                    ]
+                };
+
+                testHelper.create(echarts, 'main7', {
+                    title: ['Pie series on Geo Map', 'A pie series should be displayed at `**Alaska**`'],
+                    option: option
+                });
+            });
+        </script>
+
+        <script src="https://api.map.baidu.com/api?v=2.0&ak=KOmVjPVUAey1G2E8zNhPiuQ6QiEmAwZu"></script>
+        <script>
+            require([
+                'echarts',
+                'extension/bmap'
+            ], function (echarts) {
+
+                var option = {
+                    bmap: {
+                        center: [115, 30],
+                        zoom: 5,
+                        roam: true,
+                    },
+                    tooltip: {},
+                    series: [
+                        {
+                            type: 'pie',
+                            name: 'BMap',
+                            coordinateSystem: 'bmap',
+                            radius: 20,
+                            center: [120, 30],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        },
+                        {
+                            type: 'pie',
+                            name: 'No CRS',
+                            // coordinateSystem: 'bmap',
+                            radius: 20,
+                            center: [110, 36],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main8', {
+                    title: ['Pie series on BMap'],
+                    option: option,
+                    buttons: [{
+                        text: 'Convert point [120, 30] to pixel',
+                        onclick: function () {
+                            alert(chart.convertToPixel('bmap', [120, 30]));
+                        }
+                    }]
+                });
+            });
+        </script>
+
+        <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=c0ee23ad2324c26661065de94f5b5676"></script>
+        <script>
+            require([
+                'echarts',
+                'https://fastly.jsdelivr.net/npm/echarts-extension-amap/dist/echarts-extension-amap.js'
+            ], function (echarts) {
+
+                var option = {
+                    amap: {
+                        viewMode: '3d',
+                        center: [115, 30],
+                        zoom: 5
+                    },
+                    tooltip: {},
+                    series: [
+                        {
+                            type: 'pie',
+                            name: 'AMap',
+                            coordinateSystem: 'amap',
+                            radius: 20,
+                            center: [120, 30],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        },
+                        {
+                            type: 'pie',
+                            name: 'No CRS',
+                            // coordinateSystem: 'amap',
+                            radius: 20,
+                            center: [110, 36],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'main9', {
+                    title: ['Pie series on AMap'],
+                    option: option
+                });
+
+            });
+        </script>
+    </body>
+</html>

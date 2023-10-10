@@ -49,6 +49,7 @@ interface AxisInfo {
     coordSys: CoordinateSystemMaster
     axisPointerModel: Model<CommonAxisPointerOption>
     triggerTooltip: boolean
+    triggerEmphasis: boolean
     involveSeries: boolean
     snap: boolean
     useHandle: boolean
@@ -87,6 +88,7 @@ export function collect(ecModel: GlobalModel, api: ExtensionAPI) {
          *      coordSys,
          *      axisPointerModel,
          *      triggerTooltip,
+         *      triggerEmphasis,
          *      involveSeries,
          *      snap,
          *      seriesModels,
@@ -130,8 +132,8 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
             result.coordSysAxesInfo[coordSysKey] = {};
         result.coordSysMap[coordSysKey] = coordSys;
 
-        // Set tooltip (like 'cross') is a convienent way to show axisPointer
-        // for user. So we enable seting tooltip on coordSys model.
+        // Set tooltip (like 'cross') is a convenient way to show axisPointer
+        // for user. So we enable setting tooltip on coordSys model.
         const coordSysModel = coordSys.model as ComponentModel<ComponentOption & {
             tooltip: TooltipOption  // TODO: Same with top level tooltip?
         }>;
@@ -194,6 +196,7 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
                 : axisPointerModel;
 
             const snap = axisPointerModel.get('snap');
+            const triggerEmphasis = axisPointerModel.get('triggerEmphasis');
             const axisKey = makeKey(axis.model);
             const involveSeries = triggerTooltip || snap || axis.type === 'category';
 
@@ -204,6 +207,7 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
                 coordSys: coordSys,
                 axisPointerModel: axisPointerModel,
                 triggerTooltip: triggerTooltip,
+                triggerEmphasis: triggerEmphasis,
                 involveSeries: involveSeries,
                 snap: snap,
                 useHandle: isHandleTrigger(axisPointerModel),
@@ -250,8 +254,8 @@ function makeAxisPointerModel(
     // triggered from tooltip and trigger tooltip.
     volatileOption.snap = axis.type !== 'category' && !!triggerTooltip;
 
-    // Compatibel with previous behavior, tooltip axis do not show label by default.
-    // Only these properties can be overrided from tooltip to axisPointer.
+    // Compatible with previous behavior, tooltip axis does not show label by default.
+    // Only these properties can be overridden from tooltip to axisPointer.
     if (tooltipAxisPointerModel.get('type') === 'cross') {
         volatileOption.type = 'line';
     }

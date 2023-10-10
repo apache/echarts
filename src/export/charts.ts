@@ -49,7 +49,7 @@ export {install as SunburstChart} from '../chart/sunburst/install';
 export {install as CustomChart} from '../chart/custom/install';
 
 
-// // NOTE: Don't use XXXSeriesOption from 'option.ts' becuase they have been injected markPoint, markLine etc.
+// // NOTE: Don't use XXXSeriesOption from 'option.ts' because they have been injected markPoint, markLine etc.
 // export {LineSeriesOption} from '../chart/line/LineSeries';
 // export {BarSeriesOption} from '../chart/bar/BarSeries';
 // export {ScatterSeriesOption} from '../chart/scatter/ScatterSeries';

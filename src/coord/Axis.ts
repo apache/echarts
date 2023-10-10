@@ -232,7 +232,7 @@ class Axis {
      * Notice here we only get the default tick model. For splitLine
      * or splitArea, we should pass the splitLineModel or splitAreaModel
      * manually when calling `getTicksCoords`.
-     * In GL, this method may be overrided to:
+     * In GL, this method may be overridden to:
      * `axisModel.getModel('axisTick', grid3DModel.getModel('axisTick'));`
      */
     getTickModel(): Model {
@@ -262,7 +262,7 @@ class Axis {
 
     /**
      * Only be called in category axis.
-     * Can be overrided, consider other axes like in 3D.
+     * Can be overridden, consider other axes like in 3D.
      * @return Auto interval for cateogry axis tick and label
      */
     calculateCategoryInterval(): ReturnType<typeof calculateCategoryInterval> {
@@ -302,7 +302,7 @@ function fixOnBandTicksCoords(
     let diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
-        last = ticksCoords[1] = {coord: axisExtent[0]};
+        last = ticksCoords[1] = {coord: axisExtent[1]};
     }
     else {
         const crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
@@ -338,7 +338,7 @@ function fixOnBandTicksCoords(
 
     function littleThan(a: number, b: number): boolean {
         // Avoid rounding error cause calculated tick coord different with extent.
-        // It may cause an extra unecessary tick added.
+        // It may cause an extra unnecessary tick added.
         a = round(a);
         b = round(b);
         return inverse ? a > b : a < b;

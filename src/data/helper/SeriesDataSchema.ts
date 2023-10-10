@@ -157,8 +157,8 @@ export class SeriesDataSchema {
 
             // If retrieving data by index,
             //   use <index, type, ordinalMeta> to determine whether data can be shared.
-            //   (Becuase in this case there might be no dimension name defined in dataset, but indices always exists).
-            //   (indices are always 0, 1, 2, ..., so we can ignore them to shorten the hash).
+            //   (Because in this case there might be no dimension name defined in dataset, but indices always exists).
+            //   (Indices are always 0, 1, 2, ..., so we can ignore them to shorten the hash).
             // Otherwise if retrieving data by property name (like `data: [{aa: 123, bb: 765}, ...]`),
             //   use <property, type, ordinalMeta> in hash.
             if (willRetrieveDataByName
