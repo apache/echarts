@@ -216,21 +216,19 @@ function getPoints(shape: ECPolygonShape|ECPolylineShape) {
         return shape.points;
     }
 
-    if (shape.loop) {
-        let points = (shape.points as number[]);
+    let points = (shape.points as number[]);
 
-        if (shape.connectNulls) {
-            const nonNull: number[] = [];
-            for (let i = 0; i < points.length; i += 2) {
-                if (!isPointNull(points[i], points[i + 1])) {
-                    nonNull.push(points[i], points[i + 1]);
-                }
+    if (shape.connectNulls) {
+        const nonNull: number[] = [];
+        for (let i = 0; i < points.length; i += 2) {
+            if (!isPointNull(points[i], points[i + 1])) {
+                nonNull.push(points[i], points[i + 1]);
             }
-            points = nonNull;
         }
-
-        return [points[points.length - 2], points[points.length - 1], ...points, points[0], points[1]];
+        points = nonNull;
     }
+
+    return [points[points.length - 2], points[points.length - 1], ...points, points[0], points[1]];
 }
 
 class ECPolylineShape {
