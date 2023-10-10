@@ -137,10 +137,10 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-export const version = '5.4.1';
+export const version = '5.4.3';
 
 export const dependencies = {
-    zrender: '5.4.1'
+    zrender: '5.4.4'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -318,7 +318,7 @@ type ECEventDefinition = {
     // TODO: Use ECActionEvent
     [key: string]: (...args: unknown[]) => void | boolean
 };
-type EChartsInitOpts = {
+export type EChartsInitOpts = {
     locale?: string | LocaleOption,
     renderer?: RendererType,
     devicePixelRatio?: number,
@@ -1065,7 +1065,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                         if (ecData && ecData.dataIndex != null) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                             params = (
-                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
+                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
                             ) as ECElementEvent;
                             return true;
                         }
@@ -2087,12 +2087,12 @@ class ECharts extends Eventful<ECEventDefinition> {
             };
             const componentZLevels: ZLevelItem[] = [];
             const seriesZLevels: ZLevelItem[] = [];
-            let hasSeperateZLevel = false;
+            let hasSeparateZLevel = false;
             ecModel.eachComponent(function (componentType, componentModel) {
                 const zlevel = componentModel.get('zlevel') || 0;
                 const z = componentModel.get('z') || 0;
                 const zlevelKey = componentModel.getZLevelKey();
-                hasSeperateZLevel = hasSeperateZLevel || !!zlevelKey;
+                hasSeparateZLevel = hasSeparateZLevel || !!zlevelKey;
                 (componentType === 'series' ? seriesZLevels : componentZLevels).push({
                     zlevel,
                     z,
@@ -2102,7 +2102,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             });
 
-            if (hasSeperateZLevel) {
+            if (hasSeparateZLevel) {
                 // Series after component
                 const zLevels: ZLevelItem[] = componentZLevels.concat(seriesZLevels);
                 let lastSeriesZLevel: number;
@@ -2638,8 +2638,8 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
  * @param opts.useDirtyRect Enable dirty rectangle rendering or not.
  */
 export function init(
-    dom: HTMLElement,
-    theme?: string | object,
+    dom?: HTMLElement | null,
+    theme?: string | object | null,
     opts?: EChartsInitOpts
 ): EChartsType {
     const isClient = !(opts && opts.ssr);
@@ -2724,17 +2724,15 @@ export function connect(groupId: string | EChartsType[]): string {
     return groupId as string;
 }
 
-/**
- * @deprecated
- */
-export function disConnect(groupId: string): void {
+export function disconnect(groupId: string): void {
     connectedGroups[groupId] = false;
 }
 
 /**
  * Alias and backward compatibility
+ * @deprecated
  */
-export const disconnect = disConnect;
+export const disConnect = disconnect;
 
 /**
  * Dispose a chart instance

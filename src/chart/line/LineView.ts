@@ -1303,7 +1303,10 @@ class LineView extends ChartView {
                 });
             }
             if (valueAnimation) {
-                labelInner(endLabel).setLabelText(value);
+                const inner = labelInner(endLabel);
+                if (typeof inner.setLabelText === 'function') {
+                    inner.setLabelText(value);
+                }
             }
         }
     }

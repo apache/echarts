@@ -147,8 +147,6 @@ class TooltipView extends ComponentView {
 
     private _api: ExtensionAPI;
 
-    private _alwaysShowContent: boolean;
-
     private _tooltipContent: TooltipHTMLContent | TooltipRichContent;
 
     private _refreshUpdateTimeout: number;
@@ -173,8 +171,8 @@ class TooltipView extends ComponentView {
 
         this._tooltipContent = renderMode === 'richText'
             ? new TooltipRichContent(api)
-            : new TooltipHTMLContent(api.getDom(), api, {
-                appendToBody: tooltipModel.get('appendToBody', true)
+            : new TooltipHTMLContent(api, {
+                appendTo: tooltipModel.get('appendToBody', true) ? 'body' : tooltipModel.get('appendTo', true)
             });
     }
 
@@ -195,12 +193,6 @@ class TooltipView extends ComponentView {
         this._ecModel = ecModel;
 
         this._api = api;
-
-        /**
-         * @private
-         * @type {boolean}
-         */
-        this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
         const tooltipContent = this._tooltipContent;
         tooltipContent.update(tooltipModel);
@@ -396,7 +388,7 @@ class TooltipView extends ComponentView {
     ) {
         const tooltipContent = this._tooltipContent;
 
-        if (!this._alwaysShowContent && this._tooltipModel) {
+        if (this._tooltipModel) {
             tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
         }
 
@@ -581,7 +573,7 @@ class TooltipView extends ComponentView {
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
                     cbParams.marker = markupStyleCreator.makeTooltipMarker(
-                        'item', convertToColorString(cbParams.color), renderMode
+                        'item', convertToColorString(cbParams.color), renderMode, cbParams.opacity
                     );
 
                     const seriesTooltipResult = normalizeTooltipFormatResult(

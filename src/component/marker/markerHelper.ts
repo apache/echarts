@@ -105,14 +105,14 @@ export function dataTransform(
 
     const data = seriesModel.getData();
     const coordSys = seriesModel.coordinateSystem;
-    const dims = coordSys.dimensions;
+    const dims = coordSys && coordSys.dimensions;
 
     // 1. If not specify the position with pixel directly
     // 2. If `coord` is not a data array. Which uses `xAxis`,
     // `yAxis` to specify the coord on each dimension
 
     // parseFloat first because item.x and item.y can be percent string like '20%'
-    if (!hasXAndY(item) && !isArray(item.coord) && coordSys) {
+    if (!hasXAndY(item) && !isArray(item.coord) && isArray(dims)) {
         const axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
 
         // Clone the option
@@ -144,7 +144,7 @@ export function dataTransform(
         }
     }
     // x y is provided
-    if (item.coord == null) {
+    if (item.coord == null || !isArray(dims)) {
         item.coord = [];
     }
     else {

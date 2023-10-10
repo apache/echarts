@@ -144,7 +144,7 @@ function getLabelText<TLabelDataIndex>(
             labelDimIndex,
             normalModel && normalModel.get('formatter'),
             interpolatedValue != null ? {
-                interpolatedValue: interpolatedValue
+                interpolatedValue
             } : null
         );
     }
@@ -460,7 +460,7 @@ const TEXT_PROPS_WITH_GLOBAL = [
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
 ] as const;
 const TEXT_PROPS_SELF = [
-    'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'
+    'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign', 'ellipsis'
 ] as const;
 const TEXT_PROPS_BOX = [
     'padding', 'borderWidth', 'borderRadius', 'borderDashOffset',
