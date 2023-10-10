@@ -536,20 +536,22 @@ function setLabelLineState(
 ) {
     const isNormal = stateName === 'normal';
     const stateObj = isNormal ? labelLine : labelLine.ensureState(stateName);
-    // Make sure display.
-    stateObj.ignore = ignore;
-    // Set smooth
-    let smooth = stateModel.get('smooth');
-    if (smooth && smooth === true) {
-        smooth = 0.3;
-    }
-    stateObj.shape = stateObj.shape || {};
-    if (smooth > 0) {
-        (stateObj.shape as Polyline['shape']).smooth = smooth as number;
-    }
+    if (stateObj != undefined) {
+        // Make sure display.
+        stateObj.ignore = ignore;
+        // Set smooth
+        let smooth = stateModel.get('smooth');
+        if (smooth && smooth === true) {
+            smooth = 0.3;
+        }
+        stateObj.shape = stateObj.shape || {};
+        if (smooth > 0) {
+            (stateObj.shape as Polyline['shape']).smooth = smooth as number;
+        }
 
-    const styleObj = stateModel.getModel('lineStyle').getLineStyle();
-    isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
+        const styleObj = stateModel.getModel('lineStyle').getLineStyle();
+        isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
+    }
 }
 
 function buildLabelLinePath(path: CanvasRenderingContext2D, shape: Polyline['shape']) {
@@ -619,9 +621,6 @@ export function setLabelLineStyle(
                 || !retrieve2(stateShow, showNormal) // Use normal state by default if not set.
             ) {
                 const stateObj = isNormal ? labelLine : (labelLine && labelLine.states[stateName]);
-                if (stateObj) {
-                    stateObj.ignore = true;
-                }
                 setLabelLineState(labelLine, true, stateName, stateModel);
                 continue;
             }
