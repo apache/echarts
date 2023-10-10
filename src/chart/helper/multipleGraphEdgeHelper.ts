@@ -240,7 +240,7 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse?: bool
     // if is opposite edge, must set curvenss to opposite number
     const curKey = getKeyOfEdges(edge.node1, edge.node2, seriesModel);
     const curvenessList = seriesModel.__curvenessList;
-    // if pass array no need parity: se sono pari li corregge per curvarli tutti, vale anche per l'offset, se sono pari non uso lo zero
+    // if pass array no need parity
     const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
     if (!edgeArray.isForward) {
         // the opposite edge show outside
@@ -296,7 +296,7 @@ export function getOffsetForEdge(edge, seriesModel, index) {
             break;
         }
     }
-    // if totalLen is Longer createCurveness
+    // if totalLen is Longer createOffsets
     const totalLen = getTotalLengthBetweenNodes(edge, seriesModel);
     const nodesSizes = [edge.node1, edge.node2].map(node => {
         let symbolSize = node.getModel<GraphNodeItemOption>().get('symbolSize');
