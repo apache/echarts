@@ -394,6 +394,7 @@ class SliderZoomView extends DataZoomView {
             // Optimize for large data shadow
             const stride = Math.round(data.count() / size[0]);
             let lastIsEmpty: boolean;
+            let lastThisCoord: any;
             data.each([info.thisDim, otherDim], function (thisValue: ParsedValue, thatValue: ParsedValue, index) {
                 if (stride > 0 && (index % stride)) {
                     // thisCoord += step;
@@ -433,7 +434,11 @@ class SliderZoomView extends DataZoomView {
                 linePoints.push([thisCoord, otherCoord]);
 
                 lastIsEmpty = isEmpty;
+                lastThisCoord = thisCoord;
             });
+
+            // Close the last segment
+            areaPoints.push([lastThisCoord, 0]);
 
             polygonPts = this._shadowPolygonPts = areaPoints;
             polylinePts = this._shadowPolylinePts = linePoints;
