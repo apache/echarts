@@ -619,8 +619,9 @@ export function setLabelLineStyle(
             ) {
                 const stateObj = isNormal ? labelLine : (labelLine && labelLine.states[stateName]);
                 if (stateObj) {
-                stateObj.ignore = true;}
-                if(!!labelLine){
+                    stateObj.ignore = true;
+                }
+                if (!!labelLine) {
                     setLabelLineState(labelLine, true, stateName, stateModel);
                 }
                 continue;
