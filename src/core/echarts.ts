@@ -418,11 +418,11 @@ class ECharts extends Eventful<ECEventDefinition> {
                 env.hasGlobalWindow ? window : global
             ) as any;
 
-            defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+            defaultRenderer = root?.__ECHARTS__DEFAULT__RENDERER__ ?? defaultRenderer;
 
             defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
 
-            const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
+            const devUseDirtyRect = root?.__ECHARTS__DEFAULT__USE_DIRTY_RECT__ ?? null;
             defaultUseDirtyRect = devUseDirtyRect == null
                 ? defaultUseDirtyRect
                 : devUseDirtyRect;
