@@ -22,20 +22,21 @@
  */
 
 export default {
+
     time: {
         month: [
             'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
             'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
         ],
         monthAbbr: [
-            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+            'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
         ],
         dayOfWeek: [
-            'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+            'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'
         ],
         dayOfWeekAbbr: [
-            'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+            'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'
         ]
     },
     legend: {
@@ -47,96 +48,98 @@ export default {
     toolbox: {
         brush: {
             title: {
-                rect: 'Box Select',
-                polygon: 'Lasso Select',
-                lineX: 'Horizontally Select',
-                lineY: 'Vertically Select',
-                keep: 'Keep Selections',
-                clear: 'Clear Selections'
+                rect: 'تحديد صندوقي',
+                polygon: 'تحديد حلقي',
+                lineX: 'تحديد أفقي',
+                lineY: 'تحديد عمودي',
+                keep: 'الاحتفاظ بالمحدد',
+                clear: 'إلغاء التحديد'
             }
         },
         dataView: {
-            title: 'Data View',
-            lang: ['Data View', 'Close', 'Refresh']
+            title: 'عرض البيانات',
+            lang: ['عرض البيانات', 'إغلاق', 'تحديث']
         },
         dataZoom: {
             title: {
-                zoom: 'Zoom',
-                back: 'Zoom Reset'
+                zoom: 'تكبير',
+                back: 'استعادة التكبير'
             }
         },
         magicType: {
             title: {
-                line: 'Switch to Line Chart',
-                bar: 'Switch to Bar Chart',
-                stack: 'Stack',
-                tiled: 'Tile'
+                line: 'خطوط',
+                bar: 'أشرطة',
+                stack: 'تكديس',
+                tiled: 'مربعات'
             }
         },
         restore: {
-            title: 'Restore'
+            title: 'استعادة'
         },
         saveAsImage: {
-            title: 'Save as Image',
-            lang: ['Right Click to Save Image']
+            title: 'حفظ كملف صورة',
+            lang: ['للحفظ كصورة انقر  بالزر الأيمن']
         }
     },
     series: {
         typeNames: {
-            pie: 'Pie chart',
-            bar: 'Bar chart',
-            line: 'Line chart',
-            scatter: 'Scatter plot',
-            effectScatter: 'Ripple scatter plot',
-            radar: 'Radar chart',
-            tree: 'Tree',
-            treemap: 'Treemap',
-            boxplot: 'Boxplot',
-            candlestick: 'Candlestick',
-            k: 'K line chart',
-            heatmap: 'Heat map',
-            map: 'Map',
-            parallel: 'Parallel coordinate map',
-            lines: 'Line graph',
-            graph: 'Relationship graph',
-            sankey: 'Sankey diagram',
-            funnel: 'Funnel chart',
-            gauge: 'Gauge',
-            pictorialBar: 'Pictorial bar',
-            themeRiver: 'Theme River Map',
-            sunburst: 'Sunburst'
+            pie: 'رسم بياني دائري',
+            bar: 'رسم بياني شريطي',
+            line: 'رسم بياني خطي',
+            scatter: 'نقاط مبعثرة',
+            effectScatter: 'نقاط مبعثرة متموجة',
+            radar: 'رسم بياني راداري',
+            tree: 'شجرة',
+            treemap: 'مخطط شجري',
+            boxplot: 'مخطط صندوقي',
+            candlestick: 'مخطط شمعدان',
+            k: 'رسم بياني خطي من النوع K',
+            heatmap: 'خريطة حرارية',
+            map: 'خريطة',
+            parallel: 'خريطة الإحداثيات المتناظرة',
+            lines: 'خطوط',
+            graph: 'مخطط علائقي',
+            sankey: 'مخطط ثعباني',
+            funnel: 'مخطط هرمي',
+            gauge: 'مقياس',
+            pictorialBar: 'مخطط مصوّر',
+            themeRiver: 'نمط خريطة النهر',
+            sunburst: 'مخطط شمسي'
         }
     },
     aria: {
         general: {
-            withTitle: 'This is a chart about "{title}"',
-            withoutTitle: 'This is a chart'
+            withTitle: 'هذا رسم بياني حول "{title}".',
+            withoutTitle: 'هذا رسم بياني.'
         },
         series: {
             single: {
                 prefix: '',
-                withName: ' with type {seriesType} named {seriesName}.',
-                withoutName: ' with type {seriesType}.'
+                withName: ' من النوع {seriesType} اسمه {seriesName}.',
+                withoutName: ' من النوع {seriesType}.'
             },
             multiple: {
-                prefix: '. It consists of {seriesCount} series count.',
-                withName: ' The {seriesId} series is a {seriesType} representing {seriesName}.',
-                withoutName: ' The {seriesId} series is a {seriesType}.',
+                prefix: '. يتكون من {seriesCount} سلسلة.',
+                withName: ' الـ  {seriesId} هي سلسلة من النوع {seriesType} تستعرض {seriesName}.',
+                withoutName: ' الـ {seriesId} هي سلسلة من النوع {seriesType}.',
                 separator: {
-                    middle: '',
-                    end: ''
+                    middle: '، ',
+                    end: '. '
                 }
             }
         },
         data: {
-            allData: 'The data is as follows: ',
-            partialData: 'The first {displayCnt} items are: ',
-            withName: 'the data for {name} is {value}',
+            allData: 'البيانات هي كالتالي: ',
+            partialData: 'أول {displayCnt} عناصر هي: ',
+            withName: 'قيمة العنصر {name} هي {value}',
             withoutName: '{value}',
             separator: {
-                middle: ', ',
+                middle: '، ',
                 end: '. '
             }
         }
     }
+
+
 };
