@@ -412,17 +412,21 @@ class ECharts extends Eventful<ECEventDefinition> {
         let defaultRenderer = 'canvas';
         let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
+
         if (__DEV__) {
+            let devUseDirtyRect = null;
             const root = (
                 /* eslint-disable-next-line */
                 env.hasGlobalWindow ? window : global
             ) as any;
 
-            defaultRenderer = root?.__ECHARTS__DEFAULT__RENDERER__ ?? defaultRenderer;
+            if (root) {
+                defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+                devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
+                defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
+            }
 
-            defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
 
-            const devUseDirtyRect = root?.__ECHARTS__DEFAULT__USE_DIRTY_RECT__ ?? null;
             defaultUseDirtyRect = devUseDirtyRect == null
                 ? defaultUseDirtyRect
                 : devUseDirtyRect;
