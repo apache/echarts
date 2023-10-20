@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
@@ -223,6 +224,14 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     showMinLabel?: boolean,
     // true | false | null/undefined (auto)
     showMaxLabel?: boolean,
+    // 'left' | 'center' | 'right' | null/undefined (auto)
+    alignMinLabel?: TextAlign,
+    // 'left' | 'center' | 'right' | null/undefined (auto)
+    alignMaxLabel?: TextAlign,
+    // 'top' | 'middle' | 'bottom' | null/undefined (auto)
+    verticalAlignMinLabel?: TextVerticalAlign,
+    // 'top' | 'middle' | 'bottom' | null/undefined (auto)
+    verticalAlignMaxLabel?: TextVerticalAlign,
     margin?: number,
     rich?: Dictionary<TextCommonOption>
     /**
