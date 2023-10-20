@@ -17,7 +17,9 @@
 * under the License.
 */
 
-import {retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction, retrieve2} from 'zrender/src/core/util';
+import {
+    retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction, retrieve2
+} from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
