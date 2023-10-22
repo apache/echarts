@@ -108,38 +108,30 @@
 
     function parse(xml) {
       var doc;
-
       if (typeof xml === 'string') {
         var parser = new DOMParser();
         doc = parser.parseFromString(xml, 'text/xml');
       } else {
         doc = xml;
       }
-
       if (!doc || doc.getElementsByTagName('parsererror').length) {
         return null;
       }
-
       var gexfRoot = getChildByTagName(doc, 'gexf');
-
       if (!gexfRoot) {
         return null;
       }
-
       var graphRoot = getChildByTagName(gexfRoot, 'graph');
       var attributes = parseAttributes(getChildByTagName(graphRoot, 'attributes'));
       var attributesMap = {};
-
       for (var i = 0; i < attributes.length; i++) {
         attributesMap[attributes[i].id] = attributes[i];
       }
-
       return {
         nodes: parseNodes(getChildByTagName(graphRoot, 'nodes'), attributesMap),
         links: parseEdges(getChildByTagName(graphRoot, 'edges'))
       };
     }
-
     function parseAttributes(parent) {
       return parent ? map(getChildrenByTagName(parent, 'attribute'), function (attribDom) {
         return {
@@ -149,7 +141,6 @@
         };
       }) : [];
     }
-
     function parseNodes(parent, attributesMap) {
       return parent ? map(getChildrenByTagName(parent, 'node'), function (nodeDom) {
         var id = getAttr(nodeDom, 'id');
@@ -163,62 +154,53 @@
         };
         var vizSizeDom = getChildByTagName(nodeDom, 'viz:size');
         var vizPosDom = getChildByTagName(nodeDom, 'viz:position');
-        var vizColorDom = getChildByTagName(nodeDom, 'viz:color'); // let vizShapeDom = getChildByTagName(nodeDom, 'viz:shape');
-
+        var vizColorDom = getChildByTagName(nodeDom, 'viz:color');
+        // let vizShapeDom = getChildByTagName(nodeDom, 'viz:shape');
         var attvaluesDom = getChildByTagName(nodeDom, 'attvalues');
-
         if (vizSizeDom) {
           node.symbolSize = parseFloat(getAttr(vizSizeDom, 'value'));
         }
-
         if (vizPosDom) {
           node.x = parseFloat(getAttr(vizPosDom, 'x'));
-          node.y = parseFloat(getAttr(vizPosDom, 'y')); // z
+          node.y = parseFloat(getAttr(vizPosDom, 'y'));
+          // z
         }
 
         if (vizColorDom) {
           node.itemStyle.normal.color = 'rgb(' + [getAttr(vizColorDom, 'r') | 0, getAttr(vizColorDom, 'g') | 0, getAttr(vizColorDom, 'b') | 0].join(',') + ')';
-        } // if (vizShapeDom) {
+        }
+        // if (vizShapeDom) {
         // node.shape = getAttr(vizShapeDom, 'shape');
         // }
-
-
         if (attvaluesDom) {
           var attvalueDomList = getChildrenByTagName(attvaluesDom, 'attvalue');
           node.attributes = {};
-
           for (var j = 0; j < attvalueDomList.length; j++) {
             var attvalueDom = attvalueDomList[j];
             var attId = getAttr(attvalueDom, 'for');
             var attValue = getAttr(attvalueDom, 'value');
             var attribute = attributesMap[attId];
-
             if (attribute) {
               switch (attribute.type) {
                 case 'integer':
                 case 'long':
                   attValue = parseInt(attValue, 10);
                   break;
-
                 case 'float':
                 case 'double':
                   attValue = parseFloat(attValue);
                   break;
-
                 case 'boolean':
                   attValue = attValue.toLowerCase() === 'true';
                   break;
               }
-
               node.attributes[attId] = attValue;
             }
           }
         }
-
         return node;
       }) : [];
     }
-
     function parseEdges(parent) {
       return parent ? map(getChildrenByTagName(parent, 'edge'), function (edgeDom) {
         var id = getAttr(edgeDom, 'id');
@@ -236,30 +218,25 @@
         };
         var lineStyle = edge.lineStyle.normal;
         var vizThicknessDom = getChildByTagName(edgeDom, 'viz:thickness');
-        var vizColorDom = getChildByTagName(edgeDom, 'viz:color'); // let vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
-
+        var vizColorDom = getChildByTagName(edgeDom, 'viz:color');
+        // let vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
         if (vizThicknessDom) {
           lineStyle.width = parseFloat(vizThicknessDom.getAttribute('value'));
         }
-
         if (vizColorDom) {
           lineStyle.color = 'rgb(' + [getAttr(vizColorDom, 'r') | 0, getAttr(vizColorDom, 'g') | 0, getAttr(vizColorDom, 'b') | 0].join(',') + ')';
-        } // if (vizShapeDom) {
+        }
+        // if (vizShapeDom) {
         //     edge.shape = vizShapeDom.getAttribute('shape');
         // }
-
-
         return edge;
       }) : [];
     }
-
     function getAttr(el, attrName) {
       return el.getAttribute(attrName);
     }
-
     function getChildByTagName(parent, tagName) {
       var node = parent.firstChild;
-
       while (node) {
         if (node.nodeType !== 1 || node.nodeName.toLowerCase() !== tagName.toLowerCase()) {
           node = node.nextSibling;
@@ -267,22 +244,17 @@
           return node;
         }
       }
-
       return null;
     }
-
     function getChildrenByTagName(parent, tagName) {
       var node = parent.firstChild;
       var children = [];
-
       while (node) {
         if (node.nodeName.toLowerCase() === tagName.toLowerCase()) {
           children.push(node);
         }
-
         node = node.nextSibling;
       }
-
       return children;
     }
 
@@ -339,7 +311,6 @@
       });
       return arr;
     }
-
     function quantile(ascArr, p) {
       var H = (ascArr.length - 1) * p + 1;
       var h = Math.floor(H);
@@ -373,8 +344,6 @@
      *      axisData: Array.<string>
      * }
      */
-
-
     function prepareBoxplotData (rawData, opt) {
       opt = opt || {};
       var boxData = [];
@@ -382,7 +351,6 @@
       var axisData = [];
       var boundIQR = opt.boundIQR;
       var useExtreme = boundIQR === 'none' || boundIQR === 0;
-
       for (var i = 0; i < rawData.length; i++) {
         axisData.push(i + '');
         var ascList = asc(rawData[i].slice());
@@ -395,10 +363,8 @@
         var low = useExtreme ? min : Math.max(min, Q1 - bound);
         var high = useExtreme ? max : Math.min(max, Q3 + bound);
         boxData.push([low, Q1, Q2, Q3, high]);
-
         for (var j = 0; j < ascList.length; j++) {
           var dataItem = ascList[j];
-
           if (dataItem < low || dataItem > high) {
             var outlier = [i, dataItem];
             opt.layout === 'vertical' && outlier.reverse();
@@ -406,7 +372,6 @@
           }
         }
       }
-
       return {
         boxData: boxData,
         outliers: outliers,
@@ -414,16 +379,18 @@
       };
     }
 
+    // import { boxplotTransform } from './boxplotTransform.js';
     var version = '1.0.0';
+    // export {boxplotTransform};
     // For backward compatibility, where the namespace `dataTool` will
     // be mounted on `echarts` is the extension `dataTool` is imported.
     // But the old version of echarts do not have `dataTool` namespace,
     // so check it before mounting.
-
     if (echarts.dataTool) {
       echarts.dataTool.version = version;
       echarts.dataTool.gexf = gexf;
-      echarts.dataTool.prepareBoxplotData = prepareBoxplotData; // echarts.dataTool.boxplotTransform = boxplotTransform;
+      echarts.dataTool.prepareBoxplotData = prepareBoxplotData;
+      // echarts.dataTool.boxplotTransform = boxplotTransform;
     }
 
     exports.gexf = gexf;

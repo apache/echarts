@@ -25,15 +25,21 @@ import ParallelModel from '../../coord/parallel/ParallelModel';
 import { EChartsExtensionInstallRegisters } from '../../extension';
 
 interface ParallelAxisAreaSelectPayload extends Payload {
-    parallelAxisId: string;
-    intervals: ParallelAxisInterval[]
+    parallelAxisId?: string;
+    intervals?: ParallelAxisInterval[];
+    axes?: string[]
 }
 
 const actionInfo = {
     type: 'axisAreaSelect',
-    event: 'axisAreaSelected'
-    // update: 'updateVisual'
+    event: 'axisAreaSelected',
+    update: 'updateVisual'
 };
+
+const clearActionInfo = {
+    type: 'axisAreaClear',
+    event: 'axisAreaCleared'
+}
 
 export interface ParallelAxisExpandPayload extends Payload {
     axisExpandWindow?: number[];
@@ -61,6 +67,29 @@ export function installParallelActions(registers: EChartsExtensionInstallRegiste
             }
         );
     });
+
+    /**
+     * Register the clear action
+     */
+    registers.registerAction(clearActionInfo, function (payload: ParallelAxisAreaSelectPayload, ecModel: GlobalModel) {
+        if(payload.axes && payload.axes.length) {
+            // clear specific axes/axis by name
+            payload.axes.forEach(axisName => {
+                ecModel.eachComponent({ mainType: 'parallelAxis'}, function (parallelAxisModel: ParallelAxisModel) {
+                    if(parallelAxisModel.get('name') === axisName) {
+                        parallelAxisModel.clearSelection();
+                    }
+                });
+            });       
+        } else {
+            // clear all axis
+            ecModel.eachComponent({ mainType: 'parallelAxis', query: payload }, 
+            function (parallelAxisModel: ParallelAxisModel) {
+                parallelAxisModel.clearSelection();
+            });
+        }
+    });
+
 
 
 }
