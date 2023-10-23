@@ -606,13 +606,6 @@ export function setLabelLineStyle(
     const showNormal = normalModel.get('show');
     const labelIgnoreNormal = label.ignore;
 
-    // if labelLine exist and need to show in any state
-    const needToShow = !!labelLine && !!DISPLAY_STATES.find(stateName => {
-        const stateModel = statesModels[stateName];
-
-        return stateModel.get('show');
-    });
-
     for (let i = 0; i < DISPLAY_STATES.length; i++) {
         const stateName = DISPLAY_STATES[i];
         const stateModel = statesModels[stateName];
@@ -628,11 +621,6 @@ export function setLabelLineStyle(
                 const stateObj = isNormal ? labelLine : (labelLine && labelLine.states[stateName]);
                 if (stateObj) {
                     stateObj.ignore = true;
-                }
-
-                // set default labelLine style
-                if (needToShow) {
-                    setLabelLineState(labelLine, true, stateName, stateModel);
                 }
                 continue;
             }
