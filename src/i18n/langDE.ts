@@ -105,6 +105,7 @@ export default {
             pictorialBar: 'Bildlicher Balken',
             themeRiver: 'Thematische Flusskarte',
             sunburst: 'Sonnenausbruch',
+            custom: 'Graficu persunalizatu',
             chart: 'Diagramm'
         }
     },

@@ -105,6 +105,7 @@ export default {
             pictorialBar: 'Столбец-картинка',
             themeRiver: 'Тематическая река',
             sunburst: 'Солнечные лучи',
+            custom: 'Пользовательская диаграмма',
             chart: 'диаграмма'
         }
     },

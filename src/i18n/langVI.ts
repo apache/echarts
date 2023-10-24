@@ -129,7 +129,8 @@ export default {
       pictorialBar: 'Biểu diễn hình ảnh',
       themeRiver: 'Bản đồ sông',
       sunburst: 'Biểu đồ bậc',
-      chart: 'đồ biểu'
+      custom: 'Biểu đồ tùy chỉnh',
+      chart: 'Đồ thị'
     }
   },
   aria: {

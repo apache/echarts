@@ -105,6 +105,7 @@ export default {
             pictorialBar: 'Képes sávdiagram',
             themeRiver: 'Folyó témájú térkép',
             sunburst: 'Napégés',
+            custom: 'Egyedi diagram',
             chart: 'Diagram'
         }
     },

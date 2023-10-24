@@ -105,6 +105,7 @@
             pictorialBar: 'Obrázkový sloupcový graf',
             themeRiver: 'Theme River Map',
             sunburst: 'Vícevrstvý prstencový graf',
+            custom: 'Graficu persunalizatu',
             chart: 'Graf'
         }
     },

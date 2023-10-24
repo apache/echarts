@@ -106,6 +106,7 @@ export default {
             pictorialBar: 'مخطط مصوّر',
             themeRiver: 'نمط خريطة النهر',
             sunburst: 'مخطط شمسي',
+            custom: 'مخطط مخصص',
             chart: 'مخطط'
         }
     },

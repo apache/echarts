@@ -105,6 +105,7 @@ export default {
             pictorialBar: '絵入り棒グラフ',
             themeRiver: 'テーマリバー',
             sunburst: 'サンバースト',
+            custom: 'カスタムチャート',
             chart: 'チャート'
         }
     },

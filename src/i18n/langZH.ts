@@ -101,6 +101,7 @@ export default {
             pictorialBar: '象形柱图',
             themeRiver: '主题河流图',
             sunburst: '旭日图',
+            custom: '自定义图表',
             chart: '图表'
         }
     },

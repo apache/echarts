@@ -105,6 +105,7 @@ export default {
             pictorialBar: 'Barres à images',
             themeRiver: 'Stream Graph',
             sunburst: 'Sunburst',
+            custom: 'Graphique personnalisé',
             chart: 'Graphique'
         }
     },

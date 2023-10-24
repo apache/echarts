@@ -106,6 +106,7 @@ export default {
             pictorialBar: 'Pictorial bar',
             themeRiver: 'Theme River Map',
             sunburst: 'Sunburst',
+            custom: 'Gráfico personalizado',
             chart: 'Gráfico'
         }
     },

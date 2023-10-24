@@ -105,6 +105,7 @@ export default {
             pictorialBar: 'Pictorial bar',
             themeRiver: 'Theme River Map',
             sunburst: 'Radiale',
+            custom: 'Egyedi diagram',
             chart: 'Grafico'
         }
     },
