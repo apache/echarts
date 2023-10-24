@@ -104,7 +104,8 @@ export default {
             gauge: 'ゲージ',
             pictorialBar: '絵入り棒グラフ',
             themeRiver: 'テーマリバー',
-            sunburst: 'サンバースト'
+            sunburst: 'サンバースト',
+            chart: 'チャート'
         }
     },
     aria: {

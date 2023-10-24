@@ -104,7 +104,8 @@
             gauge: 'Calibru',
             pictorialBar: 'Diagramă cu bare picturale',
             themeRiver: 'Streamgraph',
-            sunburst: 'Diagramă rază de soare'
+            sunburst: 'Diagramă rază de soare',
+            chart: 'Diagramă'
         }
     },
     aria: {

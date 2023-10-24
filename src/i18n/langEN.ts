@@ -104,7 +104,8 @@ export default {
             gauge: 'Gauge',
             pictorialBar: 'Pictorial bar',
             themeRiver: 'Theme River Map',
-            sunburst: 'Sunburst'
+            sunburst: 'Sunburst',
+            chart: 'Chart'
         }
     },
     aria: {

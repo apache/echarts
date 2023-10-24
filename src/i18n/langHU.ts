@@ -104,7 +104,8 @@ export default {
             gauge: 'Mérőeszköz',
             pictorialBar: 'Képes sávdiagram',
             themeRiver: 'Folyó témájú térkép',
-            sunburst: 'Napégés'
+            sunburst: 'Napégés',
+            chart: 'Diagram'
         }
     },
     aria: {

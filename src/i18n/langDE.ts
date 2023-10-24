@@ -104,7 +104,8 @@ export default {
             gauge: 'Meßanzeige',
             pictorialBar: 'Bildlicher Balken',
             themeRiver: 'Thematische Flusskarte',
-            sunburst: 'Sonnenausbruch'
+            sunburst: 'Sonnenausbruch',
+            chart: 'Diagramm'
         }
     },
     aria: {

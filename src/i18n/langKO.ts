@@ -104,7 +104,8 @@ export default {
             gauge: '계기',
             pictorialBar: '픽토그램 차트',
             themeRiver: '스트림 그래프',
-            sunburst: '선버스트 차트'
+            sunburst: '선버스트 차트',
+            chart: '차트'
         }
     },
     aria: {

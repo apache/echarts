@@ -104,7 +104,8 @@ export default {
             gauge: 'Шкала',
             pictorialBar: 'Столбец-картинка',
             themeRiver: 'Тематическая река',
-            sunburst: 'Солнечные лучи'
+            sunburst: 'Солнечные лучи',
+            chart: 'диаграмма'
         }
     },
     aria: {

@@ -100,7 +100,8 @@ export default {
             gauge: '仪表盘图',
             pictorialBar: '象形柱图',
             themeRiver: '主题河流图',
-            sunburst: '旭日图'
+            sunburst: '旭日图',
+            chart: '图表'
         }
     },
     aria: {

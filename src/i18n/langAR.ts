@@ -105,7 +105,8 @@ export default {
             gauge: 'مقياس',
             pictorialBar: 'مخطط مصوّر',
             themeRiver: 'نمط خريطة النهر',
-            sunburst: 'مخطط شمسي'
+            sunburst: 'مخطط شمسي',
+            chart: 'مخطط'
         }
     },
     aria: {
