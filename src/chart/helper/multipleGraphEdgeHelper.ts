@@ -305,30 +305,21 @@ export function getOffsetForEdge(edge, seriesModel, index) {
         }
         return +symbolSize;
     });
-    const minimumSize = Math.floor(Math.min(...nodesSizes) * getNodeGlobalScale(seriesModel));
-    const parityCorrectionSpace = totalLen % 2 ? 1 : 0;
-    const totalSpaceBetweenEdges = isArrayParam
-        ? autoOffsetParams.slice(0, totalLen).reduce((total, item) => total + item)
-        : (totalLen - parityCorrectionSpace) * autoOffsetParams;
-    if (totalSpaceBetweenEdges < minimumSize) {
-        createOffsets(seriesModel, totalLen);
-        edge.lineStyle = edge.lineStyle || {};
-        // if is opposite edge, must set curvenss to opposite number
-        const curKey = getKeyOfEdges(edge.node1, edge.node2, seriesModel);
-        const offsetList = seriesModel.__offsetList;
-        // if pass array no need parity
-        const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
-        if (!edgeArray.isForward) {
-            // the opposite edge show outside
-            const oppositeKey = getOppositeKey(curKey);
-            const len = getEdgeMapLengthWithKey(oppositeKey, seriesModel);
-            return -offsetList[edgeIndex + len + parityCorrection];
-        }
-        else {
-            return offsetList[parityCorrection + edgeIndex];
-        }
+
+    createOffsets(seriesModel, totalLen);
+    edge.lineStyle = edge.lineStyle || {};
+    // if is opposite edge, must set curvenss to opposite number
+    const curKey = getKeyOfEdges(edge.node1, edge.node2, seriesModel);
+    const offsetList = seriesModel.__offsetList;
+    // if pass array no need parity
+    const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
+    if (!edgeArray.isForward) {
+        // the opposite edge show outside
+        const oppositeKey = getOppositeKey(curKey);
+        const len = getEdgeMapLengthWithKey(oppositeKey, seriesModel);
+        return -offsetList[edgeIndex + len + parityCorrection] * getNodeGlobalScale(seriesModel);
     }
     else {
-        return 0;
+        return offsetList[parityCorrection + edgeIndex] * getNodeGlobalScale(seriesModel);
     }
 }
