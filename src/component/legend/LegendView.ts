@@ -222,8 +222,17 @@ class LegendView extends ComponentView {
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
-                    .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
-                    .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
+                    .on('mouseover', curry(
+                        (seriesName: string, dataName: string, api: ExtensionAPI, excludeSeriesId: string[]) => {
+                            dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
+                            dispatchMouseOverLegendAction(seriesName, dataName, api, excludeSeriesId);
+                        }, seriesModel.name, null, api, excludeSeriesId))
+                    .on('mouseout', () => {
+                        curry((seriesName: string, dataName: string, api: ExtensionAPI, excludeSeriesId: string[]) => {
+                            dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId);
+                            dispatchMouseOutLegendAction(seriesName, dataName, api, excludeSeriesId);
+                        }, seriesModel.name, null, api, excludeSeriesId);
+                    });
 
                 legendDrawnMap.set(name, true);
             }
@@ -266,9 +275,28 @@ class LegendView extends ComponentView {
                         itemGroup.on('click', curry(dispatchSelectAction, null, name, api, excludeSeriesId))
                             // Should not specify the series name, consider legend controls
                             // more than one pie series.
-                            .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
-                            .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
-
+                            .on('mouseover',
+                                curry((
+                                    seriesName: string,
+                                    dataName: string,
+                                    api: ExtensionAPI,
+                                    excludeSeriesId: string[]
+                                ) => {
+                                    dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
+                                    dispatchMouseOverLegendAction(seriesName, dataName, api, excludeSeriesId);
+                                }, null, name, api, excludeSeriesId)
+                            )
+                            .on('mouseout',
+                                curry((
+                                    seriesName: string,
+                                    dataName: string,
+                                    api: ExtensionAPI,
+                                    excludeSeriesId: string[]
+                                ) => {
+                                    dispatchDownplayAction(seriesName, dataName, api, excludeSeriesId);
+                                    dispatchMouseOutLegendAction(seriesName, dataName, api, excludeSeriesId)
+                                }, null, name, api, excludeSeriesId)
+                            );
                         legendDrawnMap.set(name, true);
                     }
 
@@ -690,6 +718,40 @@ function dispatchHighlightAction(
     if (!isUseHoverLayer(api)) {
         api.dispatchAction({
             type: 'highlight',
+            seriesName: seriesName,
+            name: dataName,
+            excludeSeriesId: excludeSeriesId
+        });
+    }
+}
+
+function dispatchMouseOverLegendAction(
+    seriesName: string,
+    dataName: string,
+    api: ExtensionAPI,
+    excludeSeriesId: string[]
+) {
+    // If element hover will move to a hoverLayer.
+    if (!isUseHoverLayer(api)) {
+        api.dispatchAction({
+            type: 'legendMouseover',
+            seriesName: seriesName,
+            name: dataName,
+            excludeSeriesId: excludeSeriesId
+        });
+    }
+}
+
+function dispatchMouseOutLegendAction(
+    seriesName: string,
+    dataName: string,
+    api: ExtensionAPI,
+    excludeSeriesId: string[]
+) {
+    // If element hover will move to a hoverLayer.
+    if (!isUseHoverLayer(api)) {
+        api.dispatchAction({
+            type: 'legendMouseout',
             seriesName: seriesName,
             name: dataName,
             excludeSeriesId: excludeSeriesId

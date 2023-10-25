@@ -37,6 +37,9 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
         else if (methodName === 'allSelect' || methodName === 'inverseSelect') {
             legendModel[methodName]();
         }
+        else if (methodName === 'legendMouseover' || methodName === 'legendMouseout') {
+            isSelected = legendModel.isSelected(payload.name);
+        }
         else {
             legendModel[methodName](payload.name);
             isSelected = legendModel.isSelected(payload.name);
@@ -112,5 +115,27 @@ export function installLegendAction(registers) {
     registers.registerAction(
         'legendUnSelect', 'legendunselected',
         curry(legendSelectActionHandler, 'unSelect')
+    );
+
+    /**
+     * @event legendMouseover
+     * @type {Object}
+     * @property {string} type 'legendMouseover'
+     * @property {string} name Series name or data item name
+     */
+    registers.registerAction(
+        'legendMouseover', 'legendmouseover',
+        curry(legendSelectActionHandler, 'legendMouseover')
+    );
+
+    /**
+     * @event legendMouseout
+     * @type {Object}
+     * @property {string} type 'legendMouseout'
+     * @property {string} name Series name or data item name
+     */
+    registers.registerAction(
+        'legendMouseout', 'legendmouseout',
+        curry(legendSelectActionHandler, 'legendMouseout')
     );
 }
