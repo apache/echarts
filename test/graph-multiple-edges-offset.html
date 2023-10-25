@@ -119,8 +119,6 @@ under the License.
                                 show: true
                             },
                             roam: true,
-                            // edgeSymbol: ['circle', 'arrow'],
-                            // edgeSymbolSize: [4, 10],
                             edgeLabel: {
                                 fontSize: 12,
                                 formatter: (param) => param.dataIndex
@@ -143,6 +141,7 @@ under the License.
                             lineStyle: {
                                 opacity: 0.9,
                                 width: 2,
+                                curveness: getLayout(i) === "circular" ? 0.3 : 0
                             }
                         }
                     ]
@@ -211,6 +210,7 @@ under the License.
                             lineStyle: {
                                 opacity: 0.9,
                                 width: 2,
+                                curveness: getLayout(i) === "circular" ? 0.3 : 0
                             }
                         }
                     ]
@@ -277,63 +277,7 @@ under the License.
                         autoOffset: [2, -2, 4, -4, 6, -6, 8, -8, 10, -10, 12, -12, 0],
                         lineStyle: {
                             opacity: 0.9,
-                            width: 2,
-                        }
-                    }
-                ]
-            }
-
-            var chart = echarts.init(container, '', { renderer: 'svg' });
-            chart.setOption(option)
-        })
-    </script>
-    <script>
-        require([
-            'echarts'
-        ], function (echarts) {
-            var container = document.getElementById('main11');
-            var data = [{ "source": "node3", "target": "node1", "label": { "show": true } }, { "source": "node3", "target": "node1", "label": { "show": true } }, { "source": "node3", "target": "node1", "label": { "show": true } }, { "source": "node1", "target": "node3", "label": { "show": true } }, { "source": "node1", "target": "node3", "label": { "show": true } }, { "source": "node3", "target": "node1", "label": { "show": true } }, { "source": "node1", "target": "node3", "label": { "show": true } }, { "source": "node3", "target": "node1", "label": { "show": true } }, { "source": "node3", "target": "node1", "label": { "show": true } }, { "source": "node3", "target": "node1", "label": { "show": true } }, { "source": "node1", "target": "node3", "label": { "show": true } }, { "source": "node1", "target": "node3", "label": { "show": true } }, { "source": "node1", "target": "node3", "label": { "show": true } }, { "source": "node3", "target": "node1", "label": { "show": true } }, { "source": "node1", "target": "node2" }];
-
-            var option = {
-                title: {
-                    text: 'no set autoOffset'
-                },
-                tooltip: {},
-                animationDurationUpdate: 1500,
-                animationEasingUpdate: 'quinticInOut',
-                series: [
-                    {
-                        type: 'graph',
-                        layout: 'none',
-                        symbol: 'rect',
-                        symbolSize: 50,
-                        autoOffset: 4,
-                        roam: true,
-                        label: {
-                            show: true
-                        },
-                        // edgeSymbol: ['circle', 'arrow'],
-                        // edgeSymbolSize: [4, 10],
-                        edgeLabel: {
-                            fontSize: 12
-                        },
-                        data: [{
-                            name: 'node1',
-                            x: 300,
-                            y: 300
-                        }, {
-                            name: 'node2',
-                            x: 800,
-                            y: 300
-                        }, {
-                            name: 'node3',
-                            x: 550,
-                            y: 100
-                        }],
-                        links: data,
-                        lineStyle: {
-                            opacity: 0.9,
-                            width: 2,
+                            width: 2
                         }
                     }
                 ]
@@ -392,7 +336,7 @@ under the License.
                         autoOffset: [6, -6, 12, -12, 18, -18, 24, -24],
                         lineStyle: {
                             opacity: 0.9,
-                            width: 2,
+                            width: 2
                         }
                     }
                 ]
