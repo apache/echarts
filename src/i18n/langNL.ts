@@ -18,112 +18,112 @@
  */
 
 /**
- * Language: English.
+ * Language: Dutch.
  */
 
 export default {
     time: {
         month: [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
+            'januari', 'februari', 'maart', 'april', 'mei', 'juni',
+            'juli', 'augustus', 'september', 'oktober', 'november', 'december'
         ],
         monthAbbr: [
-            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+            'jan', 'feb', 'mrt', 'apr', 'mei', 'jun',
+            'jul', 'aug', 'sep', 'okt', 'nov', 'dec'
         ],
         dayOfWeek: [
-            'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+            'zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'
         ],
         dayOfWeekAbbr: [
-            'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'
+            'zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'
         ]
     },
     legend: {
         selector: {
-            all: 'All',
-            inverse: 'Inv'
+            all: 'Alle',
+            inverse: 'Omgekeerd'
         }
     },
     toolbox: {
         brush: {
             title: {
-                rect: 'Box Select',
-                polygon: 'Lasso Select',
-                lineX: 'Horizontally Select',
-                lineY: 'Vertically Select',
-                keep: 'Keep Selections',
-                clear: 'Clear Selections'
+                rect: 'Vakselectie',
+                polygon: 'Lasso selectie',
+                lineX: 'Horizontale selectie',
+                lineY: 'Verticale selectie',
+                keep: 'Selecties behouden',
+                clear: 'Selecties wissen'
             }
         },
         dataView: {
-            title: 'Data View',
-            lang: ['Data View', 'Close', 'Refresh']
+            title: 'Gegevensweergave',
+            lang: ['Gegevensweergave', 'Sluiten', 'Vernieuwen']
         },
         dataZoom: {
             title: {
                 zoom: 'Zoom',
-                back: 'Zoom Reset'
+                back: 'Zoom herstellen'
             }
         },
         magicType: {
             title: {
-                line: 'Switch to Line Chart',
-                bar: 'Switch to Bar Chart',
-                stack: 'Stack',
-                tiled: 'Tile'
+                line: 'Omzetten naar lijndiagram',
+                bar: 'Omzetten naar staafdiagram',
+                stack: 'Omzetten naar stapeldiagram',
+                tiled: 'Omzetten naar tegeldiagram'
             }
         },
         restore: {
-            title: 'Restore'
+            title: 'Herstellen'
         },
         saveAsImage: {
-            title: 'Save as Image',
-            lang: ['Right Click to Save Image']
+            title: 'Opslaan als afbeelding',
+            lang: ['Klik rechtermuisknop om de afbeelding op te slaan']
         }
     },
     series: {
         typeNames: {
-            pie: 'Pie chart',
-            bar: 'Bar chart',
-            line: 'Line chart',
-            scatter: 'Scatter plot',
-            effectScatter: 'Ripple scatter plot',
-            radar: 'Radar chart',
-            tree: 'Tree',
-            treemap: 'Treemap',
+            pie: 'Cirkeldiagram',
+            bar: 'Staafdiagram',
+            line: 'Lijndiagram',
+            scatter: 'Spreidingsdiagram',
+            effectScatter: 'Spreidingsdiagram met rimpeleffect',
+            radar: 'Radardiagram',
+            tree: 'Boomdiagram',
+            treemap: 'Boomkaart',
             boxplot: 'Boxplot',
-            candlestick: 'Candlestick',
-            k: 'K line chart',
-            heatmap: 'Heat map',
-            map: 'Map',
-            parallel: 'Parallel coordinate map',
-            lines: 'Line graph',
-            graph: 'Relationship graph',
-            sankey: 'Sankey diagram',
-            funnel: 'Funnel chart',
-            gauge: 'Gauge',
-            pictorialBar: 'Pictorial bar',
-            themeRiver: 'Theme River Map',
-            sunburst: 'Sunburst',
-            custom: 'Custom chart',
-            chart: 'Chart'
+            candlestick: 'Kandelaardiagram',
+            k: 'K-lijndiagram',
+            heatmap: 'Hittekaart',
+            map: 'Kaart',
+            parallel: 'Parallele coördinatendiagram',
+            lines: 'Lijnendiagram',
+            graph: 'Relatiediagram',
+            sankey: 'Sankey-diagram',
+            funnel: 'Trechterdiagram',
+            gauge: 'Graadmeter',
+            pictorialBar: 'Staafdiagram met afbeeldingen',
+            themeRiver: 'Thematische rivierdiagram',
+            sunburst: 'Zonnestraaldiagram',
+            custom: 'Aangepast diagram',
+            chart: 'Diagram'
         }
     },
     aria: {
         general: {
-            withTitle: 'This is a chart about "{title}"',
-            withoutTitle: 'This is a chart'
+            withTitle: 'Dit is een diagram over "{title}"',
+            withoutTitle: 'Dit is een diagram'
         },
         series: {
             single: {
                 prefix: '',
-                withName: ' with type {seriesType} named {seriesName}.',
-                withoutName: ' with type {seriesType}.'
+                withName: ' van het type {seriesType} genaamd {seriesName}.',
+                withoutName: ' van het type {seriesType}.'
             },
             multiple: {
-                prefix: '. It consists of {seriesCount} series count.',
-                withName: ' The {seriesId} series is a {seriesType} representing {seriesName}.',
-                withoutName: ' The {seriesId} series is a {seriesType}.',
+                prefix: '. Het bestaat uit {seriesCount} series.',
+                withName: ' De serie {seriesId} is een {seriesType} met de naam {seriesName}.',
+                withoutName: ' De serie {seriesId} is een {seriesType}.',
                 separator: {
                     middle: '',
                     end: ''
@@ -131,9 +131,9 @@ export default {
             }
         },
         data: {
-            allData: 'The data is as follows: ',
-            partialData: 'The first {displayCnt} items are: ',
-            withName: 'the data for {name} is {value}',
+            allData: 'De gegevens zijn als volgt: ',
+            partialData: 'De eerste {displayCnt} items zijn: ',
+            withName: 'de gegevens voor {name} zijn {value}',
             withoutName: '{value}',
             separator: {
                 middle: ', ',
