@@ -89,7 +89,11 @@
     else if (typeof document === 'undefined' && typeof self !== 'undefined') {
         env.worker = true;
     }
-    else if (typeof navigator === 'undefined') {
+    else if (
+        typeof process !== 'undefined' &&
+        process.versions &&
+        typeof process.versions.node === 'string'
+    ) {
         env.node = true;
         env.svgSupported = true;
     }
@@ -17610,9 +17614,15 @@
     * specific language governing permissions and limitations
     * under the License.
     */
-    var platform = ''; // Navigator not exists in node
+    var platform = '';
 
-    if (typeof navigator !== 'undefined') {
+    // Process.versions.node exists in node
+
+    if (
+        typeof process !== 'undefined' &&
+        process.versions &&
+        typeof process.versions.node === 'string'
+    ) {
       /* global navigator */
       platform = navigator.platform || '';
     }
