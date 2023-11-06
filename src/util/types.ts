@@ -1675,7 +1675,7 @@ export interface SeriesStackOptionMixin {
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | 'lttb' | SamplingFunc
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'minmax' | 'sum' | 'lttb' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {
