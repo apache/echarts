@@ -520,7 +520,11 @@ class TooltipHTMLContent {
     }
 
     dispose() {
-        this.el.parentNode.removeChild(this.el);
+        clearTimeout(this._hideTimeout);
+        clearTimeout(this._longHideTimeout);
+
+        const parentNode = this.el.parentNode;
+        parentNode && parentNode.removeChild(this.el);
         this.el = this._container = null;
     }
 
