@@ -104,7 +104,9 @@ export default {
             gauge: 'Jauge',
             pictorialBar: 'Barres à images',
             themeRiver: 'Stream Graph',
-            sunburst: 'Sunburst'
+            sunburst: 'Sunburst',
+            custom: 'Graphique personnalisé',
+            chart: 'Graphique'
         }
     },
     aria: {

@@ -215,14 +215,20 @@ class SunburstPiece extends graphic.Sector {
             let r;
             const labelPadding = getLabelAttr(labelStateModel, 'distance') || 0;
             let textAlign = getLabelAttr(labelStateModel, 'align');
+            const rotateType = getLabelAttr(labelStateModel, 'rotate');
+            const flipStartAngle = Math.PI * 0.5;
+            const flipEndAngle = Math.PI * 1.5;
+            const midAngleNormal = normalizeRadian(rotateType === 'tangential' ? Math.PI / 2 - midAngle : midAngle);
+
+            // For text that is up-side down, rotate 180 degrees to make sure
+            // it's readable
+            const needsFlip = midAngleNormal > flipStartAngle
+                && !isRadianAroundZero(midAngleNormal - flipStartAngle)
+                && midAngleNormal < flipEndAngle;
+
             if (labelPosition === 'outside') {
                 r = layout.r + labelPadding;
-                if (layout.clockwise) {
-                    textAlign = midAngle > Math.PI / 2 ? 'right' : 'left';
-                }
-                else {
-                    textAlign = midAngle > -Math.PI * 3 / 2 ? 'right' : 'left';
-                }
+                textAlign = needsFlip ? 'right' : 'left';
             }
             else {
                 if (!textAlign || textAlign === 'center') {
@@ -237,29 +243,11 @@ class SunburstPiece extends graphic.Sector {
                 }
                 else if (textAlign === 'left') {
                     r = layout.r0 + labelPadding;
-                    if (layout.clockwise) {
-                        if (midAngle > Math.PI / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
-                            textAlign = 'right';
-                        }
-                    }
-                    else {
-                        if (midAngle > -Math.PI * 3 / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
-                            textAlign = 'right';
-                        }
-                    }
+                    textAlign = needsFlip ? 'right' : 'left';
                 }
                 else if (textAlign === 'right') {
                     r = layout.r - labelPadding;
-                    if (layout.clockwise) {
-                        if (midAngle > Math.PI / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
-                            textAlign = 'left';
-                        }
-                    }
-                    else {
-                        if (midAngle > -Math.PI * 3 / 2 && !isRadianAroundZero(midAngle - Math.PI / 2)) {
-                            textAlign = 'left';
-                        }
-                    }
+                    textAlign = needsFlip ? 'left' : 'right';
                 }
             }
 
@@ -269,22 +257,14 @@ class SunburstPiece extends graphic.Sector {
             state.x = r * dx + layout.cx;
             state.y = r * dy + layout.cy;
 
-            const rotateType = getLabelAttr(labelStateModel, 'rotate');
             let rotate = 0;
             if (rotateType === 'radial') {
-                rotate = normalizeRadian(-midAngle);
-                if (((rotate > Math.PI / 2 && rotate < Math.PI * 1.5))) {
-                    rotate += Math.PI;
-                }
+                rotate = normalizeRadian(-midAngle)
+                    + (needsFlip ? Math.PI : 0);
             }
             else if (rotateType === 'tangential') {
-                rotate = Math.PI / 2 - midAngle;
-                if (rotate > Math.PI / 2) {
-                    rotate -= Math.PI;
-                }
-                else if (rotate < -Math.PI / 2) {
-                    rotate += Math.PI;
-                }
+                rotate = normalizeRadian(Math.PI / 2 - midAngle)
+                    + (needsFlip ? Math.PI : 0);
             }
             else if (zrUtil.isNumber(rotateType)) {
                 rotate = rotateType * Math.PI / 180;

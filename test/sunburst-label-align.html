@@ -41,9 +41,7 @@ under the License.
 
     <div id="main0"></div>
     <div id="main1"></div>
-
-
-
+    <div id="main2"></div>
 
 
 
@@ -1158,6 +1156,42 @@ under the License.
             });
         });
     </script>
+
+
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                series: [
+                    {
+                        type: 'sunburst',
+                        data: new Array(11).fill(0).map((it, index) => ({
+                            name: 'aaa' + index,
+                            value: 1
+                        })),
+                        levels: [{}, { r0: 40, r: 100, label: { position: 'outside'}}]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Put label in the center if it\'s a circle'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+    </script>
+
 </body>
 
 </html>
