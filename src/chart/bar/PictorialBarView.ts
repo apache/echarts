@@ -927,6 +927,7 @@ function updateCommon(
 
     const barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.boundingLength > 0)];
     const barRect = bar.__pictorialBarRect;
+    barRect.ignoreClip = true;
 
     setLabelStyle(
         barRect, getLabelStatesModels(itemModel),

@@ -461,7 +461,8 @@ under the License.
                     })
                 },
                 yAxis: {
-                    min: 10
+                    min: 10,
+                    max: 'dataMax'
                 },
                 series: [{
                     name: 'hill',
@@ -476,6 +477,10 @@ under the License.
                             opacity: 1
                         }
                     },
+                    label: {
+                        show: true,
+                        position: 'top'
+                    },
                     data: rawData.map(function (item) {
                         return item.velocity;
                     }),
@@ -483,6 +488,7 @@ under the License.
                 }]
             });
         </script>
+
 
 
         <script>
