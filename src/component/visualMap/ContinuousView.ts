@@ -108,8 +108,12 @@ class ContinuousView extends VisualMapView {
 
     private _firstShowIndicator: boolean;
 
-    private _api: ExtensionAPI;
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
+        super.init(ecModel, api);
 
+        this._hoverLinkFromSeriesMouseOver = zrUtil.bind(this._hoverLinkFromSeriesMouseOver, this);
+        this._hideIndicator = zrUtil.bind(this._hideIndicator, this);
+    }
 
     doRender(
         visualMapModel: ContinuousModel,
@@ -117,8 +121,6 @@ class ContinuousView extends VisualMapView {
         api: ExtensionAPI,
         payload: {type: string, from: string}
     ) {
-        this._api = api;
-
         if (!payload || payload.type !== 'selectDataRange' || payload.from !== this.uid) {
             this._buildView();
         }
@@ -711,7 +713,7 @@ class ContinuousView extends VisualMapView {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
                 // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
-                this._api.enterBlur(handleLabels[i]);
+                this.api.enterBlur(handleLabels[i]);
             }
         }
     }
@@ -856,7 +858,7 @@ class ContinuousView extends VisualMapView {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
                 // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
-                this._api.leaveBlur(handleLabels[i]);
+                this.api.leaveBlur(handleLabels[i]);
             }
         }
     }
@@ -874,6 +876,7 @@ class ContinuousView extends VisualMapView {
         this._hideIndicator();
 
         const zr = this.api.getZr();
+
         zr.off('mouseover', this._hoverLinkFromSeriesMouseOver);
         zr.off('mouseout', this._hideIndicator);
     }
@@ -892,7 +895,7 @@ class ContinuousView extends VisualMapView {
             : graphic.transformDirection(vertex, transform, inverse);
     }
 
- // TODO: TYPE more specified payload types.
+    // TODO: TYPE more specified payload types.
     private _dispatchHighDown(type: 'highlight' | 'downplay', batch: Payload['batch']) {
         batch && batch.length && this.api.dispatchAction({
             type: type,
@@ -904,14 +907,6 @@ class ContinuousView extends VisualMapView {
      * @override
      */
     dispose() {
-        this._clearHoverLinkFromSeries();
-        this._clearHoverLinkToSeries();
-    }
-
-    /**
-     * @override
-     */
-    remove() {
         this._clearHoverLinkFromSeries();
         this._clearHoverLinkToSeries();
     }

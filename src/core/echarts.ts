@@ -137,10 +137,10 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-export const version = '5.4.2';
+export const version = '5.4.3';
 
 export const dependencies = {
-    zrender: '5.4.3'
+    zrender: '5.4.4'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -318,7 +318,7 @@ type ECEventDefinition = {
     // TODO: Use ECActionEvent
     [key: string]: (...args: unknown[]) => void | boolean
 };
-type EChartsInitOpts = {
+export type EChartsInitOpts = {
     locale?: string | LocaleOption,
     renderer?: RendererType,
     devicePixelRatio?: number,
@@ -412,20 +412,19 @@ class ECharts extends Eventful<ECEventDefinition> {
         let defaultRenderer = 'canvas';
         let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
+
         if (__DEV__) {
             const root = (
                 /* eslint-disable-next-line */
                 env.hasGlobalWindow ? window : global
             ) as any;
 
-            defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+            if (root) {
+                defaultRenderer = retrieve2(root.__ECHARTS__DEFAULT__RENDERER__, defaultRenderer);
+                defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
+                defaultUseDirtyRect = retrieve2(root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__, defaultUseDirtyRect);
+            }
 
-            defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
-
-            const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
-            defaultUseDirtyRect = devUseDirtyRect == null
-                ? defaultUseDirtyRect
-                : devUseDirtyRect;
         }
 
         zrender.registerSSRDataGetter(el => {
@@ -2096,12 +2095,12 @@ class ECharts extends Eventful<ECEventDefinition> {
             };
             const componentZLevels: ZLevelItem[] = [];
             const seriesZLevels: ZLevelItem[] = [];
-            let hasSeperateZLevel = false;
+            let hasSeparateZLevel = false;
             ecModel.eachComponent(function (componentType, componentModel) {
                 const zlevel = componentModel.get('zlevel') || 0;
                 const z = componentModel.get('z') || 0;
                 const zlevelKey = componentModel.getZLevelKey();
-                hasSeperateZLevel = hasSeperateZLevel || !!zlevelKey;
+                hasSeparateZLevel = hasSeparateZLevel || !!zlevelKey;
                 (componentType === 'series' ? seriesZLevels : componentZLevels).push({
                     zlevel,
                     z,
@@ -2111,7 +2110,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             });
 
-            if (hasSeperateZLevel) {
+            if (hasSeparateZLevel) {
                 // Series after component
                 const zLevels: ZLevelItem[] = componentZLevels.concat(seriesZLevels);
                 let lastSeriesZLevel: number;

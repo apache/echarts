@@ -39,6 +39,7 @@ import {
 import { getUID } from '../../util/component';
 import Displayable from 'zrender/src/graphic/Displayable';
 import ZRText from 'zrender/src/graphic/Text';
+import { getFont } from '../../label/labelStyle';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
@@ -217,13 +218,20 @@ class ToolboxView extends ComponentView {
                 pathEmphasisState.style = iconStyleEmphasisModel.getItemStyle();
 
                 // Text position calculation
+                // TODO: extract `textStyle` from `iconStyle` and use `createTextStyle`
                 const textContent = new ZRText({
                     style: {
                         text: titlesMap[iconName],
                         align: iconStyleEmphasisModel.get('textAlign'),
                         borderRadius: iconStyleEmphasisModel.get('textBorderRadius'),
                         padding: iconStyleEmphasisModel.get('textPadding'),
-                        fill: null
+                        fill: null,
+                        font: getFont({
+                            fontStyle: iconStyleEmphasisModel.get('textFontStyle'),
+                            fontFamily: iconStyleEmphasisModel.get('textFontFamily'),
+                            fontSize: iconStyleEmphasisModel.get('textFontSize'),
+                            fontWeight: iconStyleEmphasisModel.get('textFontWeight')
+                        }, ecModel)
                     },
                     ignore: true
                 });

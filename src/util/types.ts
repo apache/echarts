@@ -637,7 +637,7 @@ export interface GraphEdgeItemObject<
      */
     target?: string | number
 }
-export type OptionDataValue = string | number | Date;
+export type OptionDataValue = string | number | Date | null | undefined;
 
 export type OptionDataValueNumeric = number | '-';
 export type OptionDataValueCategory = string;
@@ -693,6 +693,7 @@ export interface CallbackDataParams {
     dataType?: SeriesDataType;
     value: OptionDataItem | OptionDataValue;
     color?: ZRColor;
+    opacity?: number;
     borderColor?: string;
     dimensionNames?: DimensionName[];
     encode?: DimensionUserOuputEncode;
@@ -1264,7 +1265,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Will be ignored if tooltip.formatter is specified.
      */
-    valueFormatter?: (value: OptionDataValue | OptionDataValue[]) => string
+    valueFormatter?: (value: OptionDataValue | OptionDataValue[], dataIndex: number) => string
     /**
      * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
      * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',

@@ -36,7 +36,7 @@ under the License.
                 height: 1000px;
                 margin-bottom: 30px;
             }
-            #main2, #main3 {
+            #main2, #main3, #main4 {
                 width: 100%;
                 height: 300px;
                 margin-bottom: 30px;
@@ -129,6 +129,7 @@ under the License.
         <div id="main1"></div>
         <div id="main2"></div>
         <div id="main3"></div>
+        <div id="main4"></div>
 
         <script>
 
@@ -427,6 +428,47 @@ under the License.
                         }
                     }],
                     animationDuration: 0
+                };
+                chart.setOption(option);
+
+            })
+
+        </script>
+
+        <script>
+
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main4'));
+                var option = {
+                    title: [{
+                        text: 'endLabel should not fail with null data',
+                        textAlign: 'center',
+                        left: '50%',
+                        top: 0
+                    }],
+                    xAxis: [{
+                        data: ['a', 'b']
+                    }],
+                    yAxis: [{
+                    }],
+                    series: [{
+                        type: 'line',
+                        data: [1, 2],
+                        endLabel: {
+                            show: true
+                        }
+                    }, {
+                        type: 'line',
+                        data: [null, '-'],
+                        endLabel: {
+                            show: true
+                        }
+                    }],
+                    animationDuration: 5000
                 };
                 chart.setOption(option);
 
