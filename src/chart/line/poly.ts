@@ -211,11 +211,7 @@ function drawSegment(
     return k;
 }
 
-function getPoints(shape: ECPolygonShape|ECPolylineShape) {
-    if (!shape.loop) {
-        return shape.points;
-    }
-
+function getLoopedPoints(shape: ECPolygonShape) {
     let points = (shape.points as number[]);
 
     if (shape.connectNulls) {
@@ -274,7 +270,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
             });
         }
 
-        const points = getPoints(shape);
+        const points = shape.points;
         let i = 0;
         let len = points.length / 2;
 
@@ -397,7 +393,7 @@ export class ECPolygon extends Path {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolygonShape) {
-        const points = getPoints(shape);
+        const points = shape.loop ? getLoopedPoints(shape) : shape.points;
         const stackedOnPoints = shape.stackedOnPoints;
 
         let i = 0;
