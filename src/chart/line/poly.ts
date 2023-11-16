@@ -211,7 +211,7 @@ function drawSegment(
     return k;
 }
 
-function getLoopedPoints(shape: ECPolygonShape) {
+function getSmoothableLoopedPoints(shape: ECPolygonShape) {
     let points = (shape.points as number[]);
 
     if (shape.connectNulls) {
@@ -393,7 +393,8 @@ export class ECPolygon extends Path {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolygonShape) {
-        const points = shape.loop ? getLoopedPoints(shape) : shape.points;
+        const shouldSmoothLoopedPoints = shape.loop && shape.smooth;
+        const points = shouldSmoothLoopedPoints ? getSmoothableLoopedPoints(shape) : shape.points;
         const stackedOnPoints = shape.stackedOnPoints;
 
         let i = 0;
@@ -416,13 +417,13 @@ export class ECPolygon extends Path {
         while (i < len) {
             const k = drawSegment(
                 ctx, points,
-                shape.loop ? i - 1 : i, len, shape.loop ? len - 1 : len,
+                shouldSmoothLoopedPoints ? i - 1 : i, len, shouldSmoothLoopedPoints ? len - 1 : len,
                 1,
                 shape.smooth,
                 smoothMonotone, shape.connectNulls
             );
             drawSegment(
-                ctx, stackedOnPoints, i + k - 1, k, shape.loop ? len - 1 : len,
+                ctx, stackedOnPoints, i + k - 1, k, shouldSmoothLoopedPoints ? len - 1 : len,
                 -1,
                 shape.stackedOnSmooth,
                 smoothMonotone, shape.connectNulls
