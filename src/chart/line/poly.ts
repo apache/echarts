@@ -266,6 +266,14 @@ export class ECPolyline extends Path<ECPolylineProps> {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolylineShape) {
+        if (shape.loop) {
+            return ECPolygon.prototype.buildPath.call(this, ctx, {
+                ...shape,
+                stackedOnPoints: [],
+                stackedOnSmooth: 0
+            });
+        }
+
         const points = getPoints(shape);
         let i = 0;
         let len = points.length / 2;
@@ -287,7 +295,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
         }
         while (i < len) {
             i += drawSegment(
-                ctx, points, shape.loop ? i - 1 : i, len, shape.loop ? len - 1 : len,
+                ctx, points, i, len, len,
                 1,
                 shape.smooth,
                 shape.smoothMonotone, shape.connectNulls
@@ -418,7 +426,7 @@ export class ECPolygon extends Path {
                 smoothMonotone, shape.connectNulls
             );
             drawSegment(
-                ctx, stackedOnPoints, i + k - 1 - (shape.loop ? 1 : 0), k, shape.loop ? len - 1 : len,
+                ctx, stackedOnPoints, i + k - 1, k, shape.loop ? len - 1 : len,
                 -1,
                 shape.stackedOnSmooth,
                 smoothMonotone, shape.connectNulls
