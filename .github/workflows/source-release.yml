@@ -87,6 +87,7 @@ jobs:
             index.d.ts
             src/
             extension-src/
+            ssr/client/src/
             licenses/
             theme/
             build/
