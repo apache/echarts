@@ -18,12 +18,15 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import * as textContain from 'zrender/src/contain/text';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
+
+
 import {makeInner} from '../util/model';
 import {
     makeLabelFormatter,
     getOptionCategoryInterval,
-    shouldShowAllLabels
+    shouldShowAllLabels,
+    isNameLocationCenter
 } from './axisHelper';
 import Axis from './Axis';
 import Model from '../model/Model';
@@ -32,9 +35,16 @@ import OrdinalScale from '../scale/Ordinal';
 import { AxisBaseModel } from './AxisBaseModel';
 import type Axis2D from './cartesian/Axis2D';
 
+const RADIAN = Math.PI / 180;
+
+interface Size {
+    width: number;
+    height: number;
+}
+
 type CacheKey = string | number;
 
-type InnerTickLabelCache<T> = {
+type InnerListCache<T> = {
     key: CacheKey
     value: T
 }[];
@@ -42,17 +52,25 @@ type InnerTickLabelCache<T> = {
 interface InnerLabelCachedVal {
     labels: MakeLabelsResultObj[]
     labelCategoryInterval?: number
+    rotation?: number
 }
 interface InnerTickCachedVal {
     ticks: number[]
     tickCategoryInterval?: number
 }
 
+interface InnerAutoLayoutCachedVal {
+    maxLabelSize?: Size
+    interval: number
+    rotation: number
+}
+
 type InnerStore = {
-    labels: InnerTickLabelCache<InnerLabelCachedVal>
-    ticks: InnerTickLabelCache<InnerTickCachedVal>
-    autoInterval: number
-    lastAutoInterval: number
+    labels: InnerListCache<InnerLabelCachedVal>
+    ticks: InnerListCache<InnerTickCachedVal>
+    labelUnionRect: InnerListCache<BoundingRect>
+    autoLayout: InnerAutoLayoutCachedVal
+    lastAutoLayout: InnerAutoLayoutCachedVal
     lastTickCount: number
     axisExtent0: number
     axisExtent1: number
@@ -67,6 +85,7 @@ export function createAxisLabels(axis: Axis): {
         rawLabel: string,
         tickValue: number
     }[],
+    rotation?: number,
     labelCategoryInterval?: number
 } {
     // Only ordinal scale support tick interval
@@ -93,12 +112,34 @@ export function createAxisTicks(axis: Axis, tickModel: AxisBaseModel): {
         : {ticks: zrUtil.map(axis.scale.getTicks(), tick => tick.value) };
 }
 
+/**
+ * @param {module:echats/coord/Axis} axis
+ *
+ */
+export function getAxisNameGap(axis: Axis): number {
+    const axesModel = axis.model;
+    const nameGap = axesModel.get('nameGap') ?? 0;
+    if (axesModel.get('nameLayout') === 'auto'
+        && isNameLocationCenter(axis.model.get('nameLocation'))
+    ) {
+        const labelUnionRect = estimateLabelUnionRect(axis);
+        if (labelUnionRect) {
+            const labelMargin = axesModel.get(['axisLabel', 'margin']);
+            const dim = isHorizontalAxis(axis) ? 'height' : 'width';
+            return labelUnionRect[dim] + labelMargin + nameGap;
+        }
+    }
+
+    return nameGap;
+}
+
+
 function makeCategoryLabels(axis: Axis) {
     const labelModel = axis.getLabelModel();
     const result = makeCategoryLabelsActually(axis, labelModel);
 
     return (!labelModel.get('show') || axis.scale.isBlank())
-        ? {labels: [], labelCategoryInterval: result.labelCategoryInterval}
+        ? {labels: [], labelCategoryInterval: result.labelCategoryInterval, rotation: 0}
         : result;
 }
 
@@ -112,20 +153,22 @@ function makeCategoryLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption
     }
 
     let labels;
-    let numericLabelInterval;
+    let layout;
 
     if (zrUtil.isFunction(optionLabelInterval)) {
         labels = makeLabelsByCustomizedCategoryInterval(axis, optionLabelInterval);
     }
     else {
-        numericLabelInterval = optionLabelInterval === 'auto'
-            ? makeAutoCategoryInterval(axis) : optionLabelInterval;
-        labels = makeLabelsByNumericCategoryInterval(axis, numericLabelInterval);
+        const autoInterval = optionLabelInterval === 'auto';
+        layout = autoInterval || getOptionLabelAutoRotate(labelModel)
+            ? makeAutoCategoryLayout(axis, autoInterval ? undefined : optionLabelInterval)
+            : { interval: optionLabelInterval };
+        labels = makeLabelsByNumericCategoryInterval(axis, layout.interval);
     }
 
     // Cache to avoid calling interval function repeatedly.
     return listCacheSet(labelsCache, optionLabelInterval as CacheKey, {
-        labels: labels, labelCategoryInterval: numericLabelInterval
+        labels: labels, ...layout
     });
 }
 
@@ -182,7 +225,8 @@ function makeRealNumberLabels(axis: Axis) {
                 rawLabel: axis.scale.getLabel(tick),
                 tickValue: tick.value
             };
-        })
+        }),
+        rotation: 0
     };
 }
 
@@ -191,12 +235,13 @@ function makeRealNumberLabels(axis: Axis) {
 // axis is created each time during a ec process, so we do not need to clear cache.
 function getListCache(axis: Axis, prop: 'ticks'): InnerStore['ticks'];
 function getListCache(axis: Axis, prop: 'labels'): InnerStore['labels'];
-function getListCache(axis: Axis, prop: 'ticks' | 'labels') {
+function getListCache(axis: Axis, prop: 'labelUnionRect'): InnerStore['labelUnionRect'];
+function getListCache(axis: Axis, prop: 'ticks' | 'labels' | 'labelUnionRect') {
     // Because key can be a function, and cache size always is small, we use array cache.
     return inner(axis)[prop] || (inner(axis)[prop] = []);
 }
 
-function listCacheGet<T>(cache: InnerTickLabelCache<T>, key: CacheKey): T {
+function listCacheGet<T>(cache: InnerListCache<T>, key: CacheKey): T {
     for (let i = 0; i < cache.length; i++) {
         if (cache[i].key === key) {
             return cache[i].value;
@@ -204,17 +249,164 @@ function listCacheGet<T>(cache: InnerTickLabelCache<T>, key: CacheKey): T {
     }
 }
 
-function listCacheSet<T>(cache: InnerTickLabelCache<T>, key: CacheKey, value: T): T {
+function listCacheSet<T>(cache: InnerListCache<T>, key: CacheKey, value: T): T {
     cache.push({key: key, value: value});
     return value;
 }
 
-function makeAutoCategoryInterval(axis: Axis) {
-    const result = inner(axis).autoInterval;
-    return result != null
-        ? result
-        : (inner(axis).autoInterval = axis.calculateCategoryInterval());
+/**
+ * @param {module:echats/coord/Axis} axis
+ * @return null/undefined if no labels.
+ */
+export function estimateLabelUnionRect(axis: Axis) {
+    const axisModel = axis.model;
+    const scale = axis.scale;
+
+    if (!axisModel.get(['axisLabel', 'show']) || scale.isBlank()) {
+        return;
+    }
+
+    const axisLabelModel = axis.getLabelModel();
+    if (scale instanceof OrdinalScale) {
+        // reuse category axis's cached labels info
+        const { labels, labelCategoryInterval, rotation } = makeCategoryLabelsActually(axis, axisLabelModel);
+        const step = layoutScaleStep(labels.length, axisLabelModel, labelCategoryInterval);
+        return getLabelUnionRect(
+            axis,
+            (i) => labels[i].formattedLabel,
+            labels.length,
+            step,
+            rotation ?? 0
+        );
+    }
+
+    const labelFormatter = makeLabelFormatter(axis);
+    const realNumberScaleTicks = scale.getTicks();
+    const step = layoutScaleStep(realNumberScaleTicks.length, axisLabelModel);
+    return getLabelUnionRect(
+        axis,
+        (i) => labelFormatter(realNumberScaleTicks[i], i),
+        realNumberScaleTicks.length,
+        step,
+        axisLabelModel.get('rotate') ?? 0
+    );
 }
+
+/**
+ * @param {module:echats/coord/Axis} axis
+ * @return Axis name dimensions.
+ */
+export function estimateAxisNameSize(axis: Axis): Size {
+    const axisModel = axis.model;
+    const name = axisModel.get('name');
+    if (!name) {
+        return { width: 0, height: 0 };
+    }
+
+    const textStyleModel = axisModel.getModel('nameTextStyle');
+    const padding = normalizePadding(textStyleModel.get('padding') ?? 0);
+    const nameRotate = axisModel.get('nameRotate') ?? 0;
+    const { bounds } = rotateLabel(textStyleModel.getTextRect(name), nameRotate);
+    return applyPadding(bounds, padding);
+}
+
+function getLabelUnionRect(
+    axis: Axis,
+    getLabel: (i: number) => string,
+    tickCount: number,
+    step: number,
+    rotation: number
+) {
+    const cache = getListCache(axis, 'labelUnionRect');
+    const key = tickCount + '_' + step + '_' + rotation + '_' + (tickCount > 0 ? getLabel(0) : '');
+    const result = listCacheGet(cache, key);
+    if (result) {
+        return result;
+    }
+
+    return listCacheSet(cache, key, calculateLabelUnionRect(axis, getLabel, tickCount, step, rotation));
+}
+
+function calculateLabelUnionRect(
+    axis: Axis,
+    getLabel: (i: number) => string,
+    tickCount: number,
+    step: number,
+    rotation: number
+) {
+    const labelModel = axis.getLabelModel();
+    const padding = getOptionLabelPadding(labelModel);
+    const isHorizontal = isHorizontalAxis(axis);
+    let rect;
+    for (let i = 0; i < tickCount; i += step) {
+        const labelRect = rotateLabelRect(labelModel.getTextRect(getLabel(i)), rotation, padding, isHorizontal);
+        rect ? rect.union(labelRect) : (rect = labelRect);
+    }
+
+    return rect;
+}
+
+function rotateLabelRect(
+    originalRect: RectLike,
+    rotation: number,
+    padding: NormedPadding,
+    isHorizontal: boolean
+) {
+    const { bounds, offset } = rotateLabel(originalRect, rotation);
+    const { width, height } = applyPadding(bounds, padding);
+    return new BoundingRect(
+        0, 0,
+        width - (isHorizontal ? 0 : offset.x),
+        height - (isHorizontal ? offset.y : 0)
+    );
+}
+
+function makeAutoCategoryLayout(axis: Axis, interval?: number) {
+    const result = inner(axis).autoLayout;
+    return result != null && (interval === undefined || result.interval === interval)
+        ? result
+        : (inner(axis).autoLayout = axis.calculateCategoryAutoLayout(interval));
+}
+
+function calculateUnitDimensions(axis: Axis): Size {
+    const rotation = getAxisRotate(axis) * RADIAN;
+
+    const ordinalScale = axis.scale as OrdinalScale;
+    const ordinalExtent = ordinalScale.getExtent();
+    const tickValue = ordinalExtent[0];
+
+    const unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
+    return {
+        width: Math.abs(unitSpan * Math.cos(rotation)),
+        height: Math.abs(unitSpan * Math.sin(rotation))
+    };
+}
+
+function calculateMaxLabelDimensions(axis: Axis): Size {
+    const labelFormatter = makeLabelFormatter(axis);
+    const axisLabelModel = axis.getLabelModel();
+
+    const ordinalScale = axis.scale as OrdinalScale;
+    const ordinalExtent = ordinalScale.getExtent();
+    const step = layoutScaleStep(ordinalScale.count(), axisLabelModel);
+
+    let maxW = 0;
+    let maxH = 0;
+
+    // Caution: Performance sensitive for large category data.
+    // Consider dataZoom, we should make appropriate step to avoid O(n) loop.
+    for (let tickValue = ordinalExtent[0]; tickValue <= ordinalExtent[1]; tickValue += step) {
+        const label = labelFormatter({ value: tickValue });
+        const rect = axisLabelModel.getTextRect(label);
+        // Min size, void long loop.
+        maxW = Math.max(maxW, rect.width, 5);
+        maxH = Math.max(maxH, rect.height, 5);
+    }
+
+    const labelPadding = getOptionLabelPadding(axisLabelModel);
+    return applyPadding({ width: maxW, height: maxH }, labelPadding);
+}
+
 
 /**
  * Calculate interval for category axis ticks and labels.
@@ -222,64 +414,130 @@ function makeAutoCategoryInterval(axis: Axis) {
  * should be implemented in axis.
  */
 export function calculateCategoryInterval(axis: Axis) {
-    const params = fetchAutoCategoryIntervalCalculationParams(axis);
-    const labelFormatter = makeLabelFormatter(axis);
-    const rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
+    return calculateCategoryAutoLayout(axis).interval;
+}
 
-    const ordinalScale = axis.scale as OrdinalScale;
-    const ordinalExtent = ordinalScale.getExtent();
-    // Providing this method is for optimization:
-    // avoid generating a long array by `getTicks`
-    // in large category data case.
-    const tickCount = ordinalScale.count();
 
-    if (ordinalExtent[1] - ordinalExtent[0] < 1) {
-        return 0;
-    }
+function layoutScaleStep(tickCount: number, labelModel: Model<AxisBaseOption['axisLabel']>, interval?: number) {
+    // Simple optimization for large amount of labels: trigger sparse label iteration
+    // if tick count is over the threshold
+    const treshhold = labelModel.get('layoutApproximationThreshold') ?? 40;
+    const step = Math.max((interval ?? 0) + 1, 1);
+    return tickCount > treshhold ? Math.max(step, Math.floor(tickCount / treshhold)) : step;
+}
 
-    let step = 1;
-    // Simple optimization. Empirical value: tick count should less than 40.
-    if (tickCount > 40) {
-        step = Math.max(1, Math.floor(tickCount / 40));
-    }
-    let tickValue = ordinalExtent[0];
-    const unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
-    const unitW = Math.abs(unitSpan * Math.cos(rotation));
-    const unitH = Math.abs(unitSpan * Math.sin(rotation));
-
-    let maxW = 0;
-    let maxH = 0;
-
-    // Caution: Performance sensitive for large category data.
-    // Consider dataZoom, we should make appropriate step to avoid O(n) loop.
-    for (; tickValue <= ordinalExtent[1]; tickValue += step) {
-        let width = 0;
-        let height = 0;
-
-        // Not precise, do not consider align and vertical align
-        // and each distance from axis line yet.
-        const rect = textContain.getBoundingRect(
-            labelFormatter({ value: tickValue }), params.font, 'center', 'top'
-        );
-        // Magic number
-        width = rect.width * 1.3;
-        height = rect.height * 1.3;
-
-        // Min size, void long loop.
-        maxW = Math.max(maxW, width, 7);
-        maxH = Math.max(maxH, height, 7);
-    }
-
-    let dw = maxW / unitW;
-    let dh = maxH / unitH;
+function calculateLabelInterval(unitSize: Size, maxLabelSize: Size, minDistance: number) {
+    let dw = (maxLabelSize.width + minDistance) / unitSize.width;
+    let dh = (maxLabelSize.height + minDistance) / unitSize.height;
     // 0/0 is NaN, 1/0 is Infinity.
     isNaN(dw) && (dw = Infinity);
     isNaN(dh) && (dh = Infinity);
-    let interval = Math.max(0, Math.floor(Math.min(dw, dh)));
+
+    return Math.max(0, Math.floor(Math.min(dw, dh)));
+}
+
+/**
+ * Rotate label's rectangle, see https://codepen.io/agurtovoy/pen/WNPyqWx for the visualization of the math
+ * below.
+ *
+ * @return {Object} {
+ *   axesIntersection: Size, // intersection of the rotated label's rectangle with the corresponding axes
+ *   bounds: Size // dimensions of the rotated label's bounding rectangle
+ *   offset: PointLike // bounding rectangle's offset from the assumed rotation origin
+ *  }
+ */
+function rotateLabel({ width, height }: Size, rotation: number) {
+    const rad = rotation * RADIAN;
+    const sin = Math.abs(Math.sin(rad));
+    const cos = Math.abs(Math.cos(rad));
+
+    // width and height of the intersection of the rotated label's rectangle with the corresponding axes, see
+    // https://math.stackexchange.com/questions/1449352/intersection-between-a-side-of-rotated-rectangle-and-axis
+    const axesIntersection = {
+        width: Math.min(width / cos, height / sin),
+        height: Math.min(height / cos, width / sin)
+    };
+
+    // width and height of the rotated label's bounding rectangle; note th
+    const bounds = {
+        width: width * cos + height * sin,
+        height: width * sin + height * cos
+    };
+
+    // label's bounding box's rotation origin is at the vertical center of the bbox's axis edge
+    // rather than the corresponding corner point
+    const asbRotation = Math.abs(rotation);
+    const bboxOffset = asbRotation === 0 || asbRotation === 180 ? 0 : height / 2;
+    const offset = {
+        x: bboxOffset * sin,
+        y: bboxOffset * cos
+    };
+
+    return { axesIntersection, bounds, offset };
+}
+
+function getCandidateLayouts(axis: Axis) {
+    const unitSize = calculateUnitDimensions(axis);
+    const maxLabelSize = calculateMaxLabelDimensions(axis);
+    const isHorizontal = isHorizontalAxis(axis);
+
+    const labelModel = axis.getLabelModel();
+    const labelRotations = normalizeLabelRotations(getLabelRotations(labelModel), isHorizontal);
+    const labelMinDistance = labelModel.get('minDistance') ?? 0;
+
+    const candidateLayouts = [];
+    for (const rotation of labelRotations) {
+        const { axesIntersection, bounds, offset } = rotateLabel(maxLabelSize, rotation);
+        const labelSize = isHorizontal
+            ? { width: axesIntersection.width, height: bounds.height - offset.y }
+            : { width: bounds.width - offset.x, height: axesIntersection.height };
+
+        const interval = calculateLabelInterval(unitSize, labelSize, labelMinDistance);
+        candidateLayouts.push({ labelSize, interval, rotation });
+    }
+
+    return candidateLayouts;
+}
+
+function chooseAutoLayout(candidateLayouts: InnerAutoLayoutCachedVal[]): InnerAutoLayoutCachedVal {
+    let autoLayout = {
+        interval: Infinity,
+        rotation: 0
+    };
+
+    for (const layout of candidateLayouts) {
+        if (layout.interval < autoLayout.interval
+            || layout.interval > 0 && layout.interval === autoLayout.interval) {
+            autoLayout = layout;
+        }
+    }
+
+    return autoLayout;
+}
+
+/**
+ * Calculate max label dimensions, interval, and rotation for category axis ticks and labels.
+ * To get precise result, at least one of `getRotate` and `isHorizontal`
+ * should be implemented in axis.
+ */
+export function calculateCategoryAutoLayout(axis: Axis, interval?: number): InnerAutoLayoutCachedVal {
+    const ordinalScale = axis.scale as OrdinalScale;
+    const ordinalExtent = ordinalScale.getExtent();
+    if (ordinalExtent[1] - ordinalExtent[0] < 1) {
+        return { interval: 0, rotation: 0 };
+    }
+
+    const candidateLayouts = getCandidateLayouts(axis);
+    let autoLayout = {
+        ...chooseAutoLayout(candidateLayouts),
+        ...(interval === undefined ? {} : { interval })
+    };
+
+    const axisExtent = axis.getExtent();
+    const tickCount = ordinalScale.count();
 
     const cache = inner(axis.model);
-    const axisExtent = axis.getExtent();
-    const lastAutoInterval = cache.lastAutoInterval;
+    const lastAutoLayout = cache.lastAutoLayout;
     const lastTickCount = cache.lastTickCount;
 
     // Use cache to keep interval stable while moving zoom window,
@@ -288,42 +546,88 @@ export function calculateCategoryInterval(axis: Axis) {
     // For example, if all of the axis labels are `a, b, c, d, e, f, g`.
     // The jitter will cause that sometimes the displayed labels are
     // `a, d, g` (interval: 2) sometimes `a, c, e`(interval: 1).
-    if (lastAutoInterval != null
+    if (lastAutoLayout != null
         && lastTickCount != null
-        && Math.abs(lastAutoInterval - interval) <= 1
+        && Math.abs(lastAutoLayout.interval - autoLayout.interval) <= 1
         && Math.abs(lastTickCount - tickCount) <= 1
         // Always choose the bigger one, otherwise the critical
         // point is not the same when zooming in or zooming out.
-        && lastAutoInterval > interval
+        && lastAutoLayout.interval > autoLayout.interval
         // If the axis change is caused by chart resize, the cache should not
         // be used. Otherwise some hidden labels might not be shown again.
         && cache.axisExtent0 === axisExtent[0]
         && cache.axisExtent1 === axisExtent[1]
     ) {
-        interval = lastAutoInterval;
+        autoLayout = lastAutoLayout;
     }
     // Only update cache if cache not used, otherwise the
     // changing of interval is too insensitive.
     else {
         cache.lastTickCount = tickCount;
-        cache.lastAutoInterval = interval;
+        cache.lastAutoLayout = autoLayout;
         cache.axisExtent0 = axisExtent[0];
         cache.axisExtent1 = axisExtent[1];
     }
 
-    return interval;
+    return autoLayout;
 }
 
-function fetchAutoCategoryIntervalCalculationParams(axis: Axis) {
-    const labelModel = axis.getLabelModel();
+function isHorizontalAxis(axis: Axis): boolean {
+    return zrUtil.isFunction((axis as Axis2D).isHorizontal)
+        && (axis as Axis2D).isHorizontal();
+}
+
+function getAxisRotate(axis: Axis) {
+    return zrUtil.isFunction(axis.getRotate)
+        ? axis.getRotate()
+        : isHorizontalAxis(axis) ? 0 : 90;
+}
+
+function getLabelRotations(labelModel: Model<AxisBaseOption['axisLabel']>): [number, ...number[]] {
+    const labelRotate = labelModel.get('rotate');
+    const autoRotate = labelModel.get('autoRotate');
+    return labelRotate
+        ? [labelRotate]
+        : zrUtil.isArray(autoRotate) && autoRotate.length > 0
+            ? autoRotate
+            : autoRotate ? [0, 45, 90] : [0];
+}
+
+function normalizeLabelRotations(rotations: [number, ...number[]], isHorizontal: boolean) {
+    // for horizontal axes, we want to iterate through the rotation angles in the ascending order
+    // so that the smaller angles are considered first; conversely, for vertical axes, the larger
+    // angles need to be considered first, since in that case the 0 degree rotation corresponds
+    // to the smaller possible vertical label size and the largest horizontal extent.
+    return [...rotations].sort(isHorizontal
+        ? (a, b) => Math.abs(a) - Math.abs(b)
+        : (a, b) => Math.abs(b) - Math.abs(a)
+    );
+}
+
+function getOptionLabelAutoRotate(labelModel: Model<AxisBaseOption['axisLabel']>) {
+    const labelRotate = labelModel.get('rotate');
+    const autoRotate = labelModel.get('autoRotate');
+    return !labelRotate && (zrUtil.isArray(autoRotate) ? autoRotate.length > 1 : Boolean(autoRotate));
+}
+
+function getOptionLabelPadding(labelModel: Model<AxisBaseOption['axisLabel']>) {
+    return normalizePadding(labelModel.get('padding') ?? 0);
+}
+
+type NormedPadding = [number, number, number, number];
+
+function normalizePadding(padding: number | number[]): NormedPadding {
+    return zrUtil.isArray(padding)
+        ? (padding.length === 4
+            ? padding as NormedPadding
+            : [padding[0], padding[1], padding[0], padding[1]])
+        : [padding, padding, padding, padding];
+}
+
+function applyPadding({ width, height }: Size, padding: NormedPadding) {
     return {
-        axisRotate: axis.getRotate
-            ? axis.getRotate()
-            : ((axis as Axis2D).isHorizontal && !(axis as Axis2D).isHorizontal())
-            ? 90
-            : 0,
-        labelRotate: labelModel.get('rotate') || 0,
-        font: labelModel.getFont()
+        width: width + padding[1] + padding[3],
+        height: height + padding[0] + padding[2]
     };
 }
 

@@ -83,6 +83,7 @@ const defaultOption: AxisBaseOption = {
         // Whether axisLabel is inside the grid or outside the grid.
         inside: false,
         rotate: 0,
+        minDistance: 10,
         // true | false | null/undefined (auto)
         showMinLabel: null,
         // true | false | null/undefined (auto)

@@ -26,7 +26,6 @@ import {
     makeColumnLayout,
     retrieveColumnLayout
 } from '../layout/barGrid';
-import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 
 import TimeScale from '../scale/Time';
 import Model from '../model/Model';
@@ -291,69 +290,6 @@ export function getAxisRawValue(axis: Axis, tick: ScaleTick): number | string {
 }
 
 /**
- * @param axis
- * @return Be null/undefined if no labels.
- */
-export function estimateLabelUnionRect(axis: Axis) {
-    const axisModel = axis.model;
-    const scale = axis.scale;
-
-    if (!axisModel.get(['axisLabel', 'show']) || scale.isBlank()) {
-        return;
-    }
-
-    let realNumberScaleTicks: ScaleTick[];
-    let tickCount;
-    const categoryScaleExtent = scale.getExtent();
-
-    // Optimize for large category data, avoid call `getTicks()`.
-    if (scale instanceof OrdinalScale) {
-        tickCount = scale.count();
-    }
-    else {
-        realNumberScaleTicks = scale.getTicks();
-        tickCount = realNumberScaleTicks.length;
-    }
-
-    const axisLabelModel = axis.getLabelModel();
-    const labelFormatter = makeLabelFormatter(axis);
-
-    let rect;
-    let step = 1;
-    // Simple optimization for large amount of labels
-    if (tickCount > 40) {
-        step = Math.ceil(tickCount / 40);
-    }
-    for (let i = 0; i < tickCount; i += step) {
-        const tick = realNumberScaleTicks
-            ? realNumberScaleTicks[i]
-            : {
-                value: categoryScaleExtent[0] + i
-            };
-        const label = labelFormatter(tick, i);
-        const unrotatedSingleRect = axisLabelModel.getTextRect(label);
-        const singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
-
-        rect ? rect.union(singleRect) : (rect = singleRect);
-    }
-
-    return rect;
-}
-
-function rotateTextRect(textRect: RectLike, rotate: number) {
-    const rotateRadians = rotate * Math.PI / 180;
-    const beforeWidth = textRect.width;
-    const beforeHeight = textRect.height;
-    const afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians))
-        + Math.abs(beforeHeight * Math.sin(rotateRadians));
-    const afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians))
-        + Math.abs(beforeHeight * Math.cos(rotateRadians));
-    const rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
-
-    return rotatedRect;
-}
-
-/**
  * @param model axisLabelModel or axisTickModel
  * @return {number|String} Can be null|'auto'|number|function
  */
@@ -398,4 +334,8 @@ export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, 
             seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
         });
     }
+}
+
+export function isNameLocationCenter(nameLocation: string) {
+    return nameLocation === 'middle' || nameLocation === 'center';
 }

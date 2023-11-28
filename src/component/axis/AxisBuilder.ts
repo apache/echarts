@@ -28,7 +28,7 @@ import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {shouldShowAllLabels} from '../../coord/axisHelper';
+import {shouldShowAllLabels, isNameLocationCenter} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
@@ -376,8 +376,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const nameLocation = axisModel.get('nameLocation');
         const nameDirection = opt.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
-        const gap = axisModel.get('nameGap') || 0;
 
+        const gap = axisModel.axis.getNameGap();
         const extent = axisModel.axis.getExtent();
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
         const pos = [
@@ -601,11 +601,6 @@ function isTwoLabelOverlapped(
     return firstRect.intersect(nextRect);
 }
 
-function isNameLocationCenter(nameLocation: string) {
-    return nameLocation === 'middle' || nameLocation === 'center';
-}
-
-
 function createTicks(
     ticksCoords: TickCoord[],
     tickTransform: matrixUtil.MatrixArray,
@@ -742,13 +737,10 @@ function buildAxisLabel(
 
     const labelModel = axisModel.getModel('axisLabel');
     const labelMargin = labelModel.get('margin');
-    const labels = axis.getViewLabels();
+    const { labels, rotation } = axis.getViewLabelsAndRotation();
 
     // Special label rotate.
-    const labelRotation = (
-        retrieve(opt.labelRotate, labelModel.get('rotate')) || 0
-    ) * PI / 180;
-
+    const labelRotation = (opt.labelRotate || labelModel.get('rotate') || rotation || 0) * PI / 180;
     const labelLayout = AxisBuilder.innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
     const rawCategoryData = axisModel.getCategories && axisModel.getCategories(true);
 
