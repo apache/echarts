@@ -36,6 +36,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
         <script>
             require([
@@ -284,6 +285,118 @@ under the License.
                                 option.series[0].sampling = sampling === 'lttb' ? 'none' : 'lttb';
                                 console.log('current setting:', option.series[0].sampling);
                                 chart1.setOption(option);
+                            }
+                        }
+                    ]
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                const frequency = 70;
+                const magnitude = 20;
+                const firstSineData = [];
+                const secondSineData = [];
+                const firstSineOffset = 0;
+                const secondSineOffset = 50;
+                const start = new Date('2021-03-03T15:30:00.000Z');
+                for (let i = 0; i < 1960; i++) {
+                    const date = new Date(start.getTime() + i);
+                    const time = i / 1000;
+                    let value = (Math.sin( 2 * Math.PI * frequency * time) * magnitude).toFixed(3);
+                    if (i < 639 || i > 943) {
+                        firstSineData.push([date, (value + firstSineOffset)]);
+                        secondSineData.push([date, -(value - secondSineOffset)]);
+                    }
+                    else if (i === 934) {
+                        firstSineData.push([date, null]);
+                        secondSineData.push([date, null]);
+                    }
+                }
+
+                const option = {
+                    title: { text: "Data" },
+                    tooltip: { trigger: "axis", axisPointer: { animation: true } },
+                    legend: {
+                        data: ["sin(x•π•0.14)", "50 - sin(x•π•0.14)"],
+                    },
+                    dataZoom: [
+                        { realtime: true, xAxisIndex: [0, 1], filterMode: "weakFilter" },
+                        { type: "inside", realtime: true, xAxisIndex: [0, 1] },
+                    ],
+                    toolbox: { feature: { saveAsImage: {}, restore: {} } },
+                    xAxis: { type: "time" },
+                    yAxis: [
+                        {
+                            type: "value",
+                            position: "left",
+                            name: "time, s",
+                            min: -50,
+                            max: 100,
+                            _medium: "sin(x•π•0.14)"
+                        },
+                        {
+                            type: "value",
+                            position: "left",
+                            name: "time, s",
+                            min: -50,
+                            max: 100,
+                            _medium: "50 - sin(x•π•0.14)"
+                        }
+                    ],
+                    series: [
+                        {
+                            name: "sin(x•π•0.14)",
+                            type: "line",
+                            step: "start",
+                            showSymbol: false,
+                            yAxisIndex: 0,
+                            sampling: "minmax",
+                            connectNulls: false,
+                            data: firstSineData
+                        },
+                        {
+                            name: "50 - sin(x•π•0.14)",
+                            type: "line",
+                            step: "start",
+                            showSymbol: false,
+                            yAxisIndex: 1,
+                            sampling: "minmax",
+                            connectNulls: false,
+                            data: secondSineData
+                        }
+                    ]
+                };
+
+                var chart1 = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Sampling with minmax, test **connectNulls**',
+                        'toggle connectNulls value or switch setting, check it.'
+                    ],
+                    option,
+                    width: 600,
+                    height: 400,
+                    buttons: [
+                        {
+                            text: 'toggle connectNulls value',
+                            onclick: function () {
+                                option.series.forEach((s) => {
+                                    s.connectNulls = !s.connectNulls;
+                                })
+                                chart1.setOption(option);
+                            }
+                        },
+                        {
+                            text: 'switch sampling between minmax and lttb',
+                            onclick: function () {
+                                option.series.forEach((s) => {
+                                    s.sampling = s.sampling === 'minmax' ? 'lttb' : 'minmax';
+                                })
+                                chart1.setOption(option);
+                                console.log('current setting:', option.series[0].sampling);
                             }
                         }
                     ]

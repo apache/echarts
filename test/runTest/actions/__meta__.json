@@ -168,6 +168,7 @@
   "radar3": 2,
   "radar4": 1,
   "resize-animation": 1,
+  "roseType-labeline": 1,
   "sankey-depth": 1,
   "sankey-emphasis-lineStyle": 1,
   "sankey-jump": 1,
@@ -200,6 +201,7 @@
   "tooltip-domnode": 1,
   "tooltip-event": 1,
   "tooltip-link": 2,
+  "tooltip-opacity": 1,
   "tooltip-rich": 1,
   "tooltip-setOption": 2,
   "tooltip-valueFormatter": 3,
@@ -216,5 +218,6 @@
   "universalTransition": 6,
   "universalTransition2": 3,
   "universalTransition3": 2,
-  "visualMap-categories": 1
+  "visualMap-categories": 1,
+  "visualMap-multi-continuous": 1
 }
