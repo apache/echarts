@@ -28,7 +28,7 @@ import * as throttleUtil from '../../util/throttle';
 import { makeInner } from '../../util/model';
 import { Dictionary, ZRElementEvent } from '../../util/types';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import InsideZoomModel from './InsideZoomModel';
+import InsideZoomModel, { NatureMoveOnMouseWheelOpt } from './InsideZoomModel';
 import { each, curry, Curry1, HashMap, createHashMap } from 'zrender/src/core/util';
 import {
     DataZoomPayloadBatchItem, collectReferCoordSysModelInfo,
@@ -126,7 +126,7 @@ function createCoordSysRecord(api: ExtensionAPI, coordSysModel: CoordinateSystem
             const batch: DataZoomPayloadBatchItem[] = [];
 
             coordSysRecord.dataZoomInfoMap.each(function (dzInfo) {
-                // Check whether the behaviors (zoomOnMouseWheel, moveOnMouseMove,
+              // Check whether the behaviors (zoomOnMouseWheel, moveOnMouseMove,
                 // moveOnMouseWheel, ...) enabled.
                 if (!event.isAvailableBehavior(dzInfo.model.option)) {
                     return;
@@ -191,9 +191,10 @@ function mergeControllerParams(dataZoomInfoMap: HashMap<{ model: InsideZoomModel
         'type_undefined': -1
     };
     let preventDefaultMouseMove = true;
-
+    let natureMoveOnMouseWheel: boolean | NatureMoveOnMouseWheelOpt = false;
     dataZoomInfoMap.each(function (dataZoomInfo) {
         const dataZoomModel = dataZoomInfo.model;
+        natureMoveOnMouseWheel = natureMoveOnMouseWheel || dataZoomModel.get('natureMoveOnMouseWheel');
         const oneType = dataZoomModel.get('disabled', true)
             ? false
             : dataZoomModel.get('zoomLock', true)
@@ -218,7 +219,8 @@ function mergeControllerParams(dataZoomInfoMap: HashMap<{ model: InsideZoomModel
             zoomOnMouseWheel: true,
             moveOnMouseMove: true,
             moveOnMouseWheel: true,
-            preventDefaultMouseMove: !!preventDefaultMouseMove
+            preventDefaultMouseMove: !!preventDefaultMouseMove,
+            natureMoveOnMouseWheel
         }
     };
 }
@@ -242,7 +244,6 @@ export function installDataZoomRoamProcessor(registers: EChartsExtensionInstallR
                 { mainType: 'dataZoom', subType: 'inside' },
                 function (dataZoomModel: InsideZoomModel) {
                     const dzReferCoordSysWrap = collectReferCoordSysModelInfo(dataZoomModel);
-
                     each(dzReferCoordSysWrap.infoList, function (dzCoordSysInfo) {
 
                         const coordSysUid = dzCoordSysInfo.model.uid;
@@ -279,7 +280,6 @@ export function installDataZoomRoamProcessor(registers: EChartsExtensionInstallR
                     disposeCoordSysRecord(coordSysRecordMap, coordSysRecord);
                     return;
                 }
-
                 const controllerParams = mergeControllerParams(dataZoomInfoMap);
                 controller.enable(controllerParams.controlType, controllerParams.opt);
 

@@ -20,6 +20,12 @@
 import DataZoomModel, {DataZoomOption} from './DataZoomModel';
 import { inheritDefaultOption } from '../../util/component';
 
+export interface NatureMoveOnMouseWheelOpt {
+  windowScrollSpeedFactor?: number
+  zoomFactor?: number
+  wheelZoomSpeed?: number
+}
+
 export interface InsideDataZoomOption extends DataZoomOption {
 
     /**
@@ -37,6 +43,12 @@ export interface InsideDataZoomOption extends DataZoomOption {
     moveOnMouseMove?: boolean | 'shift' | 'ctrl' | 'alt'
 
     moveOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
+
+    /**
+     * Whether enable touchpad, if open this,
+     * other options such as `zoomOnMouseWheel` `moveOnMouseMove` will be ignored.
+     */
+    natureMoveOnMouseWheel?: boolean | NatureMoveOnMouseWheelOpt
 
     preventDefaultMouseMove?: boolean
 
