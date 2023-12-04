@@ -76,6 +76,7 @@
      * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
      * @param {boolean} [opt.recordCanvas] 'test/lib/canteen.js' is required.
      * @param {boolean} [opt.recordVideo]
+     * @param {string} [opt.renderer] 'canvas' or 'svg'
      */
     testHelper.create = function (echarts, domOrId, opt) {
         var dom = getDom(domOrId);
@@ -267,6 +268,7 @@
      * @param {number} opt.width
      * @param {number} opt.height
      * @param {boolean} opt.draggable
+     * @param {string} opt.renderer 'canvas' or 'svg'
      */
     testHelper.createChart = function (echarts, domOrId, option, opt) {
         if (typeof opt === 'number') {
@@ -287,6 +289,7 @@
             }
 
             var chart = echarts.init(dom, null, {
+                renderer: opt.renderer,
                 useCoarsePointer: opt.useCoarsePointer,
                 pointerSize: opt.pointerSize
             });
