@@ -252,10 +252,10 @@ class HeatmapView extends ChartView {
 
                 rect = new graphic.Rect({
                     shape: {
-                        x: point[0] - width / 2,
-                        y: point[1] - height / 2,
-                        width,
-                        height
+                      x: (point[0] - width / 2) + 2,
+                      y: (point[1] - height / 2) + 2,
+                      width: width - 4,
+                      height: height - 4
                     },
                     style
                 });
