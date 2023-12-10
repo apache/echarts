@@ -39,6 +39,7 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
 
         <script>
@@ -119,6 +120,47 @@ under the License.
                 };
 
                 chart = myChart = testHelper.create(echarts, 'main1', {
+                        option: option
+                });
+            });
+            
+        </script>
+
+        <script>
+            var chart;
+            var myChart;
+            var option;
+
+            require(['echarts'], function (echarts) {
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        position: 'top', 
+                        data: ['', 'interval_1', '', '', '', ''],
+                        splitLine: {
+                            show: true,
+                            interval: function(index, value) {
+                                return value != '';
+                            }
+                        }
+                    },
+                    dataZoom: [
+                        {
+                        type: 'slider'
+                        }
+                    ],
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                        data: [150, 230, 224, 147, 260, 50],
+                        type: 'line'
+                        }
+                    ]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main2', {
                         option: option
                 });
             });
