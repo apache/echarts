@@ -306,7 +306,6 @@ function fixOnBandTicksCoords(
         const shift = (axisExtent[1] - axisExtent[0]) / (crossLen + 1);
 
         ticksCoords[0].coord -= shift / 2;
-        
         last = {coord: axisExtent[1]};
     }
     else {
