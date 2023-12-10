@@ -303,10 +303,10 @@ function fixOnBandTicksCoords(
     let diffSize;
     if (ticksLen === 1) {
         const crossLen = dataExtent[1] - dataExtent[0];
-        const shift = (axisExtent[1] - axisExtent[0]) / crossLen;
+        const shift = (axisExtent[1] - axisExtent[0]) / (crossLen + 1);
 
         ticksCoords[0].coord -= shift / 2;
-
+        
         last = {coord: axisExtent[1]};
     }
     else {
