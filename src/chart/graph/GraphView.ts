@@ -38,6 +38,7 @@ import { getECData } from '../../util/innerStore';
 
 import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
+import Graph from '../../data/Graph';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -276,6 +277,7 @@ class GraphView extends ChartView {
                 });
                 this._updateNodeAndLinkScale();
                 adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
+                this._updateEdgeSymbolScale(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
                 this._lineDraw.updateLayout();
                 // Only update label layout on zoom
                 api.updateLabelLayout();
@@ -291,6 +293,13 @@ class GraphView extends ChartView {
         data.eachItemGraphicEl(function (el: Symbol, idx) {
             el && el.setSymbolScale(nodeScale);
         });
+    }
+
+    _updateEdgeSymbolScale(graph: Graph, scale: number) {
+        graph.eachEdge(function (edge, idx) {
+            const line = edge.getGraphicEl() as Line;
+            line.setEdgeSymbolScale(scale);
+        })
     }
 
     updateLayout(seriesModel: GraphSeriesModel) {
