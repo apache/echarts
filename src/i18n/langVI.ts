@@ -128,7 +128,9 @@ export default {
       gauge: 'Biểu đồ cung tròn',
       pictorialBar: 'Biểu diễn hình ảnh',
       themeRiver: 'Bản đồ sông',
-      sunburst: 'Biểu đồ bậc'
+      sunburst: 'Biểu đồ bậc',
+      custom: 'Biểu đồ tùy chỉnh',
+      chart: 'Đồ thị'
     }
   },
   aria: {

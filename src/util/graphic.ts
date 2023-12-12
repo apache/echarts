@@ -446,7 +446,7 @@ export function clipPointsByRect(points: vector.VectorArray[], rect: ZRRectLike)
 /**
  * Return a new clipped rect. If rect size are negative, return undefined.
  */
-export function clipRectByRect(targetRect: ZRRectLike, rect: ZRRectLike): ZRRectLike {
+export function clipRectByRect(targetRect: ZRRectLike, rect: ZRRectLike): ZRRectLike | undefined {
     const x = mathMax(targetRect.x, rect.x);
     const x2 = mathMin(targetRect.x + targetRect.width, rect.x + rect.width);
     const y = mathMax(targetRect.y, rect.y);

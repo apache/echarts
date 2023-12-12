@@ -82,6 +82,7 @@
                 'map': 'data/map',
                 'i18n': '../i18n',
                 'extension': '../dist/extension',
+                'ssrClient': '../ssr/client/dist/index.js'
             }
         });
     }

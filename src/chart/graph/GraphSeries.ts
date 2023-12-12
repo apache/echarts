@@ -80,7 +80,7 @@ interface GraphEdgeStatesMixin {
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
+    StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
 
     id?: string
     name?: string

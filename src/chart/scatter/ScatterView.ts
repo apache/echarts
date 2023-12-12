@@ -99,9 +99,12 @@ class ScatterView extends ChartView {
     }
 
     _getClipShape(seriesModel: ScatterSeriesModel) {
+        if (!seriesModel.get('clip', true)) {
+            return;
+        }
         const coordSys = seriesModel.coordinateSystem;
-        const clipArea = coordSys && coordSys.getArea && coordSys.getArea();
-        return seriesModel.get('clip', true) ? clipArea : null;
+        // PENDING make `0.1` configurable, for example, `clipTolerance`?
+        return coordSys && coordSys.getArea && coordSys.getArea(.1);
     }
 
     _updateSymbolDraw(data: SeriesData, seriesModel: ScatterSeriesModel) {

@@ -37,7 +37,7 @@ const localeModels: Dictionary<Model> = {};
 export const SYSTEM_LANG = !env.domSupported ? DEFAULT_LOCALE : (function () {
     const langStr = (
         /* eslint-disable-next-line */
-        document.documentElement.lang || navigator.language || (navigator as any).browserLanguage
+        document.documentElement.lang || navigator.language || (navigator as any).browserLanguage || DEFAULT_LOCALE
     ).toUpperCase();
     return langStr.indexOf(LOCALE_ZH) > -1 ? LOCALE_ZH : DEFAULT_LOCALE;
 })();

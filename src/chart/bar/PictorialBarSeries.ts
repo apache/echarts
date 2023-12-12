@@ -119,6 +119,8 @@ export interface PictorialBarSeriesOption
     coordinateSystem?: 'cartesian2d'
 
     data?: (PictorialBarDataItemOption | OptionDataValue | OptionDataValue[])[]
+
+    clip?: boolean
 }
 
 class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOption> {
@@ -149,6 +151,10 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
         symbolPatternSize: 400, // 400 * 400 px
 
         barGap: '-100%',      // In most case, overlap is needed.
+
+        // Pictorial bar do not clip by default because in many cases
+        // xAxis and yAxis are not displayed and it's expected not to clip
+        clip: false,
 
         // z can be set in data item, which is z2 actually.
 

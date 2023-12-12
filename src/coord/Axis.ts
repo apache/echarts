@@ -302,7 +302,7 @@ function fixOnBandTicksCoords(
     let diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
-        last = ticksCoords[1] = {coord: axisExtent[0]};
+        last = ticksCoords[1] = {coord: axisExtent[1]};
     }
     else {
         const crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;

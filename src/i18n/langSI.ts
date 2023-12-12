@@ -104,7 +104,9 @@ export default {
             gauge: 'Števec',
             pictorialBar: 'Stolpčni grafikon s podobo',
             themeRiver: 'Tematski rečni grafikon',
-            sunburst: 'Večnivojski tortni grafikon'
+            sunburst: 'Večnivojski tortni grafikon',
+            custom: 'Grafikon po meri',
+            chart: 'Grafikon'
         }
     },
     aria: {

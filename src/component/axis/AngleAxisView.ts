@@ -138,18 +138,25 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
 
     axisLine(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
         const lineStyleModel = angleAxisModel.getModel(['axisLine', 'lineStyle']);
+        const angleAxis = polar.getAngleAxis();
+        const RADIAN = Math.PI / 180;
+        const angleExtent = angleAxis.getExtent();
 
         // extent id of the axis radius (r0 and r)
         const rId = getRadiusIdx(polar);
         const r0Id = rId ? 0 : 1;
-
         let shape;
+        const shapeType = Math.abs(angleExtent[1] - angleExtent[0]) === 360 ? 'Circle' : 'Arc';
+
         if (radiusExtent[r0Id] === 0) {
-            shape = new graphic.Circle({
+            shape = new graphic[shapeType]({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
-                    r: radiusExtent[rId]
+                    r: radiusExtent[rId],
+                    startAngle: -angleExtent[0] * RADIAN,
+                    endAngle: -angleExtent[1] * RADIAN,
+                    clockwise: angleAxis.inverse
                 },
                 style: lineStyleModel.getLineStyle(),
                 z2: 1,

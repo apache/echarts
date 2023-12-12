@@ -33,6 +33,10 @@ type IconStyle = ItemStyleOption & {
     textAlign?: LabelOption['align']
     textBorderRadius?: LabelOption['borderRadius']
     textPadding?: LabelOption['padding']
+    textFontFamily?: LabelOption['fontFamily']
+    textFontSize?: LabelOption['fontSize']
+    textFontWeight?: LabelOption['fontWeight']
+    textFontStyle?: LabelOption['fontStyle']
 };
 export interface ToolboxFeatureOption {
 

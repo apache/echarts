@@ -59,6 +59,10 @@ under the License.
         <h2>texture</h2>
         <div class="chart" id="texture"></div>
         <h2>horizontal | no clip | symbolOffset</h2>
+        <div class="chart" id="min1"></div>
+        <h2>negative min value with clip</h2>
+        <div class="chart" id="min2"></div>
+        <h2>negative min value without clip</h2>
         <div class="chart" id="velocity"></div>
         <h2>clip</h2>
         <div class="chart" id="clip"></div>
@@ -431,12 +435,109 @@ under the License.
         </script>
 
 
+        <script>
+
+            var rawData = [
+                {name: '驯鹿', velocity: 123, symbol: 'reindeer'},
+                {name: '火箭', velocity: 60, symbol: 'rocket'},
+                {name: '飞机', velocity: 25, symbol: 'plane'},
+                {name: '高铁', velocity: 18, symbol: 'train'},
+                {name: '轮船', velocity: 12, symbol: 'ship'},
+                {name: '汽车', velocity: 9, symbol: 'car'},
+                {name: '跑步', velocity: 2, symbol: 'run'},
+                {name: '步行', velocity: 1, symbol: 'walk'}
+            ];
+
+            makeChart('min1', {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'none'
+                    }
+                },
+                xAxis: {
+                    data: rawData.map(function (item) {
+                        return item.name;
+                    })
+                },
+                yAxis: {
+                    min: 10,
+                    max: 'dataMax'
+                },
+                series: [{
+                    name: 'hill',
+                    type: 'pictorialBar',
+                    barCategoryGap: '-50%',
+                    symbol: 'path://M0,10 L10,10 L5,0 L0,10 z',
+                    itemStyle: {
+                        normal: {
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            opacity: 1
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top'
+                    },
+                    data: rawData.map(function (item) {
+                        return item.velocity;
+                    }),
+                    clip: true
+                }]
+            });
+        </script>
 
 
 
+        <script>
 
+            var rawData = [
+                {name: '驯鹿', velocity: 123, symbol: 'reindeer'},
+                {name: '火箭', velocity: 60, symbol: 'rocket'},
+                {name: '飞机', velocity: 25, symbol: 'plane'},
+                {name: '高铁', velocity: 18, symbol: 'train'},
+                {name: '轮船', velocity: 12, symbol: 'ship'},
+                {name: '汽车', velocity: 9, symbol: 'car'},
+                {name: '跑步', velocity: 2, symbol: 'run'},
+                {name: '步行', velocity: 1, symbol: 'walk'}
+            ];
 
-
+            makeChart('min2', {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'none'
+                    }
+                },
+                xAxis: {
+                    data: rawData.map(function (item) {
+                        return item.name;
+                    })
+                },
+                yAxis: {
+                    min: 10
+                },
+                series: [{
+                    name: 'hill',
+                    type: 'pictorialBar',
+                    barCategoryGap: '-50%',
+                    symbol: 'path://M0,10 L10,10 L5,0 L0,10 z',
+                    itemStyle: {
+                        normal: {
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            opacity: 1
+                        }
+                    },
+                    data: rawData.map(function (item) {
+                        return item.velocity;
+                    })
+                }]
+            });
+        </script>
 
 
 

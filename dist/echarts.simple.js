@@ -5316,7 +5316,10 @@
             var needLocalTransform = this.needLocalTransform();
             var m = this.transform;
             if (!(needLocalTransform || parentTransform)) {
-                m && mIdentity(m);
+                if (m) {
+                    mIdentity(m);
+                    this.invTransform = null;
+                }
                 return;
             }
             m = m || create$1();
@@ -7131,7 +7134,7 @@
     function registerPainter(name, Ctor) {
         painterCtors[name] = Ctor;
     }
-    var version = '5.4.3';
+    var version = '5.4.4';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -12482,6 +12485,14 @@
         )) {
           var view = api.getViewOfSeriesModel(seriesModel);
           view.group.traverse(function (child) {
+            // For the elements that have been triggered by other components,
+            // and are still required to be highlighted,
+            // because the current is directly forced to blur the element,
+            // it will cause the focus self to be unable to highlight, so skip the blur of this element.
+            if (child.__highByOuter && sameSeries && focus === 'self') {
+              return;
+            }
+
             singleEnterBlur(child);
           });
 
@@ -15182,7 +15193,7 @@
     }
 
     var TEXT_PROPS_WITH_GLOBAL = ['fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'];
-    var TEXT_PROPS_SELF = ['align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'];
+    var TEXT_PROPS_SELF = ['align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign', 'ellipsis'];
     var TEXT_PROPS_BOX = ['padding', 'borderWidth', 'borderRadius', 'borderDashOffset', 'backgroundColor', 'borderColor', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'];
 
     function setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, isBlock, inRich) {
@@ -16205,7 +16216,7 @@
       var monthAbbr = timeModel.get('monthAbbr');
       var dayOfWeek = timeModel.get('dayOfWeek');
       var dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
-      return (template || '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, y % 100 + '').replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
+      return (template || '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, pad(y % 100 + '', 2)).replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
     }
     function leveledFormat(tick, idx, formatter, lang, isUTC) {
       var template = null;
@@ -26786,9 +26797,9 @@
       return implsStore[name];
     }
 
-    var version$1 = '5.4.2';
+    var version$1 = '5.4.3';
     var dependencies = {
-      zrender: '5.4.3'
+      zrender: '5.4.4'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800; // Some data processors depends on the stack result dimension (to calculate data extent).
@@ -27500,7 +27511,7 @@
 
                 if (ecData && ecData.dataIndex != null) {
                   var dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
-                  params = dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {};
+                  params = dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {};
                   return true;
                 } // If element has custom eventData of components
                 else if (ecData.eventData) {
@@ -29024,18 +29035,15 @@
       connectedGroups[groupId] = true;
       return groupId;
     }
-    /**
-     * @deprecated
-     */
-
-    function disConnect(groupId) {
+    function disconnect(groupId) {
       connectedGroups[groupId] = false;
     }
     /**
      * Alias and backward compatibility
+     * @deprecated
      */
 
-    var disconnect = disConnect;
+    var disConnect = disconnect;
     /**
      * Dispose a chart instance
      */
@@ -35556,7 +35564,7 @@
       if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {
-          coord: axisExtent[0]
+          coord: axisExtent[1]
         };
       } else {
         var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
@@ -39611,7 +39619,11 @@
           }
 
           if (valueAnimation) {
-            labelInner(endLabel).setLabelText(value);
+            var inner = labelInner(endLabel);
+
+            if (typeof inner.setLabelText === 'function') {
+              inner.setLabelText(value);
+            }
           }
         }
       };

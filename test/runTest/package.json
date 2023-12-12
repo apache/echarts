@@ -3,6 +3,17 @@
   "version": "1.0.0",
   "description": "Apache ECharts Visual Regression Test",
   "devDependencies": {
-    "puppeteer": "^9.1.1"
+    "cwebp-bin": "^6.1.1",
+    "glob": "7.0.0",
+    "pixelmatch": "5.0.2",
+    "pngjs": "3.4.0",
+    "puppeteer": "^9.1.1",
+    "serve-handler": "6.1.1",
+    "slugify": "^1.3.4",
+    "socket.io": "2.5.0"
+  },
+  "scripts": {
+    "start": "npm run test:visual",
+    "test:visual": "node server.js"
   }
 }

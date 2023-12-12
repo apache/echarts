@@ -23,32 +23,19 @@ under the License.
     <meta charset="utf-8">
     <script src="lib/simpleRequire.js"></script>
     <script src="lib/config.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 
 <body>
-    <style>
-        html,
-        body,
-        #main {
-            width: 80%;
-            height: 100%;
-            margin: 0;
-        }
+    <div id="main0"></div>
+    <div id="main1"></div>
 
-        #main {
-            background: #fff;
-        }
-    </style>
-    <div id="main"></div>
     <script>
 
         require(['echarts'], function (echarts) {
-
-            var chart = echarts.init(document.getElementById('main'), null, {
-                // renderer: 'svg'
-            });
-            option = {
+            var option = {
                 toolbox: {
                     show: true,
                     feature: {
@@ -136,9 +123,102 @@ under the License.
                     }
                 }]
             }
-            chart.setOption(option, true);
+            var chart = testHelper.create(echarts, 'main0', {
+                option: option
+            });
+        });
+    </script>
 
-            window.onresize = chart.resize;
+    <script>
+        require(['echarts'], function (echarts) {
+            var font1 = document.createElement('link');
+            font1.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400';
+            var font2 = document.createElement('link');
+            font2.href = 'https://fonts.googleapis.com/css2?family=Courgette:wght@400';
+            font1.rel = font2.rel = 'stylesheet';
+            document.head.appendChild(font1);
+            document.head.appendChild(font2);
+
+            var option = {
+                textStyle: {
+                    fontFamily: "Courgette, Noto Sans SC"
+                },
+                title: {
+                    text: "This is a chart 使用了自定义字体"
+                },
+                tooltip: {
+                    trigger: "axis"
+                },
+                grid: {
+                    left: "3%",
+                    right: "4%",
+                    bottom: "3%",
+                    containLabel: true
+                },
+                toolbox: {
+                    feature: {
+                        saveAsImage: {
+                            title: '保存为图片\n(Save as image)'
+                        },
+                        dataView: {
+                            title: '数据视图\n(Data View)'
+                        }
+                    }
+                },
+                xAxis: {
+                    type: "category",
+                    boundaryGap: false,
+                    data: ["周一 Mon", "周二 Tue", "周三 Wed", "周四 Thu", "周五 Fri", "周六 Sat", "周日 Sun"]
+                },
+                yAxis: {
+                    type: "value"
+                },
+                series: [
+                    {
+                        name: "邮件营销 (Email)",
+                        type: "line",
+                        stack: "总量",
+                        data: [120, 132, 101, 134, 90, 230, 210]
+                    },
+                    {
+                        name: "联盟广告 (Union Ad)",
+                        type: "line",
+                        stack: "总量",
+                        data: [220, 182, 191, 234, 290, 330, 310]
+                    },
+                    {
+                        name: "视频广告 (Video Ad)",
+                        type: "line",
+                        stack: "总量",
+                        data: [150, 232, 201, 154, 190, 330, 410]
+                    },
+                    {
+                        name: "直接访问 (Direct Access)",
+                        type: "line",
+                        stack: "总量",
+                        data: [320, 332, 301, 334, 390, 330, 320]
+                    },
+                    {
+                        name: "搜索引擎 (Search Engine)",
+                        type: "line",
+                        stack: "总量",
+                        data: [820, 932, 901, 934, 1290, 1330, 1320]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                option: option,
+                title: [
+                    'Custom fonts should be applied on the toolbox text'
+                ]
+            });
+
+            document.fonts.ready.then(function () {
+                console.log("fonts ready");
+                // refresh the chart when custom fonts are ready
+                chart.setOption({});
+            });
         });
     </script>
 </body>

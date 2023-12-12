@@ -51,8 +51,12 @@ function createGridClipPath(
     height += lineWidth;
 
     // fix: https://github.com/apache/incubator-echarts/issues/11369
-    x = Math.floor(x);
-    width = Math.round(width);
+    width = Math.ceil(width);
+    if (x !== Math.floor(x)) {
+        x = Math.floor(x);
+        // if no extra 1px on `width`, it will still be clipped since `x` is floored
+        width++;
+    }
 
     const clipPath = new graphic.Rect({
         shape: {

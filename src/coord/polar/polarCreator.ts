@@ -124,7 +124,8 @@ function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
     if (isAngleAxisModel(axisModel)) {
         axis.inverse = axis.inverse !== axisModel.get('clockwise');
         const startAngle = axisModel.get('startAngle');
-        axis.setExtent(startAngle, startAngle + (axis.inverse ? -360 : 360));
+        const endAngle = axisModel.get('endAngle') ?? (startAngle + (axis.inverse ? -360 : 360));
+        axis.setExtent(startAngle, endAngle);
     }
 
     // Inject axis instance

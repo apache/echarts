@@ -39,6 +39,7 @@ export type AngleAxisOption = AxisBaseOption & {
     polarId?: string;
 
     startAngle?: number;
+    endAngle?: number;
     clockwise?: boolean;
 
     axisLabel?: AxisBaseOption['axisLabel']

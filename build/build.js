@@ -97,6 +97,12 @@ async function run() {
         ];
         await build(cfgs);
     }
+    else if (buildType === 'ssr') {
+        const cfgs = [
+            config.createSSRClient(opt)
+        ];
+        await build(cfgs);
+    }
     else if (buildType === 'myTransform') {
         const cfgs = [
             config.createMyTransform(opt)

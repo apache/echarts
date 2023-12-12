@@ -1,0 +1,30 @@
+name: Teardown PR Preview
+
+on:
+  pull_request_target:
+    types: [closed]
+
+jobs:
+  teardown-pr-preview:
+    if: ${{ github.repository_owner == 'apache' && github.event.action == 'closed' && github.event.pull_request.merged != true }}
+    concurrency:
+      # to cancel running `ci` workflows in current PR
+      group: 'Node CI-${{ github.event.number }}'
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install action dependencies
+        run: git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
+
+      - name: Delete PR preview comment
+        uses: ./maintain-one-comment
+        with:
+          body-include: '<!-- ECHARTS_PR_PREVIEW -->'
+          delete: true
+          number: ${{ github.event.number }}
+
+      - name: Teardown closed PR preview
+        continue-on-error: true
+        run: |
+          export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
+          npx surge teardown $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}

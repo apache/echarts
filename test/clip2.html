@@ -1,0 +1,157 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="./lib/simpleRequire.js"></script>
+        <script src="./lib/config.js"></script>
+        <script src="./lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+        <script>
+            function makeToggleChartButtons(toggleClip) {
+                return  [{
+                    text: 'Set Clip',
+                    onclick: function () {
+                        toggleClip(true);
+                    }
+                }, {
+                    text: 'Set Visible',
+                    onclick: function () {
+                        toggleClip(false);
+                    }
+                }];
+            }
+        </script>
+
+        <div class="chart" id="scatter-clip-cartesian-2"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var start = +new Date(2011, 0, 1);
+                var data = new Array(20).fill().map(function (_, i) {
+                    return [new Date(start + i), i];
+                });
+                var option = {
+                    xAxis: {
+                        type: 'time',
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            data: data,
+                            type: 'scatter'
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'scatter-clip-cartesian-2', {
+                    title: [
+                        'Scatter Clip on Cartesian (#18861)',
+                        'Shrink the page, the first and the last point shouldn\'t be clipped'
+                    ],
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    }).concat([{
+                        text: 'Resize Width (for first point)',
+                        onclick: function () {
+                            chart.resize({
+                                width: 562
+                            });
+                        }
+                    }, {
+                        text: 'Resize Width (for last point)',
+                        onclick: function () {
+                            chart.resize({
+                                width: 726
+                            });
+                        }
+                    }])
+                });
+            })
+        </script>
+
+        <div class="chart" id="scatter-clip-cartesian-3"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    grid: {
+                        top: '14%',
+                    },
+                    series: [
+                        {
+                            symbolSize: 20,
+                            data: [
+                                [1, 1],
+                                [1, 0],
+                            ],
+                            type: 'scatter'
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'scatter-clip-cartesian-3', {
+                    title: [
+                        'Scatter Clip on Cartesian (#16661)',
+                        'The point at the right-top corner shouldn\'t be clipped'
+                    ],
+                    option: option,
+                    height: 400,
+                    buttons: makeToggleChartButtons(function (clip) {
+                        chart.setOption({
+                            series: [{
+                                clip: clip
+                            }]
+                        })
+                    })
+                });
+            })
+        </script>
+    </body>
+</html>

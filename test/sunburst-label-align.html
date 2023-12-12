@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <script src="lib/dat.gui.min.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <style>
+    </style>
+
+
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+
+
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            var data = [{
+                name: 'sum',
+                children: [{
+                    name: 'text1',
+                    value: 10,
+                    itemStyle: {
+                        color: 'blue'
+                    },
+                    children: [{
+                        name: 'other',
+                        value: 10,
+                        itemStyle: {
+                            color: 'red'
+                        }
+                    }]
+                },
+                {
+                    name: 'abc',
+                    value: 270,
+                    itemStyle: {
+                        color: 'blue'
+                    },
+                    children: [{
+                        name: 'next',
+                        value: 270,
+                        itemStyle: {
+                            color: 'red',
+                        },
+
+                    }]
+                },
+
+                {
+                    name: 'text2',
+                    value: 10,
+                    itemStyle: {
+                        color: 'green'
+                    },
+                    children: [{
+                        name: 'three',
+                        value: 10,
+                        itemStyle: {
+                            color: 'orange'
+                        }
+                    }]
+                }]
+            }];
+
+            option = {
+                series: {
+                    radius: ['0%', '80%'],
+                    type: 'sunburst',
+                    sort: null,
+                    highlightPolicy: 'ancestor',
+                    nodeClick: 'false',
+                    data: data,
+                    levels: [
+                        {},
+                        {
+                            label: { align: 'center', rotate: 0 }
+                        },
+                        {
+                            label: { align: 'right' }
+                        },
+                        {
+                            label: { align: 'left' }
+                        }
+                    ]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Put label in the center if it\'s a circle'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+    </script>
+
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            var data = [
+                {
+                    "name": "脆弱性",
+                    "itemStyle": {
+                        "color": "#da0d68"
+                    },
+                    "children": [
+                        {
+                            "name": "图像分类对抗攻击",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "FGSM",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "PGD",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "AdamPGD",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "DeepFool",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "FMNA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "PointwiseAttack",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "NewtonFool",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "DDNA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "EADA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "LSBUNA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "GBA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "CW",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "HSJA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "SPNA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "GENA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "SA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Boundary",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Square attack",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Shadow attack",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "ColorFool",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Targeted UAP",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Wasserstein",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "SSAH",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "FSA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "图像分类自然变换",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "resize",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "mosaic",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "poisson_noise",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "表格分类对抗攻击",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "FGM",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "DFT",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "图像分类预处理防御",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "SpatialSmoothing",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "FeatureSqueezing",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Cutout",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "TotalVarMin",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "JpegCompression",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "GaussianAugmentation",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "LabelSmoothing",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Mixup",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Resample",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Trapdoor Model",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Fortified Networks",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "ME-Net",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "WSNNS",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "MultiMagnet",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Februus",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "NEO",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "ConFoc",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "IBAU",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Mode Connectivity",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "NAD",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Fine-pruning",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "图像分类对抗检测",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "CutMixDetect",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "NSS",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "LID",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "NIC",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "DNR",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "SF",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "图像分类后门攻击",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "BadNets",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "DFST",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "AWP",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "FTrojan",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "DeepPayLoad",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "BppAttack",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "图像分类中毒检测",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "NC",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "STRIP",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "语音识别对抗攻击",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "MOO",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "UAP",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "WSP",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "SSA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "可解释性",
+                    "itemStyle": {
+                        "color": "#da0d68"
+                    },
+                    "children": [
+                        {
+                            "name": "白盒局部可解释",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "GradCAM",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Guided Grad-CAM",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "IG",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "LRP",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "DeepLIFT",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "SmoothGrad",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Grad-cam++",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Smooth Grad-CAM++",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Axiom-based grad-cam",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "黑盒局部可解释",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "LIME",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "counterfactual",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Saliency Maps",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "RISE",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Score-cam",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Ablation-cam",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Seq2Seq-Vis",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "LORE",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "黑盒全局可解释",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "t-sne",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Shaply值",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "Influence Functions",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "白盒全局可解释",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "DGN-AM",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "隐私性",
+                    "itemStyle": {
+                        "color": "#da0d68"
+                    },
+                    "children": [
+                        {
+                            "name": "黑盒成员推理攻击",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "MIA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "MIA",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "白盒成员推理防御",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "RelaxLoss",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "黑盒模型窃取攻击",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "Knockoff",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "白盒模型窃取防御",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "Prediction Poisoning",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "黑盒成员推理攻击防御",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "MemGuard",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "公平性",
+                    "itemStyle": {
+                        "color": "#da0d68"
+                    },
+                    "children": [
+                        {
+                            "name": "黑盒评估",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "FD",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "SPB",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "ACC",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "FPR",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "LLE",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "黑盒去偏",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "CGL",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "FSCL",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "DebiAN",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "白盒评估",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "UBD",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "白盒去偏",
+                            "itemStyle": {
+                                "color": "#e0719c"
+                            },
+                            "children": [
+                                {
+                                    "name": "AAS",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                },
+                                {
+                                    "name": "FAAP",
+                                    "value": 1,
+                                    "itemStyle": {
+                                        "color": "#f99e1c"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ];
+            option = {
+                title: {
+                    text: 'WORLD COFFEE RESEARCH SENSORY LEXICON',
+                    subtext: 'Source: https://worldcoffeeresearch.org/work/sensory-lexicon/',
+                    textStyle: {
+                        fontSize: 14,
+                        align: 'center'
+                    },
+                    subtextStyle: {
+                        align: 'center'
+                    },
+                    sublink: 'https://worldcoffeeresearch.org/work/sensory-lexicon/'
+                },
+                series: {
+                    type: 'sunburst',
+                    data: data,
+                    radius: [0, '95%'],
+                    sort: undefined,
+                    emphasis: {
+                        focus: 'ancestor'
+                    },
+                    levels: [
+                        {},
+                        {
+                            r0: '15%',
+                            r: '35%',
+                            itemStyle: {
+                                borderWidth: 2
+                            },
+                            label: {
+                                rotate: 'tangential'
+                            }
+                        },
+                        {
+                            r0: '35%',
+                            r: '70%',
+                            label: {
+                                align: 'left'
+                            }
+                        },
+                        {
+                            r0: '70%',
+                            r: '72%',
+                            label: {
+                                position: 'outside',
+                                padding: 3,
+                                silent: false
+                            },
+                            itemStyle: {
+                                borderWidth: 3
+                            }
+                        }
+                    ]
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Put label in the center if it\'s a circle'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+    </script>
+
+
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                series: [
+                    {
+                        type: 'sunburst',
+                        data: new Array(11).fill(0).map((it, index) => ({
+                            name: 'aaa' + index,
+                            value: 1
+                        })),
+                        levels: [{}, { r0: 40, r: 100, label: { position: 'outside'}}]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Put label in the center if it\'s a circle'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+    </script>
+
+</body>
+
+</html>
