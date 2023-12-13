@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+  </head>
+  <body>
+    <style></style>
+
+    <div id="main0"></div>
+
+    <script>
+      var option;
+
+      require(['echarts' /*, 'map/js/china' */], function (echarts) {
+        // Example data
+        const items = ['A'];
+        const data = [-100];
+        const threshold = 5;
+
+        var option = {
+          xAxis: {
+            type: 'category',
+            data: items,
+          },
+          yAxis: {
+            type: 'value',
+            min: threshold,
+          },
+          series: [
+            {
+              data: data,
+              type: 'bar',
+              label: {
+                show: true,
+                position: 'top',
+              },
+            },
+          ],
+        };
+
+        var chart = testHelper.create(echarts, 'main0', {
+          title:
+            'extreme data zoom range with filterMode: "empty": Should only **show one bar**',
+          option: option,
+        });
+      });
+    </script>
+  </body>
+</html>
