@@ -93,11 +93,17 @@ type GetDependency<DependencyOption extends ComponentOption> = {
 
 type GetDependencies<MainType extends string> = GetDependency<Dependencies[Extract<MainType, DependenciesKeys>]>;
 
+// Retrieves the keys of a type that are not of type string or number.
+// https://github.com/microsoft/TypeScript/issues/25987#issuecomment-870515762
+type KnownKeys<T> = keyof {
+  [K in keyof T as string extends K ? never : number extends K ? never : K]: never
+};
+
 type ComposeUnitOption<OptionUnion extends ComponentOption> =
     // Will be never if some component forget to specify mainType.
     CheckMainType<GetMainType<OptionUnion>> &
     Omit<EChartsCoreOption, 'baseOption' | 'options'> & {
-        [key in GetMainType<OptionUnion>]?: Arrayable<
+        [key in KnownKeys<GetMainType<OptionUnion>>]?: Arrayable<
             ExtractComponentOption<OptionUnion, key>
         // TODO: It will make error log too complex.
         // So this more strict type checking will not be used currently to make sure the error msg is friendly.
