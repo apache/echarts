@@ -54,6 +54,8 @@ interface PieItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParam
 
 export interface PieCallbackDataParams extends CallbackDataParams {
     percent: number
+    maxValue?: number
+    sum?: number
 }
 
 export interface PieStateOption<TCbParams = never> {
@@ -107,6 +109,7 @@ export interface PieSeriesOption extends
     type?: 'pie'
 
     roseType?: 'radius' | 'area'
+    itemRadiusScale?: (dataParams: PieCallbackDataParams) => number
 
     center?: string | number | (string | number)[]
 
@@ -179,12 +182,13 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      */
     getDataParams(dataIndex: number): PieCallbackDataParams {
         const data = this.getData();
+        const valueDim = data.mapDimension('value');
         // update seats when data is changed
         const dataInner = innerData(data);
         let seats = dataInner.seats;
         if (!seats) {
             const valueList: number[] = [];
-            data.each(data.mapDimension('value'), function (value: number) {
+            data.each(valueDim, function (value: number) {
                 valueList.push(value);
             });
             seats = dataInner.seats = getPercentSeats(valueList, data.hostModel.get('percentPrecision'));
@@ -193,6 +197,15 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // seats may be empty when sum is 0
         params.percent = seats[dataIndex] || 0;
         params.$vars.push('percent');
+
+        const itemRadiusScale = data.hostModel.get('itemRadiusScale');
+        if (typeof itemRadiusScale === 'function') {
+            /* useful for custom percentage calculations in formatters etc. */
+            params.maxValue = data.getDataExtent(valueDim)[1];
+            params.$vars.push('maxValue');
+            params.sum =  data.getSum(valueDim);
+            params.$vars.push('sum');
+        }
         return params;
     }
 
