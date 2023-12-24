@@ -203,7 +203,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             /* useful for custom percentage calculations in formatters etc. */
             params.maxValue = data.getDataExtent(valueDim)[1];
             params.$vars.push('maxValue');
-            params.sum =  data.getSum(valueDim);
+            params.sum = data.getSum(valueDim);
             params.$vars.push('sum');
         }
         return params;

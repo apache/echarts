@@ -191,7 +191,7 @@ export default function pieLayout(
 
             let outerRadius = r;
             if (typeof itemRadiusScale === 'function') {
-                // calculate the radius of the current pie item based on the scale from the used-defined function
+                // calculate the radius of the current pie item based on the scale from the user-defined function
                 let scale = itemRadiusScale(seriesModel.getDataParams(idx)) || 0;
                 // scale should always be between 0 and 1
                 scale = Math.max(0, Math.min(scale, 1));
