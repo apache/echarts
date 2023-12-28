@@ -70,7 +70,7 @@ export interface AxisBuilderCfg {
     tickDirection?: number
     labelDirection?: number
     /**
-     * Usefull when onZero.
+     * Useful when onZero.
      */
     labelOffset?: number
     /**
