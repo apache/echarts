@@ -22,7 +22,3 @@ jobs:
           script: |
             const updateNoticeYear = require('.github/workflows/.scripts/update-notice-year.js')
             await updateNoticeYear({ octokit: github, context })
-
-
-
-
