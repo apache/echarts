@@ -34,8 +34,22 @@ import {
 import {
     CanvasRenderer
 } from '../../renderers';
+import { EChartsExtension, EChartsExtensionInstaller } from '../../extensionHelper';
 
-use([BarChart, LineChart, GridComponent, DataZoomComponent, CanvasRenderer]);
+const customExtension: EChartsExtension = {
+    install(registers) {}
+}
+const customExtensionInstaller: EChartsExtensionInstaller = (registers)  => {}
+
+use([
+    BarChart,
+    LineChart,
+    GridComponent,
+    DataZoomComponent,
+    CanvasRenderer,
+    customExtension,
+    customExtensionInstaller
+]);
 
 type Option = ComposeOption<
     GridComponentOption | DataZoomComponentOption

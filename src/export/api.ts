@@ -57,7 +57,7 @@ export {default as env} from 'zrender/src/core/env';
 
 // --------------------- Export for Extension Usage ---------------------
 // export {SeriesData};
-export {SeriesData as List};    // TODO: Compatitable with exists echarts-gl code
+export {SeriesData as List};    // TODO: Compatible with exists echarts-gl code
 export {default as Model} from '../model/Model';
 export {default as Axis} from '../coord/Axis';
 

@@ -197,9 +197,9 @@ module.exports = async function () {
         process.stdout.write(chalk.green.dim(` done \n`));
     }
 
-    process.stdout.write(chalk.green.dim(`Generating entries ...`));
+    process.stdout.write(chalk.green.dim(`Generating entries ...\n`));
     generateEntries();
-    process.stdout.write(chalk.green.dim(`Bundling DTS ...`));
+    process.stdout.write(chalk.green.dim(`Bundling DTS ...\n`));
     await bundleDTS();
 
     console.log(chalk.green.dim('All done.'));
@@ -400,7 +400,7 @@ async function bundleDTS() {
 
     // Bundle chunks.
     const parts = [
-        'core', 'charts', 'components', 'renderers', 'option', 'features'
+        'core', 'charts', 'components', 'renderers', 'option', 'features', 'extensionHelper'
     ];
     const inputs = {};
     parts.forEach(partName => {
@@ -411,7 +411,7 @@ async function bundleDTS() {
         input: inputs,
         ...commonConfig
     });
-    let idx = 1;
+
     await bundle.write({
         dir: outDir,
         minifyInternalExports: false,
@@ -442,7 +442,7 @@ function readTSConfig() {
 
 
 function generateEntries() {
-    ['charts', 'components', 'renderers', 'core', 'features'].forEach(entryName => {
+    ['charts', 'components', 'renderers', 'core', 'features', 'extensionHelper'].forEach(entryName => {
         if (entryName !== 'option') {
             const jsCode = fs.readFileSync(nodePath.join(__dirname, `template/${entryName}.js`), 'utf-8');
             fs.writeFileSync(nodePath.join(__dirname, `../${entryName}.js`), jsCode, 'utf-8');
