@@ -88,7 +88,11 @@ import loadingDefault from '../loading/default';
 import Scheduler from './Scheduler';
 import lightTheme from '../theme/light';
 import darkTheme from '../theme/dark';
-import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from '../coord/CoordinateSystem';
+import type {
+    CoordinateSystemMaster,
+    CoordinateSystemCreator,
+    CoordinateSystemHostModel
+} from '../coord/CoordinateSystem';
 import { parseClassType } from '../util/clazz';
 import {ECEventProcessor} from '../util/ECEventProcessor';
 import {
@@ -109,7 +113,7 @@ import {
     ECElementEvent,
     AnimationOption
 } from '../util/types';
-import Displayable from 'zrender/src/graphic/Displayable';
+import type Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
 import { deprecateLog, deprecateReplaceLog, error, warn } from '../util/log';
@@ -121,8 +125,9 @@ import { createLocaleObject, SYSTEM_LANG, LocaleOption } from './locale';
 import type {EChartsOption} from '../export/option';
 import { findEventDispatcher } from '../util/event';
 import decal from '../visual/decal';
-import CanvasPainter from 'zrender/src/canvas/Painter';
-import SVGPainter from 'zrender/src/svg/Painter';
+import type CanvasPainter from 'zrender/src/canvas/Painter';
+import type SVGPainter from 'zrender/src/svg/Painter';
+import { encodeBase64 } from 'zrender/src/svg/helper';
 import lifecycle, {
     LifecycleEvents,
     UpdateLifecycleTransitionItem,
@@ -806,15 +811,26 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
         });
 
-        const url = this._zr.painter.getType() === 'svg'
+        const isSvg = this._zr.painter.getType() === 'svg';
+        let backgroundColorToRecover;
+        if (isSvg && opts.backgroundColor) {
+            backgroundColorToRecover = this._zr.getBackgroundColor();
+            this._zr.setBackgroundColor(opts.backgroundColor);
+        }
+
+        const url = isSvg
             ? this.getSvgDataURL()
             : this.renderToCanvas(opts).toDataURL(
-                'image/' + (opts && opts.type || 'png')
+                'image/' + (opts.type || 'png')
             );
 
         each(excludesComponentViews, function (view) {
             view.group.ignore = false;
         });
+
+        backgroundColorToRecover && this._zr.setBackgroundColor(backgroundColorToRecover);
+
+        excludesComponentViews.length && this._zr.refreshImmediately();
 
         return url;
     }
@@ -832,24 +848,58 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
-        const isSvg = opts.type === 'svg';
         const groupId = this.group;
-        const mathMin = Math.min;
-        const mathMax = Math.max;
-        const MAX_NUMBER = Infinity;
         if (connectedGroups[groupId]) {
+            opts = opts || {};
+
+            const isSvg = opts.type === 'svg';
+            const MAX_NUMBER = Infinity;
+            const mathMin = Math.min;
+            const mathMax = Math.max;
             let left = MAX_NUMBER;
             let top = MAX_NUMBER;
             let right = -MAX_NUMBER;
             let bottom = -MAX_NUMBER;
-            const canvasList: {dom: HTMLCanvasElement | string, left: number, top: number}[] = [];
-            const dpr = (opts && opts.pixelRatio) || this.getDevicePixelRatio();
+            const canvasList: {
+                dom: HTMLCanvasElement | string,
+                left: number,
+                top: number,
+                width: number,
+                height: number
+            }[] = [];
+            const dpr = isSvg
+                ? 1
+                : (opts.pixelRatio || this.getDevicePixelRatio());
 
-            each(instances, function (chart, id) {
+            each(instances, function (chart) {
                 if (chart.group === groupId) {
+                    const excludesComponentViews: ComponentView[] = [];
+                    each(opts.excludeComponents, function (componentType) {
+                        chart._model.eachComponent({
+                            mainType: componentType
+                        }, function (component) {
+                            const view = chart._componentsMap[component.__viewId];
+                            if (!view.group.ignore) {
+                                excludesComponentViews.push(view);
+                                view.group.ignore = true;
+                            }
+                        });
+                    });
+
+                    const currZr = chart._zr;
+
+                    const currChartIsSvg = currZr.painter.type === 'svg';
+                    let chartBackgroundColorToRecover;
+                    if (currChartIsSvg && opts.backgroundColor) {
+                        chartBackgroundColorToRecover = currZr.getBackgroundColor();
+                        currZr.setBackgroundColor(opts.backgroundColor);
+                    }
+
+                    // TODO: allow different renderers in one group
+                    // TODO: respect each chart's own backgroundColor
                     const canvas = isSvg
-                        ? (chart.getZr().painter as SVGPainter).getSvgDom().innerHTML
-                        : chart.renderToCanvas(clone(opts));
+                        ? currZr.painter.renderToString()
+                        : chart.renderToCanvas(opts);
                     const boundingRect = chart.getDom().getBoundingClientRect();
                     left = mathMin(boundingRect.left, left);
                     top = mathMin(boundingRect.top, top);
@@ -858,8 +908,22 @@ class ECharts extends Eventful<ECEventDefinition> {
                     canvasList.push({
                         dom: canvas,
                         left: boundingRect.left,
-                        top: boundingRect.top
+                        top: boundingRect.top,
+                        width: boundingRect.width,
+                        height: boundingRect.height
                     });
+
+                    if (chartBackgroundColorToRecover) {
+                        currZr.setBackgroundColor(chartBackgroundColorToRecover);
+                    }
+
+                    if (excludesComponentViews.length) {
+                        each(excludesComponentViews, function (view) {
+                            view.group.ignore = false;
+                        });
+
+                        currZr.refresh();
+                    }
                 }
             });
 
@@ -867,50 +931,40 @@ class ECharts extends Eventful<ECEventDefinition> {
             top *= dpr;
             right *= dpr;
             bottom *= dpr;
+
             const width = right - left;
             const height = bottom - top;
-            const targetCanvas = platformApi.createCanvas();
+
+            /* global document */
+            const targetCanvas = isSvg
+                ? document.createElement('div')
+                : platformApi.createCanvas();
             const zr = zrender.init(targetCanvas, {
-                renderer: isSvg ? 'svg' : 'canvas'
+                renderer: isSvg ? 'svg' : 'canvas',
+                width,
+                height
             });
-            zr.resize({
-                width: width,
-                height: height
-            });
+
+            // Background between the charts
+            opts.connectedBackgroundColor && zr.setBackgroundColor(opts.connectedBackgroundColor);
 
             if (isSvg) {
                 let content = '';
                 each(canvasList, function (item) {
                     const x = item.left - left;
                     const y = item.top - top;
-                    content += '<g transform="translate(' + x + ','
-                        + y + ')">' + item.dom + '</g>';
+                    // eslint-disable-next-line max-len
+                    content += `<foreignObject x="${x}" y="${y}" width="${item.width}" height="${item.height}">${item.dom}</foreignObject>`;
                 });
-                (zr.painter as SVGPainter).getSvgRoot().innerHTML = content;
 
-                if (opts.connectedBackgroundColor) {
-                    (zr.painter as SVGPainter).setBackgroundColor(opts.connectedBackgroundColor as string);
-                }
+                const svgStr = (zr.painter as SVGPainter).renderToString()
+                    .replace('</svg>', content + '</svg>');
 
-                zr.refreshImmediately();
-                return (zr.painter as SVGPainter).toDataURL();
+                zr.dispose();
+
+                return 'data:image/svg+xml;base64,' + encodeBase64(svgStr);
             }
             else {
-                // Background between the charts
-                if (opts.connectedBackgroundColor) {
-                    zr.add(new graphic.Rect({
-                        shape: {
-                            x: 0,
-                            y: 0,
-                            width: width,
-                            height: height
-                        },
-                        style: {
-                            fill: opts.connectedBackgroundColor
-                        }
-                    }));
-                }
-
                 each(canvasList, function (item) {
                     const img = new graphic.Image({
                         style: {
@@ -921,9 +975,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                     });
                     zr.add(img);
                 });
+
                 zr.refreshImmediately();
 
-                return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+                const dataURL = (targetCanvas as HTMLCanvasElement).toDataURL('image/' + (opts && opts.type || 'png'));
+
+                zr.dispose();
+
+                return dataURL;
             }
         }
         else {
