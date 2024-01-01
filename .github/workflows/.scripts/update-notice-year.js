@@ -7,7 +7,10 @@ module.exports = async function updateNoticeYear(
   /** @type {{ octokit: Octokit, context: Context }} */
   { octokit, context }
 ) {
-  const newYear = new Date().getFullYear()
+  const now = new Date()
+  // Change to UTC+8
+  now.setHours(now.getHours() + 8)
+  const newYear = now.getFullYear()
   console.log('Prepare to update notice year to', newYear)
 
   const noticeContent = `Apache ECharts
