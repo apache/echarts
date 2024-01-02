@@ -26,8 +26,10 @@ import {
     ScaleDataValue,
     OptionDataValue,
     DimensionLoose,
-    ScaleTick
+    ScaleTick,
+    ScaleBreak
 } from '../util/types';
+import { getExtentSpanWithoutBreaks } from './helper';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 
 
@@ -38,6 +40,7 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     private _setting: SETTING;
 
     protected _extent: [number, number];
+    protected _breaks: ScaleBreak[];
 
     private _isBlank: boolean;
 
@@ -47,6 +50,7 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     constructor(setting?: SETTING) {
         this._setting = setting || {} as SETTING;
         this._extent = [Infinity, -Infinity];
+        this._breaks = this._setting.breaks as ScaleBreak[] || [];
     }
 
     getSetting<KEY extends keyof SETTING>(name: KEY): SETTING[KEY] {
@@ -115,6 +119,12 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
         if (!isNaN(end)) {
             thisExtent[1] = end;
         }
+    }
+
+    getBrokenExtentRatio(): number {
+        const realSpan = getExtentSpanWithoutBreaks(this._extent, this._breaks);
+        const totalSpan = this._extent[1] - this._extent[0];
+        return totalSpan === 0 ? 1 : realSpan / totalSpan;
     }
 
     /**

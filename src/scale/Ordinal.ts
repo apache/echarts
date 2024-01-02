@@ -34,7 +34,8 @@ import {
     DimensionLoose,
     OrdinalSortInfo,
     OrdinalScaleTick,
-    ScaleTick
+    ScaleTick,
+    ScaleBreak
 } from '../util/types';
 import { CategoryAxisBaseOption } from '../coord/axisCommonTypes';
 import { isArray, map, isObject, isString } from 'zrender/src/core/util';
@@ -42,6 +43,7 @@ import { isArray, map, isObject, isString } from 'zrender/src/core/util';
 type OrdinalScaleSetting = {
     ordinalMeta?: OrdinalMeta | CategoryAxisBaseOption['data'];
     extent?: [number, number];
+    breaks?: ScaleBreak[];
 };
 
 class OrdinalScale extends Scale<OrdinalScaleSetting> {
@@ -127,6 +129,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         }
         this._ordinalMeta = ordinalMeta as OrdinalMeta;
         this._extent = this.getSetting('extent') || [0, ordinalMeta.categories.length - 1];
+        this._breaks = this.getSetting('breaks') || [];
     }
 
     parse(val: OrdinalRawValue | OrdinalNumber): OrdinalNumber {
@@ -153,7 +156,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      */
     normalize(val: OrdinalRawValue | OrdinalNumber): number {
         val = this._getTickNumber(this.parse(val));
-        return scaleHelper.normalize(val, this._extent);
+        return scaleHelper.normalize(val, this._extent, this._breaks);
     }
 
     /**
@@ -161,7 +164,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @return raw ordinal number.
      */
     scale(val: number): OrdinalNumber {
-        val = Math.round(scaleHelper.scale(val, this._extent));
+        val = Math.round(scaleHelper.scale(val, this._extent, this._breaks));
         return this.getRawOrdinalNumber(val);
     }
 

@@ -198,16 +198,20 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
                     ordinalMeta: model.getOrdinalMeta
                         ? model.getOrdinalMeta()
                         : model.getCategories(),
-                    extent: [Infinity, -Infinity]
+                    extent: [Infinity, -Infinity],
+                    breaks: model.get('breaks')
                 });
             case 'time':
                 return new TimeScale({
                     locale: model.ecModel.getLocaleModel(),
-                    useUTC: model.ecModel.get('useUTC')
+                    useUTC: model.ecModel.get('useUTC'),
+                    breaks: model.get('breaks')
                 });
             default:
                 // case 'value'/'interval', 'log', or others.
-                return new (Scale.getClass(axisType) || IntervalScale)();
+                return new (Scale.getClass(axisType) || IntervalScale)({
+                    breaks: model.get('breaks')
+                });
         }
     }
 }

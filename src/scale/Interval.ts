@@ -46,11 +46,11 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     }
 
     normalize(val: number): number {
-        return helper.normalize(val, this._extent);
+        return helper.normalize(val, this._extent, this._breaks);
     }
 
     scale(val: number): number {
-        return helper.scale(val, this._extent);
+        return helper.scale(val, this._extent, this._breaks);
     }
 
     setExtent(start: number | string, end: number | string): void {

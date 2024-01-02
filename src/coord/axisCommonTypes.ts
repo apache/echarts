@@ -21,7 +21,7 @@ import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption
+    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, ScaleBreak
 } from '../util/types';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 
@@ -81,6 +81,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      */
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
 
+    breaks?: ScaleBreak[];
 }
 
 export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {

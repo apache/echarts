@@ -18,6 +18,7 @@
 */
 
 import {getPrecision, round, nice, quantityExponent} from '../util/number';
+import { ScaleBreak } from '../util/types';
 import IntervalScale from './Interval';
 import LogScale from './Log';
 import Scale from './Scale';
@@ -126,13 +127,59 @@ export function contain(val: number, extent: [number, number]): boolean {
     return val >= extent[0] && val <= extent[1];
 }
 
-export function normalize(val: number, extent: [number, number]): number {
+export function normalize(
+    val: number,
+    extent: [number, number],
+    breaks?: ScaleBreak[]
+): number {
     if (extent[1] === extent[0]) {
         return 0.5;
     }
-    return (val - extent[0]) / (extent[1] - extent[0]);
+    if (!breaks) {
+        breaks = [];
+    }
+    if (breaks.length === 0) {
+        return (val - extent[0]) / (extent[1] - extent[0]);
+    }
+
+    // If the value is in the break, return the normalized value in the break
+    let accVal = extent[0];
+    let lastBreakEnd = extent[0];
+    let largerThanLastBreakEnd = true;
+    for (let i = 0; i < breaks.length; i++) {
+        const brk = breaks[i];
+        if (val <= brk.start) {
+            accVal += val - lastBreakEnd;
+            largerThanLastBreakEnd = false;
+            break;
+        }
+        else if (val <= brk.end) {
+            accVal += brk.start - lastBreakEnd;
+            largerThanLastBreakEnd = false;
+            break;
+        }
+        else {
+            accVal += brk.start - lastBreakEnd + brk.gap;
+            lastBreakEnd = brk.end;
+        }
+    }
+    const value = accVal + (largerThanLastBreakEnd ? (val - lastBreakEnd) : 0);
+    return (value - extent[0]) / getExtentSpanWithoutBreaks(extent, breaks);
 }
 
-export function scale(val: number, extent: [number, number]): number {
-    return val * (extent[1] - extent[0]) + extent[0];
+export function scale(
+    val: number,
+    extent: [number, number],
+    breaks?: ScaleBreak[]
+): number {
+    return val * getExtentSpanWithoutBreaks(extent, breaks) + extent[0];
+}
+
+export function getExtentSpanWithoutBreaks(extent: [number, number], breaks: ScaleBreak[]): number {
+    // When breaks is defined, calculate the sum of break gaps
+    let span = extent[1] - extent[0];
+    for (let i = 0; i < breaks.length; i++) {
+        span -= breaks[i].end - breaks[i].start - breaks[i].gap;
+    }
+    return span;
 }
