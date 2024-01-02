@@ -52,9 +52,9 @@ export interface BaseBarSeriesOption<StateOption, ExtraStateOption extends State
     /**
      * Max width of bar. Defaults to 1 on cartesian coordinate system. Otherwise it's null.
      */
-    barMaxWidth?: number
+    barMaxWidth?: number | string
 
-    barMinWidth?: number
+    barMinWidth?: number | string
 
     /**
      * Bar width. Will be calculated automatically.

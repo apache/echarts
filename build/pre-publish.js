@@ -87,7 +87,7 @@ const compileWorkList = [
             module: 'ES2015',
             rootDir: ecDir,
             outDir: tmpDir,
-            // Generate types when buidling esm
+            // Generate types when building esm
             declaration: true,
             declarationDir: typesDir
         },
