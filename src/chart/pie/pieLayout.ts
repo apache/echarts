@@ -114,7 +114,7 @@ export default function pieLayout(
         const clockwise = seriesModel.get('clockwise');
 
         const roseType = seriesModel.get('roseType');
-        const itemRadiusScale = seriesModel.get('itemRadiusScale');
+        const radiusPercent = seriesModel.get(['itemStyle', 'radiusPercent']);
         const stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // [0...max]
@@ -190,9 +190,9 @@ export default function pieLayout(
             }
 
             let outerRadius = r;
-            if (typeof itemRadiusScale === 'function') {
+            if (typeof radiusPercent === 'function') {
                 // calculate the radius of the current pie item based on the scale from the user-defined function
-                let scale = itemRadiusScale(seriesModel.getDataParams(idx)) || 0;
+                let scale = radiusPercent(seriesModel.getDataParams(idx)) || 0;
                 // scale should always be between 0 and 1
                 scale = Math.max(0, Math.min(scale, 1));
                 // r0 is used here to scale radius properly in case of 'donut' style.

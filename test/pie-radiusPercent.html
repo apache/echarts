@@ -213,7 +213,9 @@ under the License.
                     itemName: 'key',
                     value: encode,
                 },
-                itemRadiusScale: itemRadiusScale,
+                itemStyle: {
+                    radiusPercent: itemRadiusScale,
+                },
                 label: {
                     formatter(params) {
                         console.log(params);

@@ -50,11 +50,17 @@ interface PieItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParam
     // which means that innerCornerRadius is 20% of the innerRadius
     // and outerCornerRadius is half of outerRadius.
     borderRadius?: (number | string)[] | number | string
+
+    // The radius of each pie item can be adjusted depends on this value.
+    // Value (or returned value in case of function) should be a decimal between 0 and 1,
+    // where 0 means the minimum outer radius from the initially calculated radius of the element,
+    // and 1 means 100% of initial outer radius.
+    radiusPercent?: number | ((dataParams: PieCallbackDataParams) => number)
 }
 
 export interface PieCallbackDataParams extends CallbackDataParams {
     percent: number
-    maxValue?: number
+    max?: number
     sum?: number
 }
 
@@ -109,7 +115,6 @@ export interface PieSeriesOption extends
     type?: 'pie'
 
     roseType?: 'radius' | 'area'
-    itemRadiusScale?: (dataParams: PieCallbackDataParams) => number
 
     center?: string | number | (string | number)[]
 
@@ -198,13 +203,11 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         params.percent = seats[dataIndex] || 0;
         params.$vars.push('percent');
 
-        const itemRadiusScale = data.hostModel.get('itemRadiusScale');
-        if (typeof itemRadiusScale === 'function') {
-            /* useful for custom percentage calculations in formatters etc. */
-            params.maxValue = data.getDataExtent(valueDim)[1];
-            params.$vars.push('maxValue');
+        const radiusPercent = data.hostModel.get(['itemStyle', 'radiusPercent']);
+        if (typeof radiusPercent === 'function') {
+            // useful variables for custom percentage calculations in formatters etc.
+            params.max = data.getDataExtent(valueDim)[1];
             params.sum = data.getSum(valueDim);
-            params.$vars.push('sum');
         }
         return params;
     }
