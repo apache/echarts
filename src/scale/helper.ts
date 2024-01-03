@@ -49,6 +49,7 @@ export function isIntervalOrLogScale(scale: Scale): scale is LogScale | Interval
  */
 export function intervalScaleNiceTicks(
     extent: [number, number],
+    spanWithoutBreaks: number,
     splitNumber: number,
     minInterval?: number,
     maxInterval?: number
@@ -56,8 +57,7 @@ export function intervalScaleNiceTicks(
 
     const result = {} as intervalScaleNiceTicksResult;
 
-    const span = extent[1] - extent[0];
-    let interval = result.interval = nice(span / splitNumber, true);
+    let interval = result.interval = nice(spanWithoutBreaks / splitNumber, true);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
     }
@@ -153,7 +153,12 @@ export function normalize(
             largerThanLastBreakEnd = false;
             break;
         }
-        else if (val <= brk.end) {
+        else if (val === brk.end) {
+            accVal += brk.start - lastBreakEnd + brk.gap;
+            largerThanLastBreakEnd = false;
+            break;
+        }
+        else if (val < brk.end) {
             accVal += brk.start - lastBreakEnd;
             largerThanLastBreakEnd = false;
             break;
@@ -178,6 +183,9 @@ export function scale(
 export function getExtentSpanWithoutBreaks(extent: [number, number], breaks: ScaleBreak[]): number {
     // When breaks is defined, calculate the sum of break gaps
     let span = extent[1] - extent[0];
+    if (!isFinite(span)) {
+        return span;
+    }
     for (let i = 0; i < breaks.length; i++) {
         span -= breaks[i].end - breaks[i].start - breaks[i].gap;
     }

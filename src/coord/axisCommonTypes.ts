@@ -196,7 +196,7 @@ type AxisLabelCategoryFormatter = (value: string, index: number) => string;
 type TimeAxisLabelUnitFormatter = AxisLabelValueFormatter | string[] | string;
 
 export type TimeAxisLabelFormatterOption = string
-    | ((value: number, index: number, extra: {level: number}) => string)
+    | ((value: number, index: number, extra: {level: number, breakStart: number, breakEnd: number}) => string)
     | {
         year?: TimeAxisLabelUnitFormatter,
         month?: TimeAxisLabelUnitFormatter,
@@ -216,11 +216,19 @@ type LabelFormatters = {
     time: TimeAxisLabelFormatterOption
 };
 
+export type AxisLabelBreakFormatter = (
+    value: number | string,
+    index: number,
+    breakStart: number,
+    breakEnd: number
+) => string;
+
 interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     show?: boolean,
     // Whether axisLabel is inside the grid or outside the grid.
     inside?: boolean,
     rotate?: number,
+    breakFormatter?: AxisLabelBreakFormatter,
     // true | false | null/undefined (auto)
     showMinLabel?: boolean,
     // true | false | null/undefined (auto)

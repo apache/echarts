@@ -121,10 +121,27 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
         }
     }
 
+    getExtentSpanWithoutBreaks() {
+        return getExtentSpanWithoutBreaks(this._extent, this._breaks);
+    }
+
     getBrokenExtentRatio(): number {
         const realSpan = getExtentSpanWithoutBreaks(this._extent, this._breaks);
         const totalSpan = this._extent[1] - this._extent[0];
         return totalSpan === 0 ? 1 : realSpan / totalSpan;
+    }
+
+    /**
+     * Whether a value is in broken range (not including either ends)
+     */
+    isInBrokenRange(val: number): boolean {
+        for (let i = 0; i < this._breaks.length; i++) {
+            const brk = this._breaks[i];
+            if (brk.start < val && brk.end > val) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

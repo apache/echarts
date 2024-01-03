@@ -119,9 +119,11 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         let tick = niceTickExtent[0];
 
         while (tick <= niceTickExtent[1]) {
-            ticks.push({
-                value: tick
-            });
+            if (!this.isInBrokenRange(tick)) {
+                ticks.push({
+                    value: tick
+                });
+            }
             // Avoid rounding error
             tick = roundNumber(tick + interval, intervalPrecision);
             if (tick === ticks[ticks.length - 1].value) {
@@ -147,6 +149,41 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
                     value: extent[1]
                 });
             }
+        }
+
+        // Add broken ranges to ticks
+        for (let i = 0; i < this._breaks.length; i++) {
+            const brk = this._breaks[i];
+            ticks.push({
+                value: brk.start,
+                breakStart: brk.start,
+                breakEnd: brk.end
+            });
+            ticks.push({
+                value: brk.end,
+                breakStart: brk.start,
+                breakEnd: brk.end
+            });
+        }
+
+        // Sort ticks by value
+        if (this._breaks.length > 0) {
+            ticks.sort(function (a, b) {
+                return a.value - b.value;
+            });
+            // Remove non-break ticks that are too close to breaks
+            const newTicks = [];
+            for (let i = 1; i < ticks.length; i++) {
+                const prevTick = ticks[i - 1];
+                const tick = ticks[i];
+                if (prevTick.breakEnd != null && tick.breakStart == null
+                    && tick.value - prevTick.breakEnd < interval
+                ) {
+                    continue;
+                }
+                newTicks.push(tick);
+            }
+            return newTicks;
         }
 
         return ticks;
@@ -218,7 +255,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
         splitNumber = splitNumber || 5;
         const extent = this._extent;
-        let span = extent[1] - extent[0];
+        let span = this.getExtentSpanWithoutBreaks();
         if (!isFinite(span)) {
             return;
         }
@@ -230,7 +267,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         }
 
         const result = helper.intervalScaleNiceTicks(
-            extent, splitNumber, minInterval, maxInterval
+            extent, span, splitNumber, minInterval, maxInterval
         );
 
         this._intervalPrecision = result.intervalPrecision;
