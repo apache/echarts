@@ -40,6 +40,7 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     private _setting: SETTING;
 
     protected _extent: [number, number];
+
     protected _breaks: ScaleBreak[];
 
     private _isBlank: boolean;
@@ -121,6 +122,23 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
         }
     }
 
+    expandBreak(breakStart: number, breakEnd: number) {
+        this.expandBreaks([{ start: breakStart, end: breakEnd, gap: 0 }]);
+    }
+
+    expandBreaks(breaks: ScaleBreak[]): void {
+        for (let j = 0; j < breaks.length; j++) {
+            const expandBrk = breaks[j];
+            for (let i = 0; i < this._breaks.length; i++) {
+                const brk = this._breaks[i];
+                if (expandBrk.start === brk.start && expandBrk.end === brk.end) {
+                    brk.isExpanded = true;
+                    break;
+                }
+            }
+        }
+    }
+
     getExtentSpanWithoutBreaks() {
         return getExtentSpanWithoutBreaks(this._extent, this._breaks);
     }
@@ -137,7 +155,7 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     isInBrokenRange(val: number): boolean {
         for (let i = 0; i < this._breaks.length; i++) {
             const brk = this._breaks[i];
-            if (brk.start < val && brk.end > val) {
+            if (!brk.isExpanded && brk.start < val && brk.end > val) {
                 return true;
             }
         }

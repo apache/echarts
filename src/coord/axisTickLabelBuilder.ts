@@ -65,7 +65,9 @@ export function createAxisLabels(axis: Axis): {
         level?: number,
         formattedLabel: string,
         rawLabel: string,
-        tickValue: number
+        tickValue: number,
+        breakStart?: number,
+        breakEnd?: number
     }[],
     labelCategoryInterval?: number
 } {
@@ -180,7 +182,9 @@ function makeRealNumberLabels(axis: Axis) {
                 level: tick.level,
                 formattedLabel: labelFormatter(tick, idx),
                 rawLabel: axis.scale.getLabel(tick),
-                tickValue: tick.value
+                tickValue: tick.value,
+                breakStart: tick.breakStart,
+                breakEnd: tick.breakEnd
             };
         })
     };

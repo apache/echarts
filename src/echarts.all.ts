@@ -62,6 +62,7 @@ import {
     GridComponent,
     PolarComponent,
     GeoComponent,
+    AxisComponent,
     SingleAxisComponent,
     ParallelComponent,
     CalendarComponent,
@@ -146,7 +147,7 @@ use([
 // Coordinate systems
 // -------------------
 
-
+use(AxisComponent);
 
 // All of the axis modules have been included in the
 // coordinate system module below, do not need to

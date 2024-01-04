@@ -36,6 +36,7 @@ import Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
 import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 const PI = Math.PI;
 
@@ -50,6 +51,8 @@ type AxisEventData = {
     value?: string | number
     dataIndex?: number
     tickIndex?: number
+    breakStart?: number
+    breakEnd?: number
 } & {
     [key in AxisIndexKey]?: number
 };
@@ -133,9 +136,14 @@ class AxisBuilder {
     readonly group = new graphic.Group();
 
     private _transformGroup: graphic.Group;
+    private _api: ExtensionAPI;
 
-    constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg) {
-
+    constructor(
+        axisModel: AxisBaseModel,
+        api: ExtensionAPI,
+        opt?: AxisBuilderCfg
+    ) {
+        this._api = api;
         this.opt = opt;
 
         this.axisModel = axisModel;
@@ -174,7 +182,7 @@ class AxisBuilder {
     }
 
     add(name: keyof typeof builders) {
-        builders[name](this.opt, this.axisModel, this.group, this._transformGroup);
+        builders[name](this.opt, this.axisModel, this.group, this._transformGroup, this._api);
     }
 
     getGroup() {
@@ -236,7 +244,8 @@ interface AxisElementsBuilder {
         opt: AxisBuilderCfg,
         axisModel: AxisBaseModel,
         group: graphic.Group,
-        transformGroup: graphic.Group
+        transformGroup: graphic.Group,
+        api: ExtensionAPI
     ):void
 }
 
@@ -343,9 +352,10 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         }
     },
 
-    axisTickLabel(opt, axisModel, group, transformGroup) {
+    // @ts-ignore
+    axisTickLabel(opt, axisModel, group, transformGroup, api) {
         const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt);
-        const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt);
+        const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt, api);
 
         fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
 
@@ -731,7 +741,8 @@ function buildAxisLabel(
     group: graphic.Group,
     transformGroup: graphic.Group,
     axisModel: AxisBaseModel,
-    opt: AxisBuilderCfg
+    opt: AxisBuilderCfg,
+    api: ExtensionAPI
 ) {
     const axis = axisModel.axis;
     const show = retrieve(opt.axisLabelShow, axisModel.get(['axisLabel', 'show']));
@@ -843,11 +854,24 @@ function buildAxisLabel(
             eventData.targetType = 'axisLabel';
             eventData.value = rawLabel;
             eventData.tickIndex = index;
+            eventData.breakStart = labelItem.breakStart;
+            eventData.breakEnd = labelItem.breakEnd;
             if (axis.type === 'category') {
                 eventData.dataIndex = tickValue;
             }
 
             getECData(textEl).eventData = eventData;
+
+            if (labelItem.breakStart != null) {
+                textEl.on('click', params => {
+                    axis.scale.expandBreak(labelItem.breakStart, labelItem.breakEnd);
+                    api.dispatchAction({
+                        type: 'axisBreakExpand',
+                        breakStart: labelItem.breakStart,
+                        breakEnd: labelItem.breakEnd,
+                    });
+                })
+            }
         }
 
         // FIXME

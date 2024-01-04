@@ -152,8 +152,12 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         }
 
         // Add broken ranges to ticks
+        let unexpandedBreaks = 0;
         for (let i = 0; i < this._breaks.length; i++) {
             const brk = this._breaks[i];
+            if (brk.isExpanded) {
+                continue;
+            }
             ticks.push({
                 value: brk.start,
                 breakStart: brk.start,
@@ -164,10 +168,11 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
                 breakStart: brk.start,
                 breakEnd: brk.end
             });
+            unexpandedBreaks++;
         }
 
         // Sort ticks by value
-        if (this._breaks.length > 0) {
+        if (unexpandedBreaks > 0) {
             ticks.sort(function (a, b) {
                 return a.value - b.value;
             });

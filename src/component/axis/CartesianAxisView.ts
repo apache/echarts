@@ -66,7 +66,7 @@ class CartesianAxisView extends AxisView {
 
         const layout = cartesianAxisHelper.layout(gridModel, axisModel);
 
-        const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
+        const axisBuilder = new AxisBuilder(axisModel, api, zrUtil.extend({
             handleAutoShown(elementType) {
                 const cartesians = gridModel.coordinateSystem.getCartesians();
                 for (let i = 0; i < cartesians.length; i++) {

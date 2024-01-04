@@ -390,7 +390,8 @@ export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
 export type ScaleBreak = {
     start: number,
     end: number,
-    gap: number
+    gap: number,
+    isExpanded?: boolean // undefined means false
 };
 
 export interface ScaleTick {

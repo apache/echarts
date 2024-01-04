@@ -148,6 +148,9 @@ export function normalize(
     let largerThanLastBreakEnd = true;
     for (let i = 0; i < breaks.length; i++) {
         const brk = breaks[i];
+        if (brk.isExpanded) {
+            continue;
+        }
         if (val <= brk.start) {
             accVal += val - lastBreakEnd;
             largerThanLastBreakEnd = false;
@@ -187,7 +190,10 @@ export function getExtentSpanWithoutBreaks(extent: [number, number], breaks: Sca
         return span;
     }
     for (let i = 0; i < breaks.length; i++) {
-        span -= breaks[i].end - breaks[i].start - breaks[i].gap;
+        const brk = breaks[i];
+        if (!brk.isExpanded) {
+            span -= breaks[i].end - breaks[i].start - breaks[i].gap;
+        }
     }
     return span;
 }

@@ -81,6 +81,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      */
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
 
+    showBreaks?: boolean;
     breaks?: ScaleBreak[];
 }
 
