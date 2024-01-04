@@ -398,6 +398,7 @@ export interface ScaleTick {
     level?: number,
     breakStart?: number,
     breakEnd?: number,
+    breakGap?: number,
     value: number
 };
 export interface TimeScaleTick extends ScaleTick {

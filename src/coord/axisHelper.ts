@@ -255,7 +255,7 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
         return (function (tpl, breakLabelFormatter: AxisLabelBreakFormatter) {
             return function (tick: ScaleTick, idx: number) {
                 if (tick.breakStart != null && breakLabelFormatter) {
-                    return breakLabelFormatter(tick.value, idx, tick.breakStart, tick.breakEnd);
+                    return breakLabelFormatter(tick.value, idx, tick.breakStart, tick.breakEnd, tick.breakGap);
                 }
 
                 // For category axis, get raw value; for numeric axis,
@@ -280,7 +280,13 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
                     idx = tick.value - categoryTickStart;
                 }
                 if (tick.breakStart != null && breakCb) {
-                    return breakCb(tick.value, idx, tick.breakStart, tick.breakEnd);
+                    return breakCb(
+                        tick.value,
+                        idx,
+                        tick.breakStart,
+                        tick.breakEnd,
+                        tick.breakGap
+                    );
                 }
                 return cb(
                     getAxisRawValue(axis, tick) as number,
@@ -297,8 +303,19 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
     }
     else {
         return function (tick: ScaleTick) {
-            if (tick.breakStart != null && breakLabelFormatter) {
-                return breakLabelFormatter(tick.value, null, tick.breakStart, tick.breakEnd);
+            if (tick.breakStart != null) {
+                if (breakLabelFormatter) {
+                    return breakLabelFormatter(
+                        tick.value,
+                        null,
+                        tick.breakStart,
+                        tick.breakEnd,
+                        tick.breakGap
+                    );
+                }
+                else if (tick.breakGap === 0) {
+                    return tick.breakStart + ' ~ ' + tick.breakEnd;
+                }
             }
             return axis.scale.getLabel(tick);
         };

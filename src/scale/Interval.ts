@@ -161,13 +161,20 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
             ticks.push({
                 value: brk.start,
                 breakStart: brk.start,
-                breakEnd: brk.end
+                breakEnd: brk.end,
+                breakGap: brk.gap
             });
-            ticks.push({
-                value: brk.end,
-                breakStart: brk.start,
-                breakEnd: brk.end
-            });
+            if (brk.gap > 0) {
+                // When gap is 0, start tick is overlap with end tick, so do
+                // not count it. If developers want to solve overlapping when
+                // gap is larger than 0, they should write breakFormattter
+                ticks.push({
+                    value: brk.end,
+                    breakStart: brk.start,
+                    breakEnd: brk.end,
+                    breakGap: brk.gap
+                });
+            }
             unexpandedBreaks++;
         }
 

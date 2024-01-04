@@ -122,6 +122,10 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
         }
     }
 
+    getBreaks() {
+        return this._breaks;
+    }
+
     expandBreak(breakStart: number, breakEnd: number) {
         this.expandBreaks([{ start: breakStart, end: breakEnd, gap: 0 }]);
     }

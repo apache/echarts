@@ -66,25 +66,22 @@ under the License.
                     data: ['a', 'b', 'c', 'd', 'e']
                 },
                 yAxis: {
+                    triggerEvent: true,
                     axisLabel: {
-                        breakFormatter: (value, index, start, end) => {
-                            console.log(value, index, start, end);
-                            if (value === end && start !== end) {
-                                return '';
-                            }
-                            return start + '~' + end;
-                        }
                     },
                     breaks: [{
                         start: 52,
                         end: 259,
-                        gap: 2
-                    }],
-                    // type: 'log'
+                        gap: 20
+                    }]
                 },
                 series: {
-                    type: 'line',
-                    data: [12, 34, 259, 283, 75]
+                    type: 'bar',
+                    data: [12, 263, 259, 283, 75],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
                 }
             };
 
@@ -98,11 +95,21 @@ under the License.
                 // buttons: [{text: 'btn-txt', onclick: function () {}}],
                 // recordCanvas: true,
             });
+
+            chart.on('click', params => {
+                console.log(params);
+                // if (params.breakStart != null) {
+                //     chart.setOption({
+                //         yAxis: {
+                //             breaks: []
+                //         }
+                //     });
+                // }
+            })
         });
         </script>
 
 
-<!--
 
 
         <script>
@@ -114,11 +121,30 @@ under the License.
             var option;
 
             option = {
-                xAxis: {},
-                yAxis: {},
+                xAxis: {
+                    data: ['a', 'b', 'c', 'd', 'e']
+                },
+                yAxis: {
+                    triggerEvent: true,
+                    axisLabel: {
+                    },
+                    breaks: [{
+                        start: 100,
+                        end: 2300,
+                        gap: 50
+                    }, {
+                        start: 2400,
+                        end: 7400,
+                        gap: 50
+                    }]
+                },
                 series: {
-                    type: 'line',
-                    data: [[11, 22], [33, 44]]
+                    type: 'bar',
+                    data: [12, 23, 34, 2340, 7435],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
                 }
             };
 
@@ -137,6 +163,7 @@ under the License.
 
 
 
+<!--
 
 
         <script>

@@ -104,6 +104,22 @@ const defaultOption: AxisBaseOption = {
         areaStyle: {
             color: ['rgba(250,250,250,0.2)', 'rgba(210,219,238,0.2)']
         }
+    },
+    breakArea: {
+        show: true,
+        backgroundStyle: {
+            borderColor: '#ccd',
+            borderWidth: 1,
+            // borderType: 'dashed',
+            decal: {
+                backgroundColor: '#eef0f6',
+                color: 'rgba(0,0,0,0.1)',
+                dashArrayX: [1, 0],
+                dashArrayY: [2, 5],
+                symbolSize: 1,
+                rotation: -Math.PI / 6
+            }
+        }
     }
 };
 

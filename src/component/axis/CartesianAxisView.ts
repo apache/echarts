@@ -29,12 +29,13 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
 import { isIntervalOrLogScale } from '../../scale/helper';
+import { rectCoordAxisBuildBreakArea } from './axisBreakAreaHelper';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ] as const;
 const selfBuilderAttrs = [
-    'splitArea', 'splitLine', 'minorSplitLine'
+    'splitArea', 'splitLine', 'minorSplitLine', 'breakArea'
 ] as const;
 
 class CartesianAxisView extends AxisView {
@@ -86,7 +87,7 @@ class CartesianAxisView extends AxisView {
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get([name, 'show'])) {
-                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel);
+                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel, api);
             }
         }, this);
 
@@ -108,7 +109,13 @@ class CartesianAxisView extends AxisView {
 }
 
 interface AxisElementBuilder {
-    (axisView: CartesianAxisView, axisGroup: graphic.Group, axisModel: CartesianAxisModel, gridModel: GridModel): void
+    (
+        axisView: CartesianAxisView,
+        axisGroup: graphic.Group,
+        axisModel: CartesianAxisModel,
+        gridModel: GridModel,
+        api: ExtensionAPI
+    ): void
 }
 
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
@@ -231,6 +238,11 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
     splitArea(axisView, axisGroup, axisModel, gridModel) {
         rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, gridModel);
+    },
+
+    // @ts-ignore
+    breakArea(axisView, axisGroup, axisModel, gridModel, api) {
+        rectCoordAxisBuildBreakArea(axisGroup, axisModel, gridModel, api);
     }
 };
 
