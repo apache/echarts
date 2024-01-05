@@ -72,7 +72,7 @@ under the License.
                     breaks: [{
                         start: 52,
                         end: 259,
-                        gap: 20
+                        gap: 0
                     }]
                 },
                 series: {
@@ -126,6 +126,7 @@ under the License.
                 },
                 yAxis: {
                     triggerEvent: true,
+                    // inverse: true,
                     axisLabel: {
                     },
                     breaks: [{
@@ -138,14 +139,17 @@ under the License.
                         gap: 50
                     }]
                 },
-                series: {
+                series: [{
                     type: 'bar',
                     data: [12, 23, 34, 2340, 7435],
                     label: {
                         show: true,
                         position: 'top'
                     }
-                }
+                }, {
+                    type: 'line',
+                    data: [12, 23, 34, 2340, 7435]
+                }]
             };
 
             var chart = testHelper.create(echarts, 'main1', {

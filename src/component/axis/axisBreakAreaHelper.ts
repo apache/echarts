@@ -106,3 +106,142 @@ export function rectCoordAxisBuildBreakArea(
         axisGroup.add(el);
     }
 }
+
+export function rectCoordAxisAddBreakBackground(
+    axisGroup: graphic.Group,
+    axisModel: SingleAxisModel | CartesianAxisModel,
+    gridModel: GridModel | SingleAxisModel,
+    api: ExtensionAPI
+) {
+    const group = rectCoordAxisBuildClipPath(axisModel, gridModel, api);
+
+    if (!group) {
+        return;
+    }
+
+    const breakAreaModel = (axisModel as AxisBaseModel).getModel('breakArea');
+    const backgroundStyleModel = breakAreaModel.getModel('backgroundStyle');
+    const itemStyle = backgroundStyleModel.getItemStyle();
+    const decal = backgroundStyleModel.get('decal');
+    if (decal) {
+        const decalPattern = createOrUpdatePatternFromDecal(decal, api);
+        (itemStyle as any).decal = decalPattern;
+    }
+
+    group.eachChild((el: graphic.Path) => {
+        el.attr({
+            style: itemStyle
+        });
+    });
+
+    axisGroup.add(group);
+}
+
+export function rectCoordAxisBuildClipPath(
+    axisModel: SingleAxisModel | CartesianAxisModel,
+    gridModel: GridModel | SingleAxisModel,
+    api: ExtensionAPI
+) {
+    const axis = axisModel.axis;
+
+    if (axis.scale.isBlank()) {
+        return;
+    }
+
+    const breaks = axis.scale.getBreaks();
+
+    if (!breaks.length) {
+        return;
+    }
+
+    const clipGap = 0; // TODO: customizable
+    const dh = 10;
+    const dv = 10;
+
+    const gridRect = gridModel.coordinateSystem.getRect();
+
+    const group = new graphic.Group();
+    for (let i = 0; i < breaks.length; i++) {
+        const brk = breaks[i];
+        if (brk.isExpanded) {
+            continue;
+        }
+
+        // Even if brk.gap is 0, we should also draw the breakArea because
+        // border is sometimes required to be visible (as a line)
+        const startCoord = axis.toGlobalCoord(axis.dataToCoord(brk.start));
+        const endCoord = axis.toGlobalCoord(axis.dataToCoord(brk.end));
+        console.log(brk, startCoord, endCoord)
+        const dGap = 0;// clipGap - (endCoord - startCoord);
+
+        let x;
+        let y;
+        let width;
+        let height;
+        const points = [];
+        if (axis.isHorizontal()) {
+            x = startCoord - dGap / 2;
+            y = gridRect.y;
+            width = endCoord - startCoord + dGap;
+            height = gridRect.height;
+        }
+        else {
+            x = gridRect.x;
+            y = startCoord - dGap / 2;
+            width = gridRect.width;
+            height = endCoord - startCoord + dGap;
+
+            // sawtooth points
+            let px = x;
+            for (; px <= x + width; px += dh) {
+                points.push([px, y + dv / 2]);
+                px += dh;
+                points.push([px, y - dv / 2]);
+            }
+            y = endCoord;
+            // y += clipGap
+            px -= dh;
+            points.push([px, y]);
+            for (; px >= x; px -= dh) {
+                points.push([px, y - dv / 2]);
+                px -= dh;
+                points.push([px, y + dv / 2]);
+            }
+            y = startCoord - dGap / 2;
+            px += dh;
+            points.push([px, y]);
+        }
+
+        const el: graphic.Path = new graphic.Polygon({
+            shape: {
+                points
+            }
+        });
+
+        el.on('click', () => {
+            axis.scale.expandBreak(brk.start, brk.end);
+            api.dispatchAction({
+                type: 'axisBreakExpand',
+                breakStart: brk.start,
+                breakEnd: brk.end,
+            });
+        })
+
+        group.add(el);
+    }
+
+    const clipPath = new graphic.Rect({
+        shape: {
+            x: gridRect.x,
+            y: gridRect.y,
+            width: gridRect.width,
+            height: gridRect.height
+        },
+        style: {
+            fill: 'blue'
+        }
+    });
+    group.setClipPath(clipPath);
+
+    return group;
+}

@@ -29,7 +29,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
 import { isIntervalOrLogScale } from '../../scale/helper';
-import { rectCoordAxisBuildBreakArea } from './axisBreakAreaHelper';
+import { rectCoordAxisAddBreakBackground, rectCoordAxisBuildBreakArea, rectCoordAxisBuildClipPath } from './axisBreakAreaHelper';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
