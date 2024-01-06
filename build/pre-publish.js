@@ -19,7 +19,7 @@
 
 /**
  * [Create CommonJS files]:
- * Compatible with prevoius folder structure: `echarts/lib` exists in `node_modules`
+ * Compatible with previous folder structure: `echarts/lib` exists in `node_modules`
  * (1) Build all files to CommonJS to `echarts/lib`.
  * (2) Remove __DEV__.
  * (3) Mount `echarts/src/export.js` to `echarts/lib/echarts.js`.
@@ -206,7 +206,7 @@ module.exports = async function () {
 };
 
 async function runTsCompile(localTs, compilerOptions, srcPathList) {
-    // Must do it. becuase the value in tsconfig.json might be different from the inner representation.
+    // Must do it, because the value in tsconfig.json might be different from the inner representation.
     // For example: moduleResolution: "NODE" => moduleResolution: 2
     const {options, errors} = localTs.convertCompilerOptionsFromJson(compilerOptions, ecDir);
 
