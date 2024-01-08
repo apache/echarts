@@ -139,6 +139,9 @@ export interface PieSeriesOption extends
     showEmptyCircle?: boolean;
     emptyCircleStyle?: PieItemStyleOption;
 
+    showBackground?: boolean
+    backgroundStyle?: PieItemStyleOption
+
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
 
@@ -204,7 +207,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         params.$vars.push('percent');
 
         const radiusPercent = data.hostModel.get(['itemStyle', 'radiusPercent']);
-        if (typeof radiusPercent === 'function') {
+        if (radiusPercent != null) {
             // useful variables for custom percentage calculations in formatters etc.
             params.max = data.getDataExtent(valueDim)[1];
             params.sum = data.getSum(valueDim);
@@ -312,6 +315,11 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         showEmptyCircle: true,
         emptyCircleStyle: {
             color: 'lightgray',
+            opacity: 1
+        },
+
+        showBackground: false,
+        backgroundStyle: {
             opacity: 1
         },
 

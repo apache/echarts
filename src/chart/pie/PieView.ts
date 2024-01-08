@@ -19,13 +19,14 @@
 */
 
 
-import { extend, retrieve3 } from 'zrender/src/core/util';
+import { extend, defaults, retrieve3 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, ColorString } from '../../util/types';
+import {SectorProps} from 'zrender/src/graphic/shape/Sector';
 import SeriesData from '../../data/SeriesData';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
@@ -236,6 +237,9 @@ class PieView extends ChartView {
     private _data: SeriesData;
     private _emptyCircleSector: graphic.Sector;
 
+    private _backgroundGroup: graphic.Group;
+    private _backgroundEls: graphic.Sector[] = [];
+
     render(seriesModel: PieSeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
         const data = seriesModel.getData();
 
@@ -268,11 +272,42 @@ class PieView extends ChartView {
             group.add(sector);
         }
 
+
+        const animationModel = seriesModel.isAnimationEnabled() ? seriesModel : null;
+        const drawBackground = seriesModel.get('showBackground', true);
+        const basicOuterRadius = getBasicPieLayout(seriesModel, api).r;
+        const bgStyle = seriesModel.getModel('backgroundStyle').getItemStyle();
+
+        const bgEls: PieView['_backgroundEls'] = [];
+        const existBgEls = this._backgroundEls;
+
+        function createBackground(idx: number) {
+            const bgEl = new graphic.Sector({
+                shape: data.getItemLayout(idx),
+                silent: true,
+                z2: 0
+            });
+            bgEl.setShape('r', basicOuterRadius);
+
+            const style = data.getItemVisual(idx, 'style');
+            const visualColor = style && style.fill as ColorString;
+            bgEl.useStyle(extend(
+                // inherit item color if no background color specified
+                {fill: visualColor},
+                bgStyle
+            ));
+            return bgEl;
+        }
+
         data.diff(oldData)
             .add(function (idx) {
                 const piePiece = new PiePiece(data, idx, startAngle);
 
                 data.setItemGraphicEl(idx, piePiece);
+
+                if (drawBackground) {
+                    bgEls[idx] = createBackground(idx);
+                }
 
                 group.add(piePiece);
             })
@@ -283,6 +318,15 @@ class PieView extends ChartView {
 
                 piePiece.off('click');
 
+                if (drawBackground) {
+                    bgEls[newIdx] = existBgEls[oldIdx] || createBackground(newIdx);
+                    const shape = defaults(
+                        {r: basicOuterRadius},
+                        data.getItemLayout(newIdx)
+                    );
+                    graphic.updateProps<SectorProps>(bgEls[newIdx], {shape}, animationModel, newIdx);
+                }
+
                 group.add(piePiece);
                 data.setItemGraphicEl(newIdx, piePiece);
             })
@@ -291,6 +335,15 @@ class PieView extends ChartView {
                 graphic.removeElementWithFadeOut(piePiece, seriesModel, idx);
             })
             .execute();
+
+        this._backgroundGroup ||= new graphic.Group();
+        this._backgroundGroup.removeAll();
+
+        for (const bgEl of bgEls) {
+            this._backgroundGroup.add(bgEl);
+        }
+        group.add(this._backgroundGroup);
+        this._backgroundEls = bgEls;
 
         labelLayout(seriesModel);
 

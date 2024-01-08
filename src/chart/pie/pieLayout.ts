@@ -190,9 +190,15 @@ export default function pieLayout(
             }
 
             let outerRadius = r;
-            if (typeof radiusPercent === 'function') {
-                // calculate the radius of the current pie item based on the scale from the user-defined function
-                let scale = radiusPercent(seriesModel.getDataParams(idx)) || 0;
+            if (radiusPercent != null) {
+                let scale = 0;
+                if (typeof radiusPercent === 'function') {
+                    // calculate the radius of the current pie item based on the scale from the user-defined function
+                    scale = radiusPercent(seriesModel.getDataParams(idx)) || 0;
+                }
+                else if (typeof radiusPercent === 'number') {
+                    scale = radiusPercent;
+                }
                 // scale should always be between 0 and 1
                 scale = Math.max(0, Math.min(scale, 1));
                 // r0 is used here to scale radius properly in case of 'donut' style.
