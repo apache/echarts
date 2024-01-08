@@ -250,39 +250,6 @@ under the License.
                 },
             };
         }
-
-        /**
-         * @param pos {number[]}
-         * @param [radius] {string[]|number[]}
-         * @param [encode] {string}
-         * @return {*}
-         */
-        function createBackgroundSeries(pos, {radius, encode = 'value'} = {}) {
-            return {
-                name: `Total ${encode}`,
-                type: 'pie',
-                center: [
-                    `${(pos[1] / 3 - 1 / 6) * 100}%`,
-                    `${(pos[0] - 1) * 50 + 25}%`,
-                ],
-                radius: radius || '22%',
-                label: {show: false},
-                itemStyle: {opacity: 0.25},
-                encode: {
-                    itemName: 'key',
-                    value: encode,
-                },
-                tooltip: {
-                    formatter(params) {
-                        const {seriesName, name, marker, value, encode, percent} = params;
-                        const val = value[encode.value?.[0]] || '-';
-                        let text = `${seriesName}<br>`;
-                        text += `${marker} ${name}: <strong>${val} (${percent}%)</strong>`;
-                        return text;
-                    },
-                },
-            };
-        }
     })
 
 </script>
