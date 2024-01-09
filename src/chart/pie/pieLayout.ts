@@ -192,11 +192,11 @@ export default function pieLayout(
             let outerRadius = r;
             if (radiusPercent != null) {
                 let scale = 0;
-                if (typeof radiusPercent === 'function') {
+                if (zrUtil.isFunction(radiusPercent)) {
                     // calculate the radius of the current pie item based on the scale from the user-defined function
                     scale = radiusPercent(seriesModel.getDataParams(idx)) || 0;
                 }
-                else if (typeof radiusPercent === 'number') {
+                else if (zrUtil.isNumber(radiusPercent)) {
                     scale = radiusPercent;
                 }
                 // scale should always be between 0 and 1
