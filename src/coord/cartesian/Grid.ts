@@ -23,14 +23,15 @@
  * TODO Default cartesian
  */
 
-import {isObject, each, indexOf, retrieve3, keys} from 'zrender/src/core/util';
+import {isObject, each, indexOf, retrieve3, keys, reduce, map} from 'zrender/src/core/util';
 import {getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
     ifAxisCrossZero,
     niceScaleExtent,
     estimateLabelUnionRect,
-    getDataDimensionsOnAxis
+    getDataDimensionsOnAxis,
+    computeNameBoundingRect
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
@@ -38,7 +39,7 @@ import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../..
 
 // Depends on GridModel, AxisModel, which performs preprocess.
 import GridModel from './GridModel';
-import CartesianAxisModel from './AxisModel';
+import CartesianAxisModel, { CartesianAxisPosition, inverseCartesianAxisPositionMap } from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
@@ -61,6 +62,15 @@ type FinderAxisIndex = {xAxisIndex?: number, yAxisIndex?: number};
 type AxesMap = {
     x: Axis2D[],
     y: Axis2D[]
+};
+
+type CartesianAxisPositionMargins = {[K in CartesianAxisPosition]: number};
+
+type ReservedSpace = {
+    labels: CartesianAxisPositionMargins,
+    name: CartesianAxisPositionMargins,
+    nameGap: CartesianAxisPositionMargins,
+    namePositionCurrAxis: CartesianAxisPosition
 };
 
 class Grid implements CoordinateSystemMaster {
@@ -186,21 +196,315 @@ class Grid implements CoordinateSystemMaster {
 
         // Minus label size
         if (isContainLabel) {
+            const reservedSpacePerAxis: ReservedSpace[] = [];
             each(axesList, function (axis) {
+                let labelUnionRect = { width: 0, height: 0};
                 if (!axis.model.get(['axisLabel', 'inside'])) {
-                    const labelUnionRect = estimateLabelUnionRect(axis);
-                    if (labelUnionRect) {
-                        const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
-                        const margin = axis.model.get(['axisLabel', 'margin']);
-                        gridRect[dim] -= labelUnionRect[dim] + margin;
-                        if (axis.position === 'top') {
-                            gridRect.y += labelUnionRect.height + margin;
+                    labelUnionRect = estimateLabelUnionRect(axis);
+                }
+
+                const reservedSpace: ReservedSpace = {
+                    labels: {left: 0, top: 0, right: 0, bottom: 0},
+                    nameGap: {left: 0, top: 0, right: 0, bottom: 0},
+                    name: {left: 0, top: 0, right: 0, bottom: 0},
+                    namePositionCurrAxis: null
+                };
+
+                const nameBoundingRect = computeNameBoundingRect(axis) || { width: 0, height: 0};
+                if (labelUnionRect.width !== 0 || labelUnionRect.height !== 0
+                    || nameBoundingRect.width !== 0 || nameBoundingRect.height !== 0) {
+
+                    let nameLocation = axis.model.get('nameLocation');
+                    const onZeroOfAxis = axis.getAxesOnZeroOf()?.[0];
+                    let namePositionOrthogonalAxis: CartesianAxisPosition = axis.position;
+                    if (onZeroOfAxis && ['start', 'end'].includes(nameLocation)) {
+                        const defaultZero = onZeroOfAxis.isHorizontal() ? 'left' : 'bottom';
+                        namePositionOrthogonalAxis = onZeroOfAxis.inverse
+                            ? inverseCartesianAxisPositionMap[defaultZero]
+                            : defaultZero;
+                    }
+
+                    const nameGap = axis.model.get('nameGap');
+                    const nameRotate = axis.model.get('nameRotate');
+                    const margin = axis.model.get(['axisLabel', 'margin']);
+
+                    if (axis.inverse) {
+                        if (nameLocation === 'start') {
+                            nameLocation = 'end';
                         }
-                        else if (axis.position === 'left') {
-                            gridRect.x += labelUnionRect.width + margin;
+                        else if (nameLocation === 'end') {
+                            nameLocation = 'start';
+                        }
+                    }
+
+                    if (axis.isHorizontal()) {
+                        if (axis.position === 'top') {
+                            reservedSpace.labels.top = labelUnionRect.height + margin;
+                        }
+                        else {
+                            reservedSpace.labels.bottom = labelUnionRect.height + margin;
+                        }
+
+                        if (nameLocation === 'start') {
+                            reservedSpace.namePositionCurrAxis = 'left';
+                            reservedSpace.nameGap.left = nameGap;
+                            reservedSpace.name.left = nameBoundingRect.width;
+                            const sin = Math.sin(nameRotate * (Math.PI / 180));
+                            const cos = Math.cos(nameRotate * (Math.PI / 180));
+                            if (namePositionOrthogonalAxis === 'top') {
+                                // 0: half height
+                                // 90: half height
+                                // 180: half height
+                                // 270: half height
+                                // 1. 0
+                                // 3. 0
+                                // 2. complete height
+                                // 4. complete height
+                                if (sin === 0 || sin === 1 || sin === -1 || cos === 0 || sin === 1 || cos === -1) {
+                                    reservedSpace.name.top =
+                                        nameBoundingRect.height / 2 - reservedSpace.labels.top;
+                                }
+                                else if (sin > 0 && cos < 0 || sin < 0 && cos > 0) {
+                                    reservedSpace.name.top =
+                                        nameBoundingRect.height - reservedSpace.labels.top;
+                                }
+                                else {
+                                    reservedSpace.name.top = 0;
+                                }
+                            }
+                            else {
+                                // 0: half height
+                                // 90: half height
+                                // 180: half height
+                                // 270: half height
+                                // 1. complete height
+                                // 3. complete height
+                                // 2. 0
+                                // 4. 0
+                                if (sin === 0 || sin === 1 || sin === -1 || cos === 0 || sin === 1 || cos === -1) {
+                                    reservedSpace.name.bottom =
+                                        nameBoundingRect.height / 2 - reservedSpace.labels.bottom;
+                                }
+                                else if (sin > 0 && cos > 0 || sin < 0 && cos < 0) {
+                                    reservedSpace.name.bottom =
+                                        nameBoundingRect.height - reservedSpace.labels.bottom;
+                                }
+                                else {
+                                    reservedSpace.name.bottom = 0;
+                                }
+                            }
+                        }
+                        else if (nameLocation === 'end') {
+                            reservedSpace.namePositionCurrAxis = 'right';
+                            reservedSpace.nameGap.right = nameGap;
+                            reservedSpace.name.right = nameBoundingRect.width;
+                            const sin = Math.sin(nameRotate * (Math.PI / 180));
+                            const cos = Math.cos(nameRotate * (Math.PI / 180));
+                            if (namePositionOrthogonalAxis === 'top') {
+                                // 0: half height
+                                // 90: half height
+                                // 180: half height
+                                // 270: half height
+                                // 1. complete height
+                                // 3. complete height
+                                // 2. 0
+                                // 4. 0
+                                if (sin === 0 || sin === 1 || sin === -1 || cos === 0 || sin === 1 || cos === -1) {
+                                    reservedSpace.name.top =
+                                        nameBoundingRect.height / 2 - reservedSpace.labels.top;
+                                }
+                                else if (sin < 0 && cos > 0 || sin > 0 && cos < 0) {
+                                    reservedSpace.name.top =
+                                        nameBoundingRect.height - reservedSpace.labels.top;
+                                }
+                                else {
+                                    reservedSpace.name.top = 0;
+                                }
+                            }
+                            else {
+                                // 0: half height
+                                // 90: half height
+                                // 180: half height
+                                // 270: half height
+                                // 1. 0
+                                // 3. 0
+                                // 2. complete height
+                                // 4. complete height
+                                if (sin === 0 || sin === 1 || sin === -1 || cos === 0 || sin === 1 || cos === -1) {
+                                    reservedSpace.name.bottom =
+                                        nameBoundingRect.height / 2 - reservedSpace.labels.bottom;
+                                }
+                                else if (sin > 0 && cos < 0 || sin < 0 && cos > 0) {
+                                    reservedSpace.name.bottom =
+                                        nameBoundingRect.height - reservedSpace.labels.bottom;
+                                }
+                                else {
+                                    reservedSpace.name.bottom = 0;
+                                }
+                            }
+                        }
+                        else {
+                            if (axis.position === 'top') {
+                                reservedSpace.namePositionCurrAxis = 'top';
+                                reservedSpace.nameGap.top = nameGap;
+                                reservedSpace.name.top = nameBoundingRect.height;
+                            }
+                            else {
+                                reservedSpace.namePositionCurrAxis = 'bottom';
+                                reservedSpace.nameGap.bottom = nameGap;
+                                reservedSpace.name.bottom = nameBoundingRect.height;
+                            }
+                        }
+                    }
+                    else {
+                        if (axis.position === 'left') {
+                            reservedSpace.labels.left = labelUnionRect.width + margin;
+                        }
+                        else {
+                            reservedSpace.labels.right = labelUnionRect.width + margin;
+                        }
+
+                        if (nameLocation === 'start') {
+                            reservedSpace.namePositionCurrAxis = 'bottom';
+                            reservedSpace.nameGap.bottom = nameGap;
+                            reservedSpace.name.bottom = nameBoundingRect.height;
+                            if (namePositionOrthogonalAxis === 'left') {
+                                // 90: 0
+                                // 270: 0
+                                // 2. 0
+                                // 4. 0
+                                // 0: half width
+                                // 180: half width
+                                // 1. complete width
+                                // 3. complete width
+                                const sin = Math.sin(nameRotate * (Math.PI / 180));
+                                const cos = Math.cos(nameRotate * (Math.PI / 180));
+                                if (sin === 0 || cos === 1 || cos === -1) {
+                                    reservedSpace.name.left =
+                                        nameBoundingRect.width / 2 - reservedSpace.labels.left;
+                                }
+                                else if (sin > 0 && cos > 0 || sin < 0 && cos < 0) {
+                                    reservedSpace.name.left =
+                                        nameBoundingRect.width - reservedSpace.labels.left;
+                                }
+                                else {
+                                    reservedSpace.name.left = 0;
+                                }
+                            }
+                            else {
+                                // 90: 0
+                                // 270: 0
+                                // 1. 0
+                                // 3. 0
+                                // 0: half width
+                                // 180: half width
+                                // 2. complete width
+                                // 4. complete width
+                                const sin = Math.sin(nameRotate * (Math.PI / 180));
+                                const cos = Math.cos(nameRotate * (Math.PI / 180));
+                                if (sin === 0 || cos === 1 || cos === -1) {
+                                    reservedSpace.name.right =
+                                        nameBoundingRect.width / 2 - reservedSpace.labels.right;
+                                }
+                                else if (sin > 0 && cos < 0 || sin < 0 && cos > 0) {
+                                    reservedSpace.name.right =
+                                        nameBoundingRect.width - reservedSpace.labels.right;
+                                }
+                                else {
+                                    reservedSpace.name.right = 0;
+                                }
+                            }
+                        }
+                        else if (nameLocation === 'end') {
+                            reservedSpace.namePositionCurrAxis = 'top';
+                            reservedSpace.nameGap.top = nameGap;
+                            reservedSpace.name.top = nameBoundingRect.height;
+                            if (namePositionOrthogonalAxis === 'left') {
+                                // 90: 0
+                                // 270: 0
+                                // 1. 0
+                                // 3. 0
+                                // 0: half width
+                                // 180: half width
+                                // 2. complete width
+                                // 4. complete width
+                                const sin = Math.sin(nameRotate * (Math.PI / 180));
+                                const cos = Math.cos(nameRotate * (Math.PI / 180));
+                                if (sin === 0 || cos === 1 || cos === -1) {
+                                    reservedSpace.name.left =
+                                        nameBoundingRect.width / 2 - reservedSpace.labels.left;
+                                }
+                                else if (sin > 0 && cos < 0 || sin < 0 && cos > 0) {
+                                    reservedSpace.name.left = nameBoundingRect.width - reservedSpace.labels.left;
+                                }
+                                else {
+                                    reservedSpace.name.left = 0;
+                                }
+                            }
+                            else {
+                                // 90: 0
+                                // 270: 0
+                                // 2. 0
+                                // 4. 0
+                                // 0: half width
+                                // 180: half width
+                                // 1. complete width
+                                // 3. complete width
+                                const sin = Math.sin(nameRotate * (Math.PI / 180));
+                                const cos = Math.cos(nameRotate * (Math.PI / 180));
+                                if (sin === 0 || cos === 1 || cos === -1) {
+                                    reservedSpace.name.right =
+                                        nameBoundingRect.width / 2 - reservedSpace.labels.right;
+                                }
+                                else if (sin > 0 && cos > 0 || sin < 0 && cos < 0) {
+                                    reservedSpace.name.right =
+                                        nameBoundingRect.width - reservedSpace.labels.right;
+                                }
+                                else {
+                                    reservedSpace.name.right = 0;
+                                }
+                            }
+                        }
+                        else {
+                            if (axis.position === 'left') {
+                                reservedSpace.namePositionCurrAxis = 'left';
+                                reservedSpace.nameGap.left = nameGap;
+                                reservedSpace.name.left = nameBoundingRect.width;
+                            }
+                            else {
+                                reservedSpace.namePositionCurrAxis = 'right';
+                                reservedSpace.nameGap.right = nameGap;
+                                reservedSpace.name.right = nameBoundingRect.width;
+                            }
                         }
                     }
                 }
+                reservedSpacePerAxis.push(reservedSpace);
+            });
+
+            const maxLabelSpace: CartesianAxisPositionMargins = { left: 0, top: 0, right: 0, bottom: 0};
+            const maxNameAndNameGapSpace: CartesianAxisPositionMargins = { left: 0, top: 0, right: 0, bottom: 0};
+
+            each(['left', 'top', 'right', 'bottom'] as CartesianAxisPosition[], (direction) => {
+                maxLabelSpace[direction] = Math.max(...map(reservedSpacePerAxis, ({ labels }) => labels[direction]));
+                maxNameAndNameGapSpace[direction] =
+                    Math.max(...map(reservedSpacePerAxis, ({ name, nameGap }) => name[direction] + nameGap[direction]));
+            });
+
+            gridRect.x += maxLabelSpace.left + maxNameAndNameGapSpace.left;
+            gridRect.y += maxLabelSpace.top + maxNameAndNameGapSpace.top;
+            gridRect.width -= gridRect.x + maxLabelSpace.right + maxNameAndNameGapSpace.right;
+            gridRect.height -= gridRect.y + maxLabelSpace.bottom + maxNameAndNameGapSpace.bottom;
+
+            const allLabelMargins = reduce(['left', 'top', 'right', 'bottom'] as CartesianAxisPosition[],
+                (acc, key) => ({
+                    ...acc,
+                    [key]: reduce(reservedSpacePerAxis, (sum, { labels }) => sum += labels[key], 0)
+                }), {} as CartesianAxisPositionMargins);
+
+            axesList.forEach((axis, axisIndex) => {
+                axis.model.axisToNameGapStartGap =
+                    allLabelMargins[reservedSpacePerAxis[axisIndex].namePositionCurrAxis];
             });
 
             adjustAxes();

@@ -45,6 +45,7 @@ import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
 import { Dictionary, DimensionName, ScaleTick, TimeScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
+import Axis2D from './cartesian/Axis2D';
 
 
 type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
@@ -338,6 +339,26 @@ export function estimateLabelUnionRect(axis: Axis) {
     }
 
     return rect;
+}
+
+/**
+ * @param axis
+ * @return Be null/undefined if no name.
+ */
+export function computeNameBoundingRect(axis: Axis2D): BoundingRect {
+    const axisModel = axis.model;
+    if (!axisModel.get('name')) {
+        return;
+    }
+    const axisLabelModel = axisModel.getModel('nameTextStyle');
+    const unRotatedNameBoundingRect = axisLabelModel.getTextRect(axisModel.getModel('name').option);
+    const defaultRotationYAxis = (axisModel.get('nameLocation') === 'end' || axisModel.get('nameLocation') === 'start')
+    && !axis.isHorizontal() ? 0 : -90;
+    const defaultRotation = axis.dim === 'x' ? 0 : defaultRotationYAxis;
+    const rotatedNameBoundingRect = rotateTextRect(
+        unRotatedNameBoundingRect, axisModel.getModel('nameRotate').option ?? defaultRotation
+    );
+    return rotatedNameBoundingRect;
 }
 
 function rotateTextRect(textRect: RectLike, rotate: number) {
