@@ -21,25 +21,27 @@ import SeriesModel from '../../model/Series';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import Model from '../../model/Model';
 import {
-    SeriesOption,
     BoxLayoutOptionMixin,
-    OptionDataValue,
-    SeriesLabelOption,
-    ItemStyleOption,
-    LineStyleOption,
-    LayoutOrient,
+    CallbackDataParams,
     ColorString,
-    StatesOptionMixin,
-    OptionDataItemObject,
-    GraphEdgeItemObject,
-    OptionDataValueNumeric,
     DefaultEmphasisFocus,
-    CallbackDataParams
+    GraphEdgeItemObject,
+    ItemStyleOption,
+    LayoutOrient,
+    LineStyleOption,
+    OptionDataItemObject,
+    OptionDataValue,
+    OptionDataValueNumeric,
+    SeriesEncodeOptionMixin,
+    SeriesLabelOption,
+    SeriesOption,
+    StatesOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
-import { LayoutRect } from '../../util/layout';
-import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import {LayoutRect} from '../../util/layout';
+import {createTooltipMarkup} from '../../component/tooltip/tooltipMarkup';
+import createGraphDataFromDataset from "../helper/createGraphDataFromDataset";
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
@@ -92,10 +94,11 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
     depth: number
 }
 
-export interface SankeySeriesOption
-    extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
+export interface SankeySeriesOption extends
+    SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
     SankeyBothStateOption<CallbackDataParams>,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin,
+    SeriesEncodeOptionMixin {
     type?: 'sankey'
 
     /**
@@ -174,6 +177,9 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         }
         if (nodes && links) {
             const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
+            return graph.data;
+        } else {
+            const graph = createGraphDataFromDataset(this, true, beforeLink);
             return graph.data;
         }
         function beforeLink(nodeData: SeriesData, edgeData: SeriesData) {
@@ -271,8 +277,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         const params = super.getDataParams(dataIndex, dataType);
         if (params.value == null && dataType === 'node') {
             const node = this.getGraph().getNodeByIndex(dataIndex);
-            const nodeValue = node.getLayout().value;
-            params.value = nodeValue;
+            params.value = node.getLayout().value;
         }
         return params;
     }
