@@ -29,7 +29,7 @@ import SeriesModel from '../../model/Series';
 import { convertOptionIdName } from '../../util/model';
 import { SankeyEdgeItemOption, SankeyNodeItemOption } from '../sankey/SankeySeries';
 import { throwError } from '../../util/log';
-import { SOURCE_FORMAT_ARRAY_ROWS } from '../../util/types';
+import { SOURCE_FORMAT_ARRAY_ROWS, SOURCE_FORMAT_OBJECT_ROWS } from '../../util/types';
 import { Source } from '../../data/Source';
 
 
@@ -138,6 +138,10 @@ function normalizeGraphDataset(source: Source): SankeyEdgeItemOption[] {
             target,
             value
         }));
+    }
+    else if (source.sourceFormat === SOURCE_FORMAT_OBJECT_ROWS) {
+        const data = source.data as Array<{source: string, target: string, value: number}>;
+        return data.slice(source.startIndex);
     }
 }
 

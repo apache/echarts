@@ -35,11 +35,12 @@ under the License.
 <body>
     <style>
     </style>
+
     <div id="main0"></div>
     <div id="main1"></div>
     <div id="main2"></div>
     <div id="main3"></div>
-    <div id="main4"></div>
+
     <script>
         var objectRows0 = [
             {
@@ -596,9 +597,9 @@ under the License.
             ["Wave", "Electricity grid", 19.013, "errordata"],
             ["Wind", "Electricity grid", 289.366, "errordata"]
         ];
-
-        require('echarts', function (echarts) {
-
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
             var option = {
                 tooltip: {
                     trigger: 'item',
@@ -610,7 +611,6 @@ under the License.
                 series: [
                     {
                         type: 'sankey',
-                        orient: 'vertical',
                         focusNodeAdjacency: true,
                         lineStyle: {
                             color: 'gradient',
@@ -622,7 +622,7 @@ under the License.
 
 
             var chart = testHelper.create(echarts, 'main0', {
-                title: 'horizontal',
+                title: 'objectRows0',
                 option: option
             });
 
@@ -635,8 +635,9 @@ under the License.
                 });
             }
         });
-
-        require('echarts', function (echarts) {
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
 
             var option = {
                 tooltip: {
@@ -649,7 +650,6 @@ under the License.
                 series: [
                     {
                         type: 'sankey',
-                        orient: 'vertical',
                         focusNodeAdjacency: true,
                         lineStyle: {
                             color: 'gradient',
@@ -661,7 +661,7 @@ under the License.
 
 
             var chart = testHelper.create(echarts, 'main1', {
-                title: 'horizontal',
+                title: 'arrayRows1',
                 option: option
             });
 
@@ -674,8 +674,9 @@ under the License.
                 });
             }
         });
-
-        require('echarts', function (echarts) {
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
 
             var option = {
                 tooltip: {
@@ -688,7 +689,6 @@ under the License.
                 series: [
                     {
                         type: 'sankey',
-                        orient: 'vertical',
                         focusNodeAdjacency: true,
                         lineStyle: {
                             color: 'gradient',
@@ -699,8 +699,8 @@ under the License.
             };
 
 
-            var chart = testHelper.create(echarts, 'main0', {
-                title: 'horizontal',
+            var chart = testHelper.create(echarts, 'main2', {
+                title: 'arrayRowsNoColumnHeader',
                 option: option
             });
 
@@ -713,7 +713,9 @@ under the License.
                 });
             }
         });
-        require('echarts', function (echarts) {
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
 
             var option = {
                 tooltip: {
@@ -726,7 +728,6 @@ under the License.
                 series: [
                     {
                         type: 'sankey',
-                        orient: 'vertical',
                         focusNodeAdjacency: true,
                         lineStyle: {
                             color: 'gradient',
@@ -737,8 +738,8 @@ under the License.
             };
 
 
-            var chart = testHelper.create(echarts, 'main0', {
-                title: 'horizontal',
+            var chart = testHelper.create(echarts, 'main3', {
+                title: 'errorArrayRows',
                 option: option
             });
 
