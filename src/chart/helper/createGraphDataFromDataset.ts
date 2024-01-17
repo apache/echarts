@@ -28,6 +28,10 @@ import createSeriesData from './createSeriesData';
 import SeriesModel from '../../model/Series';
 import { convertOptionIdName } from '../../util/model';
 import { SankeyEdgeItemOption, SankeyNodeItemOption } from '../sankey/SankeySeries';
+import { throwError } from '../../util/log';
+import { SOURCE_FORMAT_ARRAY_ROWS } from '../../util/types';
+import { Source } from '../../data/Source';
+
 
 export default function createGraphDataFromDataset(
     seriesModel: SeriesModel,
@@ -37,9 +41,10 @@ export default function createGraphDataFromDataset(
     // dataset support
     const sourceManager = seriesModel.getSourceManager();
     const source = sourceManager.getSource();
-    const edges: SankeyEdgeItemOption[] = source.data as SankeyEdgeItemOption[];
+    const edges: SankeyEdgeItemOption[] = normalizeGraphDataset(source);
     const nodes: SankeyNodeItemOption[] = [];
     const nodeNames: { [key: string]: boolean } = {};
+    // Collect nodes
     edges.forEach(edge => {
         ['source', 'target'].forEach((prop: keyof SankeyEdgeItemOption) => {
             const nodeName = edge[prop] as string;
@@ -51,7 +56,6 @@ export default function createGraphDataFromDataset(
     });
     const graph = new Graph(directed);
     for (let i = 0; i < nodes.length; i++) {
-        console.log(nodes[i])
         graph.addNode(zrUtil.retrieve(
             // Id, name, dataIndex
             nodes[i].id, nodes[i].name, i
@@ -117,4 +121,26 @@ export default function createGraphDataFromDataset(
     graph.update();
 
     return graph;
+}
+
+function normalizeGraphDataset(source: Source): SankeyEdgeItemOption[] {
+    if (!isSupportedFormat(source.sourceFormat)) {
+        let errMsg = '';
+        if (__DEV__) {
+            errMsg = source.sourceFormat + 'dataset format is not supported';
+        }
+        throwError(errMsg);
+    }
+    if (source.sourceFormat === SOURCE_FORMAT_ARRAY_ROWS) {
+        const data = source.data as Array<[string, string, number]>; // [source, target, value]
+        return data.slice(source.startIndex).map(([source, target, value]) => ({
+            source,
+            target,
+            value
+        }));
+    }
+}
+
+function isSupportedFormat(format: string): boolean {
+    return format === 'objectRows' || format === 'arrayRows';
 }
