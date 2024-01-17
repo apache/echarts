@@ -40,6 +40,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
         <script>
 
@@ -72,6 +73,45 @@ under the License.
 
                 chart = myChart = testHelper.create(echarts, 'main0', {
                     title: 'bar in log axis',
+                    option: option,
+                    info: option
+                });
+            });
+
+        </script>
+
+        <script>
+            var chart;
+            var myChart;
+            var option;
+
+            require(['echarts'], function (echarts) {
+                option = {
+                    animation: false,
+                    yAxis: { 
+                        type: 'log'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['First', 'Second']
+                    },
+                    series: [
+                        {
+                            type: 'bar',
+                            data: ['-', 2000],
+
+                            stack: 'main',
+                        },
+                        {
+                            type: 'bar',
+                            data: [2500, 3000],
+                            stack: 'main',
+                        }
+                    ]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main1', {
+                    title: 'There should be three stacked bars',
                     option: option,
                     info: option
                 });
