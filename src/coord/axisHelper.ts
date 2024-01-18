@@ -40,7 +40,7 @@ import {
     TimeAxisLabelFormatterOption,
     ValueAxisBaseOption
 } from './axisCommonTypes';
-import type CartesianAxisModel from './cartesian/AxisModel';
+import CartesianAxisModel, { CartesianAxisPosition, inverseCartesianAxisPositionMap } from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
 import { Dictionary, DimensionName, ScaleTick, TimeScaleTick } from '../util/types';
@@ -419,4 +419,134 @@ export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, 
             seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
         });
     }
+}
+
+export function isNameLocationCenter(nameLocation: string) {
+    return nameLocation === 'middle' || nameLocation === 'center';
+}
+
+function isNameLocationStart(nameLocation: string) {
+    return nameLocation === 'start';
+}
+
+function isNameLocationEnd(nameLocation: string) {
+    return nameLocation === 'end';
+}
+
+
+export type CartesianAxisPositionMargins = {[K in CartesianAxisPosition]: number};
+
+export type ReservedSpace = {
+    labels: CartesianAxisPositionMargins,
+    name: CartesianAxisPositionMargins,
+    nameGap: CartesianAxisPositionMargins,
+    namePositionCurrAxis: CartesianAxisPosition
+};
+
+/*
+ * Compute the reserved space (determined by axis labels and axis names) in each direction
+ */
+export function computeReservedSpace(
+    axis: Axis2D, labelUnionRect: BoundingRect, nameBoundingRect: BoundingRect
+): ReservedSpace {
+    const reservedSpace: ReservedSpace = {
+        labels: {left: 0, top: 0, right: 0, bottom: 0},
+        nameGap: {left: 0, top: 0, right: 0, bottom: 0},
+        name: {left: 0, top: 0, right: 0, bottom: 0},
+        namePositionCurrAxis: null
+    };
+
+    const boundingRectDim = axis.isHorizontal() ? 'height' : 'width';
+
+    if (labelUnionRect) {
+        const margin = axis.model.get(['axisLabel', 'margin']);
+        reservedSpace.labels[axis.position] = labelUnionRect[boundingRectDim] + margin;
+    }
+
+    if (nameBoundingRect) {
+        let nameLocation = axis.model.get('nameLocation');
+        const onZeroOfAxis = axis.getAxesOnZeroOf()?.[0];
+        let namePositionOrthogonalAxis: CartesianAxisPosition = axis.position;
+        if (onZeroOfAxis && ['start', 'end'].includes(nameLocation)) {
+            const defaultZero = onZeroOfAxis.isHorizontal() ? 'left' : 'bottom';
+            namePositionOrthogonalAxis = onZeroOfAxis.inverse
+                ? inverseCartesianAxisPositionMap[defaultZero]
+                : defaultZero;
+        }
+
+        const nameGap = axis.model.get('nameGap');
+        const nameRotate = axis.model.get('nameRotate');
+
+        if (axis.inverse) {
+            if (nameLocation === 'start') {
+                nameLocation = 'end';
+            }
+            else if (nameLocation === 'end') {
+                nameLocation = 'start';
+            }
+        }
+
+        const nameBoundingRectSize = nameBoundingRect[boundingRectDim];
+
+        if (isNameLocationCenter(nameLocation)) {
+            reservedSpace.namePositionCurrAxis = axis.position;
+            reservedSpace.nameGap[axis.position] = nameGap;
+            reservedSpace.name[axis.position] = nameBoundingRectSize;
+        }
+        else {
+            const inverseBoundingRectDim = boundingRectDim === 'height' ? 'width' : 'height';
+            const nameBoundingRectSizeInverseDim = nameBoundingRect?.[inverseBoundingRectDim] || 0;
+
+            const rotationInRadians = nameRotate * (Math.PI / 180);
+            const sin = Math.sin(rotationInRadians);
+            const cos = Math.cos(rotationInRadians);
+
+            const nameRotationIsFirstOrThirdQuadrant = sin > 0 && cos > 0 || sin < 0 && cos < 0;
+            const nameRotationIsSecondOrFourthQuadrant = sin > 0 && cos < 0 || sin < 0 && cos > 0;
+            const nameRotationIsMultipleOf180degrees = sin === 0 || cos === 1 || cos === -1;
+            const nameRotationIsMultipleOf90degrees =
+                nameRotationIsMultipleOf180degrees || sin === 1 || sin === -1 || cos === 0;
+
+            const nameLocationIsStart = isNameLocationStart(nameLocation);
+            const nameLocationIsEnd = isNameLocationEnd(nameLocation);
+
+            const reservedSpacePosition = axis.isHorizontal()
+                ? (nameLocationIsStart ? 'left' : 'right')
+                : (nameLocationIsStart ? 'bottom' : 'top');
+
+            reservedSpace.namePositionCurrAxis = reservedSpacePosition;
+            reservedSpace.nameGap[reservedSpacePosition] = nameGap;
+            reservedSpace.name[reservedSpacePosition] = nameBoundingRectSizeInverseDim;
+
+            const reservedLabelSpace = reservedSpace.labels[namePositionOrthogonalAxis];
+            const reservedNameSpace = nameBoundingRectSize - reservedLabelSpace;
+
+            const orthogonalAxisPositionIsTop = namePositionOrthogonalAxis === 'top';
+            const orthogonalAxisPositionIsBottom = namePositionOrthogonalAxis === 'bottom';
+            const orthogonalAxisPositionIsLeft = namePositionOrthogonalAxis === 'left';
+            const orthogonalAxisPositionIsRight = namePositionOrthogonalAxis === 'right';
+
+            if (axis.isHorizontal() && nameRotationIsMultipleOf90degrees
+                || !axis.isHorizontal() && nameRotationIsMultipleOf180degrees) {
+                    reservedSpace.name[namePositionOrthogonalAxis] = nameBoundingRectSize / 2 - reservedLabelSpace;
+            }
+            else if (
+                axis.isHorizontal() && (
+                    nameLocationIsStart && orthogonalAxisPositionIsTop && nameRotationIsSecondOrFourthQuadrant
+                        || nameLocationIsStart && orthogonalAxisPositionIsBottom && nameRotationIsFirstOrThirdQuadrant
+                        || nameLocationIsEnd && orthogonalAxisPositionIsTop && nameRotationIsFirstOrThirdQuadrant
+                        || nameLocationIsEnd && orthogonalAxisPositionIsBottom && nameRotationIsSecondOrFourthQuadrant
+                )
+                || !axis.isHorizontal() && (
+                    nameLocationIsStart && orthogonalAxisPositionIsLeft && nameRotationIsFirstOrThirdQuadrant
+                        || nameLocationIsStart && orthogonalAxisPositionIsRight && nameRotationIsSecondOrFourthQuadrant
+                        || nameLocationIsEnd && orthogonalAxisPositionIsLeft && nameRotationIsSecondOrFourthQuadrant
+                        || nameLocationIsEnd && orthogonalAxisPositionIsRight && nameRotationIsFirstOrThirdQuadrant
+                )
+            ) {
+                reservedSpace.name[namePositionOrthogonalAxis] = reservedNameSpace;
+            }
+        }
+    }
+    return reservedSpace;
 }

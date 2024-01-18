@@ -28,7 +28,7 @@ import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {shouldShowAllLabels} from '../../coord/axisHelper';
+import {isNameLocationCenter, shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
@@ -601,10 +601,6 @@ function isTwoLabelOverlapped(
     nextRect.applyTransform(matrixUtil.mul([], mRotationBack, next.getLocalTransform()));
 
     return firstRect.intersect(nextRect);
-}
-
-function isNameLocationCenter(nameLocation: string) {
-    return nameLocation === 'middle' || nameLocation === 'center';
 }
 
 
