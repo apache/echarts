@@ -41,7 +41,7 @@ import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import {LayoutRect} from '../../util/layout';
 import {createTooltipMarkup} from '../../component/tooltip/tooltipMarkup';
-import createGraphDataFromDataset from "../helper/createGraphDataFromDataset";
+import createGraphDataFromDataset from '../helper/createGraphDataFromDataset';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
@@ -178,7 +178,8 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         if (nodes && links) {
             const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
             return graph.data;
-        } else {
+        }
+        else {
             const graph = createGraphDataFromDataset(this, true, beforeLink);
             return graph.data;
         }
