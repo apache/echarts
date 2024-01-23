@@ -17,58 +17,78 @@
 * under the License.
 */
 
-export interface ECSSRClientEventParams {}
+// FIXME: use only one definition with
+//  {SSRItemType} from '../../../src/util/innerStore';
+type SSRItemType = 'legend' | 'chart';
+
+export interface ECSSRClientEventParams {
+    type: ECSSREvent;
+    ssrType: SSRItemType;
+    seriesIndex?: number;
+    dataIndex?: number;
+    event: Event;
+}
 
 export interface ECSSRClientOptions {
     on?: {
-        mouseover?: (params: ECSSRClientEventParams) => void,
-        mouseout?: (params: ECSSRClientEventParams) => void,
-        click?: (params: ECSSRClientEventParams) => void
+        mouseover?: (params: ECSSRClientEventParams) => void;
+        mouseout?: (params: ECSSRClientEventParams) => void;
+        click?: (params: ECSSRClientEventParams) => void;
     }
 }
 
 export type ECSSREvent = 'mouseover' | 'mouseout' | 'click';
 
-export function hydrate(dom: HTMLElement, options: ECSSRClientOptions) {
+export function hydrate(dom: HTMLElement, options: ECSSRClientOptions): void {
     const svgRoot = dom.querySelector('svg');
     if (!svgRoot) {
         console.error('No SVG element found in the DOM.');
         return;
     }
 
-    const children = svgRoot.children;
-
-    function getIndex(child: Element, attr: string) {
+    function getIndex(child: Element, attr: string): number | undefined {
         const index = child.getAttribute(attr);
         if (index) {
             return parseInt(index, 10);
         }
         else {
-            return null;
+            return undefined;
         }
     }
 
-    const events = options.on;
-    if (events) {
-        for (let eventName in events) {
-            if (typeof events[eventName as ECSSREvent] === 'function') {
-                for (let i = 0; i < children.length; i++) {
-                    const child = children[i];
-                    const type = child.getAttribute('ecmeta_ssr_type');
-                    const silent = child.getAttribute('ecmeta_silent') === 'true';
-                    if (type && !silent) {
-                        child.addEventListener(eventName, e => {
-                            (events[eventName as ECSSREvent] as Function)({
-                                type: eventName,
-                                ssrType: type,
-                                seriesIndex: getIndex(child, 'ecmeta_series_index'),
-                                dataIndex: getIndex(child, 'ecmeta_data_index'),
-                                event: e,
-                            });
-                        });
-                    }
-                }
-            }
+    const listeners = options.on || {};
+    for (const rawEvtName in listeners) {
+        if (!listeners.hasOwnProperty(rawEvtName)) {
+            continue;
         }
+        const eventName = rawEvtName as ECSSREvent;
+        const listener = listeners[eventName as ECSSREvent];
+        if (!isFunction(listener)) {
+            continue;
+        }
+
+        svgRoot.addEventListener(eventName, event => {
+            const targetEl = event.target as Element;
+            if (!targetEl || !isFunction(targetEl.getAttribute)) {
+                return;
+            }
+            const type = targetEl.getAttribute('ecmeta_ssr_type');
+            const silent = targetEl.getAttribute('ecmeta_silent') === 'true';
+            if (!type || silent) {
+                return;
+            }
+            listener({
+                type: eventName,
+                ssrType: type as SSRItemType,
+                seriesIndex: getIndex(targetEl, 'ecmeta_series_index'),
+                dataIndex: getIndex(targetEl, 'ecmeta_data_index'),
+                event
+            });
+        });
+
     }
+}
+
+function isFunction(value: any): value is Function {
+    return typeof value === 'function';
 }

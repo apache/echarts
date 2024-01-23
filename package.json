@@ -59,7 +59,7 @@
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "checktype": "tsc --noEmit",
-    "lint": "npx eslint --cache --cache-location node_modules/.cache/eslint src/**/*.ts extension-src/**/*.ts",
+    "lint": "npx eslint --cache --cache-location node_modules/.cache/eslint src/**/*.ts ssr/client/src/**/*.ts extension-src/**/*.ts",
     "lint:fix": "npx eslint --fix src/**/*.ts extension-src/**/*.ts",
     "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
   },
@@ -107,7 +107,7 @@
     ".": {
       "types": "./index.d.ts",
       "import": "./index.js",
-      "require": "./dist/echarts.js"
+      "require": "./index.js"
     },
     "./core": "./core.js",
     "./core.js": "./core.js",
@@ -136,6 +136,11 @@
     "./lib/echarts.js": "./lib/echarts.js",
     "./lib/extension": "./lib/extension.js",
     "./lib/extension.js": "./lib/extension.js",
+    "./ssr/client/index": {
+      "types": "./ssr/client/index.d.ts",
+      "import": "./ssr/client/index.js",
+      "require": "./ssr/client/dist/index.js"
+    },
     "./*.js": "./*.js",
     "./*.ts": "./*.ts",
     "./*.json": "./*.json",
