@@ -108,7 +108,7 @@ exports.createECharts = function (opt = {}) {
             opt,
             {
                 name: 'echarts',
-                // Ignore default exports, which is only for compitable code like:
+                // Ignore default exports, which is only for compatible code like:
                 // import echarts from 'echarts/lib/echarts';
                 exports: 'named',
                 format: format
@@ -170,6 +170,22 @@ exports.createMyTransform = function (opt) {
             opt,
             {
                 name: 'myTransform'
+            }
+        )
+    };
+};
+
+exports.createSSRClient = function (opt) {
+    const input = nodePath.resolve(ecDir, `ssr/client/lib/index.js`);
+
+    return {
+        plugins: [nodeResolvePlugin()],
+        input: input,
+        output: createOutputs(
+            nodePath.resolve(ecDir, `ssr/client/dist/index`),
+            opt,
+            {
+                name: 'echarts-ssr-client'
             }
         )
     };

@@ -432,7 +432,7 @@ export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = DataStoreDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
-    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'itemChildGroupId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
 export interface DataVisualDimensions {
@@ -444,6 +444,7 @@ export interface DataVisualDimensions {
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
     itemGroupId?: DimensionIndex;
+    itemChildGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
@@ -618,6 +619,7 @@ export type OptionDataItemObject<T> = {
     id?: OptionId;
     name?: OptionName;
     groupId?: OptionId;
+    childGroupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
 };
@@ -637,7 +639,7 @@ export interface GraphEdgeItemObject<
      */
     target?: string | number
 }
-export type OptionDataValue = string | number | Date;
+export type OptionDataValue = string | number | Date | null | undefined;
 
 export type OptionDataValueNumeric = number | '-';
 export type OptionDataValueCategory = string;
@@ -667,6 +669,7 @@ export interface OptionEncodeVisualDimensions {
     // Which is useful in prepresenting the transition key of drilldown/up animation.
     // Or hover linking.
     itemGroupId?: OptionEncodeValue;
+    childGroupdId?: OptionEncodeValue;
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue | undefined
@@ -693,6 +696,7 @@ export interface CallbackDataParams {
     dataType?: SeriesDataType;
     value: OptionDataItem | OptionDataValue;
     color?: ZRColor;
+    opacity?: number;
     borderColor?: string;
     dimensionNames?: DimensionName[];
     encode?: DimensionUserOuputEncode;
@@ -1264,7 +1268,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Will be ignored if tooltip.formatter is specified.
      */
-    valueFormatter?: (value: OptionDataValue | OptionDataValue[]) => string
+    valueFormatter?: (value: OptionDataValue | OptionDataValue[], dataIndex: number) => string
     /**
      * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
      * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',
@@ -1674,7 +1678,7 @@ export interface SeriesStackOptionMixin {
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | 'lttb' | SamplingFunc
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'minmax' | 'sum' | 'lttb' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {

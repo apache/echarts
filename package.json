@@ -45,10 +45,11 @@
     "build:i18n": "node build/build-i18n.js",
     "build:lib": "node build/build.js --prepublish",
     "build:extension": "node build/build.js --type extension",
+    "build:ssr": "node build/build.js --type ssr",
     "dev:fast": "node build/build-i18n.js && node build/dev-fast.js",
     "dev": "npx -y concurrently -n build,server \"npm run dev:fast\" \"npx -y http-server -c-1 -s -o test\"",
     "prepare": "npm run build:lib && husky install",
-    "release": "npm run build:lib && npm run build:i18n && npm run build && npm run build:esm && npm run build:extension",
+    "release": "npm run build:lib && npm run build:i18n && npm run build && npm run build:esm && npm run build:extension && npm run build:ssr",
     "help": "node build/build.js --help",
     "test:visual": "node test/runTest/server.js",
     "test": "npx jest --config test/ut/jest.config.js",
@@ -58,13 +59,13 @@
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "checktype": "tsc --noEmit",
-    "lint": "npx eslint --cache --cache-location node_modules/.cache/eslint src/**/*.ts extension-src/**/*.ts",
+    "lint": "npx eslint --cache --cache-location node_modules/.cache/eslint src/**/*.ts ssr/client/src/**/*.ts extension-src/**/*.ts",
     "lint:fix": "npx eslint --fix src/**/*.ts extension-src/**/*.ts",
     "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "5.4.4"
+    "zrender": "npm:zrender-nightly@^5.4.4-dev.20231116"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
@@ -100,5 +101,49 @@
     "terser": "^5.16.1",
     "ts-jest": "^26.4.3",
     "typescript": "4.4.3"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.js"
+    },
+    "./core": "./core.js",
+    "./core.js": "./core.js",
+    "./charts": "./charts.js",
+    "./charts.js": "./charts.js",
+    "./components": "./components.js",
+    "./components.js": "./components.js",
+    "./features": "./features.js",
+    "./features.js": "./features.js",
+    "./renderers": "./renderers.js",
+    "./renderers.js": "./renderers.js",
+    "./index.blank": "./index.blank.js",
+    "./index.blank.js": "./index.blank.js",
+    "./index.common": "./index.common.js",
+    "./index.common.js": "./index.common.js",
+    "./index.simple": "./index.simple.js",
+    "./index.simple.js": "./index.simple.js",
+    "./index": "./index.js",
+    "./index.js": "./index.js",
+    "./extension/dataTool": "./extension/dataTool/index.js",
+    "./extension/dataTool/index": "./extension/dataTool/index.js",
+    "./extension/dataTool/index.js": "./extension/dataTool/index.js",
+    "./extension/bmap/bmap": "./extension/bmap/bmap.js",
+    "./extension/bmap/bmap.js": "./extension/bmap/bmap.js",
+    "./lib/echarts": "./lib/echarts.js",
+    "./lib/echarts.js": "./lib/echarts.js",
+    "./lib/extension": "./lib/extension.js",
+    "./lib/extension.js": "./lib/extension.js",
+    "./ssr/client/index": {
+      "types": "./ssr/client/index.d.ts",
+      "import": "./ssr/client/index.js",
+      "require": "./ssr/client/dist/index.js"
+    },
+    "./*.js": "./*.js",
+    "./*.ts": "./*.ts",
+    "./*.json": "./*.json",
+    "./*": "./*.js"
   }
 }

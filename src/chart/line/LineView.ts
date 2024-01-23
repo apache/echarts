@@ -644,7 +644,7 @@ class LineView extends ChartView {
 
         const lineGroup = this._lineGroup;
 
-        const hasAnimation = !ecModel.ssr && seriesModel.isAnimationEnabled();
+        const hasAnimation = !ecModel.ssr && seriesModel.get('animation');
 
         const isAreaChart = !areaStyleModel.isEmpty();
 

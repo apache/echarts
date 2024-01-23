@@ -314,7 +314,7 @@ export function querySeriesUpstreamDatasetModel(
 export function queryDatasetUpstreamDatasetModels(
     datasetModel: DatasetModel
 ): DatasetModel[] {
-    // Only these attributes declared, we by defualt reference to `datasetIndex: 0`.
+    // Only these attributes declared, we by default reference to `datasetIndex: 0`.
     // Otherwise, no reference.
     if (!datasetModel.get('transform', true)
         && !datasetModel.get('fromTransformResult', true)
