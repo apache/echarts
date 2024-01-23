@@ -71,25 +71,25 @@ under the License.
                     height: 300,
                     renderer: 'svg',
                     ssr: true
-                })
+                });
 
                 const width = serverChart.getWidth();
                 const height = serverChart.getHeight();
 
                 const seriesData = [{
-                        type: 'bar',
-                        name: 'a',
-                        data: [31, 43, 23, 54, 65, 23, 43]
-                    }, {
-                        type: 'bar',
-                        name: 'b',
-                        data: [63, 53, 73, 23, 43, 23, 43]
-                    }, {
-                        type: 'bar',
-                        name: 'silent',
-                        data: [32, 55, 31, 65, 54, 43, 65],
-                        silent: true
-                    }];
+                    type: 'bar',
+                    name: 'a',
+                    data: [31, 43, 23, 54, 65, 23, 43]
+                }, {
+                    type: 'bar',
+                    name: 'b',
+                    data: [63, 53, 73, 23, 43, 23, 43]
+                }, {
+                    type: 'bar',
+                    name: 'silent',
+                    data: [32, 55, 31, 65, 54, 43, 65],
+                    silent: true
+                }];
 
                 const option = {
                     legend: {
@@ -115,7 +115,7 @@ under the License.
                 function update() {
                     main.innerHTML = serverChart.renderToSVGString();
 
-                    const clientChart = ssrClient.hydrate(main, {
+                    ssrClient.hydrate(main, {
                         on: {
                             mouseover: (params) => {
                                 // console.log(params);
@@ -197,7 +197,8 @@ under the License.
                 const main = document.getElementById('big-data');
 
                 console.time('renderToSVGString');
-                main.innerHTML = serverChart.renderToSVGString();
+                const html = serverChart.renderToSVGString();
+                main.innerHTML = html;
                 console.timeEnd('renderToSVGString');
                 const size = main.innerHTML.length;
                 console.log('SVG size:', size > 1e6 ? (size / 1e6).toFixed(1) + 'M' : (size / 1e3).toFixed(1) + 'K');
