@@ -108,7 +108,7 @@ exports.createECharts = function (opt = {}) {
             opt,
             {
                 name: 'echarts',
-                // Ignore default exports, which is only for compitable code like:
+                // Ignore default exports, which is only for compatible code like:
                 // import echarts from 'echarts/lib/echarts';
                 exports: 'named',
                 format: format

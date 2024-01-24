@@ -156,7 +156,7 @@ export interface ValueAxisBaseOption extends NumericAxisBaseOptionCommon {
     /**
      * Optional value can be:
      * + `false`: always include value 0.
-     * + `false`: always include value 0.
+     * + `true`: the axis may not contain zero position.
      */
      scale?: boolean;
 }

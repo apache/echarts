@@ -23,6 +23,7 @@
     "include": [
         "src/**/*.ts",
         "extension-src/**/*.ts",
+        "ssr/client/**/*.ts",
         "test/lib/myTransform/src/**/*.ts"
     ]
 }

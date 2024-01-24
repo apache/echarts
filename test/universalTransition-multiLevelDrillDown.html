@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style></style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+        <script>
+            window.ANIMATION_DURATION_UPDATE = 1000;
+        </script>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var myChart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Test Case 1',
+                        '(1) 3 levels: bar <--> bar <--> bar',
+                        '(2) only one-series-to-one-series transitions',
+                        '(3) groupId and childGroupID are read from encode (by dimension)'
+                    ],
+                    height: 300
+                });
+
+                // level 1 (root)
+                const data_things = [
+                    ['Animals', 3, 'things', 'animals'],
+                    ['Fruits', 3, 'things', 'fruits'],
+                    ['Cars', 2, 'things', 'cars']
+                ];
+                // level 2
+                const data_animals = [
+                    ['Dogs', 3, 'animals', 'dogs'],
+                    ['Cats', 4, 'animals', 'cats'],
+                    ['Birds', 3, 'animals', 'birds']
+                ];
+                const data_fruits = [
+                    ['Pomes', 3, 'fruits', 'pomes'],
+                    ['Berries', 4, 'fruits', 'berries'],
+                    ['Citrus', 9, 'fruits', 'citrus']
+                ];
+                const data_cars = [
+                    ['SUV', 5, 'cars', 'suv'],
+                    ['Sports', 3, 'cars', 'sports']
+                ];
+                // level 3
+                const data_dogs = [
+                    ['Corgi', 5, 'dogs'], // the "childest" data need not to be specified a `childGroupId`
+                    ['Bulldog', 6, 'dogs'],
+                    ['Shiba Inu', 7, 'dogs']
+                ];
+                const data_cats = [
+                    ['American Shorthair', 2, 'cats'],
+                    ['British Shorthair', 9, 'cats'],
+                    ['Bengal', 2, 'cats'],
+                    ['Birman', 2, 'cats']
+                ];
+                const data_birds = [
+                    ['Goose', 1, 'birds'],
+                    ['Owl', 2, 'birds'],
+                    ['Eagle', 8, 'birds']
+                ];
+                const data_pomes = [
+                    ['Apple', 9, 'pomes'],
+                    ['Pear', 2, 'pomes'],
+                    ['Kiwi', 1, 'pomes']
+                ];
+                const data_berries = [
+                    ['Blackberries', 7, 'berries'],
+                    ['Cranberries', 2, 'berries'],
+                    ['Strawberries', 9, 'berries'],
+                    ['Grapes', 4, 'berries']
+                ];
+                const data_citrus = [
+                    ['Oranges', 3, 'citrus'],
+                    ['Grapefruits', 7, 'citrus'],
+                    ['Tangerines', 8, 'citrus'],
+                    ['Lemons', 7, 'citrus'],
+                    ['Limes', 3, 'citrus'],
+                    ['Kumquats', 2, 'citrus'],
+                    ['Citrons', 3, 'citrus'],
+                    ['Tengelows', 3, 'citrus'],
+                    ['Uglifruit', 1, 'citrus']
+                ];
+                const data_suv = [
+                    ['Mazda CX-30', 7, 'suv'],
+                    ['BMW X2', 7, 'suv'],
+                    ['Ford Bronco Sport', 2, 'suv'],
+                    ['Toyota RAV4', 9, 'suv'],
+                    ['Porsche Macan', 4, 'suv']
+                ];
+                const data_sports = [
+                    ['Porsche 718 Cayman', 2, 'sports'],
+                    ['Porsche 911 Turbo', 2, 'sports'],
+                    ['Ferrari F8', 4, 'sports']
+                ];
+                const allLevelData = [
+                    data_things,
+                    data_animals,
+                    data_fruits,
+                    data_cars,
+                    data_dogs,
+                    data_cats,
+                    data_birds,
+                    data_pomes,
+                    data_berries,
+                    data_citrus,
+                    data_suv,
+                    data_sports
+                ];
+
+                const allOptions = {};
+
+                allLevelData.forEach((data, index) => {
+                    // since dataItems of each data have same groupId in this
+                    // example, we can use groupId as optionId for optionStack.
+                    const optionId = data[0][2];
+
+                    const option = {
+                        id: optionId, // option.id is not a property of emyCharts option model, but can be accessed if we provide it
+                        xAxis: {
+                            type: 'category'
+                        },
+                        yAxis: {
+                            minInterval: 1
+                        },
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                        series: {
+                            type: 'bar',
+                            dimensions: ['x', 'y', 'groupId', 'childGroupId'],
+                            encode: {
+                                x: 'x',
+                                y: 'y',
+                                itemGroupId: 'groupId',
+                                itemChildGroupId: 'childGroupId'
+                            },
+                            data,
+                            universalTransition: {
+                                enabled: true,
+                                divideShape: 'clone'
+                            }
+                        },
+                        graphic: [
+                            {
+                                type: 'text',
+                                left: 50,
+                                top: 20,
+                                style: {
+                                    text: 'Back',
+                                    fontSize: 18,
+                                    fill: 'grey'
+                                },
+                                onclick: function () {
+                                    goBack();
+                                }
+                            }
+                        ]
+                    };
+                    allOptions[optionId] = option;
+                });
+
+                // A stack to remember previous option id
+                const optionStack = [];
+
+                const goForward = (optionId) => {
+                    optionStack.push(myChart.getOption().id); // push current option id into stack.
+                    myChart.setOption(allOptions[optionId]);
+                };
+
+                const goBack = () => {
+                    if (optionStack.length === 0) {
+                        console.log('Already in root level!');
+                    } else {
+                        console.log('Go back to previous level.');
+                        myChart.setOption(allOptions[optionStack.pop()]);
+                    }
+                };
+
+                option = allOptions['things']; // The initial option is the root data option
+
+                myChart.on('click', 'series', (params) => {
+                    const dataItem = params.data;
+                    if (dataItem[3]) {
+                        // If current params is not belong to the "childest" data, it has data[3]
+                        const childGroupId = dataItem[3];
+                        // since we use groupId as optionId in this example,
+                        // we use childGroupId as the next level optionId.
+                        const nextOptionId = childGroupId;
+                        goForward(nextOptionId);
+                    }
+                });
+
+                option && myChart.setOption(option);
+
+                window.onresize = myChart.resize;
+            });
+        </script>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var myChart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Test Case 2',
+                        '(1) 3 levels: bar <--> pie <--> line',
+                        '(2) only one-series-to-one-series transitions',
+                        '(3) groupId and childGroupID are read from raw dataItem'
+                    ],
+                    height: 300
+                });
+
+                // level 1 (root)
+                const data_orgs = [
+                    ['Org X', 15000, 'orgs', 'org_x'],
+                    ['Org Y', 10000, 'orgs', 'org_y']
+                ];
+                // level 2
+                const data_org_x = [
+                    ['Repo X1', 8000, 'org_x', 'repo_x1'],
+                    ['Repo X2', 5000, 'org_x', 'repo_x2'],
+                    ['Repo X3', 2000, 'org_x', 'repo_x3']
+                ];
+                const data_org_y = [
+                    ['Repo Y1', 7000, 'org_y', 'repo_y1'],
+                    ['Repo Y2', 3000, 'org_y', 'repo_y2']
+                ];
+                // level 3
+                const data_repo_x1 = [
+                    ['Q1', 1500, 'repo_x1'], // the "childest" data need not to be specified a `childGroupId`
+                    ['Q2', 2000, 'repo_x1'],
+                    ['Q3', 2000, 'repo_x1'],
+                    ['Q4', 2500, 'repo_x1']
+                ];
+                const data_repo_x2 = [
+                    ['Q1', 700, 'repo_x2'],
+                    ['Q2', 1000, 'repo_x2'],
+                    ['Q3', 1300, 'repo_x2'],
+                    ['Q4', 2000, 'repo_x2']
+                ];
+                const data_repo_x3 = [
+                    ['Q1', 500, 'repo_x3'],
+                    ['Q2', 400, 'repo_x3'],
+                    ['Q3', 500, 'repo_x3'],
+                    ['Q4', 600, 'repo_x3']
+                ];
+                const data_repo_y1 = [
+                    ['Q1', 1500, 'repo_y1'],
+                    ['Q2', 2000, 'repo_y1'],
+                    ['Q3', 2000, 'repo_y1'],
+                    ['Q4', 1500, 'repo_y1']
+                ];
+                const data_repo_y2 = [
+                    ['Q1', 1000, 'repo_y2'],
+                    ['Q2', 500, 'repo_y2'],
+                    ['Q3', 900, 'repo_y2'],
+                    ['Q4', 600, 'repo_y2']
+                ];
+                const barData = [data_orgs];
+                const pieData = [data_org_x, data_org_y];
+                const lineData = [data_repo_x1, data_repo_x2, data_repo_x3, data_repo_y1, data_repo_y2];
+                const allOptions = {};
+
+                barData.forEach((data) => {
+                    // since dataItems of each data have same groupId in this
+                    // example, we can use groupId as optionId for optionStack.
+                    const optionId = data[0][2];
+
+                    const option = {
+                        id: optionId, // option.id is not a property of emyCharts option model, but can be accessed if we provide it
+                        xAxis: {
+                            show: true,
+                            name: '',
+                            type: 'category',
+                            data: data.map((item) => item[0])
+                        },
+                        yAxis: {
+                            show: true,
+                            name: 'Git Commits',
+                            nameLocation: 'center',
+                            nameGap: 50,
+                            minInterval: 1
+                        },
+                        tooltip: {},
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                        series: {
+                            type: 'bar',
+                            data: data.map((item) => {
+                                return {
+                                    value: item[1],
+                                    groupId: item[2],
+                                    childGroupId: item[3]
+                                };
+                            }),
+                            universalTransition: {
+                                enabled: true,
+                                divideShape: 'split'
+                            }
+                        },
+                        graphic: [
+                            {
+                                type: 'text',
+                                left: 50,
+                                top: 20,
+                                style: {
+                                    text: 'Back',
+                                    fontSize: 18,
+                                    fill: 'grey'
+                                },
+                                onclick: function () {
+                                    goBack();
+                                }
+                            }
+                        ]
+                    };
+                    allOptions[optionId] = option;
+                });
+
+                pieData.forEach((data) => {
+                    // since dataItems of each data have same groupId in this
+                    // example, we can use groupId as optionId for optionStack.
+                    const optionId = data[0][2];
+
+                    const option = {
+                        id: optionId, // option.id is not a property of emyCharts option model, but can be accessed if we provide it
+                        xAxis: { show: false },
+                        yAxis: { show: false },
+                        tooltip: {},
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                        series: {
+                            type: 'pie',
+                            data: data.map((item) => {
+                                return {
+                                    name: item[0],
+                                    value: item[1],
+                                    groupId: item[2],
+                                    childGroupId: item[3]
+                                };
+                            }),
+                            universalTransition: {
+                                enabled: true,
+                                divideShape: 'split'
+                            }
+                        },
+                        graphic: [
+                            {
+                                type: 'text',
+                                left: 50,
+                                top: 20,
+                                style: {
+                                    text: 'Back',
+                                    fontSize: 18,
+                                    fill: 'grey'
+                                },
+                                onclick: function () {
+                                    goBack();
+                                }
+                            }
+                        ]
+                    };
+                    allOptions[optionId] = option;
+                });
+
+                lineData.forEach((data) => {
+                    // since dataItems of each data have same groupId in this
+                    // example, we can use groupId as optionId for optionStack.
+                    const optionId = data[0][2];
+
+                    const option = {
+                        id: optionId, // option.id is not a property of emyCharts option model, but can be accessed if we provide it
+                        xAxis: {
+                            show: true,
+                            type: 'category',
+                            name: optionId,
+                            data: data.map((item) => item[0])
+                        },
+                        yAxis: {
+                            show: true,
+                            minInterval: 1
+                        },
+                        tooltip: {},
+                        animationDurationUpdate: ANIMATION_DURATION_UPDATE,
+                        series: {
+                            type: 'line',
+                            data: data.map((item) => {
+                                return {
+                                    value: item[1],
+                                    groupId: item[2]
+                                };
+                            }),
+                            universalTransition: {
+                                enabled: true,
+                                divideShape: 'split'
+                            }
+                        },
+                        graphic: [
+                            {
+                                type: 'text',
+                                left: 50,
+                                top: 20,
+                                style: {
+                                    text: 'Back',
+                                    fontSize: 18,
+                                    fill: 'grey'
+                                },
+                                onclick: function () {
+                                    goBack();
+                                }
+                            }
+                        ]
+                    };
+                    allOptions[optionId] = option;
+                });
+
+                // A stack to remember previous option id
+                const optionStack = [];
+
+                const goForward = (optionId) => {
+                    optionStack.push(myChart.getOption().id); // push current option id into stack.
+                    myChart.setOption(allOptions[optionId]);
+                };
+
+                const goBack = () => {
+                    if (optionStack.length === 0) {
+                        console.log('Already in root level!');
+                    } else {
+                        console.log('Go back to previous level.');
+                        myChart.setOption(allOptions[optionStack.pop()]);
+                    }
+                };
+
+                option = allOptions['orgs']; // The initial option is the root data option
+
+                myChart.on('click', 'series', (params) => {
+                    const dataItem = params.data;
+                    if (dataItem.childGroupId) {
+                        const nextOptionId = dataItem.childGroupId;
+                        goForward(nextOptionId);
+                    }
+                });
+
+                option && myChart.setOption(option);
+
+                window.onresize = myChart.resize;
+            });
+        </script>
+    </body>
+</html>
