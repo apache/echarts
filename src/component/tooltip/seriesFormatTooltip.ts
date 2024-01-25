@@ -48,7 +48,7 @@ export function defaultSeriesFormatTooltip(opt: {
     const value = series.getRawValue(dataIndex) as any;
     const isValueArr = isArray(value);
     const markerColor = retrieveVisualColorForTooltipMarker(series, dataIndex);
-    const markerOpacity = retrieveVisualOpacityForTooltipMarker(series, dataIndex);
+    const markerOpacity = retrieveVisualOpacityForTooltipMarker(series); ;
 
     // Complicated rule for pretty tooltip.
     let inlineValue;
