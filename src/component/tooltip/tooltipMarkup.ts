@@ -480,9 +480,8 @@ export function retrieveVisualColorForTooltipMarker(
 
 export function retrieveVisualOpacityForTooltipMarker(
     series: SeriesModel,
-    dataIndex: number
 ): number {
-    const style = series.getData().getItemVisual(dataIndex, 'style');
+    const style = series.getData().getVisual('style');
     const opacity = style.opacity;
     return opacity;
 }
