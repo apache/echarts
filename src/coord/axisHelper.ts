@@ -352,9 +352,7 @@ export function computeNameBoundingRect(axis: Axis2D): BoundingRect {
     }
     const axisLabelModel = axisModel.getModel('nameTextStyle');
     const unRotatedNameBoundingRect = axisLabelModel.getTextRect(axisModel.getModel('name').option);
-    const defaultRotationYAxis = (axisModel.get('nameLocation') === 'end' || axisModel.get('nameLocation') === 'start')
-    && !axis.isHorizontal() ? 0 : -90;
-    const defaultRotation = axis.dim === 'x' ? 0 : defaultRotationYAxis;
+    const defaultRotation = axis.isHorizontal() || !isNameLocationCenter(axisModel.get('nameLocation')) ? 0 : -90;
     const rotatedNameBoundingRect = rotateTextRect(
         unRotatedNameBoundingRect, axisModel.getModel('nameRotate').option ?? defaultRotation
     );
