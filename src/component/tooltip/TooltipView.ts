@@ -573,7 +573,7 @@ class TooltipView extends ComponentView {
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
                     cbParams.marker = markupStyleCreator.makeTooltipMarker(
-                        'item', convertToColorString(cbParams.color), renderMode, cbParams.opacity
+                        'item', convertToColorString(cbParams.color), renderMode
                     );
 
                     const seriesTooltipResult = normalizeTooltipFormatResult(
