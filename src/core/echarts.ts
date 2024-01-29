@@ -427,18 +427,20 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         }
 
-        zrender.registerSSRDataGetter(el => {
-            const ecData = getECData(el);
-            const dataIndex = ecData.dataIndex;
-            if (dataIndex == null) {
-                return;
-            }
-            const hashMap = createHashMap();
-            hashMap.set('series_index', ecData.seriesIndex);
-            hashMap.set('data_index', dataIndex);
-            ecData.ssrType && hashMap.set('ssr_type', ecData.ssrType);
-            return hashMap;
-        });
+        if (opts.ssr) {
+            zrender.registerSSRDataGetter(el => {
+                const ecData = getECData(el);
+                const dataIndex = ecData.dataIndex;
+                if (dataIndex == null) {
+                    return;
+                }
+                const hashMap = createHashMap();
+                hashMap.set('series_index', ecData.seriesIndex);
+                hashMap.set('data_index', dataIndex);
+                ecData.ssrType && hashMap.set('ssr_type', ecData.ssrType);
+                return hashMap;
+            });
+        }
 
         const zr = this._zr = zrender.init(dom, {
             renderer: opts.renderer || defaultRenderer,
