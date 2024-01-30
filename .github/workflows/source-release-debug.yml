@@ -130,7 +130,7 @@ jobs:
       - name: Build source release
         run: |
           npm ci
-          cat package-lock.json
+          npx jest --version
           npm run release
           npm run test
           npm run test:dts
