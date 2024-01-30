@@ -127,7 +127,9 @@
             gauge: 'Indikátor',
             pictorialBar: 'Obrázkový sloupcový graf',
             themeRiver: 'Theme River Map',
-            sunburst: 'Vícevrstvý prstencový graf'
+            sunburst: 'Vícevrstvý prstencový graf',
+            custom: 'Graficu persunalizatu',
+            chart: 'Graf'
         }
     },
     aria: {
