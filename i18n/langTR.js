@@ -127,7 +127,9 @@ var localeObj = {
             gauge: 'Gösterge',
             pictorialBar: 'Resimli Çubuk Grafiği',
             themeRiver: 'Akış Haritası',
-            sunburst: 'Güeş Patlaması Tablosu'
+            sunburst: 'Güeş Patlaması Tablosu',
+            custom: 'Özel grafik',
+            chart: 'Grafiği'
         }
     },
     aria: {

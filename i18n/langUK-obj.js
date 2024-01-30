@@ -127,7 +127,9 @@ var localeObj = {
             gauge: 'Шкала',
             pictorialBar: 'Стовпчик-картинка',
             themeRiver: 'Тематична ріка',
-            sunburst: 'Сонячне проміння'
+            sunburst: 'Сонячне проміння',
+            custom: 'Спеціальна діаграма',
+            chart: 'діаграма'
         }
     },
     aria: {
