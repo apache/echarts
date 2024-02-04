@@ -107,7 +107,7 @@
     ".": {
       "types": "./index.d.ts",
       "import": "./index.js",
-      "require": "./index.js"
+      "require": "./dist/echarts.js"
     },
     "./core": "./core.js",
     "./core.js": "./core.js",
@@ -200,6 +200,18 @@
     "./lib/component/visualMap": "./lib/component/visualMap.js",
     "./lib/component/visualMapContinuous": "./lib/component/visualMapContinuous.js",
     "./lib/component/visualMapPiecewise": "./lib/component/visualMapPiecewise.js",
+    "./dist/echarts.common": "./dist/echarts.common.js",
+    "./dist/echarts.common.min": "./dist/echarts.common.min.js",
+    "./dist/echarts.esm": "./dist/echarts.esm.mjs",
+    "./dist/echarts.esm.min": "./dist/echarts.esm.min.mjs",
+    "./dist/echarts": "./dist/echarts.js",
+    "./dist/echarts.min": "./dist/echarts.min.js",
+    "./dist/echarts.simple": "./dist/echarts.simple.js",
+    "./dist/echarts.simple.min": "./dist/echarts.simple.min.js",
+    "./dist/extension/bmap": "./dist/extension/bmap.js",
+    "./dist/extension/bmap.min": "./dist/extension/bmap.min.js",
+    "./dist/extension/dataTool": "./dist/extension/dataTool.js",
+    "./dist/extension/dataTool.min": "./dist/extension/dataTool.min.js",
     "./*": "./*"
   }
 }
