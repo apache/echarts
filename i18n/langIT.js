@@ -127,7 +127,9 @@ var localeObj = {
             gauge: 'Gauge',
             pictorialBar: 'Pictorial bar',
             themeRiver: 'Theme River Map',
-            sunburst: 'Radiale'
+            sunburst: 'Radiale',
+            custom: 'Egyedi diagram',
+            chart: 'Grafico'
         }
     },
     aria: {

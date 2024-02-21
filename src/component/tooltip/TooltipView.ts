@@ -463,6 +463,11 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         else if (el) {
+            const ecData = getECData(el);
+            if (ecData.ssrType === 'legend') {
+                // Don't trigger tooltip for legend tooltip item
+                return;
+            }
             this._lastDataByCoordSys = null;
 
             let seriesDispatcher: Element;
@@ -573,7 +578,7 @@ class TooltipView extends ComponentView {
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
                     cbParams.marker = markupStyleCreator.makeTooltipMarker(
-                        'item', convertToColorString(cbParams.color), renderMode, cbParams.opacity
+                        'item', convertToColorString(cbParams.color), renderMode
                     );
 
                     const seriesTooltipResult = normalizeTooltipFormatResult(
