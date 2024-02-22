@@ -17,14 +17,13 @@
 * under the License.
 */
 
-/* global Uint8Array, document */
+/* global window, Uint8Array, document */
 
 import env from 'zrender/src/core/env';
 import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ZRColor } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../core/ExtensionAPI';
-import { isFunction } from 'zrender/src/core/util';
 
 export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     icon?: string
@@ -41,8 +40,6 @@ export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
 
     lang?: string[]
 }
-
-/* global window, document */
 
 class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
 
@@ -61,7 +58,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         });
         const browser = env.browser;
         // Chrome, Firefox, New Edge
-        if (isFunction(MouseEvent) && (browser.newEdge || (!browser.ie && !browser.edge))) {
+        if (typeof MouseEvent === 'function' && (browser.newEdge || (!browser.ie && !browser.edge))) {
             const $a = document.createElement('a');
             $a.download = title + '.' + type;
             $a.target = '_blank';

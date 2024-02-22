@@ -99,6 +99,66 @@ var localeObj = {
             title: 'Tallenna kuvana',
             lang: ['Paina oikeaa hiirennappia tallentaaksesi kuva']
         }
+    },
+    series: {
+        typeNames: {
+            pie: 'Ympyrädiagrammi',
+            bar: 'Pylväsdiagrammi',
+            line: 'Viivakaavio',
+            scatter: 'Pisteplot',
+            effectScatter: 'Ripple-pisteplot',
+            radar: 'Sädekaavio',
+            tree: 'Puu',
+            treemap: 'Tilastoaluekartta',
+            boxplot: 'Viivadiagrammi',
+            candlestick: 'Kynttiläkaavio',
+            k: 'K-linjakaavio',
+            heatmap: 'Lämpökartta',
+            map: 'Kartta',
+            parallel: 'Rinnakkaiskoordinaattikartta',
+            lines: 'Viivakuvaaja',
+            graph: 'Suhdekuvaaja',
+            sankey: 'Sankey-kaavio',
+            funnel: 'Suppilokaavio',
+            gauge: 'Mittari',
+            pictorialBar: 'Kuvallinen pylväs',
+            themeRiver: 'Teemajokikartta',
+            sunburst: 'Auringonkehä',
+            custom: 'Mukautettu kaavio',
+            chart: 'Kaavio'
+        }
+    },
+    aria: {
+        general: {
+            withTitle: 'Tämä on kaavio “{title}”',
+            withoutTitle: 'Tämä on kaavio'
+        },
+        series: {
+            single: {
+                prefix: '',
+                withName: ' tyyppiä {seriesType} nimeltään {seriesName}.',
+                withoutName: ' tyyppiä {seriesType}.'
+            },
+            multiple: {
+                prefix: '. Se koostuu {seriesCount} sarjasta.',
+                withName: ' Sarja {seriesId} on {seriesType}, joka edustaa {seriesName}.',
+                withoutName: ' Sarja {seriesId} on {seriesType}.',
+                separator: {
+                    middle: '',
+                    end: ''
+                }
+            }
+        },
+        data: {
+            allData: 'Tiedot ovat seuraavat: ',
+            partialData: 'Ensimmäiset {displayCnt} kohtaa ovat: ',
+            withName: 'tiedot nimelle {name} ovat {value}',
+            withoutName: '{value}',
+            separator: {
+                middle: ', ',
+                end: '. '
+            }
+        }
     }
 };
 

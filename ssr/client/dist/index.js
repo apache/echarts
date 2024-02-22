@@ -48,57 +48,53 @@
   */
   function hydrate(dom, options) {
     var svgRoot = dom.querySelector('svg');
-
     if (!svgRoot) {
       console.error('No SVG element found in the DOM.');
       return;
     }
-
-    var children = svgRoot.children;
-
     function getIndex(child, attr) {
       var index = child.getAttribute(attr);
-
       if (index) {
         return parseInt(index, 10);
       } else {
-        return null;
+        return undefined;
       }
     }
-
-    var events = options.on;
-
-    if (events) {
-      var _loop_1 = function (eventName) {
-        if (typeof events[eventName] === 'function') {
-          var _loop_2 = function (i) {
-            var child = children[i];
-            var type = child.getAttribute('ecmeta_ssr_type');
-            var silent = child.getAttribute('ecmeta_silent') === 'true';
-
-            if (type && !silent) {
-              child.addEventListener(eventName, function (e) {
-                events[eventName]({
-                  type: eventName,
-                  ssrType: type,
-                  seriesIndex: getIndex(child, 'ecmeta_series_index'),
-                  dataIndex: getIndex(child, 'ecmeta_data_index'),
-                  event: e
-                });
-              });
-            }
-          };
-
-          for (var i = 0; i < children.length; i++) {
-            _loop_2(i);
-          }
+    var listeners = options.on || {};
+    var _loop_1 = function (rawEvtName) {
+      if (!listeners.hasOwnProperty(rawEvtName)) {
+        return "continue";
+      }
+      var eventName = rawEvtName;
+      var listener = listeners[eventName];
+      if (!isFunction(listener)) {
+        return "continue";
+      }
+      svgRoot.addEventListener(eventName, function (event) {
+        var targetEl = event.target;
+        if (!targetEl || !isFunction(targetEl.getAttribute)) {
+          return;
         }
-      };
-
-      for (var eventName in events) {
-        _loop_1(eventName);
-      }
+        var type = targetEl.getAttribute('ecmeta_ssr_type');
+        var silent = targetEl.getAttribute('ecmeta_silent') === 'true';
+        if (!type || silent) {
+          return;
+        }
+        listener({
+          type: eventName,
+          ssrType: type,
+          seriesIndex: getIndex(targetEl, 'ecmeta_series_index'),
+          dataIndex: getIndex(targetEl, 'ecmeta_data_index'),
+          event: event
+        });
+      });
+    };
+    for (var rawEvtName in listeners) {
+      _loop_1(rawEvtName);
     }
+  }
+  function isFunction(value) {
+    return typeof value === 'function';
   }
 
   exports.hydrate = hydrate;

@@ -226,12 +226,14 @@ class LegendView extends ComponentView {
                     .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
-                itemGroup.eachChild(child => {
-                    const ecData = getECData(child);
-                    ecData.seriesIndex = seriesModel.seriesIndex;
-                    ecData.dataIndex = dataIndex;
-                    ecData.ssrType = 'legend';
-                });
+                if (ecModel.ssr) {
+                    itemGroup.eachChild(child => {
+                        const ecData = getECData(child);
+                        ecData.seriesIndex = seriesModel.seriesIndex;
+                        ecData.dataIndex = dataIndex;
+                        ecData.ssrType = 'legend';
+                    });
+                }
 
                 legendDrawnMap.set(name, true);
             }
@@ -277,12 +279,14 @@ class LegendView extends ComponentView {
                             .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
                             .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
 
-                        itemGroup.eachChild(child => {
-                            const ecData = getECData(child);
-                            ecData.seriesIndex = seriesModel.seriesIndex;
-                            ecData.dataIndex = dataIndex;
-                            ecData.ssrType = 'legend';
-                        });
+                        if (ecModel.ssr) {
+                            itemGroup.eachChild(child => {
+                                const ecData = getECData(child);
+                                ecData.seriesIndex = seriesModel.seriesIndex;
+                                ecData.dataIndex = dataIndex;
+                                ecData.ssrType = 'legend';
+                            });
+                        }
 
                         legendDrawnMap.set(name, true);
                     }

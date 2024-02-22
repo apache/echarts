@@ -41,7 +41,6 @@ under the License.
 
 
 
-
         <script>
 
             require([
@@ -118,5 +117,42 @@ under the License.
         </script>
 
 
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: 'line',
+                            data: [150, 230, 224, 218, 135, 147, 260],
+                            type: 'line'
+                        }
+                    ]
+                };
+                var myChart = testHelper.create(echarts, 'main1', {
+                    option: option,
+                    renderer: 'svg',
+                    title: 'There should not be SSR attribute with **undefined** value'
+                });
+                const svgDom = myChart.getZr().painter.getSvgDom();
+                const undefinedCount = Array.from(svgDom.querySelectorAll('path'))
+                    .filter(p => p.getAttribute('ecmeta_series_index') === 'undefined').length;
+                myChart.setOption({
+                    title: {
+                        text: 'UndefinedCount: ' + undefinedCount,
+                        textStyle: {
+                            color: undefinedCount > 0 ? 'red' : 'black'
+                        }
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
