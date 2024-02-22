@@ -264,6 +264,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function getSeriesTypeName(type: SeriesTypes) {
-        return ecModel.getLocaleModel().get(['series', 'typeNames'])[type] || '自定义图';
+        const typeNames = ecModel.getLocaleModel().get(['series', 'typeNames']);
+        return typeNames[type] || typeNames.chart;
     }
 }

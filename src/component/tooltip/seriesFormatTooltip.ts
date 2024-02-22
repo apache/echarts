@@ -93,7 +93,8 @@ export function defaultSeriesFormatTooltip(opt: {
                 // be not readable. So we check trim here.
                 noName: !trim(inlineName),
                 value: inlineValue,
-                valueType: inlineValueType
+                valueType: inlineValueType,
+                dataIndex
             })
         ].concat(subBlocks || [] as any)
     });

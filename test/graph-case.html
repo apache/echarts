@@ -38,8 +38,8 @@ under the License.
 
 
         <div id="main0"></div>
-
-
+        <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -95,7 +95,120 @@ under the License.
         });
         </script>
 
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    legend: {},
+                    series:   {
+                        type: 'graph',
+                        name: 'graph',
+                        edgeLabel: {
+                            show: true,
+                            fontSize: 16
+                        },
+                        lineStyle: {
+                            width: 5,
+                            curveness: 0.2,
+                            opacity: 0.9
+                        },
+                        data: [
+                            {
+                                x: 10,
+                                y: 100,
+                                name: 'Node 1'
+                            },
+                            {
+                                x: 100,
+                                y: -50,
+                                name: 'Node 2'
+                            },
+                            {
+                                x: 400,
+                                y: 200,
+                                name: 'Node 3'
+                            }
+                        ],
+                        links: [
+                            {
+                                source: 'Node 1',
+                                target: 'Node 2'
+                            },
+                            {
+                                source: 'Node 1',
+                                target: 'Node 3'
+                            },
+                            {
+                                source: 'Node 2',
+                                target: 'Node 3'
+                            }
+                        ]
+                    }
+                };
 
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Should not throw error when hiding by legend'
+                    ],
+                    option: option
+                });
+            });
+            </script>
+
+            <script>
+                require(['echarts'], function (echarts) {
+                    var option = {
+                        series: [{
+                            type: 'graph',
+                            layout: 'force',
+                            roam: true,
+                            data: [
+                                {
+                                    name: 'Node 1',
+                                    x: 300,
+                                    y: 300
+                                },
+                                {
+                                    name: 'Node 2',
+                                    x: 800,
+                                    y: 300
+                                }
+                            ],
+                            links: [
+                                {
+                                    source: 'Node 1',
+                                    target: 'Node 2'
+                                }
+                            ]
+                        }]
+                    };
+
+                    var chart = testHelper.create(echarts, 'main2', {
+                        title: [
+                            'Layout timer should stop after disposing chart'
+                        ],
+                        buttons: [
+                            {
+                                text: 'Dispose',
+                                onclick() {
+                                    const seriesModel = chart.getModel().getSeriesByType('graph')[0]
+                                    const graphView = chart.getViewOfSeriesModel(seriesModel)
+
+                                    const container = chart.getDom()
+
+                                    chart.dispose()
+
+                                    if (graphView._layoutTimeout) {
+                                        const errMsg = 'Graph layout timer is not removed after disposing the chart!'
+                                        container.innerHTML = '<b style="color: red">' + errMsg + '</b>'
+                                        throw new Error(errMsg)
+                                    }
+                                }
+                            }
+                        ],
+                        option: option
+                    });
+                });
+                </script>
     </body>
 </html>
 

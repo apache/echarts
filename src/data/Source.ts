@@ -271,7 +271,7 @@ export function detectSourceFormat(data: DatasetOption['source']): SourceFormat 
             if (item == null) {
                 continue;
             }
-            else if (isArray(item)) {
+            else if (isArray(item) || isTypedArray(item)) {
                 sourceFormat = SOURCE_FORMAT_ARRAY_ROWS;
                 break;
             }

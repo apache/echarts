@@ -127,7 +127,9 @@ var localeObj = {
             gauge: 'Mérőeszköz',
             pictorialBar: 'Képes sávdiagram',
             themeRiver: 'Folyó témájú térkép',
-            sunburst: 'Napégés'
+            sunburst: 'Napégés',
+            custom: 'Egyedi diagram',
+            chart: 'Diagram'
         }
     },
     aria: {

@@ -50,6 +50,7 @@ import {LineStyleProps} from '../../model/mixin/lineStyle';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
+import { getECData } from '../../util/innerStore';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -225,6 +226,15 @@ class LegendView extends ComponentView {
                     .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
+                if (ecModel.ssr) {
+                    itemGroup.eachChild(child => {
+                        const ecData = getECData(child);
+                        ecData.seriesIndex = seriesModel.seriesIndex;
+                        ecData.dataIndex = dataIndex;
+                        ecData.ssrType = 'legend';
+                    });
+                }
+
                 legendDrawnMap.set(name, true);
             }
             else {
@@ -268,6 +278,15 @@ class LegendView extends ComponentView {
                             // more than one pie series.
                             .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
                             .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
+
+                        if (ecModel.ssr) {
+                            itemGroup.eachChild(child => {
+                                const ecData = getECData(child);
+                                ecData.seriesIndex = seriesModel.seriesIndex;
+                                ecData.dataIndex = dataIndex;
+                                ecData.ssrType = 'legend';
+                            });
+                        }
 
                         legendDrawnMap.set(name, true);
                     }
@@ -430,7 +449,10 @@ class LegendView extends ComponentView {
         // Add a invisible rect to increase the area of mouse hover
         const hitRect = new graphic.Rect({
             shape: itemGroup.getBoundingRect(),
-            invisible: true
+            style: {
+                // Cannot use 'invisible' because SVG SSR will miss the node
+                fill: 'transparent'
+            }
         });
 
         const tooltipModel =

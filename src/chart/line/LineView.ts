@@ -644,7 +644,7 @@ class LineView extends ChartView {
 
         const lineGroup = this._lineGroup;
 
-        const hasAnimation = !ecModel.ssr && seriesModel.isAnimationEnabled();
+        const hasAnimation = !ecModel.ssr && seriesModel.get('animation');
 
         const isAreaChart = !areaStyleModel.isEmpty();
 
@@ -1299,7 +1299,10 @@ class LineView extends ChartView {
                 });
             }
             if (valueAnimation) {
-                labelInner(endLabel).setLabelText(value);
+                const inner = labelInner(endLabel);
+                if (typeof inner.setLabelText === 'function') {
+                    inner.setLabelText(value);
+                }
             }
         }
     }

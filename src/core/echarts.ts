@@ -137,10 +137,10 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-export const version = '5.4.2';
+export const version = '5.5.0';
 
 export const dependencies = {
-    zrender: '5.4.3'
+    zrender: '5.5.0'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -318,7 +318,7 @@ type ECEventDefinition = {
     // TODO: Use ECActionEvent
     [key: string]: (...args: unknown[]) => void | boolean
 };
-type EChartsInitOpts = {
+export type EChartsInitOpts = {
     locale?: string | LocaleOption,
     renderer?: RendererType,
     devicePixelRatio?: number,
@@ -412,20 +412,34 @@ class ECharts extends Eventful<ECEventDefinition> {
         let defaultRenderer = 'canvas';
         let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
+
         if (__DEV__) {
             const root = (
                 /* eslint-disable-next-line */
                 env.hasGlobalWindow ? window : global
             ) as any;
 
-            defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+            if (root) {
+                defaultRenderer = retrieve2(root.__ECHARTS__DEFAULT__RENDERER__, defaultRenderer);
+                defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
+                defaultUseDirtyRect = retrieve2(root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__, defaultUseDirtyRect);
+            }
 
-            defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
+        }
 
-            const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
-            defaultUseDirtyRect = devUseDirtyRect == null
-                ? defaultUseDirtyRect
-                : devUseDirtyRect;
+        if (opts.ssr) {
+            zrender.registerSSRDataGetter(el => {
+                const ecData = getECData(el);
+                const dataIndex = ecData.dataIndex;
+                if (dataIndex == null) {
+                    return;
+                }
+                const hashMap = createHashMap();
+                hashMap.set('series_index', ecData.seriesIndex);
+                hashMap.set('data_index', dataIndex);
+                ecData.ssrType && hashMap.set('ssr_type', ecData.ssrType);
+                return hashMap;
+            });
         }
 
         const zr = this._zr = zrender.init(dom, {
@@ -2087,12 +2101,12 @@ class ECharts extends Eventful<ECEventDefinition> {
             };
             const componentZLevels: ZLevelItem[] = [];
             const seriesZLevels: ZLevelItem[] = [];
-            let hasSeperateZLevel = false;
+            let hasSeparateZLevel = false;
             ecModel.eachComponent(function (componentType, componentModel) {
                 const zlevel = componentModel.get('zlevel') || 0;
                 const z = componentModel.get('z') || 0;
                 const zlevelKey = componentModel.getZLevelKey();
-                hasSeperateZLevel = hasSeperateZLevel || !!zlevelKey;
+                hasSeparateZLevel = hasSeparateZLevel || !!zlevelKey;
                 (componentType === 'series' ? seriesZLevels : componentZLevels).push({
                     zlevel,
                     z,
@@ -2102,7 +2116,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             });
 
-            if (hasSeperateZLevel) {
+            if (hasSeparateZLevel) {
                 // Series after component
                 const zLevels: ZLevelItem[] = componentZLevels.concat(seriesZLevels);
                 let lastSeriesZLevel: number;
@@ -2638,8 +2652,8 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
  * @param opts.useDirtyRect Enable dirty rectangle rendering or not.
  */
 export function init(
-    dom: HTMLElement,
-    theme?: string | object,
+    dom?: HTMLElement | null,
+    theme?: string | object | null,
     opts?: EChartsInitOpts
 ): EChartsType {
     const isClient = !(opts && opts.ssr);
@@ -2724,17 +2738,15 @@ export function connect(groupId: string | EChartsType[]): string {
     return groupId as string;
 }
 
-/**
- * @deprecated
- */
-export function disConnect(groupId: string): void {
+export function disconnect(groupId: string): void {
     connectedGroups[groupId] = false;
 }
 
 /**
  * Alias and backward compatibility
+ * @deprecated
  */
-export const disconnect = disConnect;
+export const disConnect = disconnect;
 
 /**
  * Dispose a chart instance
