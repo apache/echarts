@@ -271,7 +271,7 @@ class Axis {
 
 }
 
-function fixExtentWithBands(extent: [number, number], nTick: number, onBand = [] as number[]): void {
+function fixExtentWithBands(extent: [number, number], nTick: number, onBand: number[] = []): void {
     const size = extent[1] - extent[0];
     const len = nTick;
     const margin = size / len / 2;
