@@ -99,6 +99,7 @@ import {
     applyKeyframeAnimation,
     stopPreviousKeyframeAnimationAndRestore
 } from '../../animation/customGraphicKeyframeAnimation';
+import type SeriesModel from '../../model/Series';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -163,7 +164,7 @@ const attachedTxInfoTmp = {
 const prepareCustoms: Dictionary<PrepareCustomInfo> = {
     cartesian2d: prepareCartesian2d,
     geo: prepareGeo,
-    singleAxis: prepareSingleAxis,
+    single: prepareSingleAxis,
     polar: preparePolar,
     calendar: prepareCalendar
 };
@@ -228,7 +229,7 @@ export default class CustomChartView extends ChartView {
             })
             .remove(function (oldIdx) {
                 const el = oldData.getItemGraphicEl(oldIdx);
-                applyLeaveTransition(el, customInnerStore(el).option, customSeries);
+                el && applyLeaveTransition(el, customInnerStore(el).option, customSeries);
             })
             .update(function (newIdx, oldIdx) {
                 const oldEl = oldData.getItemGraphicEl(oldIdx);
@@ -304,7 +305,7 @@ export default class CustomChartView extends ChartView {
         }
 
         // Enable to give a name on a group made by `renderItem`, and listen
-        // events that triggerd by its descendents.
+        // events that are triggered by its descendents.
         while ((targetEl = (targetEl.__hostTarget || targetEl.parent)) && targetEl !== this.group) {
             if (targetEl.name === elementName) {
                 return true;
@@ -381,23 +382,23 @@ function createEl(elOption: CustomElementOption): Element {
  * ----------------------------------------------------------
  * [STRATEGY_MERGE] Merge properties or erase all properties:
  *
- * Based on the fact that the existing zr element probably be reused, we now consider whether
- * merge or erase all properties to the exsiting elements.
- * That is, if a certain props is not specified in the lastest return of `renderItem`:
+ * Based on the fact that the existing zr element probably is reused, we now consider whether
+ * merge or erase all properties to the existing elements.
+ * That is, if a certain props is not specified in the latest return of `renderItem`:
  * + "Merge" means that do not modify the value on the existing element.
  * + "Erase all" means that use a default value to the existing element.
  *
- * "Merge" might bring some unexpected state retaining for users and "erase all" seams to be
- * more safe. "erase all" force users to specify all of the props each time, which is recommanded
+ * "Merge" might bring some unexpected state retaining for users and "erase all" seems to be
+ * more safe. "erase all" forces users to specify all of the props each time, which is recommended
  * in most cases.
  * But "erase all" theoretically disables the chance of performance optimization (e.g., just
  * generete shape and style at the first time rather than always do that).
  * So we still use "merge" rather than "erase all". If users need "erase all", they can
- * simple always set all of the props each time.
+ * simply always set all of the props each time.
  * Some "object-like" config like `textConfig`, `textContent`, `style` which are not needed for
- * every elment, so we replace them only when user specify them. And the that is a total replace.
+ * every element, so we replace them only when users specify them. And that is a total replace.
  *
- * TODO: there is no hint of 'isFirst' to users. So the performance enhancement can not be
+ * TODO: There is no hint of 'isFirst' to users. So the performance enhancement cannot be
  * performed yet. Consider the case:
  * (1) setOption to "mergeChildren" with a smaller children count
  * (2) Use dataZoom to make an item disappear.
@@ -411,7 +412,7 @@ function createEl(elOption: CustomElementOption): Element {
  * So we  trade a {xx: null} or {xx: undefined} as "not specified" if possible rather than
  * "set them to null/undefined". In most cases, props can not be cleared. Some typicall
  * clearable props like `style`/`textConfig`/`textContent` we enable `false` to means
- * "clear". In some othere special cases that the prop is able to set as null/undefined,
+ * "clear". In some other special cases that the prop is able to set as null/undefined,
  * but not suitable to use `false`, `hasOwnProperty` is checked.
  *
  * ---------------------------------------------
@@ -525,7 +526,7 @@ function updateElOnState(
             }
         }
         else {
-            // style is needed to enable defaut emphasis.
+            // style is needed to enable default emphasis.
             stateObj.style = styleOpt || null;
         }
         // If `elOption.styleEmphasis` or `elOption.emphasis.style` is `false`,
@@ -731,9 +732,9 @@ function makeRenderItem(
     }
 
     /**
-     * @deprecated The orgininal intention of `api.style` is enable to set itemStyle
-     * like other series. But it not necessary and not easy to give a strict definition
-     * of what it return. And since echarts5 it needs to be make compat work. So
+     * @deprecated The original intention of `api.style` is enable to set itemStyle
+     * like other series. But it is not necessary and not easy to give a strict definition
+     * of what it returns. And since echarts5 it needs to be make compat work. So
      * deprecates it since echarts5.
      *
      * By default, `visual` is applied to style (to support visualMap).
@@ -766,7 +767,7 @@ function makeRenderItem(
 
         const opt = {inheritColor: isString(visualColor) ? visualColor : '#000'};
         const labelModel = getLabelModel(dataIndexInside, NORMAL);
-        // Now that the feture of "auto adjust text fill/stroke" has been migrated to zrender
+        // Now that the feature of "auto adjust text fill/stroke" has been migrated to zrender
         // since ec5, we should set `isAttached` as `false` here and make compat in
         // `convertToEC4StyleForCustomSerise`.
         const textStyle = labelStyleHelper.createTextStyle(labelModel, null, opt, false, true);
@@ -1133,7 +1134,7 @@ function doCreateOrUpdateAttachedTx(
     isInit: boolean,
     attachedTxInfo: AttachedTxInfo
 ): void {
-    // group do not support textContent temporarily untill necessary.
+    // Group does not support textContent temporarily until necessary.
     if (el.isGroup) {
         return;
     }
@@ -1142,7 +1143,7 @@ function doCreateOrUpdateAttachedTx(
     processTxInfo(elOption, null, attachedTxInfo);
     processTxInfo(elOption, EMPHASIS, attachedTxInfo);
 
-    // If `elOption.textConfig` or `elOption.textContent` is null/undefined, it does not make sence.
+    // If `elOption.textConfig` or `elOption.textContent` is null/undefined, it does not make sense.
     // So for simplicity, if "elOption hasOwnProperty of them but be null/undefined", we do not
     // trade them as set to null to el.
     // Especially:
@@ -1231,7 +1232,7 @@ function processTxInfo(
         // `textContent: {type: 'text'}`, the "type" is easy to be missing. So we tolerate it.
         !txConOptNormal.type && (txConOptNormal.type = 'text');
         if (__DEV__) {
-            // Do not tolerate incorret type for forward compat.
+            // Do not tolerate incorrcet type for forward compat.
             assert(
                 txConOptNormal.type === 'text',
                 'textContent.type must be "text"'
@@ -1264,20 +1265,25 @@ function retrieveStyleOptionOnState(
 
 
 // Usage:
-// (1) By default, `elOption.$mergeChildren` is `'byIndex'`, which indicates that
-//     the existing children will not be removed, and enables the feature that
-//     update some of the props of some of the children simply by construct
+// (1) By default, `elOption.$mergeChildren` is `'byIndex'`, which indicates
+//     that the existing children will not be removed, and enables the feature
+//     that update some of the props of some of the children simply by construct
 //     the returned children of `renderItem` like:
 //     `var children = group.children = []; children[3] = {opacity: 0.5};`
 // (2) If `elOption.$mergeChildren` is `'byName'`, add/update/remove children
 //     by child.name. But that might be lower performance.
 // (3) If `elOption.$mergeChildren` is `false`, the existing children will be
 //     replaced totally.
-// (4) If `!elOption.children`, following the "merge" principle, nothing will happen.
+// (4) If `!elOption.children`, following the "merge" principle, nothing will
+//     happen.
+// (5) If `elOption.$mergeChildren` is not `false` neither `'byName'` and the
+//     `el` is a group, and if any of the new child is null, it means to remove
+//     the element at the same index, if exists. On the other hand, if the new
+//     child is and empty object `{}`, it means to keep the element not changed.
 //
-// For implementation simpleness, do not provide a direct way to remove sinlge
-// child (otherwise the total indicies of the children array have to be modified).
-// User can remove a single child by set its `ignore` as `true`.
+// For implementation simpleness, do not provide a direct way to remove single
+// child (otherwise the total indices of the children array have to be modified).
+// User can remove a single child by setting its `ignore` to `true`.
 function mergeChildren(
     api: ExtensionAPI,
     el: graphicUtil.Group,
@@ -1316,22 +1322,57 @@ function mergeChildren(
     // might be better performance.
     let index = 0;
     for (; index < newLen; index++) {
-        newChildren[index] && doCreateOrUpdateEl(
-            api,
-            el.childAt(index),
-            dataIndex,
-            newChildren[index] as CustomElementOption,
-            seriesModel,
-            el
-        );
+        const newChild = newChildren[index];
+        const oldChild = el.childAt(index);
+        if (newChild) {
+            if (newChild.ignore == null) {
+                // The old child is set to be ignored if null (see comments
+                // below). So we need to set ignore to be false back.
+                newChild.ignore = false;
+            }
+            doCreateOrUpdateEl(
+                api,
+                oldChild,
+                dataIndex,
+                newChild as CustomElementOption,
+                seriesModel,
+                el
+            );
+        }
+        else {
+            if (__DEV__) {
+                assert(
+                    oldChild,
+                    'renderItem should not return a group containing elements'
+                    + ' as null/undefined/{} if they do not exist before.'
+                );
+            }
+            // If the new element option is null, it means to remove the old
+            // element. But we cannot really remove the element from the group
+            // directly, because the element order may not be stable when this
+            // element is added back. So we set the element to be ignored.
+            oldChild.ignore = true;
+        }
     }
     for (let i = el.childCount() - 1; i >= index; i--) {
-        // Do not supprot leave elements that are not mentioned in the latest
-        // `renderItem` return. Otherwise users may not have a clear and simple
-        // concept that how to contorl all of the elements.
         const child = el.childAt(i);
-        applyLeaveTransition(child, customInnerStore(el).option, seriesModel);
+        removeChildFromGroup(el, child, seriesModel);
     }
+}
+
+function removeChildFromGroup(
+    group: graphicUtil.Group,
+    child: Element,
+    seriesModel: SeriesModel
+) {
+    // Do not support leave elements that are not mentioned in the latest
+    // `renderItem` return. Otherwise users may not have a clear and simple
+    // concept that how to control all of the elements.
+    child && applyLeaveTransition(
+        child,
+        customInnerStore(group).option,
+        seriesModel
+    );
 }
 
 type DiffGroupContext = {
@@ -1383,7 +1424,7 @@ function processAddUpdate(
 function processRemove(this: DataDiffer<DiffGroupContext>, oldIndex: number): void {
     const context = this.context;
     const child = context.oldChildren[oldIndex];
-    applyLeaveTransition(child, customInnerStore(child).option, context.seriesModel);
+    child && applyLeaveTransition(child, customInnerStore(child).option, context.seriesModel);
 }
 
 /**

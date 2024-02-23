@@ -29,6 +29,8 @@ import Transformable from 'zrender/src/core/Transformable';
 import { CoordinateSystemMaster, CoordinateSystem } from './CoordinateSystem';
 import GlobalModel from '../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../util/model';
+import { parsePercent } from '../util/number';
+import type ExtensionAPI from '../core/ExtensionAPI';
 
 const v2ApplyTransform = vector.applyTransform;
 
@@ -82,7 +84,6 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      */
     private _viewRect: BoundingRect;
 
-
     constructor(name?: string) {
         super();
         this.name = name;
@@ -127,12 +128,14 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     /**
      * Set center of view
      */
-    setCenter(centerCoord?: number[]): void {
+    setCenter(centerCoord: (number | string)[], api: ExtensionAPI): void {
         if (!centerCoord) {
             return;
         }
-        this._center = centerCoord;
-
+        this._center = [
+            parsePercent(centerCoord[0], api.getWidth()),
+            parsePercent(centerCoord[1], api.getHeight())
+        ];
         this._updateCenterAndZoom();
     }
 
@@ -229,9 +232,9 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         const rawTransformable = this._rawTransformable;
 
         const roamTransformable = this._roamTransformable;
-        // Becuase roamTransformabel has `originX/originY` modified,
+        // Because roamTransformabel has `originX/originY` modified,
         // but the caller of `getTransformInfo` can not handle `originX/originY`,
-        // so need to recalcualte them.
+        // so need to recalculate them.
         const dummyTransformable = new Transformable();
         dummyTransformable.transform = roamTransformable.transform;
         dummyTransformable.decomposeTransform();
@@ -307,7 +310,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      * @return {number}
      */
     // getScalarScale() {
-    //     // Use determinant square root of transform to mutiply scalar
+    //     // Use determinant square root of transform to multiply scalar
     //     let m = this.transform;
     //     let det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
     //     return det;

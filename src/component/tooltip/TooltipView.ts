@@ -147,8 +147,6 @@ class TooltipView extends ComponentView {
 
     private _api: ExtensionAPI;
 
-    private _alwaysShowContent: boolean;
-
     private _tooltipContent: TooltipHTMLContent | TooltipRichContent;
 
     private _refreshUpdateTimeout: number;
@@ -173,8 +171,8 @@ class TooltipView extends ComponentView {
 
         this._tooltipContent = renderMode === 'richText'
             ? new TooltipRichContent(api)
-            : new TooltipHTMLContent(api.getDom(), api, {
-                appendToBody: tooltipModel.get('appendToBody', true)
+            : new TooltipHTMLContent(api, {
+                appendTo: tooltipModel.get('appendToBody', true) ? 'body' : tooltipModel.get('appendTo', true)
             });
     }
 
@@ -195,12 +193,6 @@ class TooltipView extends ComponentView {
         this._ecModel = ecModel;
 
         this._api = api;
-
-        /**
-         * @private
-         * @type {boolean}
-         */
-        this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
         const tooltipContent = this._tooltipContent;
         tooltipContent.update(tooltipModel);
@@ -249,6 +241,7 @@ class TooltipView extends ComponentView {
         const tooltipModel = this._tooltipModel;
         const ecModel = this._ecModel;
         const api = this._api;
+        const triggerOn = tooltipModel.get('triggerOn');
 
         // Try to keep the tooltip show when refreshing
         if (this._lastX != null
@@ -256,7 +249,8 @@ class TooltipView extends ComponentView {
             // When user is willing to control tooltip totally using API,
             // self.manuallyShowTip({x, y}) might cause tooltip hide,
             // which is not expected.
-            && tooltipModel.get('triggerOn') !== 'none'
+            && triggerOn !== 'none'
+            && triggerOn !== 'click'
         ) {
             const self = this;
             clearTimeout(this._refreshUpdateTimeout);
@@ -394,7 +388,7 @@ class TooltipView extends ComponentView {
     ) {
         const tooltipContent = this._tooltipContent;
 
-        if (!this._alwaysShowContent && this._tooltipModel) {
+        if (this._tooltipModel) {
             tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
         }
 
@@ -469,6 +463,11 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         else if (el) {
+            const ecData = getECData(el);
+            if (ecData.ssrType === 'legend') {
+                // Don't trigger tooltip for legend tooltip item
+                return;
+            }
             this._lastDataByCoordSys = null;
 
             let seriesDispatcher: Element;
@@ -743,8 +742,8 @@ class TooltipView extends ComponentView {
             tooltipModelCascade.push(cmpt as Model<TooltipableOption>);
         }
         // In most cases, component tooltip formatter has different params with series tooltip formatter,
-        // so that they can not share the same formatter. Since the global tooltip formatter is used for series
-        // by convension, we do not use it as the default formatter for component.
+        // so that they cannot share the same formatter. Since the global tooltip formatter is used for series
+        // by convention, we do not use it as the default formatter for component.
         tooltipModelCascade.push({ formatter: tooltipOpt.content });
 
         const positionDefault = e.positionDefault;
@@ -1089,7 +1088,7 @@ function refixTooltipPosition(
 
     if (gapH != null) {
         // Add extra 2 pixels for this case:
-        // At present the "values" in defaut tooltip are using CSS `float: right`.
+        // At present the "values" in default tooltip are using CSS `float: right`.
         // When the right edge of the tooltip box is on the right side of the
         // viewport, the `float` layout might push the "values" to the second line.
         if (x + width + gapH + 2 > viewWidth) {

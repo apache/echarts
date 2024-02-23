@@ -18,7 +18,7 @@
 */
 
 import {isDimensionStacked} from '../../data/helper/dataStackHelper';
-import {map} from 'zrender/src/core/util';
+import {isNumber, map} from 'zrender/src/core/util';
 import type Polar from '../../coord/polar/Polar';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import SeriesData from '../../data/SeriesData';
@@ -58,11 +58,11 @@ export function prepareDataCoordInfo(
 
     let stacked = false;
     const stackResultDim = data.getCalculationInfo('stackResultDimension');
-    if (isDimensionStacked(data, dims[0] /*, dims[1]*/)) { // jshint ignore:line
+    if (isDimensionStacked(data, dims[0] /* , dims[1] */)) { // jshint ignore:line
         stacked = true;
         dims[0] = stackResultDim;
     }
-    if (isDimensionStacked(data, dims[1] /*, dims[0]*/)) { // jshint ignore:line
+    if (isDimensionStacked(data, dims[1] /* , dims[0] */)) { // jshint ignore:line
         stacked = true;
         dims[1] = stackResultDim;
     }
@@ -89,6 +89,11 @@ function getValueStart(valueAxis: Axis, valueOrigin: LineSeriesOption['areaStyle
     }
     else if (valueOrigin === 'end') {
         valueStart = extent[1];
+    }
+    // If origin is specified as a number, use it as
+    // valueStart directly
+    else if (isNumber(valueOrigin) && !isNaN(valueOrigin)) {
+        valueStart = valueOrigin;
     }
     // auto
     else {

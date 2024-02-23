@@ -61,7 +61,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultEmphasisFocus | 'adjacency'
+        focus?: DefaultEmphasisFocus | 'adjacency' | 'trajectory'
     }
 }
 
@@ -85,6 +85,7 @@ export interface SankeyEdgeItemOption extends
         StatesOptionMixin<SankeyEdgeStateOption, ExtraStateOption>,
         GraphEdgeItemObject<OptionDataValueNumeric> {
     focusNodeAdjacency?: FocusNodeAdjacency
+    edgeLabel?: SeriesLabelOption
 }
 
 export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
@@ -137,6 +138,10 @@ export interface SankeySeriesOption
     links?: SankeyEdgeItemOption[]
 
     levels?: SankeyLevelOption[]
+
+    edgeLabel?: SeriesLabelOption & {
+        position?: 'inside'
+    }
 }
 
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
@@ -295,6 +300,11 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         label: {
             show: true,
             position: 'right',
+            fontSize: 12
+        },
+
+        edgeLabel: {
+            show: false,
             fontSize: 12
         },
 

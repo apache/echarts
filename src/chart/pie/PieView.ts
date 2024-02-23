@@ -31,8 +31,8 @@ import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { getSectorCornerRadius } from '../helper/pieHelper';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { getSectorCornerRadius } from '../helper/sectorHelper';
+import { saveOldStyle } from '../../animation/basicTransition';
 import { getBasicPieLayout } from './pieLayout';
 
 /**

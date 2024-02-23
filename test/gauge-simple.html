@@ -190,19 +190,19 @@ under the License.
                     pointer: {
                         length: '80%',
                         itemStyle: {
-                            color: 'auto'
+                            color: 'inherit'
                         }
                     },
                     axisTick: {
                         length: 15,
                         lineStyle: {
-                            color: 'auto'
+                            color: 'inherit'
                         }
                     },
                     splitLine: {
                         length: 20,
                         lineStyle: {
-                            color: 'auto',
+                            color: 'inherit',
                             width: 5
                         }
                     },
@@ -210,6 +210,7 @@ under the License.
                         color: '#464646',
                         fontSize: 20,
                         distance: -60,
+                        rotate: 'tangential',
                         formatter: function(value) {
                             if (value === 0.875) {
                                 return '优'
@@ -233,7 +234,7 @@ under the License.
                         formatter: function(value) {
                             return Math.round(value * 100) + '%';
                         },
-                        color: 'auto'
+                        color: 'inherit'
                     },
                     data: [{
                         value: 0.75,

@@ -97,7 +97,11 @@ under the License.
             </div>
         </div>
         <script>
-
+            // gap usually appears when dpr is not an integer
+            Object.defineProperty(window, 'devicePixelRatio', {
+                value: 2.5,
+                writable: false
+            });
             require([
                 'echarts'
             ], function (echarts) {

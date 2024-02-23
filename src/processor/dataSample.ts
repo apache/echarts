@@ -61,6 +61,22 @@ const samplers: Dictionary<Sampler> = {
         // NaN will cause illegal axis extent.
         return isFinite(min) ? min : NaN;
     },
+    minmax: function (frame) {
+        let turningPointAbsoluteValue = -Infinity;
+        let turningPointOriginalValue = -Infinity;
+
+        for (let i = 0; i < frame.length; i++) {
+            const originalValue = frame[i];
+            const absoluteValue = Math.abs(originalValue);
+
+            if (absoluteValue > turningPointAbsoluteValue) {
+                turningPointAbsoluteValue = absoluteValue;
+                turningPointOriginalValue = originalValue;
+            }
+        }
+
+        return isFinite(turningPointOriginalValue) ? turningPointOriginalValue : NaN;
+    },
     // TODO
     // Median
     nearest: function (frame) {

@@ -162,6 +162,7 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     // null/undefined/NaN/''... (displayed as '-').
     noName?: boolean;
     noValue?: boolean;
+    dataIndex?: number;
 
     valueFormatter?: CommonTooltipOption<unknown>['valueFormatter']
 }
@@ -330,7 +331,9 @@ function buildNameValue(
         ? ''
         : makeValueReadable(name, 'ordinal', useUTC);
     const valueTypeOption = fragment.valueType;
-    const readableValueList = noValue ? [] : valueFormatter(fragment.value as OptionDataValue);
+    const readableValueList = noValue
+        ? []
+        : valueFormatter(fragment.value as OptionDataValue, fragment.dataIndex);
     const valueAlignRight = !noMarker || !noName;
     // It little weird if only value next to marker but far from marker.
     const valueCloseToMarker = !noMarker && noName;
@@ -494,8 +497,8 @@ export function getPaddingFromTooltipModel(
 export class TooltipMarkupStyleCreator {
     readonly richTextStyles: Dictionary<Dictionary<unknown>> = {};
 
-    // Notice that "generate a style name" usuall happens repeatly when mouse moving and
-    // displaying a tooltip. So we put the `_nextStyleNameId` as a member of each creator
+    // Notice that "generate a style name" usually happens repeatedly when mouse is moving and
+    // a tooltip is displayed. So we put the `_nextStyleNameId` as a member of each creator
     // rather than static shared by all creators (which will cause it increase to fast).
     private _nextStyleNameId: number = getRandomIdBase();
 

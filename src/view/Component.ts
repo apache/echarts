@@ -62,7 +62,7 @@ interface ComponentView {
 
 class ComponentView {
 
-    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // [Caution]: Because this class or desecendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.
     // Otherwise there is bad case:
     //   class A {xxx = 1;}
@@ -107,11 +107,11 @@ class ComponentView {
     }
 
     /**
-     * Hook for blur target series.
-     * Can be used in marker for blur the markers
+     * Hook for toggle blur target series.
+     * Can be used in marker for blur or leave blur the markers
      */
-    blurSeries(seriesModels: SeriesModel[], ecModel: GlobalModel): void {
-         // Do nothing;
+    toggleBlurSeries(seriesModels: SeriesModel[], isBlur: boolean, ecModel: GlobalModel): void {
+        // Do nothing;
     }
 
     /**

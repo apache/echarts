@@ -101,9 +101,9 @@ class LogScale extends Scale {
     }
 
     setExtent(start: number, end: number): void {
-        const base = this.base;
-        start = symMathLog(start) / mathLog(base);
-        end = symMathLog(end) / mathLog(base);
+        const base = mathLog(this.base);
+        start = symMathLog(start) / base;
+        end = symMathLog(end) / base;
         intervalScaleProto.setExtent.call(this, start, end);
     }
 

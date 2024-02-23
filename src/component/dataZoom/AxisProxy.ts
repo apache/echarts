@@ -189,15 +189,20 @@ class AxisProxy {
 
             // valueWindow[idx] = round(boundValue);
             // percentWindow[idx] = round(boundPercent);
-            valueWindow[idx] = boundValue;
-            percentWindow[idx] = boundPercent;
+            // fallback to extent start/end when parsed value or percent is invalid
+            valueWindow[idx] = boundValue == null || isNaN(boundValue)
+                ? dataExtent[idx]
+                : boundValue;
+            percentWindow[idx] = boundPercent == null || isNaN(boundPercent)
+                ? percentExtent[idx]
+                : boundPercent;
         });
 
         asc(valueWindow);
         asc(percentWindow);
 
         // The windows from user calling of `dispatchAction` might be out of the extent,
-        // or do not obey the `min/maxSpan`, `min/maxValueSpan`. But we dont restrict window
+        // or do not obey the `min/maxSpan`, `min/maxValueSpan`. But we don't restrict window
         // by `zoomLock` here, because we see `zoomLock` just as a interaction constraint,
         // where API is able to initialize/modify the window size even though `zoomLock`
         // specified.
@@ -232,8 +237,8 @@ class AxisProxy {
     }
 
     /**
-     * Notice: reset should not be called before series.restoreData() called,
-     * so it is recommanded to be called in "process stage" but not "model init
+     * Notice: reset should not be called before series.restoreData() is called,
+     * so it is recommended to be called in "process stage" but not "model init
      * stage".
      */
     reset(dataZoomModel: DataZoomModel) {

@@ -6,7 +6,7 @@ dev@echarts.apache.org
 [VOTE] Release {{ECHARTS_RELEASE_VERSION_FULL_NAME}}
 -----------------------------------------------------------
 
-Dear community
+Dear community,
 
 We are pleased to be calling this vote for the release of {{ECHARTS_RELEASE_VERSION_FULL_NAME}}.
 
@@ -24,6 +24,10 @@ https://dist.apache.org/repos/dist/dev/echarts/{{ECHARTS_RELEASE_VERSION}}/RELEA
 
 Build Guide:
 https://github.com/apache/echarts/blob/{{ECHARTS_RELEASE_VERSION}}/README.md#build
+
+NPM Install:
+npm i echarts@{{ECHARTS_RELEASE_VERSION}}
+https://www.npmjs.com/package/echarts/v/{{ECHARTS_RELEASE_VERSION}}
 
 Please vote on releasing this package as:
 {{ECHARTS_RELEASE_VERSION_FULL_NAME}}

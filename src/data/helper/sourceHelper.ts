@@ -148,9 +148,9 @@ export function makeSeriesEncodeForAxisCoordSys(
 
             // ??? TODO give a better default series name rule?
             // especially when encode x y specified.
-            // consider: when mutiple series share one dimension
+            // consider: when multiple series share one dimension
             // category axis, series name should better use
-            // the other dimsion name. On the other hand, use
+            // the other dimension name. On the other hand, use
             // both dimensions name.
         }
         // In category way, the first category axis.
@@ -274,8 +274,8 @@ export function makeSeriesEncodeForNameBased(
         encode.value = [idxResult.v];
         // `potentialNameDimIndex` has highest priority.
         const nameDimIndex = potentialNameDimIndex != null ? potentialNameDimIndex : idxResult.n;
-        // By default, label use itemName in charts.
-        // So we dont set encodeLabel here.
+        // By default, label uses itemName in charts.
+        // So we don't set encodeLabel here.
         encode.itemName = [nameDimIndex];
         encode.seriesName = [nameDimIndex];
     }
@@ -314,7 +314,7 @@ export function querySeriesUpstreamDatasetModel(
 export function queryDatasetUpstreamDatasetModels(
     datasetModel: DatasetModel
 ): DatasetModel[] {
-    // Only these attributes declared, we by defualt reference to `datasetIndex: 0`.
+    // Only these attributes declared, we by default reference to `datasetIndex: 0`.
     // Otherwise, no reference.
     if (!datasetModel.get('transform', true)
         && !datasetModel.get('fromTransformResult', true)

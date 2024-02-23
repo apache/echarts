@@ -185,12 +185,12 @@ export function enableClassCheck(target: CheckableConstructor): void {
     };
 }
 
-// superCall should have class info, which can not be fetch from 'this'.
+// superCall should have class info, which can not be fetched from 'this'.
 // Consider this case:
 // class A has method f,
 // class B inherits class A, overrides method f, f call superApply('f'),
-// class C inherits class B, do not overrides method f,
-// then when method of class C is called, dead loop occured.
+// class C inherits class B, does not override method f,
+// then when method of class C is called, dead loop occurred.
 function superCall(this: any, context: any, methodName: string, ...args: any): any {
     return this.superClass.prototype[methodName].apply(context, args);
 }
@@ -231,8 +231,8 @@ export function enableClassManagement(
      * Component model classes
      * key: componentType,
      * value:
-     *     componentClass, when componentType is 'xxx'
-     *     or Object.<subKey, componentClass>, when componentType is 'xxx.yy'
+     *     componentClass, when componentType is 'a'
+     *     or Object.<subKey, componentClass>, when componentType is 'a.b'
      */
     const storage: {
         [componentMainType: string]: (Constructor | SubclassContainer)
@@ -242,11 +242,11 @@ export function enableClassManagement(
         clz: Constructor
     ): Constructor {
 
-        // `type` should not be a "instance memeber".
+        // `type` should not be a "instance member".
         // If using TS class, should better declared as `static type = 'series.pie'`.
         // otherwise users have to mount `type` on prototype manually.
         // For backward compat and enable instance visit type via `this.type`,
-        // we stil support fetch `type` from prototype.
+        // we still support fetch `type` from prototype.
         const componentFullType = (clz as any).type || clz.prototype.type;
 
         if (componentFullType) {

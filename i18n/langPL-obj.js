@@ -127,7 +127,9 @@
             gauge: 'Wykres zegarowy',
             pictorialBar: 'Wykres słupkowy obrazkowy',
             themeRiver: 'Wykres rzeki tematycznej',
-            sunburst: 'Wykres hierarchiczny słonecznikowy'
+            sunburst: 'Wykres hierarchiczny słonecznikowy',
+            custom: 'Wykres niestandardowy',
+            chart: 'Wykres'
         }
     },
     aria: {

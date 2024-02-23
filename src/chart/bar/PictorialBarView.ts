@@ -38,6 +38,7 @@ import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
+import { createClipPath } from '../helper/createClipPathFromCoordSys';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
@@ -213,6 +214,17 @@ class PictorialBarView extends ChartView {
                 );
             })
             .execute();
+
+        // Do clipping
+        const clipPath = seriesModel.get('clip', true)
+            ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
+            : null;
+        if (clipPath) {
+            group.setClipPath(clipPath);
+        }
+        else {
+            group.removeClipPath();
+        }
 
         this._data = data;
 
@@ -804,16 +816,16 @@ function removeBar(
     const labelRect = bar.__pictorialBarRect;
     labelRect && (labelRect.removeTextContent());
 
-    const pathes = [];
+    const paths = [];
     eachPath(bar, function (path) {
-        pathes.push(path);
+        paths.push(path);
     });
-    bar.__pictorialMainPath && pathes.push(bar.__pictorialMainPath);
+    bar.__pictorialMainPath && paths.push(bar.__pictorialMainPath);
 
     // I do not find proper remove animation for clip yet.
     bar.__pictorialClipPath && (animationModel = null);
 
-    zrUtil.each(pathes, function (path) {
+    zrUtil.each(paths, function (path) {
         graphic.removeElement(
             path, { scaleX: 0, scaleY: 0 }, animationModel, dataIndex,
             function () {
@@ -915,6 +927,7 @@ function updateCommon(
 
     const barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.boundingLength > 0)];
     const barRect = bar.__pictorialBarRect;
+    barRect.ignoreClip = true;
 
     setLabelStyle(
         barRect, getLabelStatesModels(itemModel),

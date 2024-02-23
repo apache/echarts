@@ -1,0 +1,24 @@
+name: Update NOTICE year
+
+on:
+  schedule:
+    # 1/1 00:00 UTC+8
+    - cron: '0 16 31 12 *'
+  workflow_dispatch:
+
+jobs:
+  update-notice-year:
+    if: ${{ github.repository_owner == 'apache' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/.scripts
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const updateNoticeYear = require('.github/workflows/.scripts/update-notice-year.js')
+            await updateNoticeYear({ octokit: github, context })

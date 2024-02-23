@@ -91,7 +91,7 @@ export interface DataStoreDimensionDefine {
      * For example, in `[{bb: 124, aa: 543}, ...]`, "aa" and "bb" is "object property".
      *
      * Deliberately name it as "property" rather than "name" to prevent it from been used in
-     * SOURCE_FORMAT_ARRAY_ROWS, becuase if it comes from series, it probably
+     * SOURCE_FORMAT_ARRAY_ROWS, because if it comes from series, it probably
      * can not be shared by different series.
      */
     property?: string;
@@ -161,7 +161,7 @@ class DataStore {
 
     private _provider: DataProvider;
 
-    // It will not be calculated util needed.
+    // It will not be calculated until needed.
     private _rawExtent: [number, number][] = [];
 
     private _extent: [number, number][] = [];
@@ -191,7 +191,7 @@ class DataStore {
         if (__DEV__) {
             assert(
                 isFunction(provider.getItem) && isFunction(provider.count),
-                'Inavlid data provider.'
+                'Invalid data provider.'
             );
         }
 
@@ -290,8 +290,10 @@ class DataStore {
         // Parse from previous data offset. len may be changed after appendData
         for (let i = offset; i < len; i++) {
             const val = (chunk as any)[i] = ordinalMeta.parseAndCollect(chunk[i]);
-            dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
-            dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+            if (!isNaN(val)) {
+                dimRawExtent[0] = Math.min(val, dimRawExtent[0]);
+                dimRawExtent[1] = Math.max(val, dimRawExtent[1]);
+            }
         }
 
         dim.ordinalMeta = ordinalMeta;
@@ -446,7 +448,7 @@ class DataStore {
     }
 
     getValues(idx: number): ParsedValue[];
-    getValues(dimensions: readonly DimensionIndex[], idx?: number): ParsedValue[]
+    getValues(dimensions: readonly DimensionIndex[], idx?: number): ParsedValue[];
     getValues(dimensions: readonly DimensionIndex[] | number, idx?: number): ParsedValue[] {
         const values = [];
         let dimArr: DimensionIndex[] = [];
@@ -525,7 +527,7 @@ class DataStore {
     }
 
     /**
-     * Retreive the index with given raw data index
+     * Retrieve the index with given raw data index.
      */
     indexOfRawIndex(rawIndex: number): number {
         if (rawIndex >= this._rawCount || rawIndex < 0) {
@@ -564,11 +566,11 @@ class DataStore {
 
 
     /**
-     * Retreive the index of nearest value
+     * Retrieve the index of nearest value.
      * @param dim
      * @param value
      * @param [maxDistance=Infinity]
-     * @return If and only if multiple indices has
+     * @return If and only if multiple indices have
      *         the same value, they are put to the result.
      */
     indicesOfNearest(
@@ -599,7 +601,7 @@ class DataStore {
                 // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
                 // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
                 // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
-                // So we chose the one that `diff >= 0` in this csae.
+                // So we choose the one that `diff >= 0` in this case.
                 // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
                 // should be push to `nearestIndices`.
                 if (dist < minDist
@@ -968,7 +970,7 @@ class DataStore {
 
             let firstNaNIndex = -1;
             let countNaN = 0;
-            // Find a point from current frame that construct a triangel with largest area with previous selected point
+            // Find a point from current frame that construct a triangle with largest area with previous selected point
             // And the average of next frame.
             for (let idx = frameStart; idx < frameEnd; idx++) {
                 const rawIndex = this.getRawIndex(idx);

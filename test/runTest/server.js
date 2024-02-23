@@ -17,10 +17,21 @@
 * under the License.
 */
 
+const chalk = require('chalk');
+
+process.on('uncaughtException', (err) => {
+    if (err.message.includes('Cannot find module')) {
+        console.error(chalk.red(err.message.split('\n')[0]));
+        console.log();
+        console.error(`Please run \`${chalk.yellow('npm install')}\` in \`${chalk.green('test/runTest')}\` folder first!`);
+        console.log();
+    }
+    process.exit(1);
+});
+
 const handler = require('serve-handler');
 const http = require('http');
 const path = require('path');
-// const open = require('open');
 const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
@@ -131,6 +142,7 @@ function startTests(testsNameList, socket, {
     actualVersion,
     expectedVersion,
     renderer,
+    useCoarsePointer,
     noSave
 }) {
     console.log('Received: ', testsNameList.join(','));
@@ -190,6 +202,7 @@ function startTests(testsNameList, socket, {
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
                 '--renderer', renderer || '',
+                '--use-coarse-pointer', useCoarsePointer,
                 '--threads', Math.min(threadsCount, CLI_FIXED_THREADS_COUNT),
                 '--dir', getResultBaseDir(),
                 ...(noHeadless ? ['--no-headless'] : []),
@@ -339,6 +352,7 @@ async function start() {
                         actualVersion: data.actualVersion,
                         expectedVersion: data.expectedVersion,
                         renderer: data.renderer,
+                        useCoarsePointer: data.useCoarsePointer,
                         noSave: false
                     }
                 );
@@ -399,6 +413,7 @@ async function start() {
                     actualVersion: data.actualVersion,
                     expectedVersion: data.expectedVersion,
                     renderer: data.renderer || '',
+                    useCoarsePointer: data.useCoarsePointer,
                     noSave: true
                 });
             }

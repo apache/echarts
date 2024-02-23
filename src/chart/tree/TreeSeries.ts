@@ -55,7 +55,7 @@ export interface TreeSeriesStateOption<TCbParams = never> {
 
 interface TreeStatesMixin {
     emphasis?: {
-        focus?: DefaultEmphasisFocus | 'ancestor' | 'descendant'
+        focus?: DefaultEmphasisFocus | 'ancestor' | 'descendant' | 'relative'
         scale?: boolean
     }
 }
@@ -82,7 +82,7 @@ export interface TreeSeriesLeavesOption
 
 export interface TreeSeriesOption extends
     SeriesOption<TreeSeriesStateOption, TreeStatesMixin>, TreeSeriesStateOption,
-    SymbolOptionMixin, BoxLayoutOptionMixin, RoamOptionMixin {
+    SymbolOptionMixin<CallbackDataParams>, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 
     layout?: 'orthogonal' | 'radial'
@@ -121,6 +121,7 @@ export interface TreeAncestors {
 }
 
 export interface TreeSeriesCallbackDataParams extends CallbackDataParams {
+    collapsed: boolean;
     treeAncestors?: TreeAncestors[]
 }
 
@@ -145,7 +146,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
      */
     getInitialData(option: TreeSeriesOption): SeriesData {
 
-        //create an virtual root
+        // create a virtual root
         const root: TreeSeriesNodeItemOption = {
             name: option.name,
             children: option.data
@@ -240,6 +241,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         const node = this.getData().tree.getNodeByDataIndex(dataIndex);
         params.treeAncestors = wrapTreePathInfo(node, this);
+        params.collapsed = !node.isExpand;
 
         return params;
     }

@@ -127,7 +127,9 @@ var localeObj = {
             gauge: 'Шкала',
             pictorialBar: 'Столбец-картинка',
             themeRiver: 'Тематическая река',
-            sunburst: 'Солнечные лучи'
+            sunburst: 'Солнечные лучи',
+            custom: 'Пользовательская диаграмма',
+            chart: 'диаграмма'
         }
     },
     aria: {

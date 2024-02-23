@@ -40,14 +40,10 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
         <script>
-
-            var chart;
-            var myChart;
-            var option;
-
             require([
                 'echarts'/*, 'map/js/china' */
             ], function (echarts) {
@@ -136,7 +132,7 @@ under the License.
                     return option;
                 }
 
-                chart = myChart = testHelper.create(echarts, 'main0', {
+                var chart = testHelper.create(echarts, 'main0', {
                     title: 'Click the two buttons. Animation should be appropriate, and dataZoom state should be kept.',
                     option: createOption('3series'),
                     buttons: Object.keys(seriesMap).map(function (name) {
@@ -154,6 +150,45 @@ under the License.
 
             });
 
+        </script>
+
+        <script>
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                var option;
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                        data: [820, 932, 901, 934, 1290, 1330, 1320],
+                        type: 'line',
+                        areaStyle: {}
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: 'The area polygon should be removed after the button is clicked',
+                    option: option,
+                    buttons: {
+                        text: 'setOption: with notMerge mode' ,
+                        onClick: function () {
+                            option.series.map(s => {
+                                s.step = 'end';
+                                delete s.areaStyle;
+                            });
+                            chart.setOption(option, { notMerge: true });
+                        }
+                    }
+                })
+            });
         </script>
     </body>
 </html>

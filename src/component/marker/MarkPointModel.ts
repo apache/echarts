@@ -73,8 +73,8 @@ class MarkPointModel extends MarkerModel<MarkPointOption> {
         z: 5,
         symbol: 'pin',
         symbolSize: 50,
-        //symbolRotate: 0,
-        //symbolOffset: [0, 0]
+        // symbolRotate: 0,
+        // symbolOffset: [0, 0]
         tooltip: {
             trigger: 'item'
         },

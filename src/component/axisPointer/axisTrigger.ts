@@ -425,8 +425,8 @@ function dispatchTooltipActually(
     }
 
     // In most case only one axis (or event one series is used). It is
-    // convinient to fetch payload.seriesIndex and payload.dataIndex
-    // dirtectly. So put the first seriesIndex and dataIndex of the first
+    // convenient to fetch payload.seriesIndex and payload.dataIndex
+    // directly. So put the first seriesIndex and dataIndex of the first
     // axis on the payload.
     const sampleItem = ((dataByCoordSys.list[0].dataByAxis[0] || {}).seriesDataIndices || [])[0] || {} as DataIndex;
 
@@ -450,7 +450,7 @@ function dispatchHighDownActually(
     api: ExtensionAPI
 ) {
     // FIXME
-    // highlight status modification shoule be a stage of main process?
+    // highlight status modification should be a stage of main process?
     // (Consider confilct (e.g., legend and axisPointer) and setOption)
 
     const zr = api.getZr();
@@ -462,7 +462,7 @@ function dispatchHighDownActually(
     // Build hash map and remove duplicate incidentally.
     each(axesInfo, function (axisInfo, key) {
         const option = axisInfo.axisPointerModel.option;
-        option.status === 'show' && each(option.seriesDataIndices, function (batchItem) {
+        option.status === 'show' && axisInfo.triggerEmphasis && each(option.seriesDataIndices, function (batchItem) {
             const key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
             newHighlights[key] = batchItem;
         });

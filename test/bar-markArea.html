@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+
+            option = {
+              xAxis: {
+                type: 'category',
+                data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+              },
+              yAxis: {
+                type: 'value'
+              },
+              series: [
+                {
+                  data: [120, 200, 150, 80, 70, 110, 130],
+                  type: 'bar',
+                  markArea: {
+                    data: [
+                      [
+                        {
+                          name: 'Invert input',
+                          xAxis: 'Thu'
+                        },
+                        {
+                          xAxis: 'Mon'
+                        }
+                      ]
+                    ]
+                  }
+                },
+                {
+                  data: [120, 200, 150, 80, 70, 110, 130],
+                  type: 'bar',
+                  markArea: {
+                    data: [
+                      [
+                        {
+                          name: 'Single Emphasis',
+                          xAxis: 'Sun'
+                        },
+                        {
+                          xAxis: 'Sun'
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            };
+
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    `MarkArea should cover the **'Mon'** to **'Thu'** area and **'Sun'** area`,
+                    `rather than area between bars inside. (See issue#12341)`
+                ],
+                option: option
+            });
+        });
+        </script>
+
+<script>
+    require([
+        'echarts'
+    ], function (echarts) {
+        var option;
+
+        option = {
+          xAxis: {
+            type: 'category',
+            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          },
+          yAxis: {
+            type: 'category',
+            data: ['Sleep', 'Exercise', 'Gardening', 'Gaming', 'Work']
+          },
+          series: [
+            {
+              data: ['Work', 'Exercise', 'Work', 'Gardening', 'Gaming'],
+              type: 'bar',
+              markArea: {
+                data: [
+                  [
+                    {
+                      name: 'Dual Axes specified Emphasis',
+                      xAxis: 'Fri',
+                      yAxis: 'Work'
+                    },
+                    {
+                      xAxis: 'Mon',
+                      yAxis: 'Gardening'
+                    }
+                  ]
+                ]
+              }
+            },
+            {
+              data: ['Gardening', 'Work', 'Exercise', 'Exercise', 'Gardening'],
+              type: 'bar',
+              markArea: {
+                data: [
+                  [
+                    {
+                      name: 'Coord specified Emphasis',
+                      coord: ['Mon', 'Exercise']
+                    },
+                    {
+                      coord: ['Tue', 'Gardening']
+                    }
+                  ]
+                ]
+              }
+            }
+          ]
+        };
+
+        var chart = testHelper.create(echarts, 'main1', {
+            title: [
+                `MarkArea should cover the **'Mon'** to **'Fri'** area and **'Exercise'** to **'Gaming'** area`,
+                `rather than area between bars inside. (Dual category axes for bar chart is rare)`
+            ],
+            option: option
+        });
+    });
+    </script>
+
+      <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+            // This bug only occurs when end is large enough for some of the
+            // axis labels to be hidden due to overlapping.
+            var end = 70;
+
+            var xData = [];
+            for (let i = 0; i < end; ++i) {
+              xData.push(i);
+            }
+
+            option = {
+              xAxis: [
+                {
+                  data: xData,
+                  show: true
+                }
+              ],
+              yAxis: [{ type: 'value', show: true, max: 100 }],
+              grid: [{}],
+              series: [
+                {
+                  type: 'bar',
+                  data: [[end - 1, 100, 22]],
+
+                  barWidth: 10,
+                  itemStyle: {
+                    opacity: 0.5
+                  },
+                  markArea: {
+                    itemStyle: {
+                      color: 'red',
+                      opacity: 0.5
+                    },
+                    data: [
+                      [
+                        {
+                          xAxis: 20
+                        },
+                        {
+                          xAxis: end - 10
+                        }
+                      ]
+                    ]
+                  }
+                }
+              ]
+            };
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'There should be a red markArea at x position 20~60 (the position between 60 and 62)',
+                    'Fix #18130'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+          require([
+              'echarts'
+          ], function (echarts) {
+              var option;
+              var end = 70;
+
+              var xData = [];
+              for (let i = 0; i < end; ++i) {
+                xData.push(i);
+              }
+
+              option = {
+                xAxis: [
+                  {
+                    data: xData,
+                    show: true
+                  }
+                ],
+                yAxis: [{ type: 'value', show: true, max: 100 }],
+                grid: [{}],
+                dataZoom: {
+                  type: 'slider',
+                  xAxisIndex: 0,
+                  start: 50,
+                  end: 100
+                },
+                series: [
+                  {
+                    type: 'bar',
+                    data: [[end - 1, 100, 22]],
+
+                    barWidth: 10,
+                    itemStyle: {
+                      opacity: 0.5
+                    },
+                    markArea: {
+                      itemStyle: {
+                        color: 'red',
+                        opacity: 0.5
+                      },
+                      data: [
+                        [
+                          {
+                            xAxis: 20
+                          },
+                          {
+                            xAxis: end - 10
+                          }
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              };
+              var chart = testHelper.create(echarts, 'main3', {
+                  title: [
+                      'There should be a red markArea at x position 35~60',
+                      'Fix #18130'
+                  ],
+                  option: option
+              });
+          });
+        </script>
+
+        <script>
+          require([
+              'echarts'
+          ], function (echarts) {
+              var option;
+              var end = 70;
+
+              var xData = [];
+              for (let i = 0; i < end; ++i) {
+                xData.push(i);
+              }
+
+              option = {
+                xAxis: [
+                  {
+                    data: xData,
+                    show: true
+                  }
+                ],
+                yAxis: [{ type: 'value', show: true, max: 100 }],
+                grid: [{}],
+                dataZoom: {
+                  type: 'slider',
+                  xAxisIndex: 0,
+                  start: 0,
+                  end: 50
+                },
+                series: [
+                  {
+                    type: 'bar',
+                    data: [[end - 1, 100, 22]],
+
+                    barWidth: 10,
+                    itemStyle: {
+                      opacity: 0.5
+                    },
+                    markArea: {
+                      itemStyle: {
+                        color: 'red',
+                        opacity: 0.5
+                      },
+                      data: [
+                        [
+                          {
+                            xAxis: 20
+                          },
+                          {
+                            xAxis: end - 10
+                          }
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              };
+              var chart = testHelper.create(echarts, 'main4', {
+                  title: [
+                      'There should be a red markArea at x position 20~35',
+                      'Fix #18130'
+                  ],
+                  option: option
+              });
+          });
+        </script>
+
+        <script>
+          require([
+              'echarts'
+          ], function (echarts) {
+              var option;
+              var end = 70;
+
+              var xData = [];
+              for (let i = 0; i < end; ++i) {
+                xData.push(i);
+              }
+
+              option = {
+                xAxis: [
+                  {
+                    data: xData,
+                    show: true
+                  }
+                ],
+                yAxis: [{ type: 'value', show: true, max: 100 }],
+                grid: [{}],
+                dataZoom: {
+                  type: 'slider',
+                  xAxisIndex: 0,
+                  start: 60,
+                  end: 60
+                },
+                series: [
+                  {
+                    type: 'bar',
+                    data: [[end - 1, 100, 22]],
+
+                    barWidth: 10,
+                    itemStyle: {
+                      opacity: 0.5
+                    },
+                    markArea: {
+                      itemStyle: {
+                        color: 'red',
+                        opacity: 0.5
+                      },
+                      data: [
+                        [
+                          {
+                            xAxis: 20
+                          },
+                          {
+                            xAxis: end - 10
+                          }
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              };
+              var chart = testHelper.create(echarts, 'main5', {
+                  title: [
+                      'There should be a red markArea at the full grid area',
+                      'Fix #18130'
+                  ],
+                  option: option
+              });
+          });
+        </script>
+
+        <script>
+          require([
+              'echarts'
+          ], function (echarts) {
+              var option;
+              var end = 70;
+
+              var xData = [];
+              for (let i = 0; i < end; ++i) {
+                xData.push(i);
+              }
+
+              option = {
+                xAxis: [
+                  {
+                    data: xData,
+                    show: true
+                  }
+                ],
+                yAxis: [{ type: 'value', show: true, max: 100 }],
+                grid: [{}],
+                dataZoom: {
+                  type: 'slider',
+                  xAxisIndex: 0,
+                  startValue: 0,
+                  endValue: 61
+                },
+                series: [
+                  {
+                    type: 'bar',
+                    data: [[end - 1, 100, 22]],
+
+                    barWidth: 10,
+                    itemStyle: {
+                      opacity: 0.5
+                    },
+                    markArea: {
+                      itemStyle: {
+                        color: 'red',
+                        opacity: 0.5
+                      },
+                      data: [
+                        [
+                          {
+                            xAxis: 20
+                          },
+                          {
+                            xAxis: end - 10
+                          }
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              };
+              var chart = testHelper.create(echarts, 'main6', {
+                  title: [
+                      'There should be a red markArea at 20~60. **Note the right should NOT be at the right boundary.**',
+                      'Fix #18130'
+                  ],
+                  option: option
+              });
+          });
+        </script>
+    </body>
+</html>

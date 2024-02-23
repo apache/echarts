@@ -80,7 +80,7 @@ interface GraphEdgeStatesMixin {
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
+    StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
 
     id?: string
     name?: string
@@ -106,6 +106,7 @@ export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOp
     category?: number | string
 
     draggable?: boolean
+    cursor?: string
 }
 
 export interface GraphEdgeStateOption {
@@ -183,7 +184,7 @@ export interface GraphSeriesOption
 
     emphasis?: {
         focus?: Exclude<GraphNodeItemOption['emphasis'], undefined>['focus']
-        scale?: boolean
+        scale?: boolean | number
         label?: SeriesLabelOption
         edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption
@@ -223,6 +224,11 @@ export interface GraphSeriesOption
 
         layoutAnimation?: boolean
     }
+
+    /**
+     * auto curveness for multiple edge, invalid when `lineStyle.curveness` is set
+     */
+    autoCurveness?: boolean | number | number[]
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {

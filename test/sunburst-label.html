@@ -28,6 +28,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -37,6 +38,7 @@ under the License.
 
 
 
+        <div id="main1"></div>
         <div id="main0"></div>
 
 
@@ -111,6 +113,129 @@ under the License.
             });
         });
         </script>
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var chart = echarts.init(document.getElementById('main1'));
+
+            var data = [
+                {
+                    name: 'Grandpa',
+                    children: [
+                        {
+                            name: 'Uncle Leo',
+                            value: 15,
+                            children: [
+                                {
+                                    name: 'Cousin Jack',
+                                    value: 2
+                                },
+                                {
+                                    name: 'Cousin Mary',
+                                    value: 5,
+                                    children: [
+                                        {
+                                            name: 'Jackson',
+                                            value: 2
+                                        }
+                                    ]
+                                },
+                                {
+                                    name: 'Cousin Ben',
+                                    value: 4
+                                }
+                            ]
+                        },
+                        {
+                            name: 'Father',
+                            value: 10,
+                            children: [
+                                {
+                                    name: 'Me',
+                                    value: 5
+                                },
+                                {
+                                    name: 'Brother Peter',
+                                    value: 1
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    name: 'Nancy',
+                    children: [
+                        {
+                            name: 'Uncle Nike',
+                            children: [
+                                {
+                                    name: 'Cousin Betty',
+                                    value: 1
+                                },
+                                {
+                                    name: 'Cousin Jenny',
+                                    value: 2
+                                }
+                            ]
+                        }
+                    ]
+                }
+
+            ];
+            option = {
+                series: {
+                    type: 'sunburst',
+                    startAngle: 0,
+                    // emphasis: {
+                    //     focus: 'ancestor'
+                    // },
+                    data: data,
+                    radius: [0, '90%'],
+                    label: {
+                        rotate: 'radial'
+                    },
+                    levels: [{}, {
+                        label: {
+                            rotate: 'tangential'
+                        }
+                    }]
+                }
+            };
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Label rotation under different startAngle '
+                ],
+                option: option,
+                height: 600,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+
+            var config = {
+                startAngle: 0,
+                clockwise: true
+            };
+
+            function update() {
+                chart.setOption({
+                    series: [{
+                        startAngle: config.startAngle,
+                        clockwise: config.clockwise
+                    }]
+                });
+            }
+
+            var gui = new dat.GUI();
+                gui.add(config, 'startAngle', 0, 360)
+                    .onChange(update);
+                gui.add(config, 'clockwise')
+                    .onChange(update);
+        });
+    </script>
 
 
     </body>

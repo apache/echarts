@@ -104,7 +104,7 @@ export interface PiecewiseVisualMapOption extends VisualMapOption {
      * When categories: {'cate1': false, 'cate3': true} When selected === false, means all unselected.
      */
     selected?: Dictionary<boolean>
-    selectedMode?: 'multiple' | 'single'
+    selectedMode?: 'multiple' | 'single' | boolean
 
     /**
      * By default, when text is used, label will hide (the logic
@@ -531,7 +531,7 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
             }
             else {
                 // `min` `max` is legacy option.
-                // `lt` `gt` `lte` `gte` is recommanded.
+                // `lt` `gt` `lte` `gte` is recommended.
                 const interval = item.interval = [] as unknown as [number, number];
                 const close: typeof item.close = item.close = [0, 0];
 

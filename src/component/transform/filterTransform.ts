@@ -35,12 +35,12 @@ export const filterTransform: ExternalDataTransform<FilterTransformOption> = {
 
     type: 'echarts:filter',
 
-    // PEDING: enhance to filter by index rather than create new data
+    // PENDING: enhance to filter by index rather than create new data
     transform: function (params) {
         // [Caveat] Fail-Fast:
-        // Do not return the whole dataset unless user config indicate it explicitly.
-        // For example, if no condition specified by mistake, return an empty result
-        // is better than return the entire raw soruce for user to find the mistake.
+        // Do not return the whole dataset unless user config indicates it explicitly.
+        // For example, if no condition is specified by mistake, returning an empty result
+        // is better than returning the entire raw source for the user to find the mistake.
 
         const upstream = params.upstream;
         let rawItem: DataTransformDataItem;

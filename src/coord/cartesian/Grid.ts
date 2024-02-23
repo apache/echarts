@@ -23,7 +23,7 @@
  * TODO Default cartesian
  */
 
-import {isObject, each, indexOf, retrieve3, map, keys} from 'zrender/src/core/util';
+import {isObject, each, indexOf, retrieve3, keys} from 'zrender/src/core/util';
 import {getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
@@ -369,7 +369,7 @@ class Grid implements CoordinateSystemMaster {
             y: 0
         };
 
-        /// Create axis
+        // Create axis
         ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
         ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
@@ -382,7 +382,7 @@ class Grid implements CoordinateSystemMaster {
 
         this._axesMap = axesMap;
 
-        /// Create cartesian2d
+        // Create cartesian2d
         each(axesMap.x, (xAxis, xAxisIndex) => {
             each(axesMap.y, (yAxis, yAxisIndex) => {
                 const key = 'x' + xAxisIndex + 'y' + yAxisIndex;

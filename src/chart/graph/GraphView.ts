@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
 import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
@@ -36,6 +35,9 @@ import Symbol from '../helper/Symbol';
 import SeriesData from '../../data/SeriesData';
 import Line from '../helper/Line';
 import { getECData } from '../../util/innerStore';
+
+import { simpleLayoutEdge } from './simpleLayoutHelper';
+import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -122,6 +124,8 @@ class GraphView extends ChartView {
             this._startForceLayoutIteration(forceLayout, layoutAnimation);
         }
 
+        const layout = seriesModel.get('layout');
+
         data.graph.eachNode((node) => {
             const idx = node.dataIndex;
             const el = node.getGraphicEl() as Symbol;
@@ -135,14 +139,31 @@ class GraphView extends ChartView {
             el.off('drag').off('dragend');
             const draggable = itemModel.get('draggable');
             if (draggable) {
-                el.on('drag', () => {
-                    if (forceLayout) {
-                        forceLayout.warmUp();
-                        !this._layouting
-                            && this._startForceLayoutIteration(forceLayout, layoutAnimation);
-                        forceLayout.setFixed(idx);
-                        // Write position back to layout
-                        data.setItemLayout(idx, [el.x, el.y]);
+                el.on('drag', (e) => {
+                    switch (layout) {
+                        case 'force':
+                            forceLayout.warmUp();
+                            !this._layouting
+                                && this._startForceLayoutIteration(forceLayout, layoutAnimation);
+                            forceLayout.setFixed(idx);
+                            // Write position back to layout
+                            data.setItemLayout(idx, [el.x, el.y]);
+                            break;
+                        case 'circular':
+                            data.setItemLayout(idx, [el.x, el.y]);
+                            // mark node fixed
+                            node.setLayout({ fixed: true }, true);
+                            // recalculate circular layout
+                            circularLayout(seriesModel, 'symbolSize', node, [e.offsetX, e.offsetY]);
+                            this.updateLayout(seriesModel);
+                            break;
+                        case 'none':
+                        default:
+                            data.setItemLayout(idx, [el.x, el.y]);
+                            // update edge
+                            simpleLayoutEdge(seriesModel.getGraph(), seriesModel);
+                            this.updateLayout(seriesModel);
+                            break;
                     }
                 }).on('dragend', () => {
                     if (forceLayout) {
@@ -150,7 +171,7 @@ class GraphView extends ChartView {
                     }
                 });
             }
-            el.setDraggable(draggable && !!forceLayout);
+            el.setDraggable(draggable, !!itemModel.get('cursor'));
 
             const focus = itemModel.get(['emphasis', 'focus']);
 
@@ -179,43 +200,16 @@ class GraphView extends ChartView {
             && seriesModel.get(['circular', 'rotateLabel']);
         const cx = data.getLayout('cx');
         const cy = data.getLayout('cy');
-        data.eachItemGraphicEl(function (el: Symbol, idx) {
-            const itemModel = data.getItemModel<GraphNodeItemOption>(idx);
-            let labelRotate = itemModel.get(['label', 'rotate']) || 0;
-            const symbolPath = el.getSymbolPath();
-            if (circularRotateLabel) {
-                const pos = data.getItemLayout(idx);
-                let rad = Math.atan2(pos[1] - cy, pos[0] - cx);
-                if (rad < 0) {
-                    rad = Math.PI * 2 + rad;
-                }
-                const isLeft = pos[0] < cx;
-                if (isLeft) {
-                    rad = rad - Math.PI;
-                }
-                const textPosition = isLeft ? 'left' as const : 'right' as const;
-
-                symbolPath.setTextConfig({
-                    rotation: -rad,
-                    position: textPosition,
-                    origin: 'center'
-                });
-                const emphasisState = symbolPath.ensureState('emphasis');
-                zrUtil.extend(emphasisState.textConfig || (emphasisState.textConfig = {}), {
-                    position: textPosition
-                });
-            }
-            else {
-                symbolPath.setTextConfig({
-                    rotation: labelRotate *= Math.PI / 180
-                });
-            }
+        data.graph.eachNode((node) => {
+            rotateNodeLabel(node, circularRotateLabel, cx, cy);
         });
 
         this._firstRender = false;
     }
 
     dispose() {
+        this.remove();
+
         this._controller && this._controller.dispose();
         this._controllerHost = null;
     }
@@ -308,7 +302,11 @@ class GraphView extends ChartView {
         this._lineDraw.updateLayout();
     }
 
-    remove(ecModel: GlobalModel, api: ExtensionAPI) {
+    remove() {
+        clearTimeout(this._layoutTimeout);
+        this._layouting = false;
+        this._layoutTimeout = null;
+
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
     }

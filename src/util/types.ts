@@ -87,8 +87,8 @@ export type ZRStyleProps = PathStyleProps | ImageStyleProps | TSpanStyleProps | 
 export type ZRElementEventName = ElementEventName | 'globalout';
 
 // ComponentFullType can be:
-//     'xxx.yyy': means ComponentMainType.ComponentSubType.
-//     'xxx': means ComponentMainType.
+//     'a.b': means ComponentMainType.ComponentSubType.
+//     'a': means ComponentMainType.
 // See `checkClassType` check the restict definition.
 export type ComponentFullType = string;
 export type ComponentMainType = keyof ECUnitOption & string;
@@ -96,7 +96,7 @@ export type ComponentSubType = Exclude<ComponentOption['type'], undefined>;
 /**
  * Use `parseClassType` to parse componentType declaration to componentTypeInfo.
  * For example:
- * componentType declaration: 'xxx.yyy', get componentTypeInfo {main: 'xxx', sub: 'yyy'}.
+ * componentType declaration: 'a.b', get componentTypeInfo {main: 'a', sub: 'b'}.
  * componentType declaration: '', get componentTypeInfo {main: '', sub: ''}.
  */
 export interface ComponentTypeInfo {
@@ -143,7 +143,9 @@ export interface DataHost {
     getData(dataType?: SeriesDataType): SeriesData;
 }
 
-export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {
+    getDataParams(dataIndex: number, dataType?: SeriesDataType, el?: Element): CallbackDataParams;
+}
     // Pick<DataHost, 'getData'>,
     // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
@@ -357,7 +359,7 @@ export type OrdinalNumber = number; // The number mapped from each OrdinalRawVal
  * ```js
  * { ordinalNumbers: [2, 5, 3, 4] }
  * ```
- * means that ordinal 2 should be diplayed on tick 0,
+ * means that ordinal 2 should be displayed on tick 0,
  * ordinal 5 should be displayed on tick 1, ...
  */
 export type OrdinalSortInfo = {
@@ -411,7 +413,7 @@ export interface OrdinalScaleTick extends ScaleTick {
      * const coord = dataToCoord(ordinalScale.getRawOrdinalNumber(tick.value)).
      * ```
      * Why place the tick value here rather than the raw ordinal value (like LogScale did)?
-     * Becuase ordinal scale sort is the different case from LogScale, where
+     * Because ordinal scale sort is the different case from LogScale, where
      * axis tick, splitArea should better not to be sorted, especially in
      * anid(animation id) when `boundaryGap: true`.
      * Only axis label are sorted.
@@ -430,7 +432,7 @@ export type DimensionLoose = DimensionName | DimensionIndexLoose;
 export type DimensionType = DataStoreDimensionType;
 
 export const VISUAL_DIMENSIONS = createHashMap<number, keyof DataVisualDimensions>([
-    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'seriesName'
+    'tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'itemChildGroupId', 'seriesName'
 ]);
 // The key is VISUAL_DIMENSIONS
 export interface DataVisualDimensions {
@@ -442,6 +444,7 @@ export interface DataVisualDimensions {
     itemName?: DimensionIndex;
     itemId?: DimensionIndex;
     itemGroupId?: DimensionIndex;
+    itemChildGroupId?: DimensionIndex;
     seriesName?: DimensionIndex;
 }
 
@@ -517,7 +520,7 @@ export type SeriesDataType = 'main' | 'node' | 'edge';
  * ```
  */
 export type ECUnitOption = {
-    // Exclude these reserverd word for `ECOption` to avoid to infer to "any".
+    // Exclude these reserved word for `ECOption` to avoid to infer to "any".
     baseOption?: unknown
     options?: unknown
     media?: unknown
@@ -616,6 +619,7 @@ export type OptionDataItemObject<T> = {
     id?: OptionId;
     name?: OptionName;
     groupId?: OptionId;
+    childGroupId?: OptionId;
     value?: T[] | T;
     selected?: boolean;
 };
@@ -635,7 +639,7 @@ export interface GraphEdgeItemObject<
      */
     target?: string | number
 }
-export type OptionDataValue = string | number | Date;
+export type OptionDataValue = string | number | Date | null | undefined;
 
 export type OptionDataValueNumeric = number | '-';
 export type OptionDataValueCategory = string;
@@ -665,6 +669,7 @@ export interface OptionEncodeVisualDimensions {
     // Which is useful in prepresenting the transition key of drilldown/up animation.
     // Or hover linking.
     itemGroupId?: OptionEncodeValue;
+    childGroupdId?: OptionEncodeValue;
 }
 export interface OptionEncode extends OptionEncodeVisualDimensions {
     [coordDim: string]: OptionEncodeValue | undefined
@@ -758,7 +763,8 @@ export type ComponentLayoutMode = {
     type?: 'box',
     ignoreSize?: boolean | boolean[]
 };
-/******************* Mixins for Common Option Properties   ********************** */
+
+// ------------------ Mixins for Common Option Properties ------------------
 export type PaletteOptionMixin = ColorPaletteOptionMixin;
 
 export interface ColorPaletteOptionMixin {
@@ -873,7 +879,7 @@ export interface RoamOptionMixin {
     /**
      * Current center position.
      */
-    center?: number[]
+    center?: (number | string)[]
     /**
      * Current zoom level. Default is 1
      */
@@ -1053,6 +1059,8 @@ export interface LabelOption extends TextCommonOption {
     minMargin?: number
 
     overflow?: TextStyleProps['overflow']
+    ellipsis?: TextStyleProps['ellipsis']
+
     silent?: boolean
     precision?: number | 'auto'
     valueAnimation?: boolean
@@ -1063,8 +1071,8 @@ export interface LabelOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
 }
 
-export interface SeriesLabelOption extends LabelOption {
-    formatter?: string | LabelFormatterCallback<CallbackDataParams>
+export interface SeriesLabelOption<T extends CallbackDataParams = CallbackDataParams> extends LabelOption {
+    formatter?: string | LabelFormatterCallback<T>
 }
 
 /**
@@ -1113,12 +1121,12 @@ export interface SeriesLineLabelOption extends LineLabelOption {
 export interface LabelLayoutOptionCallbackParams {
     /**
      * Index of data which the label represents.
-     * It can be null if label does't represent any data.
+     * It can be null if label doesn't represent any data.
      */
     dataIndex?: number,
     /**
      * Type of data which the label represents.
-     * It can be null if label does't represent any data.
+     * It can be null if label doesn't represent any data.
      */
     dataType?: SeriesDataType,
     seriesIndex: number,
@@ -1259,7 +1267,7 @@ export interface CommonTooltipOption<FormatterParams> {
      *
      * Will be ignored if tooltip.formatter is specified.
      */
-    valueFormatter?: (value: OptionDataValue | OptionDataValue[]) => string
+    valueFormatter?: (value: OptionDataValue | OptionDataValue[], dataIndex: number) => string
     /**
      * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
      * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',
@@ -1332,7 +1340,7 @@ export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
 export type ComponentItemTooltipLabelFormatterParams = {
     componentType: string
     name: string
-    // properies key array like ['name']
+    // properties key array like ['name']
     $vars: string[]
 } & {
     // Other properties
@@ -1373,8 +1381,10 @@ export interface CommonAxisPointerOption {
 
     triggerTooltip?: boolean
 
+    triggerEmphasis?: boolean
+
     /**
-     * current value. When using axisPointer.handle, value can be set to define the initail position of axisPointer.
+     * current value. When using axisPointer.handle, value can be set to define the initial position of axisPointer.
      */
     value?: ScaleDataValue
 
@@ -1661,12 +1671,13 @@ export interface SeriesLargeOptionMixin {
 }
 export interface SeriesStackOptionMixin {
     stack?: string
+    stackStrategy?: 'samesign' | 'all' | 'positive' | 'negative';
 }
 
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
 export interface SeriesSamplingOptionMixin {
-    sampling?: 'none' | 'average' | 'min' | 'max' | 'sum' | 'lttb' | SamplingFunc
+    sampling?: 'none' | 'average' | 'min' | 'max' | 'minmax' | 'sum' | 'lttb' | SamplingFunc
 }
 
 export interface SeriesEncodeOptionMixin {

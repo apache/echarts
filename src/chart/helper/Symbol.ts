@@ -30,7 +30,7 @@ import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
 import { extend } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 import Model from '../../model/Model';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
@@ -141,10 +141,10 @@ class Symbol extends graphic.Group {
         symbolPath.z = z;
     }
 
-    setDraggable(draggable: boolean) {
+    setDraggable(draggable: boolean, hasCursorOption?: boolean) {
         const symbolPath = this.childAt(0) as ECSymbol;
         symbolPath.draggable = draggable;
-        symbolPath.cursor = draggable ? 'move' : symbolPath.cursor;
+        symbolPath.cursor = !hasCursorOption && draggable ? 'move' : symbolPath.cursor;
     }
 
     /**
@@ -221,8 +221,8 @@ class Symbol extends graphic.Group {
 
         let labelStatesModels;
 
-        let hoverScale;
-        let cursorStyle;
+        let hoverScale: SymbolDrawSeriesScope['hoverScale'];
+        let cursorStyle: SymbolDrawSeriesScope['cursorStyle'];
 
         if (seriesScope) {
             emphasisItemStyle = seriesScope.emphasisItemStyle;
@@ -336,11 +336,19 @@ class Symbol extends graphic.Group {
         symbolPath.ensureState('select').style = selectItemStyle;
         symbolPath.ensureState('blur').style = blurItemStyle;
 
-        if (hoverScale) {
-            const scaleRatio = Math.max(1.1, 3 / this._sizeY);
-            emphasisState.scaleX = this._sizeX * scaleRatio;
-            emphasisState.scaleY = this._sizeY * scaleRatio;
-        }
+        // null / undefined / true means to use default strategy.
+        // 0 / false / negative number / NaN / Infinity means no scale.
+        const scaleRatio =
+            hoverScale == null || hoverScale === true
+                ? Math.max(1.1, 3 / this._sizeY)
+                // PENDING: restrict hoverScale > 1? It seems unreasonable to scale down
+                : isFinite(hoverScale as number) && hoverScale > 0
+                    ? +hoverScale
+                    : 1;
+        // always set scale to allow resetting
+        emphasisState.scaleX = this._sizeX * scaleRatio;
+        emphasisState.scaleY = this._sizeY * scaleRatio;
+
         this.setSymbolScale(1);
 
         toggleHoverEmphasis(this, focus, blurScope, emphasisDisabled);

@@ -31,7 +31,7 @@ import {
     ComponentMainType,
     ComponentSubType,
     DimensionLoose,
-    InterpolatableValue,
+    InterpolatableValue
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
@@ -211,8 +211,8 @@ type TooltipFormatResult =
 // compat it?
 // type TooltipFormatResultLegacyObject = {
 //     // `html` means the markup language text, either in 'html' or 'richText'.
-//     // The name `html` is not appropriate becuase in 'richText' it is not a HTML
-//     // string. But still support it for backward compat.
+//     // The name `html` is not appropriate because in 'richText' it is not a HTML
+//     // string. But still support it for backward compatibility.
 //     html: string;
 //     markers: Dictionary<ColorString>;
 // };

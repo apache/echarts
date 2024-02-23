@@ -17,11 +17,13 @@
 * under the License.
 */
 
+import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
     AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption
 } from '../util/types';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
@@ -90,7 +92,7 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     boundaryGap?: [number | string, number | string]
 
     /**
-     * AxisTick and axisLabel and splitLine are caculated based on splitNumber.
+     * AxisTick and axisLabel and splitLine are calculated based on splitNumber.
      */
     splitNumber?: number;
     /**
@@ -127,7 +129,7 @@ export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
     })[];
     /*
      * Set false to faster category collection.
-     * Only usefull in the case like: category is
+     * Only useful in the case like: category is
      * ['2012-01-01', '2012-01-02', ...], where the input
      * data has been ensured not duplicate and is large data.
      * null means "auto":
@@ -149,7 +151,7 @@ export interface ValueAxisBaseOption extends NumericAxisBaseOptionCommon {
     /**
      * Optional value can be:
      * + `false`: always include value 0.
-     * + `false`: always include value 0.
+     * + `true`: the axis may not contain zero position.
      */
      scale?: boolean;
 }
@@ -222,6 +224,14 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     showMinLabel?: boolean,
     // true | false | null/undefined (auto)
     showMaxLabel?: boolean,
+    // 'left' | 'center' | 'right' | null/undefined (auto)
+    alignMinLabel?: TextAlign,
+    // 'left' | 'center' | 'right' | null/undefined (auto)
+    alignMaxLabel?: TextAlign,
+    // 'top' | 'middle' | 'bottom' | null/undefined (auto)
+    verticalAlignMinLabel?: TextVerticalAlign,
+    // 'top' | 'middle' | 'bottom' | null/undefined (auto)
+    verticalAlignMaxLabel?: TextVerticalAlign,
     margin?: number,
     rich?: Dictionary<TextCommonOption>
     /**
@@ -230,6 +240,7 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     hideOverlap?: boolean;
     // Color can be callback
     color?: ColorString | ((value?: string | number, index?: number) => ColorString)
+    overflow?: TextStyleProps['overflow']
 }
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]

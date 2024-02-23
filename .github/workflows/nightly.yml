@@ -11,24 +11,31 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'apache' }}
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [18.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           registry-url: https://registry.npmjs.org/
+          node-version: ${{ matrix.node-version }}
+
       - name: Setup and publish nightly
         run: |
+          node build/nightly/prepare.js
+          npm i zrender@npm:zrender-nightly
           npm ci
+          npm ls zrender
+          node build/nightly/post.js
           npm run release
           npm run test
           npm run test:dts
-          node build/prepareNightly.js
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

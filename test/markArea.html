@@ -23,22 +23,20 @@ under the License.
         <meta charset="utf-8">
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
-        <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-            }
-        </style>
-        <div id="main"></div>
+        <div id="main0"></div>
+        <div id="main-align"></div>
+        <div id="main-overlapping"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
         <script>
 
             require([
                 'echarts'
             ], function (echarts) {
-
-                var chart = echarts.init(document.getElementById('main'));
 
                 var xAxisData = [];
                 var data1 = [];
@@ -50,7 +48,7 @@ under the License.
                     data2.push(+Math.random().toFixed(2));
                 }
 
-                chart.setOption({
+                option = {
                     legend: {
                         data: ['line', 'line2']
                     },
@@ -134,10 +132,528 @@ under the License.
                     grid: {
                         right: 300
                     }
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    option: option,
+                    title: 'MarkArea with grid filter'
+                });
+            });
+
+        </script>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisTick: {
+                            alignWithLabel: true
+                        }
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                        data: [150, 230, 224, 218, 135, 147, 260],
+                        type: 'bar',
+                        markArea: {
+                            data: [
+                                [
+                                    {
+                                        xAxis: 'Tue'
+                                    },
+                                    {
+                                        xAxis: 'Fri'
+                                    }
+                                ]
+                            ]
+                        }
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main-align', {
+                    option: option,
+                    title: ['MarkArea with alignWithLabel', 'MarkArea should be Tue ~ Fri']
+                });
+            });
+
+        </script>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        data: Array.from(Array(2017).keys())
+                    },
+                    yAxis: { type: 'value', show: true, max: 100 },
+                    series: [
+                        {
+                        type: 'bar',
+                        data: [
+                            [65, 100, 0],
+                            [130, 100, 1],
+                            [196, 100, 2],
+                            [260, 100, 3],
+                            [325, 100, 4],
+                            [391, 100, 5],
+                            [456, 100, 6],
+                            [522, 100, 7],
+                            [1117, 100, 8],
+                            [1189, 100, 9],
+                            [1254, 100, 10],
+                            [1319, 100, 11],
+                            [1420, 100, 12],
+                            [1485, 100, 13],
+                            [1551, 100, 14],
+                            [1616, 100, 15],
+                            [1750, 100, 16],
+                            [1817, 100, 17],
+                            [1882, 100, 18],
+                            [1947, 100, 19],
+                            [2014, 100, 20],
+                            [2081, 100, 21],
+                            [2147, 100, 22]
+                        ],
+                        barGap: 0,
+                        zlevel: 1,
+
+                        barWidth: 1, //10,
+                        itemStyle: {
+                            color: 'red',
+                            opacity: 0.5
+                        },
+                        emphasis: {
+                            itemStyle: {
+                            color: '#ffb703',
+                            opacity: 1,
+                            borderWidth: 2,
+                            borderColor: '#fee440'
+                            }
+                        },
+                        markArea: {
+                            emphasis: {
+                            itemStyle: {
+                                color: '#48cae4',
+                                opacity: 0.5
+                            }
+                            },
+                            zlevel: 10,
+                            itemStyle: {
+                            //opacity: 0
+                            },
+                            data: [
+                            [
+                                {
+                                xAxis: '65'
+                                },
+                                {
+                                xAxis: '130'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '130'
+                                },
+                                {
+                                xAxis: '196'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '196'
+                                },
+                                {
+                                xAxis: '260'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '260'
+                                },
+                                {
+                                xAxis: '325'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '325'
+                                },
+                                {
+                                xAxis: '391'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '391'
+                                },
+                                {
+                                xAxis: '456'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '456'
+                                },
+                                {
+                                xAxis: '522'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '522'
+                                },
+                                {
+                                xAxis: '1117'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1117'
+                                },
+                                {
+                                xAxis: '1189'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1189'
+                                },
+                                {
+                                xAxis: '1254'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1254'
+                                },
+                                {
+                                xAxis: '1319'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1319'
+                                },
+                                {
+                                xAxis: '1420'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1420'
+                                },
+                                {
+                                xAxis: '1485'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1485'
+                                },
+                                {
+                                xAxis: '1551'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1551'
+                                },
+                                {
+                                xAxis: '1616'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1616'
+                                },
+                                {
+                                xAxis: '1750'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1750'
+                                },
+                                {
+                                xAxis: '1817'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1817'
+                                },
+                                {
+                                xAxis: '1882'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1882'
+                                },
+                                {
+                                xAxis: '1947'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '1947'
+                                },
+                                {
+                                xAxis: '2014'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '2014'
+                                },
+                                {
+                                xAxis: '2081'
+                                }
+                            ],
+                            [
+                                {
+                                xAxis: '2081'
+                                },
+                                {
+                                xAxis: '2147'
+                                }
+                            ]
+                            ]
+                        }
+                        }
+                    ],
+                    dataZoom: { endValue: 912 }
+                };
+                var chart = testHelper.create(echarts, 'main-overlapping', {
+                    option: option,
+                    title: [
+                        'MarkArea when some ticks are overlapping',
+                        'There should be **no overlapping around 456**',
+                        'This test case should be fixed in the future.'
+                    ]
+                });
+            });
+
+        </script>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    title: {
+                        text: 'Distribution of Electricity',
+                        subtext: 'Fake Data'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                        type: 'cross'
+                        }
+                    },
+                    toolbox: {
+                        show: true,
+                        feature: {
+                        saveAsImage: {}
+                        }
+                    },
+                    dataZoom: [{}], // WITH ZOOMING
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        // prettier-ignore
+                        data: ['00:00', '01:15', '02:30', '03:45', '05:00', '06:15', '07:30', '08:45', '10:00', '11:15', '12:30', '13:45', '15:00', '16:15', '17:30', '18:45', '20:00', '21:15', '22:30', '23:45']
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                        formatter: '{value} W'
+                        },
+                        axisPointer: {
+                        snap: true
+                        },
+                    },
+                    series: [
+                        {
+                        name: 'Electricity',
+                        type: 'line',
+                        smooth: true,
+                        // prettier-ignore
+                        data: [300, 280, 250, 260, 270, 300, 550, 500, 400, 390, 380, 390, 400, 500, 600, 750, 800, 700, 600, 400],
+                        markArea: {
+                            itemStyle: {
+                            color: 'rgba(255, 173, 177, 0.4)'
+                            },
+                            data: [
+                            [
+                                {
+                                name: 'Morning Peak',
+                                xAxis: '07:30',
+                                yAxis: -100
+                                },
+                                {
+                                xAxis: '10:00',
+                                yAxis: 900 // EXACT LIMIT HERE
+                                }
+                            ],
+                            [
+                                {
+                                name: 'Evening Peak',
+                                xAxis: '17:30'
+                                },
+                                {
+                                xAxis: '21:15'
+                                }
+                            ],
+                            [
+                            {yAxis: 200}, {yAxis: 600, xAxis: '22:30'}, // EXACT LIMIT HERE
+                                ]
+                            ]
+                        }
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    option: option
                 });
 
             });
 
         </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [10, 52, 200, 334, 390, 330, 220],
+                        itemStyle: {
+                            opacity: .1
+                        },
+                        markArea: {
+                            data: [
+                                [
+                                    {
+                                        name: '所有数据范围区间',
+                                        coord: ['min', 'min'],
+                                        itemStyle: {
+                                            color: 'lightgray',
+                                            borderWidth: 2,
+                                            borderColor: 'gray'
+                                        },
+                                        label: {
+                                            position: 'insideLeft',
+                                        }
+                                    },
+                                    {
+                                        coord: ['max', 'max']
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '[average, min] to [max, median]',
+                                        coord: ['average', 'min'],
+                                        itemStyle: {
+                                            color: '#14c4ba',
+                                            opacity: .5
+                                        }
+                                    },
+                                    {
+                                        coord: ['max', 'median']
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '平均值到最大值',
+                                        type: 'average',
+                                        itemStyle: {
+                                            color: 'lightblue',
+                                            borderWidth: 2,
+                                            borderColor: 'lightblue'
+                                        }
+                                    },
+                                    {
+                                        type: 'max'
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '两个坐标之间的标域',
+                                        coord: [1, 20]
+                                    },
+                                    {
+                                        coord: ['c', 30]
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: 'yAxis 120~130',
+                                        yAxis: 120
+                                    },
+                                    {
+                                        yAxis: 130
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '两个屏幕坐标之间的标域 px',
+                                        x: 80,
+                                        y: 50,
+                                        itemStyle: {
+                                            color: 'lightgreen'
+                                        }
+                                    },
+                                    {
+                                        x: 100,
+                                        y: 100
+                                    }
+                                ],
+                                [
+                                    {
+                                        name: '两个屏幕坐标之间的标域 px & %',
+                                        x: 100,
+                                        y: '20%'
+                                    },
+                                    {
+                                        x: '90%',
+                                        y: '30%'
+                                    }
+                                ]
+                            ]
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        '**两个屏幕坐标之间的标域** should be displayed',
+                        '**所有数据范围区间** should be displayed',
+                        'Other mark areas should also be displayed',
+                        'should have no errors in the console'
+                    ],
+                    option: option
+                });
+            });
+            </script>
     </body>
 </html>

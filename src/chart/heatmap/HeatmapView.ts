@@ -33,7 +33,7 @@ import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../u
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import Element from 'zrender/src/Element';
+import type Element from 'zrender/src/Element';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -94,7 +94,7 @@ function getIsInContinuousRange(dataExtent: number[], range: number[]) {
 
 function isGeoCoordSys(coordSys: CoordinateSystem): coordSys is GeoLikeCoordSys {
     const dimensions = coordSys.dimensions;
-    // Not use coorSys.type === 'geo' because coordSys maybe extended
+    // Not use coordSys.type === 'geo' because coordSys maybe extended
     return dimensions[0] === 'lng' && dimensions[1] === 'lat';
 }
 
@@ -175,12 +175,13 @@ class HeatmapView extends ChartView {
     ) {
 
         const coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar;
+        const isCartesian2d = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d');
         let width;
         let height;
         let xAxisExtent;
         let yAxisExtent;
 
-        if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
+        if (isCartesian2d) {
             const xAxis = coordSys.getAxis('x');
             const yAxis = coordSys.getAxis('y');
 
@@ -193,8 +194,9 @@ class HeatmapView extends ChartView {
                 }
             }
 
-            width = xAxis.getBandWidth();
-            height = yAxis.getBandWidth();
+            // add 0.5px to avoid the gaps
+            width = xAxis.getBandWidth() + .5;
+            height = yAxis.getBandWidth() + .5;
             xAxisExtent = xAxis.scale.getExtent();
             yAxisExtent = yAxis.scale.getExtent();
         }
@@ -212,7 +214,7 @@ class HeatmapView extends ChartView {
         let blurScope = emphasisModel.get('blurScope');
         let emphasisDisabled = emphasisModel.get('disabled');
 
-        const dataDims = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')
+        const dataDims = isCartesian2d
             ? [
                 data.mapDimension('x'),
                 data.mapDimension('y'),
@@ -227,12 +229,14 @@ class HeatmapView extends ChartView {
             let rect;
             const style = data.getItemVisual(idx, 'style');
 
-            if (isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d')) {
+            if (isCartesian2d) {
                 const dataDimX = data.get(dataDims[0], idx);
                 const dataDimY = data.get(dataDims[1], idx);
 
                 // Ignore empty data and out of extent data
                 if (isNaN(data.get(dataDims[2], idx) as number)
+                    || isNaN(dataDimX as number)
+                    || isNaN(dataDimY as number)
                     || dataDimX < xAxisExtent[0]
                     || dataDimX > xAxisExtent[1]
                     || dataDimY < yAxisExtent[0]
@@ -248,10 +252,10 @@ class HeatmapView extends ChartView {
 
                 rect = new graphic.Rect({
                     shape: {
-                        x: Math.floor(Math.round(point[0]) - width / 2),
-                        y: Math.floor(Math.round(point[1]) - height / 2),
-                        width: Math.ceil(width),
-                        height: Math.ceil(height)
+                        x: point[0] - width / 2,
+                        y: point[1] - height / 2,
+                        width,
+                        height
                     },
                     style
                 });
@@ -269,7 +273,7 @@ class HeatmapView extends ChartView {
                 });
             }
 
-            // Optimization for large datset
+            // Optimization for large dataset
             if (data.hasItemOption) {
                 const itemModel = data.getItemModel<HeatmapDataItemOption>(idx);
                 const emphasisModel = itemModel.getModel('emphasis');
