@@ -42,20 +42,17 @@ const mathLog = Math.log;
  * symmetric log, allowing negative values for logarithmic scales
  */
 function symMathLog(x: number): number {
-    if (x >= 0) {
-        return mathLog(x);
+    if (x === 0) {
+        return 0;
     }
-    return -mathLog(-x);
+    return x > 0 ? mathLog(x) : -mathLog(-x);
 }
 
 /**
  * symmetric pow, allowing negative values for logarithmic scales
  */
 function symMathPow(x: number, y: number): number {
-    if (y >= 0) {
-        return mathPow(x, y);
-    }
-    return -mathPow(x, -y);
+    return y >= 0 ? mathPow(x, y) : -mathPow(x, -y);
 }
 
 class LogScale extends Scale {
