@@ -52,7 +52,6 @@
       console.error('No SVG element found in the DOM.');
       return;
     }
-    // const children = svgRoot.children;
     function getIndex(child, attr) {
       var index = child.getAttribute(attr);
       if (index) {
@@ -63,10 +62,10 @@
     }
     var listeners = options.on || {};
     var _loop_1 = function (rawEvtName) {
-      var eventName = rawEvtName;
-      if (!listeners.hasOwnProperty(eventName)) {
+      if (!listeners.hasOwnProperty(rawEvtName)) {
         return "continue";
       }
+      var eventName = rawEvtName;
       var listener = listeners[eventName];
       if (!isFunction(listener)) {
         return "continue";

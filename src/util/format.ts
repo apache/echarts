@@ -181,7 +181,6 @@ interface GetTooltipMarkerOpt {
     // id name for marker. If only one marker is in a rich text, this can be omitted.
     // By default: 'markerX'
     markerId?: string;
-    opacity?: number;
 }
 // Only support color string
 export function getTooltipMarker(color: ColorString, extraCssText?: string): TooltipMarker;
@@ -192,7 +191,6 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
         extraCssText: extraCssText
     } : (inOpt || {}) as GetTooltipMarkerOpt;
     const color = opt.color;
-    const opacity = String(opt.opacity || 1);
     const type = opt.type;
     extraCssText = opt.extraCssText;
     const renderMode = opt.renderMode || 'html';
@@ -206,10 +204,10 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
         ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;'
             + 'border-radius:4px;width:4px;height:4px;background-color:'
             // Only support string
-            + encodeHTML(color) + ';' + 'opacity:' + encodeHTML(opacity) + ';' + (extraCssText || '') + '"></span>'
+            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
         : '<span style="display:inline-block;margin-right:4px;'
             + 'border-radius:10px;width:10px;height:10px;background-color:'
-            + encodeHTML(color) + ';' + 'opacity:' + encodeHTML(opacity) + ';' + (extraCssText || '') + '"></span>';
+            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
     }
     else {
         // Should better not to auto generate style name by auto-increment number here.
@@ -225,14 +223,12 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
                     width: 4,
                     height: 4,
                     borderRadius: 2,
-                    opacity: opacity,
                     backgroundColor: color
                 }
                 : {
                     width: 10,
                     height: 10,
                     borderRadius: 5,
-                    opacity: opacity,
                     backgroundColor: color
                 }
         };

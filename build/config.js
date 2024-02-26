@@ -38,7 +38,7 @@ function createAddLicensePlugin(sourcemap) {
     }
 }
 
-function createOutputs(basename, { min }, commonOutputOpts) {
+function createOutputs(basename, { min, fileExtension }, commonOutputOpts) {
     commonOutputOpts = {
         format: 'umd',
         ...commonOutputOpts
@@ -59,7 +59,7 @@ function createOutputs(basename, { min }, commonOutputOpts) {
             createReplacePlugin('development'),
             createAddLicensePlugin(true)
         ],
-        file: basename + '.js'
+        file: basename + (fileExtension || '.js')
     }];
 
     if (min) {
@@ -73,7 +73,7 @@ function createOutputs(basename, { min }, commonOutputOpts) {
                 terser(),
                 createAddLicensePlugin(false)
             ],
-            file: basename + '.min.js'
+            file: basename + '.min' + (fileExtension || '.js')
         })
     }
     return output;
@@ -86,6 +86,7 @@ function createOutputs(basename, { min }, commonOutputOpts) {
  * @param {string} [opt.format='umd'] If set, `opt.input` is required too, and `opt.type` is ignored.
  * @param {string} [opt.min=false] If build minified output
  * @param {boolean} [opt.addBundleVersion=false] Only for debug in watch, prompt that the two build is different.
+ * @param {string} [opt.fileExtension=undefined] output file extension, default is '.js'. Should start with '.'.
  */
 exports.createECharts = function (opt = {}) {
     const srcType = opt.type !== 'all' ? '.' + opt.type : '';

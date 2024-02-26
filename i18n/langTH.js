@@ -99,6 +99,66 @@ var localeObj = {
             title: 'บันทึกไปยังรูปภาพ',
             lang: ['คลิกขวาเพื่อบันทึกรูปภาพ']
         }
+    },
+    series: {
+        typeNames: {
+            pie: 'แผนภูมิวงกลม',
+            bar: 'แผนภูมิแท่ง',
+            line: 'แผนภูมิเส้น',
+            scatter: 'แผนภูมิกระจาย',
+            effectScatter: 'แผนภูมิกระจายคลื่น',
+            radar: 'แผนภูมิเรดาร์',
+            tree: 'ต้นไม้',
+            treemap: 'แผนที่ต้นไม้',
+            boxplot: 'แผนภูมิกล่อง',
+            candlestick: 'แผนภูมิเทียน',
+            k: 'แผนภูมิเส้น K',
+            heatmap: 'แผนที่ความร้อน',
+            map: 'แผนที่',
+            parallel: 'แผนที่พิกัดขนาน',
+            lines: 'กราฟเส้น',
+            graph: 'กราฟความสัมพันธ์',
+            sankey: 'แผนภูมิซันกีย์',
+            funnel: 'แผนภูมิกรวย',
+            gauge: 'เกจ',
+            pictorialBar: 'แผนภูมิแท่งภาพ',
+            themeRiver: 'แผนที่แม่น้ำธีม',
+            sunburst: 'Sunburst',
+            custom: 'แผนภูมิที่กำหนดเอง',
+            chart: 'แผนภูมิ'
+        }
+    },
+    aria: {
+        general: {
+            withTitle: 'นี่คือแผนภูมิเกี่ยวกับ “{title}”',
+            withoutTitle: 'นี่คือแผนภูมิ'
+        },
+        series: {
+            single: {
+                prefix: '',
+                withName: ' ด้วยประเภท {seriesType} ชื่อ {seriesName} ',
+                withoutName: ' ด้วยประเภท {seriesType} '
+            },
+            multiple: {
+                prefix: ' มีทั้งหมด {seriesCount} ชุดข้อมูล ',
+                withName: ' ชุดข้อมูลที่ {seriesId} เป็นประเภท {seriesType} แทน {seriesName} ',
+                withoutName: ' ชุดข้อมูลที่ {seriesId} เป็นประเภท {seriesType} ',
+                separator: {
+                    middle: '',
+                    end: ''
+                }
+            }
+        },
+        data: {
+            allData: 'ข้อมูลดังต่อไปนี้: ',
+            partialData: 'ข้อมูล {displayCnt} รายการแรกคือ: ',
+            withName: 'ข้อมูลสำหรับ {name} คือ {value} ',
+            withoutName: '{value} ',
+            separator: {
+                middle: ', ',
+                end: '. '
+            }
+        }
     }
 };
 

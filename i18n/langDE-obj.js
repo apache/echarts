@@ -127,7 +127,9 @@ var localeObj = {
             gauge: 'Meßanzeige',
             pictorialBar: 'Bildlicher Balken',
             themeRiver: 'Thematische Flusskarte',
-            sunburst: 'Sonnenausbruch'
+            sunburst: 'Sonnenausbruch',
+            custom: 'Graficu persunalizatu',
+            chart: 'Diagramm'
         }
     },
     aria: {

@@ -39,7 +39,7 @@ const transformDEVUtil = require('./transform-dev');
 const preamble = require('./preamble');
 const dts = require('@lang/rollup-plugin-dts').default;
 const rollup = require('rollup');
-const { transformImport } = require('zrender/build/transformImport');
+const { transformImport } = require('zrender/build/transformImport.js');
 
 const ecDir = nodePath.resolve(__dirname, '..');
 const tmpDir = nodePath.resolve(ecDir, 'pre-publish-tmp');

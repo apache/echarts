@@ -67,7 +67,6 @@ export class DataFormatMixin {
         const itemOpt = data.getRawDataItem(dataIndex);
         const style = data.getItemVisual(dataIndex, 'style');
         const color = style && style[data.getItemVisual(dataIndex, 'drawType') || 'fill'] as ZRColor;
-        const opacity = style && style.opacity;
         const borderColor = style && style.stroke as ColorString;
         const mainType = this.mainType;
         const isSeries = mainType === 'series';
@@ -88,7 +87,6 @@ export class DataFormatMixin {
             value: rawValue,
             color: color,
             borderColor: borderColor,
-            opacity: opacity,
             dimensionNames: userOutput ? userOutput.fullDimensions : null,
             encode: userOutput ? userOutput.encode : null,
 
