@@ -204,7 +204,7 @@ class LegendView extends ComponentView {
             }
 
             // Legend to control series.
-            if (seriesModel && seriesModel.subType !== "gauge") {
+            if (seriesModel) {
                 const data = seriesModel.getData();
                 const lineVisualStyle = data.getVisual('legendLineStyle') || {};
                 const legendIcon = data.getVisual('legendIcon');
@@ -232,7 +232,7 @@ class LegendView extends ComponentView {
                 ecModel.eachRawSeries(function (seriesModel) {
 
                     // In case multiple series has same data name
-                    if (legendDrawnMap.get(name) && seriesModel.subType !== "gauge") {
+                    if (legendDrawnMap.get(name)) {
                         return;
                     }
 
