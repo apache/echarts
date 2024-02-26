@@ -20,8 +20,10 @@
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import GaugeView from './GaugeView';
 import GaugeSeriesModel from './GaugeSeries';
+import dataFilter from '../../processor/dataFilter';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(GaugeView);
     registers.registerSeriesModel(GaugeSeriesModel);
+    registers.registerProcessor(dataFilter('gauge'));
 }
