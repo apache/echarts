@@ -223,6 +223,7 @@ class BarView extends ChartView {
         const coordSysClipArea = getClipArea(coord, data);
         // If there is clipPath created in large mode. Remove it.
         group.removeClipPath();
+        this._updateLargeClip(seriesModel);
         // We don't use clipPath in normal mode because we needs a perfect animation
         // And don't want the label are clipped.
 
@@ -440,6 +441,8 @@ class BarView extends ChartView {
             })
             .execute();
 
+        this._updateBreakAxisClip(coord);
+
         const bgGroup = this._backgroundGroup || (this._backgroundGroup = new Group());
         bgGroup.removeAll();
 
@@ -474,6 +477,12 @@ class BarView extends ChartView {
         else {
             group.removeClipPath();
         }
+    }
+
+    private _updateBreakAxisClip(coord: Cartesian2D | Polar) {
+        const compoundPath = (coord as Cartesian2D).getBreakAreaClipPath();
+        // this.group.add(compoundPath);
+        this.group.setClipPath(compoundPath);
     }
 
     private _enableRealtimeSort(

@@ -870,7 +870,7 @@ function buildAxisLabel(
                         breakStart: labelItem.breakStart,
                         breakEnd: labelItem.breakEnd,
                     });
-                })
+                });
             }
         }
 
