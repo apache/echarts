@@ -209,7 +209,7 @@ under the License.
                     var xAxisInfo = event.axesInfo[0];
                     if (xAxisInfo) {
                         var dimension = xAxisInfo.value + 1;
-                        if (curDimension !== dimension) {
+                        if(curDimension === dimension){
                             curDimension = dimension;
                             chart.setOption({
                                 series: {
