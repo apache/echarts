@@ -19,6 +19,7 @@
 
 import createSeriesDataSimply from '../helper/createSeriesDataSimply';
 import SeriesModel from '../../model/Series';
+import * as zrUtil from 'zrender/src/core/util';
 import {
     SeriesOption,
     CircleLayoutOptionMixin,
@@ -34,6 +35,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
+import LegendVisualProvider from '../../visual/LegendVisualProvider';
 
 // [percent, color]
 type GaugeColorStop = [number, ColorString];
@@ -190,6 +192,16 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
     type = GaugeSeriesModel.type;
 
     visualStyleAccessPath = 'itemStyle';
+
+    init(option: GaugeSeriesOption): void {
+        super.init.apply(this, arguments as any);
+
+        // Enable legend selection for each data item
+        // Use a function instead of direct access because data reference may changed
+        this.legendVisualProvider = new LegendVisualProvider(
+            zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
+        );
+    }
 
     getInitialData(option: GaugeSeriesOption, ecModel: GlobalModel): SeriesData {
         return createSeriesDataSimply(this, ['value']);
