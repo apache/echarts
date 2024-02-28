@@ -545,7 +545,13 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         else {
                             const coord = cartesian.dataToPoint([baseValue, value]);
                             if (stacked) {
-                                const startCoord = cartesian.dataToPoint([baseValue, startValue]);
+                                let adjustedStartValue = startValue;
+                                if (startValue === 0 && valueAxis.type === 'log') {
+                                    // Since log(0) == -Infinity, we adjust the start value to 1
+                                    // so that log(1) == 0, and the bars go from 0.
+                                    adjustedStartValue = 1;
+                                }
+                                const startCoord = cartesian.dataToPoint([baseValue, adjustedStartValue]);
                                 baseCoord = startCoord[1];
                             }
                             x = coord[0] + columnOffset;
