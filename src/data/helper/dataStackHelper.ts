@@ -97,7 +97,7 @@ export function enableDataStack(
     const yCoordDimension = dimensionDefineList.find(
         dimensionInfo => !isString(dimensionInfo) && dimensionInfo.coordDim === 'y'
     ) as SeriesDimensionDefine | undefined;
-    const isYCoordDimensionStackable = yCoordDimension !== null
+    const isYCoordDimensionStackable = yCoordDimension != null
         && yCoordDimension.type !== 'ordinal' && yCoordDimension.type !== 'time';
 
     each(dimensionDefineList, function (dimensionInfo, index) {
