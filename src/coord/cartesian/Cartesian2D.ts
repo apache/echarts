@@ -192,53 +192,6 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 
         return new BoundingRect(x, y, width, height);
     }
-
-    getBreakAreaClipPath(): CompoundPath {
-        const xAxis = this.getAxis('x');
-        const yAxis = this.getOtherAxis(xAxis);
-        const xBreaks = xAxis.scale.getBreaks();
-        const yBreaks = yAxis.scale.getBreaks();
-        const area = this.getArea();
-        const yAreaStart = yAxis.inverse ? 0 : area.y + area.height;
-        const yAreaEnd = yAxis.inverse ? area.y + area.height : area.y;
-
-        const paths: Rect[] = [];
-        let lastXEnd = area.x;
-        for (let i = 0; i <= xBreaks.length; i++) {
-            const isLastX = i === xBreaks.length;
-            const xStart = isLastX
-                ? area.x + area.width
-                : xAxis.toGlobalCoord(xAxis.dataToCoord(xBreaks[i].start));
-            const xEnd = !isLastX && xAxis.toGlobalCoord(xAxis.dataToCoord(xBreaks[i].end));
-            let lastYEnd = yAreaStart;
-            for (let j = 0; j <= yBreaks.length; j++) {
-                const isLastY = j === yBreaks.length;
-                const yStart = isLastY
-                    ? yAreaEnd
-                    : yAxis.toGlobalCoord(yAxis.dataToCoord(yBreaks[j].start));
-                const yEnd = !isLastY && yAxis.toGlobalCoord(yAxis.dataToCoord(yBreaks[j].end));
-                paths.push(new Rect({
-                    shape: {
-                        x: lastXEnd,
-                        y: lastYEnd,
-                        width: xStart - lastXEnd,
-                        height: (yStart - lastYEnd) * (yAxis.inverse ? -1 : 1)
-                    }
-                }));
-                lastYEnd = yEnd;
-            }
-            lastXEnd = xEnd;
-        }
-        return new CompoundPath({
-            shape: {
-                paths
-            },
-            style: {
-                fill: 'green',
-                opacity: 0.3
-            }
-        });
-    }
 };
 
 interface Cartesian2DArea extends BoundingRect {}

@@ -2361,13 +2361,13 @@ class ECharts extends Eventful<ECEventDefinition> {
             const zlevel = model.get('zlevel') || 0;
             // Set z and zlevel
             view.eachRendered((el) => {
-                doUpdateZ(el, z, zlevel, -Infinity);
+                doUpdateZ(el, z, zlevel, -Infinity, false);
                 // Don't traverse the children because it has been traversed in _updateZ.
                 return true;
             });
         };
 
-        function doUpdateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
+        function doUpdateZ(el: Element, z: number, zlevel: number, maxZ2: number, zFloat: boolean): number {
             // Group may also have textContent
             const label = el.getTextContent();
             const labelLine = el.getTextGuideLine();
@@ -2377,10 +2377,15 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // set z & zlevel of children elements of Group
                 const children = (el as graphic.Group).childrenRef();
                 for (let i = 0; i < children.length; i++) {
-                    maxZ2 = Math.max(doUpdateZ(children[i], z, zlevel, maxZ2), maxZ2);
+                    maxZ2 = Math.max(doUpdateZ(children[i], z, zlevel, maxZ2, zFloat || (el as any).zFloat), maxZ2);
                 }
             }
             else {
+                if (zFloat || (el as any).zFloat) {
+                    // This child element will not be set z and zlevel of the group
+                    return maxZ2;
+                }
+
                 // not Group
                 (el as Displayable).z = z;
                 (el as Displayable).zlevel = zlevel;

@@ -30,19 +30,20 @@ export function rectCoordAxisBuildBreakArea(
     axisModel: SingleAxisModel | CartesianAxisModel,
     gridModel: GridModel | SingleAxisModel,
     api: ExtensionAPI
-) {
+): graphic.Group {
     const axis = axisModel.axis;
 
     if (axis.scale.isBlank()) {
-        return;
+        return null;
     }
 
     const breakAreaModel = (axisModel as AxisBaseModel).getModel('breakArea');
     const breaks = axis.scale.getBreaks();
-
     if (!breaks.length) {
-        return;
+        return null;
     }
+    const zigzagSize = Math.max(1, 10); // TODO: from breakAreaModel
+    const maskHeight = Math.max(1, 30); // TODO: from breakAreaModel
 
     const gridRect = gridModel.coordinateSystem.getRect();
     const backgroundStyleModel = breakAreaModel.getModel('backgroundStyle');
@@ -53,6 +54,11 @@ export function rectCoordAxisBuildBreakArea(
         (itemStyle as any).decal = decalPattern;
     }
 
+    const group = new graphic.Group({
+        zFloat: true
+    } as any);
+
+    let clipEl;
     for (let i = 0; i < breaks.length; i++) {
         const brk = breaks[i];
         if (brk.isExpanded) {
@@ -64,35 +70,108 @@ export function rectCoordAxisBuildBreakArea(
         const startCoord = axis.toGlobalCoord(axis.dataToCoord(brk.start));
         const endCoord = axis.toGlobalCoord(axis.dataToCoord(brk.end));
 
+        const breakGroup = new graphic.Group();
+        const polygonPoints = []; // Zigzag path
         let x;
         let y;
         let width;
         let height;
+        const spanCoord = endCoord - startCoord;
         if (axis.isHorizontal()) {
             x = startCoord;
             y = gridRect.y;
             width = endCoord - startCoord;
             height = gridRect.height;
+
+            const sign = width < 0 ? -1 : 1;
+            if (width * sign > spanCoord) {
+                x += (spanCoord - maskHeight * sign) / 2;
+                width = maskHeight * sign;
+            }
         }
         else {
+            clipEl = new graphic.Rect({
+                shape: {
+                    x: gridRect.x,
+                    y: 0,
+                    width: gridRect.width,
+                    height: api.getHeight()
+                }
+            });
             x = gridRect.x;
             y = startCoord;
             width = gridRect.width;
             height = endCoord - startCoord;
+
+            const sign = height < 0 ? -1 : 1;
+            if (height * sign > spanCoord) {
+                y += (spanCoord - maskHeight * sign) / 2;
+                height = maskHeight * sign;
+            }
+
+            let polylinePoints = [];
+            let i = x;
+            const xValues = [i];
+            while (xValues.length % 2 === 1 || i < x + width) {
+                i += zigzagSize * (Math.random() * 4 + 0.5);
+                xValues.push(i);
+            }
+
+            for (let j = 0; j < xValues.length; ++j) {
+                i = xValues[j];
+                polygonPoints.push([i, y]);
+                polylinePoints.push([i, y]);
+                i = xValues[++j];
+                polygonPoints.push([i, y - zigzagSize]);
+                polylinePoints.push([i, y - zigzagSize]);
+            }
+            breakGroup.add(new graphic.Polyline({
+                shape: {
+                    points: polylinePoints
+                },
+                style: {
+                    stroke: '#ccc',
+                    fill: 'none'
+                },
+                clipPath: clipEl,
+                z: 100
+            }));
+
+            polylinePoints = [];
+            for (let j = xValues.length - 1; j >= 0; --j) {
+                let i = xValues[j];
+                polygonPoints.push([i, y + height]);
+                polylinePoints.push([i, y + height]);
+                i = xValues[--j];
+                polygonPoints.push([i, y + height + zigzagSize]);
+                polylinePoints.push([i, y + height + zigzagSize]);
+            }
+            polygonPoints.push([x, y]);
+            breakGroup.add(new graphic.Polyline({
+                shape: {
+                    points: polylinePoints
+                },
+                style: {
+                    stroke: '#ccc',
+                    fill: 'none'
+                },
+                clipPath: clipEl,
+                z: 100
+            }));
         }
 
-        const el = new graphic.Rect({
+        breakGroup.add(new graphic.Polygon({
             shape: {
-                x,
-                y,
-                width,
-                height
+                points: polygonPoints
             },
-            style: itemStyle,
-            cursor: 'pointer' // TODO: depends on whether expandable
-        });
+            style: {
+                fill: '#fff'
+            },
+            clipPath: clipEl,
+            z: 100
+        }));
 
-        el.on('click', () => {
+        breakGroup.on('click', () => {
             axis.scale.expandBreak(brk.start, brk.end);
             api.dispatchAction({
                 type: 'axisBreakExpand',
@@ -101,6 +180,7 @@ export function rectCoordAxisBuildBreakArea(
             });
         });
 
-        axisGroup.add(el);
+        group.add(breakGroup);
     }
+    axisGroup.add(group);
 }
