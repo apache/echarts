@@ -130,7 +130,7 @@ export function getStackedOnPoint(
         ) as number;
     }
 
-    if (isNaN(stackedOverValue) && !isNaN(stackResultValue)) {
+    if (isNaN(stackedOverValue) && !(dataCoordInfo.stacked && isNaN(stackResultValue))) {
         stackedOverValue = dataCoordInfo.valueStart;
     }
 
