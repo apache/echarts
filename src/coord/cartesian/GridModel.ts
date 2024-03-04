@@ -29,7 +29,12 @@ export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, Shado
     show?: boolean;
 
     // Whether grid size contain label.
-    containLabel?: boolean;
+    containLabel?: boolean | {
+        left?: boolean,
+        top?: boolean,
+        right?: boolean,
+        bottom?: boolean
+    };
 
     backgroundColor?: ZRColor;
     borderWidth?: number;
