@@ -19,6 +19,7 @@
 
 import { createHashMap, HashMap, isObject, retrieve2 } from 'zrender/src/core/util';
 import { makeInner } from '../../util/model';
+import { DIMENSIONS_LIMIT } from '../../util/constant';
 import {
     DimensionDefinition, DimensionDefinitionLoose, DimensionIndex, DimensionName, DimensionType
 } from '../../util/types';
@@ -262,6 +263,6 @@ export function ensureSourceDimNameMap(source: Source): HashMap<DimensionIndex, 
     );
 }
 
-export function shouldOmitUnusedDimensions(dimCount: number): boolean {
-    return dimCount > 30;
+export function shouldOmitUnusedDimensions(dimCount: number, dimensionsLimit: number = DIMENSIONS_LIMIT): boolean {
+    return dimCount > dimensionsLimit;
 }
