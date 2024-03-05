@@ -84,7 +84,10 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     breaks?: ScaleBreak[];
     breakArea?: {
         show?: boolean,
-        backgroundStyle?: ItemStyleOption & {decal?: DecalObject}
+        itemStyle?: ItemStyleOption,
+        zigzagAmplitude?: number,
+        zigzagMinSpan?: number,
+        zigzagMaxSpan?: number
     }
 }
 

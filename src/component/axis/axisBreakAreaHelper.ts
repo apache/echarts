@@ -22,8 +22,8 @@ import GridModel from '../../coord/cartesian/GridModel';
 import type SingleAxisModel from '../../coord/single/AxisModel';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import ExtensionAPI from '../../core/ExtensionAPI';
+import { ExtendedElementProps } from '../../core/ExtendedElement';
 
 export function rectCoordAxisBuildBreakArea(
     axisGroup: graphic.Group,
@@ -42,21 +42,20 @@ export function rectCoordAxisBuildBreakArea(
     if (!breaks.length) {
         return null;
     }
-    const zigzagSize = Math.max(1, 10); // TODO: from breakAreaModel
-    const maskHeight = Math.max(1, 30); // TODO: from breakAreaModel
+    const zigzagAmplitude = breakAreaModel.get('zigzagAmplitude');
+    const zigzagMinSpan = breakAreaModel.get('zigzagMinSpan');
+    const zigzagMaxSpan = breakAreaModel.get('zigzagMaxSpan');
 
     const gridRect = gridModel.coordinateSystem.getRect();
-    const backgroundStyleModel = breakAreaModel.getModel('backgroundStyle');
-    const itemStyle = backgroundStyleModel.getItemStyle();
-    const decal = backgroundStyleModel.get('decal');
-    if (decal) {
-        const decalPattern = createOrUpdatePatternFromDecal(decal, api);
-        (itemStyle as any).decal = decalPattern;
-    }
+    const itemStyleModel = breakAreaModel.getModel('itemStyle');
+    const itemStyle = itemStyleModel.getItemStyle();
+    const borderColor = itemStyle.stroke;
+    const borderWidth = itemStyle.lineWidth;
+    const color = itemStyle.fill;
 
     const group = new graphic.Group({
-        zFloat: true
-    } as any);
+        ignoreModelZ: true
+    } as ExtendedElementProps);
 
     let clipEl;
     for (let i = 0; i < breaks.length; i++) {
@@ -82,12 +81,6 @@ export function rectCoordAxisBuildBreakArea(
             y = gridRect.y;
             width = endCoord - startCoord;
             height = gridRect.height;
-
-            const sign = width < 0 ? -1 : 1;
-            if (width * sign > spanCoord) {
-                x += (spanCoord - maskHeight * sign) / 2;
-                width = maskHeight * sign;
-            }
         }
         else {
             clipEl = new graphic.Rect({
@@ -103,34 +96,29 @@ export function rectCoordAxisBuildBreakArea(
             width = gridRect.width;
             height = endCoord - startCoord;
 
-            const sign = height < 0 ? -1 : 1;
-            if (height * sign > spanCoord) {
-                y += (spanCoord - maskHeight * sign) / 2;
-                height = maskHeight * sign;
-            }
-
             let polylinePoints = [];
             let i = x;
             const xValues = [i];
             while (xValues.length % 2 === 1 || i < x + width) {
-                i += zigzagSize * (Math.random() * 4 + 0.5);
+                i += Math.random() * (zigzagMaxSpan - zigzagMinSpan) + zigzagMinSpan;
                 xValues.push(i);
             }
 
             for (let j = 0; j < xValues.length; ++j) {
                 i = xValues[j];
-                polygonPoints.push([i, y]);
-                polylinePoints.push([i, y]);
+                polygonPoints.push([i, y + zigzagAmplitude]);
+                polylinePoints.push([i, y + zigzagAmplitude]);
                 i = xValues[++j];
-                polygonPoints.push([i, y - zigzagSize]);
-                polylinePoints.push([i, y - zigzagSize]);
+                polygonPoints.push([i, y - zigzagAmplitude]);
+                polylinePoints.push([i, y - zigzagAmplitude]);
             }
             breakGroup.add(new graphic.Polyline({
                 shape: {
                     points: polylinePoints
                 },
                 style: {
-                    stroke: '#ccc',
+                    stroke: borderColor,
+                    lineWidth: borderWidth,
                     fill: 'none'
                 },
                 clipPath: clipEl,
@@ -140,11 +128,11 @@ export function rectCoordAxisBuildBreakArea(
             polylinePoints = [];
             for (let j = xValues.length - 1; j >= 0; --j) {
                 let i = xValues[j];
-                polygonPoints.push([i, y + height]);
-                polylinePoints.push([i, y + height]);
+                polygonPoints.push([i, y + height - zigzagAmplitude]);
+                polylinePoints.push([i, y + height - zigzagAmplitude]);
                 i = xValues[--j];
-                polygonPoints.push([i, y + height + zigzagSize]);
-                polylinePoints.push([i, y + height + zigzagSize]);
+                polygonPoints.push([i, y + height + zigzagAmplitude]);
+                polylinePoints.push([i, y + height + zigzagAmplitude]);
             }
             polygonPoints.push([x, y]);
             breakGroup.add(new graphic.Polyline({
@@ -152,7 +140,8 @@ export function rectCoordAxisBuildBreakArea(
                     points: polylinePoints
                 },
                 style: {
-                    stroke: '#ccc',
+                    stroke: borderColor,
+                    lineWidth: borderWidth,
                     fill: 'none'
                 },
                 clipPath: clipEl,
@@ -165,7 +154,7 @@ export function rectCoordAxisBuildBreakArea(
                 points: polygonPoints
             },
             style: {
-                fill: '#fff'
+                fill: color
             },
             clipPath: clipEl,
             z: 100

@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import { AxisBaseOption } from './axisCommonTypes';
 
+const splitColor = '#E0E6F1';
 
 const defaultOption: AxisBaseOption = {
     show: true,
@@ -94,7 +95,7 @@ const defaultOption: AxisBaseOption = {
     splitLine: {
         show: true,
         lineStyle: {
-            color: ['#E0E6F1'],
+            color: [splitColor],
             width: 1,
             type: 'solid'
         }
@@ -107,19 +108,14 @@ const defaultOption: AxisBaseOption = {
     },
     breakArea: {
         show: true,
-        backgroundStyle: {
-            borderColor: '#ccd',
-            borderWidth: 1,
-            // borderType: 'dashed',
-            decal: {
-                backgroundColor: '#eef0f6',
-                color: 'rgba(0,0,0,0.1)',
-                dashArrayX: [1, 0],
-                dashArrayY: [2, 5],
-                symbolSize: 1,
-                rotation: -Math.PI / 6
-            }
-        }
+        itemStyle: {
+            color: '#fff',
+            borderColor: splitColor,
+            borderWidth: 2
+        },
+        zigzagAmplitude: 4,
+        zigzagMinSpan: 4,
+        zigzagMaxSpan: 20
     }
 };
 

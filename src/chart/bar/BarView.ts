@@ -69,8 +69,6 @@ import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRota
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
-// import { getBreakAxisMask } from '../../component/axis/axisBreakAreaHelper';
-import GridModel from '../../coord/cartesian/GridModel';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
