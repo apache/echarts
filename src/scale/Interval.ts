@@ -126,7 +126,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
             }
             // Avoid rounding error
             tick = roundNumber(tick + interval, intervalPrecision);
-            if (tick === ticks[ticks.length - 1].value) {
+            if (ticks.length > 0 && tick === ticks[ticks.length - 1].value) {
                 // Consider out of safe float point, e.g.,
                 // -3711126.9907707 + 2e-10 === -3711126.9907707
                 break;

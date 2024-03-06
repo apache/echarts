@@ -21,7 +21,7 @@ import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, ScaleBreak, DecalObject, ItemStyleOption
+    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, ScaleBreak, ItemStyleOption
 } from '../util/types';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 

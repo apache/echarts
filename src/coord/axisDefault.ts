@@ -111,7 +111,8 @@ const defaultOption: AxisBaseOption = {
         itemStyle: {
             color: '#fff',
             borderColor: splitColor,
-            borderWidth: 2
+            borderWidth: 1,
+            opacity: 0.6
         },
         zigzagAmplitude: 4,
         zigzagMinSpan: 4,

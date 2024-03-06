@@ -25,7 +25,7 @@ import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ExtendedElementProps } from '../../core/ExtendedElement';
 
-export function rectCoordAxisBuildBreakArea(
+export function rectCoordBuildBreakAxis(
     axisGroup: graphic.Group,
     axisModel: SingleAxisModel | CartesianAxisModel,
     gridModel: GridModel | SingleAxisModel,
@@ -75,12 +75,12 @@ export function rectCoordAxisBuildBreakArea(
         let y;
         let width;
         let height;
-        const spanCoord = endCoord - startCoord;
         if (axis.isHorizontal()) {
             x = startCoord;
             y = gridRect.y;
             width = endCoord - startCoord;
             height = gridRect.height;
+            // TODO
         }
         else {
             clipEl = new graphic.Rect({
@@ -154,7 +154,8 @@ export function rectCoordAxisBuildBreakArea(
                 points: polygonPoints
             },
             style: {
-                fill: color
+                fill: color,
+                opacity: itemStyle.opacity
             },
             clipPath: clipEl,
             z: 100

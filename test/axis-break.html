@@ -52,7 +52,7 @@ under the License.
 
 
 
-
+<!--
         <script>
         require([
             'echarts',
@@ -107,7 +107,7 @@ under the License.
                 // }
             })
         });
-        </script>
+        </script> -->
 
 
 
@@ -121,14 +121,15 @@ under the License.
             var option;
 
             option = {
+                animation: 0,
                 xAxis: {
-                    data: ['a', 'b', 'c', 'd', 'e']
+                    data: ['a', 'b', 'c', 'd', 'e'],
+                    axisTick: {
+                        show: false
+                    },
                 },
                 yAxis: {
                     triggerEvent: true,
-                    // inverse: true,
-                    axisLabel: {
-                    },
                     breaks: [{
                         start: 100,
                         end: 2300,
@@ -137,18 +138,26 @@ under the License.
                         start: 2400,
                         end: 7400,
                         gap: 50
-                    }]
+                    }],
+                    // min: 0,
+                    // max: 200
                 },
                 series: [{
                     type: 'bar',
-                    data: [12, 23, 34, 2340, 7435],
+                    data: [12, 88, 650, 1200, 7435],
                     label: {
                         show: true,
                         position: 'top'
                     }
                 }, {
                     type: 'line',
-                    data: [12, 23, 34, 2340, 7435]
+                    data: [12, 88, 650, 1200, 7435],
+                    // z: 200
+                }, {
+                    type: 'scatter',
+                    data: [12, 88, 650, 1200, 7435],
+                    symbolSize: 30,
+                    // z: 200
                 }]
             };
 
@@ -157,6 +166,7 @@ under the License.
                     'Test Case Description of main1',
                     '(Muliple lines and **emphasis** are supported in description)'
                 ],
+                // renderer: 'svg',
                 option: option
                 // height: 300,
                 // buttons: [{text: 'btn-txt', onclick: function () {}}],

@@ -29,7 +29,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
 import { isIntervalOrLogScale } from '../../scale/helper';
-import { rectCoordAxisBuildBreakArea } from './axisBreakAreaHelper';
+import { rectCoordBuildBreakAxis } from './axisBreakHelper';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -242,7 +242,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
     // @ts-ignore
     breakArea(axisView, axisGroup, axisModel, gridModel, api) {
-        rectCoordAxisBuildBreakArea(axisGroup, axisModel, gridModel, api);
+        rectCoordBuildBreakAxis(axisGroup, axisModel, gridModel, api);
     }
 };
 

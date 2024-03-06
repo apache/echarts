@@ -90,9 +90,33 @@ export function createAxisTicks(axis: Axis, tickModel: AxisBaseModel): {
     tickCategoryInterval?: number
 } {
     // Only ordinal scale support tick interval
-    return axis.type === 'category'
-        ? makeCategoryTicks(axis, tickModel)
-        : {ticks: zrUtil.map(axis.scale.getTicks(), tick => tick.value) };
+    if (axis.type === 'category') {
+        return makeCategoryTicks(axis, tickModel);
+    }
+
+    const ticks = axis.scale.getTicks();
+    // Remove the break axis ticks because it's rendered using zigzag line
+    const filteredTicks = [];
+    for (let i = 0; i < ticks.length; ++i) {
+        if (ticks[i].breakStart != null) {
+            // Current is a break, ignore
+            continue;
+        }
+        if (i > 0 && ticks[i - 1].breakStart != null
+            && ticks[i].value >= ticks[i - 1].breakStart
+            && ticks[i].value <= ticks[i - 1].breakEnd
+            || i < ticks.length - 1 && ticks[i + 1].breakStart != null
+            && ticks[i].value >= ticks[i + 1].breakStart
+            && ticks[i].value <= ticks[i + 1].breakEnd
+        ) {
+            // Current is in a break, ignore
+            ++i;
+        }
+        else {
+            filteredTicks.push(ticks[i].value);
+        }
+    }
+    return {ticks: filteredTicks};
 }
 
 function makeCategoryLabels(axis: Axis) {

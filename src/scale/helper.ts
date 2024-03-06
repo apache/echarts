@@ -19,6 +19,7 @@
 
 import {getPrecision, round, nice, quantityExponent} from '../util/number';
 import { ScaleBreak } from '../util/types';
+import { warn } from '../util/log';
 import IntervalScale from './Interval';
 import LogScale from './Log';
 import Scale from './Scale';
@@ -142,37 +143,45 @@ export function normalize(
         return (val - extent[0]) / (extent[1] - extent[0]);
     }
 
+    let beforeBreakRange = 0;
+    for (let i = 0; i < breaks.length; ++i) {
+        const brk = breaks[i];
+        if (!brk.isExpanded) {
+            if (brk.gap < 0) {
+                warn('Break axis gap should not be negative');
+            }
+            beforeBreakRange += brk.end - brk.start - brk.gap;
+        }
+    }
+    const beforeValueRange = Math.max(0, extent[1] - extent[0] - beforeBreakRange);
+
     // If the value is in the break, return the normalized value in the break
-    let accVal = extent[0];
+    let elapsedVal = 0;
     let lastBreakEnd = extent[0];
-    let largerThanLastBreakEnd = true;
     for (let i = 0; i < breaks.length; i++) {
         const brk = breaks[i];
         if (brk.isExpanded) {
             continue;
         }
-        if (val <= brk.start) {
-            accVal += val - lastBreakEnd;
-            largerThanLastBreakEnd = false;
-            break;
-        }
-        else if (val === brk.end) {
-            accVal += brk.start - lastBreakEnd + brk.gap;
-            largerThanLastBreakEnd = false;
-            break;
-        }
-        else if (val < brk.end) {
-            accVal += brk.start - lastBreakEnd;
-            largerThanLastBreakEnd = false;
-            break;
-        }
-        else {
-            accVal += brk.start - lastBreakEnd + brk.gap;
+        if (val <= brk.end) {
+            if (val > brk.start) {
+                elapsedVal += brk.start - lastBreakEnd
+                    + (val - brk.start) / (brk.end - brk.start) * brk.gap;
+            }
+            else {
+                elapsedVal += val - lastBreakEnd;
+            }
             lastBreakEnd = brk.end;
+            break;
         }
+        elapsedVal += brk.start - lastBreakEnd + brk.gap;
+        lastBreakEnd = brk.end;
     }
-    const value = accVal + (largerThanLastBreakEnd ? (val - lastBreakEnd) : 0);
-    return (value - extent[0]) / getExtentSpanWithoutBreaks(extent, breaks);
+    const lastBreak = breaks[breaks.length - 1];
+    if (val >= lastBreak.end) {
+        elapsedVal += val - lastBreak.end;
+    }
+    return Math.min(1, elapsedVal / beforeValueRange);
 }
 
 export function scale(
