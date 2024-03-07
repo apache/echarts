@@ -72,7 +72,10 @@ under the License.
                 };
 
                 for (var i = 0; i < 50; i++) {
-                    data1.push([random(5), random(2)]);
+                    data1.push({
+                        value: [random(5), random(2)],
+                        label: { show: true, },
+                    });
                 }
 
                 chart.setOption({
@@ -144,7 +147,7 @@ under the License.
                 };
 
                 for (var i = 0; i < 50; i++) {
-                    data1.push(random(5));
+                    data1.push({value: random(5), label: { show: true, },});
                 }
 
                 chart.setOption({
@@ -201,7 +204,7 @@ under the License.
                 };
 
                 for (var i = 0; i < 3; i++) {
-                    data1.push(random(5));
+                    data1.push({value: random(5), label: { show: true, },});
                 }
 
                 chart.setOption({

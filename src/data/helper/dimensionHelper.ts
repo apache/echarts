@@ -99,6 +99,7 @@ export function summarizeDimensions(
     const notExtraCoordDimMap = createHashMap<1, DimensionName>();
     let defaultedLabel = [] as DimensionName[];
     let defaultedTooltip = [] as DimensionName[];
+    let lastExtraCoord = '';
 
     const userOutputEncode = {} as DimensionUserOuputEncode;
 
@@ -115,6 +116,7 @@ export function summarizeDimensions(
             getOrCreateEncodeArr(encode, coordDim)[coordDimIndex] = dimName;
 
             if (!dimItem.isExtraCoord) {
+                lastExtraCoord = dimName;
                 notExtraCoordDimMap.set(coordDim, 1);
 
                 // Use the last coord dim (and label friendly) as default label,
@@ -167,6 +169,10 @@ export function summarizeDimensions(
     // in this way. Use label.formatter instead. Maybe remove this approach someday.
     if (encodeLabel && encodeLabel.length) {
         defaultedLabel = encodeLabel.slice();
+    }
+
+    if (!defaultedLabel.length && lastExtraCoord) {
+        defaultedLabel = [lastExtraCoord];
     }
 
     const encodeTooltip = encode.tooltip;
