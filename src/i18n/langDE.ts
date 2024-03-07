@@ -136,8 +136,8 @@ export default {
             withName: 'die Daten für {name} sind {value}',
             withoutName: '{value}',
             separator: {
-                middle: ',',
-                end: '.'
+                middle: '.',
+                end: ','
             }
         }
     }
