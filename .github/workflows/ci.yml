@@ -120,7 +120,7 @@ jobs:
           rm -f *.tgz
           echo -e "Dist files: \n$(ls -l)"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ steps.save-pr-data.outcome == 'success' }}
         with:
           name: pr_preview
