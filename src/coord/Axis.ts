@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {each, map} from 'zrender/src/core/util';
+import {each, isArray, map} from 'zrender/src/core/util';
 import {linearMap, getPixelPrecision, round} from '../util/number';
 import {
     createAxisTicks,
@@ -126,7 +126,7 @@ class Axis {
 
         if (this.onBand && scale.type === 'ordinal') {
             extent = extent.slice() as [number, number];
-            fixExtentWithBands(extent, (scale as OrdinalScale).count());
+            fixExtentWithBands(extent, (scale as OrdinalScale).count(), isArray(this.onBand) ? this.onBand : []);
         }
 
         return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
@@ -271,12 +271,12 @@ class Axis {
 
 }
 
-function fixExtentWithBands(extent: [number, number], nTick: number): void {
+function fixExtentWithBands(extent: [number, number], nTick: number, onBand = [] as number[]): void {
     const size = extent[1] - extent[0];
     const len = nTick;
     const margin = size / len / 2;
-    extent[0] += margin;
-    extent[1] -= margin;
+    extent[0] += onBand[0] || margin;
+    extent[1] -= onBand[1] || margin;
 }
 
 // If axis has labels [1, 2, 3, 4]. Bands on the axis are
