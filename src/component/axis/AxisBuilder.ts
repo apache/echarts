@@ -836,6 +836,15 @@ function buildAxisLabel(
         });
         textEl.anid = 'label_' + tickValue;
 
+        graphic.setTooltipConfig({
+            el: textEl,
+            componentModel: axisModel,
+            itemName: formattedLabel,
+            formatterParamsExtra: {
+                getTickLabel: () => textEl,
+                tickIndex: index
+            }
+        });
 
         // Pack data for mouse event
         if (triggerEvent) {
