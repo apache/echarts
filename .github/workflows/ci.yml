@@ -36,7 +36,7 @@ jobs:
 
       - name: Cache node modules
         id: cache-dep
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: cache-node-modules
         with:
@@ -76,7 +76,7 @@ jobs:
 
       - name: Cache node modules
         id: cache-dep
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: cache-node-modules
         with:
@@ -120,7 +120,7 @@ jobs:
           rm -f *.tgz
           echo -e "Dist files: \n$(ls -l)"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ steps.save-pr-data.outcome == 'success' }}
         with:
           name: pr_preview
