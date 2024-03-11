@@ -8,6 +8,9 @@
 /benchmark
 /src
 /ssr/client/src
+/extension-src
+/build
+/tsconfig.json
 .DS_Store
 Thumbs.db
 Desktop.ini
