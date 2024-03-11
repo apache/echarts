@@ -25,10 +25,17 @@ import Axis2D from './Axis2D';
 import { AxisBaseOption } from '../axisCommonTypes';
 import GridModel from './GridModel';
 import { AxisBaseModel } from '../AxisBaseModel';
-import {OrdinalSortInfo} from '../../util/types';
+import { OrdinalSortInfo } from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
 
 export type CartesianAxisPosition = 'top' | 'bottom' | 'left' | 'right';
+
+export const inverseCartesianAxisPositionMap = {
+    left: 'right',
+    right: 'left',
+    top: 'bottom',
+    bottom: 'top'
+} as const;
 
 export type CartesianAxisOption = AxisBaseOption & {
     gridIndex?: number;
@@ -52,6 +59,12 @@ export class CartesianAxisModel extends ComponentModel<CartesianAxisOption>
     static type = 'cartesian2dAxis';
 
     axis: Axis2D;
+
+    /**
+     * The gap between the axis and the name gap.
+     * Injected outside.
+     */
+    axisToNameGapStartGap: number = 0;
 
     getCoordSysModel(): GridModel {
         return this.getReferringComponents('grid', SINGLE_REFERRING).models[0] as GridModel;
