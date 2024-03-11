@@ -43,6 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import { normalizeCssArray } from '../../util/format';
 
 const Rect = graphic.Rect;
 
@@ -603,7 +604,8 @@ class SliderZoomView extends DataZoomView {
             this._handleHeight = parsePercent(handleSize, this._size[1]);
             this._handleWidth = bRect.width / bRect.height * this._handleHeight;
 
-            path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
+            const handleStyleModel = dataZoomModel.getModel('handleStyle');
+            path.setStyle(handleStyleModel.getItemStyle());
             path.style.strokeNoScale = true;
             path.rectHover = true;
 
@@ -611,7 +613,7 @@ class SliderZoomView extends DataZoomView {
             enableHoverEmphasis(path);
 
             const handleColor = dataZoomModel.get('handleColor' as any); // deprecated option
-            // Compatitable with previous version
+            // Compatible with previous version
             if (handleColor != null) {
                 path.style.fill = handleColor;
             }
@@ -640,11 +642,12 @@ class SliderZoomView extends DataZoomView {
         let actualMoveZone: Displayable = filler;
         if (brushSelect) {
             const moveHandleHeight = parsePercent(dataZoomModel.get('moveHandleSize'), size[1]);
+            const moveHandleStyleModel = dataZoomModel.getModel('moveHandleStyle');
             const moveHandle = displayables.moveHandle = new graphic.Rect({
-                style: dataZoomModel.getModel('moveHandleStyle').getItemStyle(),
+                style: moveHandleStyleModel.getItemStyle(),
                 silent: true,
                 shape: {
-                    r: [0, 0, 2, 2],
+                    r: moveHandleStyleModel.get('borderRadius'),
                     y: size[1] - 0.5,
                     height: moveHandleHeight
                 }
@@ -659,9 +662,15 @@ class SliderZoomView extends DataZoomView {
             moveHandleIcon.silent = true;
             moveHandleIcon.y = size[1] + moveHandleHeight / 2 - 0.5;
 
-            moveHandle.ensureState('emphasis').style = dataZoomModel.getModel(
-                ['emphasis', 'moveHandleStyle']
-            ).getItemStyle();
+            const moveHandleEmphasisStyle = dataZoomModel.getModel(['emphasis', 'moveHandleStyle']);
+            const moveHandleEmphasisState = moveHandle.ensureState('emphasis');
+            moveHandleEmphasisState.style = moveHandleEmphasisStyle.getItemStyle();
+            const moveHandleEmphasisBorderRadius = moveHandleEmphasisStyle.get('borderRadius');
+            if (moveHandleEmphasisBorderRadius != null) {
+                moveHandleEmphasisState.shape = {
+                    r: moveHandleEmphasisBorderRadius
+                };
+            }
 
             const moveZoneExpandSize = Math.min(size[1] / 2, Math.max(moveHandleHeight, 10));
             actualMoveZone = displayables.moveZone = new graphic.Rect({
@@ -777,9 +786,11 @@ class SliderZoomView extends DataZoomView {
         const dataShadowSegs = displaybles.dataShadowSegs;
         const segIntervals = [0, handleInterval[0], handleInterval[1], size[0]];
 
-        for (let i = 0; i < dataShadowSegs.length; i++) {
+        const borderRadius = normalizeCssArray(this.dataZoomModel.get('borderRadius') || 0);
+        const segNum = dataShadowSegs.length;
+        for (let i = 0; i < segNum; i++) {
             const segGroup = dataShadowSegs[i];
-            let clipPath = segGroup.getClipPath();
+            let clipPath = segGroup.getClipPath() as graphic.Rect;
             if (!clipPath) {
                 clipPath = new graphic.Rect();
                 segGroup.setClipPath(clipPath);
@@ -790,6 +801,12 @@ class SliderZoomView extends DataZoomView {
                 width: segIntervals[i + 1] - segIntervals[i],
                 height: size[1]
             });
+            // prevent shadow from overflow when `borderRadius` is set
+            if (i === 0 || i === segNum - 1) {
+                clipPath.shape.r = i === 0
+                    ? [borderRadius[0], 0, 0, borderRadius[3]]
+                    : [0, borderRadius[1], borderRadius[2], 0];
+            }
         }
 
         this._updateDataInfo(nonRealtime);
