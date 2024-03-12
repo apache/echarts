@@ -131,6 +131,7 @@ class SliderZoomView extends DataZoomView {
     private _shadowSize: number[];
     private _shadowPolygonPts: number[][];
     private _shadowPolylinePts: number[][];
+    private _valueRange: number[] = [];
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         this.api = api;
@@ -697,6 +698,7 @@ class SliderZoomView extends DataZoomView {
 
     private _resetInterval() {
         const range = this._range = this.dataZoomModel.getPercentRange();
+        this.setValueRange(range);
         const viewExtent = this._getViewExtent();
 
         this._handleEnds = [
@@ -728,6 +730,7 @@ class SliderZoomView extends DataZoomView {
             linearMap(handleEnds[0], viewExtend, percentExtent, true),
             linearMap(handleEnds[1], viewExtend, percentExtent, true)
         ]);
+        this.setValueRange(range);
 
         return !lastRange || lastRange[0] !== range[0] || lastRange[1] !== range[1];
     }
@@ -809,14 +812,7 @@ class SliderZoomView extends DataZoomView {
 
             if (axisProxy) {
                 const axis = axisProxy.getAxisModel().axis;
-                const range = this._range;
-
-                const dataInterval = nonRealtime
-                    // See #4434, data and axis are not processed and reset yet in non-realtime mode.
-                    ? axisProxy.calculateDataWindow({
-                        start: range[0], end: range[1]
-                    }).valueWindow
-                    : axisProxy.getDataValueWindow();
+                const dataInterval = this._valueRange;
 
                 labelTexts = [
                     this._formatLabel(dataInterval[0], axis),
@@ -991,11 +987,26 @@ class SliderZoomView extends DataZoomView {
             linearMap(brushShape.x + brushShape.width, viewExtend, percentExtent, true)
         ]);
 
+        this.setValueRange(this._range);
+
         this._handleEnds = [brushShape.x, brushShape.x + brushShape.width];
 
         this._updateView();
 
         this._dispatchZoomAction(false);
+    }
+
+    private setValueRange(range: number[]) {
+        const axisProxy = this.dataZoomModel.findRepresentativeAxisProxy();
+        if (axisProxy) {
+            const dataInterval = this.dataZoomModel.get('realtime')
+                // See #4434, data and axis are not processed and reset yet in non-realtime mode.
+                ? axisProxy.calculateDataWindow({
+                    start: range[0], end: range[1]
+                }).valueWindow
+                : axisProxy.getDataValueWindow();
+            this._valueRange = dataInterval;
+        }
     }
 
     private _onBrush(e: ZRElementEvent) {
@@ -1050,7 +1061,9 @@ class SliderZoomView extends DataZoomView {
             dataZoomId: this.dataZoomModel.id,
             animation: realtime ? REALTIME_ANIMATION_CONFIG : null,
             start: range[0],
-            end: range[1]
+            end: range[1],
+            startValue: this._valueRange[0],
+            endValue: this._valueRange[1]
         });
     }
 
