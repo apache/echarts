@@ -401,13 +401,11 @@ class Line extends graphic.Group {
         if (symbolFrom) {
             symbolFrom.setPosition(fromPos);
             setSymbolRotation(symbolFrom, 0);
-            symbolFrom.scaleX = symbolFrom.scaleY = invScale * percent;
             symbolFrom.markRedraw();
         }
         if (symbolTo) {
             symbolTo.setPosition(toPos);
             setSymbolRotation(symbolTo, 1);
-            symbolTo.scaleX = symbolTo.scaleY = invScale * percent;
             symbolTo.markRedraw();
         }
 
@@ -514,6 +512,14 @@ class Line extends graphic.Group {
                 align: label.__align || textAlign
             });
         }
+    }
+
+    setEdgeSymbolScale(scale: number) {
+        const lineGroup = this;
+        const symbolFrom = lineGroup.childOfName('fromSymbol') as ECSymbol;
+        const symbolTo = lineGroup.childOfName('toSymbol') as ECSymbol;
+        symbolFrom.scaleX = symbolFrom.scaleY =  scale;
+        symbolTo.scaleX = symbolTo.scaleY =  scale;
     }
 }
 
