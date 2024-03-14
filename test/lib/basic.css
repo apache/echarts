@@ -79,3 +79,44 @@ html, body, #main, #main2 {
 .tooltip-marker-color-6e7079 {
     background-color: #6e7079;
 }
+
+/* Base styles for the arrow */
+.tooltip-arrow {
+    position: absolute;
+    width: 6px; /* Adjust as needed */
+    height: 6px; /* Adjust as needed */
+    z-index: -1;
+}
+
+/* Horizontal arrow styles */
+.tooltip-arrow-horizontal {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Vertical arrow styles */
+.tooltip-arrow-vertical {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Rotation styles */
+.tooltip-arrow-rotate-225 {
+    transform: translateY(-50%) rotate(225deg);
+}
+
+.tooltip-arrow-rotate-45 {
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.tooltip-arrow-rotate--225 {
+    transform: translateY(-50%) rotate(-225deg);
+}
+
+.tooltip-arrow-rotate--45 {
+    transform: translateY(-50%) rotate(-45deg);
+}
+
+.tooltip-arrow-background-color-fff {
+    background-color: #ffffff;
+}
