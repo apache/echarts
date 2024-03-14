@@ -418,24 +418,53 @@ class TooltipHTMLContent {
         borderColor?: ZRColor,
         arrowPosition?: TooltipOption['position']
     ) {
+        function clearContent(el: HTMLElement) {
+            while (el.firstChild) {
+                el.removeChild(el.firstChild);
+            }
+        }
+
+        function setTextContent(el: HTMLElement, text: string) {
+            clearContent(el);
+
+            const fragment = document.createRange().createContextualFragment(text);
+            while (fragment.firstChild) {
+                el.appendChild(fragment.firstChild);
+            }
+        }
+
+        function appendArrow(el: HTMLElement, arrow: string) {
+            if (!arrow) {
+                return;
+            }
+            const arrowEl = document.createElement('div');
+            arrowEl.classList.add('tooltip-arrow');
+            arrowEl.innerHTML = arrow;
+            el.appendChild(arrowEl);
+        }
+
         const el = this.el;
 
         if (content == null) {
-            el.innerHTML = '';
+            clearContent(el);
             return;
         }
 
         let arrow = '';
-        if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
-            && !shouldTooltipConfine(tooltipModel)) {
+        if (
+            isString(arrowPosition)
+            && tooltipModel.get('trigger') === 'item'
+            && !shouldTooltipConfine(tooltipModel)
+        ) {
             arrow = assembleArrow(tooltipModel, borderColor, arrowPosition);
         }
         if (isString(content)) {
-            el.innerHTML = content + arrow;
+            setTextContent(el, content);
+            appendArrow(el, arrow);
         }
         else if (content) {
             // Clear previous
-            el.innerHTML = '';
+            clearContent(el);
             if (!isArray(content)) {
                 content = [content];
             }
@@ -448,9 +477,7 @@ class TooltipHTMLContent {
             if (arrow && el.childNodes.length) {
                 // no need to create a new parent element, but it's not supported by IE 10 and older.
                 // const arrowEl = document.createRange().createContextualFragment(arrow);
-                const arrowEl = document.createElement('div');
-                arrowEl.innerHTML = arrow;
-                el.appendChild(arrowEl);
+                appendArrow(el, arrow);
             }
         }
     }
