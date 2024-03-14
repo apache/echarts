@@ -192,7 +192,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     } : (inOpt || {}) as GetTooltipMarkerOpt;
     const color = opt.color;
     const type = opt.type;
-    extraCssText = opt.extraCssText;
+    const extraCssClasses = opt.extraCssText ? opt.extraCssText.split(' ') : [];
     const renderMode = opt.renderMode || 'html';
 
     if (!color) {
@@ -200,14 +200,11 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     }
 
     if (renderMode === 'html') {
-        return type === 'subItem'
-        ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;'
-            + 'border-radius:4px;width:4px;height:4px;background-color:'
-            // Only support string
-            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
-        : '<span style="display:inline-block;margin-right:4px;'
-            + 'border-radius:10px;width:10px;height:10px;background-color:'
-            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
+        const markerClass = type === 'subItem' ? 'tooltip-marker-sub' : 'tooltip-marker';
+        const colorClass = `tooltip-marker-color-${color.replace('#', '')}`;
+        const classes = [markerClass, colorClass, ...extraCssClasses];
+
+        return `<span class="${classes.join(' ')}"></span>`;
     }
     else {
         // Should better not to auto generate style name by auto-increment number here.
