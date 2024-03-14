@@ -54,3 +54,28 @@ html, body, #main, #main2 {
     float: left;
     margin-right: 20px; /* Adjust as needed */
 }
+
+.tooltip-marker,
+.tooltip-marker-sub {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.tooltip-marker {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+}
+
+.tooltip-marker-sub {
+    margin-left: 3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 2px;
+}
+
+/* Color styles for markers */
+.tooltip-marker-color-6e7079 {
+    background-color: #6e7079;
+}
