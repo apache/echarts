@@ -454,17 +454,34 @@ function wrapInlineValueHTML(
     alignRight: boolean,
     valueCloseToMarker: boolean,
     style: string
-): string {
+): HTMLElement {
     // Do not too close to marker, considering there are multiple values separated by spaces.
-    const paddingStr = valueCloseToMarker ? '10px' : '20px';
-    const alignCSS = alignRight ? `float:right;margin-left:${paddingStr}` : '';
+    const padding = valueCloseToMarker ? '10px' : '20px';
+    const alignClass = alignRight
+        ? 'tooltip-value-right'
+        : 'tooltip-value-left';
+    const styleClasses = `tooltip-value-container ${alignClass} ${padding}`;
+
     valueList = isArray(valueList) ? valueList : [valueList];
-    return (
-        `<span style="${alignCSS};${style}">`
-        // Value has commas inside, so use '  ' as delimiter for multiple values.
-        + map(valueList, value => encodeHTML(value)).join('&nbsp;&nbsp;')
-        + '</span>'
-    );
+
+    const valueSpan = document.createElement('span');
+    valueSpan.classList.add(...styleClasses.split(' '));
+
+    // Split the style argument by spaces and add each class separately
+    const styleClassList = style.split(' ');
+    valueSpan.classList.add(...styleClassList);
+
+    valueList.forEach((value) => {
+        const valueNode = document.createTextNode(encodeHTML(value));
+        valueSpan.appendChild(valueNode);
+
+        if (value !== valueList[valueList.length - 1]) {
+            const spacer = document.createTextNode('\u00A0\u00A0'); // Non-breaking spaces
+            valueSpan.appendChild(spacer);
+        }
+    });
+
+    return valueSpan;
 }
 
 function wrapInlineNameRichText(ctx: TooltipMarkupBuildContext, name: string, style: RichTextStyle): string {
