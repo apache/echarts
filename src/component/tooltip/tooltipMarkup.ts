@@ -443,8 +443,8 @@ function wrapInlineNameHTML(
     leftHasMarker: boolean,
     style: string
 ): string {
-    const marginCss = leftHasMarker ? 'margin-left:2px' : '';
-    return `<span style="${style};${marginCss}">`
+    const marginCss = leftHasMarker ? 'margin-left-2px' : '';
+    return `<span class="${style} ${marginCss}">`
         + encodeHTML(name)
         + '</span>';
 }

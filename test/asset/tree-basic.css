@@ -4,3 +4,53 @@ html, body, #main {
     margin: 0;
     height: 100%;
 }
+
+.clearfix {
+    clear: both;
+}
+
+.tooltip-content {
+    line-height: 1;
+}
+
+.tooltip-name-size-14 {
+    font-size: 14px;
+}
+
+.tooltip-name-color-666 {
+    color: #6e7079;
+}
+
+.tooltip-name-size-12 {
+    font-size: 12px;
+}
+
+.tooltip-name-weight-400 {
+    font-weight: 400;
+}
+
+.tooltip-value-color-464646 {
+    color: #464646;
+}
+
+.tooltip-value-size-14 {
+    font-size: 14px;
+}
+
+.tooltip-value-weight-900 {
+    font-weight: 900;
+}
+
+.margin-top-0 {
+    margin-top: 0px;
+}
+
+.tooltip-value-right {
+    float: right;
+    margin-left: 20px; /* Adjust as needed */
+}
+
+.tooltip-value-left {
+    float: left;
+    margin-right: 20px; /* Adjust as needed */
+}
