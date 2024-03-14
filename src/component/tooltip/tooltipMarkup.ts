@@ -409,11 +409,31 @@ function wrapBlockHTML(
     encodedContent: string,
     topGap: number
 ): string {
-    const clearfix = '<div style="clear:both"></div>';
-    const marginCSS = `margin: ${topGap}px 0 0`;
-    return `<div style="${marginCSS};${TOOLTIP_LINE_HEIGHT_CSS};">`
-        + encodedContent + clearfix
-        + '</div>';
+    function createElementFromHTML(htmlString: string) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString.trim(), 'text/html');
+        const fragment = document.createDocumentFragment();
+
+        for (const child of doc.body.childNodes as any) {
+            fragment.appendChild(child);
+        }
+
+        return fragment;
+    }
+
+    const clearfixDiv = document.createElement('div');
+    clearfixDiv.classList.add('clearfix');
+
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('tooltip-content');
+    contentDiv.classList.add(`margin-top-${topGap}`);
+
+    const contentFragment = createElementFromHTML(encodedContent);
+    contentDiv.appendChild(contentFragment);
+
+    contentDiv.appendChild(clearfixDiv);
+
+    return contentDiv.outerHTML;
 }
 
 function wrapInlineNameHTML(
