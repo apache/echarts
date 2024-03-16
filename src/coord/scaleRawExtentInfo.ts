@@ -234,6 +234,20 @@ export class ScaleRawExtentInfo {
             maxFixed = true;
         }
 
+        // Use this where only one of the min or max is fixed and the other not.
+        // You can see the usage of this when testing min-max-axis.html that I created as a test case.
+        // (https://github.com/apache/echarts/issues/19187)
+        if ((!maxFixed && minFixed) || (!minFixed && maxFixed)) {
+            if (min > max) {
+                max = min + 10;
+                maxFixed = true;
+            }
+            else if (max < min) {
+                min = max - 10;
+                minFixed = true;
+            }
+        }
+
         // Ensure min/max be finite number or NaN here. (not to be null/undefined)
         // `NaN` means min/max axis is blank.
         return {
