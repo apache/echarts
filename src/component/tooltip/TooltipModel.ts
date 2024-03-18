@@ -79,6 +79,8 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
     className?: string
 
     order?: TooltipOrderMode
+
+    snapSize?: number
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {
@@ -177,7 +179,9 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         textStyle: {
             color: '#666',
             fontSize: 14
-        }
+        },
+
+        snapSize: 25
     };
 }
 
