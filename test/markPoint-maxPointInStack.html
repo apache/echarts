@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var data = [
+                [1, 1, 1, 3, 1, 1, 5],
+                [1, 1, 1, 4, 1, 5, 1],
+                [10, 12, 10, 5, 10, 6, 6]
+            ];
+            var option = {
+                legend: {
+                    data: [
+                        ...data.map((_, index) => `line${index + 1}`),
+                        ...data.map((_, index) => `bar${index + 1}`),
+                    ]
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'line'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    ...data.map((list, index) => ({
+                        name: `bar${index + 1}`,
+                        type: 'bar',
+                        stack: 'bar',
+                        areaStyle: {},
+                        markPoint: {
+                            data: [{name: 'Inbound', type: 'max'}]
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        },
+                        data: list
+                    })),
+                    ...data.map((list, index) => ({
+                        name: `line${index + 1}`,
+                        type: 'line',
+                        stack: 'line',
+                        areaStyle: {},
+                        markPoint: {
+                            data: [{name: 'Inbound', type: 'max'}]
+                        },
+                        label: {
+                            show: true,
+                            position: 'top'
+                        },
+                        data: list
+                    }))
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: ['In stack chart , max markPoint should mark the maximum value of each serie.'],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
