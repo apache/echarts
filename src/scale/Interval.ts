@@ -185,11 +185,15 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
             });
             // Remove non-break ticks that are too close to breaks
             const newTicks = [];
-            for (let i = 1; i < ticks.length; i++) {
-                const prevTick = ticks[i - 1];
+            for (let i = 0; i < ticks.length; i++) {
+                const prevTick = i > 0 ? ticks[i - 1] : null;
+                const nextTick = i < ticks.length - 1 ? ticks[i + 1] : null;
                 const tick = ticks[i];
-                if (prevTick.breakEnd != null && tick.breakStart == null
+                if (tick.breakStart == null
+                    && (prevTick && prevTick.breakEnd != null
                     && tick.value - prevTick.breakEnd < interval
+                    || nextTick && nextTick.breakStart != null
+                    && nextTick.breakStart - tick.value < interval)
                 ) {
                     continue;
                 }

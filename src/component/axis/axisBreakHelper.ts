@@ -51,13 +51,32 @@ export function rectCoordBuildBreakAxis(
     const itemStyle = itemStyleModel.getItemStyle();
     const borderColor = itemStyle.stroke;
     const borderWidth = itemStyle.lineWidth;
+    const borderType = itemStyle.lineDash;
     const color = itemStyle.fill;
 
     const group = new graphic.Group({
         ignoreModelZ: true
     } as ExtendedElementProps);
 
-    let clipEl;
+    const isHorizontal = axis.isHorizontal();
+    const clipEl = isHorizontal
+        ? new graphic.Rect({
+            shape: {
+                x: 0,
+                y: gridRect.y,
+                width: api.getWidth(),
+                height: gridRect.height
+            }
+        })
+        : new graphic.Rect({
+            shape: {
+                x: gridRect.x,
+                y: 0,
+                width: gridRect.width,
+                height: api.getHeight()
+            }
+        });
+
     for (let i = 0; i < breaks.length; i++) {
         const brk = breaks[i];
         if (brk.isExpanded) {
@@ -70,107 +89,96 @@ export function rectCoordBuildBreakAxis(
         const endCoord = axis.toGlobalCoord(axis.dataToCoord(brk.end));
 
         const breakGroup = new graphic.Group();
-        const polygonPoints = []; // Zigzag path
-        let x;
-        let y;
-        let width;
-        let height;
-        if (axis.isHorizontal()) {
-            x = startCoord;
-            y = gridRect.y;
-            width = endCoord - startCoord;
-            height = gridRect.height;
-            // TODO
-        }
-        else {
-            clipEl = new graphic.Rect({
-                shape: {
-                    x: gridRect.x,
-                    y: 0,
-                    width: gridRect.width,
-                    height: api.getHeight()
-                }
-            });
-            x = gridRect.x;
-            y = startCoord;
-            width = gridRect.width;
-            height = endCoord - startCoord;
 
-            let polylinePoints = [];
-            let i = x;
-            const xValues = [i];
-            while (xValues.length % 2 === 1 || i < x + width) {
-                i += Math.random() * (zigzagMaxSpan - zigzagMinSpan) + zigzagMinSpan;
-                xValues.push(i);
-            }
-
-            for (let j = 0; j < xValues.length; ++j) {
-                i = xValues[j];
-                polygonPoints.push([i, y + zigzagAmplitude]);
-                polylinePoints.push([i, y + zigzagAmplitude]);
-                i = xValues[++j];
-                polygonPoints.push([i, y - zigzagAmplitude]);
-                polylinePoints.push([i, y - zigzagAmplitude]);
-            }
-            breakGroup.add(new graphic.Polyline({
-                shape: {
-                    points: polylinePoints
-                },
-                style: {
-                    stroke: borderColor,
-                    lineWidth: borderWidth,
-                    fill: 'none'
-                },
-                clipPath: clipEl,
-                z: 100
-            }));
-
-            polylinePoints = [];
-            for (let j = xValues.length - 1; j >= 0; --j) {
-                let i = xValues[j];
-                polygonPoints.push([i, y + height - zigzagAmplitude]);
-                polylinePoints.push([i, y + height - zigzagAmplitude]);
-                i = xValues[--j];
-                polygonPoints.push([i, y + height + zigzagAmplitude]);
-                polylinePoints.push([i, y + height + zigzagAmplitude]);
-            }
-            polygonPoints.push([x, y]);
-            breakGroup.add(new graphic.Polyline({
-                shape: {
-                    points: polylinePoints
-                },
-                style: {
-                    stroke: borderColor,
-                    lineWidth: borderWidth,
-                    fill: 'none'
-                },
-                clipPath: clipEl,
-                z: 100
-            }));
-        }
-
-        breakGroup.add(new graphic.Polygon({
-            shape: {
-                points: polygonPoints
-            },
-            style: {
-                fill: color,
-                opacity: itemStyle.opacity
-            },
-            clipPath: clipEl,
-            z: 100
-        }));
-
-        breakGroup.on('click', () => {
-            axis.scale.expandBreak(brk.start, brk.end);
-            api.dispatchAction({
-                type: 'axisBreakExpand',
-                breakStart: brk.start,
-                breakEnd: brk.end,
-            });
-        });
+        addZigzagShapes(
+            breakGroup,
+            clipEl,
+            startCoord,
+            endCoord,
+            isHorizontal,
+            brk.gap === 0 || brk.end === brk.start
+        );
 
         group.add(breakGroup);
     }
     axisGroup.add(group);
+
+    function addZigzagShapes(
+        breakGroup: graphic.Group,
+        clipEl: graphic.Path,
+        startCoord: number,
+        endCoord: number,
+        isHorizontal: boolean,
+        isGapZero: boolean
+    ) {
+        const polylineStyle = {
+            stroke: borderColor,
+            lineWidth: borderWidth,
+            lineDash: borderType,
+            fill: 'none'
+        };
+        let x = isHorizontal ? startCoord : gridRect.x;
+        let y = isHorizontal ? gridRect.y : startCoord;
+        let width = isHorizontal ? endCoord - startCoord : gridRect.width;
+        let height = isHorizontal ? gridRect.height : endCoord - startCoord;
+
+        let pointsA = [];
+        let pointsB = [];
+        let current = isHorizontal ? y : x;
+        const max = isHorizontal ? y + height : x + width;
+        let isSwap = true;
+
+        while (current <= max) {
+            if (isHorizontal) {
+                pointsA.push([x + (isSwap ? -zigzagAmplitude : zigzagAmplitude), current]);
+                // unshift for bottom to reverse order
+                pointsB.unshift([x + width - (!isSwap ? -zigzagAmplitude : zigzagAmplitude), current]);
+            }
+            else {
+                pointsA.push([current, y + (isSwap ? -zigzagAmplitude : zigzagAmplitude)]);
+                // unshift for bottom to reverse order
+                pointsB.unshift([current, y + height - (!isSwap ? -zigzagAmplitude : zigzagAmplitude)]);
+            }
+            current += Math.random() * (zigzagMaxSpan - zigzagMinSpan) + zigzagMinSpan;
+            isSwap = !isSwap;
+        }
+
+        // Create two polylines and add them to the breakGroup
+        breakGroup.add(new graphic.Polyline({
+            shape: {
+                points: pointsA
+            },
+            style: polylineStyle,
+            clipPath: clipEl,
+            z: 100
+        }));
+
+        /* Add the second polyline and a polygon only if the gap is not zero
+         * Otherwise if the polyline is with dashed line or being opaque,
+         * it may not be constant with breaks with non-zero gaps. */
+        if (!isGapZero) {
+            breakGroup.add(new graphic.Polyline({
+                shape: {
+                    points: pointsB
+                },
+                style: polylineStyle,
+                clipPath: clipEl,
+                z: 100
+            }));
+
+            // Creating the polygon that fills the area between the polylines
+            let polygonPoints = pointsA.concat(pointsB);
+            breakGroup.add(new graphic.Polygon({
+                shape: {
+                    points: polygonPoints
+                },
+                style: {
+                    fill: color,
+                    opacity: itemStyle.opacity
+                },
+                clipPath: clipEl,
+                z: 100
+            }));
+        }
+    }
 }

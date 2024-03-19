@@ -50,73 +50,9 @@ under the License.
 
 
 
-
-
-<!--
         <script>
         require([
-            'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
-        ], function (echarts) {
-            var option;
-
-            option = {
-                xAxis: {
-                    data: ['a', 'b', 'c', 'd', 'e']
-                },
-                yAxis: {
-                    triggerEvent: true,
-                    axisLabel: {
-                    },
-                    breaks: [{
-                        start: 52,
-                        end: 259,
-                        gap: 0
-                    }]
-                },
-                series: {
-                    type: 'bar',
-                    data: [12, 263, 259, 283, 75],
-                    label: {
-                        show: true,
-                        position: 'top'
-                    }
-                }
-            };
-
-            var chart = testHelper.create(echarts, 'main0', {
-                title: [
-                    'Test Case Description of main0',
-                    '(Muliple lines and **emphasis** are supported in description)'
-                ],
-                option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
-            });
-
-            chart.on('click', params => {
-                console.log(params);
-                // if (params.breakStart != null) {
-                //     chart.setOption({
-                //         yAxis: {
-                //             breaks: []
-                //         }
-                //     });
-                // }
-            })
-        });
-        </script> -->
-
-
-
-
-        <script>
-        require([
-            'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
+            'echarts'
         ], function (echarts) {
             var option;
 
@@ -126,21 +62,19 @@ under the License.
                     data: ['a', 'b', 'c', 'd', 'e'],
                     axisTick: {
                         show: false
-                    },
+                    }
                 },
                 yAxis: {
                     triggerEvent: true,
                     breaks: [{
                         start: 100,
                         end: 2300,
-                        gap: 50
+                        gap: 10
                     }, {
                         start: 2400,
                         end: 7400,
-                        gap: 50
-                    }],
-                    // min: 0,
-                    // max: 200
+                        gap: 0
+                    }]
                 },
                 series: [{
                     type: 'bar',
@@ -151,99 +85,123 @@ under the License.
                     }
                 }, {
                     type: 'line',
-                    data: [12, 88, 650, 1200, 7435],
-                    // z: 200
+                    data: [12, 88, 650, 1200, 7435]
                 }, {
                     type: 'scatter',
                     data: [12, 88, 650, 1200, 7435],
-                    symbolSize: 30,
-                    // z: 200
+                    symbolSize: 30
                 }]
             };
 
-            var chart = testHelper.create(echarts, 'main1', {
+            var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Test Case Description of main1',
-                    '(Muliple lines and **emphasis** are supported in description)'
+                    'yAxis with breaks'
                 ],
-                // renderer: 'svg',
                 option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
         });
         </script>
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option;
+
+                option = {
+                    animation: 0,
+                    yAxis: {
+                        data: ['a', 'b', 'c', 'd', 'e'],
+                        axisTick: {
+                            show: false
+                        }
+                    },
+                    xAxis: {
+                        triggerEvent: true,
+                        breaks: [{
+                            start: 100,
+                            end: 2300,
+                            gap: 10
+                        }, {
+                            start: 2400,
+                            end: 7400,
+                            gap: 0
+                        }]
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [12, 88, 650, 1200, 7435],
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    }, {
+                        type: 'line',
+                        data: [12, 88, 650, 1200, 7435]
+                    }, {
+                        type: 'scatter',
+                        data: [12, 88, 650, 1200, 7435],
+                        symbolSize: 30
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'xAxis with breaks'
+                    ],
+                    option: option
+                });
+            });
+            </script>
 
 
 
 <!--
-
-
         <script>
-        require([
-            'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
-        ], function (echarts) {
-            var option;
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option;
 
-            option = {
-                xAxis: {},
-                yAxis: {},
-                series: {
-                    type: 'line',
-                    data: [[11, 22], [33, 44]]
-                }
-            };
+                option = {
+                    animation: 0,
+                    xAxis: {
+                        data: ['a', 'b', 'c', 'd', 'e'],
+                        breaks: [{
+                            start: 1,
+                            end: 3,
+                            gap: 0
+                        }]
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [12, 88, 650, 1200, 7435],
+                        label: {
+                            show: true,
+                            position: 'top'
+                        }
+                    }, {
+                        type: 'line',
+                        data: [12, 88, 650, 1200, 7435]
+                    }, {
+                        type: 'scatter',
+                        data: [12, 88, 650, 1200, 7435],
+                        symbolSize: 30
+                    }]
+                };
 
-            var chart = testHelper.create(echarts, 'main2', {
-                title: [
-                    'Test Case Description of main2',
-                    '(Muliple lines and **emphasis** are supported in description)'
-                ],
-                option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'xAxis with breaks'
+                    ],
+                    option: option
+                });
             });
-        });
-        </script>
-
-
-
-
-
-        <script>
-        require([
-            'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
-        ], function (echarts) {
-            var option;
-
-            option = {
-                xAxis: {},
-                yAxis: {},
-                series: {
-                    type: 'line',
-                    data: [[11, 22], [33, 44]]
-                }
-            };
-
-            var chart = testHelper.create(echarts, 'main3', {
-                title: [
-                    'Test Case Description of main3',
-                    '(Muliple lines and **emphasis** are supported in description)'
-                ],
-                option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
-            });
-        });
-        </script> -->
-
+            </script> -->
 
     </body>
 </html>

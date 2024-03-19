@@ -20,8 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import { AxisBaseOption } from './axisCommonTypes';
 
-const splitColor = '#E0E6F1';
-
 const defaultOption: AxisBaseOption = {
     show: true,
     // zlevel: 0,
@@ -95,7 +93,7 @@ const defaultOption: AxisBaseOption = {
     splitLine: {
         show: true,
         lineStyle: {
-            color: [splitColor],
+            color: ['#E0E6F1'],
             width: 1,
             type: 'solid'
         }
@@ -110,8 +108,11 @@ const defaultOption: AxisBaseOption = {
         show: true,
         itemStyle: {
             color: '#fff',
-            borderColor: splitColor,
+            // Break border color should be darker than the splitLine
+            // because it has opacity and should be more prominent
+            borderColor: '#C2CADA',
             borderWidth: 1,
+            borderType: [3, 3],
             opacity: 0.6
         },
         zigzagAmplitude: 4,
