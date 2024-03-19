@@ -45,6 +45,7 @@ export function rectCoordBuildBreakAxis(
     const zigzagAmplitude = breakAreaModel.get('zigzagAmplitude');
     const zigzagMinSpan = breakAreaModel.get('zigzagMinSpan');
     const zigzagMaxSpan = breakAreaModel.get('zigzagMaxSpan');
+    const expandOnClick = breakAreaModel.get('expandOnClick');
 
     const gridRect = gridModel.coordinateSystem.getRect();
     const itemStyleModel = breakAreaModel.getModel('itemStyle');
@@ -59,23 +60,14 @@ export function rectCoordBuildBreakAxis(
     } as ExtendedElementProps);
 
     const isHorizontal = axis.isHorizontal();
-    const clipEl = isHorizontal
-        ? new graphic.Rect({
-            shape: {
-                x: 0,
-                y: gridRect.y,
-                width: api.getWidth(),
-                height: gridRect.height
-            }
-        })
-        : new graphic.Rect({
-            shape: {
-                x: gridRect.x,
-                y: 0,
-                width: gridRect.width,
-                height: api.getHeight()
-            }
-        });
+    const clipEl = new graphic.Rect({
+        shape: {
+            x: gridRect.x,
+            y: gridRect.y,
+            width: gridRect.width,
+            height: gridRect.height
+        }
+    });
 
     for (let i = 0; i < breaks.length; i++) {
         const brk = breaks[i];
@@ -87,7 +79,6 @@ export function rectCoordBuildBreakAxis(
         // border is sometimes required to be visible (as a line)
         const startCoord = axis.toGlobalCoord(axis.dataToCoord(brk.start));
         const endCoord = axis.toGlobalCoord(axis.dataToCoord(brk.end));
-
         const breakGroup = new graphic.Group();
 
         addZigzagShapes(
@@ -98,6 +89,17 @@ export function rectCoordBuildBreakAxis(
             isHorizontal,
             brk.gap === 0 || brk.end === brk.start
         );
+
+        if (expandOnClick) {
+            breakGroup.on('click', () => {
+                axis.scale.expandBreak(brk.start, brk.end);
+                api.dispatchAction({
+                    type: 'axisBreakExpand',
+                    breakStart: brk.start,
+                    breakEnd: brk.end,
+                });
+            });
+        }
 
         group.add(breakGroup);
     }
@@ -128,7 +130,7 @@ export function rectCoordBuildBreakAxis(
         const max = isHorizontal ? y + height : x + width;
         let isSwap = true;
 
-        while (current <= max) {
+        while (current <= max + zigzagMaxSpan) {
             if (isHorizontal) {
                 pointsA.push([x + (isSwap ? -zigzagAmplitude : zigzagAmplitude), current]);
                 // unshift for bottom to reverse order

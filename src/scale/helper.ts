@@ -136,16 +136,14 @@ export function normalize(
     if (extent[1] === extent[0]) {
         return 0.5;
     }
-    if (!breaks) {
-        breaks = [];
-    }
-    if (breaks.length === 0) {
+    const unexpandedBreaks = (breaks || []).filter(brk => !brk.isExpanded);
+    if (unexpandedBreaks.length === 0) {
         return (val - extent[0]) / (extent[1] - extent[0]);
     }
 
     let beforeBreakRange = 0;
-    for (let i = 0; i < breaks.length; ++i) {
-        const brk = breaks[i];
+    for (let i = 0; i < unexpandedBreaks.length; ++i) {
+        const brk = unexpandedBreaks[i];
         if (!brk.isExpanded) {
             if (brk.gap < 0) {
                 warn('Break axis gap should not be negative');
@@ -158,8 +156,8 @@ export function normalize(
     // If the value is in the break, return the normalized value in the break
     let elapsedVal = 0;
     let lastBreakEnd = extent[0];
-    for (let i = 0; i < breaks.length; i++) {
-        const brk = breaks[i];
+    for (let i = 0; i < unexpandedBreaks.length; i++) {
+        const brk = unexpandedBreaks[i];
         if (brk.isExpanded) {
             continue;
         }
@@ -177,7 +175,7 @@ export function normalize(
         elapsedVal += brk.start - lastBreakEnd + brk.gap;
         lastBreakEnd = brk.end;
     }
-    const lastBreak = breaks[breaks.length - 1];
+    const lastBreak = unexpandedBreaks[unexpandedBreaks.length - 1];
     if (val >= lastBreak.end) {
         elapsedVal += val - lastBreak.end;
     }

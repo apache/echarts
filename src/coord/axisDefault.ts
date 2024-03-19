@@ -117,7 +117,8 @@ const defaultOption: AxisBaseOption = {
         },
         zigzagAmplitude: 4,
         zigzagMinSpan: 4,
-        zigzagMaxSpan: 20
+        zigzagMaxSpan: 20,
+        expandOnClick: true
     }
 };
 

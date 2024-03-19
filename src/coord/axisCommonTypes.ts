@@ -87,7 +87,8 @@ export interface AxisBaseOptionCommon extends ComponentOption,
         itemStyle?: ItemStyleOption,
         zigzagAmplitude?: number,
         zigzagMinSpan?: number,
-        zigzagMaxSpan?: number
+        zigzagMaxSpan?: number,
+        expandOnClick?: boolean
     }
 }
 
