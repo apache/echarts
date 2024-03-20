@@ -128,8 +128,7 @@ class Axis {
             extent = extent.slice() as [number, number];
             fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
-
-        return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
+        return linearMap(data, NORMALIZED_EXTENT, extent, clamp, true);
     }
 
     /**

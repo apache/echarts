@@ -48,7 +48,8 @@ export function linearMap(
     val: number,
     domain: number[],
     range: number[],
-    clamp?: boolean
+    clamp?: boolean,
+    canBeNaN: boolean = false
 ): number {
     const d0 = domain[0];
     const d1 = domain[1];
@@ -63,7 +64,15 @@ export function linearMap(
             ? r0
             : (r0 + r1) / 2;
     }
-
+    //Solving issue #16746, #16852, #17014
+    //Check if the mapped-to subRange is a point r0 and val is outside the domain to map
+    //If so, val should not be mapped to the point r0, returning NaN
+    //However somewhere this function is applied would not accept NaN
+    //For example visualMapping.ts line 637 the result returned is used as index
+    //So an option `canBeNaN` is added to toggle if the result can be NaN, by default false
+    if ((subRange === 0) && ((val < Math.min(d0, d1)) || (val > Math.max(d0, d1)))) {
+        return canBeNaN ? NaN : r0;
+    }
     // Avoid accuracy problem in edge, such as
     // 146.39 - 62.83 === 83.55999999999999.
     // See echarts/test/ut/spec/util/number.js#linearMap#accuracyError
