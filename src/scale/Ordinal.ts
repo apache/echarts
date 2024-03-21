@@ -174,9 +174,11 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         let rank = extent[0];
 
         while (rank <= extent[1]) {
-            ticks.push({
-                value: rank
-            });
+            if (!this.isInBrokenRange(rank)) {
+                ticks.push({
+                    value: rank
+                });
+            }
             rank++;
         }
 

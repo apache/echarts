@@ -105,103 +105,164 @@ under the License.
 
 
         <script>
-            require([
-                'echarts'
-            ], function (echarts) {
-                var option;
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
 
-                option = {
-                    animation: 0,
-                    yAxis: {
-                        data: ['a', 'b', 'c', 'd', 'e'],
-                        axisTick: {
-                            show: false
-                        }
-                    },
-                    xAxis: {
-                        triggerEvent: true,
-                        breaks: [{
-                            start: 100,
-                            end: 2300,
-                            gap: 10
-                        }, {
-                            start: 2400,
-                            end: 7400,
-                            gap: 0
-                        }]
-                    },
-                    series: [{
-                        type: 'bar',
-                        data: [12, 88, 650, 1200, 7435],
-                        label: {
-                            show: true,
-                            position: 'top'
-                        }
+            option = {
+                animation: 0,
+                yAxis: {
+                    data: ['a', 'b', 'c', 'd', 'e'],
+                    axisTick: {
+                        show: false
+                    }
+                },
+                xAxis: {
+                    triggerEvent: true,
+                    breaks: [{
+                        start: 100,
+                        end: 2300,
+                        gap: 10
                     }, {
-                        type: 'line',
-                        data: [12, 88, 650, 1200, 7435]
-                    }, {
-                        type: 'scatter',
-                        data: [12, 88, 650, 1200, 7435],
-                        symbolSize: 30
+                        start: 2400,
+                        end: 7400,
+                        gap: 0
                     }]
-                };
+                },
+                series: [{
+                    type: 'bar',
+                    data: [12, 88, 650, 1200, 7435],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
+                }, {
+                    type: 'line',
+                    data: [12, 88, 650, 1200, 7435]
+                }, {
+                    type: 'scatter',
+                    data: [12, 88, 650, 1200, 7435],
+                    symbolSize: 30
+                }]
+            };
 
-                var chart = testHelper.create(echarts, 'main1', {
-                    title: [
-                        'xAxis with breaks'
-                    ],
-                    option: option
-                });
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'xAxis with breaks'
+                ],
+                option: option
             });
-            </script>
+        });
+        </script>
 
 
 
-<!--
         <script>
             require([
                 'echarts'
             ], function (echarts) {
-                var option;
+                let option;
+
+                const xAxis = {
+                    data: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                    axisTick: {
+                    },
+                    breaks: [{
+                        start: 1,
+                        end: 2,
+                        gap: 0.5
+                    }, {
+                        start: 4,
+                        end: 6,
+                        gap: 0
+                    }]
+                };
 
                 option = {
+                    title: [{
+                        text: 'xAxis.boundaryGap: true',
+                        left: '25%',
+                        textAlign: 'center'
+                    }, {
+                        text: 'xAxis.boundaryGap: false',
+                        left: '75%',
+                        textAlign: 'center'
+                    }],
                     animation: 0,
-                    xAxis: {
-                        data: ['a', 'b', 'c', 'd', 'e'],
-                        breaks: [{
-                            start: 1,
-                            end: 3,
-                            gap: 0
-                        }]
-                    },
-                    yAxis: {
-                    },
+                    grid: [{
+                        left: 100,
+                        right: '55%'
+                    }, {
+                        right: 100,
+                        left: '55%'
+                    }],
+                    xAxis: [{
+                        gridIndex: 0,
+                        boundaryGap: true,
+                        ...xAxis
+                    }, {
+                        gridIndex: 1,
+                        boundaryGap: false,
+                        ...xAxis
+                    }],
+                    yAxis: [{
+                        gridIndex: 0
+                    }, {
+                        gridIndex: 1
+                    }],
                     series: [{
                         type: 'bar',
-                        data: [12, 88, 650, 1200, 7435],
+                        data: [12, 88, 650, 1200, 200, 4000, 7435],
                         label: {
                             show: true,
                             position: 'top'
-                        }
+                        },
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
                     }, {
                         type: 'line',
-                        data: [12, 88, 650, 1200, 7435]
+                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
                     }, {
                         type: 'scatter',
-                        data: [12, 88, 650, 1200, 7435],
-                        symbolSize: 30
+                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        symbolSize: 30,
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        type: 'bar',
+                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        label: {
+                            show: true,
+                            position: 'top'
+                        },
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }, {
+                        type: 'line',
+                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }, {
+                        type: 'scatter',
+                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        symbolSize: 30,
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
                     }]
                 };
 
                 var chart = testHelper.create(echarts, 'main2', {
                     title: [
-                        'xAxis with breaks'
+                        'Category break axis',
+                        'b, e, f should be missing'
                     ],
                     option: option
                 });
             });
-            </script> -->
+        </script>
 
     </body>
 </html>

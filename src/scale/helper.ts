@@ -23,6 +23,7 @@ import { warn } from '../util/log';
 import IntervalScale from './Interval';
 import LogScale from './Log';
 import Scale from './Scale';
+import { filter } from 'zrender/src/core/util';
 
 type intervalScaleNiceTicksResult = {
     interval: number,
@@ -136,7 +137,7 @@ export function normalize(
     if (extent[1] === extent[0]) {
         return 0.5;
     }
-    const unexpandedBreaks = (breaks || []).filter(brk => !brk.isExpanded);
+    const unexpandedBreaks = filter(breaks || [], brk => !brk.isExpanded);
     if (unexpandedBreaks.length === 0) {
         return (val - extent[0]) / (extent[1] - extent[0]);
     }
