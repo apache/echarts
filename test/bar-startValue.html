@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+            var startValue0 = -200;
+            var ymin = -150;
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    axisLine: {
+                        onZero: false
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: ymin,
+                    startValue: startValue0
+                },
+                series: [{
+                    data: [-120, 200, 150, 80, 70, 110, 130],
+                    type: 'bar',
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    `min/max of axis has higher priority over startValue,here startValue = ${startValue0}, yAxis.min = ${ymin}`,
+                    `The starting value of bars should be ${ymin}`,
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+            var startValue0 = -200;
+            var ymin = -300;
+            var ymax = 300;
+            option = {
+                dataZoom:[{
+                    type: 'slider',
+                    yAxisIndex:[0],
+                    right:100
+                }],
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    axisLine: {
+                        onZero: false
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    startValue: startValue0,
+                    min: ymin,
+                    max: ymax
+                },
+                series: [{
+                    data: [-120, 200, 150, 80, 70, 110, 130],
+                    type: 'bar',
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    `startValue should work well with dataZoom,`,
+                    `here startValue = ${startValue0}, yAxis.min = ${ymin}, yAxis.max = ${ymax}`,
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+                var startValue0 = -140;
+                var radiusMin = -120;
+                option = {
+                    angleAxis: {
+                        type: "category",
+                        data: ["  0-30", " 30-60", " 60-90", " 90-120", "120-150", "150-180", "180-210", "210-240", "240-270", "270-300", "300-330", "330-360"],
+                    },
+                    radiusAxis: {
+                        scale: true,
+                        startValue: startValue0,
+                        min: radiusMin,
+                        max: -90,
+                    },
+                    polar: {},
+                    series: [{
+                        type: 'bar',
+                        color: "#F53700",
+                        coordinateSystem: "polar",
+                        data: [-95,-110,-105,-115,-110,-120,-90,-98,-100,-110,-92,-107]
+                    }]
+                }
+    
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        `The starting value of polar bars should be ${radiusMin}`,
+                    ],
+                    option: option
+                    // height: 300,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+            });
+            </script>
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+            var startValue0 = -3;
+            option = {
+                polar: {
+                    radius: [30, '80%']
+                },
+                radiusAxis: {
+                    max: 4,
+                    startValue: startValue0,
+                },
+                angleAxis: {
+                    type: 'category',
+                    data: ['a', 'b', 'c', 'd'],
+                    startAngle: 75
+                },
+                tooltip: {},
+                series: {
+                    type: 'bar',
+                    data: [2, 1.2, 2.4, 3.6],
+                    coordinateSystem: 'polar',
+                    label: {
+                        show: true,
+                        position: 'middle',
+                        formatter: '{b}: {c}'
+                    }
+                },
+                backgroundColor: '#fff',
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    `The starting value of polar bars should be ${startValue0}`,
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+    </body>
+</html>
+

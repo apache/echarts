@@ -98,7 +98,11 @@ export class ScaleRawExtentInfo {
         const isOrdinal = this._isOrdinal = scale.type === 'ordinal';
         this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
 
-        const modelMinRaw = this._modelMinRaw = model.get('min', true);
+        let axisMinValue = model.get('min', true);
+        if (axisMinValue == null) {
+            axisMinValue = model.get('startValue', true);
+        }
+        const modelMinRaw = this._modelMinRaw = axisMinValue;
         if (isFunction(modelMinRaw)) {
             // This callback always provides users the full data extent (before data is filtered).
             this._modelMinNum = parseAxisModelMinMax(scale, modelMinRaw({
