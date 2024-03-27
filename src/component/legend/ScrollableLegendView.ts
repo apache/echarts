@@ -276,8 +276,14 @@ class ScrollableLegendView extends LegendView {
         // Layout container group based on 0.
         const containerPos = [0, 0];
         const controllerPos = [-controllerRect.x, -controllerRect.y];
+        const direction = legendModel.get('orient', true);
+
+        const itemGapList = layoutUtil.normalizeGap(legendModel.get('itemGap', true));
+        const itemGap = direction === 'horizontal' ? itemGapList[0] : itemGapList[1];
+
+
         const pageButtonGap = zrUtil.retrieve2(
-            legendModel.get('pageButtonGap', true), legendModel.get('itemGap', true)
+            legendModel.get('pageButtonGap', true), itemGap
         );
 
         // Place containerGroup and controllerGroup and contentGroup.
