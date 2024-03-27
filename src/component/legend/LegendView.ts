@@ -462,20 +462,39 @@ class LegendView extends ComponentView {
     protected layoutInner(
         legendModel: LegendModel,
         itemAlign: LegendOption['align'],
-        maxSize: { width: number, height: number },
+        maxSize: { width: number, height: number, margin?: number[] },
         isFirstRender: boolean,
         selector: LegendOption['selector'],
         selectorPosition: LegendOption['selectorPosition']
     ): ZRRectLike {
         const contentGroup = this.getContentGroup();
         const selectorGroup = this.getSelectorGroup();
+        const selectorRect = selectorGroup.getBoundingRect();
 
+        const margin: number[] = maxSize["margin"] || [0, 0, 0, 0];
+        
+        let selectorButtonGap = 0;
+        let seletorMaxWidth = 0;
+        let selectorLength = 0;
+        let gapLength = 0;
+
+        if (selector) {
+            selectorButtonGap = legendModel.get('selectorButtonGap', true);
+            // @ts-ignore
+            selectorLength = selectorGroup?._children?.length ?? 0;
+            gapLength = selectorLength > 0 ? selectorLength - 1 : 0;
+            // @ts-ignore
+            seletorMaxWidth = selectorGroup?._children?.reduce((acc, val) => acc + (val?._rect?.width ?? 0), 0) + selectorButtonGap * gapLength;
+            selectorRect.width = seletorMaxWidth;
+        }
+        
+        const contentMaxWidth = maxSize.width - seletorMaxWidth - margin[1] - margin[3];
         // Place items in contentGroup.
         layoutUtil.box(
             legendModel.get('orient'),
             contentGroup,
             legendModel.get('itemGap'),
-            maxSize.width,
+            contentMaxWidth,
             maxSize.height
         );
 
@@ -494,20 +513,19 @@ class LegendView extends ComponentView {
                 legendModel.get('selectorItemGap', true)
             );
 
-            const selectorRect = selectorGroup.getBoundingRect();
             const selectorPos = [-selectorRect.x, -selectorRect.y];
-            const selectorButtonGap = legendModel.get('selectorButtonGap', true);
 
             const orientIdx = legendModel.getOrient().index;
             const wh: 'width' | 'height' = orientIdx === 0 ? 'width' : 'height';
             const hw: 'width' | 'height' = orientIdx === 0 ? 'height' : 'width';
             const yx: 'x' | 'y' = orientIdx === 0 ? 'y' : 'x';
+            const marginHW: 0 | 3 = orientIdx === 0 ? 3 : 0;
 
             if (selectorPosition === 'end') {
-                selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
+                selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap + margin[marginHW];
             }
             else {
-                contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
+                contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap + margin[marginHW];
             }
 
             // Always align selector to content as 'middle'

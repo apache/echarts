@@ -176,12 +176,14 @@ class ScrollableLegendView extends LegendView {
     layoutInner(
         legendModel: ScrollableLegendModel,
         itemAlign: ScrollableLegendOption['align'],
-        maxSize: { width: number, height: number },
+        maxSize: { width: number, height: number, margin?: number[] },
         isFirstRender: boolean,
         selector: LegendSelectorButtonOption[],
         selectorPosition: ScrollableLegendOption['selectorPosition']
     ) {
         const selectorGroup = this.getSelectorGroup();
+
+        const margin: number[] = maxSize["margin"] || [0, 0, 0, 0];
 
         const orientIdx = legendModel.getOrient().index;
         const wh = WH[orientIdx];
@@ -209,10 +211,10 @@ class ScrollableLegendView extends LegendView {
 
         if (selector) {
             if (selectorPosition === 'end') {
-                selectorPos[orientIdx] += mainRect[wh] + selectorButtonGap;
+                selectorPos[orientIdx] += mainRect[wh] + selectorButtonGap - margin[3];
             }
             else {
-                const offset = selectorRect[wh] + selectorButtonGap;
+                const offset = selectorRect[wh] + selectorButtonGap - margin[3];
                 selectorPos[orientIdx] -= offset;
                 mainRect[xy] -= offset;
             }
