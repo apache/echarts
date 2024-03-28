@@ -34,10 +34,12 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     DefaultEmphasisFocus,
-    CallbackDataParams
+    CallbackDataParams,
+    RoamOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
+import View from '../../coord/View';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 
@@ -95,15 +97,13 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
 export interface SankeySeriesOption
     extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
     SankeyBothStateOption<CallbackDataParams>,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'sankey'
 
     /**
      * color will be linear mapped.
      */
     color?: ColorString[]
-
-    coordinateSystem?: 'view'
 
     orient?: LayoutOrient
     /**
@@ -142,11 +142,15 @@ export interface SankeySeriesOption
     edgeLabel?: SeriesLabelOption & {
         position?: 'inside'
     }
+
+    nodeScaleRatio?: number
 }
 
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     static readonly type = 'series.sankey';
     readonly type = SankeySeriesModel.type;
+
+    coordinateSystem: View;
 
     levelModels: Model<SankeyLevelOption>[];
 
@@ -277,6 +281,14 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         return params;
     }
 
+    setZoom(zoom: number) {
+        this.option.zoom = zoom;
+    }
+
+    setCenter(center: number[]) {
+        this.option.center = center;
+    }
+
     static defaultOption: SankeySeriesOption = {
         // zlevel: 0,
         z: 2,
@@ -335,7 +347,13 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         animationEasing: 'linear',
 
-        animationDuration: 1000
+        animationDuration: 1000,
+
+        // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        roam: false,
+
+        // Symbol size scale ratio in roam
+        nodeScaleRatio: 0.4,
     };
 }
 

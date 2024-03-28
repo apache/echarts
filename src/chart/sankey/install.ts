@@ -25,6 +25,7 @@ import sankeyLayout from './sankeyLayout';
 import sankeyVisual from './sankeyVisual';
 import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
+import { installSankeyAction } from './sankeyAction';
 
 interface SankeyDragNodePayload extends Payload {
     localX: number
@@ -53,4 +54,5 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         });
     });
 
+    // installSankeyAction(registers);
 }

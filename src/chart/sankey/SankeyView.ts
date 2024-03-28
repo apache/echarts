@@ -31,6 +31,31 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { isString, retrieve3 } from 'zrender/src/core/util';
 import type { GraphEdge } from '../../data/Graph';
+import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
+import {onIrrelevantElement} from '../../component/helper/cursorHelper';
+import * as roamHelper from '../../component/helper/roamHelper';
+import SymbolClz from '../helper/Symbol';
+import * as bbox from 'zrender/src/core/bbox';
+import View from '../../coord/View';
+
+type SankeySymbol = SymbolClz & {
+    __edge: graphic.BezierCurve | SankeyPath
+
+    __radialOldRawX: number
+    __radialOldRawY: number
+    __radialRawX: number
+    __radialRawY: number
+
+    __oldX: number
+    __oldY: number
+};
+
+interface SanKeyNodeLayout {
+    x: number
+    y: number
+    rawX: number
+    rawY: number
+}
 
 class SankeyPathShape {
     x1 = 0;
@@ -105,13 +130,33 @@ class SankeyView extends ChartView {
     static readonly type = 'sankey';
     readonly type = SankeyView.type;
 
+    private _controller: RoamController;
+    private _controllerHost: RoamControllerHost;
+    private _nodeScaleRatio: number;
+    private _mainGroup = new graphic.Group();
+
     private _model: SankeySeriesModel;
 
     private _focusAdjacencyDisabled = false;
 
     private _data: SeriesData;
 
+    private _min: number[];
+    private _max: number[];
+    
+
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
+        this._controller = new RoamController(api.getZr());
+
+        this._controllerHost = {
+            target: this.group
+        } as RoamControllerHost;
+
+        this.group.add(this._mainGroup);
+    }
+
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
+        const data = seriesModel.getData();
         const sankeyView = this;
         const graph = seriesModel.getGraph();
         const group = this.group;
@@ -340,11 +385,210 @@ class SankeyView extends ChartView {
             }));
         }
 
-        this._data = seriesModel.getData();
+        const oldData = this._data;
+
+        data.diff(oldData)
+            .add(function (newIdx) {
+                // console.log('add', symbolNeedsDraw(data, newIdx));
+                if (symbolNeedsDraw(data, newIdx)) {
+                    // Create node and edge
+                    updateNode(data, newIdx, null, group, seriesModel);
+                }
+            })
+            .update(function (newIdx, oldIdx) {
+                const symbolEl = oldData.getItemGraphicEl(oldIdx) as SankeySymbol;
+                // console.log('update', symbolEl);
+                if (!symbolNeedsDraw(data, newIdx)) {
+                    symbolEl && removeNode(oldData, oldIdx, symbolEl, group, seriesModel);
+                    return;
+                }
+                // Update node and edge
+                updateNode(data, newIdx, symbolEl, group, seriesModel);
+            })
+            .remove(function (oldIdx) {
+                console.log('remove', 'remove');
+                const symbolEl = oldData.getItemGraphicEl(oldIdx) as SankeySymbol;
+                // When remove a collapsed node of subtree, since the collapsed
+                // node haven't been initialized with a symbol element,
+                // you can't found it's symbol element through index.
+                // so if we want to remove the symbol element we should insure
+                // that the symbol element is not null.
+                if (symbolEl) {
+                    removeNode(oldData, oldIdx, symbolEl, group, seriesModel);
+                }
+            })
+            .execute();
+
+        this._updateViewCoordSys(seriesModel, api);
+        this._updateController(seriesModel, ecModel, api);
+
+        this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
+        this._updateNodeAndLinkScale(seriesModel);
+
+        this._data = data;
+    }
+
+    _updateController(
+        seriesModel: SankeySeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) { 
+        const controller = this._controller;
+        const controllerHost = this._controllerHost;
+        const group = this.group;
+        controller.setPointerChecker(function (e, x, y) {
+            const rect = group.getBoundingRect();
+            rect.applyTransform(group.transform);
+            return rect.contain(x, y)
+                && !onIrrelevantElement(e, api, seriesModel);
+        });
+
+        // console.log('roam', seriesModel.get('roam'));
+        // console.log('scaleLimit', seriesModel.get('scaleLimit'));
+
+        controller.enable(seriesModel.get('roam'));
+        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
+        controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
+
+        controller
+            .off('pan')
+            .off('zoom')
+            .on('pan', (e) => {
+                // console.log('pan', e);
+                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
+                api.dispatchAction({
+                    seriesId: seriesModel.id,
+                    type: 'treeRoam',
+                    dx: e.dx,
+                    dy: e.dy
+                });
+            })
+            .on('zoom', (e) => {
+                // console.log('zoom', e);
+                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
+                api.dispatchAction({
+                    seriesId: seriesModel.id,
+                    type: 'treeRoam',
+                    zoom: e.scale,
+                    originX: e.originX,
+                    originY: e.originY
+                });
+                this._updateNodeAndLinkScale(seriesModel);
+                // Only update label layout on zoom
+                api.updateLabelLayout();
+            });
+    }
+
+    _updateNodeAndLinkScale(seriesModel: SankeySeriesModel) {
+        const data = seriesModel.getData();
+
+        const nodeScale = this._getNodeGlobalScale(seriesModel);
+
+        // data.eachItemGraphicEl(function (el: SymbolClz, idx) {
+        //     el.setSymbolScale(nodeScale);
+        // });
+    }
+
+    _getNodeGlobalScale(seriesModel: SankeySeriesModel) {
+        // console.log('1')
+        const coordSys = seriesModel.coordinateSystem;
+        if (coordSys.type !== 'view') {
+            return 1;
+        }
+        const nodeScaleRatio = this._nodeScaleRatio;
+
+        const groupZoom = coordSys.scaleX || 1;
+        // Scale node when zoom changes
+        const roamZoom = coordSys.getZoom();
+        const nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
+
+        return nodeScale / groupZoom;
+    }
+
+    _updateViewCoordSys(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
+        const data = seriesModel.getData();
+        const points: number[][] = [];
+        data.each(function (idx) {
+            const layout = data.getItemLayout(idx);
+            if (layout && !isNaN(layout.x) && !isNaN(layout.y)) {
+                points.push([+layout.x, +layout.y]);
+            }
+        });
+        const min: number[] = [];
+        const max: number[] = [];
+        bbox.fromPoints(points, min, max);
+
+        // If don't Store min max when collapse the root node after roam,
+        // the root node will disappear.
+        const oldMin = this._min;
+        const oldMax = this._max;
+
+        // If width or height is 0
+        if (max[0] - min[0] === 0) {
+            min[0] = oldMin ? oldMin[0] : min[0] - 1;
+            max[0] = oldMax ? oldMax[0] : max[0] + 1;
+        }
+        if (max[1] - min[1] === 0) {
+            min[1] = oldMin ? oldMin[1] : min[1] - 1;
+            max[1] = oldMax ? oldMax[1] : max[1] + 1;
+        }
+
+        const viewCoordSys = seriesModel.coordinateSystem = new View();
+        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
+
+        viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
+
+        viewCoordSys.setCenter(seriesModel.get('center'), api);
+        viewCoordSys.setZoom(seriesModel.get('zoom'));
+
+        // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group
+        this.group.attr({
+            x: viewCoordSys.x,
+            y: viewCoordSys.y,
+            scaleX: viewCoordSys.scaleX,
+            scaleY: viewCoordSys.scaleY
+        });
+
+        this._min = min;
+        this._max = max;
     }
 
     dispose() {
+        this._controller && this._controller.dispose();
+        this._controllerHost = null;
     }
+
+    remove() {
+        this._mainGroup.removeAll();
+        this._data = null;
+    }
+}
+
+function updateNode(
+    data: SeriesData,
+    dataIndex: number,
+    symbolEl: SankeySymbol,
+    group: graphic.Group,
+    seriesModel: SankeySeriesModel
+) {
+    // data.setItemGraphicEl(dataIndex, symbolEl);
+}
+
+function removeNode(
+    data: SeriesData,
+    dataIndex: number,
+    symbolEl: SankeySymbol,
+    group: graphic.Group,
+    seriesModel: SankeySeriesModel
+) {
+    
+}
+
+function symbolNeedsDraw(data: SeriesData, dataIndex: number) {
+    const layout = data.getItemLayout(dataIndex);
+
+    return layout
+        && !isNaN(layout.x) && !isNaN(layout.y);
 }
 
 /**
