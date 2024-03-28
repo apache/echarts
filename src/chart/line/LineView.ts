@@ -400,6 +400,43 @@ function getIsIgnoreFunc(
     };
 }
 
+function getIsSingleSymbolIgnore(
+    seriesModel: LineSeriesModel,
+    data: SeriesData,
+    coordSys: Cartesian2D
+) {
+    const intervalAxis = coordSys.getAxesByScale('interval')[0];
+
+    if (!intervalAxis) {
+        return;
+    }
+
+    const intervalDataDim = data.mapDimension(intervalAxis.dim);
+
+    const count = data.count();
+
+    const singleDataIdxStateList: boolean[] = [];
+
+    for (let i = 0; i < count; i++) {
+        const intervalValue = data.get(intervalDataDim, i);
+
+        if (typeof intervalValue === 'number' && isNaN(intervalValue)) {
+            singleDataIdxStateList[i] = false;
+        }
+        else {
+            singleDataIdxStateList[i] = true;
+        }
+
+    }
+
+
+    return function (dataIndex: number) {
+        return singleDataIdxStateList[dataIndex - 1]
+                || !singleDataIdxStateList[dataIndex]
+                || singleDataIdxStateList[dataIndex + 1];
+    };
+}
+
 function canShowAllSymbolForCategory(
     categoryAxis: Axis2D,
     data: SeriesData
@@ -655,10 +692,17 @@ class LineView extends ChartView {
 
         const showSymbol = seriesModel.get('showSymbol');
 
+        const showDisconnectSymbol = seriesModel.get('showDisconnectSymbol');
+
         const connectNulls = seriesModel.get('connectNulls');
 
-        const isIgnoreFunc = showSymbol && !isCoordSysPolar
-            && getIsIgnoreFunc(seriesModel, data, coordSys as Cartesian2D);
+        const isIgnoreFunc = showSymbol ? !isCoordSysPolar
+            && getIsIgnoreFunc(seriesModel, data, coordSys as Cartesian2D)
+            : (
+                !isCoordSysPolar
+                && showDisconnectSymbol === true
+                && getIsSingleSymbolIgnore(seriesModel, data, coordSys as Cartesian2D)
+            );
 
         // Remove temporary symbols
         const oldData = this._data;
@@ -701,14 +745,16 @@ class LineView extends ChartView {
         if (
             !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
         ) {
-            showSymbol && symbolDraw.updateData(data, {
-                isIgnore: isIgnoreFunc,
-                clipShape: clipShapeForSymbol,
-                disableAnimation: true,
-                getSymbolPoint(idx) {
-                    return [points[idx * 2], points[idx * 2 + 1]];
-                }
-            });
+            if (showSymbol || showDisconnectSymbol === true) {
+                symbolDraw.updateData(data, {
+                    isIgnore: isIgnoreFunc,
+                    clipShape: clipShapeForSymbol,
+                    disableAnimation: true,
+                    getSymbolPoint(idx) {
+                        return [points[idx * 2], points[idx * 2 + 1]];
+                    }
+                });
+            }
 
             hasAnimation && this._initSymbolLabelAnimation(
                 data,
@@ -779,14 +825,16 @@ class LineView extends ChartView {
 
             // Always update, or it is wrong in the case turning on legend
             // because points are not changed.
-            showSymbol && symbolDraw.updateData(data, {
-                isIgnore: isIgnoreFunc,
-                clipShape: clipShapeForSymbol,
-                disableAnimation: true,
-                getSymbolPoint(idx) {
-                    return [points[idx * 2], points[idx * 2 + 1]];
-                }
-            });
+            if (showSymbol || showDisconnectSymbol === true) {
+                symbolDraw.updateData(data, {
+                    isIgnore: isIgnoreFunc,
+                    clipShape: clipShapeForSymbol,
+                    disableAnimation: true,
+                    getSymbolPoint(idx) {
+                        return [points[idx * 2], points[idx * 2 + 1]];
+                    }
+                });
+            }
 
             // In the case data zoom triggered refreshing frequently
             // Data may not change if line has a category axis. So it should animate nothing.
