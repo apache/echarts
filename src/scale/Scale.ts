@@ -26,8 +26,10 @@ import {
     ScaleDataValue,
     OptionDataValue,
     DimensionLoose,
-    ScaleTick
+    ScaleTick,
+    ScaleBreak
 } from '../util/types';
+import { getExtentSpanWithoutBreaks } from './helper';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 
 
@@ -39,6 +41,8 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
 
     protected _extent: [number, number];
 
+    protected _breaks: ScaleBreak[];
+
     private _isBlank: boolean;
 
     // Inject
@@ -47,6 +51,7 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     constructor(setting?: SETTING) {
         this._setting = setting || {} as SETTING;
         this._extent = [Infinity, -Infinity];
+        this._breaks = this._setting.breaks as ScaleBreak[] || [];
     }
 
     getSetting<KEY extends keyof SETTING>(name: KEY): SETTING[KEY] {
@@ -115,6 +120,50 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
         if (!isNaN(end)) {
             thisExtent[1] = end;
         }
+    }
+
+    getBreaks() {
+        return this._breaks;
+    }
+
+    expandBreak(breakStart: number, breakEnd: number) {
+        this.expandBreaks([{ start: breakStart, end: breakEnd, gap: 0 }]);
+    }
+
+    expandBreaks(breaks: ScaleBreak[]): void {
+        for (let j = 0; j < breaks.length; j++) {
+            const expandBrk = breaks[j];
+            for (let i = 0; i < this._breaks.length; i++) {
+                const brk = this._breaks[i];
+                if (expandBrk.start === brk.start && expandBrk.end === brk.end) {
+                    brk.isExpanded = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    getExtentSpanWithoutBreaks() {
+        return getExtentSpanWithoutBreaks(this._extent, this._breaks);
+    }
+
+    getBrokenExtentRatio(): number {
+        const realSpan = getExtentSpanWithoutBreaks(this._extent, this._breaks);
+        const totalSpan = this._extent[1] - this._extent[0];
+        return totalSpan === 0 ? 1 : realSpan / totalSpan;
+    }
+
+    /**
+     * Whether a value is in broken range (not including either ends)
+     */
+    isInBrokenRange(val: number): boolean {
+        for (let i = 0; i < this._breaks.length; i++) {
+            const brk = this._breaks[i];
+            if (!brk.isExpanded && brk.start <= val && brk.end > val) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

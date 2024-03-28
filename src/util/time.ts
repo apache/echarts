@@ -171,7 +171,9 @@ export function leveledFormat(
     else if (zrUtil.isFunction(formatter)) {
         // Callback formatter
         template = formatter(tick.value, idx, {
-            level: tick.level
+            level: tick.level,
+            breakStart: tick.breakStart,
+            breakEnd: tick.breakEnd
         });
     }
     else {
