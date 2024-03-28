@@ -28,34 +28,192 @@ under the License.
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
+            html, body {
+                padding: 0;
+                margin: 0;
+            }
+
+            body {
+                padding: 17px;
                 height: 100%;
             }
+
+            .scroll-container {
+                position: relative;
+                width: 100%;
+                border: 1px solid #ccc;
+                overflow: hidden;
+            }
+
+            /* .main {
+                width: 1000px;
+                height: 240px;
+            } */
+
+            .scroll-bar-container {
+                margin-top: 20px;
+                border-radius: 10px;
+                width: 100%;
+                height: 20px;
+                background-color: #ccc;
+                overflow: hidden;
+            }
+
+            .scroll-bar {
+                width: 100%;
+                height: 20px;
+                background-color: #4e6ef2;
+                border-radius: 10px;
+                cursor: pointer;
+            }
+
+            .landscape-screen {
+                position:  absolute;
+                bottom: 0;
+                right: 0;
+                padding: 5px;
+                background-color: red;
+                color: #fff;
+            }
         </style>
-        <div id="main"><div>
+        <div class="scroll-container">
+            <div class="main"></div>
+            <div class="landscape-screen-mian"></div>
+            <!-- 全屏 -->
+            <div class="landscape-screen">切换横屏</div>
+        </div>
+        <div class="scroll-bar-container">
+            <div class="scroll-bar"></div>
+        </div>
+        
         <script>
+            let active = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+            let isLandscapeScreen = false;
+            let chartInstance1 = null;
+
+            function initEvent(echarts, seriesData) {
+                console.log('初始化');
+                const scrollContainer = document.getElementsByClassName('scroll-container')[0];
+                const main = document.getElementsByClassName('main')[0];
+                const scrollBar = document.getElementsByClassName('scroll-bar')[0];
+                const scrollBarContainer = document.getElementsByClassName('scroll-bar-container')[0];
+                const landscapeScreen = document.getElementsByClassName('landscape-screen')[0];
+
+                landscapeScreen.innerText = isLandscapeScreen ? '切换竖屏' : '切换横屏';
+
+                let scrollBarWidth = scrollContainer.offsetWidth / main.offsetWidth;
+                scrollBar.style.width = (scrollBarWidth < 1 ? scrollBarWidth : 1) * 100 + '%';
+
+                const xMin = 0;
+                const xMax = scrollBarContainer.offsetWidth - scrollBar.offsetWidth;
+
+                function setTranslate(xPos, yPos) {
+                    scrollBar.style.transform = `translateX(${xPos}px)`;
+                    main.style.transform = `translateX(${-xPos}px)`;
+                }
+
+                const EventMap = {
+                    down: scrollBarContainer.offsetWidth > 500 ? 'mousedown' : 'touchstart',
+                    move: scrollBarContainer.offsetWidth > 500 ? 'mousemove' : 'touchmove',
+                    up: scrollBarContainer.offsetWidth > 500 ? 'mouseup' : 'touchend',
+                }
+
+                scrollBar.addEventListener(EventMap.down, function(e) {
+                    e = EventMap.down === 'touchstart' ? e.changedTouches[0] : e;
+                    initialX = e.clientX - xOffset;
+                    initialY = e.clientY - yOffset;
+
+                    if (e.target === scrollBar) {
+                        active = true;
+                    }
+                });
+
+                scrollBar.addEventListener(EventMap.move, function(e) {
+                    if (active) {
+                        e.preventDefault();
+                    }
+                    e = EventMap.move === 'touchmove' ? e.changedTouches[0] : e;
+                    if (active) {
+                        currentX = e.clientX - initialX;
+                        currentY = e.clientY - initialY;
+                    
+                        xOffset = currentX;
+                        yOffset = currentY;
+
+                        currentX = currentX < xMin ? xMin : currentX;
+                        currentX = currentX > xMax ? xMax : currentX;
+
+                        setTranslate(currentX, currentY);
+                    }
+                });
+
+                scrollBar.addEventListener(EventMap.up, function(e) {
+                    e = EventMap.up === 'touceend' ? e.changedTouches[0] : e;
+                    initialX = currentX;
+                    initialY = currentY;
+                    
+                    active = false;
+                });
+
+                landscapeScreen.addEventListener('click', function(e) {
+                    // isLandscapeScreen = !isLandscapeScreen;
+
+                    // landscapeScreen.innerText = isLandscapeScreen ? '切换竖屏' : '切换横屏';
+                    
+                    // drawChart(echarts, seriesData);
+                });
+            }
+
+            function drawChart(echarts, seriesData) {
+                const main = document.getElementsByClassName('main')[0];
+
+                if (isLandscapeScreen) {
+                    main.style.width = '100%';
+                    main.style.height = '600px';
+                }
+                else {
+                    main.style.width = '1000px';
+                    main.style.height = '240px';
+                }
+
+                console.log('main width ', main.offsetWidth);
+                console.log('main height ', main.offsetHeight);
+
+                const chartInstance = echarts.init(document.getElementsByClassName('main')[0]);
+
+                chartInstance.setOption({
+                    series: [seriesData]
+                });
+            }
+
             require([
                 'echarts',
                 './data/energy.json'
             ], function (echarts, data) {
-                var chart = echarts.init(document.getElementById('main'));
-                chart.setOption({
-                    series: [
-                        {
-                            type: 'sankey',
-                            nodes: data.nodes,
-                            links: data.links,
-                            lineStyle: {
-                                color: 'gradient',
-                                curveness: 0.5
-                            },
-                            emphasis: {
-                                focus: 'trajectory'
-                            }
-                        }
-                    ]
-                });
+                const seriesData = {
+                    type: 'sankey',
+                    nodes: data.nodes,
+                    links: data.links,
+                    lineStyle: {
+                        color: 'gradient',
+                        curveness: 0.5
+                    },
+                    emphasis: {
+                        focus: 'trajectory'
+                    },
+                    roam: true,
+                    // orient: 'vertical',
+                }
+
+                drawChart(echarts, seriesData);
+
+                initEvent(echarts, seriesData);
             });
         </script>
     </body>
