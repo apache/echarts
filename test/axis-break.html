@@ -50,7 +50,7 @@ under the License.
 
 
 
-        <script>
+        <!-- <script>
         require([
             'echarts'
         ], function (echarts) {
@@ -66,6 +66,9 @@ under the License.
                 },
                 yAxis: {
                     triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
                     breaks: [{
                         start: 100,
                         end: 2300,
@@ -120,6 +123,9 @@ under the License.
                 },
                 xAxis: {
                     triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
                     breaks: [{
                         start: 100,
                         end: 2300,
@@ -154,7 +160,7 @@ under the License.
                 option: option
             });
         });
-        </script>
+        </script> -->
 
 
 
@@ -213,7 +219,7 @@ under the License.
                     }],
                     series: [{
                         type: 'bar',
-                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        data: [12, 88, 65, 120, 200, 40, 75],
                         label: {
                             show: true,
                             position: 'top'
@@ -222,18 +228,18 @@ under the License.
                         yAxisIndex: 0
                     }, {
                         type: 'line',
-                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        data: [12, 88, 65, 120, 200, 40, 75],
                         xAxisIndex: 0,
                         yAxisIndex: 0
                     }, {
                         type: 'scatter',
-                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        data: [12, 88, 65, 120, 200, 40, 75],
                         symbolSize: 30,
                         xAxisIndex: 0,
                         yAxisIndex: 0
                     }, {
                         type: 'bar',
-                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        data: [12, 88, 65, 120, 200, 40, 75],
                         label: {
                             show: true,
                             position: 'top'
@@ -242,12 +248,12 @@ under the License.
                         yAxisIndex: 1
                     }, {
                         type: 'line',
-                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        data: [12, 88, 65, 120, 200, 40, 75],
                         xAxisIndex: 1,
                         yAxisIndex: 1
                     }, {
                         type: 'scatter',
-                        data: [12, 88, 650, 1200, 200, 4000, 7435],
+                        data: [12, 88, 65, 120, 200, 40, 75],
                         symbolSize: 30,
                         xAxisIndex: 1,
                         yAxisIndex: 1

@@ -240,6 +240,9 @@ class BarView extends ChartView {
 
         function createBackground(dataIndex: number) {
             const bgLayout = getLayout[coord.type](data, dataIndex);
+            if (!bgLayout) {
+                return null;
+            }
             const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
             bgEl.useStyle(backgroundModel.getItemStyle());
             // Only cartesian2d support borderRadius.
@@ -256,6 +259,9 @@ class BarView extends ChartView {
             .add(function (dataIndex) {
                 const itemModel = data.getItemModel<BarDataItemOption>(dataIndex);
                 const layout = getLayout[coord.type](data, dataIndex, itemModel);
+                if (!layout) {
+                    return;
+                }
 
                 if (drawBackground) {
                     createBackground(dataIndex);
@@ -327,6 +333,9 @@ class BarView extends ChartView {
             .update(function (newIndex, oldIndex) {
                 const itemModel = data.getItemModel<BarDataItemOption>(newIndex);
                 const layout = getLayout[coord.type](data, newIndex, itemModel);
+                if (!layout) {
+                    return;
+                }
 
                 if (drawBackground) {
                     let bgEl: Rect | Sector;
@@ -927,6 +936,10 @@ const getLayout: {
     // when calculating bar background layout.
     cartesian2d(data, dataIndex, itemModel?): RectLayout {
         const layout = data.getItemLayout(dataIndex) as RectLayout;
+        if (!layout) {
+            return null;
+        }
+
         const fixedLineWidth = itemModel ? getLineWidth(itemModel, layout) : 0;
 
         // fix layout with lineWidth

@@ -60,6 +60,7 @@ export function rectCoordBuildBreakAxis(
     } as ExtendedElementProps);
 
     const isHorizontal = axis.isHorizontal();
+    // TODO: expand clip area according to zigzagAmplitude
     const clipEl = new graphic.Rect({
         shape: {
             x: gridRect.x,
