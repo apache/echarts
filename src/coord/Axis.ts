@@ -25,7 +25,7 @@ import {
     calculateCategoryInterval
 } from './axisTickLabelBuilder';
 import Scale from '../scale/Scale';
-import { DimensionName, ScaleBreak, ScaleDataValue, ScaleTick } from '../util/types';
+import { DimensionName, OrdinalNumber, ScaleBreak, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
@@ -121,16 +121,36 @@ class Axis {
      * Convert data to coord. Data is the rank if it has an ordinal scale
      */
     dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
+        return this.dataToCoordWithBreaks(data, clamp);
+    }
+
+    dataToCoordWithBreaks(
+        data: ScaleDataValue,
+        clamp?: boolean,
+        breakIncludingStart = true,
+        breakIncludingEnd = false
+    ): number {
         let extent = this._extent;
         const scale = this.scale;
-        data = scale.normalize(data);
+        let normalizedData = scale.normalize(data);
 
-        if (this.onBand && scale.type === 'ordinal') {
-            extent = extent.slice() as [number, number];
-            fixExtentWithBands(extent, (scale as OrdinalScale).count(), this.scale.getBreaks());
+        if (scale.type === 'ordinal') {
+            const isInBreak = scale.isInBrokenRange(
+                data as OrdinalNumber,
+                breakIncludingStart,
+                breakIncludingEnd
+            );
+            if (isInBreak) {
+                const extent = scale.getExtent();
+                // normalizedData -= 0.5 / (extent[1] - extent[0] + 1);
+            }
+            if (this.onBand) {
+                extent = extent.slice() as [number, number];
+                fixExtentWithBands(extent, (scale as OrdinalScale).count(), this.scale.getBreaks());
+            }
         }
 
-        return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
+        return linearMap(normalizedData, NORMALIZED_EXTENT, extent, clamp);
     }
 
     /**

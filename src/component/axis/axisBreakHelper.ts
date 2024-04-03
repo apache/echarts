@@ -78,8 +78,13 @@ export function rectCoordBuildBreakAxis(
 
         // Even if brk.gap is 0, we should also draw the breakArea because
         // border is sometimes required to be visible (as a line)
-        const startCoord = axis.toGlobalCoord(axis.dataToCoord(brk.start));
-        const endCoord = axis.toGlobalCoord(axis.dataToCoord(brk.end));
+        const startCoord = axis.toGlobalCoord(
+            axis.dataToCoordWithBreaks(brk.start, false, true, false)
+        );
+        const endCoord = axis.toGlobalCoord(axis.dataToCoord(
+            axis.dataToCoordWithBreaks(brk.end, false, true, false)
+        ));
+        console.log(brk.start, axis.dataToCoordWithBreaks(brk.start, false, false, false), axis.dataToCoordWithBreaks(brk.start, false, true, false), axis.dataToCoordWithBreaks(brk.start, false, false, true),axis.dataToCoordWithBreaks(brk.start, false, true, true));
         const breakGroup = new graphic.Group();
 
         addZigzagShapes(
