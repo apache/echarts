@@ -31,9 +31,7 @@ under the License.
             text-align: center;
         }
 
-        #main0,
-        #main1 {
-            width: 680px;
+        .main {
             margin: 0;
             padding: 0;
         }
@@ -41,8 +39,13 @@ under the License.
 </head>
 
 <body>
-    <div id="main0"></div>
-    <div id="main1"></div>
+    <div class="main" id="main0"></div>
+    <div class="main" id="main1"></div>
+    <div class="main" id="main2"></div>
+    <div class="main" id="main3"></div>
+    <div class="main" id="main4"></div>
+    <div class="main" id="main5"></div>
+    <div class="main" id="main6"></div>
     <script>
         let data = [];
         for (let i = 1; i < 20000; i++) {
@@ -52,43 +55,43 @@ under the License.
         require([
             'echarts'
         ], function (echarts) {
-            option = {
-                xAxis: {},
-                yAxis: {},
-                dataZoom: [
-                    {
-                        start: 0,
-                        end: 5
-                    }
-                ],
-                series: [
-                    {
-                        type: 'line',
-                        symbol: 'none',
-                        data: data
-                    }
-                ]
-            };
-            chart = testHelper.create(echarts, 'main0', {
+            [{
+                div: 'main0',
+                sampling: 'none',
                 title: 'dataZoom without sampling (default value of "none", showes zig-zag shape)',
-                option,
-                height: 400,
-            });
-        });
-    </script>
-
-    <script>
-        require([
-            'echarts'
-        ], function (echarts) {
-            option = {
+            }, {
+                div: 'main1',
+                sampling: 'min',
+                title: 'dataZoom with sampling = "min"',
+            }, {
+                div: 'main2',
+                sampling: 'max',
+                title: 'dataZoom with sampling = "max"',
+            }, {
+                div: 'main3',
+                sampling: 'minmax',
+                title: 'dataZoom with sampling = "minmax"',
+            }, {
+                div: 'main4',
+                sampling: 'average',
+                title: 'dataZoom with sampling = "minmax"',
+            }, {
+                div: 'main5',
+                sampling: 'sum',
+                title: 'dataZoom with sampling = "sum"',
+            }, {
+                div: 'main6',
+                sampling: 'lttb',
+                title: 'dataZoom with sampling = "lttb"',
+            }].forEach(({div, sampling, title}) => {
+                option = {
                 xAxis: {},
                 yAxis: {},
                 dataZoom: [
                     {
                         start: 0,
                         end: 5,
-                        sampling: 'lttb',
+                        sampling,
                     }
                 ],
                 series: [
@@ -99,10 +102,13 @@ under the License.
                     }
                 ]
             };
-            chart = testHelper.create(echarts, 'main1', {
-                title: 'dataZoom with sampling = "lttb"',
+
+            chart = testHelper.create(echarts, div, {
+                title,
                 option,
                 height: 400,
+            });
+
             });
         });
     </script>
