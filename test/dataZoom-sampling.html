@@ -26,27 +26,17 @@ under the License.
     <script src="./lib/config.js"></script>
     <script src="./lib/testHelper.js"></script>
     <link rel="stylesheet" href="./lib/reset.css">
-    <style>
-        body {
-            text-align: center;
-        }
-
-        .main {
-            margin: 0;
-            padding: 0;
-        }
-    </style>
 </head>
-
 <body>
-    <div class="main" id="main0"></div>
-    <div class="main" id="main1"></div>
-    <div class="main" id="main2"></div>
-    <div class="main" id="main3"></div>
-    <div class="main" id="main4"></div>
-    <div class="main" id="main5"></div>
-    <div class="main" id="main6"></div>
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+    <div id="main4"></div>
+    <div id="main5"></div>
+    <div id="main6"></div>
     <script>
+        // some input data
         let data = [];
         for (let i = 1; i < 20000; i++) {
             data.push([i, Math.sin((i / 5) * Math.PI)]);
@@ -57,57 +47,55 @@ under the License.
         ], function (echarts) {
             [{
                 div: 'main0',
-                sampling: 'none',
                 title: 'dataZoom without sampling (default value of "none", showes zig-zag shape)',
             }, {
                 div: 'main1',
                 sampling: 'min',
-                title: 'dataZoom with sampling = "min"',
             }, {
                 div: 'main2',
                 sampling: 'max',
-                title: 'dataZoom with sampling = "max"',
             }, {
                 div: 'main3',
                 sampling: 'minmax',
-                title: 'dataZoom with sampling = "minmax"',
             }, {
                 div: 'main4',
                 sampling: 'average',
-                title: 'dataZoom with sampling = "minmax"',
             }, {
                 div: 'main5',
                 sampling: 'sum',
-                title: 'dataZoom with sampling = "sum"',
             }, {
                 div: 'main6',
                 sampling: 'lttb',
-                title: 'dataZoom with sampling = "lttb"',
             }].forEach(({div, sampling, title}) => {
-                option = {
-                xAxis: {},
-                yAxis: {},
-                dataZoom: [
-                    {
-                        start: 0,
-                        end: 5,
-                        sampling,
-                    }
-                ],
-                series: [
-                    {
-                        type: 'line',
-                        symbol: 'none',
-                        data: data
-                    }
-                ]
-            };
+                if (!title) {
+                    title = `dataZoom with sampling = "${sampling}"`;
+                }
 
-            chart = testHelper.create(echarts, div, {
-                title,
-                option,
-                height: 400,
-            });
+                option = {
+                    xAxis: {},
+                    yAxis: {},
+                    dataZoom: [
+                        {
+                            start: 0,
+                            end: 5,
+                            sampling,
+                        }
+                    ],
+                    series: [
+                        {
+                            type: 'line',
+                            symbol: 'none',
+                            data: data
+                        }
+                    ]
+                };
+
+                chart = testHelper.create(echarts, div, {
+                    title,
+                    option,
+                    height: 400,
+                    width: 680,
+                });
 
             });
         });
