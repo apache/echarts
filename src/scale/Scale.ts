@@ -156,12 +156,11 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     /**
      * Whether a value is in broken range (not including either ends)
      */
-    isInBrokenRange(val: number, includingStart = true, includingEnd = false): boolean {
+    isInBrokenRange(val: number, includeEnd = false): boolean {
         for (let i = 0; i < this._breaks.length; i++) {
             const brk = this._breaks[i];
-            if (!brk.isExpanded
-                && (brk.start < val || includingStart && brk.start === val)
-                && (brk.end > val || includingEnd && brk.end === val)
+            if (!brk.isExpanded && brk.start <= val
+                && (brk.end > val || brk.end === val && includeEnd)
             ) {
                 return true;
             }

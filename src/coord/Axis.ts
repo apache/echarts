@@ -30,7 +30,7 @@ import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
-import { getExtentSpanWithoutBreaks } from '../scale/helper';
+import { adjustInBreakPosition, getExtentSpanWithoutBreaks } from '../scale/helper';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -127,22 +127,21 @@ class Axis {
     dataToCoordWithBreaks(
         data: ScaleDataValue,
         clamp?: boolean,
-        breakIncludingStart = true,
-        breakIncludingEnd = false
+        inBreakPosition?: 'start' | 'center' | 'end'
     ): number {
         let extent = this._extent;
         const scale = this.scale;
         let normalizedData = scale.normalize(data);
 
         if (scale.type === 'ordinal') {
-            const isInBreak = scale.isInBrokenRange(
-                data as OrdinalNumber,
-                breakIncludingStart,
-                breakIncludingEnd
-            );
+            const isInBreak = scale.isInBrokenRange(data as OrdinalNumber, inBreakPosition === 'end');
             if (isInBreak) {
-                const extent = scale.getExtent();
-                // normalizedData -= 0.5 / (extent[1] - extent[0] + 1);
+                normalizedData = adjustInBreakPosition(
+                    normalizedData,
+                    scale.getExtent(),
+                    scale.getBreaks(),
+                    inBreakPosition
+                );
             }
             if (this.onBand) {
                 extent = extent.slice() as [number, number];

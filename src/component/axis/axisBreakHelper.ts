@@ -32,6 +32,8 @@ export function rectCoordBuildBreakAxis(
     api: ExtensionAPI
 ): graphic.Group {
     const axis = axisModel.axis;
+    const isOrdinal = axis.scale.type === 'ordinal';
+    const axisMax = axis.scale.getExtent()[1];
 
     if (axis.scale.isBlank()) {
         return null;
@@ -60,13 +62,12 @@ export function rectCoordBuildBreakAxis(
     } as ExtendedElementProps);
 
     const isHorizontal = axis.isHorizontal();
-    // TODO: expand clip area according to zigzagAmplitude
     const clipEl = new graphic.Rect({
         shape: {
-            x: gridRect.x,
-            y: gridRect.y,
-            width: gridRect.width,
-            height: gridRect.height
+            x: gridRect.x - (isHorizontal ? zigzagAmplitude : 0),
+            y: gridRect.y - (isHorizontal ? 0 : zigzagAmplitude),
+            width: gridRect.width + (isHorizontal ? zigzagAmplitude * 2 : 0),
+            height: gridRect.height + (isHorizontal ? 0: zigzagAmplitude * 2)
         }
     });
 
@@ -78,13 +79,24 @@ export function rectCoordBuildBreakAxis(
 
         // Even if brk.gap is 0, we should also draw the breakArea because
         // border is sometimes required to be visible (as a line)
-        const startCoord = axis.toGlobalCoord(
-            axis.dataToCoordWithBreaks(brk.start, false, true, false)
-        );
-        const endCoord = axis.toGlobalCoord(axis.dataToCoord(
-            axis.dataToCoordWithBreaks(brk.end, false, true, false)
-        ));
-        console.log(brk.start, axis.dataToCoordWithBreaks(brk.start, false, false, false), axis.dataToCoordWithBreaks(brk.start, false, true, false), axis.dataToCoordWithBreaks(brk.start, false, false, true),axis.dataToCoordWithBreaks(brk.start, false, true, true));
+        let startCoord;
+        let endCoord;
+        const isEndBreak = brk.end >= axisMax;
+        if (isEndBreak) {
+            // The break area is bigger than the max value
+            startCoord = axis.toGlobalCoord(
+                axis.dataToCoordWithBreaks(axisMax, false, 'start')
+            );
+            endCoord = startCoord;
+        }
+        else {
+            startCoord = axis.toGlobalCoord(
+                axis.dataToCoordWithBreaks(brk.start, false, 'start')
+            );
+            endCoord = axis.toGlobalCoord(
+                axis.dataToCoordWithBreaks(brk.end - (isOrdinal ? 1 : 0), false, 'end')
+            );
+        }
         const breakGroup = new graphic.Group();
 
         addZigzagShapes(

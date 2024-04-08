@@ -18,7 +18,7 @@
 */
 
 import {getPrecision, round, nice, quantityExponent} from '../util/number';
-import { ScaleBreak } from '../util/types';
+import { OrdinalNumber, ScaleBreak } from '../util/types';
 import { warn } from '../util/log';
 import IntervalScale from './Interval';
 import LogScale from './Log';
@@ -204,4 +204,26 @@ export function getExtentSpanWithoutBreaks(extent: [number, number], breaks: Sca
         }
     }
     return span;
+}
+
+export function adjustInBreakPosition(
+    normalizedData: OrdinalNumber,
+    extent: [number, number],
+    breaks: ScaleBreak[],
+    inBreakPosition: 'start' | 'center' | 'end'
+) {
+    inBreakPosition = inBreakPosition || 'center';
+    const span = getExtentSpanWithoutBreaks(extent, breaks);
+    const bandWidth = 1 / span / 2;
+
+    if (normalizedData === 1) {
+        return normalizedData + bandWidth;
+    }
+    if (inBreakPosition === 'end') {
+        return normalizedData;
+    }
+    else if (inBreakPosition === 'start') {
+        return normalizedData - bandWidth;
+    }
+    return normalizedData - bandWidth / 2;
 }
