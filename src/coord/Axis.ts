@@ -334,7 +334,7 @@ function fixOnBandTicksCoords(
     }
     else {
         const crossLen = getExtentSpanWithoutBreaks(
-            [ticksCoords[0].tickValue, ticksCoords[ticksLen - 1].tickValue],
+            axis.scale.getExtent(),
             breaks
         );
         const shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;

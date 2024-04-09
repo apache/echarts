@@ -81,7 +81,8 @@ export function rectCoordBuildBreakAxis(
         // border is sometimes required to be visible (as a line)
         let startCoord;
         let endCoord;
-        const isEndBreak = brk.end >= axisMax;
+        const end = brk.end - (isOrdinal ? 1 : 0);
+        const isEndBreak = end >= axisMax;
         if (isEndBreak) {
             // The break area is bigger than the max value
             startCoord = axis.toGlobalCoord(
@@ -94,7 +95,7 @@ export function rectCoordBuildBreakAxis(
                 axis.dataToCoordWithBreaks(brk.start, false, 'start')
             );
             endCoord = axis.toGlobalCoord(
-                axis.dataToCoordWithBreaks(brk.end - (isOrdinal ? 1 : 0), false, 'end')
+                axis.dataToCoordWithBreaks(end, false, 'end')
             );
         }
         const breakGroup = new graphic.Group();

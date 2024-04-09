@@ -412,6 +412,28 @@ function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: numbe
         addItem(ordinalExtent[1]);
     }
 
+    const breaks = scale.getBreaks();
+    const breakLabelFormatter = labelModel.get('breakFormatter');
+    const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
+    for (let i = 0; i < breaks.length; ++i) {
+        const brk = breaks[i];
+        if (brk.isExpanded) {
+            continue;
+        }
+        const label = breakLabelFormatter ? breakLabelFormatter(
+            brk.start,
+            brk.start - categoryTickStart,
+            brk.start,
+            brk.end,
+            brk.gap
+        ) : '';
+        result.push(onlyTick ? tickValue : {
+            formattedLabel: label,
+            rawLabel: ordinalScale.getLabel({ value: brk.start }),
+            tickValue: brk.start
+        });
+    }
+
     function addItem(tickValue: number) {
         if (!scale.isInBrokenRange(tickValue)) {
             const tickObj = { value: tickValue };

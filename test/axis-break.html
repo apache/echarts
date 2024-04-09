@@ -170,19 +170,25 @@ under the License.
             ], function (echarts) {
                 let option;
 
+                const xData = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
                 const xAxis = {
-                    data: ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
+                    data: xData,
                     axisTick: {
                     },
                     breaks: [{
                         start: 1,
                         end: 2,
-                        gap: 0.5
+                        gap: 0.2
                     }, {
                         start: 4,
                         end: 6,
                         gap: 0
-                    }]
+                    }],
+                    axisLabel: {
+                        breakFormatter: (value, index, start, end, gap) => {
+                            return index === 1 ? 'b' : 'e~f'
+                        }
+                    }
                 };
 
                 option = {
@@ -200,7 +206,7 @@ under the License.
                         left: 100,
                         right: '55%'
                     }, {
-                        right: 100,
+                        right: 150,
                         left: '55%'
                     }],
                     xAxis: [{
@@ -270,6 +276,68 @@ under the License.
             });
         </script>
 
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                let option;
+
+                const data = [];
+                const date = new Date('2024-04-09 9:30:00');
+                const endTime = new Date('2024-04-09 15:00:00').getTime();
+                const breakStart = new Date('2024-04-09 11:30:00');
+                const breakEnd = new Date('2024-04-09 13:00:00');
+                for (let val = 1669; date.getTime() <= endTime; ) {
+                    if (date <= breakStart || date >= breakEnd) {
+                        val = val + Math.floor((Math.random() - 0.5 * Math.sin(val / 1000)) * 20 * 100) / 100;
+                        data.push([date.getTime(), val]);
+                    }
+                    date.setMinutes(date.getMinutes() + 1);
+                }
+
+                option = {
+                    tooltip: {
+                        show: true,
+                        trigger: 'axis',
+                    },
+                    xAxis: [{
+                        type: 'time',
+                        axisLabel: {
+                            showMinLabel: true,
+                            showMaxLabel: true,
+                            breakFormatter: (value, index, start, end, gap) => {
+                                console.log(value, index, start, end, gap);
+                            }
+                        },
+                        breaks: [{
+                            start: breakStart,
+                            end: breakEnd,
+                            gap: 0
+                        }]
+                    }],
+                    yAxis: {
+                        type: 'value',
+                        min: 'dataMin',
+                        axisLabel: {
+                            formatter: n => n.toFixed(2)
+                        }
+                    },
+                    series: [{
+                        type: 'line',
+                        data: data,
+                        symbolSize: 0
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Intraday stock chart'
+                    ],
+                    option: option
+                });
+            });
+        </script>
     </body>
 </html>
 

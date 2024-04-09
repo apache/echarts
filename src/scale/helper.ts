@@ -216,14 +216,14 @@ export function adjustInBreakPosition(
     const span = getExtentSpanWithoutBreaks(extent, breaks);
     const bandWidth = 1 / span / 2;
 
+    if (inBreakPosition === 'start') {
+        return normalizedData - bandWidth;
+    }
+    if (inBreakPosition === 'center') {
+        return normalizedData - bandWidth / 2;
+    }
     if (normalizedData === 1) {
         return normalizedData + bandWidth;
     }
-    if (inBreakPosition === 'end') {
-        return normalizedData;
-    }
-    else if (inBreakPosition === 'start') {
-        return normalizedData - bandWidth;
-    }
-    return normalizedData - bandWidth / 2;
+    return normalizedData;
 }
