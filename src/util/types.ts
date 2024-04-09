@@ -1665,6 +1665,11 @@ export interface SeriesOnCalendarOptionMixin {
     calendarId?: string
 }
 
+export interface SeriesOnMatrixOptionMixin {
+    matrixIndex?: number
+    matrixId?: string
+}
+
 export interface SeriesLargeOptionMixin {
     large?: boolean
     largeThreshold?: number

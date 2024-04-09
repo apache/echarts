@@ -28,6 +28,7 @@ export {install as GeoComponent} from '../component/geo/install';
 export {install as SingleAxisComponent} from '../component/singleAxis/install';
 export {install as ParallelComponent} from '../component/parallel/install';
 export {install as CalendarComponent} from '../component/calendar/install';
+export {install as MatrixComponent} from '../component/matrix/install';
 
 export {install as GraphicComponent} from '../component/graphic/install';
 
@@ -77,6 +78,7 @@ export {
     SingleAxisComponentOption,
     ParallelComponentOption,
     CalendarComponentOption,
+    MatrixComponentOption,
 
     GraphicComponentOption,
 
