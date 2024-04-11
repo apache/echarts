@@ -21,6 +21,7 @@ import MatrixModel from '../../coord/matrix/MatrixModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ComponentView } from '../../echarts.all';
 import GlobalModel from '../../model/Global';
+import * as graphic from '../../util/graphic';
 
 class MatrixView extends ComponentView {
 
@@ -28,7 +29,25 @@ class MatrixView extends ComponentView {
     type = MatrixView.type;
 
     render(matrixModel: MatrixModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        // TODO
+
+        const group = this.group;
+
+        group.removeAll();
+
+        this._renderGrid(matrixModel);
+    }
+
+    protected _renderGrid(matrixModel: MatrixModel) {
+        const coordSys = matrixModel.coordinateSystem;
+        const rect = coordSys.getRect();
+        this.group.add(new graphic.Rect({
+            shape: rect,
+            style: {
+                fill: 'none',
+                stroke: '#333',
+                lineWidth: 2
+            }
+        }));
     }
 }
 

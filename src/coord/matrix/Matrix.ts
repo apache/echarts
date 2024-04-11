@@ -27,10 +27,14 @@ import { CoordinateSystem, CoordinateSystemClipArea, CoordinateSystemMaster } fr
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import MatrixModel from './MatrixModel';
+import { LayoutRect, getLayoutRect } from '../../util/layout';
 
 class Matrix implements CoordinateSystem, CoordinateSystemMaster {
 
     static readonly dimensions = [''];
+
+    private _model: MatrixModel;
+    private _rect: LayoutRect;
 
     static create(ecModel: GlobalModel, api: ExtensionAPI) {
         const matrixList: Matrix[] = [];
@@ -54,14 +58,30 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
         this._model = matrixModel;
     }
 
-    private _model: MatrixModel;
+    getRect(): LayoutRect {
+        return this._rect;
+    }
+
+    update(ecModel: GlobalModel, api: ExtensionAPI) {
+        this.resize(this._model, api);
+    }
+
+    resize(matrixModel: MatrixModel, api: ExtensionAPI) {
+        const boxLayoutParams = matrixModel.getBoxLayoutParams();
+        const gridRect = getLayoutRect(
+            boxLayoutParams, {
+                width: api.getWidth(),
+                height: api.getHeight()
+            });
+        this._rect = gridRect;
+    }
 
     type: string;
     master?: CoordinateSystemMaster;
     dimensions: string[];
     model?: ComponentModel<ComponentOption>;
     dataToPoint(data: ScaleDataValue | ScaleDataValue[], reserved?: any, out?: number[]): number[] {
-        throw new Error('Method not implemented.');
+        return [0, 0];
     }
     pointToData?(point: number[], clamp?: boolean): number | number[] {
         throw new Error('Method not implemented.');
