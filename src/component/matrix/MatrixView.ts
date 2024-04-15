@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import { MatrixNodeOption } from '../../coord/matrix/MatrixDim';
 import MatrixModel from '../../coord/matrix/MatrixModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ComponentView } from '../../echarts.all';
@@ -34,10 +35,10 @@ class MatrixView extends ComponentView {
 
         group.removeAll();
 
-        this._renderGrid(matrixModel);
+        this._renderTable(matrixModel);
     }
 
-    protected _renderGrid(matrixModel: MatrixModel) {
+    protected _renderTable(matrixModel: MatrixModel) {
         const coordSys = matrixModel.coordinateSystem;
         const rect = coordSys.getRect();
         this.group.add(new graphic.Rect({
@@ -45,9 +46,52 @@ class MatrixView extends ComponentView {
             style: {
                 fill: 'none',
                 stroke: '#333',
-                lineWidth: 2
+                lineWidth: 1
             }
         }));
+
+        const xDim = coordSys.getDim('x');
+        const yDim = coordSys.getDim('y');
+        const xLeavesCnt = xDim.getLeavesCount();
+        const yLeavesCnt = yDim.getLeavesCount();
+
+        const xCells = xDim.getCells();
+        const xHeight = xDim.getHeight();
+        const yCells = yDim.getCells();
+        const yHeight = yDim.getHeight();
+
+        const cellWidth = rect.width / (xLeavesCnt + yHeight);
+        const cellHeight = rect.height / (yLeavesCnt + xHeight);
+
+        const xLeft = rect.x + cellWidth * yHeight;
+        for (let i = 0; i < xCells.length; i++) {
+            const cell = xCells[i];
+            const width = cellWidth * cell.colSpan;
+            const height = cellHeight * cell.rowSpan;
+            this.group.add(new graphic.Text({
+                x: xLeft + cellWidth * cell.colId + width / 2,
+                y: rect.y + cellHeight * cell.rowId + height / 2,
+                style: {
+                    text: cell.value,
+                    fill: '#333',
+                }
+            }));
+        }
+
+        const yTop = cellHeight * xHeight;
+        for (let i = 0; i < yCells.length; i++) {
+            const cell = yCells[i];
+            const width = cellWidth * cell.colSpan;
+            const height = cellHeight * cell.rowSpan;
+            this.group.add(new graphic.Text({
+                x: rect.x + cellWidth * cell.rowId + width / 2,
+                y: yTop + cellHeight * cell.colId + height / 2,
+                style: {
+                    text: cell.value,
+                    fill: '#333',
+                }
+            }));
+        }
     }
 }
 

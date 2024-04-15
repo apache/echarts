@@ -261,6 +261,7 @@ export interface EChartsOption extends ECBasicOption {
     parallel?: ParallelComponentOption | ParallelComponentOption[];
     parallelAxis?: ParallelAxisComponentOption | ParallelAxisComponentOption[];
     calendar?: CalendarComponentOption | CalendarComponentOption[];
+    matrix?: MatrixComponentOption | MatrixComponentOption[];
     toolbox?: ToolboxComponentOption | ToolboxComponentOption[];
     tooltip?: TooltipComponentOption | TooltipComponentOption[];
     axisPointer?: AxisPointerComponentOption | AxisPointerComponentOption[];

@@ -28,6 +28,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import MatrixModel from './MatrixModel';
 import { LayoutRect, getLayoutRect } from '../../util/layout';
+import { MatrixDim } from './MatrixDim';
 
 class Matrix implements CoordinateSystem, CoordinateSystemMaster {
 
@@ -35,6 +36,8 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
 
     private _model: MatrixModel;
     private _rect: LayoutRect;
+    private _xDim: MatrixDim;
+    private _yDim: MatrixDim;
 
     static create(ecModel: GlobalModel, api: ExtensionAPI) {
         const matrixList: Matrix[] = [];
@@ -56,10 +59,16 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
 
     constructor(matrixModel: MatrixModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._model = matrixModel;
+        this._xDim = new MatrixDim(matrixModel.get('x'));
+        this._yDim = new MatrixDim(matrixModel.get('y'));
     }
 
     getRect(): LayoutRect {
         return this._rect;
+    }
+
+    getDim(dim: 'x' | 'y'): MatrixDim {
+        return dim === 'x' ? this._xDim : this._yDim;
     }
 
     update(ecModel: GlobalModel, api: ExtensionAPI) {
@@ -90,7 +99,6 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
         throw new Error('Method not implemented.');
     }
     getAxes?: () => Axis[];
-    getAxis?: (dim?: string) => Axis;
     getBaseAxis?: () => Axis;
     getOtherAxis?: (baseAxis: Axis) => Axis;
     clampData?: (data: ScaleDataValue[], out?: number[]) => number[];

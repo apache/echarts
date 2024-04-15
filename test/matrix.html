@@ -57,7 +57,10 @@ under the License.
                     x: {
                         data: [{
                             value: 'A',
-                            children: ['A1', 'A2', 'A3']
+                            children: ['A1', 'A2', {
+                                value: 'A3',
+                                children: ['A31', 'A32']
+                            }]
                         }]
                     },
                     y: {
@@ -67,7 +70,10 @@ under the License.
                 series: {
                     type: 'pie',
                     coordinateSystem: 'matrix',
-                    data: [['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30], ['A2', 'V', 40], ['A3', 'U', 50], ['A3', 'V', 60]]
+                    data: [
+                        ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
+                        ['A2', 'V', 40], ['A3', 'U', 50], ['A3', 'V', 60]
+                    ]
                 }
             };
 

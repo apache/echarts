@@ -20,9 +20,19 @@
 import ComponentModel from '../../model/Component';
 import { BoxLayoutOptionMixin, ComponentOption } from '../../util/types';
 import Matrix from './Matrix';
+import { MatrixNodeOption } from './MatrixDim';
 
 export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
+    mainType?: 'matrix';
 
+    containLabel?: boolean;
+
+    x?: {
+        data?: MatrixNodeOption[];
+    }
+    y?: {
+        data?: MatrixNodeOption[];
+    }
 }
 
 class MatrixModel extends ComponentModel<MatrixOption> {
@@ -30,6 +40,21 @@ class MatrixModel extends ComponentModel<MatrixOption> {
     type = MatrixModel.type;
 
     coordinateSystem: Matrix;
+
+    static defaultOption: MatrixOption = {
+        z: 2,
+        left: '10%',
+        top: '10%',
+        right: '10%',
+        bottom: '10%',
+        containLabel: false,
+        x: {
+            data: []
+        },
+        y: {
+            data: []
+        }
+    }
 }
 
 export default MatrixModel;
