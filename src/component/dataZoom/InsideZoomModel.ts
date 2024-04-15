@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import DataZoomModel, {DataZoomOption} from './DataZoomModel';
+import DataZoomModel, { DataZoomOption } from './DataZoomModel';
 import { inheritDefaultOption } from '../../util/component';
 
 export interface InsideDataZoomOption extends DataZoomOption {
@@ -38,6 +38,14 @@ export interface InsideDataZoomOption extends DataZoomOption {
 
     moveOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
 
+    /**
+     * Add configration attribute to control zoom X and Y axis.
+     */
+
+    zoomXOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
+
+    zoomYOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
+
     preventDefaultMouseMove?: boolean
 
     /**
@@ -51,14 +59,15 @@ class InsideZoomModel extends DataZoomModel<InsideDataZoomOption> {
     static readonly type = 'dataZoom.inside';
     type = InsideZoomModel.type;
 
-    static defaultOption: InsideDataZoomOption = inheritDefaultOption(DataZoomModel.defaultOption, {
-        disabled: false,
-        zoomLock: false,
-        zoomOnMouseWheel: true,
-        moveOnMouseMove: true,
-        moveOnMouseWheel: false,
-        preventDefaultMouseMove: true
-    });
+    static defaultOption: InsideDataZoomOption =
+        inheritDefaultOption(DataZoomModel.defaultOption, {
+            disabled: false,
+            zoomLock: false,
+            zoomOnMouseWheel: true,
+            moveOnMouseMove: true,
+            moveOnMouseWheel: false,
+            preventDefaultMouseMove: true
+        });
 }
 
 export default InsideZoomModel;
