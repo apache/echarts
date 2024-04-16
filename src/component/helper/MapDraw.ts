@@ -595,6 +595,7 @@ class MapDraw {
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
+                totalZoom: controllerHost.zoom,
                 zoom: e.scale,
                 originX: e.originX,
                 originY: e.originY,
