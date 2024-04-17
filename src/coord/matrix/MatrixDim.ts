@@ -17,6 +17,8 @@
 * under the License.
 */
 
+import { reduce } from "zrender/src/core/util";
+
 export type MatrixNodeOption = {
     value?: string;
     children?: MatrixNodeOption[];
@@ -96,24 +98,45 @@ export class MatrixDim {
     }
 
     private _traverseInitCells(node: MatrixNodeOption, rowId: number, colId: number = 0): { rowId: number, colId: number } {
-        const cell: MatrixCell = {
-            value: typeof node === 'string' ? node : node.value,
-            rowId,
-            colId,
-            rowSpan: 1, // Assuming single rowSpan for now
-            colSpan: node.children ? node.children.length : 1 // Assuming colSpan is the number of children
-        };
-
-        this._cells.push(cell);
-
-        if (node.children) {
-            for (let i = 0; i < node.children.length; i++) {
-                const child = node.children[i];
-                colId = this._traverseInitCells(child, rowId + 1, colId).colId;
-            }
+        if (typeof node === 'string') {
+            // When node is a string, it's a leaf with colSpan of 1
+            this._cells.push({
+                value: node,
+                rowId,
+                colId,
+                rowSpan: 1,
+                colSpan: 1
+            });
+            return { rowId, colId: colId + 1 };
         }
 
-        return { rowId, colId: colId + cell.colSpan };
+        let currentColId = colId;
+        let totalColSpan = 0;
+        let childrenColSpans = [];
+
+        if (node.children && node.children.length) {
+            for (let child of node.children) {
+                const result = this._traverseInitCells(child, rowId + 1, currentColId);
+                const childColSpan = result.colId - currentColId;
+                childrenColSpans.push(childColSpan);
+                currentColId = result.colId;
+            }
+            totalColSpan = reduce(childrenColSpans, (a, b) => a + b, 0);
+        } else {
+            // If no children, it's a leaf node with colSpan of 1
+            totalColSpan = 1;
+        }
+
+        // Create cell for the current node
+        this._cells.push({
+            value: node.value,
+            rowId,
+            colId,
+            rowSpan: 1,
+            colSpan: totalColSpan
+        });
+
+        return { rowId, colId: colId + totalColSpan };
     }
 
     private _countHeight(node: MatrixNodeOption): number {

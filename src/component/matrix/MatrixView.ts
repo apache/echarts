@@ -45,7 +45,7 @@ class MatrixView extends ComponentView {
             shape: rect,
             style: {
                 fill: 'none',
-                stroke: '#333',
+                stroke: '#888',
                 lineWidth: 1
             }
         }));
@@ -59,38 +59,120 @@ class MatrixView extends ComponentView {
         const xHeight = xDim.getHeight();
         const yCells = yDim.getCells();
         const yHeight = yDim.getHeight();
+        console.log(xCells)
 
         const cellWidth = rect.width / (xLeavesCnt + yHeight);
         const cellHeight = rect.height / (yLeavesCnt + xHeight);
+
+        for (let i = 1; i <= xHeight; ++i) {
+            this.group.add(new graphic.Line({
+                shape: {
+                    x1: rect.x + (i === xHeight ? 0 : cellWidth),
+                    x2: rect.x + rect.width,
+                    y1: rect.y + cellHeight * i,
+                    y2: rect.y + cellHeight * i,
+                },
+                style: {
+                    stroke: '#ccc'
+                }
+            }));
+        }
+        for (let i = 1; i <= yHeight; ++i) {
+            this.group.add(new graphic.Line({
+                shape: {
+                    x1: rect.x + cellWidth * i,
+                    x2: rect.x + cellWidth * i,
+                    y1: rect.y + (i === yHeight ? 0 : cellHeight),
+                    y2: rect.y + rect.height,
+                },
+                style: {
+                    stroke: '#ccc'
+                }
+            }));
+        }
 
         const xLeft = rect.x + cellWidth * yHeight;
         for (let i = 0; i < xCells.length; i++) {
             const cell = xCells[i];
             const width = cellWidth * cell.colSpan;
             const height = cellHeight * cell.rowSpan;
+            const left = xLeft + cellWidth * cell.colId;
+            const top = rect.y + cellHeight * cell.rowId;
             this.group.add(new graphic.Text({
-                x: xLeft + cellWidth * cell.colId + width / 2,
-                y: rect.y + cellHeight * cell.rowId + height / 2,
+                x: left + width / 2,
+                y: top + height / 2,
                 style: {
                     text: cell.value,
                     fill: '#333',
                 }
             }));
+
+            this.group.add(new graphic.Line({
+                shape: {
+                    x1: left,
+                    x2: left,
+                    y1: top,
+                    y2: top + height,
+                },
+                style: {
+                    stroke: '#ccc'
+                }
+            }));
+            if (left + width < rect.x + rect.width) {
+                this.group.add(new graphic.Line({
+                    shape: {
+                        x1: left + width,
+                        x2: left + width,
+                        y1: top,
+                        y2: top + height,
+                    },
+                    style: {
+                        stroke: '#ccc'
+                    }
+                }));
+            }
         }
 
-        const yTop = cellHeight * xHeight;
+        const yTop = rect.y + cellHeight * xHeight;
         for (let i = 0; i < yCells.length; i++) {
             const cell = yCells[i];
             const width = cellWidth * cell.colSpan;
             const height = cellHeight * cell.rowSpan;
+            const left = rect.x + cellWidth * cell.rowId;
+            const top = yTop + cellHeight * cell.colId;
             this.group.add(new graphic.Text({
-                x: rect.x + cellWidth * cell.rowId + width / 2,
-                y: yTop + cellHeight * cell.colId + height / 2,
+                x: left + width / 2,
+                y: top + height / 2,
                 style: {
                     text: cell.value,
                     fill: '#333',
                 }
             }));
+
+            this.group.add(new graphic.Line({
+                shape: {
+                    x1: left,
+                    x2: left + width,
+                    y1: top,
+                    y2: top,
+                },
+                style: {
+                    stroke: '#ccc'
+                }
+            }));
+            if (top + height < rect.y + rect.height) {
+                this.group.add(new graphic.Line({
+                    shape: {
+                        x1: left,
+                        x2: left + width,
+                        y1: top + height,
+                        y2: top + height,
+                    },
+                    style: {
+                        stroke: '#ccc'
+                    }
+                }));
+            }
         }
     }
 }
