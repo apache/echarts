@@ -17,10 +17,10 @@
 * under the License.
 */
 
-import { MatrixNodeOption } from '../../coord/matrix/MatrixDim';
 import MatrixModel from '../../coord/matrix/MatrixModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { ComponentView } from '../../echarts.all';
+import ComponentView from '../../view/Component';
+import { createTextStyle } from '../../label/labelStyle';
 import GlobalModel from '../../model/Global';
 import * as graphic from '../../util/graphic';
 
@@ -40,56 +40,24 @@ class MatrixView extends ComponentView {
 
     protected _renderTable(matrixModel: MatrixModel) {
         const coordSys = matrixModel.coordinateSystem;
-        const rect = coordSys.getRect();
-        this.group.add(new graphic.Rect({
-            shape: rect,
-            style: {
-                fill: 'none',
-                stroke: '#888',
-                lineWidth: 1
-            }
-        }));
-
         const xDim = coordSys.getDim('x');
         const yDim = coordSys.getDim('y');
+        const xModel = matrixModel.getModel('x');
+        const yModel = matrixModel.getModel('y');
+        const xLabelModel = xModel.getModel('label');
+        const yLabelModel = yModel.getModel('label');
+        const xItemStyle = xModel.getModel('itemStyle').getItemStyle();
+        const yItemStyle = yModel.getModel('itemStyle').getItemStyle();
+
+        const rect = coordSys.getRect();
         const xLeavesCnt = xDim.getLeavesCount();
         const yLeavesCnt = yDim.getLeavesCount();
-
         const xCells = xDim.getCells();
         const xHeight = xDim.getHeight();
         const yCells = yDim.getCells();
         const yHeight = yDim.getHeight();
-        console.log(xCells)
-
         const cellWidth = rect.width / (xLeavesCnt + yHeight);
         const cellHeight = rect.height / (yLeavesCnt + xHeight);
-
-        for (let i = 1; i <= xHeight; ++i) {
-            this.group.add(new graphic.Line({
-                shape: {
-                    x1: rect.x + (i === xHeight ? 0 : cellWidth),
-                    x2: rect.x + rect.width,
-                    y1: rect.y + cellHeight * i,
-                    y2: rect.y + cellHeight * i,
-                },
-                style: {
-                    stroke: '#ccc'
-                }
-            }));
-        }
-        for (let i = 1; i <= yHeight; ++i) {
-            this.group.add(new graphic.Line({
-                shape: {
-                    x1: rect.x + cellWidth * i,
-                    x2: rect.x + cellWidth * i,
-                    y1: rect.y + (i === yHeight ? 0 : cellHeight),
-                    y2: rect.y + rect.height,
-                },
-                style: {
-                    stroke: '#ccc'
-                }
-            }));
-        }
 
         const xLeft = rect.x + cellWidth * yHeight;
         for (let i = 0; i < xCells.length; i++) {
@@ -98,39 +66,25 @@ class MatrixView extends ComponentView {
             const height = cellHeight * cell.rowSpan;
             const left = xLeft + cellWidth * cell.colId;
             const top = rect.y + cellHeight * cell.rowId;
-            this.group.add(new graphic.Text({
-                x: left + width / 2,
-                y: top + height / 2,
-                style: {
-                    text: cell.value,
-                    fill: '#333',
-                }
-            }));
 
-            this.group.add(new graphic.Line({
+            this.group.add(new graphic.Rect({
                 shape: {
-                    x1: left,
-                    x2: left,
-                    y1: top,
-                    y2: top + height,
+                    x: left,
+                    y: top,
+                    width: width,
+                    height: height
                 },
-                style: {
-                    stroke: '#ccc'
-                }
+                style: xItemStyle
             }));
-            if (left + width < rect.x + rect.width) {
-                this.group.add(new graphic.Line({
-                    shape: {
-                        x1: left + width,
-                        x2: left + width,
-                        y1: top,
-                        y2: top + height,
-                    },
-                    style: {
-                        stroke: '#ccc'
-                    }
-                }));
-            }
+            this.group.add(new graphic.Text({
+                style: createTextStyle(xLabelModel, {
+                    text: cell.value,
+                    x: left + width / 2,
+                    y: top + height / 2,
+                    verticalAlign: 'middle',
+                    align: 'center'
+                })
+            }));
         }
 
         const yTop = rect.y + cellHeight * xHeight;
@@ -140,40 +94,74 @@ class MatrixView extends ComponentView {
             const height = cellHeight * cell.rowSpan;
             const left = rect.x + cellWidth * cell.rowId;
             const top = yTop + cellHeight * cell.colId;
-            this.group.add(new graphic.Text({
-                x: left + width / 2,
-                y: top + height / 2,
-                style: {
-                    text: cell.value,
-                    fill: '#333',
-                }
-            }));
 
-            this.group.add(new graphic.Line({
+            this.group.add(new graphic.Rect({
                 shape: {
-                    x1: left,
-                    x2: left + width,
-                    y1: top,
-                    y2: top,
+                    x: left,
+                    y: top,
+                    width: width,
+                    height: height
                 },
-                style: {
-                    stroke: '#ccc'
-                }
+                style: yItemStyle
             }));
-            if (top + height < rect.y + rect.height) {
-                this.group.add(new graphic.Line({
+            this.group.add(new graphic.Text({
+                style: createTextStyle(yLabelModel, {
+                    text: cell.value,
+                    x: left + width / 2,
+                    y: top + height / 2,
+                    verticalAlign: 'middle',
+                    align: 'center'
+                })
+            }));
+        }
+
+        // Inner cells
+        const innerBackgroundStyle = matrixModel
+            .getModel('innerBackgroundStyle')
+            .getItemStyle();
+        for (let i = 0; i < xLeavesCnt; i++) {
+            for (let j = 0; j < yLeavesCnt; j++) {
+                const left = xLeft + cellWidth * i;
+                const top = yTop + cellHeight * j;
+                this.group.add(new graphic.Rect({
                     shape: {
-                        x1: left,
-                        x2: left + width,
-                        y1: top + height,
-                        y2: top + height,
+                        x: left,
+                        y: top,
+                        width: cellWidth,
+                        height: cellHeight
                     },
-                    style: {
-                        stroke: '#ccc'
-                    }
+                    style: innerBackgroundStyle
                 }));
             }
         }
+
+        // Outer border
+        const backgroundStyle = matrixModel
+            .getModel('backgroundStyle')
+            .getItemStyle();
+        this.group.add(new graphic.Rect({
+            shape: rect,
+            style: backgroundStyle
+        }));
+        // Header border
+        this.group.add(new graphic.Line({
+            shape: {
+                x1: rect.x,
+                y1: yTop,
+                x2: rect.x + rect.width,
+                y2: yTop
+            },
+            style: backgroundStyle
+        }));
+        this.group.add(new graphic.Line({
+            shape: {
+                x1: xLeft,
+                y1: rect.y,
+                x2: xLeft,
+                y2: rect.y + rect.height
+            },
+            style: backgroundStyle
+        }));
     }
 }
 

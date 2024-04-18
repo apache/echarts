@@ -18,7 +18,7 @@
 */
 
 import ComponentModel from '../../model/Component';
-import { BoxLayoutOptionMixin, ComponentOption } from '../../util/types';
+import { BoxLayoutOptionMixin, ComponentOption, ItemStyleOption, LabelOption } from '../../util/types';
 import Matrix from './Matrix';
 import { MatrixNodeOption } from './MatrixDim';
 
@@ -29,11 +29,31 @@ export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
 
     x?: {
         data?: MatrixNodeOption[];
+        label?: LabelOption;
+        itemStyle?: ItemStyleOption;
     }
     y?: {
         data?: MatrixNodeOption[];
+        label?: LabelOption;
+        itemStyle?: ItemStyleOption;
     }
+
+    backgroundStyle?: ItemStyleOption;
+    innerBackgroundStyle?: ItemStyleOption;
 }
+
+const defaultDimOption = {
+    data: [] as MatrixNodeOption[],
+    label: {
+        show: true,
+        color: '#333'
+    },
+    itemStyle: {
+        color: 'none',
+        borderWidth: 1,
+        borderColor: '#ccc'
+    }
+};
 
 class MatrixModel extends ComponentModel<MatrixOption> {
     static type = 'matrix';
@@ -48,11 +68,21 @@ class MatrixModel extends ComponentModel<MatrixOption> {
         right: '10%',
         bottom: '10%',
         containLabel: false,
-        x: {
-            data: []
+        x: defaultDimOption,
+        y: defaultDimOption,
+        backgroundStyle: {
+            color: 'none',
+            borderColor: '#777',
+            borderWidth: 1,
+            borderType: 'solid',
+            opacity: 1
         },
-        y: {
-            data: []
+        innerBackgroundStyle: {
+            color: 'none',
+            borderColor: '#ccc',
+            borderWidth: 1,
+            borderType: 'solid',
+            opacity: 1
         }
     }
 }
