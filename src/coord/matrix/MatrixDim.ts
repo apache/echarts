@@ -45,6 +45,7 @@ export class MatrixDim {
 
     private _option: MatrixDimOption;
     private _cells: MatrixCell[];
+    private _height: number;
 
     constructor(option: MatrixDimOption) {
         this._option = option || { data: [] };
@@ -70,6 +71,9 @@ export class MatrixDim {
     }
 
     getHeight() {
+        if (this._height != null) {
+            return this._height;
+        }
         if (!this._option.data) {
             return 0;
         }
@@ -80,11 +84,20 @@ export class MatrixDim {
         for (let i = 0; i < this._option.data.length; i++) {
             height = Math.max(height, this._countHeight(this._option.data[i]));
         }
+        this._height = height;
         return height;
     }
 
     getCells() {
         return this._cells;
+    }
+
+    getCell(value: string) {
+        for (let i = 0; i < this._cells.length; i++) {
+            if (this._cells[i].value === value) {
+                return this._cells[i];
+            }
+        }
     }
 
     private _initCells(): void {

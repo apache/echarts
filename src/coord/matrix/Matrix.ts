@@ -17,11 +17,11 @@
 * under the License.
 */
 
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import { MatrixArray } from 'zrender/src/core/matrix';
 import { PrepareCustomInfo } from '../../chart/custom/CustomSeries';
 import { ComponentModel, SeriesModel } from '../../echarts.all';
-import { ComponentOption, ScaleDataValue, SeriesOnMatrixOptionMixin, SeriesOption } from '../../util/types';
+import { ComponentOption, OrdinalRawValue, ScaleDataValue, SeriesOnMatrixOptionMixin, SeriesOption } from '../../util/types';
 import Axis from '../Axis';
 import { CoordinateSystem, CoordinateSystemClipArea, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
@@ -32,12 +32,15 @@ import { MatrixDim } from './MatrixDim';
 
 class Matrix implements CoordinateSystem, CoordinateSystemMaster {
 
-    static readonly dimensions = [''];
+    static readonly dimensions = ['x', 'y', 'value'];
+    readonly dimensions = Matrix.dimensions;
+    readonly type = 'matrix';
 
     private _model: MatrixModel;
     private _rect: LayoutRect;
     private _xDim: MatrixDim;
     private _yDim: MatrixDim;
+    private _lineWidth: number;
 
     static create(ecModel: GlobalModel, api: ExtensionAPI) {
         const matrixList: Matrix[] = [];
@@ -83,15 +86,45 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
                 height: api.getHeight()
             });
         this._rect = gridRect;
+        this._lineWidth = matrixModel.getModel('backgroundStyle')
+            .getItemStyle().lineWidth || 0;
     }
 
-    type: string;
-    master?: CoordinateSystemMaster;
-    dimensions: string[];
-    model?: ComponentModel<ComponentOption>;
-    dataToPoint(data: ScaleDataValue | ScaleDataValue[], reserved?: any, out?: number[]): number[] {
-        return [0, 0];
+    dataToPoint(x: string, y: string, reserved?: any, out?: number[]): number[] {
+        const xCell = this._xDim.getCell(x);
+        const yCell = this._yDim.getCell(y);
+        const xLeavesCnt = this._xDim.getLeavesCount();
+        const yLeavesCnt = this._yDim.getLeavesCount();
+        const xHeight = this._xDim.getHeight();
+        const yHeight = this._yDim.getHeight();
+        return [
+            0, 0
+        ]
     }
+
+    dataToRect(x: string, y: string, clamp?: boolean): RectLike {
+        const xCell = this._xDim.getCell(x);
+        const yCell = this._yDim.getCell(y);
+        const xLeavesCnt = this._xDim.getLeavesCount();
+        const yLeavesCnt = this._yDim.getLeavesCount();
+        const xHeight = this._xDim.getHeight();
+        const yHeight = this._yDim.getHeight();
+        // TODO: each cell may have different width and height
+        const cellWidth = this._rect.width / (xLeavesCnt + yHeight) * xCell.colSpan;
+        const cellHeight = this._rect.height / (yLeavesCnt + xHeight) * yCell.rowSpan;
+        const halfLineWidth = this._lineWidth / 2;
+        return {
+            x: this._rect.x + this._rect.width / (xLeavesCnt + yHeight)
+                * (xCell.colId + yHeight) + halfLineWidth,
+            y: this._rect.y + this._rect.height / (yLeavesCnt + xHeight)
+                * (yCell.colId + xHeight) + halfLineWidth,
+            width: cellWidth - halfLineWidth * 2,
+            height: cellHeight - halfLineWidth * 2
+        };
+    }
+
+    master?: CoordinateSystemMaster;
+    model?: ComponentModel<ComponentOption>;
     pointToData?(point: number[], clamp?: boolean): number | number[] {
         throw new Error('Method not implemented.');
     }

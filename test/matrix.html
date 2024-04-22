@@ -67,12 +67,20 @@ under the License.
                         data: ['U', 'V']
                     }
                 },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 80,
+                    top: 'middle',
+                    dimension: 2,
+                    calculable: true
+                },
                 series: {
-                    type: 'pie',
+                    type: 'heatmap',
                     coordinateSystem: 'matrix',
                     data: [
                         ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
-                        ['A2', 'V', 40], ['A3', 'U', 50], ['A3', 'V', 60]
+                        ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
                     ]
                 }
             };

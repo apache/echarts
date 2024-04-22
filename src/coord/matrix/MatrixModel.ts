@@ -72,7 +72,7 @@ class MatrixModel extends ComponentModel<MatrixOption> {
         y: defaultDimOption,
         backgroundStyle: {
             color: 'none',
-            borderColor: '#777',
+            borderColor: '#aaa',
             borderWidth: 1,
             borderType: 'solid',
             opacity: 1
