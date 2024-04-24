@@ -759,6 +759,11 @@ function buildAxisLabel(
 
     each(labels, function (labelItem, index) {
 
+        if (axis.type === 'time' && !axisModel.isDataNotEmptyAt(index)) {
+            // Skip the label processing for series with no data to ensure the correct time axis range.
+            return;
+        }
+
         if (data && data.length <= index && data[index].length === 0) {
             // If it's null array, we jump it
             return;

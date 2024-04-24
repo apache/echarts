@@ -37561,6 +37561,9 @@ function buildAxisLabel(group, transformGroup, axisModel, opt) {
   const silent = AxisBuilder.isLabelSilent(axisModel);
   const triggerEvent = axisModel.get("triggerEvent");
   each(labels, function(labelItem, index) {
+    if (axis.type === "time" && !axisModel.isDataNotEmptyAt(index)) {
+      return;
+    }
     if (data && data.length <= index && data[index].length === 0) {
       return;
     }
@@ -40406,6 +40409,7 @@ var MapDraw = class {
       this._mouseDownFlag = false;
       updateViewOnZoom(controllerHost, e2.scale, e2.originX, e2.originY);
       api2.dispatchAction(extend(makeActionBase(), {
+        totalZoom: controllerHost.zoom,
         zoom: e2.scale,
         originX: e2.originX,
         originY: e2.originY,
