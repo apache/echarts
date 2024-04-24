@@ -21,14 +21,14 @@ import {
     retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction, retrieve2
 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import {getECData} from '../../util/innerStore';
-import {createTextStyle} from '../../label/labelStyle';
+import { getECData } from '../../util/innerStore';
+import { createTextStyle } from '../../label/labelStyle';
 import Model from '../../model/Model';
-import {isRadianAroundZero, remRadian} from '../../util/number';
-import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
+import { isRadianAroundZero, remRadian } from '../../util/number';
+import { createSymbol, normalizeSymbolOffset } from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
-import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {shouldShowAllLabels} from '../../coord/axisHelper';
+import { applyTransform as v2ApplyTransform } from 'zrender/src/core/vector';
+import { shouldShowAllLabels } from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
@@ -51,8 +51,8 @@ type AxisEventData = {
     dataIndex?: number
     tickIndex?: number
 } & {
-    [key in AxisIndexKey]?: number
-};
+        [key in AxisIndexKey]?: number
+    };
 
 type AxisLabelText = graphic.Text & {
     __fullText: string
@@ -237,7 +237,7 @@ interface AxisElementsBuilder {
         axisModel: AxisBaseModel,
         group: graphic.Group,
         transformGroup: graphic.Group
-    ):void
+    ): void
 }
 
 const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBuilder> = {
@@ -384,8 +384,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             nameLocation === 'start'
                 ? extent[0] - gapSignal * gap
                 : nameLocation === 'end'
-                ? extent[1] + gapSignal * gap
-                : (extent[0] + extent[1]) / 2, // 'middle'
+                    ? extent[1] + gapSignal * gap
+                    : (extent[0] + extent[1]) / 2, // 'middle'
             // Reuse labelOffset.
             isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
         ];
@@ -734,6 +734,7 @@ function buildAxisLabel(
     opt: AxisBuilderCfg
 ) {
     const axis = axisModel.axis;
+    const data = axisModel.get('data');
     const show = retrieve(opt.axisLabelShow, axisModel.get(['axisLabel', 'show']));
 
     if (!show || axis.scale.isBlank()) {
@@ -757,6 +758,11 @@ function buildAxisLabel(
     const triggerEvent = axisModel.get('triggerEvent');
 
     each(labels, function (labelItem, index) {
+
+        if (data && data.length <= index && data[index].length === 0) {
+            // If it's null array, we jump it
+            return;
+        }
         const tickValue = axis.scale.type === 'ordinal'
             ? (axis.scale as OrdinalScale).getRawOrdinalNumber(labelItem.tickValue)
             : labelItem.tickValue;
@@ -827,8 +833,8 @@ function buildAxisLabel(
                         axis.type === 'category'
                             ? rawLabel
                             : axis.type === 'value'
-                            ? tickValue + ''
-                            : tickValue,
+                                ? tickValue + ''
+                                : tickValue,
                         index
                     )
                     : textColor as string
