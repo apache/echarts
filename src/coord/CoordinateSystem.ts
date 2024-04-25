@@ -149,6 +149,8 @@ export interface CoordinateSystem {
 
     getRoamTransform?: () => MatrixArray;
 
+    fixSurfaceBug?: (data: ScaleDataValue[][]) => void;
+
     getArea?: (tolerance?: number) => CoordinateSystemClipArea
 
     // Only `coord/View.js` implements `getBoundingRect`.
@@ -165,6 +167,16 @@ export interface CoordinateSystem {
 /**
  * Like GridModel, PolarModel, ...
  */
+class SomeCoordinateSystemImplementation implements CoordinateSystem {
+    fixSurfaceBug(data: ScaleDataValue[][]): void {
+        if (data.length > 5) {
+            console.log('fix');
+        }
+    }
+
+    // ... 省略其他属性和方法的实现 ...
+}
+
 export interface CoordinateSystemHostModel extends ComponentModel {
     coordinateSystem?: CoordinateSystemMaster
 }
