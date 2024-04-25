@@ -38,13 +38,14 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
 
 
 
 
 
-        <script>
+        <!-- <script>
         require([
             'echarts',
             // 'map/js/china',
@@ -81,24 +82,71 @@ under the License.
                     data: [
                         ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
                         ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
-                    ]
+                    ],
+                    label: {
+                        show: true
+                    }
                 }
             };
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Test Case Description of main0',
-                    '(Muliple lines and **emphasis** are supported in description)'
+                    'Heatmap with Matrix'
                 ],
                 option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
             });
         });
+        </script> -->
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+
+                option = {
+                    matrix: {
+                        x: {
+                            data: [{
+                                value: 'A',
+                                children: ['A1', 'A2', {
+                                    value: 'A3',
+                                    children: ['A31', 'A32']
+                                }]
+                            }]
+                        },
+                        y: {
+                            data: ['U', 'V']
+                        }
+                    },
+                    series: {
+                        type: 'pie',
+                        coordinateSystem: 'matrix',
+                        data: [
+                            ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
+                            ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
+                        ],
+                        label: {
+                            show: true
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Pie with Matrix'
+                    ],
+                    option: option
+                });
+            });
         </script>
-
-
     </body>
 </html>
 
