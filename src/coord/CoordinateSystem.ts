@@ -149,7 +149,8 @@ export interface CoordinateSystem {
 
     getRoamTransform?: () => MatrixArray;
 
-    fixSurfaceBug?: (data: ScaleDataValue[][]) => void;
+    fixSurfaceBug?: (data: ScaleDataValue[][]) => ScaleDataValue[][];
+}
 
     getArea?: (tolerance?: number) => CoordinateSystemClipArea
 
@@ -168,15 +169,29 @@ export interface CoordinateSystem {
  * Like GridModel, PolarModel, ...
  */
 class SomeCoordinateSystemImplementation implements CoordinateSystem {
-    fixSurfaceBug(data: ScaleDataValue[][]): void {
-        if (data.length > 5) {
-            console.log('fix');
-        }
+    /
+    fixSurfaceBug(data: ScaleDataValue[][]): ScaleDataValue[][] {
+        let fixedData = data.map(subArray =>
+            subArray.length > 5 ? subArray.slice(0, 5) : subArray
+        );
+
+        
+        const expectedLength = 5;
+        fixedData = fixedData.map(subArray => {
+            if (subArray.length > expectedLength) {
+                return subArray.slice(0, expectedLength);
+            }
+            while (subArray.length < expectedLength) {
+                subArray.push(subArray[subArray.length - 1]);
+            }
+            return subArray;
+        });
+
+        console.log('fix');
+
+        return fixedData;
     }
-
-    // ... 省略其他属性和方法的实现 ...
-}
-
+    
 export interface CoordinateSystemHostModel extends ComponentModel {
     coordinateSystem?: CoordinateSystemMaster
 }
