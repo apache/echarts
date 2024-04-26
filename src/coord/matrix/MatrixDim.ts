@@ -46,6 +46,7 @@ export class MatrixDim {
     private _option: MatrixDimOption;
     private _cells: MatrixCell[];
     private _height: number;
+    private _leavesCount: number;
 
     constructor(option: MatrixDimOption) {
         this._option = option || { data: [] };
@@ -53,20 +54,25 @@ export class MatrixDim {
             this._option.data = [];
         }
         this._initCells();
-        console.log(this._cells)
     }
 
     getLeavesCount() {
+        if (this._leavesCount != null) {
+            return this._leavesCount;
+        }
         if (!this._option.data) {
+            this._leavesCount = 0;
             return 0;
         }
         if (typeof this._option.data === 'string') {
+            this._leavesCount = 1;
             return 1;
         }
         let cnt = 0;
         for (let i = 0; i < this._option.data.length; i++) {
             cnt += this._countLeaves(this._option.data[i]);
         }
+        this._leavesCount = cnt;
         return cnt;
     }
 

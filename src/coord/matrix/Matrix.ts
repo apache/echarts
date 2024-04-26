@@ -21,7 +21,10 @@ import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import { MatrixArray } from 'zrender/src/core/matrix';
 import { PrepareCustomInfo } from '../../chart/custom/CustomSeries';
 import { ComponentModel, SeriesModel } from '../../echarts.all';
-import { ComponentOption, OrdinalRawValue, ScaleDataValue, SeriesOnMatrixOptionMixin, SeriesOption } from '../../util/types';
+import {
+    ComponentOption, ParsedValue, ScaleDataValue,
+    SeriesOnMatrixOptionMixin, SeriesOption
+} from '../../util/types';
 import Axis from '../Axis';
 import { CoordinateSystem, CoordinateSystemClipArea, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
@@ -29,10 +32,15 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import MatrixModel from './MatrixModel';
 import { LayoutRect, getLayoutRect } from '../../util/layout';
 import { MatrixDim } from './MatrixDim';
+import { isArray } from 'zrender/src/core/util';
 
 class Matrix implements CoordinateSystem, CoordinateSystemMaster {
 
     static readonly dimensions = ['x', 'y', 'value'];
+    static getDimensionsInfo() {
+        return ['x', 'y', 'value'];
+    }
+
     readonly dimensions = Matrix.dimensions;
     readonly type = 'matrix';
 
@@ -90,26 +98,30 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
             .getItemStyle().lineWidth || 0;
     }
 
-    dataToPoint(x: string, y: string, reserved?: any, out?: number[]): number[] {
-        const xCell = this._xDim.getCell(x);
-        const yCell = this._yDim.getCell(y);
+    dataToPoint(data: string[]): number[] {
+        const xCell = this._xDim.getCell(data[0]);
+        const yCell = this._yDim.getCell(data[1]);
         const xLeavesCnt = this._xDim.getLeavesCount();
         const yLeavesCnt = this._yDim.getLeavesCount();
         const xHeight = this._xDim.getHeight();
         const yHeight = this._yDim.getHeight();
+        const cellWidth = this._rect.width / (xLeavesCnt + yHeight) * xCell.colSpan;
+        const cellHeight = this._rect.height / (yLeavesCnt + xHeight) * yCell.rowSpan;
         return [
-            0, 0
-        ]
+            this._rect.x + this._rect.width / (xLeavesCnt + yHeight)
+                * (xCell.colId + yHeight) + cellWidth / 2,
+            this._rect.y + this._rect.height / (yLeavesCnt + xHeight)
+                * (yCell.colId + xHeight) + cellHeight / 2
+        ];
     }
 
-    dataToRect(x: string, y: string, clamp?: boolean): RectLike {
+    dataToRect(x: string, y: string): RectLike {
         const xCell = this._xDim.getCell(x);
         const yCell = this._yDim.getCell(y);
         const xLeavesCnt = this._xDim.getLeavesCount();
         const yLeavesCnt = this._yDim.getLeavesCount();
         const xHeight = this._xDim.getHeight();
         const yHeight = this._yDim.getHeight();
-        // TODO: each cell may have different width and height
         const cellWidth = this._rect.width / (xLeavesCnt + yHeight) * xCell.colSpan;
         const cellHeight = this._rect.height / (yLeavesCnt + xHeight) * yCell.rowSpan;
         const halfLineWidth = this._lineWidth / 2;
