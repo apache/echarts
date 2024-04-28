@@ -45,7 +45,7 @@ under the License.
 
 
 
-        <!-- <script>
+        <script>
         require([
             'echarts',
             // 'map/js/china',
@@ -96,7 +96,7 @@ under the License.
                 option: option
             });
         });
-        </script> -->
+        </script>
 
 
 
@@ -110,7 +110,6 @@ under the License.
                 // './data/nutrients.json'
             ], function (echarts) {
                 var option;
-
                 option = {
                     matrix: {
                         x: {
@@ -126,17 +125,47 @@ under the License.
                             data: ['U', 'V']
                         }
                     },
-                    series: {
+                    series: [{
                         type: 'pie',
                         coordinateSystem: 'matrix',
+                        center: ['A1', 'U'],
+                        radius: 18,
                         data: [
-                            ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
-                            ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
+                            {
+                                value: 12,
+                                name: 'x'
+                            }, {
+                                value: 24,
+                                name: 'y'
+                            }, {
+                                value: 23,
+                                name: 'z'
+                            }
                         ],
                         label: {
                             show: true
                         }
-                    }
+                    }, {
+                        type: 'pie',
+                        coordinateSystem: 'matrix',
+                        center: ['A31', 'V'],
+                        radius: 18,
+                        data: [
+                            {
+                                value: 18,
+                                name: 'x'
+                            }, {
+                                value: 44,
+                                name: 'y'
+                            }, {
+                                value: 43,
+                                name: 'z'
+                            }
+                        ],
+                        label: {
+                            show: true
+                        }
+                    }]
                 };
 
                 var chart = testHelper.create(echarts, 'main1', {
