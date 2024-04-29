@@ -22,7 +22,7 @@ import { MatrixArray } from 'zrender/src/core/matrix';
 import { PrepareCustomInfo } from '../../chart/custom/CustomSeries';
 import { ComponentModel, SeriesModel } from '../../echarts.all';
 import {
-    ComponentOption, ParsedValue, ScaleDataValue,
+    ComponentOption, ScaleDataValue,
     SeriesOnMatrixOptionMixin, SeriesOption
 } from '../../util/types';
 import Axis from '../Axis';
@@ -98,7 +98,7 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
             .getItemStyle().lineWidth || 0;
     }
 
-    dataToPoint(data: string[]): number[] {
+    dataToPoint(data: [string, string]): number[] {
         const xCell = this._xDim.getCell(data[0]);
         const yCell = this._yDim.getCell(data[1]);
         const xLeavesCnt = this._xDim.getLeavesCount();
@@ -115,9 +115,9 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
         ];
     }
 
-    dataToRect(x: string, y: string): RectLike {
-        const xCell = this._xDim.getCell(x);
-        const yCell = this._yDim.getCell(y);
+    dataToRect(data: [string, string]): RectLike {
+        const xCell = this._xDim.getCell(data[0]);
+        const yCell = this._yDim.getCell(data[1]);
         const xLeavesCnt = this._xDim.getLeavesCount();
         const yLeavesCnt = this._yDim.getLeavesCount();
         const xHeight = this._xDim.getHeight();

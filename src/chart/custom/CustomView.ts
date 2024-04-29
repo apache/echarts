@@ -50,6 +50,7 @@ import prepareGeo from '../../coord/geo/prepareCustom';
 import prepareSingleAxis from '../../coord/single/prepareCustom';
 import preparePolar from '../../coord/polar/prepareCustom';
 import prepareCalendar from '../../coord/calendar/prepareCustom';
+import prepareMatrix from '../../coord/matrix/prepareCustom';
 import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -166,7 +167,8 @@ const prepareCustoms: Dictionary<PrepareCustomInfo> = {
     geo: prepareGeo,
     single: prepareSingleAxis,
     polar: preparePolar,
-    calendar: prepareCalendar
+    calendar: prepareCalendar,
+    matrix: prepareMatrix
 };
 
 

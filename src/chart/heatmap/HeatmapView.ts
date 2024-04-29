@@ -268,8 +268,10 @@ class HeatmapView extends ChartView {
                 rect = new graphic.Rect({
                     z2: 1,
                     shape: coordSys.dataToRect(
-                        data.get(dataDims[0], idx) as string,
-                        data.get(dataDims[1], idx) as string
+                        [
+                            data.get(dataDims[0], idx) as string,
+                            data.get(dataDims[1], idx) as string
+                        ]
                     ),
                     style
                 });

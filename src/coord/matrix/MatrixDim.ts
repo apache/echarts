@@ -18,6 +18,7 @@
 */
 
 import { reduce } from "zrender/src/core/util";
+import { ParsedValue } from "../../util/types";
 
 export type MatrixNodeOption = {
     value?: string;
@@ -98,9 +99,10 @@ export class MatrixDim {
         return this._cells;
     }
 
-    getCell(value: string) {
+    getCell(value: ParsedValue) {
         for (let i = 0; i < this._cells.length; i++) {
-            if (this._cells[i].value === value) {
+            // value can be number while this._cells[i].value is string
+            if (this._cells[i].value == value) {
                 return this._cells[i];
             }
         }

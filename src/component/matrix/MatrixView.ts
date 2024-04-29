@@ -90,8 +90,8 @@ class MatrixView extends ComponentView {
         const yTop = rect.y + cellHeight * xHeight;
         for (let i = 0; i < yCells.length; i++) {
             const cell = yCells[i];
-            const width = cellWidth * cell.colSpan;
-            const height = cellHeight * cell.rowSpan;
+            const width = cellWidth * cell.rowSpan;
+            const height = cellHeight * cell.colSpan;
             const left = rect.x + cellWidth * cell.rowId;
             const top = yTop + cellHeight * cell.colId;
 
