@@ -362,7 +362,7 @@ class TooltipHTMLContent {
             const container = this._api.getDom();
             const position = getComputedStyle(container, 'position');
             const domStyle = container.style;
-            if (domStyle.position !== 'absolute' && position !== 'absolute') {
+            if (position !== 'absolute') {
                 domStyle.position = 'relative';
             }
         }
