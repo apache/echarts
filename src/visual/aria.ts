@@ -140,10 +140,11 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
     function setLabel() {
         const dom = api.getZr().dom;
-        // No DOM if using SSR
+        // TODO: support for SSR
         if (!dom) {
             return;
         }
+
         const labelLocale = ecModel.getLocaleModel().get('aria');
         const labelModel = ariaModel.getModel('label');
         labelModel.option = zrUtil.defaults(labelModel.option, labelLocale);
