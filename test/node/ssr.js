@@ -25,6 +25,10 @@ const chart = echarts.init(null, null, {
 });
 
 chart.setOption({
+    aria: {
+        // Not supported in SSR, but should not throw error
+        enabled: true,
+    },
     series: [
         {
             name: 'Nightingale Chart',
