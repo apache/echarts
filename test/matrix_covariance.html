@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                const xData = [];
+                const yData = [];
+                for (let i = 0; i < 5; ++i) {
+                    const children = [];
+                    for (let j = 0; j < 5; ++j) {
+                        children.push(i * 5 + j + 1 + '');
+                    }
+                    xData.push({
+                        value: 'X' + (i + 1),
+                        children
+                    });
+                    yData.push({
+                        value: 'Y' + (i + 1),
+                        children
+                    });
+                }
+
+                const data = [];
+                for (let i = 1; i <= 25; ++i) {
+                    for (let j = 1; j <= 25; ++j) {
+                        const isDiag = Math.abs(i - j) < 3;
+                        let base = i === j ? 100 : 20;
+                        const iGroup = Math.ceil(i / 5);
+                        const jGroup = Math.ceil(j / 5);
+                        base += (3 - Math.abs(iGroup - jGroup)) * 35;
+                        if (i % 5 === j % 5) {
+                            base += 20;
+                        }
+                        if (Math.random() > 0.9) {
+                            base += Math.random() * 40;
+                        }
+                        data.push([
+                            i + '',
+                            j + '',
+                            (Math.random() * 0.5 + 0.5) * base
+                        ]);
+                    }
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: xData
+                        },
+                        y: {
+                            data: yData
+                        },
+                        width: 500,
+                        height: 500,
+                        left: (window.innerWidth - 500) / 2
+                    },
+                    visualMap: {
+                        type: 'continuous',
+                        min: 15,
+                        max: 120,
+                        top: 'middle',
+                        dimension: 2,
+                        calculable: true,
+                        orient: 'horizontal',
+                        top: 5,
+                        left: 'center',
+                        inRange: {
+                            color: ['#186F65', '#B5CB99', '#FCE09B', '#B2533E']
+                        }
+                    },
+                    series: {
+                        type: 'heatmap',
+                        coordinateSystem: 'matrix',
+                        data
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Covariance Matrix'
+                    ],
+                    option: option,
+                    height: 600
+                });
+            });
+        </script>
+    </body>
+</html>
+

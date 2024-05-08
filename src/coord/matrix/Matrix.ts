@@ -32,7 +32,6 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import MatrixModel from './MatrixModel';
 import { LayoutRect, getLayoutRect } from '../../util/layout';
 import { MatrixDim } from './MatrixDim';
-import { isArray } from 'zrender/src/core/util';
 
 class Matrix implements CoordinateSystem, CoordinateSystemMaster {
 
