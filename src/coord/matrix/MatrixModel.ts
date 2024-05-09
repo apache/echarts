@@ -84,7 +84,7 @@ class MatrixModel extends ComponentModel<MatrixOption> {
             borderType: 'solid',
             opacity: 1
         }
-    }
+    };
 }
 
 export default MatrixModel;

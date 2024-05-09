@@ -17,16 +17,10 @@
 * under the License.
 */
 
-import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
-import { MatrixArray } from 'zrender/src/core/matrix';
-import { PrepareCustomInfo } from '../../chart/custom/CustomSeries';
-import { ComponentModel, SeriesModel } from '../../echarts.all';
-import {
-    ComponentOption, ScaleDataValue,
-    SeriesOnMatrixOptionMixin, SeriesOption
-} from '../../util/types';
-import Axis from '../Axis';
-import { CoordinateSystem, CoordinateSystemClipArea, CoordinateSystemMaster } from '../CoordinateSystem';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import { SeriesModel } from '../../echarts.all';
+import { SeriesOnMatrixOptionMixin, SeriesOption } from '../../util/types';
+import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import MatrixModel from './MatrixModel';
@@ -134,23 +128,10 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
         };
     }
 
-    master?: CoordinateSystemMaster;
-    model?: ComponentModel<ComponentOption>;
-    pointToData?(point: number[], clamp?: boolean): number | number[] {
-        throw new Error('Method not implemented.');
-    }
     containPoint(point: number[]): boolean {
-        throw new Error('Method not implemented.');
+        console.warn('Not implemented.');
+        return false;
     }
-    getAxes?: () => Axis[];
-    getBaseAxis?: () => Axis;
-    getOtherAxis?: (baseAxis: Axis) => Axis;
-    clampData?: (data: ScaleDataValue[], out?: number[]) => number[];
-    getRoamTransform?: () => MatrixArray;
-    getArea?: (tolerance?: number) => CoordinateSystemClipArea;
-    getBoundingRect?: () => BoundingRect;
-    getAxesByScale?: (scaleType: string) => Axis[];
-    prepareCustoms?: PrepareCustomInfo;
 }
 
 export default Matrix;

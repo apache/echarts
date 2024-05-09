@@ -38,6 +38,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main0-1"></div>
         <div id="main1"></div>
         <div id="main2"></div>
         <div id="main3"></div>
@@ -95,6 +96,61 @@ under the License.
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
                     'Heatmap with Matrix'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                dataset: {
+                    source: [
+                        ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
+                        ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
+                    ]
+                },
+                matrix: {
+                    x: {
+                        data: [{
+                            value: 'A',
+                            children: ['A1', 'A2', {
+                                value: 'A3',
+                                children: ['A31', 'A32']
+                            }]
+                        }]
+                    },
+                    y: {
+                        data: ['U', 'V']
+                    }
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 80,
+                    top: 'middle',
+                    dimension: 2,
+                    calculable: true
+                },
+                series: {
+                    type: 'heatmap',
+                    coordinateSystem: 'matrix',
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0-1', {
+                title: [
+                    'Heatmap with Matrix (dataset)'
                 ],
                 option: option
             });

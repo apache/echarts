@@ -17,8 +17,8 @@
 * under the License.
 */
 
-import { reduce } from "zrender/src/core/util";
-import { ParsedValue } from "../../util/types";
+import { reduce } from 'zrender/src/core/util';
+import { ParsedValue } from '../../util/types';
 
 export type MatrixNodeOption = {
     value?: string;
@@ -102,6 +102,7 @@ export class MatrixDim {
     getCell(value: ParsedValue) {
         for (let i = 0; i < this._cells.length; i++) {
             // value can be number while this._cells[i].value is string
+            // eslint-disable-next-line eqeqeq
             if (this._cells[i].value == value) {
                 return this._cells[i];
             }
@@ -118,7 +119,11 @@ export class MatrixDim {
         }
     }
 
-    private _traverseInitCells(node: MatrixNodeOption, rowId: number, colId: number = 0): { rowId: number, colId: number } {
+    private _traverseInitCells(
+        node: MatrixNodeOption,
+        rowId: number,
+        colId: number = 0
+    ): { rowId: number, colId: number } {
         if (typeof node === 'string') {
             // When node is a string, it's a leaf with colSpan of 1
             this._cells.push({
@@ -133,17 +138,18 @@ export class MatrixDim {
 
         let currentColId = colId;
         let totalColSpan = 0;
-        let childrenColSpans = [];
+        const childrenColSpans = [];
 
         if (node.children && node.children.length) {
-            for (let child of node.children) {
+            for (const child of node.children) {
                 const result = this._traverseInitCells(child, rowId + 1, currentColId);
                 const childColSpan = result.colId - currentColId;
                 childrenColSpans.push(childColSpan);
                 currentColId = result.colId;
             }
             totalColSpan = reduce(childrenColSpans, (a, b) => a + b, 0);
-        } else {
+        }
+        else {
             // If no children, it's a leaf node with colSpan of 1
             totalColSpan = 1;
         }
