@@ -185,7 +185,8 @@ interface AxisTickOption {
     inside?: boolean,
     // The length of axisTick.
     length?: number,
-    lineStyle?: LineStyleOption
+    lineStyle?: LineStyleOption,
+    customValues?: (number | string | Date)[]
 }
 
 type AxisLabelValueFormatter = (value: number, index: number) => string;
@@ -237,9 +238,10 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     /**
      * If hide overlapping labels.
      */
-    hideOverlap?: boolean;
+    hideOverlap?: boolean,
+    customValues?: (number | string | Date)[],
     // Color can be callback
-    color?: ColorString | ((value?: string | number, index?: number) => ColorString)
+    color?: ColorString | ((value?: string | number, index?: number) => ColorString),
     overflow?: TextStyleProps['overflow']
 }
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
@@ -271,7 +273,6 @@ interface SplitAreaOption {
     // colors will display in turn
     areaStyle?: AreaStyleOption<ZRColor[]>
 }
-
 
 export type AxisBaseOption = ValueAxisBaseOption | LogAxisBaseOption
     | CategoryAxisBaseOption | TimeAxisBaseOption | AxisBaseOptionCommon;
