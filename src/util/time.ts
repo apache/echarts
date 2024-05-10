@@ -121,7 +121,8 @@ export function format(
     const m = date[minutesGetterName(isUTC)]();
     const s = date[secondsGetterName(isUTC)]();
     const S = date[millisecondsGetterName(isUTC)]();
-
+    const a = H >= 12 ? 'pm' : 'am';
+    const A = a.toUpperCase();
 
     const localeModel = lang instanceof Model ? lang
         : getLocaleModel(lang || SYSTEM_LANG) || getDefaultLocaleModel();
@@ -132,6 +133,8 @@ export function format(
     const dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
 
     return (template || '')
+        .replace(/{a}/g, a + '')
+        .replace(/{A}/g, A + '')
         .replace(/{yyyy}/g, y + '')
         .replace(/{yy}/g, pad(y % 100 + '', 2))
         .replace(/{Q}/g, q + '')

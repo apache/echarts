@@ -101,7 +101,7 @@
   "geoScatter": 1,
   "getOption": 1,
   "graph": 2,
-  "graph-case": 2,
+  "graph-case": 3,
   "graph-grid": 1,
   "graph-simple": 2,
   "graphic-animation": 1,

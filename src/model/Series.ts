@@ -347,7 +347,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const task = getCurrentTask(this);
         if (task) {
             const data = task.context.data;
-            return (dataType == null ? data : data.getLinkedData(dataType)) as SeriesData<this>;
+            return (dataType == null || !data.getLinkedData ? data : data.getLinkedData(dataType)) as SeriesData<this>;
         }
         else {
             // When series is not alive (that may happen when click toolbox

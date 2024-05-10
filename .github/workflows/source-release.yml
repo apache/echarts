@@ -26,7 +26,7 @@ jobs:
           echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Cache node modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: cache-node-modules
         with:
@@ -44,7 +44,7 @@ jobs:
             --out tmp/materials
 
       - name: Archive materials
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
           path: |
@@ -72,7 +72,7 @@ jobs:
 
       # Get RELEASE_NOTE.txt and pack it into zip.
       - name: Download materials
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
 
@@ -80,7 +80,7 @@ jobs:
 
       # Archive before run others to avoid packing unknown files.
       - name: Archive source release
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-src
           path: |
@@ -123,7 +123,7 @@ jobs:
           echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Download source release
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-src
           path: tmp/echarts
