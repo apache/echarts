@@ -61,17 +61,7 @@ type InnerStore = {
 const inner = makeInner<InnerStore, any>();
 
 function tickValuesToNumbers(axis: Axis, values: (number | string | Date)[]) {
-    const nums = values.map(val => {
-        if (zrUtil.isString(val)) {
-            return axis.model.get('data').indexOf(val);
-        }
-        else if (val instanceof Date) {
-            return val.getTime();
-        }
-        else {
-            return val;
-        }
-    });
+    const nums = zrUtil.map(values, val => axis.scale.parse(val));
     if (axis.type === 'time' && nums.length > 0) {
         // Time axis needs duplicate first/last tick (see TimeScale.getTicks())
         // The first and last tick/label don't get drawn
