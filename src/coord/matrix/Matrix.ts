@@ -26,6 +26,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import MatrixModel from './MatrixModel';
 import { LayoutRect, getLayoutRect } from '../../util/layout';
 import { MatrixDim } from './MatrixDim';
+import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 
 class Matrix implements CoordinateSystem, CoordinateSystemMaster {
 
@@ -128,10 +129,49 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
         };
     }
 
+    pointToData(point: number[]): number[] {
+        const xLeavesCnt = this._xDim.getLeavesCount();
+        const yLeavesCnt = this._yDim.getLeavesCount();
+        const xHeight = this._xDim.getHeight();
+        const yHeight = this._yDim.getHeight();
+        const cellWidth = this._rect.width / (xLeavesCnt + yHeight);
+        const cellHeight = this._rect.height / (yLeavesCnt + xHeight);
+        const xIdx = Math.floor((point[0] - this._rect.x) / cellWidth);
+        const yIdx = Math.floor((point[1] - this._rect.y) / cellHeight);
+
+        const xCell = this._xDim.getCellByColId(xIdx - yHeight);
+        const yCell = this._yDim.getCellByColId(yIdx - xHeight);
+
+        return [xCell.colId, yCell.rowId, xCell.colSpan, yCell.rowSpan];
+    }
+
+    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: [string, string]) {
+        const coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.dataToPoint(value) : null;
+    }
+
+    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
+        const coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.pointToData(pixel) : null;
+    }
+
     containPoint(point: number[]): boolean {
         console.warn('Not implemented.');
         return false;
     }
+}
+
+function getCoordSys(finder: ParsedModelFinderKnown): Matrix {
+    const matrixModel = finder.matrixModel as MatrixModel;
+    const seriesModel = finder.seriesModel;
+
+    const coordSys = matrixModel
+        ? matrixModel.coordinateSystem
+        : seriesModel
+        ? seriesModel.coordinateSystem
+        : null;
+
+    return coordSys as Matrix;
 }
 
 export default Matrix;

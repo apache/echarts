@@ -76,15 +76,17 @@ class MatrixView extends ComponentView {
                 },
                 style: xItemStyle
             }));
-            this.group.add(new graphic.Text({
-                style: createTextStyle(xLabelModel, {
-                    text: cell.value,
-                    x: left + width / 2,
-                    y: top + height / 2,
-                    verticalAlign: 'middle',
-                    align: 'center'
-                })
-            }));
+            if (xLabelModel.get('show')) {
+                this.group.add(new graphic.Text({
+                    style: createTextStyle(xLabelModel, {
+                        text: cell.value,
+                        x: left + width / 2,
+                        y: top + height / 2,
+                        verticalAlign: 'middle',
+                        align: 'center'
+                    })
+                }));
+            }
         }
 
         const yTop = rect.y + cellHeight * xHeight;
@@ -104,15 +106,17 @@ class MatrixView extends ComponentView {
                 },
                 style: yItemStyle
             }));
-            this.group.add(new graphic.Text({
-                style: createTextStyle(yLabelModel, {
-                    text: cell.value,
-                    x: left + width / 2,
-                    y: top + height / 2,
-                    verticalAlign: 'middle',
-                    align: 'center'
-                })
-            }));
+            if (yLabelModel.get('show')) {
+                this.group.add(new graphic.Text({
+                    style: createTextStyle(yLabelModel, {
+                        text: cell.value,
+                        x: left + width / 2,
+                        y: top + height / 2,
+                        verticalAlign: 'middle',
+                        align: 'center'
+                    })
+                }));
+            }
         }
 
         // Inner cells

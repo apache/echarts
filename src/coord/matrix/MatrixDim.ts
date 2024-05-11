@@ -109,6 +109,14 @@ export class MatrixDim {
         }
     }
 
+    getCellByColId(id: number) {
+        for (let i = 0; i < this._cells.length; i++) {
+            if (this._cells[i].colId === id) {
+                return this._cells[i];
+            }
+        }
+    }
+
     private _initCells(): void {
         this._cells = [];
         for (let i = 0, rowId = 0, colId = 0; i < this._option.data.length; i++) {

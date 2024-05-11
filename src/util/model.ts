@@ -777,6 +777,7 @@ export type ModelFinderObject = {
     xAxisIndex?: ModelFinderIndexQuery, xAxisId?: ModelFinderIdQuery, xAxisName?: ModelFinderNameQuery
     yAxisIndex?: ModelFinderIndexQuery, yAxisId?: ModelFinderIdQuery, yAxisName?: ModelFinderNameQuery
     gridIndex?: ModelFinderIndexQuery, gridId?: ModelFinderIdQuery, gridName?: ModelFinderNameQuery
+    matrixIndex?: ModelFinderIndexQuery, matrixId?: ModelFinderIdQuery, matrixName?: ModelFinderNameQuery
     dataIndex?: number, dataIndexInside?: number
     // ... (can be extended)
 };
