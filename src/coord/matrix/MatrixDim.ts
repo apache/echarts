@@ -167,7 +167,7 @@ export class MatrixDim {
     }
 
     private _countHeight(node: MatrixNodeOption): number {
-        if (typeof node === 'string') {
+        if (typeof node === 'string' || !node.children) {
             return 1;
         }
         let height = 0;
@@ -178,7 +178,7 @@ export class MatrixDim {
     }
 
     private _countLeaves(node: MatrixNodeOption): number {
-        if (typeof node === 'string') {
+        if (typeof node === 'string' || !node.children) {
             return 1;
         }
         let cnt = 0;

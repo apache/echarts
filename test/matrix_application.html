@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                const label = {
+                    fontSize: 16,
+                    color: '#555'
+                };
+                const option = {
+                    matrix: {
+                        x: {
+                            data: ['Positive', 'Negative'],
+                            label
+                        },
+                        y: {
+                            data: ['Positive', 'Negative'],
+                            label
+                        },
+                        top: 80,
+                        width: 600,
+                        left: 'center'
+                    },
+                    series: {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        data: [
+                            ['Positive', 'Positive', 10],
+                            ['Positive', 'Negative', 2],
+                            ['Negative', 'Positive', 3],
+                            ['Negative', 'Negative', 5]
+                        ],
+                        label: {
+                            show: true,
+                            formatter: params => {
+                                const value = params.value[2];
+                                return '{name|'
+                                    + (params.value[0] === params.value[1]
+                                    ? 'True ' : 'False ')
+                                    + params.value[1] + '}\n{value|'
+                                    + value + '}';
+                            },
+                            rich: {
+                                name: {
+                                    color: '#fff',
+                                    backgroundColor: '#999',
+                                    textBorderColor: '#333',
+                                    padding: 5,
+                                    fontSize: 18
+                                },
+                                value: {
+                                    color: '#444',
+                                    textBorderWidth:  0,
+                                    padding: 5,
+                                    fontSize: 16,
+                                    align: 'center'
+                                }
+                            }
+                        },
+                        renderItem: function (params, api) {
+                            const x = api.value(0);
+                            const y = api.value(1);
+                            const center = api.coord([x, y]);
+                            const size = api.size([x, y]);
+                            return {
+                                type: 'rect',
+                                shape: {
+                                    x: center[0] - size[0] / 2,
+                                    y: center[1] - size[1] / 2,
+                                    width: size[0],
+                                    height: size[1]
+                                },
+                                style: api.style({
+                                    fill: x === y ? '#8f8' : '#f88',
+                                }),
+                            }
+                        }
+                    },
+                    graphic: {
+                        elements: [{
+                            type: 'text',
+                            style: {
+                                text: 'True Class',
+                                fill: '#333',
+                                font: 'bold 24px serif',
+                                textAlign: 'center'
+                            },
+                            x: (window.innerWidth - 600) / 2 + 600 / 6 * 4,
+                            y: 40,
+                        }, {
+                            type: 'text',
+                            style: {
+                                text: 'Predicted Class',
+                                fill: '#333',
+                                font: 'bold 24px serif',
+                                textAlign: 'center'
+                            },
+                            x: (window.innerWidth - 600) / 2 - 50,
+                            y: 270,
+                            rotation: Math.PI / 2
+                        }]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Confusion Matrix'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                const xCnt = 10;
+                const yCnt = 6;
+                const xData = [];
+                const yData = [];
+                for (let i = 0; i < xCnt; ++i) {
+                    xData.push({
+                        value: 'X' + (i + 1)
+                    });
+                }
+
+                for (let i = 0; i < yCnt; ++i) {
+                    yData.push({
+                        value: 'Y' + (i + 1)
+                    });
+                }
+
+                const data = [];
+                for (let i = 1; i <= xCnt; ++i) {
+                    for (let j = 1; j <= yCnt; ++j) {
+                        data.push([
+                            'X' + i,
+                            'Y' + j,
+                            Math.random() * 2 - 1
+                        ]);
+                    }
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: xData
+                        },
+                        y: {
+                            data: yData
+                        },
+                        top: 80
+                    },
+                    visualMap: {
+                        type: 'continuous',
+                        min: -1,
+                        max: 1,
+                        top: 'middle',
+                        dimension: 2,
+                        calculable: true,
+                        orient: 'horizontal',
+                        top: 5,
+                        left: 'center',
+                        inRange: {
+                            color: [
+                                '#313695',
+                                '#4575b4',
+                                '#74add1',
+                                '#abd9e9',
+                                '#e0f3f8',
+                                '#ffffbf',
+                                '#fee090',
+                                '#fdae61',
+                                '#f46d43',
+                                '#d73027',
+                                '#a50026'
+                            ],
+                            symbolSize: [15, 40]
+                        }
+                    },
+                    series: {
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        data,
+                        itemStyle: {
+                            opacity: 1
+                        },
+                        label: {
+                            show: true,
+                            formatter: params => params.value[2].toFixed(2)
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Correlation Matrix (Scatter)'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                const xCnt = 8;
+                const yCnt = xCnt;
+                const xData = [];
+                const yData = [];
+                for (let i = 0; i < xCnt; ++i) {
+                    xData.push({
+                        value: 'X' + (i + 1)
+                    });
+                }
+
+                for (let i = 0; i < yCnt; ++i) {
+                    yData.push({
+                        value: 'Y' + (i + 1)
+                    });
+                }
+
+                const data = [];
+                for (let i = 1; i <= xCnt; ++i) {
+                    for (let j = 1; j <= yCnt; ++j) {
+                        if (i >= j) {
+                            data.push([
+                                'X' + i,
+                                'Y' + j,
+                                i === j ? 1 : Math.random() * 2 - 1
+                            ]);
+                        }
+                    }
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: xData
+                        },
+                        y: {
+                            data: yData
+                        },
+                        top: 80
+                    },
+                    visualMap: {
+                        type: 'continuous',
+                        min: -1,
+                        max: 1,
+                        top: 'middle',
+                        dimension: 2,
+                        calculable: true,
+                        orient: 'horizontal',
+                        top: 5,
+                        left: 'center',
+                        inRange: {
+                            color: [
+                                '#313695',
+                                '#4575b4',
+                                '#74add1',
+                                '#abd9e9',
+                                '#e0f3f8',
+                                '#ffffbf',
+                                '#fee090',
+                                '#fdae61',
+                                '#f46d43',
+                                '#d73027',
+                                '#a50026'
+                            ]
+                        }
+                    },
+                    series: {
+                        type: 'heatmap',
+                        coordinateSystem: 'matrix',
+                        data,
+                        label: {
+                            show: true,
+                            formatter: params => params.value[2].toFixed(2)
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Correlation Matrix (Heatmap)'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                const xData = [];
+                const yData = [];
+                for (let i = 0; i < 5; ++i) {
+                    const children = [];
+                    for (let j = 0; j < 5; ++j) {
+                        children.push(i * 5 + j + 1 + '');
+                    }
+                    xData.push({
+                        value: 'X' + (i + 1),
+                        children
+                    });
+                    yData.push({
+                        value: 'Y' + (i + 1),
+                        children
+                    });
+                }
+
+                const data = [];
+                const size = 25;
+                let temp = {};
+
+                for (let i = 1; i <= size; ++i) {
+                    for (let j = 1; j <= size; ++j) {
+                        const isDiag = Math.abs(i - j) < 3;
+                        let base = i === j ? 100 : 20;
+                        const iGroup = Math.ceil(i / 5);
+                        const jGroup = Math.ceil(j / 5);
+                        base += (3 - Math.abs(iGroup - jGroup)) * 35;
+                        if (i % 5 === j % 5) {
+                            base += 20;
+                        }
+                        if (Math.random() > 0.9) {
+                            base += Math.random() * 40;
+                        }
+
+                        if (i > j) {
+                            // Use the previously calculated value to ensure symmetry
+                            data.push([
+                                i + '',
+                                j + '',
+                                temp[j + "_" + i]
+                            ]);
+                        } else {
+                            // Calculate a new value and save it for future use
+                            let value = (Math.random() * 0.5 + 0.5) * base;
+                            data.push([
+                                i + '',
+                                j + '',
+                                value
+                            ]);
+                            temp[i + "_" + j] = value;
+                        }
+                    }
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: xData
+                        },
+                        y: {
+                            data: yData
+                        },
+                        width: 500,
+                        height: 500,
+                        left: (window.innerWidth - 500) / 2
+                    },
+                    visualMap: {
+                        type: 'continuous',
+                        min: 15,
+                        max: 120,
+                        top: 'middle',
+                        dimension: 2,
+                        calculable: true,
+                        orient: 'horizontal',
+                        top: 5,
+                        left: 'center',
+                        inRange: {
+                            color: [
+                                '#313695',
+                                '#4575b4',
+                                '#74add1',
+                                '#abd9e9',
+                                '#e0f3f8',
+                                '#ffffbf',
+                                '#fee090',
+                                '#fdae61',
+                                '#f46d43',
+                                '#d73027',
+                                '#a50026'
+                            ]
+                        }
+                    },
+                    series: {
+                        type: 'heatmap',
+                        coordinateSystem: 'matrix',
+                        data
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Covariance Matrix'
+                    ],
+                    option: option,
+                    height: 600
+                });
+            });
+        </script>
+    </body>
+</html>
+
