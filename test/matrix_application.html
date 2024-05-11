@@ -201,7 +201,6 @@ under the License.
                         type: 'continuous',
                         min: -1,
                         max: 1,
-                        top: 'middle',
                         dimension: 2,
                         calculable: true,
                         orient: 'horizontal',
@@ -296,7 +295,6 @@ under the License.
                         type: 'continuous',
                         min: -1,
                         max: 1,
-                        top: 'middle',
                         dimension: 2,
                         calculable: true,
                         orient: 'horizontal',
@@ -367,7 +365,6 @@ under the License.
 
                 for (let i = 1; i <= size; ++i) {
                     for (let j = 1; j <= size; ++j) {
-                        const isDiag = Math.abs(i - j) < 3;
                         let base = i === j ? 100 : 20;
                         const iGroup = Math.ceil(i / 5);
                         const jGroup = Math.ceil(j / 5);
@@ -384,7 +381,7 @@ under the License.
                             data.push([
                                 i + '',
                                 j + '',
-                                temp[j + "_" + i]
+                                temp[j + '_' + i]
                             ]);
                         } else {
                             // Calculate a new value and save it for future use
@@ -394,7 +391,7 @@ under the License.
                                 j + '',
                                 value
                             ]);
-                            temp[i + "_" + j] = value;
+                            temp[i + '_' + j] = value;
                         }
                     }
                 }
@@ -415,7 +412,6 @@ under the License.
                         type: 'continuous',
                         min: 15,
                         max: 120,
-                        top: 'middle',
                         dimension: 2,
                         calculable: true,
                         orient: 'horizontal',
