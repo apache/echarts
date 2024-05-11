@@ -18,8 +18,8 @@
 */
 
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { SeriesModel } from '../../echarts.all';
-import { SeriesOnMatrixOptionMixin, SeriesOption } from '../../util/types';
+import type SeriesModel from '../../model/Series';
+import type { SeriesOnMatrixOptionMixin, SeriesOption } from '../../util/types';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
