@@ -28,6 +28,7 @@ export type MatrixNodeOption = {
 export type MatrixNodeRawOption = string | MatrixNodeOption;
 
 export interface MatrixDimOption {
+    show?: boolean;
     data?: MatrixNodeOption[];
 }
 export interface MatrixDimRawOption {
@@ -78,6 +79,9 @@ export class MatrixDim {
     }
 
     getHeight() {
+        if (!this._option.show) {
+            return 0;
+        }
         if (this._height != null) {
             return this._height;
         }

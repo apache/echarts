@@ -28,11 +28,13 @@ export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
     containLabel?: boolean;
 
     x?: {
+        show?: boolean;
         data?: MatrixNodeOption[];
         label?: LabelOption;
         itemStyle?: ItemStyleOption;
     }
     y?: {
+        show?: boolean;
         data?: MatrixNodeOption[];
         label?: LabelOption;
         itemStyle?: ItemStyleOption;
@@ -43,6 +45,7 @@ export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
 }
 
 const defaultDimOption = {
+    show: true,
     data: [] as MatrixNodeOption[],
     label: {
         show: true,

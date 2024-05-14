@@ -400,14 +400,20 @@ under the License.
                 const option = {
                     matrix: {
                         x: {
-                            data: xData
+                            data: xData,
+                            show: false
                         },
                         y: {
-                            data: yData
+                            data: yData,
+                            show: false
                         },
                         width: 500,
                         height: 500,
                         left: (window.innerWidth - 500) / 2
+                    },
+                    tooltip: {
+                        show: true,
+                        valueFormatter: value => Math.round(value)
                     },
                     visualMap: {
                         type: 'continuous',
@@ -645,7 +651,6 @@ under the License.
                             const size = api.size([x, y]);
                             const isElement = !isNaN(api.value(2));
                             const margin = 2;
-                                console.log(api.value(2))
                             return {
                                 type: 'rect',
                                 shape: {

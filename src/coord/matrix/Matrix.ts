@@ -95,6 +95,11 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
     dataToPoint(data: [string, string]): number[] {
         const xCell = this._xDim.getCell(data[0]);
         const yCell = this._yDim.getCell(data[1]);
+        if (!xCell || !yCell) {
+            // Point not found
+            return [NaN, NaN];
+        }
+
         const xLeavesCnt = this._xDim.getLeavesCount();
         const yLeavesCnt = this._yDim.getLeavesCount();
         const xHeight = this._xDim.getHeight();
