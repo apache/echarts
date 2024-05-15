@@ -24,9 +24,6 @@ import { MatrixNodeOption } from './MatrixDim';
 
 export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
     mainType?: 'matrix';
-
-    containLabel?: boolean;
-
     x?: {
         show?: boolean;
         data?: MatrixNodeOption[];
@@ -39,7 +36,6 @@ export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
         label?: LabelOption;
         itemStyle?: ItemStyleOption;
     }
-
     backgroundStyle?: ItemStyleOption;
     innerBackgroundStyle?: ItemStyleOption;
 }
@@ -70,7 +66,6 @@ class MatrixModel extends ComponentModel<MatrixOption> {
         top: '10%',
         right: '10%',
         bottom: '10%',
-        containLabel: false,
         x: defaultDimOption,
         y: defaultDimOption,
         backgroundStyle: {
