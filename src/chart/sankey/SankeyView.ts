@@ -259,13 +259,15 @@ class SankeyView extends ChartView {
             const dragX = itemModel.get('localX');
             const dragY = itemModel.get('localY');
             const emphasisModel = itemModel.getModel('emphasis');
+            const borderRadius = itemModel.get(['itemStyle', 'borderRadius']) as number | number[] || 0;
 
             const rect = new graphic.Rect({
                 shape: {
                     x: dragX != null ? dragX * width : layout.x,
                     y: dragY != null ? dragY * height : layout.y,
                     width: layout.dx,
-                    height: layout.dy
+                    height: layout.dy,
+                    r: borderRadius
                 },
                 style: itemModel.getModel('itemStyle').getItemStyle(),
                 z2: 10
@@ -387,7 +389,7 @@ function createGridClipShape(rect: RectLike, seriesModel: SankeySeriesModel, cb:
             x: rect.x - 10,
             y: rect.y - 10,
             width: 0,
-            height: rect.height + 20
+            height: rect.height + 20,
         }
     });
     graphic.initProps(rectEl, {

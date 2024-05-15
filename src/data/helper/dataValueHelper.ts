@@ -67,7 +67,7 @@ export function parseDataValue(
         ? NaN
         // If string (like '-'), using '+' parse to NaN
         // If object, also parse to NaN
-        : +value;
+        : Number(value);
 };
 
 
