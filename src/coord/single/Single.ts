@@ -238,6 +238,13 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
 
         pt[idx] = axis.toGlobalCoord(axis.dataToCoord(+val));
         pt[1 - idx] = idx === 0 ? (rect.y + rect.height / 2) : (rect.x + rect.width / 2);
+
+        const jitter = axis.model.get('jitter');
+        if (jitter) {
+            const diff = (Math.random() - 0.5) * jitter;
+            pt[1 - idx] += diff;
+        }
+
         return pt;
     }
 

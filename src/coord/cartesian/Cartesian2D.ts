@@ -133,9 +133,24 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         }
         const xAxis = this.getAxis('x');
         const yAxis = this.getAxis('y');
-        out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(xVal, clamp));
-        out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(yVal, clamp));
+        out[0] = this._fixJitter(
+            xAxis.toGlobalCoord(xAxis.dataToCoord(xVal, clamp)),
+            xAxis
+        );
+        out[1] = this._fixJitter(
+            yAxis.toGlobalCoord(yAxis.dataToCoord(yVal, clamp)),
+            yAxis
+        );
         return out;
+    }
+
+    protected _fixJitter(coord: number, axis: Axis2D): number {
+        const jitter = axis.model.get('jitter');
+        const scaleType = axis.scale.type;
+        if (jitter > 0 && (scaleType === 'category' || scaleType === 'ordinal')) {
+            return coord + (Math.random() - 0.5) * jitter;
+        }
+        return coord;
     }
 
     clampData(data: ScaleDataValue[], out?: number[]): number[] {
