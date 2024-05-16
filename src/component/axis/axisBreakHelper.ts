@@ -67,7 +67,7 @@ export function rectCoordBuildBreakAxis(
             x: gridRect.x - (isHorizontal ? zigzagAmplitude : 0),
             y: gridRect.y - (isHorizontal ? 0 : zigzagAmplitude),
             width: gridRect.width + (isHorizontal ? zigzagAmplitude * 2 : 0),
-            height: gridRect.height + (isHorizontal ? 0: zigzagAmplitude * 2)
+            height: gridRect.height + (isHorizontal ? 0 : zigzagAmplitude * 2)
         }
     });
 
