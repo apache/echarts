@@ -561,7 +561,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         }
 
                         if (!isLarge) {
-                            if (isBaseCategoryAxis && baseAxis.scale.isInBrokenRange(baseValue)) {
+                            if (isBaseCategoryAxis && baseAxis.scale.getBreakIndex(baseValue)) {
                                 // Bar is filtered in break axis
                                 data.setItemLayout(dataIndex, null);
                             }

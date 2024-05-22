@@ -134,12 +134,13 @@ class Axis {
         let normalizedData = scale.normalize(data);
 
         if (scale.type === 'ordinal') {
-            const isInBreak = scale.isInBrokenRange(data as OrdinalNumber, inBreakPosition === 'end');
-            if (isInBreak) {
+            const index = scale.getBreakIndex(data as OrdinalNumber, inBreakPosition === 'end');
+            if (index >= 0) {
                 normalizedData = adjustInBreakPosition(
                     normalizedData,
                     scale.getExtent(),
                     scale.getBreaks(),
+                    index,
                     inBreakPosition
                 );
             }

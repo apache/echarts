@@ -210,11 +210,13 @@ export function adjustInBreakPosition(
     normalizedData: OrdinalNumber,
     extent: [number, number],
     breaks: ScaleBreak[],
+    breakIndex: number,
     inBreakPosition: 'start' | 'center' | 'end'
 ) {
     inBreakPosition = inBreakPosition || 'center';
     const span = getExtentSpanWithoutBreaks(extent, breaks);
-    const bandWidth = 1 / span / 2;
+    const brk = breaks[breakIndex];
+    const bandWidth = 1 / span * brk.gap;
 
     if (inBreakPosition === 'start') {
         return normalizedData - bandWidth;

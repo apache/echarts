@@ -190,7 +190,7 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
     }
 
     ticks = zrUtil.filter(ticks, tick => {
-        return !axis.scale.isInBrokenRange(tick);
+        return !axis.scale.getBreakIndex(tick);
     });
 
     // Cache to avoid calling interval function repeatedly.
@@ -435,7 +435,7 @@ function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: numbe
     }
 
     function addItem(tickValue: number) {
-        if (!scale.isInBrokenRange(tickValue)) {
+        if (!scale.getBreakIndex(tickValue)) {
             const tickObj = { value: tickValue };
             result.push(onlyTick
                 ? tickValue
@@ -470,7 +470,7 @@ function makeLabelsByCustomizedCategoryInterval(axis: Axis, categoryInterval: Ca
     zrUtil.each(ordinalScale.getTicks(), function (tick) {
         const rawLabel = ordinalScale.getLabel(tick);
         const tickValue = tick.value;
-        if (categoryInterval(tick.value, rawLabel) && !scale.isInBrokenRange(tickValue)) {
+        if (categoryInterval(tick.value, rawLabel) && !scale.getBreakIndex(tickValue)) {
             result.push(
                 onlyTick
                 ? tickValue

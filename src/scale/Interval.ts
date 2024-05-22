@@ -119,7 +119,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         let tick = niceTickExtent[0];
 
         while (tick <= niceTickExtent[1]) {
-            if (!this.isInBrokenRange(tick)) {
+            if (!this.getBreakIndex(tick)) {
                 ticks.push({
                     value: tick
                 });
