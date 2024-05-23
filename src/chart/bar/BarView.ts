@@ -99,7 +99,7 @@ function getClipArea(coord: CoordSysOfBar, data: SeriesData) {
         // When boundaryGap is false or using time axis. bar may exceed the grid.
         // We should not clip this part.
         // See test/bar2.html
-        if (baseAxis.type !== 'category' || !baseAxis.onBand) {
+        if (baseAxis.type === 'category' && !baseAxis.onBand) {
             const expandWidth = data.getLayout('bandWidth');
             if (baseAxis.isHorizontal()) {
                 (coordSysClipArea as CartesianCoordArea).x -= expandWidth;
