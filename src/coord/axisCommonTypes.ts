@@ -82,6 +82,8 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
 
     jitter?: number;
+    jitterOverlap?: boolean;
+    jitterMargin?: number;
 }
 
 export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {

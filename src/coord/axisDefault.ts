@@ -114,6 +114,8 @@ const categoryAxis: AxisBaseOption = zrUtil.merge({
     // Set false to faster category collection.
     deduplication: null,
     jitter: 0,
+    jitterOverlap: true,
+    jitterMargin: 5,
     // splitArea: {
         // show: false
     // },

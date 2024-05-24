@@ -41,6 +41,7 @@ import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../../model/Series';
+import { fixJitter, needFixJitter } from '../../util/jitter';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -182,17 +183,21 @@ class SymbolDraw {
         opt = normalizeUpdateOpt(opt);
 
         const group = this.group;
-        const seriesModel = data.hostModel;
+        const seriesModel = data.hostModel as SeriesModel;
         const oldData = this._data;
         const SymbolCtor = this._SymbolCtor;
         const disableAnimation = opt.disableAnimation;
+        const hasJitter = needFixJitter(seriesModel);
 
         const seriesScope = makeSeriesScope(data);
 
         const symbolUpdateOpt = { disableAnimation };
 
         const getSymbolPoint = opt.getSymbolPoint || function (idx: number) {
-            return data.getItemLayout(idx);
+            const layout = data.getItemLayout(idx);
+            return hasJitter
+                ? fixJitter(layout as [number, number])
+                : layout;
         };
 
 
