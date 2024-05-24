@@ -52,6 +52,7 @@ import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
+import { shiftLayoutByForce } from './shiftLayoutByForce';
 import { labelInner, animateLabelValue } from './labelStyle';
 import { normalizeRadian } from 'zrender/src/contain/util';
 
@@ -348,7 +349,8 @@ class LabelManager {
                     // Force to set local false.
                     local: false,
                     // Ignore position and rotation config on the host el if x or y is changed.
-                    position: (layoutOption.x != null || layoutOption.y != null)
+                    position: (layoutOption.x != null || layoutOption.y != null || layoutOption.moveOverlap === true
+                        || layoutOption.moveOverlap === 'force')
                         ? null : defaultLabelAttr.attachedPos,
                     // Ignore rotation config on the host el if rotation is changed.
                     rotation: layoutOption.rotate != null
@@ -444,6 +446,12 @@ class LabelManager {
         });
 
         hideOverlap(labelsNeedsHideOverlap);
+
+        const labelsNeedsMoveOverlap = filter(labelList, function (item) {
+            return item.layoutOption.moveOverlap === 'force' || item.layoutOption.moveOverlap === true;
+        });
+        // todo Add some optional parameters later
+        shiftLayoutByForce(labelsNeedsMoveOverlap, 0, width, 0, height);
     }
 
     /**
