@@ -1,7 +1,3 @@
-import SeriesModel from '../../model/Series';
-import GlobalModel from '../../model/Global';
-import LegendModel from './LegendModel';
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -21,6 +17,10 @@ import LegendModel from './LegendModel';
 * under the License.
 */
 
+import SeriesModel from '../../model/Series';
+import GlobalModel from '../../model/Global';
+import LegendModel from './LegendModel';
+
 export default function legendFilter(ecModel: GlobalModel) {
 
     const legendModels = ecModel.findComponents({
@@ -28,10 +28,29 @@ export default function legendFilter(ecModel: GlobalModel) {
     }) as LegendModel[];
     if (legendModels && legendModels.length) {
         ecModel.filterSeries(function (series: SeriesModel) {
+            /**
+             * Filter data of this series.
+             * Don't check whether is colored by series here because
+             * even when the series is colored by series, it may have
+             * the same name with a data that is colored by data,
+             * in which case it may possibly be filtered.
+             */
+            const data = series.getData();
+            data.filterSelf(function (idx) {
+                const name = data.getName(idx);
+                // If in any legend component the status is not selected.
+                for (let i = 0; i < legendModels.length; i++) {
+                    if (legendModels[i].isFiltered(name)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
             // If in any legend component the status is not selected.
             // Because in legend series is assumed selected when it is not in the legend data.
             for (let i = 0; i < legendModels.length; i++) {
-                if (!legendModels[i].isSelected(series.name)) {
+                if (legendModels[i].isFiltered(series.name)) {
                     return false;
                 }
             }
