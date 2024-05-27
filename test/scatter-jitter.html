@@ -38,6 +38,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main0-no-overlap"></div>
 
 
         <div id="main1"></div>
@@ -52,7 +53,7 @@ under the License.
 
 
 
-
+<!--
         <script>
         require([
             'echarts',
@@ -62,7 +63,7 @@ under the License.
             var option;
 
             const data = [];
-            for (let i = 0; i < 200; ++i) {
+            for (let i = 0; i < 500; ++i) {
                 data.push([
                     'a' + (Math.floor(Math.random() * 4) + 1),
                     Math.random() * 100,
@@ -92,10 +93,52 @@ under the License.
                 // recordCanvas: true,
             });
         });
+        </script> -->
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            const data = [];
+            for (let i = 0; i < 500; ++i) {
+                data.push([
+                    'a' + (Math.floor(Math.random() * 4) + 1),
+                    Math.random() * 100,
+                ])
+            }
+
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['a1', 'a2', 'a3', 'a4'],
+                    jitter: 20,
+                    jitterOverlap: false
+                },
+                yAxis: {},
+                series: {
+                    type: 'scatter',
+                    data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0-no-overlap', {
+                title: [
+                    'Jittering with Cartesian Category Axis'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
         </script>
 
 
-
+<!--
 
         <script>
             require([
@@ -255,7 +298,7 @@ under the License.
                 });
             });
 
-        </script>
+        </script> -->
 
     </body>
 </html>
