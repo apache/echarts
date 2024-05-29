@@ -101,7 +101,7 @@ class SingleAxisModel extends ComponentModel<SingleAxisOption>
 
         jitter: 0,
         jitterOverlap: true,
-        jitterMargin: 5,
+        jitterMargin: 2,
     };
 }
 

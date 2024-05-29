@@ -136,10 +136,6 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         const yAxis = this.getAxis('y');
         out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(xVal, clamp));
         out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(yVal, clamp));
-        // const xCoord = xAxis.toGlobalCoord(xAxis.dataToCoord(xVal, clamp));
-        // const yCoord = yAxis.toGlobalCoord(yAxis.dataToCoord(yVal, clamp));
-        // out[0] = fixJitter(xAxis, xCoord, yCoord, 0);
-        // out[1] = fixJitter(yAxis, yCoord, xCoord, 0);
         return out;
     }
 

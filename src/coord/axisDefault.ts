@@ -115,7 +115,7 @@ const categoryAxis: AxisBaseOption = zrUtil.merge({
     deduplication: null,
     jitter: 0,
     jitterOverlap: true,
-    jitterMargin: 5,
+    jitterMargin: 2,
     // splitArea: {
         // show: false
     // },
