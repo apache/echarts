@@ -39,21 +39,21 @@ under the License.
 
         <div id="main0"></div>
         <div id="main0-no-overlap"></div>
+        <div id="main0-no-overlap2"></div>
 
 
         <div id="main1"></div>
 
 
         <div id="main2"></div>
+        <div id="main2-no-overlap"></div>
+        <div id="main2-symbolSize"></div>
 
 
         <div id="main3"></div>
+        <div id="main3-no-overlap"></div>
 
 
-
-
-
-<!--
         <script>
         require([
             'echarts',
@@ -63,7 +63,7 @@ under the License.
             var option;
 
             const data = [];
-            for (let i = 0; i < 500; ++i) {
+            for (let i = 0; i < 300; ++i) {
                 data.push([
                     'a' + (Math.floor(Math.random() * 4) + 1),
                     Math.random() * 100,
@@ -74,60 +74,25 @@ under the License.
                 xAxis: {
                     type: 'category',
                     data: ['a1', 'a2', 'a3', 'a4'],
-                    jitter: 20
+                    jitter: 150,
+                    jitterOverlap: true
                 },
                 yAxis: {},
                 series: {
                     type: 'scatter',
-                    data
+                    data,
+                    itemStyle: {
+                        color: params => {
+                            return 'rgba(100, 100, 255, ' + (params.dataIndex / 300 * 0.9 + 0.1) + ')';
+                        }
+                    }
                 }
             };
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Jittering with Cartesian Category Axis'
-                ],
-                option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
-            });
-        });
-        </script> -->
-
-        <script>
-        require([
-            'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
-        ], function (echarts) {
-            var option;
-
-            const data = [];
-            for (let i = 0; i < 500; ++i) {
-                data.push([
-                    'a' + (Math.floor(Math.random() * 4) + 1),
-                    Math.random() * 100,
-                ])
-            }
-
-            option = {
-                xAxis: {
-                    type: 'category',
-                    data: ['a1', 'a2', 'a3', 'a4'],
-                    jitter: 20,
-                    jitterOverlap: false
-                },
-                yAxis: {},
-                series: {
-                    type: 'scatter',
-                    data
-                }
-            };
-
-            var chart = testHelper.create(echarts, 'main0-no-overlap', {
-                title: [
-                    'Jittering with Cartesian Category Axis'
+                    'Jittering with Cartesian Category Axis',
+                    '**jitterOverlap: true** (default)'
                 ],
                 option: option
                 // height: 300,
@@ -137,8 +102,98 @@ under the License.
         });
         </script>
 
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
 
-<!--
+            const data = [];
+            for (let i = 0; i < 300; ++i) {
+                data.push([
+                    'a' + (Math.floor(Math.random() * 4) + 1),
+                    Math.random() * 100,
+                ])
+            }
+
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['a1', 'a2', 'a3', 'a4'],
+                    jitter: 150,
+                    jitterOverlap: false
+                },
+                yAxis: {},
+                series: {
+                    type: 'scatter',
+                    data,
+                    itemStyle: {
+                        color: params => {
+                            return 'rgba(100, 100, 255, ' + (params.dataIndex / 300 * 0.9 + 0.1) + ')';
+                        }
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0-no-overlap', {
+                title: [
+                    'Jittering with Cartesian Category Axis',
+                    '**jitterOverlap: false**'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            const data = [];
+            for (let i = 0; i < 500; ++i) {
+                data.push([
+                    Math.random() * 100,
+                    'a' + (Math.floor(Math.random() * 4) + 1),
+                ])
+            }
+
+            option = {
+                yAxis: {
+                    type: 'category',
+                    data: ['a1', 'a2', 'a3', 'a4'],
+                    jitter: 50,
+                    jitterOverlap: false
+                },
+                xAxis: {},
+                series: {
+                    type: 'scatter',
+                    data
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0-no-overlap2', {
+                title: [
+                    'Jittering with Cartesian Category Axis',
+                    '**jitterOverlap: false**',
+                    'When too crowded to avoid overlap, there may be overlap'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
 
         <script>
             require([
@@ -155,7 +210,6 @@ under the License.
                         Math.random() * 100,
                     ]);
                 }
-                console.log(data)
 
                 option = {
                     tooltip: {
@@ -193,46 +247,171 @@ under the License.
             require([
                 'echarts'
             ], function (echarts) {
-
-                var main = document.getElementById('main2');
-                if (!main) {
-                    return;
-                }
-                var chart = echarts.init(main);
-
                 var data1 = [];
+                var data2 = [];
 
                 for (var clutter = 0; clutter < 10; ++clutter) {
                     var cnt = Math.round(Math.random() * 20);
                     var base = Math.random() * 20 * 20;
                     for (var i = 0; i < cnt; ++i) {
                         data1.push((Math.random() * base).toFixed(3));
+                        data2.push((Math.random() * base).toFixed(3));
                     }
                 }
 
                 var option = {
                     tooltip: {
-                        trigger: 'axis'
                     },
                     legend: {
                         data: ['scatter']
                     },
                     singleAxis: {
                         bottom: '15%',
-                        jitter: 20
+                        jitter: 200,
+                        jitterOverlap: true
                     },
                     series: [{
-                        name: 'scatter',
                         type: 'scatter',
                         coordinateSystem: 'singleAxis',
                         symbolSize: 20,
                         data: data1
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: 20,
+                        data: data2
                     }]
                 };
 
                 var chart = testHelper.create(echarts, 'main2', {
                     title: [
-                        'Jittering with SingleAxis in Category'
+                        'Jittering with SingleAxis in Category',
+                        '**jitterOverlap: true** (default)'
+                    ],
+                    option: option
+                    // height: 300,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas true,
+                });
+            });
+
+        </script>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var data1 = [];
+                var data2 = [];
+
+                for (var clutter = 0; clutter < 10; ++clutter) {
+                    var cnt = Math.round(Math.random() * 10) + 5;
+                    var base = Math.random() * 20 * 20 + 100;
+                    for (var i = 0; i < cnt; ++i) {
+                        data1.push((Math.random() * base).toFixed(3));
+                        data2.push((Math.random() * base).toFixed(3));
+                    }
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data: ['scatter']
+                    },
+                    singleAxis: {
+                        bottom: '15%',
+                        jitter: 400,
+                        jitterOverlap: false,
+                        max: 500
+                    },
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: dataItem => Math.random() * 20 + 10,
+                        data: data1
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: dataItem => Math.random() * 10 + 10,
+                        data: data2
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: dataItem => Math.random() * 10 + 5,
+                        data: data2
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2-symbolSize', {
+                    title: [
+                        'Jittering with SingleAxis in Category, **dynamic symbolSize**',
+                        '**jitterOverlap: false**'
+                    ],
+                    option: option,
+                    height: 500,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+            });
+
+        </script>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var main = document.getElementById('main2-no-overlap');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                var data1 = [];
+                var data2 = [];
+
+                for (var clutter = 0; clutter < 10; ++clutter) {
+                    var cnt = Math.round(Math.random() * 20);
+                    var base = Math.random() * 20 * 20;
+                    for (var i = 0; i < cnt; ++i) {
+                        data1.push((Math.random() * base).toFixed(3));
+                        data2.push((Math.random() * base).toFixed(3));
+                    }
+                }
+
+                var option = {
+                    tooltip: {
+                    },
+                    legend: {
+                        data: ['scatter']
+                    },
+                    singleAxis: {
+                        bottom: '15%',
+                        jitter: 200,
+                        jitterOverlap: false
+                    },
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: 20,
+                        data: data1
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: 20,
+                        data: data2
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2-no-overlap', {
+                    title: [
+                        'Jittering with SingleAxis in Category',
+                        '**jitterOverlap: false**'
                     ],
                     option: option
                     // height: 300,
@@ -249,13 +428,6 @@ under the License.
             require([
                 'echarts'
             ], function (echarts) {
-
-                var main = document.getElementById('main2');
-                if (!main) {
-                    return;
-                }
-                var chart = echarts.init(main);
-
                 var data1 = [];
 
                 for (var clutter = 0; clutter < 50; ++clutter) {
@@ -274,22 +446,25 @@ under the License.
                     },
                     singleAxis: {
                         bottom: '15%',
-                        jitter: 100,
+                        jitter: 150,
+                        jitterOverlap: true,
                         type: 'category',
-                        data: ['a1', 'a2', 'a3', 'a4']
+                        data: ['a1', 'a2', 'a3', 'a4'],
+                        // orient: 'vertical'
                     },
                     series: [{
                         name: 'scatter',
                         type: 'scatter',
                         coordinateSystem: 'singleAxis',
-                        symbolSize: 20,
+                        // symbolSize: 20,
                         data: data1
                     }]
                 };
 
                 var chart = testHelper.create(echarts, 'main3', {
                     title: [
-                        'Jittering with SingleAxis in Category'
+                        'Jittering with SingleAxis in Category',
+                        '**jitterOverlap: true** (default)'
                     ],
                     option: option
                     // height: 300,
@@ -298,8 +473,60 @@ under the License.
                 });
             });
 
-        </script> -->
+        </script>
 
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var data1 = [];
+
+                for (var clutter = 0; clutter < 50; ++clutter) {
+                    data1.push([
+                        'a' + (Math.floor(Math.random() * 4) + 1),
+                        Math.random() * 100
+                    ]);
+                }
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['scatter']
+                    },
+                    singleAxis: {
+                        bottom: '15%',
+                        jitter: 150,
+                        jitterOverlap: false,
+                        type: 'category',
+                        data: ['a1', 'a2', 'a3', 'a4'],
+                        // orient: 'vertical'
+                    },
+                    series: [{
+                        name: 'scatter',
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        // symbolSize: 20,
+                        data: data1
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3-no-overlap', {
+                    title: [
+                        'Jittering with SingleAxis in Category',
+                        '**jitterOverlap: false**'
+                    ],
+                    option: option
+                    // height: 300,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+            });
+
+        </script>
     </body>
 </html>
 

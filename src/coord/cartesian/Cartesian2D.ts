@@ -28,7 +28,6 @@ import Grid from './Grid';
 import Scale from '../../scale/Scale';
 import { invert } from 'zrender/src/core/matrix';
 import { applyTransform } from 'zrender/src/core/vector';
-import { fixJitter } from '../../util/jitter';
 
 export const cartesian2DDimensions = ['x', 'y'];
 

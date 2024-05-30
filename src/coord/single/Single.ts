@@ -238,7 +238,6 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
 
         pt[idx] = axis.toGlobalCoord(axis.dataToCoord(+val));
         pt[1 - idx] = idx === 0 ? (rect.y + rect.height / 2) : (rect.x + rect.width / 2);
-
         return pt;
     }
 

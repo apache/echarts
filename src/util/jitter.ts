@@ -115,6 +115,7 @@ function placeJitterOnDirection(
             const newY = item.floatCoord + Math.sqrt(r * r - dx * dx) * direction;
             if (direction > 0 && newY > y || direction < 0 && newY < y) {
                 y = newY;
+                i = 0; // Back to check from the first item.
             }
 
             if (Math.abs(newY - floatCoord) > jitter / 2) {
