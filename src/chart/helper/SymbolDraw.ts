@@ -190,8 +190,8 @@ class SymbolDraw {
         const SymbolCtor = this._SymbolCtor;
         const disableAnimation = opt.disableAnimation;
         const coord = seriesModel.coordinateSystem;
-        const baseAxis = coord.getBaseAxis();
-        const hasJitter = needFixJitter(seriesModel, baseAxis);
+        const baseAxis = coord.getBaseAxis ? coord.getBaseAxis() : null;
+        const hasJitter = baseAxis && needFixJitter(seriesModel, baseAxis);
 
         const seriesScope = makeSeriesScope(data);
 
@@ -201,9 +201,6 @@ class SymbolDraw {
             const layout = data.getItemLayout(idx);
             const rawSize = data.getItemVisual(idx, 'symbolSize');
             const size = rawSize instanceof Array ? (rawSize[1] + rawSize[0]) / 2 : rawSize;
-            if (data.get('single', idx) === 90.956) {
-                debugger
-            }
 
             // return layout
             if (hasJitter) {
