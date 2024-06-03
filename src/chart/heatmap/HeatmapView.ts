@@ -34,7 +34,7 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import type Element from 'zrender/src/Element';
-import Matrix from '../../coord/matrix/Matrix';
+import type Matrix from '../../coord/matrix/Matrix';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {

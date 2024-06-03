@@ -18,10 +18,8 @@
 */
 
 import MatrixModel from '../../coord/matrix/MatrixModel';
-import ExtensionAPI from '../../core/ExtensionAPI';
 import ComponentView from '../../view/Component';
 import { createTextStyle } from '../../label/labelStyle';
-import GlobalModel from '../../model/Global';
 import * as graphic from '../../util/graphic';
 
 class MatrixView extends ComponentView {
@@ -29,7 +27,7 @@ class MatrixView extends ComponentView {
     static type = 'matrix';
     type = MatrixView.type;
 
-    render(matrixModel: MatrixModel, ecModel: GlobalModel, api: ExtensionAPI) {
+    render(matrixModel: MatrixModel) {
 
         const group = this.group;
 
@@ -60,62 +58,72 @@ class MatrixView extends ComponentView {
         const cellHeight = rect.height / (yLeavesCnt + xHeight);
 
         const xLeft = rect.x + cellWidth * yHeight;
-        for (let i = 0; i < xCells.length; i++) {
-            const cell = xCells[i];
-            const width = cellWidth * cell.colSpan;
-            const height = cellHeight * cell.rowSpan;
-            const left = xLeft + cellWidth * cell.colId;
-            const top = rect.y + cellHeight * cell.rowId;
+        if (xModel.get('show')) {
+            for (let i = 0; i < xCells.length; i++) {
+                const cell = xCells[i];
+                const width = cellWidth * cell.colSpan;
+                const height = cellHeight * cell.rowSpan;
+                const left = xLeft + cellWidth * cell.colId;
+                const top = rect.y + cellHeight * cell.rowId;
 
-            this.group.add(new graphic.Rect({
-                shape: {
-                    x: left,
-                    y: top,
-                    width: width,
-                    height: height
-                },
-                style: xItemStyle
-            }));
-            if (xLabelModel.get('show')) {
-                this.group.add(new graphic.Text({
-                    style: createTextStyle(xLabelModel, {
-                        text: cell.value,
-                        x: left + width / 2,
-                        y: top + height / 2,
-                        verticalAlign: 'middle',
-                        align: 'center'
-                    })
-                }));
+                const cellRect = new graphic.Rect({
+                    shape: {
+                        x: left,
+                        y: top,
+                        width: width,
+                        height: height
+                    },
+                    style: xItemStyle
+                });
+                this.group.add(cellRect);
+
+                if (xLabelModel.get('show')) {
+                    cellRect.setTextConfig({
+                        position: 'inside'
+                    });
+                    cellRect.setTextContent(
+                        new graphic.Text({
+                            style: createTextStyle(xLabelModel, {
+                                text: cell.value,
+                                verticalAlign: 'middle',
+                                align: 'center'
+                            }),
+                            silent: xLabelModel.get('silent')
+                        })
+                    );
+                }
             }
         }
 
         const yTop = rect.y + cellHeight * xHeight;
-        for (let i = 0; i < yCells.length; i++) {
-            const cell = yCells[i];
-            const width = cellWidth * cell.rowSpan;
-            const height = cellHeight * cell.colSpan;
-            const left = rect.x + cellWidth * cell.rowId;
-            const top = yTop + cellHeight * cell.colId;
+        if (yModel.get('show')) {
+            for (let i = 0; i < yCells.length; i++) {
+                const cell = yCells[i];
+                const width = cellWidth * cell.rowSpan;
+                const height = cellHeight * cell.colSpan;
+                const left = rect.x + cellWidth * cell.rowId;
+                const top = yTop + cellHeight * cell.colId;
 
-            this.group.add(new graphic.Rect({
-                shape: {
-                    x: left,
-                    y: top,
-                    width: width,
-                    height: height
-                },
-                style: yItemStyle
-            }));
-            if (yLabelModel.get('show')) {
-                this.group.add(new graphic.Text({
-                    style: createTextStyle(yLabelModel, {
-                        text: cell.value,
-                        x: left + width / 2,
-                        y: top + height / 2,
-                        verticalAlign: 'middle',
-                        align: 'center'
-                    })
+                this.group.add(new graphic.Rect({
+                    shape: {
+                        x: left,
+                        y: top,
+                        width: width,
+                        height: height
+                    },
+                    style: yItemStyle
                 }));
+                if (yLabelModel.get('show')) {
+                    this.group.add(new graphic.Text({
+                        style: createTextStyle(yLabelModel, {
+                            text: cell.value,
+                            x: left + width / 2,
+                            y: top + height / 2,
+                            verticalAlign: 'middle',
+                            align: 'center'
+                        })
+                    }));
+                }
             }
         }
 

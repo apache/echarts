@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { reduce } from 'zrender/src/core/util';
+import { reduce, isString } from 'zrender/src/core/util';
 import { ParsedValue } from '../../util/types';
 
 export type MatrixNodeOption = {
@@ -62,17 +62,18 @@ export class MatrixDim {
         if (this._leavesCount != null) {
             return this._leavesCount;
         }
-        if (!this._option.data) {
+        const data = this._option.data;
+        if (!data) {
             this._leavesCount = 0;
             return 0;
         }
-        if (typeof this._option.data === 'string') {
+        if (isString(data)) {
             this._leavesCount = 1;
             return 1;
         }
         let cnt = 0;
-        for (let i = 0; i < this._option.data.length; i++) {
-            cnt += this._countLeaves(this._option.data[i]);
+        for (let i = 0; i < data.length; i++) {
+            cnt += this._countLeaves(data[i]);
         }
         this._leavesCount = cnt;
         return cnt;
@@ -85,15 +86,16 @@ export class MatrixDim {
         if (this._height != null) {
             return this._height;
         }
-        if (!this._option.data) {
+        const data = this._option.data;
+        if (!data) {
             return 0;
         }
-        if (typeof this._option.data === 'string') {
+        if (isString(data)) {
             return 1;
         }
         let height = 0;
-        for (let i = 0; i < this._option.data.length; i++) {
-            height = Math.max(height, this._countHeight(this._option.data[i]));
+        for (let i = 0; i < data.length; i++) {
+            height = Math.max(height, this._countHeight(data[i]));
         }
         this._height = height;
         return height;
@@ -123,8 +125,9 @@ export class MatrixDim {
 
     private _initCells(): void {
         this._cells = [];
-        for (let i = 0, rowId = 0, colId = 0; i < this._option.data.length; i++) {
-            const node = this._option.data[i];
+        const data = this._option.data;
+        for (let i = 0, rowId = 0, colId = 0; i < data.length; i++) {
+            const node = data[i];
             const result = this._traverseInitCells(node, rowId, colId);
             rowId = result.rowId;
             colId = result.colId;
