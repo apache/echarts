@@ -173,6 +173,7 @@
     "./lib/component/axisPointer": "./lib/component/axisPointer.js",
     "./lib/component/brush": "./lib/component/brush.js",
     "./lib/component/calendar": "./lib/component/calendar.js",
+    "./lib/component/matrix": "./lib/component/matrix.js",
     "./lib/component/dataZoom": "./lib/component/dataZoom.js",
     "./lib/component/dataZoomInside": "./lib/component/dataZoomInside.js",
     "./lib/component/dataZoomSelect": "./lib/component/dataZoomSelect.js",
