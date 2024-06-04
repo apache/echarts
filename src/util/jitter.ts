@@ -1,8 +1,8 @@
-import Axis from '../coord/Axis';
-import { AxisBaseModel } from '../coord/AxisBaseModel';
+import type Axis from '../coord/Axis';
+import type { AxisBaseModel } from '../coord/AxisBaseModel';
 import Axis2D from '../coord/cartesian/Axis2D';
-import SingleAxis from '../coord/single/SingleAxis';
-import SeriesModel from '../model/Series';
+import type SingleAxis from '../coord/single/SingleAxis';
+import type SeriesModel from '../model/Series';
 import { makeInner } from './model';
 
 export function needFixJitter(seriesModel: SeriesModel, axis: Axis): boolean {

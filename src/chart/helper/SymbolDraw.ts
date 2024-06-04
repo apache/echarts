@@ -42,8 +42,8 @@ import { getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../../model/Series';
 import { fixJitter, needFixJitter } from '../../util/jitter';
-import Axis2D from '../../coord/cartesian/Axis2D';
-import SingleAxis from '../../coord/single/SingleAxis';
+import type Axis2D from '../../coord/cartesian/Axis2D';
+import type SingleAxis from '../../coord/single/SingleAxis';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
