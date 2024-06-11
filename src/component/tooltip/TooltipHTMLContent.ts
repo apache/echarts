@@ -58,6 +58,22 @@ function mirrorPos(pos: string): string {
     return pos;
 }
 
+function calculateArrowOffset(rotatedWH: number, borderWidth: number, arrowWH: number) {
+    return Math.round(
+        (
+            ((rotatedWH - Math.SQRT2 * borderWidth) / 2
+                + Math.SQRT2 * borderWidth
+                - (rotatedWH - arrowWH) / 2)
+            * 100
+        ) / 100
+    );
+}
+
+function getColorClassName(color: ZRColor) {
+    const colorValue = convertToColorString(color);
+    return colorValue.replace(/[^a-zA-Z0-9]/g, '');
+}
+
 function assembleArrow(
     tooltipModel: Model<TooltipOption>,
     borderColor: ZRColor,
@@ -85,22 +101,6 @@ function assembleArrow(
     else {
         arrowClasses.push('tooltip-arrow-vertical');
         transformClasses.push(`tooltip-arrow-rotate-${rotateDeg = arrowPos === 'top' ? 225 : 45}`);
-    }
-
-    function calculateArrowOffset(rotatedWH: number, borderWidth: number, arrowWH: number) {
-        return Math.round(
-            (
-                ((rotatedWH - Math.SQRT2 * borderWidth) / 2
-                    + Math.SQRT2 * borderWidth
-                    - (rotatedWH - arrowWH) / 2)
-                * 100
-            ) / 100
-        );
-    }
-
-    function getColorClassName(color: ZRColor) {
-        const colorValue = convertToColorString(color);
-        return colorValue.replace(/[^a-zA-Z0-9]/g, '');
     }
 
     const rotateRadian = rotateDeg * Math.PI / 180;
