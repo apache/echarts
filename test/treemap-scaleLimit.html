@@ -37,23 +37,23 @@ under the License.
             height: 50%;
         }
     </style>
-    
+
     <body>
         <div>scaleLimit: { max: 1, min: 0.5 }</div>
         <div id="main1" class="chart"></div>
         <div id="main2" class="chart"></div>
         <script>
-    
+
             require([
                 'echarts'
             ], function (echarts) {
-    
+
                 var chart = echarts.init(document.getElementById('main1'), null, {
-    
+
                 });
-    
+
                 chart.setOption({
-    
+
                     series: [
                         {
                             name: '矩形树图scaleLimit',
@@ -146,10 +146,14 @@ under the License.
                         }
                     ]
                 });
-                
+
                 var chart1 = echarts.init(document.getElementById('main2'));
                 option = {
                     series: [{
+                        scaleLimit: {
+                            max: 3,
+                            min: 0.8
+                        },
                         emphasis: {
                             label: {
                                 show: true,
@@ -175,7 +179,7 @@ under the License.
 
                 chart1.setOption(option);
                 });
-    
+
         </script>
     </body>
 </html>
