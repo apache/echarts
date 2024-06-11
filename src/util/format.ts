@@ -212,21 +212,22 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
         // called repeatedly when mouse move and the auto-increment number increases fast.
         // Users can make their own style name by theirselves, make it unique and readable.
         const markerId = opt.markerId || 'markerX';
+        const colorStyle = `color-${color.replace('#', '')}`;
         return {
             renderMode: renderMode,
-            content: '{' + markerId + '|}  ',
+            content: '{' + markerId + '|} ',
             style: type === 'subItem'
                 ? {
                     width: 4,
                     height: 4,
                     borderRadius: 2,
-                    backgroundColor: color
+                    backgroundColor: colorStyle
                 }
                 : {
                     width: 10,
                     height: 10,
                     borderRadius: 5,
-                    backgroundColor: color
+                    backgroundColor: colorStyle
                 }
         };
     }
