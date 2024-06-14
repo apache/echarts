@@ -86,6 +86,7 @@ export interface SankeyEdgeItemOption extends
         GraphEdgeItemObject<OptionDataValueNumeric> {
     focusNodeAdjacency?: FocusNodeAdjacency
     edgeLabel?: SeriesLabelOption
+    edgeName?: string
 }
 
 export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
@@ -244,7 +245,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
             const params = this.getDataParams(dataIndex, dataType);
             const rawDataOpt = params.data as SankeyEdgeItemOption;
             const edgeValue = params.value;
-            const edgeName = rawDataOpt.source + ' -- ' + rawDataOpt.target;
+            const edgeName = rawDataOpt.edgeName ?? rawDataOpt.source + ' -- ' + rawDataOpt.target;
             return createTooltipMarkup('nameValue', {
                 name: edgeName,
                 value: edgeValue,
