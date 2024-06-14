@@ -401,9 +401,6 @@
         },
         "$count": 1074
       },
-      "barWidth": {
-        "$count": 992
-      },
       "barCategoryGap": {
         "$count": 553
       },
