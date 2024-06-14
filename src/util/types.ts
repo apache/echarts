@@ -1727,7 +1727,8 @@ export interface AriaLabelOption {
         separator?: {
             middle?: string;
             end?: string;
-        }
+        },
+        columnsToExclude?: number[]
     }
 }
 
