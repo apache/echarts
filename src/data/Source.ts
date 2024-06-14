@@ -86,6 +86,7 @@ export interface SourceMetaRawOption {
     seriesLayoutBy: SeriesLayoutBy;
     sourceHeader: OptionSourceHeader;
     dimensions: DimensionDefinitionLoose[];
+    dimensionsLimit?: number;
 }
 
 // Prevent from `new Source()` external and circular reference.
@@ -118,6 +119,11 @@ class SourceImpl {
      * `dimensionsDefine` will be null/undefined.
      */
     readonly dimensionsDefine: DimensionDefinition[];
+
+    /**
+     * dimensions limit, default 30
+     */
+    readonly dimensionsLimit: number;
 
     /**
      * Only make sense in `SOURCE_FORMAT_ARRAY_ROWS`.
@@ -156,7 +162,9 @@ class SourceImpl {
         // This is the raw user defined `encode` in `series`.
         // If user not defined, DO NOT make a empty object or hashMap here.
         // An empty object or hashMap will prevent from auto generating encode.
-        encodeDefine?: HashMap<OptionEncodeValue, DimensionName>
+        encodeDefine?: HashMap<OptionEncodeValue, DimensionName>,
+
+        dimensionsLimit?: number
     }) {
 
         this.data = fields.data || (
@@ -169,6 +177,7 @@ class SourceImpl {
         this.startIndex = fields.startIndex || 0;
         this.dimensionsDetectedCount = fields.dimensionsDetectedCount;
         this.metaRawOption = fields.metaRawOption;
+        this.dimensionsLimit = fields.dimensionsLimit;
 
         const dimensionsDefine = this.dimensionsDefine = fields.dimensionsDefine;
 
@@ -202,6 +211,7 @@ export function createSource(
 ): Source {
     sourceFormat = sourceFormat || detectSourceFormat(sourceData);
     const seriesLayoutBy = thisMetaRawOption.seriesLayoutBy;
+    const dimensionsLimit = thisMetaRawOption.dimensionsLimit;
     const determined = determineSourceDimensions(
         sourceData,
         sourceFormat,
@@ -213,7 +223,8 @@ export function createSource(
         data: sourceData,
         sourceFormat: sourceFormat,
 
-        seriesLayoutBy: seriesLayoutBy,
+        seriesLayoutBy,
+        dimensionsLimit,
         dimensionsDefine: determined.dimensionsDefine,
         startIndex: determined.startIndex,
         dimensionsDetectedCount: determined.dimensionsDetectedCount,
