@@ -612,11 +612,12 @@ export function getFont(
     ecModel: GlobalModel
 ) {
     const gTextStyleModel = ecModel && ecModel.getModel('textStyle');
+    const fontSize = opt.fontSize || gTextStyleModel && gTextStyleModel.getShallow('fontSize') || '12px';
     return trim([
         // FIXME in node-canvas fontWeight is before fontStyle
         opt.fontStyle || gTextStyleModel && gTextStyleModel.getShallow('fontStyle') || '',
         opt.fontWeight || gTextStyleModel && gTextStyleModel.getShallow('fontWeight') || '',
-        (opt.fontSize || gTextStyleModel && gTextStyleModel.getShallow('fontSize') || 12) + 'px',
+        isNaN(Number(fontSize)) ? String(fontSize) : `${fontSize}px`,
         opt.fontFamily || gTextStyleModel && gTextStyleModel.getShallow('fontFamily') || 'sans-serif'
     ].join(' '));
 }
