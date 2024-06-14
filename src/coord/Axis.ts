@@ -31,8 +31,6 @@ import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
 
-const NORMALIZED_EXTENT = [0, 1] as [number, number];
-
 interface TickCoord {
     coord: number;
     // That is `scaleTick.value`.
@@ -129,7 +127,7 @@ class Axis {
             fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
 
-        return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
+        return linearMap(data, this._getNormalizedExtent(), extent, clamp);
     }
 
     /**
@@ -144,7 +142,7 @@ class Axis {
             fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
 
-        const t = linearMap(coord, extent, NORMALIZED_EXTENT, clamp);
+        const t = linearMap(coord, extent, this._getNormalizedExtent(), clamp);
 
         return this.scale.scale(t);
     }
@@ -174,7 +172,7 @@ class Axis {
 
         const tickModel = opt.tickModel || this.getTickModel();
         const result = createAxisTicks(this, tickModel as AxisBaseModel);
-        const ticks = result.ticks;
+        const ticks = this.inverse ? result.ticks.reverse() : result.ticks;
 
         const ticksCoords = map(ticks, function (tickVal) {
             return {
@@ -267,6 +265,10 @@ class Axis {
      */
     calculateCategoryInterval(): ReturnType<typeof calculateCategoryInterval> {
         return calculateCategoryInterval(this);
+    }
+
+    _getNormalizedExtent(): [number, number] {
+        return this.inverse ? [1, 0] : [0, 1];
     }
 
 }
