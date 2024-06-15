@@ -202,7 +202,11 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
                         seriesType: getSeriesTypeName(seriesModel.subType as SeriesTypes)
                     });
 
-                    const data = seriesModel.getData();
+                    let data = seriesModel.getData();
+                    const columnsToExclude = labelModel.get(['data', 'columnsToExclude']);
+                    if (columnsToExclude) {
+                        data = data.filterSelf(idx => !columnsToExclude?.includes(idx));
+                    }
                     if (data.count() > maxDataCnt) {
                         // Show part of data
                         const partialLabel = labelModel.get(['data', 'partialData']);
@@ -216,10 +220,9 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
                     const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
                     const endSeparator = labelModel.get(['data', 'separator', 'end']);
-                    const columnsToExclude = labelModel.get(['data', 'columnsToExclude']);
                     const dataLabels = [];
                     for (let i = 0; i < data.count(); i++) {
-                        if (i < maxDataCnt && !columnsToExclude?.includes(i)) {
+                        if (i < maxDataCnt) {
                             const name = data.getName(i);
                             const value = data.getValues(i);
                             const dataLabel = labelModel.get(['data', name ? 'withName' : 'withoutName']);
