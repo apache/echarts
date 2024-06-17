@@ -29,6 +29,7 @@ describe('util/time', function () {
 
         const time = new Date('2003-04-09 01:04:02.300 UTC');
         const anotherTime = new Date('2023-12-19 11:44:33.003 UTC');
+        const oneMoreTime = new Date('2023-01-12 13:09:01.035 UTC');
 
         // test {yyyy}, {yy} ...
         it('should format year', function () {
@@ -126,6 +127,19 @@ describe('util/time', function () {
         it('should format millisecond', function () {
             expect(format(time, '{S}', true)).toEqual('300');
             expect(format(anotherTime, '{S}', true)).toEqual('3');
+        });
+
+        // test {a} ...
+        it('should format meridian', function () {
+            expect(format(time, '{a}', true)).toEqual('am');
+            expect(format(anotherTime, '{a}', true)).toEqual('am');
+            expect(format(oneMoreTime, '{a}', true)).toEqual('pm');
+        });
+
+        it('should format meridian in uppercase', function () {
+            expect(format(time, '{A}', true)).toEqual('AM');
+            expect(format(anotherTime, '{A}', true)).toEqual('AM');
+            expect(format(oneMoreTime, '{A}', true)).toEqual('PM');
         });
     });
 });

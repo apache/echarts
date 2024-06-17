@@ -19,11 +19,7 @@
 */
 
 const { TypeScriptVersion } = require('@definitelytyped/typescript-versions');
-const {
-    cleanTypeScriptInstalls,
-    installAllTypeScriptVersions,
-    typeScriptPath
-} = require('@definitelytyped/utils');
+const { typeScriptPath, install } = require('@definitelytyped/utils');
 const { runTsCompile } = require('./pre-publish');
 const globby = require('globby');
 const semver = require('semver');
@@ -31,8 +27,10 @@ const semver = require('semver');
 const MIN_VERSION = '3.5.0';
 
 async function installTs() {
-    // await cleanTypeScriptInstalls();
-    await installAllTypeScriptVersions();
+    const tsVersions = getTypeScriptVersions();
+    for (const version of tsVersions) {
+        await install(version);
+    }
 }
 
 async function runTests() {
@@ -52,17 +50,20 @@ async function runTests() {
     };
     const testsList = await globby(__dirname + '/../test/types/*.ts');
 
-    for (let version of TypeScriptVersion.shipped) {
-        if (semver.lt(version + '.0', MIN_VERSION)) {
-            continue;
-        }
-
+    const tsVersions = getTypeScriptVersions();
+    for (const version of tsVersions) {
         console.log(`Testing ts version ${version}`);
         const ts = require(typeScriptPath(version));
         await runTsCompile(ts, compilerOptions, testsList);
 
         console.log(`Finished test of ts version ${version}`);
     }
+}
+
+function getTypeScriptVersions() {
+    return TypeScriptVersion.unsupported
+        .concat(TypeScriptVersion.shipped)
+        .filter(version => semver.gte(version + '.0', MIN_VERSION));
 }
 
 async function main() {
