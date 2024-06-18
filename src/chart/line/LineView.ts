@@ -531,7 +531,7 @@ function createLineClipPath(
             : null;
 
         const isHorizontal = coordSys.getBaseAxis().isHorizontal();
-        const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, () => {
+        const clipPath = createGridClipPath(coordSys, hasAnimation, seriesModel, undefined, () => {
             const endLabel = lineView._endLabel;
             if (endLabel && hasAnimation) {
                 if (labelAnimationRecord.originalX != null) {

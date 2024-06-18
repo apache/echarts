@@ -25,6 +25,8 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import { isFunction } from 'zrender/src/core/util';
+import GlobalModel from '../../model/Global';
+import AxisModel from '../../coord/cartesian/AxisModel';
 
 type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
     lineStyle?: { width?: number }
@@ -33,6 +35,7 @@ function createGridClipPath(
     cartesian: Cartesian2D,
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth,
+    ecModel?: GlobalModel,
     done?: () => void,
     during?: (percent: number, clipRect: graphic.Rect) => void
 ) {
@@ -43,12 +46,14 @@ function createGridClipPath(
     let width = rect.width;
     let height = rect.height;
 
-    const lineWidth = seriesModel.get(['lineStyle', 'width']) || 2;
     // Expand the clip path a bit to avoid the border is clipped and looks thinner
-    x -= lineWidth / 2;
-    y -= lineWidth / 2;
-    width += lineWidth;
-    height += lineWidth;
+    const xAxisModel = ecModel.getComponent('xAxis', 0) as AxisModel;
+    const yAxisModel = ecModel.getComponent('yAxis', 0) as AxisModel;
+    const xAisWidth = xAxisModel.get(['axisLine', 'lineStyle']).width || 2;
+    const yAxisWidth = yAxisModel.get(['axisLine', 'lineStyle']).width || 2;
+    x += xAisWidth / 2;
+    width -= xAisWidth / 2;
+    height -= yAxisWidth / 2;
 
     // fix: https://github.com/apache/incubator-echarts/issues/11369
     width = Math.ceil(width);
@@ -150,6 +155,7 @@ function createClipPath(
     coordSys: CoordinateSystem,
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth,
+    ecModel?:GlobalModel,
     done?: () => void,
     during?: (percent: number) => void
 ) {
@@ -160,7 +166,7 @@ function createClipPath(
         return createPolarClipPath(coordSys as Polar, hasAnimation, seriesModel);
     }
     else if (coordSys.type === 'cartesian2d') {
-        return createGridClipPath(coordSys as Cartesian2D, hasAnimation, seriesModel, done, during);
+        return createGridClipPath(coordSys as Cartesian2D, hasAnimation, seriesModel, ecModel, done, during);
     }
     return null;
 }
