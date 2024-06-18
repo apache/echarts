@@ -25033,7 +25033,7 @@
       return implsStore[name];
     }
 
-    var version$1 = '5.6.0';
+    var version$1 = '5.5.1';
     var dependencies = {
       zrender: '5.6.0'
     };
