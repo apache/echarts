@@ -66,8 +66,8 @@ under the License.
         <div class="chart" id="positionSpecified"></div>
         <!--<h1>alwaysShowContent (check when hover on the last one, the content should not be the previous one)</h1>-->
         <!--<div class="chart" id="alwaysShowContent"></div>-->
-
-
+        <h1>Tooltip shouldn't render legend name as HTML element by default</h1>
+        <div class="chart" id="tooltip-legend-xss"></div>
 
 
 
@@ -785,34 +785,39 @@ under the License.
         <script>
 
             require(['echarts'], function (echarts) {
-
                 var option = {
                     tooltip: {
-                        trigger: 'axis',
-                        triggerOn: 'click',
-                        axisPointer: {
-                            type: 'cross'
-                        }
-                    }
-                };
-                var baseTop = 90;
-                var height = 150;
-                var gap = 50;
-                makeCategoryGrid(option, {
-                    grid: {top: baseTop, height: height},
-                    yAxis: {
-                        name: 'click show tip',
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['<img onerror=alert(1)/>'],
                         tooltip: {
                             show: true
                         }
-                    }
-                });
-                baseTop += height + gap;
-
-                createChart('click', echarts, option, baseTop);
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {},
+                    series: [
+                        {
+                            name: '<img onerror=alert(1)/>',
+                            type: 'line',
+                            stack: 'Total',
+                            areaStyle: {},
+                            emphasis: {
+                                focus: 'series'
+                            },
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        }
+                    ]
+                };
+                createChart('tooltip-legend-xss', echarts, option, 500);
             })
         </script>
 
 
     </body>
 </html>
+

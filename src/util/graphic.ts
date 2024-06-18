@@ -67,6 +67,7 @@ import {
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import ComponentModel from '../model/Component';
+import { encodeHTML } from 'zrender/src/core/dom';
 
 
 import {
@@ -600,10 +601,11 @@ export function setTooltipConfig(opt: {
     const ecData = getECData(opt.el);
     ecData.componentMainType = mainType;
     ecData.componentIndex = componentIndex;
+
     ecData.tooltipConfig = {
         name: itemName,
         option: defaults({
-            content: itemName,
+            content: encodeHTML(itemName),
             formatterParams: formatterParams
         }, itemTooltipOptionObj)
     };
