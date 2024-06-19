@@ -170,7 +170,7 @@ var platformApi = {
             else {
                 text = text || '';
                 font = font || DEFAULT_FONT;
-                var res = /(\d+)px/.exec(font);
+                var res = /((?:\d+)?\.?\d*)px/.exec(font);
                 var fontSize = res && +res[1] || DEFAULT_FONT_SIZE;
                 var width = 0;
                 if (font.indexOf('mono') >= 0) {
@@ -7364,7 +7364,7 @@ function getElementSSRData(el) {
 function registerSSRDataGetter(getter) {
     ssrDataGetter = getter;
 }
-var version = '5.5.0';
+var version = '5.6.0';
 
 var zrender = /*#__PURE__*/Object.freeze({
     __proto__: null,
@@ -14957,6 +14957,7 @@ function setTooltipConfig(opt) {
     name: itemName,
     option: defaults({
       content: itemName,
+      encodeHTMLContent: true,
       formatterParams: formatterParams
     }, itemTooltipOptionObj)
   };
@@ -16249,13 +16250,15 @@ time, template, isUTC, lang) {
   var m = date[minutesGetterName(isUTC)]();
   var s = date[secondsGetterName(isUTC)]();
   var S = date[millisecondsGetterName(isUTC)]();
+  var a = H >= 12 ? 'pm' : 'am';
+  var A = a.toUpperCase();
   var localeModel = lang instanceof Model ? lang : getLocaleModel(lang || SYSTEM_LANG) || getDefaultLocaleModel();
   var timeModel = localeModel.getModel('time');
   var month = timeModel.get('month');
   var monthAbbr = timeModel.get('monthAbbr');
   var dayOfWeek = timeModel.get('dayOfWeek');
   var dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
-  return (template || '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, pad(y % 100 + '', 2)).replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
+  return (template || '').replace(/{a}/g, a + '').replace(/{A}/g, A + '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, pad(y % 100 + '', 2)).replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
 }
 function leveledFormat(tick, idx, formatter, lang, isUTC) {
   var template = null;
@@ -17629,8 +17632,8 @@ function doGuessOrdinal(data, sourceFormat, seriesLayoutBy, dimensionsDefine, st
   function detectValue(val) {
     var beStr = isString(val);
     // Consider usage convenience, '1', '2' will be treated as "number".
-    // `isFinit('')` get `true`.
-    if (val != null && isFinite(val) && val !== '') {
+    // `Number('')` (or any whitespace) is `0`.
+    if (val != null && Number.isFinite(Number(val)) && val !== '') {
       return beStr ? BE_ORDINAL.Might : BE_ORDINAL.Not;
     } else if (beStr && val !== '-') {
       return BE_ORDINAL.Must;
@@ -20389,7 +20392,7 @@ opt) {
   return value == null || value === '' ? NaN
   // If string (like '-'), using '+' parse to NaN
   // If object, also parse to NaN
-  : +value;
+  : Number(value);
 }
 var valueParserMap = createHashMap({
   'number': function (val) {
@@ -22749,7 +22752,7 @@ var SeriesModel = /** @class */function (_super) {
     var task = getCurrentTask(this);
     if (task) {
       var data = task.context.data;
-      return dataType == null ? data : data.getLinkedData(dataType);
+      return dataType == null || !data.getLinkedData ? data : data.getLinkedData(dataType);
     } else {
       // When series is not alive (that may happen when click toolbox
       // restore or setOption with not merge mode), series data may
@@ -26246,9 +26249,9 @@ function getImpl(name) {
   return implsStore[name];
 }
 
-var version$1 = '5.5.0';
+var version$1 = '5.5.1';
 var dependencies = {
-  zrender: '5.5.0'
+  zrender: '5.6.0'
 };
 var TEST_FRAME_REMAIN_TIME = 1;
 var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
@@ -31616,11 +31619,11 @@ function createProgressiveLayout(seriesType) {
             var value = store.get(stacked ? stackedDimIdx : valueDimIdx, dataIndex);
             var baseValue = store.get(baseDimIdx, dataIndex);
             var baseCoord = valueAxisStart;
-            var startValue = void 0;
+            var stackStartValue = void 0;
             // Because of the barMinHeight, we can not use the value in
             // stackResultDimension directly.
             if (stacked) {
-              startValue = +value - store.get(valueDimIdx, dataIndex);
+              stackStartValue = +value - store.get(valueDimIdx, dataIndex);
             }
             var x = void 0;
             var y = void 0;
@@ -31629,7 +31632,7 @@ function createProgressiveLayout(seriesType) {
             if (isValueAxisH) {
               var coord = cartesian.dataToPoint([value, baseValue]);
               if (stacked) {
-                var startCoord = cartesian.dataToPoint([startValue, baseValue]);
+                var startCoord = cartesian.dataToPoint([stackStartValue, baseValue]);
                 baseCoord = startCoord[0];
               }
               x = baseCoord;
@@ -31642,7 +31645,7 @@ function createProgressiveLayout(seriesType) {
             } else {
               var coord = cartesian.dataToPoint([baseValue, value]);
               if (stacked) {
-                var startCoord = cartesian.dataToPoint([baseValue, startValue]);
+                var startCoord = cartesian.dataToPoint([baseValue, stackStartValue]);
                 baseCoord = startCoord[1];
               }
               x = coord[0] + columnOffset;
@@ -31695,7 +31698,11 @@ function isInLargeMode(seriesModel) {
 }
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis, valueAxis) {
-  return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
+  var startValue = valueAxis.model.get('startValue');
+  if (!startValue) {
+    startValue = 0;
+  }
+  return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? startValue > 0 ? startValue : 1 : startValue));
 }
 
 // FIXME 公用？
@@ -32287,7 +32294,11 @@ var ScaleRawExtentInfo = /** @class */function () {
     this._dataMax = dataExtent[1];
     var isOrdinal = this._isOrdinal = scale.type === 'ordinal';
     this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
-    var modelMinRaw = this._modelMinRaw = model.get('min', true);
+    var axisMinValue = model.get('min', true);
+    if (axisMinValue == null) {
+      axisMinValue = model.get('startValue', true);
+    }
+    var modelMinRaw = this._modelMinRaw = axisMinValue;
     if (isFunction(modelMinRaw)) {
       // This callback always provides users the full data extent (before data is filtered).
       this._modelMinNum = parseAxisModelMinMax(scale, modelMinRaw({
@@ -33338,7 +33349,36 @@ var util$1 = /*#__PURE__*/Object.freeze({
 });
 
 var inner$5 = makeInner();
+function tickValuesToNumbers(axis, values) {
+  var nums = map(values, function (val) {
+    return axis.scale.parse(val);
+  });
+  if (axis.type === 'time' && nums.length > 0) {
+    // Time axis needs duplicate first/last tick (see TimeScale.getTicks())
+    // The first and last tick/label don't get drawn
+    nums.sort();
+    nums.unshift(nums[0]);
+    nums.push(nums[nums.length - 1]);
+  }
+  return nums;
+}
 function createAxisLabels(axis) {
+  var custom = axis.getLabelModel().get('customValues');
+  if (custom) {
+    var labelFormatter_1 = makeLabelFormatter(axis);
+    return {
+      labels: tickValuesToNumbers(axis, custom).map(function (numval) {
+        var tick = {
+          value: numval
+        };
+        return {
+          formattedLabel: labelFormatter_1(tick),
+          rawLabel: axis.scale.getLabel(tick),
+          tickValue: numval
+        };
+      })
+    };
+  }
   // Only ordinal scale support tick interval
   return axis.type === 'category' ? makeCategoryLabels(axis) : makeRealNumberLabels(axis);
 }
@@ -33351,6 +33391,12 @@ function createAxisLabels(axis) {
  * }
  */
 function createAxisTicks(axis, tickModel) {
+  var custom = axis.getTickModel().get('customValues');
+  if (custom) {
+    return {
+      ticks: tickValuesToNumbers(axis, custom)
+    };
+  }
   // Only ordinal scale support tick interval
   return axis.type === 'category' ? makeCategoryTicks(axis, tickModel) : {
     ticks: map(axis.scale.getTicks(), function (tick) {
@@ -41354,6 +41400,10 @@ function pieLayout(seriesType, ecModel, api) {
     var halfPadAngle = dir * padAngle / 2;
     normalizeArcAngles(angles, !clockwise);
     startAngle = angles[0], endAngle = angles[1];
+    var layoutData = getSeriesLayoutData(seriesModel);
+    layoutData.startAngle = startAngle;
+    layoutData.endAngle = endAngle;
+    layoutData.clockwise = clockwise;
     var angleRange = Math.abs(endAngle - startAngle);
     // In the case some sector angle is smaller than minAngle
     var restAngle = angleRange;
@@ -41462,6 +41512,7 @@ function pieLayout(seriesType, ecModel, api) {
     }
   });
 }
+var getSeriesLayoutData = makeInner();
 
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
@@ -42142,8 +42193,9 @@ var PieView = /** @class */function (_super) {
     }
     // when all data are filtered, show lightgray empty circle
     if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+      var layoutData = getSeriesLayoutData(seriesModel);
       var sector = new Sector({
-        shape: getBasicPieLayout(seriesModel, api)
+        shape: extend(getBasicPieLayout(seriesModel, api), layoutData)
       });
       sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
       this._emptyCircleSector = sector;
@@ -47898,6 +47950,7 @@ var MapDraw = /** @class */function () {
       this._mouseDownFlag = false;
       updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
       api.dispatchAction(extend(makeActionBase(), {
+        totalZoom: controllerHost.zoom,
         zoom: e.scale,
         originX: e.originX,
         originY: e.originY,
@@ -51348,6 +51401,7 @@ var TreemapSeriesModel = /** @class */function (_super) {
     drillDownIcon: '▶',
     // to align specialized icon. ▷▶❒❐▼✚
     zoomToNodeRatio: 0.32 * 0.32,
+    scaleLimit: null,
     roam: true,
     nodeClick: 'zoomToNode',
     animation: true,
@@ -51863,6 +51917,13 @@ var TreemapView = /** @class */function (_super) {
     var willDeleteEls = clearStorage(oldStorage);
     this._oldTree = thisTree;
     this._storage = thisStorage;
+    if (this._controllerHost) {
+      var _oldRootLayout = this.seriesModel.layoutInfo;
+      var rootLayout = thisTree.root.getLayout();
+      if (rootLayout.width === _oldRootLayout.width && rootLayout.height === _oldRootLayout.height) {
+        this._controllerHost.zoom = 1;
+      }
+    }
     return {
       lastsForAnimation: lastsForAnimation,
       willDeleteEls: willDeleteEls,
@@ -52033,10 +52094,19 @@ var TreemapView = /** @class */function (_super) {
   };
   TreemapView.prototype._resetController = function (api) {
     var controller = this._controller;
+    var controllerHost = this._controllerHost;
+    if (!controllerHost) {
+      this._controllerHost = {
+        target: this.group
+      };
+      controllerHost = this._controllerHost;
+    }
     // Init controller.
     if (!controller) {
       controller = this._controller = new RoamController(api.getZr());
       controller.enable(this.seriesModel.get('roam'));
+      controllerHost.zoomLimit = this.seriesModel.get('scaleLimit');
+      controllerHost.zoom = this.seriesModel.get('zoom');
       controller.on('pan', bind(this._onPan, this));
       controller.on('zoom', bind(this._onZoom, this));
     }
@@ -52047,6 +52117,7 @@ var TreemapView = /** @class */function (_super) {
   };
   TreemapView.prototype._clearController = function () {
     var controller = this._controller;
+    this._controllerHost = null;
     if (controller) {
       controller.dispose();
       controller = null;
@@ -52079,6 +52150,7 @@ var TreemapView = /** @class */function (_super) {
   TreemapView.prototype._onZoom = function (e) {
     var mouseX = e.originX;
     var mouseY = e.originY;
+    var zoomDelta = e.scale;
     if (this._state !== 'animating') {
       // These param must not be cached.
       var root = this.seriesModel.getData().tree.root;
@@ -52090,6 +52162,19 @@ var TreemapView = /** @class */function (_super) {
         return;
       }
       var rect = new BoundingRect(rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height);
+      // scaleLimit
+      var zoomLimit = null;
+      var _controllerHost = this._controllerHost;
+      zoomLimit = _controllerHost.zoomLimit;
+      var newZoom = _controllerHost.zoom = _controllerHost.zoom || 1;
+      newZoom *= zoomDelta;
+      if (zoomLimit) {
+        var zoomMin = zoomLimit.min || 0;
+        var zoomMax = zoomLimit.max || Infinity;
+        newZoom = Math.max(Math.min(zoomMax, newZoom), zoomMin);
+      }
+      var zoomScale = newZoom / _controllerHost.zoom;
+      _controllerHost.zoom = newZoom;
       var layoutInfo = this.seriesModel.layoutInfo;
       // Transform mouse coord from global to containerGroup.
       mouseX -= layoutInfo.x;
@@ -52097,7 +52182,7 @@ var TreemapView = /** @class */function (_super) {
       // Scale root bounding rect.
       var m = create$1();
       translate(m, m, [-mouseX, -mouseY]);
-      scale$1(m, m, [e.scale, e.scale]);
+      scale$1(m, m, [zoomScale, zoomScale]);
       translate(m, m, [mouseX, mouseY]);
       rect.applyTransform(m);
       this.api.dispatchAction({
@@ -59520,12 +59605,14 @@ var SankeyView = /** @class */function (_super) {
       var dragX = itemModel.get('localX');
       var dragY = itemModel.get('localY');
       var emphasisModel = itemModel.getModel('emphasis');
+      var borderRadius = itemModel.get(['itemStyle', 'borderRadius']) || 0;
       var rect = new Rect({
         shape: {
           x: dragX != null ? dragX * width : layout.x,
           y: dragY != null ? dragY * height : layout.y,
           width: layout.dx,
-          height: layout.dy
+          height: layout.dy,
+          r: borderRadius
         },
         style: itemModel.getModel('itemStyle').getItemStyle(),
         z2: 10
@@ -69028,7 +69115,9 @@ function barLayoutPolar(seriesType, ecModel, api) {
     var baseDim = data.mapDimension(baseAxis.dim);
     var stacked = isDimensionStacked(data, valueDim /* , baseDim */);
     var clampLayout = baseAxis.dim !== 'radius' || !seriesModel.get('roundCap', true);
-    var valueAxisStart = valueAxis.dataToCoord(0);
+    var valueAxisModel = valueAxis.model;
+    var startValue = valueAxisModel.get('startValue');
+    var valueAxisStart = valueAxis.dataToCoord(startValue || 0);
     for (var idx = 0, len = data.count(); idx < len; idx++) {
       var value = data.get(valueDim, idx);
       var baseValue = data.get(baseDim, idx);
@@ -72431,7 +72520,6 @@ function isUserFeatureName(featureName) {
   return featureName.indexOf('my') === 0;
 }
 
-/* global window, document */
 var SaveAsImage = /** @class */function (_super) {
   __extends(SaveAsImage, _super);
   function SaveAsImage() {
@@ -72451,7 +72539,7 @@ var SaveAsImage = /** @class */function (_super) {
     });
     var browser = env.browser;
     // Chrome, Firefox, New Edge
-    if (isFunction(MouseEvent) && (browser.newEdge || !browser.ie && !browser.edge)) {
+    if (typeof MouseEvent === 'function' && (browser.newEdge || !browser.ie && !browser.edge)) {
       var $a = document.createElement('a');
       $a.download = title + '.' + type;
       $a.target = '_blank';
@@ -74729,9 +74817,11 @@ var TooltipView = /** @class */function (_super) {
     });
   };
   TooltipView.prototype._showComponentItemTooltip = function (e, el, dispatchAction) {
+    var isHTMLRenderMode = this._renderMode === 'html';
     var ecData = getECData(el);
     var tooltipConfig = ecData.tooltipConfig;
     var tooltipOpt = tooltipConfig.option || {};
+    var encodeHTMLContent = tooltipOpt.encodeHTMLContent;
     if (isString(tooltipOpt)) {
       var content = tooltipOpt;
       tooltipOpt = {
@@ -74739,6 +74829,15 @@ var TooltipView = /** @class */function (_super) {
         // Fixed formatter
         formatter: content
       };
+      // when `tooltipConfig.option` is a string rather than an object,
+      // we can't know if the content needs to be encoded
+      // for the sake of security, encode it by default.
+      encodeHTMLContent = true;
+    }
+    if (encodeHTMLContent && isHTMLRenderMode && tooltipOpt.content) {
+      // clone might be unnecessary?
+      tooltipOpt = clone(tooltipOpt);
+      tooltipOpt.content = encodeHTML(tooltipOpt.content);
     }
     var tooltipModelCascade = [tooltipOpt];
     var cmpt = this._ecModel.getComponent(ecData.componentMainType, ecData.componentIndex);
@@ -77169,6 +77268,16 @@ var MarkerModel = /** @class */function (_super) {
   };
   MarkerModel.prototype.setData = function (data) {
     this._data = data;
+  };
+  MarkerModel.prototype.getDataParams = function (dataIndex, dataType) {
+    var params = DataFormatMixin.prototype.getDataParams.call(this, dataIndex, dataType);
+    var hostSeries = this.__hostSeries;
+    if (hostSeries) {
+      params.seriesId = hostSeries.id;
+      params.seriesName = hostSeries.name;
+      params.seriesType = hostSeries.subType;
+    }
+    return params;
   };
   MarkerModel.getMarkerModelFromSeries = function (seriesModel,
   // Support three types of markers. Strict check.
@@ -83042,13 +83151,17 @@ function ariaVisual(ecModel, api) {
     }
   }
   function setLabel() {
+    var dom = api.getZr().dom;
+    // TODO: support for SSR
+    if (!dom) {
+      return;
+    }
     var labelLocale = ecModel.getLocaleModel().get('aria');
     var labelModel = ariaModel.getModel('label');
     labelModel.option = defaults(labelModel.option, labelLocale);
     if (!labelModel.get('enabled')) {
       return;
     }
-    var dom = api.getZr().dom;
     if (labelModel.get('description')) {
       dom.setAttribute('aria-label', labelModel.get('description'));
       return;
