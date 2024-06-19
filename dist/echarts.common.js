@@ -14837,6 +14837,7 @@
         name: itemName,
         option: defaults({
           content: itemName,
+          encodeHTMLContent: true,
           formatterParams: formatterParams
         }, itemTooltipOptionObj)
       };
@@ -51155,9 +51156,11 @@
         });
       };
       TooltipView.prototype._showComponentItemTooltip = function (e, el, dispatchAction) {
+        var isHTMLRenderMode = this._renderMode === 'html';
         var ecData = getECData(el);
         var tooltipConfig = ecData.tooltipConfig;
         var tooltipOpt = tooltipConfig.option || {};
+        var encodeHTMLContent = tooltipOpt.encodeHTMLContent;
         if (isString(tooltipOpt)) {
           var content = tooltipOpt;
           tooltipOpt = {
@@ -51165,6 +51168,15 @@
             // Fixed formatter
             formatter: content
           };
+          // when `tooltipConfig.option` is a string rather than an object,
+          // we can't know if the content needs to be encoded
+          // for the sake of security, encode it by default.
+          encodeHTMLContent = true;
+        }
+        if (encodeHTMLContent && isHTMLRenderMode && tooltipOpt.content) {
+          // clone might be unnecessary?
+          tooltipOpt = clone(tooltipOpt);
+          tooltipOpt.content = encodeHTML(tooltipOpt.content);
         }
         var tooltipModelCascade = [tooltipOpt];
         var cmpt = this._ecModel.getComponent(ecData.componentMainType, ecData.componentIndex);

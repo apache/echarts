@@ -14576,6 +14576,7 @@
         name: itemName,
         option: defaults({
           content: itemName,
+          encodeHTMLContent: true,
           formatterParams: formatterParams
         }, itemTooltipOptionObj)
       };
