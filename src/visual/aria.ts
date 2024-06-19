@@ -154,6 +154,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
         }
 
         if (labelModel.get('description')) {
+            dom.setAttribute('role', 'region');
             dom.setAttribute('aria-label', labelModel.get('description'));
             return;
         }
@@ -241,6 +242,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             const endSeparator = separatorModel.get('end');
             ariaLabel += seriesLabels.join(middleSeparator) + endSeparator;
 
+            dom.setAttribute('role', 'region');
             dom.setAttribute('aria-label', ariaLabel);
         }
     }
