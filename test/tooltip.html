@@ -785,12 +785,25 @@ under the License.
         <script>
 
             require(['echarts'], function (echarts) {
+                // 鼠标悬停在图例名称处将显示图片
+                const legendName1 =
+                    '<img src="https://echarts.apache.org/en/images/favicon.png" />';
+                // 鼠标悬停在图例名称处将清空 HTML 并显示 XSS
+                const legendName2 =
+                    '<img src="https://echarts.apache.org/en/images/favicon.png1111" onerror="document.body.innerHTML = \'XSS\'" />';
+
+                let renderMode = 'html';
+
                 var option = {
+                    title: {
+                        text: renderMode
+                    },
                     tooltip: {
-                        trigger: 'axis'
+                        trigger: 'axis',
+                        renderMode
                     },
                     legend: {
-                        data: ['<img onerror=alert(1)/>'],
+                        data: [legendName1, legendName2],
                         tooltip: {
                             show: true
                         }
@@ -800,20 +813,36 @@ under the License.
                         data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
                     },
                     yAxis: {},
+                    toolbox: {
+                        feature: {
+                            myTool2: {
+                                show: true,
+                                title: 'Switch renderMode',
+                                icon: 'image://https://echarts.apache.org/en/images/favicon.png',
+                                onclick() {
+                                    renderMode = renderMode === 'html' ? 'richText' : 'html'
+                                    option.tooltip.renderMode
+                                        = option.title.text
+                                        = renderMode
+                                    chart.setOption(option, true)
+                                }
+                            }
+                        }
+                    },
                     series: [
                         {
-                            name: '<img onerror=alert(1)/>',
+                            name: legendName1,
                             type: 'line',
-                            stack: 'Total',
-                            areaStyle: {},
-                            emphasis: {
-                                focus: 'series'
-                            },
                             data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: legendName2,
+                            type: 'line',
+                            data: [145, 240, 188, 169, 155, 174, 260]
                         }
                     ]
                 };
-                createChart('tooltip-legend-xss', echarts, option, 500);
+                var chart = createChart('tooltip-legend-xss', echarts, option, 500);
             })
         </script>
 
