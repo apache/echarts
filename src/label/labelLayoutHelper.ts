@@ -317,12 +317,11 @@ export function hideOverlap(labelList: LabelLayoutInfo[]) {
         const labelLine = labelItem.labelLine;
 
         // if the label has no text, remove it as a candidate for overlap checking
-        if (label.style?.text === ""){
+        if (label.style?.text === '') {
             hideEl(label);
             labelLine && hideEl(labelLine);
             continue;
         }
-        
         globalRect.copy(labelItem.rect);
         // Add a threshold because layout may be aligned precisely.
         globalRect.width -= 0.1;
