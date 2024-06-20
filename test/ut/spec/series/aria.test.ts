@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 import { EChartsType } from '@/src/echarts';
-import { createChart } from '../../core/utHelper';
+import { createChart, getECModel } from '../../core/utHelper';
 
 describe('omit some aria data', function() {
 
@@ -59,12 +58,12 @@ describe('omit some aria data', function() {
         expect(ariaValue).not.toContain('Tue');
     });
 
-    it('data for columns in columnsToExclude (first and seventh, Monday and Sunday) should be omitted from Aria', async () => {
+    it('data for graph should not be omitted', async () => {
         const option = {
             aria: {
                 enabled: true,
                 data: {
-                    columnsToExclude: [0,6]
+                    columnsToExclude: [0]
                 }
             },
             xAxis: {
@@ -82,10 +81,71 @@ describe('omit some aria data', function() {
             ]
         };
         chart.setOption(option);
+        const listData = getECModel(chart).getSeries()[0].getData();
+        expect(listData.getName(0)).toEqual('Mon');
+        expect(listData.getValues(0)).toEqual([0, 150]);
+        expect(listData.count()).toEqual(7);
+    });
+
+    it('aria should be omitted correctly in nested array', async () => {
+        const option = {
+            aria: {
+                enabled: true,
+                data: {
+                    columnsToExclude: [0]
+                }
+            },
+            xAxis: {
+                data: ['2017-10-24', '2017-10-25', '2017-10-26', '2017-10-27']
+            },
+            yAxis: {},
+            series: [
+                {
+                    type: 'candlestick',
+                    data: [
+                        [20, 34, 10, 38],
+                        [40, 35, 30, 50],
+                        [31, 38, 33, 44],
+                        [38, 15, 5, 42]
+                    ]
+                }
+            ]
+        };
+        chart.setOption(option);
         const el = chart.getDom();
         const ariaValue = el.getAttribute('aria-label');
-        expect(ariaValue).not.toContain('Mon');
-        expect(ariaValue).not.toContain('Sun');
+        expect(ariaValue).not.toContain('2017-10-24');
+    });
+
+
+    it('data for graph should not be omitted', async () => {
+        const option = {
+            aria: {
+                enabled: true,
+                data: {
+                    columnsToExclude: [0]
+                }
+            },
+            xAxis: {
+                data: ['2017-10-24', '2017-10-25', '2017-10-26', '2017-10-27']
+            },
+            yAxis: {},
+            series: [
+                {
+                    type: 'candlestick',
+                    data: [
+                        [20, 34, 10, 38],
+                        [40, 35, 30, 50],
+                        [31, 38, 33, 44],
+                        [38, 15, 5, 42]
+                    ]
+                }
+            ]
+        };
+        chart.setOption(option);
+        const listData = getECModel(chart).getSeries()[0].getData();
+        expect(listData.getName(0)).toEqual('2017-10-24');
+        expect(listData.count()).toEqual(4);
     });
 
 });
