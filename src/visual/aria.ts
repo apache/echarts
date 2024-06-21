@@ -153,8 +153,9 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             return;
         }
 
+        dom.setAttribute('role', 'img');
+
         if (labelModel.get('description')) {
-            dom.setAttribute('role', 'img');
             dom.setAttribute('aria-label', labelModel.get('description'));
             return;
         }
@@ -242,7 +243,6 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             const endSeparator = separatorModel.get('end');
             ariaLabel += seriesLabels.join(middleSeparator) + endSeparator;
 
-            dom.setAttribute('role', 'img');
             dom.setAttribute('aria-label', ariaLabel);
         }
     }
