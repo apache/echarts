@@ -153,6 +153,8 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             return;
         }
 
+        dom.setAttribute('role', 'img');
+
         if (labelModel.get('description')) {
             dom.setAttribute('aria-label', labelModel.get('description'));
             return;
