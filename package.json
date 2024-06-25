@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "5.5.0"
+    "zrender": "^5.5.0"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
@@ -100,7 +100,7 @@
     "semver": "6.3.0",
     "terser": "^5.16.1",
     "ts-jest": "^26.4.3",
-    "typescript": "4.4.3"
+    "typescript": "^4.4.3"
   },
   "type": "module",
   "exports": {
