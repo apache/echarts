@@ -619,11 +619,12 @@ class SliderZoomView extends DataZoomView {
             sliderGroup.add(handles[handleIndex] = path);
 
             const textStyleModel = dataZoomModel.getModel('textStyle');
+            const handleLabelShow = dataZoomModel.get('handleLabelShow');
 
             thisGroup.add(
                 handleLabels[handleIndex] = new graphic.Text({
                 silent: true,
-                invisible: true,
+                invisible: !handleLabelShow,
                 style: createTextStyle(textStyleModel, {
                     x: 0, y: 0, text: '',
                     verticalAlign: 'middle',
@@ -885,19 +886,24 @@ class SliderZoomView extends DataZoomView {
     }
 
     /**
-     * @param showOrHide true: show, false: hide
+     * @param isEmphasis true: show, false: hide
      */
-    private _showDataInfo(showOrHide?: boolean) {
-        // Always show when drgging.
-        showOrHide = this._dragging || showOrHide;
+    private _showDataInfo(isEmphasis?: boolean) {
+        const normalShow = this.dataZoomModel.get('handleLabelShow');
+        const emphasisShow = this.dataZoomModel.getModel('emphasis')
+            .get('handleLabelShow');
+        // Dragging is considered as emphasis
+        const toShow = isEmphasis
+            ? (emphasisShow || this._dragging)
+            : normalShow;
         const displayables = this._displayables;
         const handleLabels = displayables.handleLabels;
-        handleLabels[0].attr('invisible', !showOrHide);
-        handleLabels[1].attr('invisible', !showOrHide);
+        handleLabels[0].attr('invisible', !toShow);
+        handleLabels[1].attr('invisible', !toShow);
 
         // Highlight move handle
         displayables.moveHandle
-            && this.api[showOrHide ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
+            && this.api[toShow ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
     }
 
     private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
