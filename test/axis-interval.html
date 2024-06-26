@@ -69,6 +69,8 @@ under the License.
     </div>
 
     <div class="chart" id="main5"></div>
+    <div class="chart" id="main60"></div>
+    <div class="chart" id="main61"></div>
 
 
     <script>
@@ -533,8 +535,151 @@ under the License.
         </script>
 
 
+<script>
+
+    require([
+        'echarts'
+    ], function (echarts) {
+
+        var option = {
+            color: ['#1890ff'],
+            grid: {
+                top: 30,
+                bottom: 20,
+                left: 50,
+                right: 50,
+            },
+            xAxis: {
+                type: 'time',
+                interval: 43200000,
+                min: 1649740400000,
+                max: 1650199600000,
+                axisLabel: {
+                    formatter: '{MM}-{dd} {HH}:{mm}',
+                },
+            },
+            yAxis: {
+                type: 'value',
+                name: '数量',
+                minInterval: 1,
+                splitLine: {
+                    lineStyle: {
+                        type: 'dashed',
+                    },
+                },
+            },
+            series: [
+                {
+                    name: '数量',
+                    data: [
+                        [
+                        1649926800000,4
+                        ],
+                        [
+                        1650013200000,4
+                        ],
+                        [
+                        1650099600000,4
+                        ],
+                        [
+                        1649840400000,4
+                        ],
+                        [
+                        1649754000000,4
+                        ],
+                    ],
+                    type: 'bar',
+                    barCategoryGap: '2%',
+                    barWidth: '98%',
+                    symbol: 'none',
+                },
+            ],
+            tooltip: {
+                show: true,
+                trigger: 'axis',
+            },
+            toolbox: {
+                show: false,
+            },
+            brush: {
+                throttleType: 'debounce',
+                xAxisIndex: 'all',
+                brushLink: 'all',
+                outOfBrush: {
+                    colorAlpha: 0.1,
+                },
+            },
+        };
+
+        testHelper.create(echarts, 'main60', {
+            title: 'xAxis (type: time) should always be 12 hours interval',
+            option: option
+        });
+    });
+
+</script>
+
+<script>
+
+    require([
+        'echarts'
+    ], function (echarts) {
+
+        var data = [
+            [1650511428000, 22],
+            [1650511438000, 22],
+            [1650511458000, 22]
+        ];
+        option = {
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+            type: 'cross'
+            }
+        },
+        xAxis: {
+            type: 'time',
+            name: '时间',
+            interval: 600000, //10分钟
+            min: 1650506400000,
+            max: 1650513600000,
+            axisLabel: {}
+        },
+        grid: {
+            top: 40,
+            left: 60,
+            right: 40,
+            bottom: 40
+        },
+        yAxis: {
+            type: 'value',
+            name: '温度℃',
+            min: 0,
+            interval: 33,
+            axisLabel: {
+            show: true
+            },
+            max: 528
+        },
+        series: [
+            {
+            name: '温度',
+            data: data,
+            type: 'line',
+            smooth: true,
+            showSymbol: false
+            }
+        ]
+        };
 
 
+        testHelper.create(echarts, 'main61', {
+            title: 'xAxis (type: time) should always be 10 minutes interval',
+            option: option
+        });
+    });
+
+</script>
 
 </body>
 
