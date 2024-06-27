@@ -892,9 +892,9 @@ class SliderZoomView extends DataZoomView {
         const normalShow = this.dataZoomModel.get('handleLabelShow');
         const emphasisShow = this.dataZoomModel.getModel('emphasis')
             .get('handleLabelShow');
-        // Dragging is considered as emphasis
-        const toShow = isEmphasis
-            ? (emphasisShow || this._dragging)
+        // Dragging is considered as emphasis, unless emphasisShow is false
+        const toShow = (isEmphasis || this._dragging)
+            ? emphasisShow
             : normalShow;
         const displayables = this._displayables;
         const handleLabels = displayables.handleLabels;
