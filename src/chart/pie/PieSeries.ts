@@ -50,10 +50,18 @@ interface PieItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParam
     // which means that innerCornerRadius is 20% of the innerRadius
     // and outerCornerRadius is half of outerRadius.
     borderRadius?: (number | string)[] | number | string
+
+    // The radius of each pie item can be adjusted depends on this value.
+    // Value (or returned value in case of function) should be a decimal between 0 and 1,
+    // where 0 means the minimum outer radius from the initially calculated radius of the element,
+    // and 1 means 100% of initial outer radius.
+    radiusPercent?: number | ((dataParams: PieCallbackDataParams) => number)
 }
 
 export interface PieCallbackDataParams extends CallbackDataParams {
     percent: number
+    max?: number
+    sum?: number
 }
 
 export interface PieStateOption<TCbParams = never> {
@@ -131,6 +139,9 @@ export interface PieSeriesOption extends
     showEmptyCircle?: boolean;
     emptyCircleStyle?: PieItemStyleOption;
 
+    showBackground?: boolean
+    backgroundStyle?: PieItemStyleOption
+
     data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | PieDataItemOption)[]
 }
 
@@ -179,12 +190,13 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      */
     getDataParams(dataIndex: number): PieCallbackDataParams {
         const data = this.getData();
+        const valueDim = data.mapDimension('value');
         // update seats when data is changed
         const dataInner = innerData(data);
         let seats = dataInner.seats;
         if (!seats) {
             const valueList: number[] = [];
-            data.each(data.mapDimension('value'), function (value: number) {
+            data.each(valueDim, function (value: number) {
                 valueList.push(value);
             });
             seats = dataInner.seats = getPercentSeats(valueList, data.hostModel.get('percentPrecision'));
@@ -193,6 +205,13 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // seats may be empty when sum is 0
         params.percent = seats[dataIndex] || 0;
         params.$vars.push('percent');
+
+        const radiusPercent = data.hostModel.get(['itemStyle', 'radiusPercent']);
+        if (radiusPercent != null) {
+            // useful variables for custom percentage calculations in formatters etc.
+            params.max = data.getDataExtent(valueDim)[1];
+            params.sum = data.getSum(valueDim);
+        }
         return params;
     }
 
@@ -296,6 +315,11 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         showEmptyCircle: true,
         emptyCircleStyle: {
             color: 'lightgray',
+            opacity: 1
+        },
+
+        showBackground: false,
+        backgroundStyle: {
             opacity: 1
         },
 
