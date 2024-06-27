@@ -25,7 +25,6 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import { isFunction } from 'zrender/src/core/util';
-import GlobalModel from '../../model/Global';
 
 type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
     lineStyle?: { width?: number }
@@ -34,7 +33,6 @@ function createGridClipPath(
     cartesian: Cartesian2D,
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth,
-    ecModel?: GlobalModel,
     done?: () => void,
     during?: (percent: number, clipRect: graphic.Rect) => void
 ) {
@@ -152,7 +150,6 @@ function createClipPath(
     coordSys: CoordinateSystem,
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth,
-    ecModel?:GlobalModel,
     done?: () => void,
     during?: (percent: number) => void
 ) {
@@ -163,7 +160,7 @@ function createClipPath(
         return createPolarClipPath(coordSys as Polar, hasAnimation, seriesModel);
     }
     else if (coordSys.type === 'cartesian2d') {
-        return createGridClipPath(coordSys as Cartesian2D, hasAnimation, seriesModel, ecModel, done, during);
+        return createGridClipPath(coordSys as Cartesian2D, hasAnimation, seriesModel, done, during);
     }
     return null;
 }
