@@ -26,7 +26,6 @@ import type Polar from '../../coord/polar/Polar';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import { isFunction } from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import AxisModel from '../../coord/cartesian/AxisModel';
 
 type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
     lineStyle?: { width?: number }
@@ -46,14 +45,12 @@ function createGridClipPath(
     let width = rect.width;
     let height = rect.height;
 
+    const lineWidth = seriesModel.get(['lineStyle', 'width']) || 0;
     // Expand the clip path a bit to avoid the border is clipped and looks thinner
-    const xAxisModel = ecModel.getComponent('xAxis', 0) as AxisModel;
-    const yAxisModel = ecModel.getComponent('yAxis', 0) as AxisModel;
-    const xAisWidth = xAxisModel.get(['axisLine', 'lineStyle']).width || 2;
-    const yAxisWidth = yAxisModel.get(['axisLine', 'lineStyle']).width || 2;
-    x += xAisWidth / 2;
-    width -= xAisWidth / 2;
-    height -= yAxisWidth / 2;
+    x -= lineWidth / 2;
+    y -= lineWidth / 2;
+    width += lineWidth - 1;
+    height += lineWidth;
 
     // fix: https://github.com/apache/incubator-echarts/issues/11369
     width = Math.ceil(width);

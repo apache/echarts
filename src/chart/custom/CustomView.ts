@@ -243,7 +243,7 @@ export default class CustomChartView extends ChartView {
 
         // Do clipping
         const clipPath = customSeries.get('clip', true)
-            ? createClipPath(customSeries.coordinateSystem, false, customSeries, ecModel)
+            ? createClipPath(customSeries.coordinateSystem, false, customSeries)
             : null;
         if (clipPath) {
             group.setClipPath(clipPath);
