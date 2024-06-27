@@ -49,7 +49,7 @@ function createGridClipPath(
     // Expand the clip path a bit to avoid the border is clipped and looks thinner
     x -= lineWidth / 2;
     y -= lineWidth / 2;
-    width += lineWidth - 1;
+    width += lineWidth;
     height += lineWidth;
 
     // fix: https://github.com/apache/incubator-echarts/issues/11369
