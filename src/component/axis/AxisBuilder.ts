@@ -26,9 +26,9 @@ import {createTextStyle} from '../../label/labelStyle';
 import Model from '../../model/Model';
 import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
+import { estimateLabelUnionRect, shouldShowAllLabels } from '../../coord/axisHelper';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
@@ -236,7 +236,8 @@ interface AxisElementsBuilder {
         opt: AxisBuilderCfg,
         axisModel: AxisBaseModel,
         group: graphic.Group,
-        transformGroup: graphic.Group
+        transformGroup: graphic.Group,
+        labelGap?: number
     ):void
 }
 
@@ -367,29 +368,47 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
     },
 
     axisName(opt, axisModel, group, transformGroup) {
+        function calcDistanceToAxis() {
+            const defaultMargin = 10;
+            const axis = axisModel.axis;
+            const isHorizontal = axis.isHorizontal();
+            const labelUnionRect = estimateLabelUnionRect(axis);
+            if (!labelUnionRect) {
+                return 0;
+            }
+            const dim = isHorizontal ? 'height' : 'width';
+            const margin = axisModel.getModel('axisLabel').get('margin');
+            return labelUnionRect[dim] + margin + defaultMargin;
+        }
         const name = retrieve(opt.axisName, axisModel.get('name'));
 
         if (!name) {
             return;
         }
-
+        const isOutside = name === 'outsideStart' || name === 'outsideMiddle' || name === 'outsideEnd';
+        const labelGap =  isOutside ? calcDistanceToAxis() : 0;
         const nameLocation = axisModel.get('nameLocation');
         const nameDirection = opt.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
-        const gap = axisModel.get('nameGap') || 0;
-
+        const gap = (axisModel.get('nameGap') || 0);
         const extent = axisModel.axis.getExtent();
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
+
         const pos = [
             nameLocation === 'start'
                 ? extent[0] - gapSignal * gap
+                : nameLocation === 'outsideStart'
+                ? extent[0] + gapSignal * (gap) + (nameDirection * labelGap)
                 : nameLocation === 'end'
                 ? extent[1] + gapSignal * gap
-                : (extent[0] + extent[1]) / 2, // 'middle'
+                : nameLocation === 'outsideEnd'
+                ? extent[1] - gapSignal * (gap) - (nameDirection * labelGap)
+                : (extent[0] + extent[1]) / 2, // 'middle' or 'outsideMiddle'
             // Reuse labelOffset.
-            isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
+            isNameLocationCenter(nameLocation)
+            ? opt.labelOffset + nameDirection * (gap + (isNameLocationOutside(nameLocation) ? labelGap : 0))
+            : isNameLocationOutside(nameLocation) ? nameDirection * (gap + labelGap) : 0
         ];
-
         let labelLayout;
 
         let nameRotation = axisModel.get('nameRotate');
@@ -477,15 +496,16 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
 };
 
-function endTextLayout(
-    rotation: number, textPosition: 'start' | 'middle' | 'end', textRotate: number, extent: number[]
-) {
+function endTextLayout(rotation: number,
+    textPosition: 'start' | 'middle' | 'end' | 'outsideStart' | 'outsideMiddle' | 'outsideEnd',
+    textRotate: number, extent: number[]) {
     const rotationDiff = remRadian(textRotate - rotation);
     let textAlign: ZRTextAlign;
     let textVerticalAlign: ZRTextVerticalAlign;
     const inverse = extent[0] > extent[1];
-    const onLeft = (textPosition === 'start' && !inverse)
-        || (textPosition !== 'start' && inverse);
+    const textIsStart = textPosition === 'start' || textPosition === 'outsideStart';
+    const onLeft = ((textIsStart) && !inverse)
+        || (!textIsStart && inverse);
 
     if (isRadianAroundZero(rotationDiff - PI / 2)) {
         textVerticalAlign = onLeft ? 'bottom' : 'top';
@@ -602,9 +622,12 @@ function isTwoLabelOverlapped(
 }
 
 function isNameLocationCenter(nameLocation: string) {
-    return nameLocation === 'middle' || nameLocation === 'center';
+    return nameLocation === 'middle' || nameLocation === 'center' || nameLocation === 'outsideMiddle';
 }
 
+function isNameLocationOutside(nameLocation: string) {
+    return nameLocation === 'outsideStart' || nameLocation === 'outsideMiddle' || nameLocation === 'outsideEnd';
+}
 
 function createTicks(
     ticksCoords: TickCoord[],
