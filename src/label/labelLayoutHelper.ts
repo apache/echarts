@@ -315,7 +315,6 @@ export function hideOverlap(labelList: LabelLayoutInfo[]) {
         const transform = labelItem.transform;
         const label = labelItem.label;
         const labelLine = labelItem.labelLine;
-
         globalRect.copy(labelItem.rect);
         // Add a threshold because layout may be aligned precisely.
         globalRect.width -= 0.1;
