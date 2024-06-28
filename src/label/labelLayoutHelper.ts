@@ -316,18 +316,19 @@ export function hideOverlap(labelList: LabelLayoutInfo[]) {
         const label = labelItem.label;
         const labelLine = labelItem.labelLine;
 
-        // if the label has no text, remove it as a candidate for overlap checking
-        if (label.style?.text === '') {
-            hideEl(label);
-            labelLine && hideEl(labelLine);
-            continue;
-        }
         globalRect.copy(labelItem.rect);
         // Add a threshold because layout may be aligned precisely.
         globalRect.width -= 0.1;
         globalRect.height -= 0.1;
         globalRect.x += 0.05;
         globalRect.y += 0.05;
+        // if a labels bounding rect has no width or height (i.e. no text)
+        // it should not be shown
+        if (globalRect.width <= 0 && globalRect.height <= 0) {
+          hideEl(label);
+          labelLine && hideEl(labelLine);
+          continue;
+        }
 
         let obb = labelItem.obb;
         let overlapped = false;
