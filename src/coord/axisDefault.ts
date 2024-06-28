@@ -97,7 +97,9 @@ const defaultOption: AxisBaseOption = {
             color: ['#E0E6F1'],
             width: 1,
             type: 'solid'
-        }
+        },
+        showMinLine: true,
+        showMaxLine: true
     },
     splitArea: {
         show: false,
