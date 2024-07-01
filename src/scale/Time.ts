@@ -243,7 +243,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     }
 
     normalize(val: number): number {
-        return scaleHelper.normalize(this.parse(val), this._extent, this._breaks);
+        return scaleHelper.normalize(this.parse(val), this._extent, false, this._breaks);
     }
 
     scale(val: number): number {

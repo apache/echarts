@@ -28,8 +28,6 @@ import Grid from './Grid';
 import Scale from '../../scale/Scale';
 import { invert } from 'zrender/src/core/matrix';
 import { applyTransform } from 'zrender/src/core/vector';
-import CompoundPath from 'zrender/src/graphic/CompoundPath';
-import { Rect } from '../../util/graphic';
 
 export const cartesian2DDimensions = ['x', 'y'];
 

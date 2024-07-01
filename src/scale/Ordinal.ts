@@ -156,7 +156,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      */
     normalize(val: OrdinalRawValue | OrdinalNumber): number {
         val = this._getTickNumber(this.parse(val));
-        return scaleHelper.normalize(val, this._extent, this._breaks);
+        return scaleHelper.normalize(val, this._extent, true, this._breaks);
     }
 
     /**
@@ -174,7 +174,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         let rank = extent[0];
 
         while (rank <= extent[1]) {
-            if (!this.getBreakIndex(rank)) {
+            if (this.getBreakIndex(rank) < 0) {
                 ticks.push({
                     value: rank
                 });

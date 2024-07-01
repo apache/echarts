@@ -183,7 +183,7 @@ class LogScale extends Scale {
 
     normalize(val: number): number {
         val = mathLog(val) / mathLog(this.base);
-        return scaleHelper.normalize(val, this._extent, this._breaks);
+        return scaleHelper.normalize(val, this._extent, false, this._breaks);
     }
 
     scale(val: number): number {

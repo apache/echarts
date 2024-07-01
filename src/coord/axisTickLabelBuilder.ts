@@ -190,7 +190,7 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
     }
 
     ticks = zrUtil.filter(ticks, tick => {
-        return !axis.scale.getBreakIndex(tick);
+        return axis.scale.getBreakIndex(tick) < 0;
     });
 
     // Cache to avoid calling interval function repeatedly.
@@ -435,7 +435,7 @@ function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: numbe
     }
 
     function addItem(tickValue: number) {
-        if (!scale.getBreakIndex(tickValue)) {
+        if (scale.getBreakIndex(tickValue) < 0) {
             const tickObj = { value: tickValue };
             result.push(onlyTick
                 ? tickValue

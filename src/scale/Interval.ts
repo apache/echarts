@@ -46,7 +46,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     }
 
     normalize(val: number): number {
-        return helper.normalize(val, this._extent, this._breaks);
+        return helper.normalize(val, this._extent, false, this._breaks);
     }
 
     scale(val: number): number {
@@ -119,7 +119,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         let tick = niceTickExtent[0];
 
         while (tick <= niceTickExtent[1]) {
-            if (!this.getBreakIndex(tick)) {
+            if (this.getBreakIndex(tick) < 0) {
                 ticks.push({
                     value: tick
                 });
