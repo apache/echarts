@@ -117,6 +117,9 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
     // true: show all symbols.
     showAllSymbol?: 'auto' | boolean
 
+    // work when showSymbol
+    showDisconnectSymbol?: 'auto' | true,
+
     data?: (LineDataValue | LineDataItemOption)[]
 
     triggerLineEvent?: boolean
@@ -196,6 +199,10 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         // `'auto'`: If possible, show all symbols, otherwise
         //           follow the label interval strategy.
         showAllSymbol: 'auto',
+
+        // `true`: when `showSymbol` is false, will show symbol between null value.
+        // `auto`: follow `showSymbol` value
+        showDisconnectSymbol: 'auto',
 
         // Whether to connect break point.
         connectNulls: false,
