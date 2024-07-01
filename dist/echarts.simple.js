@@ -176,7 +176,7 @@
                 else {
                     text = text || '';
                     font = font || DEFAULT_FONT;
-                    var res = /(\d+)px/.exec(font);
+                    var res = /((?:\d+)?\.?\d*)px/.exec(font);
                     var fontSize = res && +res[1] || DEFAULT_FONT_SIZE;
                     var width = 0;
                     if (font.indexOf('mono') >= 0) {
@@ -7231,7 +7231,7 @@
     function registerSSRDataGetter(getter) {
         ssrDataGetter = getter;
     }
-    var version = '5.5.0';
+    var version = '5.6.0';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -14576,6 +14576,7 @@
         name: itemName,
         option: defaults({
           content: itemName,
+          encodeHTMLContent: true,
           formatterParams: formatterParams
         }, itemTooltipOptionObj)
       };
@@ -15789,13 +15790,15 @@
       var m = date[minutesGetterName(isUTC)]();
       var s = date[secondsGetterName(isUTC)]();
       var S = date[millisecondsGetterName(isUTC)]();
+      var a = H >= 12 ? 'pm' : 'am';
+      var A = a.toUpperCase();
       var localeModel = lang instanceof Model ? lang : getLocaleModel(lang || SYSTEM_LANG) || getDefaultLocaleModel();
       var timeModel = localeModel.getModel('time');
       var month = timeModel.get('month');
       var monthAbbr = timeModel.get('monthAbbr');
       var dayOfWeek = timeModel.get('dayOfWeek');
       var dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
-      return (template || '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, pad(y % 100 + '', 2)).replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
+      return (template || '').replace(/{a}/g, a + '').replace(/{A}/g, A + '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, pad(y % 100 + '', 2)).replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
     }
     function leveledFormat(tick, idx, formatter, lang, isUTC) {
       var template = null;
@@ -16987,8 +16990,8 @@
       function detectValue(val) {
         var beStr = isString(val);
         // Consider usage convenience, '1', '2' will be treated as "number".
-        // `isFinit('')` get `true`.
-        if (val != null && isFinite(val) && val !== '') {
+        // `Number('')` (or any whitespace) is `0`.
+        if (val != null && Number.isFinite(Number(val)) && val !== '') {
           return beStr ? BE_ORDINAL.Might : BE_ORDINAL.Not;
         } else if (beStr && val !== '-') {
           return BE_ORDINAL.Must;
@@ -19702,7 +19705,7 @@
       return value == null || value === '' ? NaN
       // If string (like '-'), using '+' parse to NaN
       // If object, also parse to NaN
-      : +value;
+      : Number(value);
     }
     var valueParserMap = createHashMap({
       'number': function (val) {
@@ -21653,7 +21656,7 @@
         var task = getCurrentTask(this);
         if (task) {
           var data = task.context.data;
-          return dataType == null ? data : data.getLinkedData(dataType);
+          return dataType == null || !data.getLinkedData ? data : data.getLinkedData(dataType);
         } else {
           // When series is not alive (that may happen when click toolbox
           // restore or setOption with not merge mode), series data may
@@ -25031,9 +25034,9 @@
       return implsStore[name];
     }
 
-    var version$1 = '5.5.0';
+    var version$1 = '5.5.1';
     var dependencies = {
-      zrender: '5.5.0'
+      zrender: '5.6.0'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
@@ -30374,11 +30377,11 @@
                 var value = store.get(stacked ? stackedDimIdx : valueDimIdx, dataIndex);
                 var baseValue = store.get(baseDimIdx, dataIndex);
                 var baseCoord = valueAxisStart;
-                var startValue = void 0;
+                var stackStartValue = void 0;
                 // Because of the barMinHeight, we can not use the value in
                 // stackResultDimension directly.
                 if (stacked) {
-                  startValue = +value - store.get(valueDimIdx, dataIndex);
+                  stackStartValue = +value - store.get(valueDimIdx, dataIndex);
                 }
                 var x = void 0;
                 var y = void 0;
@@ -30387,7 +30390,7 @@
                 if (isValueAxisH) {
                   var coord = cartesian.dataToPoint([value, baseValue]);
                   if (stacked) {
-                    var startCoord = cartesian.dataToPoint([startValue, baseValue]);
+                    var startCoord = cartesian.dataToPoint([stackStartValue, baseValue]);
                     baseCoord = startCoord[0];
                   }
                   x = baseCoord;
@@ -30400,7 +30403,7 @@
                 } else {
                   var coord = cartesian.dataToPoint([baseValue, value]);
                   if (stacked) {
-                    var startCoord = cartesian.dataToPoint([baseValue, startValue]);
+                    var startCoord = cartesian.dataToPoint([baseValue, stackStartValue]);
                     baseCoord = startCoord[1];
                   }
                   x = coord[0] + columnOffset;
@@ -30453,7 +30456,11 @@
     }
     // See cases in `test/bar-start.html` and `#7412`, `#8747`.
     function getValueAxisStart(baseAxis, valueAxis) {
-      return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
+      var startValue = valueAxis.model.get('startValue');
+      if (!startValue) {
+        startValue = 0;
+      }
+      return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? startValue > 0 ? startValue : 1 : startValue));
     }
 
     // FIXME 公用？
@@ -31045,7 +31052,11 @@
         this._dataMax = dataExtent[1];
         var isOrdinal = this._isOrdinal = scale.type === 'ordinal';
         this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
-        var modelMinRaw = this._modelMinRaw = model.get('min', true);
+        var axisMinValue = model.get('min', true);
+        if (axisMinValue == null) {
+          axisMinValue = model.get('startValue', true);
+        }
+        var modelMinRaw = this._modelMinRaw = axisMinValue;
         if (isFunction(modelMinRaw)) {
           // This callback always provides users the full data extent (before data is filtered).
           this._modelMinNum = parseAxisModelMinMax(scale, modelMinRaw({
@@ -32087,7 +32098,36 @@
     });
 
     var inner$5 = makeInner();
+    function tickValuesToNumbers(axis, values) {
+      var nums = map(values, function (val) {
+        return axis.scale.parse(val);
+      });
+      if (axis.type === 'time' && nums.length > 0) {
+        // Time axis needs duplicate first/last tick (see TimeScale.getTicks())
+        // The first and last tick/label don't get drawn
+        nums.sort();
+        nums.unshift(nums[0]);
+        nums.push(nums[nums.length - 1]);
+      }
+      return nums;
+    }
     function createAxisLabels(axis) {
+      var custom = axis.getLabelModel().get('customValues');
+      if (custom) {
+        var labelFormatter_1 = makeLabelFormatter(axis);
+        return {
+          labels: tickValuesToNumbers(axis, custom).map(function (numval) {
+            var tick = {
+              value: numval
+            };
+            return {
+              formattedLabel: labelFormatter_1(tick),
+              rawLabel: axis.scale.getLabel(tick),
+              tickValue: numval
+            };
+          })
+        };
+      }
       // Only ordinal scale support tick interval
       return axis.type === 'category' ? makeCategoryLabels(axis) : makeRealNumberLabels(axis);
     }
@@ -32100,6 +32140,12 @@
      * }
      */
     function createAxisTicks(axis, tickModel) {
+      var custom = axis.getTickModel().get('customValues');
+      if (custom) {
+        return {
+          ticks: tickValuesToNumbers(axis, custom)
+        };
+      }
       // Only ordinal scale support tick interval
       return axis.type === 'category' ? makeCategoryTicks(axis, tickModel) : {
         ticks: map(axis.scale.getTicks(), function (tick) {
@@ -37842,6 +37888,10 @@
         var halfPadAngle = dir * padAngle / 2;
         normalizeArcAngles(angles, !clockwise);
         startAngle = angles[0], endAngle = angles[1];
+        var layoutData = getSeriesLayoutData(seriesModel);
+        layoutData.startAngle = startAngle;
+        layoutData.endAngle = endAngle;
+        layoutData.clockwise = clockwise;
         var angleRange = Math.abs(endAngle - startAngle);
         // In the case some sector angle is smaller than minAngle
         var restAngle = angleRange;
@@ -37950,6 +38000,7 @@
         }
       });
     }
+    var getSeriesLayoutData = makeInner();
 
     /*
     * Licensed to the Apache Software Foundation (ASF) under one
@@ -38630,8 +38681,9 @@
         }
         // when all data are filtered, show lightgray empty circle
         if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+          var layoutData = getSeriesLayoutData(seriesModel);
           var sector = new Sector({
-            shape: getBasicPieLayout(seriesModel, api)
+            shape: extend(getBasicPieLayout(seriesModel, api), layoutData)
           });
           sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
           this._emptyCircleSector = sector;
@@ -41107,13 +41159,17 @@
         }
       }
       function setLabel() {
+        var dom = api.getZr().dom;
+        // TODO: support for SSR
+        if (!dom) {
+          return;
+        }
         var labelLocale = ecModel.getLocaleModel().get('aria');
         var labelModel = ariaModel.getModel('label');
         labelModel.option = defaults(labelModel.option, labelLocale);
         if (!labelModel.get('enabled')) {
           return;
         }
-        var dom = api.getZr().dom;
         if (labelModel.get('description')) {
           dom.setAttribute('aria-label', labelModel.get('description'));
           return;

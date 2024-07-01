@@ -68,7 +68,6 @@ import {
 import { getECData } from './innerStore';
 import ComponentModel from '../model/Component';
 
-
 import {
     updateProps,
     initProps,
@@ -604,6 +603,7 @@ export function setTooltipConfig(opt: {
         name: itemName,
         option: defaults({
             content: itemName,
+            encodeHTMLContent: true,
             formatterParams: formatterParams
         }, itemTooltipOptionObj)
     };

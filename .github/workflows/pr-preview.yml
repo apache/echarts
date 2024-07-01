@@ -25,11 +25,11 @@ jobs:
             return jobsRes.data.jobs.some((job) => job.name.includes('build') && job.conclusion === 'success');
 
     outputs:
-      SHOULD_DEPOLY: ${{ steps.check-build-success.outputs.result }}
+      SHOULD_DEPLOY: ${{ steps.check-build-success.outputs.result }}
 
   deploy:
     needs: [on-success]
-    if: ${{ needs.on-success.outputs.SHOULD_DEPOLY == 'true' }}
+    if: ${{ needs.on-success.outputs.SHOULD_DEPLOY == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -38,7 +38,7 @@ jobs:
           mkdir .actions
           cd .actions
           git clone --depth=1 https://github.com/dawidd6/action-download-artifact.git
-          git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
+          git clone --depth=1 https://github.com/plainheart/maintain-one-comment.git
 
       - name: Fetch PR dist files
         uses: ./.actions/action-download-artifact
@@ -70,7 +70,6 @@ jobs:
           COMMIT_SHA_SHORT: ${{ steps.pr-metadata.outputs.COMMIT_SHA_SHORT }}
         with:
           body: |
-            <!-- ECHARTS_PR_PREVIEW -->
             The changes brought by this PR can be previewed at: https://echarts.apache.org/examples/editor?version=PR-${{ env.PR_NUMBER }}@${{ env.COMMIT_SHA_SHORT }}
           body-include: '<!-- ECHARTS_PR_PREVIEW -->'
           number: ${{ env.PR_NUMBER }}
