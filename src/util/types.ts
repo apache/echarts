@@ -387,8 +387,18 @@ export type ParsedValueNumeric = number | OrdinalNumber;
  */
 export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
 
+export type ScaleBreak = {
+    start: number,
+    end: number,
+    gap: number,
+    isExpanded?: boolean // undefined means false
+};
+
 export interface ScaleTick {
     level?: number,
+    breakStart?: number,
+    breakEnd?: number,
+    breakGap?: number,
     value: number
 };
 export interface TimeScaleTick extends ScaleTick {

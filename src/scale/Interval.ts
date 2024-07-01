@@ -46,11 +46,11 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     }
 
     normalize(val: number): number {
-        return helper.normalize(val, this._extent);
+        return helper.normalize(val, this._extent, this._breaks);
     }
 
     scale(val: number): number {
-        return helper.scale(val, this._extent);
+        return helper.scale(val, this._extent, this._breaks);
     }
 
     setExtent(start: number | string, end: number | string): void {
@@ -119,12 +119,14 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         let tick = niceTickExtent[0];
 
         while (tick <= niceTickExtent[1]) {
-            ticks.push({
-                value: tick
-            });
+            if (!this.getBreakIndex(tick)) {
+                ticks.push({
+                    value: tick
+                });
+            }
             // Avoid rounding error
             tick = roundNumber(tick + interval, intervalPrecision);
-            if (tick === ticks[ticks.length - 1].value) {
+            if (ticks.length > 0 && tick === ticks[ticks.length - 1].value) {
                 // Consider out of safe float point, e.g.,
                 // -3711126.9907707 + 2e-10 === -3711126.9907707
                 break;
@@ -147,6 +149,57 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
                     value: extent[1]
                 });
             }
+        }
+
+        // Add broken ranges to ticks
+        let unexpandedBreaks = 0;
+        for (let i = 0; i < this._breaks.length; i++) {
+            const brk = this._breaks[i];
+            if (brk.isExpanded) {
+                continue;
+            }
+            ticks.push({
+                value: brk.start,
+                breakStart: brk.start,
+                breakEnd: brk.end,
+                breakGap: brk.gap
+            });
+            if (brk.gap > 0) {
+                // When gap is 0, start tick is overlap with end tick, so do
+                // not count it. If developers want to solve overlapping when
+                // gap is larger than 0, they should write breakFormattter
+                ticks.push({
+                    value: brk.end,
+                    breakStart: brk.start,
+                    breakEnd: brk.end,
+                    breakGap: brk.gap
+                });
+            }
+            unexpandedBreaks++;
+        }
+
+        // Sort ticks by value
+        if (unexpandedBreaks > 0) {
+            ticks.sort(function (a, b) {
+                return a.value - b.value;
+            });
+            // Remove non-break ticks that are too close to breaks
+            const newTicks = [];
+            for (let i = 0; i < ticks.length; i++) {
+                const prevTick = i > 0 ? ticks[i - 1] : null;
+                const nextTick = i < ticks.length - 1 ? ticks[i + 1] : null;
+                const tick = ticks[i];
+                if (tick.breakStart == null
+                    && (prevTick && prevTick.breakEnd != null
+                    && tick.value - prevTick.breakEnd < interval
+                    || nextTick && nextTick.breakStart != null
+                    && nextTick.breakStart - tick.value < interval)
+                ) {
+                    continue;
+                }
+                newTicks.push(tick);
+            }
+            return newTicks;
         }
 
         return ticks;
@@ -218,7 +271,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
         splitNumber = splitNumber || 5;
         const extent = this._extent;
-        let span = extent[1] - extent[0];
+        let span = this.getExtentSpanWithoutBreaks();
         if (!isFinite(span)) {
             return;
         }
@@ -230,7 +283,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         }
 
         const result = helper.intervalScaleNiceTicks(
-            extent, splitNumber, minInterval, maxInterval
+            extent, span, splitNumber, minInterval, maxInterval
         );
 
         this._intervalPrecision = result.intervalPrecision;

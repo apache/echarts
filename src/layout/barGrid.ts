@@ -477,6 +477,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
 
             const cartesian = seriesModel.coordinateSystem as Cartesian2D;
             const baseAxis = cartesian.getBaseAxis();
+            const isBaseCategoryAxis = baseAxis.type === 'category';
             const valueAxis = cartesian.getOtherAxis(baseAxis);
             const valueDimIdx = data.getDimensionIndex(data.mapDimension(valueAxis.dim));
             const baseDimIdx = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
@@ -559,7 +560,13 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         }
 
                         if (!isLarge) {
-                            data.setItemLayout(dataIndex, { x, y, width, height });
+                            if (isBaseCategoryAxis && baseAxis.scale.getBreakIndex(baseValue)) {
+                                // Bar is filtered in break axis
+                                data.setItemLayout(dataIndex, null);
+                            }
+                            else {
+                                data.setItemLayout(dataIndex, { x, y, width, height });
+                            }
                         }
                         else {
                             largePoints[idxOffset] = x;
