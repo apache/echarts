@@ -1099,6 +1099,32 @@ under the License.
             })
         </script>
 
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var option = {
+                    legend:{
+                        data: [undefined, null]
+                    },
+                    xAxis: {
+                        data: ['A', 'B', 'C']
+                    },
+                    yAxis: {
 
+                    },
+                    series: [{
+                        type: 'bar',
+                        data: [120, 200, 150]
+                    }]
+                };
+
+                testHelper.create(echarts, 'legend-value-includes-null', {
+                    option: option,
+                    title: 'Chart should be display when legend value includes null',
+                    draggable: true
+                });
+            })
+        </script>
     </body>
 </html>
