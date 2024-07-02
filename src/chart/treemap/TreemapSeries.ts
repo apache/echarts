@@ -37,7 +37,9 @@ import {
     SeriesLabelOption,
     DefaultEmphasisFocus,
     AriaOptionMixin,
-    BlurScope
+    BlurScope,
+    OptionDataItemObject,
+    OptionDataValueNumeric,
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -133,8 +135,11 @@ export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
     decal?: DecalObject[] | 'none'
 }
 
-export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
-    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
+export interface TreemapSeriesNodeItemOption extends
+    TreemapSeriesVisualOption,
+    TreemapStateOption,
+    OptionDataItemObject<OptionDataValueNumeric>,
+    StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
     id?: OptionId
     name?: OptionName
 
@@ -144,7 +149,9 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 
     color?: ColorString[] | 'none'
 
-    decal?: DecalObject[] | 'none'
+    decal?: DecalObject[] | 'none',
+
+    cursor?:string
 }
 
 export interface TreemapSeriesOption
@@ -212,7 +219,7 @@ export interface TreemapSeriesOption
 
     levels?: TreemapSeriesLevelOption[]
 
-    data?: TreemapSeriesNodeItemOption[]
+    data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | TreemapSeriesNodeItemOption)[]
 }
 
 class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
@@ -362,7 +369,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         // Create a virtual root.
         const root: TreemapSeriesNodeItemOption = {
             name: option.name,
-            children: option.data
+            children: option.data.map(item => item as TreemapSeriesNodeItemOption)
         };
 
         completeTreeValue(root);
