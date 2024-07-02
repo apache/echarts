@@ -257,7 +257,7 @@ var platformApi = {
       } else {
         text = text || "";
         font = font || DEFAULT_FONT;
-        const res = /(\d+)px/.exec(font);
+        const res = /((?:\d+)?\.?\d*)px/.exec(font);
         const fontSize = res && +res[1] || DEFAULT_FONT_SIZE;
         let width = 0;
         if (font.indexOf("mono") >= 0) {
@@ -7144,7 +7144,7 @@ function getElementSSRData(el) {
 function registerSSRDataGetter(getter) {
   ssrDataGetter = getter;
 }
-var version = "5.5.0";
+var version = "5.6.0";
 
 // src/util/number.ts
 var RADIAN_EPSILON = 1e-4;
@@ -13683,6 +13683,7 @@ function setTooltipConfig(opt) {
     name: itemName,
     option: defaults({
       content: itemName,
+      encodeHTMLContent: true,
       formatterParams
     }, itemTooltipOptionObj)
   };
@@ -22528,9 +22529,9 @@ function getImpl(name) {
 }
 
 // src/core/echarts.ts
-var version2 = "5.5.0";
+var version2 = "5.5.1";
 var dependencies = {
-  zrender: "5.5.0"
+  zrender: "5.6.0"
 };
 var TEST_FRAME_REMAIN_TIME = 1;
 var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
@@ -32711,7 +32712,7 @@ function createGridClipPath(cartesian, hasAnimation, seriesModel, done, during) 
   let y = rect.y;
   let width = rect.width;
   let height = rect.height;
-  const lineWidth = seriesModel.get(["lineStyle", "width"]) || 2;
+  const lineWidth = seriesModel.get(["lineStyle", "width"]) || 0;
   x -= lineWidth / 2;
   y -= lineWidth / 2;
   width += lineWidth;
@@ -62934,15 +62935,22 @@ var TooltipView2 = class extends Component_default2 {
     });
   }
   _showComponentItemTooltip(e2, el, dispatchAction3) {
+    const isHTMLRenderMode = this._renderMode === "html";
     const ecData = getECData(el);
     const tooltipConfig = ecData.tooltipConfig;
     let tooltipOpt = tooltipConfig.option || {};
+    let encodeHTMLContent = tooltipOpt.encodeHTMLContent;
     if (isString(tooltipOpt)) {
       const content = tooltipOpt;
       tooltipOpt = {
         content,
         formatter: content
       };
+      encodeHTMLContent = true;
+    }
+    if (encodeHTMLContent && isHTMLRenderMode && tooltipOpt.content) {
+      tooltipOpt = clone(tooltipOpt);
+      tooltipOpt.content = encodeHTML(tooltipOpt.content);
     }
     const tooltipModelCascade = [tooltipOpt];
     const cmpt = this._ecModel.getComponent(ecData.componentMainType, ecData.componentIndex);
