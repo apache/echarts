@@ -20,7 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ChartView from '../../view/Chart';
 import * as graphic from '../../util/graphic';
-import { setStatesStylesFromModel } from '../../util/states';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import {createClipPath} from '../helper/createClipPathFromCoordSys';
 import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
@@ -33,6 +33,7 @@ import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
+import { getBorderColor, getColor } from './candlestickVisual';
 
 const SKIP_PROPS = ['color', 'borderColor'] as const;
 
@@ -294,6 +295,19 @@ function setBoxCommon(el: NormalBoxPath, data: SeriesData, dataIndex: number, is
     el.__simpleBox = isSimpleBox;
 
     setStatesStylesFromModel(el, itemModel);
+
+    const sign = data.getItemLayout(dataIndex).sign;
+    zrUtil.each(el.states, (state, stateName) => {
+        const stateModel = itemModel.getModel(stateName as any);
+        const color = getColor(sign, stateModel);
+        const borderColor = getBorderColor(sign, stateModel) || color;
+        const stateStyle = state.style || (state.style = {});
+        color && (stateStyle.fill = color);
+        borderColor && (stateStyle.stroke = borderColor);
+    });
+
+    const emphasisModel = itemModel.getModel('emphasis');
+    toggleHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
 }
 
 function transInit(points: number[][], itemLayout: CandlestickItemLayout) {
@@ -391,12 +405,9 @@ function createLarge(
 
 function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickSeriesModel, data: SeriesData) {
     // TODO put in visual?
-    let borderColor = seriesModel.get(['itemStyle', sign > 0 ? 'borderColor' : 'borderColor0'])
+    const borderColor = getBorderColor(sign, seriesModel)
         // Use color for border color by default.
-        || seriesModel.get(['itemStyle', sign > 0 ? 'color' : 'color0']);
-    if (sign === 0) {
-        borderColor = seriesModel.get(['itemStyle', 'borderColorDoji']);
-    }
+        || getColor(sign, seriesModel);
 
     // Color must be excluded.
     // Because symbol provide setColor individually to set fill and stroke
