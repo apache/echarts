@@ -47,6 +47,8 @@ under the License.
             });
 
             chart.setOption({
+                cursor:'crosshair',
+
                 series: [
                     {
                         name: '矩形树图',
@@ -103,6 +105,7 @@ under the License.
                                 }
                             }
                         ],
+                        cursor:'crosshair', /* it should be able to set crosshair for treemap */
                         data: [
                             {
                                 name: '三星',
