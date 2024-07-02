@@ -43105,7 +43105,7 @@ var TreemapSeriesModel2 = class extends Series_default {
   getInitialData(option, ecModel) {
     const root = {
       name: option.name,
-      children: option.data.map((item) => item)
+      children: option.data
     };
     completeTreeValue(root);
     let levels = option.levels || [];
@@ -43960,8 +43960,6 @@ function renderNode(seriesModel, thisStorage, oldStorage, reRoot, lastsForAnimat
     }
     setAsHighDownDispatcher(group, !isDisabled);
     data.setItemGraphicEl(thisNode.dataIndex, group);
-    const cursorStyle = nodeModel.getShallow("cursor");
-    cursorStyle && content.attr("cursor", cursorStyle);
     enableHoverFocus(group, focusOrIndices, blurScope);
   }
   return group;
