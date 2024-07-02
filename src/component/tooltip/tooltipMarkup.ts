@@ -40,8 +40,6 @@ type RichTextStyle = {
 
 type TextStyle = string | RichTextStyle;
 
-const TOOLTIP_LINE_HEIGHT_CSS = 'line-height:1';
-
 // TODO: more textStyle option
 function getTooltipTextStyle(
     textStyle: TooltipOption['textStyle'],
@@ -60,10 +58,14 @@ function getTooltipTextStyle(
     if (renderMode === 'html') {
         // `textStyle` is probably from user input, should be encoded to reduce security risk.
         return {
-            // eslint-disable-next-line max-len
-            nameStyle: `font-size:${encodeHTML(nameFontSize + '')}px;color:${encodeHTML(nameFontColor)};font-weight:${encodeHTML(nameFontWeight + '')}`,
-            // eslint-disable-next-line max-len
-            valueStyle: `font-size:${encodeHTML(valueFontSize + '')}px;color:${encodeHTML(valueFontColor)};font-weight:${encodeHTML(valueFontWeight + '')}`
+            nameStyle: `tooltip-name-style tooltip-name-color-${nameFontColor.replace(
+                '#',
+                ''
+            )} tooltip-name-size-${nameFontSize} tooltip-name-weight-${nameFontWeight}`,
+            valueStyle: `tooltip-value-style tooltip-value-color-${valueFontColor.replace(
+                '#',
+                ''
+            )} tooltip-value-size-${valueFontSize} tooltip-value-weight-${valueFontWeight}`,
         };
     }
     else {
@@ -71,13 +73,13 @@ function getTooltipTextStyle(
             nameStyle: {
                 fontSize: nameFontSize,
                 fill: nameFontColor,
-                fontWeight: nameFontWeight
+                fontWeight: nameFontWeight,
             },
             valueStyle: {
                 fontSize: valueFontSize,
                 fill: valueFontColor,
-                fontWeight: valueFontWeight
-            }
+                fontWeight: valueFontWeight,
+            },
         };
     }
 }
@@ -288,7 +290,7 @@ function buildSection(
     }
     else {
         return wrapBlockHTML(
-            `<div style="${nameStyle};${TOOLTIP_LINE_HEIGHT_CSS};">`
+            '<div class="tooltip-content">'
                 + encodeHTML(displayableHeader)
                 + '</div>'
                 + subMarkupText,
@@ -409,11 +411,31 @@ function wrapBlockHTML(
     encodedContent: string,
     topGap: number
 ): string {
-    const clearfix = '<div style="clear:both"></div>';
-    const marginCSS = `margin: ${topGap}px 0 0`;
-    return `<div style="${marginCSS};${TOOLTIP_LINE_HEIGHT_CSS};">`
-        + encodedContent + clearfix
-        + '</div>';
+    function createElementFromHTML(htmlString: string) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString.trim(), 'text/html');
+        const fragment = document.createDocumentFragment();
+
+        for (const child of doc.body.childNodes as any) {
+            fragment.appendChild(child);
+        }
+
+        return fragment;
+    }
+
+    const clearfixDiv = document.createElement('div');
+    clearfixDiv.classList.add('clearfix');
+
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('tooltip-content');
+    contentDiv.classList.add(`margin-top-${topGap}`);
+
+    const contentFragment = createElementFromHTML(encodedContent);
+    contentDiv.appendChild(contentFragment);
+
+    contentDiv.appendChild(clearfixDiv);
+
+    return contentDiv.outerHTML;
 }
 
 function wrapInlineNameHTML(
@@ -421,8 +443,8 @@ function wrapInlineNameHTML(
     leftHasMarker: boolean,
     style: string
 ): string {
-    const marginCss = leftHasMarker ? 'margin-left:2px' : '';
-    return `<span style="${style};${marginCss}">`
+    const marginCss = leftHasMarker ? 'margin-left-2px' : '';
+    return `<span class="${style} ${marginCss}">`
         + encodeHTML(name)
         + '</span>';
 }
@@ -432,17 +454,34 @@ function wrapInlineValueHTML(
     alignRight: boolean,
     valueCloseToMarker: boolean,
     style: string
-): string {
+): HTMLElement {
     // Do not too close to marker, considering there are multiple values separated by spaces.
-    const paddingStr = valueCloseToMarker ? '10px' : '20px';
-    const alignCSS = alignRight ? `float:right;margin-left:${paddingStr}` : '';
+    const padding = valueCloseToMarker ? '10px' : '20px';
+    const alignClass = alignRight
+        ? 'tooltip-value-right'
+        : 'tooltip-value-left';
+    const styleClasses = `tooltip-value-container ${alignClass} ${padding}`;
+
     valueList = isArray(valueList) ? valueList : [valueList];
-    return (
-        `<span style="${alignCSS};${style}">`
-        // Value has commas inside, so use '  ' as delimiter for multiple values.
-        + map(valueList, value => encodeHTML(value)).join('&nbsp;&nbsp;')
-        + '</span>'
-    );
+
+    const valueSpan = document.createElement('span');
+    valueSpan.classList.add(...styleClasses.split(' '));
+
+    // Split the style argument by spaces and add each class separately
+    const styleClassList = style.split(' ');
+    valueSpan.classList.add(...styleClassList);
+
+    valueList.forEach((value) => {
+        const valueNode = document.createTextNode(encodeHTML(value));
+        valueSpan.appendChild(valueNode);
+
+        if (value !== valueList[valueList.length - 1]) {
+            const spacer = document.createTextNode('\u00A0\u00A0'); // Non-breaking spaces
+            valueSpan.appendChild(spacer);
+        }
+    });
+
+    return valueSpan;
 }
 
 function wrapInlineNameRichText(ctx: TooltipMarkupBuildContext, name: string, style: RichTextStyle): string {

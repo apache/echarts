@@ -192,7 +192,7 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     } : (inOpt || {}) as GetTooltipMarkerOpt;
     const color = opt.color;
     const type = opt.type;
-    extraCssText = opt.extraCssText;
+    const extraCssClasses = opt.extraCssText ? opt.extraCssText.split(' ') : [];
     const renderMode = opt.renderMode || 'html';
 
     if (!color) {
@@ -200,14 +200,11 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
     }
 
     if (renderMode === 'html') {
-        return type === 'subItem'
-        ? '<span style="display:inline-block;vertical-align:middle;margin-right:8px;margin-left:3px;'
-            + 'border-radius:4px;width:4px;height:4px;background-color:'
-            // Only support string
-            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>'
-        : '<span style="display:inline-block;margin-right:4px;'
-            + 'border-radius:10px;width:10px;height:10px;background-color:'
-            + encodeHTML(color) + ';' + (extraCssText || '') + '"></span>';
+        const markerClass = type === 'subItem' ? 'tooltip-marker-sub' : 'tooltip-marker';
+        const colorClass = `tooltip-marker-color-${color.replace('#', '')}`;
+        const classes = [markerClass, colorClass, ...extraCssClasses];
+
+        return `<span class="${classes.join(' ')}"></span>`;
     }
     else {
         // Should better not to auto generate style name by auto-increment number here.
@@ -215,21 +212,22 @@ export function getTooltipMarker(inOpt: ColorString | GetTooltipMarkerOpt, extra
         // called repeatedly when mouse move and the auto-increment number increases fast.
         // Users can make their own style name by theirselves, make it unique and readable.
         const markerId = opt.markerId || 'markerX';
+        const colorStyle = `color-${color.replace('#', '')}`;
         return {
             renderMode: renderMode,
-            content: '{' + markerId + '|}  ',
+            content: '{' + markerId + '|} ',
             style: type === 'subItem'
                 ? {
                     width: 4,
                     height: 4,
                     borderRadius: 2,
-                    backgroundColor: color
+                    backgroundColor: colorStyle
                 }
                 : {
                     width: 10,
                     height: 10,
                     borderRadius: 5,
-                    backgroundColor: color
+                    backgroundColor: colorStyle
                 }
         };
     }
