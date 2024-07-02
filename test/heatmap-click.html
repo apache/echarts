@@ -1,0 +1,127 @@
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+    <div id="main"></div>
+    <script>
+
+        require(['echarts'], function (echarts) {
+
+            var chartDom = document.getElementById('main');
+            var myChart = echarts.init(chartDom);
+            var option;
+
+            option = {
+                tooltip: {
+                    position: 'top'
+                },
+                animation: true,
+                grid: {
+                    height: 300,
+                },
+                xAxis: {
+                    type: 'category',
+                    data: [
+                    '12a',
+                    '1a',
+                    '2a',
+                    '3a',
+                    '4a',
+                    '5a',
+                    '6a',
+                    '7a',
+                    '8a',
+                    '9a',
+                    '10a',
+                    '11a',
+                    '12p',
+                    '1p',
+                    '2p',
+                    '3p',
+                    '4p',
+                    '5p',
+                    '6p',
+                    '7p',
+                    '8p',
+                    '9p',
+                    '10p',
+                    '11p'
+                    ],
+                    splitArea: {
+                    show: true
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: [
+                    'Saturday',
+                    'Friday',
+                    'Thursday',
+                    'Wednesday',
+                    'Tuesday',
+                    'Monday',
+                    'Sunday'
+                    ],
+                    splitArea: {
+                    show: true
+                    }
+                },
+                visualMap: {
+                    min: 0,
+                    max: 10,
+                    calculable: true,
+                    // orient: 'horizontal',
+                    // left: 'center',
+                    // bottom: '15%'
+                },
+
+                series: [
+                {
+                    name: 'Punch Card',
+                    type: 'heatmap',
+                    selectedMode: false, // disable selected mode
+                    data: data,
+                    itemStyle: {
+                        emphasis: {
+                            borderColor: 'black',
+                            borderWidth: 2
+                        }
+                    }
+                }
+                ]
+            };
+
+            var previousSelected = null;
+            myChart.on('click', function (params) {
+                // clear previous selected
+                if (previousSelected) {
+                    myChart.dispatchAction({
+                        type: 'downplay',
+                        seriesIndex: 0,
+                        dataIndex: previousSelected.dataIndex
+                    });
+                }
+
+                // highlight current selected
+                myChart.dispatchAction({
+                    type: 'highlight',
+                    seriesIndex: 0,
+                    dataIndex: params.dataIndex
+                });
+
+                previousSelected = params;
+            });
+
+            option && myChart.setOption(option);
+        })
+
+    </script>
