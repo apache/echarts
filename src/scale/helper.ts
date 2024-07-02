@@ -132,7 +132,6 @@ export function contain(val: number, extent: [number, number]): boolean {
 export function normalize(
     val: number,
     extent: [number, number],
-    isOrdinal: boolean = false,
     breaks?: ScaleBreak[]
 ): number {
     if (extent[1] === extent[0]) {
@@ -158,7 +157,7 @@ export function normalize(
 
     // If the value is in the break, return the normalized value in the break
     let elapsedVal = 0;
-    let lastBreakEnd = extent[0] + (isOrdinal ? -0.5 : 0);
+    let lastBreakEnd = extent[0];
     for (let i = 0; i < unexpandedBreaks.length; i++) {
         const brk = unexpandedBreaks[i];
         if (brk.isExpanded) {
@@ -181,9 +180,6 @@ export function normalize(
     const lastBreak = unexpandedBreaks[unexpandedBreaks.length - 1];
     if (val >= lastBreak.end) {
         elapsedVal += val - lastBreak.end;
-    }
-    if (isOrdinal) {
-        elapsedVal = Math.max(0, elapsedVal - 0.5);
     }
     return Math.min(1, elapsedVal / beforeValueRange);
 }

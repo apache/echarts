@@ -199,8 +199,7 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
                     ordinalMeta: model.getOrdinalMeta
                         ? model.getOrdinalMeta()
                         : model.getCategories(),
-                    extent: [Infinity, -Infinity],
-                    breaks: model.get('breaks')
+                    extent: [Infinity, -Infinity]
                 });
             case 'time':
                 return new TimeScale({

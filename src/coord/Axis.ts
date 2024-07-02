@@ -25,12 +25,12 @@ import {
     calculateCategoryInterval
 } from './axisTickLabelBuilder';
 import Scale from '../scale/Scale';
-import { DimensionName, OrdinalNumber, ScaleBreak, ScaleDataValue, ScaleTick } from '../util/types';
+import { DimensionName, ScaleBreak, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
-import { adjustInBreakPosition, getExtentSpanWithoutBreaks } from '../scale/helper';
+import { getExtentSpanWithoutBreaks } from '../scale/helper';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -126,27 +126,16 @@ class Axis {
 
     dataToCoordWithBreaks(
         data: ScaleDataValue,
-        clamp?: boolean,
-        inBreakPosition?: 'start' | 'center' | 'end'
+        clamp?: boolean
     ): number {
         let extent = this._extent;
         const scale = this.scale;
-        let normalizedData = scale.normalize(data);
+        const normalizedData = scale.normalize(data);
 
         if (scale.type === 'ordinal') {
-            const index = scale.getBreakIndex(data as OrdinalNumber, inBreakPosition === 'end');
-            if (index >= 0) {
-                normalizedData = adjustInBreakPosition(
-                    normalizedData,
-                    scale.getExtent(),
-                    scale.getBreaks(),
-                    index,
-                    inBreakPosition
-                );
-            }
             if (this.onBand) {
                 extent = extent.slice() as [number, number];
-                fixExtentWithBands(extent, (scale as OrdinalScale).count(), this.scale.getBreaks());
+                fixExtentWithBands(extent, (scale as OrdinalScale).count());
             }
         }
 
@@ -162,7 +151,7 @@ class Axis {
 
         if (this.onBand && scale.type === 'ordinal') {
             extent = extent.slice() as [number, number];
-            fixExtentWithBands(extent, (scale as OrdinalScale).count(), this.scale.getBreaks());
+            fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
 
         const t = linearMap(coord, extent, NORMALIZED_EXTENT, clamp);
@@ -296,9 +285,9 @@ class Axis {
 
 }
 
-function fixExtentWithBands(extent: [number, number], nTick: number, breaks: ScaleBreak[]): void {
+function fixExtentWithBands(extent: [number, number], nTick: number): void {
     const size = extent[1] - extent[0];
-    const len = getExtentSpanWithoutBreaks([0, nTick - 1], breaks) + 1;
+    const len = getExtentSpanWithoutBreaks([0, nTick - 1], []) + 1;
     const margin = size / Math.max(len, 1) / 2;
     extent[0] += margin;
     extent[1] -= margin;
@@ -336,7 +325,7 @@ function fixOnBandTicksCoords(
     else {
         const crossLen = getExtentSpanWithoutBreaks(
             axis.scale.getExtent(),
-            breaks
+            []
         );
         const shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
 

@@ -86,16 +86,16 @@ export function rectCoordBuildBreakAxis(
         if (isEndBreak) {
             // The break area is bigger than the max value
             startCoord = axis.toGlobalCoord(
-                axis.dataToCoordWithBreaks(axisMax, false, 'start')
+                axis.dataToCoordWithBreaks(axisMax, false)
             );
             endCoord = startCoord;
         }
         else {
             startCoord = axis.toGlobalCoord(
-                axis.dataToCoordWithBreaks(brk.start, false, 'start')
+                axis.dataToCoordWithBreaks(brk.start, false)
             );
             endCoord = axis.toGlobalCoord(
-                axis.dataToCoordWithBreaks(end, false, 'end')
+                axis.dataToCoordWithBreaks(end, false)
             );
         }
         const breakGroup = new graphic.Group();

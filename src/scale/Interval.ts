@@ -46,7 +46,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     }
 
     normalize(val: number): number {
-        return helper.normalize(val, this._extent, false, this._breaks);
+        return helper.normalize(val, this._extent, this._breaks);
     }
 
     scale(val: number): number {

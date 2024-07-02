@@ -123,7 +123,9 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     }
 
     getBreaks() {
-        return this._breaks;
+        return this.type === 'ordinal'
+            ? []
+            : this._breaks;
     }
 
     expandBreak(breakStart: number, breakEnd: number) {
