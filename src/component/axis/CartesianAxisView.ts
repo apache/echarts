@@ -123,6 +123,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const splitLineModel = axisModel.getModel('splitLine');
         const lineStyleModel = splitLineModel.getModel('lineStyle');
         let lineColors = lineStyleModel.get('color');
+        const hiddenTicks = splitLineModel.get('hiddenTicks') || [];
 
         lineColors = zrUtil.isArray(lineColors) ? lineColors : [lineColors];
 
@@ -142,6 +143,11 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         for (let i = 0; i < ticksCoords.length; i++) {
             const tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
 
+            const tickValue = ticksCoords[i].tickValue;
+            if (hiddenTicks.includes(tickValue)) {
+                continue
+            }
+
             if (isHorizontal) {
                 p1[0] = tickCoord;
                 p1[1] = gridRect.y;
@@ -156,9 +162,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
             }
 
             const colorIndex = (lineCount++) % lineColors.length;
-            const tickValue = ticksCoords[i].tickValue;
             const line = new graphic.Line({
-                anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
+                anid: tickValue != null ? 'line_' + tickValue : null,
                 autoBatch: true,
                 shape: {
                     x1: p1[0],
