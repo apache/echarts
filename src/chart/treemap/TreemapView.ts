@@ -667,7 +667,7 @@ class TreemapView extends ChartView {
                         ? this._rootToNode({node: node})
                         : this._zoomToNode({node: node});
                 }
-            });
+        });
     }
 
     /**
@@ -876,6 +876,9 @@ function renderNode(
         setAsHighDownDispatcher(group, !isDisabled);
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
+
+        const cursorStyle = nodeModel.getShallow('cursor');
+        cursorStyle && content.attr('cursor', cursorStyle);
 
         enableHoverFocus(group, focusOrIndices, blurScope);
     }
