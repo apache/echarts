@@ -329,7 +329,8 @@ class LegendView extends ComponentView {
                 },
                 onclick() {
                     api.dispatchAction({
-                        type: type === 'all' ? 'legendAllSelect' : 'legendInverseSelect'
+                        type: type === 'all' ? 'legendAllSelect' : 'legendInverseSelect',
+                        legendId: legendModel.id
                     });
                 }
             });
