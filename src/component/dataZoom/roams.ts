@@ -124,6 +124,9 @@ function createCoordSysRecord(api: ExtensionAPI, coordSysModel: CoordinateSystem
     each(['pan', 'zoom', 'scrollMove'] as const, function (eventName) {
         controller.on(eventName, function (event) {
             const batch: DataZoomPayloadBatchItem[] = [];
+            if (eventName === 'zoom') {
+                (event as any).context = { batch };
+            }
 
             coordSysRecord.dataZoomInfoMap.each(function (dzInfo) {
                 // Check whether the behaviors (zoomOnMouseWheel, moveOnMouseMove,
