@@ -17,16 +17,22 @@
 * under the License.
 */
 
-// @ts-nocheck
+import {curry, each, hasOwn} from 'zrender/src/core/util';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import { Payload } from '../../util/types';
+import type GlobalModel from '../../model/Global';
+import type LegendModel from './LegendModel';
 
-import {curry, each} from 'zrender/src/core/util';
+type LegendSelectMethodNames =
+    'select' | 'unSelect' |
+    'toggleSelected' | 'toggleSelected' |
+    'allSelect' | 'inverseSelect';
 
-function legendSelectActionHandler(methodName, payload, ecModel) {
-    const selectedMap = {};
+function legendSelectActionHandler(methodName: LegendSelectMethodNames, payload: Payload, ecModel: GlobalModel) {
+    const selectedMap: Record<string, boolean> = {};
     const isToggleSelect = methodName === 'toggleSelected';
-    let isSelected;
-    // Update all legend components
-    ecModel.eachComponent('legend', function (legendModel) {
+    let isSelected: boolean;
+    ecModel.eachComponent({ mainType: 'legend', query: payload }, function (legendModel: LegendModel) {
         if (isToggleSelect && isSelected != null) {
             // Force other legend has same selected status
             // Or the first is toggled to true and other are toggled to false
@@ -49,7 +55,7 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
                 return;
             }
             const isItemSelected = legendModel.isSelected(name);
-            if (selectedMap.hasOwnProperty(name)) {
+            if (hasOwn(selectedMap, name)) {
                 // Unselected if any legend is unselected
                 selectedMap[name] = selectedMap[name] && isItemSelected;
             }
@@ -69,7 +75,7 @@ function legendSelectActionHandler(methodName, payload, ecModel) {
         };
 }
 
-export function installLegendAction(registers) {
+export function installLegendAction(registers: EChartsExtensionInstallRegisters) {
     /**
      * @event legendToggleSelect
      * @type {Object}
