@@ -23,10 +23,7 @@ import { Payload } from '../../util/types';
 import type GlobalModel from '../../model/Global';
 import type LegendModel from './LegendModel';
 
-type LegendSelectMethodNames =
-    'select' | 'unSelect' |
-    'toggleSelected' | 'toggleSelected' |
-    'allSelect' | 'inverseSelect';
+type LegendSelectMethodNames = 'select' | 'unSelect' | 'toggleSelected' | 'allSelect' | 'inverseSelect';
 
 function legendSelectActionHandler(methodName: LegendSelectMethodNames, payload: Payload, ecModel: GlobalModel) {
     const isAllSelect = methodName === 'allSelect' || methodName === 'inverseSelect';
