@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {curry, each, hasOwn, indexOf, map} from 'zrender/src/core/util';
+import {curry, each, hasOwn} from 'zrender/src/core/util';
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import { Payload } from '../../util/types';
 import type GlobalModel from '../../model/Global';
