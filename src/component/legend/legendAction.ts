@@ -61,13 +61,13 @@ function legendSelectActionHandler(methodName: LegendSelectMethodNames, payload:
     // Return the event explicitly
     return isAllSelect
         ? {
-            selected: selectedMap,
+            selected: allSelectedMap,
             // return legendIndex array to tell the developers which legends are allSelect / inverseSelect
             legendIndex: actionLegendIndices
         }
         : {
             name: payload.name,
-            selected: selectedMap
+            selected: allSelectedMap
         };
 }
 
