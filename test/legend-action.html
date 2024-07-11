@@ -46,6 +46,7 @@ under the License.
                     legend: [
                         {
                             id: 1,
+                            name: 'legend1',
                             data: ['Steppe', 'Forest'],
                             left: '10%',
                             selector: [
@@ -59,7 +60,8 @@ under the License.
                         },
                         {
                             id: 2,
-                            data: ['Desert', 'Wetland'],
+                            name: 'legend2',
+                            data: ['Desert', 'Wetland', 'Steppe' /* test for the same item in other legend */],
                             right: '10%',
                             selector: [
                                 {
@@ -94,12 +96,40 @@ under the License.
                         }
                     ]
                 };
-                var chart = testHelper.create(echarts, 'main0', {
+                var chart = window.myChart0 = testHelper.create(echarts, 'main0', {
                     title: [
-                        'Legend action should be isolated from other legend components'
+                        'Legend action should be isolated from other legend components\n(except for the items with the same name)'
                     ],
-                    option: option
+                    option: option,
+                    buttons: [
+                        {
+                            text: 'Dispatch `legendAllSelect` for both legend components',
+                            onclick() {
+                                chart.dispatchAction({
+                                    type: 'legendAllSelect',
+                                    legendName: ['legend1', 'legend2'],
+                                    // legendId: ['0', '1'],
+                                    // legendIndex: [0, 1]
+                                })
+                            }
+                        },
+                        {
+                            text: 'Dispatch `legendInverseSelect` for both legend components',
+                            onclick() {
+                                chart.dispatchAction({
+                                    type: 'legendInverseSelect',
+                                    // legendName: ['legend1', 'legend2'],
+                                    legendId: ['1', '2'],
+                                    // legendIndex: [0, 1]
+                                })
+                            }
+                        }
+                    ]
                 });
+                var logFn = e => console.log(JSON.stringify(e, null, 2));
+                chart.on('legendselectall', logFn);
+                chart.on('legendinverseselect', logFn);
+                chart.on('legendselectchanged', logFn);
             });
         </script>
     </body>
