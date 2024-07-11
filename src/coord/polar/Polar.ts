@@ -25,6 +25,7 @@ import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
 import ExtensionAPI from '../../core/ExtensionAPI';
+import { BoundingRect } from 'zrender';
 
 export const polarDimensions = ['radius', 'angle'];
 
@@ -234,7 +235,13 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
                 const r0 = this.r0;
 
                 return d2 <= r * r && d2 >= r0 * r0;
-            }
+            },
+
+            // As the bounding box
+            x: this.cx - radiusExtent[1],
+            y: this.cy - radiusExtent[1],
+            width: radiusExtent[1] * 2,
+            height: radiusExtent[1] * 2
         };
     }
 

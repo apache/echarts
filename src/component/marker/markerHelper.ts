@@ -144,7 +144,7 @@ export function dataTransform(
         }
     }
     // x y is provided
-    if (item.coord == null || !isArray(dims)) {
+    if ((item.coord == null || !isArray(dims)) && item.relativeTo === 'screen') {
         item.coord = [];
     }
     else {

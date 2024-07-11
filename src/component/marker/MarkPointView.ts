@@ -41,11 +41,29 @@ function updateMarkerLayout(
     api: ExtensionAPI
 ) {
     const coordSys = seriesModel.coordinateSystem;
+    const apiWidth = api.getWidth();
+    const apiHeight = api.getHeight();
+    const coordRect = coordSys.getArea && coordSys.getArea();
+    console.log(coordSys)
     mpData.each(function (idx: number) {
         const itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
+        const relativeTo = itemModel.get('relativeTo');
+        const width = relativeTo === 'coordinate'
+            ? coordRect ? coordRect.width : 0
+            : apiWidth;
+        const height = relativeTo === 'coordinate'
+            ? coordRect ? coordRect.height : 0
+            : apiHeight;
+        const left = relativeTo === 'coordinate'
+            ? coordRect ? coordRect.x : 0
+            : 0;
+        const top = relativeTo === 'coordinate'
+            ? coordRect ? coordRect.y : 0
+            : 0;
+
         let point;
-        const xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
-        const yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
+        const xPx = numberUtil.parsePercent(itemModel.get('x'), width) + left;
+        const yPx = numberUtil.parsePercent(itemModel.get('y'), height) + top;
         if (!isNaN(xPx) && !isNaN(yPx)) {
             point = [xPx, yPx];
         }
