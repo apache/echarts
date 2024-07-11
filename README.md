@@ -1,5 +1,28 @@
 # Apache ECharts
 
+## fix-15509: moveOver label overap
+
+### Steps to reproduce 
+https://jsfiddle.net/732w6hLj/3/
+
+### What is expected?
+Every label does not overlap with other elements
+
+the following configuration can be used to remove label overlap
+
+```javascript
+series: [{
+    ......,
+    labelLayout:{
+        moveOverlap: true, 
+        //or moveOverlap: 'repel'
+    }
+}]
+```
+result：
+![image](https://user-images.githubusercontent.com/42894308/129080475-870b860f-d72a-47bd-85f9-1ed99e6e3180.png)
+
+
 <a href="https://echarts.apache.org/">
     <img style="vertical-align: top;" src="./asset/logo.png?raw=true" alt="logo" height="50px">
 </a>
