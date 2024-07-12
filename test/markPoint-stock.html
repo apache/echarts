@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            const data = [];
+            let date = new Date('2024-07-11 9:30:00');
+            const endDate = new Date('2024-07-11 15:00:00');
+            let value = 120;
+            for (; date <= endDate;) {
+                if (date < new Date('2024-07-11 11:30:00').getTime()
+                    || date > new Date('2024-07-11 13:00:00').getTime()
+                ) {
+                    value = value + Math.round((Math.random() - 0.5) * 20);
+                }
+                data.push([
+                    date,
+                    value
+                ]);
+                date = new Date(date.getTime() + 1000 * 60);
+            }
+
+            option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        showMinLabel: true,
+                        showMaxLabel: true,
+                    }
+                },
+                yAxis: {
+                    axisLabel: {
+                        show: false,
+                    },
+                    min: 'dataMin',
+                    max: 'dataMax'
+                },
+                series: {
+                    type: 'line',
+                    data,
+                    showSymbol: false,
+                    markPoint: {
+                        data: [{
+                            type: 'min',
+                            // x: 0,
+                            // y: 0,
+                            // relativeTo: 'coordinate'
+                        }, {
+                            type: 'max',
+                            x: 0,
+                            y: '100%',
+                            // relativeTo: 'coordinate'
+                        }]
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Test Case Description of main0',
+                    '(Muliple lines and **emphasis** are supported in description)'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+
