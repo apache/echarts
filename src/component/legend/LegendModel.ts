@@ -362,6 +362,12 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
                     name: dataItem as string
                 };
             }
+
+            // remove null and undefined legend names
+            if (dataItem == null || dataItem.name == null) {
+                return null;
+            }
+
             if (legendNameMap.get(dataItem.name)) {
                 // remove legend name duplicate
                 return null;
