@@ -25,7 +25,7 @@ import * as vec2 from 'zrender/src/core/vector';
 import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
-import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
+import {getCurvenessForEdge, getOffsetForEdge} from '../helper/multipleGraphEdgeHelper';
 
 export interface ForceLayoutInstance {
     step(cb: (stopped: boolean) => void): void
@@ -99,11 +99,19 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                     -getCurvenessForEdge(edge, graphSeries, idx, true),
                     0
                 );
+
+                const offset = zrUtil.retrieve3(
+                    edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'offset']),
+                    getOffsetForEdge(edge, graphSeries, idx),
+                    0
+                );
+
                 return {
                     n1: nodes[edge.node1.dataIndex],
                     n2: nodes[edge.node2.dataIndex],
                     d: d,
                     curveness,
+                    offset,
                     ignoreForceLayout: edgeModel.get('ignoreForceLayout')
                 };
             });
@@ -144,6 +152,15 @@ export default function graphForceLayout(ecModel: GlobalModel) {
                     points[1] = points[1] || [];
                     vec2.copy(points[0], p1);
                     vec2.copy(points[1], p2);
+                    if (+e.offset) {
+                        const direction: number[] = [];
+                        vec2.sub(direction, p2, p1);
+                        const normalVector = [-direction[1], direction[0]];
+                        vec2.normalize(normalVector, normalVector);
+                        const offsetVector = [normalVector[0] * e.offset, normalVector[1] * e.offset];
+                        vec2.add(points[0], p1, offsetVector);
+                        vec2.add(points[1], p2, offsetVector);
+                    }
                     if (+e.curveness) {
                         points[2] = [
                             (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * e.curveness,
