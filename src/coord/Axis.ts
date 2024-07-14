@@ -298,11 +298,15 @@ function fixOnBandTicksCoords(
     }
 
     const axisExtent = axis.getExtent();
+    const dataExtent = axis.scale.getExtent();
     let last;
     let diffSize;
     if (ticksLen === 1) {
-        ticksCoords[0].coord = axisExtent[0];
-        last = ticksCoords[1] = {coord: axisExtent[1]};
+        const crossLen = dataExtent[1] - dataExtent[0];
+        const shift = (axisExtent[1] - axisExtent[0]) / (crossLen + 1);
+
+        ticksCoords[0].coord -= shift / 2;
+        last = {coord: axisExtent[1]};
     }
     else {
         const crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
@@ -312,13 +316,11 @@ function fixOnBandTicksCoords(
             ticksItem.coord -= shift / 2;
         });
 
-        const dataExtent = axis.scale.getExtent();
         diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
 
         last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
-
-        ticksCoords.push(last);
     }
+    ticksCoords.push(last);
 
     const inverse = axisExtent[0] > axisExtent[1];
 
