@@ -514,6 +514,15 @@ function updateNode(
                 }
             }
         };
+
+         // triggle edge's linestyle when select change
+         (symbolEl as ECElement).onElSelectedChange = function (state) {
+            const parentEl = node.parentNode
+                && data.getItemGraphicEl(node.parentNode.dataIndex);
+            if (parentEl) {
+                (symbolEl.__edge as ECElement).selected = state;
+            }
+        };
     }
 }
 
