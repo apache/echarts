@@ -185,7 +185,7 @@ export interface LegendOption extends ComponentOption, LegendStyleOption,
      * Gap between each legend item.
      * @default 10
      */
-    itemGap?: number
+    itemGap?: number | number[]
     /**
      * Width of legend symbol
      */

@@ -54,15 +54,30 @@ export const HV_NAMES = [
     ['height', 'top', 'bottom']
 ] as const;
 
+export function normalizeGap(gap: number | number[]): [number, number] {
+    let gapList = gap;
+
+    if (typeof gapList === 'number') {
+        gapList = [gapList, gapList];
+    }
+    else if (gapList.length <= 1) {
+        gapList = [gapList[0] ?? 0, gapList[1] ?? 0];
+    }
+
+    return [gapList[0], gapList[1]];
+}
+
 function boxLayout(
     orient: 'horizontal' | 'vertical',
     group: Group,
-    gap: number,
+    gap: number | number[],
     maxWidth?: number,
     maxHeight?: number
 ) {
     let x = 0;
     let y = 0;
+
+    const gapList = normalizeGap(gap);
 
     if (maxWidth == null) {
         maxWidth = Infinity;
@@ -87,7 +102,7 @@ function boxLayout(
             if (nextX > maxWidth || (child as NewlineElement).newline) {
                 x = 0;
                 nextX = moveX;
-                y += currentLineMaxSize + gap;
+                y += currentLineMaxSize + gapList[1];
                 currentLineMaxSize = rect.height;
             }
             else {
@@ -100,7 +115,7 @@ function boxLayout(
             nextY = y + moveY;
             // Wrap when width exceeds maxHeight or meet a `newline` group
             if (nextY > maxHeight || (child as NewlineElement).newline) {
-                x += currentLineMaxSize + gap;
+                x += currentLineMaxSize + gapList[0];
                 y = 0;
                 nextY = moveY;
                 currentLineMaxSize = rect.width;
@@ -119,8 +134,8 @@ function boxLayout(
         child.markRedraw();
 
         orient === 'horizontal'
-            ? (x = nextX + gap)
-            : (y = nextY + gap);
+            ? (x = nextX + gapList[0])
+            : (y = nextY + gapList[1]);
     });
 }
 
