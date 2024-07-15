@@ -624,6 +624,8 @@ class LineView extends ChartView {
 
         this._symbolDraw = symbolDraw;
         this._lineGroup = lineGroup;
+
+        this._changePolyState = zrUtil.bind(this._changePolyState, this);
     }
 
     render(seriesModel: LineSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
@@ -885,9 +887,7 @@ class LineView extends ChartView {
             toggleHoverEmphasis(polygon, focus, blurScope, emphasisDisabled);
         }
 
-        const changePolyState = (toState: DisplayState) => {
-            this._changePolyState(toState);
-        };
+        const changePolyState = this._changePolyState;
 
         data.eachItemGraphicEl(function (el) {
             // Switch polyline / polygon state if element changed its state.
