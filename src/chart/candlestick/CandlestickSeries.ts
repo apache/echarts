@@ -124,8 +124,6 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         },
 
         emphasis: {
-            // disable emphasis state by default for forward compatibility
-            disabled: true,
             itemStyle: {
                 borderWidth: 2
             }
