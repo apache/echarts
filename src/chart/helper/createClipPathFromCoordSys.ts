@@ -43,7 +43,7 @@ function createGridClipPath(
     let width = rect.width;
     let height = rect.height;
 
-    const lineWidth = seriesModel.get(['lineStyle', 'width']) || 2;
+    const lineWidth = seriesModel.get(['lineStyle', 'width']) || 0;
     // Expand the clip path a bit to avoid the border is clipped and looks thinner
     x -= lineWidth / 2;
     y -= lineWidth / 2;
