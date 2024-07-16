@@ -25,7 +25,6 @@ import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { BoundingRect } from 'zrender';
 
 export const polarDimensions = ['radius', 'angle'];
 

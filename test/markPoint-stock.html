@@ -79,7 +79,7 @@ under the License.
                 },
                 yAxis: {
                     axisLabel: {
-                        show: false,
+                        // show: false,
                     },
                     min: 'dataMin',
                     max: 'dataMax'
@@ -91,15 +91,30 @@ under the License.
                     markPoint: {
                         data: [{
                             type: 'min',
-                            // x: 0,
-                            // y: 0,
-                            // relativeTo: 'coordinate'
+                            x: 0,
+                            y: 0,
+                            relativeTo: 'coordinate'
                         }, {
                             type: 'max',
                             x: 0,
                             y: '100%',
+                            relativeTo: 'coordinate'
+                        }, {
+                            type: 'min',
+                            x: '100%',
+                            y: 0,
+                            name: 'abcd',
+                            relativeTo: 'coordinate'
+                        }, {
+                            type: 'max',
+                            // x: '100%',
+                            // y: '100%',
                             // relativeTo: 'coordinate'
-                        }]
+                        }],
+                        // label: {
+                        //     show: true,
+                        //     formatter: 'x: {c}'
+                        // }
                     }
                 }
             };

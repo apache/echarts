@@ -144,8 +144,9 @@ export function dataTransform(
         }
     }
     // x y is provided
-    if ((item.coord == null || !isArray(dims)) && item.relativeTo === 'screen') {
+    if (item.coord == null || !isArray(dims)) {
         item.coord = [];
+        item.value = numCalculate(data, data.mapDimension(dims[1]), item.type);
     }
     else {
         // Each coord support max, min, average

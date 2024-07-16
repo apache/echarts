@@ -44,7 +44,6 @@ function updateMarkerLayout(
     const apiWidth = api.getWidth();
     const apiHeight = api.getHeight();
     const coordRect = coordSys.getArea && coordSys.getArea();
-    console.log(coordSys)
     mpData.each(function (idx: number) {
         const itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
         const relativeTo = itemModel.get('relativeTo');
