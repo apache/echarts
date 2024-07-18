@@ -258,7 +258,11 @@ interface MinorTickOption {
 
 interface SplitLineOption {
     show?: boolean,
-    interval?: 'auto' | number | ((index:number, value: string) => boolean)
+    interval?: 'auto' | number | ((index:number, value: string) => boolean),
+    // true | false
+    showMinLine?: boolean,
+    // true | false
+    showMaxLine?: boolean,
     // colors will display in turn
     lineStyle?: LineStyleOption<ZRColor | ZRColor[]>
 }
