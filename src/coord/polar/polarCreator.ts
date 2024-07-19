@@ -102,9 +102,15 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     // Fix extent of category angle axis
     if (angleAxis.type === 'category' && !angleAxis.onBand) {
         const extent = angleAxis.getExtent();
-        const diff = 360 / (angleAxis.scale as OrdinalScale).count();
-        angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
-        angleAxis.setExtent(extent[0], extent[1]);
+        const angleModel = angleAxis.model;
+        const endAngle = angleModel.get('endAngle');
+        const spanAngle = (endAngle == null ? 360 : endAngle - angleModel.get('startAngle'))
+            * (angleAxis.inverse ? -1 : 1) ;
+        const diff = spanAngle / (angleAxis.scale as OrdinalScale).count();
+        if (Math.abs(spanAngle + diff) >= 360) {
+            extent[1] += Math.abs(diff);
+            angleAxis.setExtent(extent[0], extent[1]);
+        }
     }
 }
 
