@@ -105,7 +105,7 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
         const angleModel = angleAxis.model;
         const endAngle = angleModel.get('endAngle');
         const spanAngle = (endAngle == null ? 360 : endAngle - angleModel.get('startAngle'))
-            * (angleAxis.inverse ? -1 : 1) ;
+            * (angleAxis.inverse ? -1 : 1);
         const diff = spanAngle / (angleAxis.scale as OrdinalScale).count();
         if (Math.abs(spanAngle + diff) >= 360) {
             extent[1] += Math.abs(diff);
