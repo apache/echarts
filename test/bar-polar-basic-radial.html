@@ -37,12 +37,21 @@ under the License.
                 background: #fff;
             }
         </style>
-        <div id="main"></div>
+        <h2>
+            angleAxis range should adjust when `boundaryGap: false`.
+        </h2>
+        <p>
+            1. startAngle: 90, endAngle: -270, clockwise: true: `a` to `d` should take 3/4 of the circle so that pieces are not overlapped.
+        </p>
+        <p>
+            2. (click "textNext") startAngle: 90, endAngle: -90, clockwise: true: `a` to `d` should take 1/2 of the circle so that pieces are not overlapped.
+        </p>
         <div id="main2"></div>
+        <div id="main"></div>
 
 
 
-        <!-- <script>
+        <script>
 
             require(['echarts'], function (echarts) {
 
@@ -76,7 +85,7 @@ under the License.
 
                 window.onresize = chart.resize;
             });
-        </script> -->
+        </script>
 
 
 
@@ -89,23 +98,27 @@ under the License.
                 var config = {
                     startAngle: 90,
                     endAngle: -270,
-                    clockwise: false
+                    clockwise: true,
+                    testNext: () => {
+                        config.startAngle = 90;
+                        config.endAngle = -90;
+                        update();
+                    }
                 };
 
                 chart.setOption({
                     angleAxis: {
                         type: 'category',
                         data: [
-                        'a',
-                        'b',
-                        'c',
-                        'd'
+                            'a',
+                            'b',
+                            'c',
+                            'd'
                         ],
-                        // boundaryGap: false,
+                        boundaryGap: false,
                         startAngle: config.startAngle,
                         endAngle: config.endAngle,
                         clockwise: config.clockwise
-
                     },
                     radiusAxis: {
                     },
@@ -139,6 +152,7 @@ under the License.
                     .onChange(update);
                 gui.add(config, 'clockwise')
                     .onChange(update);
+                gui.add(config, 'testNext');
             });
         </script>
     </body>
