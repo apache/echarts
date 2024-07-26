@@ -25,7 +25,7 @@ describe('aria, omit data', function () {
         'aria': {
             'enabled': true,
             'data': {
-                'columnsToExclude': [0, 1, 2]
+                'excludeDataId': [0, 1, 2]
             },
         },
         'dataset': [
@@ -78,6 +78,8 @@ describe('aria, omit data', function () {
         chart.setOption(option);
         const el = chart.getDom();
         const ariaValue = el.getAttribute('aria-label');
+        expect(ariaValue).toContain('Llosa del Cavall (Navès) is 17.945, 80');
+        expect(ariaValue).toContain('Riudecanyes is 0.401, 5.32');
         expect(ariaValue).not.toContain(1.58285827);
         expect(ariaValue).not.toContain(42.099784969);
         expect(ariaValue).not.toContain(0.960270444);
@@ -88,6 +90,7 @@ describe('aria, omit data', function () {
         chart.setOption(option);
         const listData = getECModel(chart).getSeries()[0].getData();
         expect(listData.getValues(0)).toEqual([1.58285827, 42.099784969, 'Llosa del Cavall (Navès)', 17.945, 80]);
+        expect(listData.getValues(1)).toEqual([0.960270444, 41.134931354, 'Riudecanyes', 0.401, 5.32]);
     });
 
 });
