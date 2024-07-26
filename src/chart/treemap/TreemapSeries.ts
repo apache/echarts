@@ -38,8 +38,6 @@ import {
     DefaultEmphasisFocus,
     AriaOptionMixin,
     BlurScope,
-    OptionDataItemObject,
-    OptionDataValueNumeric,
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -138,7 +136,6 @@ export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
 export interface TreemapSeriesNodeItemOption extends
     TreemapSeriesVisualOption,
     TreemapStateOption,
-    OptionDataItemObject<OptionDataValueNumeric>,
     StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
     id?: OptionId
     name?: OptionName
@@ -219,7 +216,7 @@ export interface TreemapSeriesOption
 
     levels?: TreemapSeriesLevelOption[]
 
-    data?: (OptionDataValueNumeric | OptionDataValueNumeric[] | TreemapSeriesNodeItemOption)[]
+    data?: TreemapSeriesNodeItemOption[]
 }
 
 class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
@@ -367,7 +364,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
      */
     getInitialData(option: TreemapSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
-        const root = { name: option.name, children: option.data } as TreemapSeriesNodeItemOption;
+        const root: TreemapSeriesNodeItemOption = {
+            name: option.name,
+            children: option.data
+        };
 
         completeTreeValue(root);
 
