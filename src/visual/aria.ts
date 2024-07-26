@@ -218,13 +218,13 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
                     const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
                     const endSeparator = labelModel.get(['data', 'separator', 'end']);
-                    const columnsToExclude = labelModel.get(['data', 'columnsToExclude']);
+                    const excludeDataId = labelModel.get(['data', 'excludeDataId']);
                     const dataLabels = [];
                     for (let i = 0; i < data.count(); i++) {
                         if (i < maxDataCnt) {
                             const name = data.getName(i);
-                            const value = !columnsToExclude ? data.getValues(i)
-                                : data.getValues(i).filter((value, j) => !columnsToExclude?.includes(j));
+                            const value = !excludeDataId ? data.getValues(i)
+                                : zrUtil.filter(data.getValues(i), (v, j) => zrUtil.indexOf(excludeDataId, j) === -1);
                             const dataLabel = labelModel.get(['data', name ? 'withName' : 'withoutName']);
                             dataLabels.push(
                                 replace(dataLabel, {
