@@ -37,7 +37,7 @@ import {
     SeriesLabelOption,
     DefaultEmphasisFocus,
     AriaOptionMixin,
-    BlurScope,
+    BlurScope
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -133,10 +133,8 @@ export interface TreemapSeriesLevelOption extends TreemapSeriesVisualOption,
     decal?: DecalObject[] | 'none'
 }
 
-export interface TreemapSeriesNodeItemOption extends
-    TreemapSeriesVisualOption,
-    TreemapStateOption,
-    StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
+export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
+    TreemapStateOption, StatesOptionMixin<TreemapStateOption, ExtraStateOption> {
     id?: OptionId
     name?: OptionName
 

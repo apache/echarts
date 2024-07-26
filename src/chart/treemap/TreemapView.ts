@@ -661,12 +661,12 @@ class TreemapView extends ChartView {
         }
 
         (this._breadcrumb || (this._breadcrumb = new Breadcrumb(this.group)))
-            .render(seriesModel, api, targetInfo.node, (node) => {
-                if (this._state !== 'animating') {
-                    helper.aboveViewRoot(seriesModel.getViewRoot(), node)
-                        ? this._rootToNode({node: node})
-                        : this._zoomToNode({node: node});
-                }
+        .render(seriesModel, api, targetInfo.node, (node) => {
+            if (this._state !== 'animating') {
+                helper.aboveViewRoot(seriesModel.getViewRoot(), node)
+                    ? this._rootToNode({node: node})
+                    : this._zoomToNode({node: node});
+            }
         });
     }
 
