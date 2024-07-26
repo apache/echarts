@@ -151,7 +151,7 @@ export interface TreemapSeriesNodeItemOption extends
 
     decal?: DecalObject[] | 'none',
 
-    cursor?:string
+    cursor?: string
 }
 
 export interface TreemapSeriesOption
@@ -367,10 +367,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
      */
     getInitialData(option: TreemapSeriesOption, ecModel: GlobalModel) {
         // Create a virtual root.
-        const root: TreemapSeriesNodeItemOption = {
-            name: option.name,
-            children: option.data.map(item => item as TreemapSeriesNodeItemOption)
-        };
+        const root = { name: option.name, children: option.data } as TreemapSeriesNodeItemOption;
 
         completeTreeValue(root);
 
