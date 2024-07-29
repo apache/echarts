@@ -50,8 +50,8 @@ export interface RadarIndicatorOption {
     min?: number
     max?: number
     color?: ColorString
-
     axisType?: 'value' | 'log'
+    inverse?: boolean
 }
 
 export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
@@ -146,7 +146,8 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 nameGap: nameGap,
                 // min: 0,
                 nameTextStyle: iNameTextStyle,
-                triggerEvent: triggerEvent
+                triggerEvent: triggerEvent,
+                inverse: indicatorOpt.inverse
             } as InnerIndicatorAxisOption, false);
             if (zrUtil.isString(nameFormatter)) {
                 const indName = innerIndicatorOpt.name;
