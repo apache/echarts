@@ -168,6 +168,7 @@ export function niceScaleExtent(
 
     scale.setExtent(extent[0], extent[1]);
     scale.calcNiceExtent({
+        interval: interval,
         splitNumber: splitNumber,
         fixMin: extentInfo.fixMin,
         fixMax: extentInfo.fixMax,
@@ -182,6 +183,8 @@ export function niceScaleExtent(
     // FIXME
     if (interval != null) {
         (scale as IntervalScale).setInterval && (scale as IntervalScale).setInterval(interval);
+        //If interval is set by user, mark it as true
+        (scale as IntervalScale).intervalSetByUser();
     }
 }
 
