@@ -26,7 +26,7 @@ describe('aria, omit data', function () {
         'aria': {
             'enabled': true,
             'data': {
-                'excludeDataId': [0, 1, 2]
+                'excludeDimensionId': [0, 1, 2]
             },
         },
         'dataset': [

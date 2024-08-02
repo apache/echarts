@@ -1734,7 +1734,7 @@ export interface AriaLabelOption {
             middle?: string;
             end?: string;
         },
-        excludeDataId?: number[]
+        excludeDimensionId?: number[]
     }
 }
 
