@@ -23,7 +23,7 @@
  * TODO Default cartesian
  */
 
-import {isObject, each, indexOf, retrieve3, keys, reduce, map} from 'zrender/src/core/util';
+import {isObject, each, indexOf, retrieve3, keys, map} from 'zrender/src/core/util';
 import {getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,

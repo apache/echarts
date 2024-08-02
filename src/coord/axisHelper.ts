@@ -351,10 +351,10 @@ export function computeNameBoundingRect(axis: Axis2D): BoundingRect {
         return;
     }
     const axisLabelModel = axisModel.getModel('nameTextStyle');
-    const unRotatedNameBoundingRect = axisLabelModel.getTextRect(axisModel.getModel('name').option);
+    const unRotatedNameBoundingRect = axisLabelModel.getTextRect(axisModel.get('name'));
     const defaultRotation = axis.isHorizontal() || !isNameLocationCenter(axisModel.get('nameLocation')) ? 0 : -90;
     const rotatedNameBoundingRect = rotateTextRect(
-        unRotatedNameBoundingRect, axisModel.getModel('nameRotate').option ?? defaultRotation
+        unRotatedNameBoundingRect, axisModel.get('nameRotate') ?? defaultRotation
     );
     return rotatedNameBoundingRect;
 }
