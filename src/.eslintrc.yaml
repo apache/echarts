@@ -34,10 +34,11 @@ parserOptions:
     sourceType: module
     ecmaFeatures:
         modules: true
-    project: "tsconfig.json"
+    project: "**/tsconfig.json"
 plugins: ["@typescript-eslint"]
 env:
     es6: false
+    browser: true
 globals:
     jQuery: false
     Promise: false
