@@ -62,6 +62,7 @@ import { concatInternalOptions } from './internalComponentCreator';
 import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
 import { error, warn } from '../util/log';
+import CustomSeriesManager from '../chart/custom/CustomSeriesManager';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -160,6 +161,8 @@ class GlobalModel extends Model<ECUnitOption> {
     private _locale: Model;
 
     private _optionManager: OptionManager;
+
+    private _customSeriesManager: CustomSeriesManager;
 
     private _componentsMap: HashMap<ComponentModel[], ComponentMainType>;
 
@@ -410,14 +413,20 @@ class GlobalModel extends Model<ECUnitOption> {
                 }
                 else {
                     const isSeriesType = mainType === 'series';
+
+                    let subType = resultItem.keyInfo.subType;
+                    if (subType && subType.startsWith('custom.')) {
+                        subType = 'custom';
+                    }
+
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
-                        mainType, resultItem.keyInfo.subType,
+                        mainType,
+                        subType,
                         !isSeriesType // Give a more detailed warn later if series don't exists
                     );
 
                     if (!ComponentModelClass) {
                         if (__DEV__) {
-                            const subType = resultItem.keyInfo.subType;
                             const seriesImportName = BUILTIN_CHARTS_MAP[subType as keyof typeof BUILTIN_CHARTS_MAP];
                             if (!componetsMissingLogPrinted[subType]) {
                                 componetsMissingLogPrinted[subType] = true;
@@ -576,6 +585,10 @@ echarts.use([${seriesImportName}]);`);
                 }
             }
         }
+    }
+
+    getCustomRenderer(type: string) {
+        return CustomSeriesManager.get(type);
     }
 
     /**

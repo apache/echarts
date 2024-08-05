@@ -591,7 +591,11 @@ function makeRenderItem(
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
-    const renderItem = customSeries.get('renderItem');
+    const type = customSeries.get('type').split('.');
+    const customRenderer = type.length > 1
+        ? ecModel.getCustomRenderer(type[1])
+        : null;
+    const renderItem = customRenderer || customSeries.get('renderItem');
     const coordSys = customSeries.coordinateSystem;
     let prepareResult = {} as ReturnType<PrepareCustomInfo>;
 

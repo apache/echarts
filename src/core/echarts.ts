@@ -51,6 +51,7 @@ import ComponentModel from '../model/Component';
 import SeriesModel from '../model/Series';
 import ComponentView, {ComponentViewConstructor} from '../view/Component';
 import ChartView, {ChartViewConstructor} from '../view/Chart';
+import {CustomSeriesRenderItem} from '../chart/custom/CustomSeries';
 import * as graphic from '../util/graphic';
 import {getECData} from '../util/innerStore';
 import {
@@ -132,6 +133,7 @@ import lifecycle, {
 import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
 import { getImpl } from './impl';
 import type geoSourceManager from '../coord/geo/geoSourceManager';
+import CustomSeriesManager from '../chart/custom/CustomSeriesManager';
 
 declare let global: any;
 
@@ -2891,6 +2893,10 @@ export function getCoordinateSystemDimensions(type: string): DimensionDefinition
             ? coordSysCreator.getDimensionsInfo()
             : coordSysCreator.dimensions.slice();
     }
+}
+
+export function registerCustomSeries(seriesType: string, renderItem: CustomSeriesRenderItem) {
+    CustomSeriesManager.register(seriesType, renderItem);
 }
 
 export {registerLocale} from './locale';
