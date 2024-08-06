@@ -105,6 +105,8 @@ export default  {
         pictorialBar: 'Bildstapel',
         themeRiver: 'Tematisk flod',
         sunburst: 'Solburstdiagram',
+        custom: 'Anpassat',
+        chart: 'Diagram',
       },
     },
     aria: {
