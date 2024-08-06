@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <script src="lib/draggable.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="lib/reset.css">
+    <style>
+      h1 {
+          line-height: 60px;
+          height: 60px;
+          background: #a60;
+          text-align: center;
+          font-weight: bold;
+          color: #eee;
+          font-size: 14px;
+      }
+
+      .chart {
+          height: 500px;
+      }
+
+      svg > g > text {
+        transition: all ease-in-out 0.5s;
+        color: red !important;
+        background-color: aqua;
+      }
+  </style>
+
+  </head>
+
+<body>
+    <div style="height:700px">
+        <div class="chart" id="autorotate"></div>
+    </div>
+
+    <div style="height:1000px">
+        <div class="chart" id="autorotate-y"></div>
+    </div>
+
+    <div class="chart" id="autorotate-zoom"></div>
+
+    <script>
+        const categoryAxis = {
+            type: 'category',
+            name: 'Day of the week',
+            nameLocation: 'middle',
+            nameLayout: 'auto',
+            nameGap: 8,
+            nameTextStyle: {
+                fontSize: 16,
+                padding: [6, 8],
+                backgroundColor: '#eeeeee'
+            },
+            data: ['Monday', 'hey, it\'s Tuesday!', 'yay, Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            axisLabel: {
+                fontSize: 20,
+                margin: 12,
+                padding: 8,
+                backgroundColor: '#feee9e',
+                showMinLabel: true,
+                showMaxLabel: true
+            }
+        };
+
+        const valueAxis = {
+            type: 'value',
+            name: 'Value',
+            nameLocation: 'middle',
+            nameLayout: 'auto',
+            nameTextStyle: {
+                fontSize: 16,
+                padding: [6, 8],
+                backgroundColor: '#eeeeee'
+            },
+            axisLabel: {
+                fontSize: 16
+            }
+        };
+    </script>
+
+
+    <script>
+
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            let invertedAxes = false;
+            let autoRotate = [0, 25, 45, 70, 90];
+            const option = {
+                grid: { left: 0, top: 10, right: 0, bottom: 10, containLabel: true },
+                xAxis: {
+                    ...categoryAxis,
+                    axisLabel: {
+                        ...categoryAxis.axisLabel,
+                        autoRotate,
+                    },
+                },
+                yAxis: valueAxis,
+                series: [{
+                    data: [120_000, 200_000, 150_000, 80_000, 70_000, 110_000, 130_000],
+                    type: 'bar'
+                }]
+            };
+
+            const chart = testHelper.create(echarts, 'autorotate', {
+                title: 'Category labels should auto-rotate to avoid overlap / maximize vertical grid space as the chart is horizontally resized (rotation degrees: ' + autoRotate.join(', ') + ')',
+                option: option,
+                width: 700,
+                height: 500,
+                draggable: true,
+                buttons: [{
+                    text: 'Toggle axes location',
+                    onclick: function () {
+                        invertedAxes = !invertedAxes;
+                        chart.setOption(invertedAxes ? {
+                            grid: { left: 10, top: 0, right: 0, bottom: 10, containLabel: true },
+                            xAxis: { position: 'top' },
+                            yAxis: { position: 'right' }
+                        } : {
+                            grid: { left: 0, top: 10, right: 0, bottom: 0, containLabel: true },
+                            xAxis: { position: 'left' },
+                            yAxis: { position: 'bottom' }
+                        });
+                    }
+                }, {
+                    text: 'Toggle rotation direction',
+                    onclick: function () {
+                        autoRotate = autoRotate.map(x => -x);
+                        chart.setOption({
+                            xAxis: {
+                                axisLabel: {
+                                    autoRotate,
+                                }
+                            }
+                        });
+                    }
+                }
+                ],
+            });
+        });
+    </script>
+
+
+    <script>
+
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            let invertedAxes = false;
+            let autoRotate = [55, 45, 35, 25, 15, 0];
+            const option = {
+                grid: { left: 0, top: 10, right: 10, bottom: 0, containLabel: true },
+                xAxis: valueAxis,
+                yAxis: {
+                    ...categoryAxis,
+                    axisLabel: {
+                        ...categoryAxis.axisLabel,
+                        autoRotate,
+                    },
+                    axisTick: {
+                        alignWithLabel: true
+                    }
+                },
+                series: [{
+                    data: [120_000, 200_000, 150_000, 80_000, 70_000, 110_000, 130_000],
+                    type: 'bar'
+                }]
+            };
+
+            const chart = testHelper.create(echarts, 'autorotate-y', {
+                title: 'Category labels should auto-rotate as the chart is vertically resized (rotation degrees: ' + autoRotate.join(', ') + ')',
+                option: option,
+                width: 700,
+                height: 500,
+                draggable: true,
+                buttons: [{
+                    text: 'Toggle axes location',
+                    onclick: function () {
+                        invertedAxes = !invertedAxes;
+                        chart.setOption(invertedAxes ? {
+                            grid: { left: 10, top: 0, right: 0, bottom: 10, containLabel: true },
+                            xAxis: { position: 'top' },
+                            yAxis: { position: 'right' }
+                        } : {
+                            grid: { left: 0, top: 10, right: 0, bottom: 0, containLabel: true },
+                            xAxis: { position: 'left' },
+                            yAxis: { position: 'bottom' }
+                        });
+                    }
+                }, {
+                    text: 'Toggle rotation direction',
+                    onclick: function () {
+                        autoRotate = autoRotate.map(x => -x);
+                        chart.setOption({
+                            yAxis: {
+                                axisLabel: {
+                                    autoRotate,
+                                }
+                            }
+                        });
+                    }
+                }
+                ]
+            });
+        });
+    </script>
+
+
+    <script>
+
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            const dataCount = 2000;
+            const data = [];
+            const categories = [];
+            for (var i = 0; i < dataCount; i++) {
+                const cat = 'category' + i;
+                categories.push(cat);
+                data.push(Math.random());
+            }
+
+            const startValue = 0;
+            const endValue = dataCount;
+            const autoRotate = [0, 25, 45, 55, 70, 90];
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                dataZoom: [{
+                    startValue: startValue,
+                    endValue: endValue
+                }, {
+                    type: 'inside',
+                    startValue: startValue,
+                    endValue: endValue
+                }],
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: 60,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: categories,
+                    axisLabel: {
+                        autoRotate
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                },
+                series: [
+                    {
+                        type: 'line',
+                        data: data
+                    }
+                ]
+            };
+
+            testHelper.create(echarts, 'autorotate-zoom', {
+                title: 'Category labels should auto-rotate as the chart is zoomed (rotation degrees: ' + option.xAxis.axisLabel.autoRotate.join(', ') + ')',
+                option: option
+            });
+        });
+
+    </script>
+
+
+</body>
+
+</html>
