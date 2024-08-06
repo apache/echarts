@@ -30,6 +30,7 @@ import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
+import TimeScale from '../scale/Time';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -243,16 +244,10 @@ class Axis {
      * Get width of band
      */
     getBandWidth(): number {
-        const axisExtent = this._extent;
-        const dataExtent = this.scale.getExtent();
-
-        let len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
+        const dataLength = getDataLength(this.scale);
+        const size = Math.abs(this._extent[1] - this._extent[0]);
         // Fix #2728, avoid NaN when only one data.
-        len === 0 && (len = 1);
-
-        const size = Math.abs(axisExtent[1] - axisExtent[0]);
-
-        return Math.abs(size) / len;
+        return dataLength === 0 ? 1 : Math.abs(size) / dataLength;
     }
 
     /**
@@ -269,6 +264,20 @@ class Axis {
         return calculateCategoryInterval(this);
     }
 
+}
+
+// Calculates the data length based on the provided scale
+function getDataLength(scale: any): number {
+    // For time scales, the data length is calculated based on the extent and the approximate interval.
+    // (1547691327400.4685 - 1547185472599.5315) / 84309133.48950195
+    if (scale.type === 'time') {
+        const dataExtent = scale.getExtent();
+        return Math.ceil((dataExtent[1] - dataExtent[0]) / (scale as TimeScale)._approxInterval);
+    }
+    else {
+        const dataExtent = scale.getExtent();
+        return dataExtent[1] - dataExtent[0] + 1;
+    }
 }
 
 function fixExtentWithBands(extent: [number, number], nTick: number): void {
