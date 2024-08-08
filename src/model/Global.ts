@@ -62,6 +62,7 @@ import { concatInternalOptions } from './internalComponentCreator';
 import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
 import { error, warn } from '../util/log';
+import { getCustomSeries } from '../chart/custom/customSeriesRegister';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -411,7 +412,8 @@ class GlobalModel extends Model<ECUnitOption> {
                 else {
                     const isSeriesType = mainType === 'series';
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
-                        mainType, resultItem.keyInfo.subType,
+                        mainType,
+                        resultItem.keyInfo.subType,
                         !isSeriesType // Give a more detailed warn later if series don't exists
                     );
 
@@ -576,6 +578,10 @@ echarts.use([${seriesImportName}]);`);
                 }
             }
         }
+    }
+
+    getCustomRenderer(type: string) {
+        return getCustomSeries(type);
     }
 
     /**
