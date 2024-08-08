@@ -133,7 +133,7 @@ import lifecycle, {
 import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
 import { getImpl } from './impl';
 import type geoSourceManager from '../coord/geo/geoSourceManager';
-import CustomSeriesManager from '../chart/custom/CustomSeriesManager';
+import {registerCustomSeries as registerCustom} from '../chart/custom/customSeriesRegister';
 
 declare let global: any;
 
@@ -2896,7 +2896,7 @@ export function getCoordinateSystemDimensions(type: string): DimensionDefinition
 }
 
 export function registerCustomSeries(seriesType: string, renderItem: CustomSeriesRenderItem) {
-    CustomSeriesManager.register(seriesType, renderItem);
+    registerCustom(seriesType, renderItem);
 }
 
 export {registerLocale} from './locale';

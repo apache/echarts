@@ -591,11 +591,18 @@ function makeRenderItem(
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
-    const type = customSeries.get('type').split('.');
-    const customRenderer = type.length > 1
-        ? ecModel.getCustomRenderer(type[1])
-        : null;
-    const renderItem = customRenderer || customSeries.get('renderItem');
+    let renderItem = customSeries.get('renderItem');
+    if (typeof renderItem === 'string') {
+        // Find renderItem in registered custom series
+        const registeredRenderItem = ecModel.getCustomRenderer(renderItem);
+        if (registeredRenderItem) {
+            renderItem = registeredRenderItem;
+        }
+        else if (__DEV__) {
+            console.warn(`Custom series renderItem '${renderItem}' not found.
+                Call 'echarts.registerCustomSeries' to register it.`);
+        }
+    }
     const coordSys = customSeries.coordinateSystem;
     let prepareResult = {} as ReturnType<PrepareCustomInfo>;
 
