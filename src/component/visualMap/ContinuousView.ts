@@ -32,7 +32,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
-import { ColorString, Payload } from '../../util/types';
+import { ColorString, Payload, VerticalAlign } from '../../util/types';
 import { parsePercent } from 'zrender/src/contain/text';
 import { setAsHighDownDispatcher } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
@@ -622,7 +622,10 @@ class ContinuousView extends VisualMapView {
                 x: textPoint[0],
                 y: textPoint[1],
                 text: visualMapModel.formatValueText(this._dataInterval[handleIndex]),
-                verticalAlign: 'middle',
+                verticalAlign: this._orient === 'horizontal' ? this._applyTransform(
+                    'left',
+                    handleThumb
+                ) as VerticalAlign : 'middle',
                 align: this._orient === 'vertical' ? this._applyTransform(
                     'left',
                     shapes.mainGroup

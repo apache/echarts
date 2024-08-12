@@ -48,6 +48,8 @@ under the License.
         <div id="main3" class="main"></div>
         <div class="split">Stacked Bar (and inversed)</div>
         <div id="main4" class="main"></div>
+        <div class="split">Color and Size (various positions)</div>
+        <div id="main5" class="main"></div>
 
         <script type="text/javascript">
             require([
@@ -623,6 +625,122 @@ under the License.
                 });
             });
         </script>
+
+<script type="text/javascript">
+    require(['echarts'], function (echarts) {
+        const main = document.getElementById('main5');
+        if (!main) {
+            return;
+        }
+        const chart = echarts.init(main);
+
+        chart.setOption({
+            grid: {
+                top: 150,
+                bottom: 150,
+                left: 150,
+                right: 150
+            },
+            xAxis: {},
+            yAxis: {},
+            visualMap: [{
+                left: 10,
+                top: 100,
+                type: 'continuous',
+                calculable: true,
+                dimension: 0,
+                inRange: {
+                symbolSize: [10, 500]
+                }
+            },{
+                right: 10,
+                top: 100,
+                type: 'continuous',
+                calculable: true,
+                dimension: 0,
+                inRange: {
+                symbolSize: [10, 500]
+                },
+            },{
+                orient: 'horizontal',
+                left: 100,
+                top: 10,
+                type: 'continuous',
+                calculable: true,
+                dimension: 0,
+                inRange: {
+                symbolSize: [10, 500]
+                }
+            },{
+                orient: 'horizontal',
+                left: 100,
+                bottom: 10,
+                type: 'continuous',
+                calculable: true,
+                dimension: 0,
+                inRange: {
+                symbolSize: [10, 500]
+                },
+            },{
+                left: 10,
+                top: 300,
+                type: 'continuous',
+                calculable: true,
+                dimension: 0
+            },{
+                right: 10,
+                top: 300,
+                type: 'continuous',
+                calculable: true,
+                dimension: 0
+            },{
+                orient: 'horizontal',
+                left: 300,
+                top: 10,
+                type: 'continuous',
+                calculable: true,
+                dimension: 0
+            },{
+                orient: 'horizontal',
+                left: 300,
+                bottom: 10,
+                type: 'continuous',
+                calculable: true,
+                dimension: 0
+            }],
+            series: [
+                {
+                symbolSize: 20,
+                data: [
+                    [10.0, 8.04],
+                    [8.07, 6.95],
+                    [13.0, 7.58],
+                    [9.05, 8.81],
+                    [11.0, 8.33],
+                    [14.0, 7.66],
+                    [13.4, 6.81],
+                    [10.0, 6.33],
+                    [14.0, 8.96],
+                    [12.5, 6.82],
+                    [9.15, 7.2],
+                    [11.5, 7.2],
+                    [3.03, 4.23],
+                    [12.2, 7.83],
+                    [2.02, 4.47],
+                    [1.05, 3.33],
+                    [4.05, 4.96],
+                    [6.03, 7.24],
+                    [12.0, 6.26],
+                    [12.0, 8.84],
+                    [7.08, 5.82],
+                    [5.02, 5.68]
+                ],
+                type: 'scatter'
+                }
+            ]
+        });
+    });
+</script>
 
     </body>
 </html>
