@@ -56,10 +56,11 @@ under the License.
                     shape: {
                         cx: api.coord([api.value(0), api.value(1)])[0],
                         cy: api.coord([api.value(0), api.value(1)])[1],
-                        r: api.value(2) * (params.renderItemArgs.scale || 1)
+                        r: api.value(2) * (params.itemPayload.scale || 1)
                     },
                     style: {
-                        fill: api.visual('color')
+                        fill: api.visual('color'),
+                        opacity: params.itemPayload.opacity() || 1,
                     }
                 }
             };
@@ -71,10 +72,11 @@ under the License.
                 series: {
                     type: 'custom',
                     renderItem: 'bubble',
-                    renderItemArgs: {
-                        scale: 2
+                    itemPayload: {
+                        scale: 2,
+                        opacity: () => Math.random() * 0.5 + 0.5
                     },
-                    data: [[11, 22, 20], [33, 44, 40]]
+                    data: [[11, 22, 20], [33, 44, 40], [18, 24, 10]]
                 }
             };
 

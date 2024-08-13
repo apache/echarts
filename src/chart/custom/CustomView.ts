@@ -648,7 +648,7 @@ function makeRenderItem(
         coordSys: prepareResult.coordSys,
         dataInsideLength: data.count(),
         encode: wrapEncodeDef(customSeries.getData()),
-        renderItemArgs: customSeries.get('renderItemArgs') || {}
+        itemPayload: customSeries.get('itemPayload') || {}
     } as CustomSeriesRenderItemParams;
 
     // If someday intending to refactor them to a class, should consider do not
