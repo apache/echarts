@@ -1,4 +1,4 @@
-import { CustomSeriesRenderItem } from './CustomSeries';
+import type { CustomSeriesRenderItem } from './CustomSeries';
 
 const customRenderers: {[type: string]: CustomSeriesRenderItem} = {};
 
