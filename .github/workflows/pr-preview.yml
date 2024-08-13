@@ -46,10 +46,12 @@ jobs:
           workflow: ${{ github.event.workflow.id }}
           run_id: ${{ github.event.workflow_run.id }}
           name: pr_preview
+          path: pr-dist
           if_no_artifact_found: fail
 
       - name: Output PR metadata
         id: pr-metadata
+        working-directory: pr-dist
         run: |
           echo "NUMBER=$(cat pr_number)" >> $GITHUB_OUTPUT
           echo "COMMIT_SHA=$(cat pr_commit_sha)" >> $GITHUB_OUTPUT
@@ -59,6 +61,7 @@ jobs:
         env:
           PR_NUMBER: ${{ steps.pr-metadata.outputs.NUMBER }}
           SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
+        working-directory: pr-dist
         run: |
           export SURGE_DOMAIN=https://echarts-pr-$PR_NUMBER.surge.sh
           npx surge --project ./package --domain $SURGE_DOMAIN --token $SURGE_TOKEN
