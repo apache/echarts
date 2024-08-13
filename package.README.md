@@ -1,7 +1,8 @@
 # NOTICE about package.json
 
-See more details about in the "exports" field of `package.json` and why it is written like that in https://github.com/apache/echarts/pull/19513 .
+**[[!Remember!]]**: update the "exports" field of `package.json` if adding new public entry files.
 
+See more details about in the "exports" field of `package.json` and why it is written like that in https://github.com/apache/echarts/pull/19513 .
 
 ## Public and private
 
@@ -29,6 +30,8 @@ The other entries listed in the `"exports"` field of `package.json` make the int
 ## File extension fully specified
 
 Since `v5.5.0`, `"type": "module"` and `"exports: {...}"` are added to `package.json`. When upgrading to `v5.5.0+`, if you meet some problems about "can not find/resolve xxx" when importing `echarts/i18n/xxx` or `echarts/theme/xxx` or some internal files, it probably because of the issue "file extension not fully specified". Please try to make the file extension fully specified (that is, `import 'xxx/xxx/xxx.js'` rather than `import 'xxx/xxx/xxx'`), or change the config of you bundler tools to support auto adding file extensions.
+
+About `"./types/dist/shared": "./types/dist/shared.d.ts",` in "exports", see https://github.com/apache/echarts/pull/19663 .
 
 
 ## Use physical entry file or alias in `"exports"` of `package.json`

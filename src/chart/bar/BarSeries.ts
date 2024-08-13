@@ -81,6 +81,8 @@ export interface BarSeriesOption
 
     showBackground?: boolean
 
+    startValue?: number
+
     backgroundStyle?: ItemStyleOption & {
         borderRadius?: number | number[]
     }
