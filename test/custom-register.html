@@ -56,7 +56,7 @@ under the License.
                     shape: {
                         cx: api.coord([api.value(0), api.value(1)])[0],
                         cy: api.coord([api.value(0), api.value(1)])[1],
-                        r: api.value(2)
+                        r: api.value(2) * (params.renderItemArgs.scale || 1)
                     },
                     style: {
                         fill: api.visual('color')
@@ -71,6 +71,9 @@ under the License.
                 series: {
                     type: 'custom',
                     renderItem: 'bubble',
+                    renderItemArgs: {
+                        scale: 2
+                    },
                     data: [[11, 22, 20], [33, 44, 40]]
                 }
             };

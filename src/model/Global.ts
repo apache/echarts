@@ -62,7 +62,6 @@ import { concatInternalOptions } from './internalComponentCreator';
 import { LocaleOption } from '../core/locale';
 import {PaletteMixin} from './mixin/palette';
 import { error, warn } from '../util/log';
-import { getCustomSeries } from '../chart/custom/customSeriesRegister';
 
 export interface GlobalModelSetOptionOpts {
     replaceMerge: ComponentMainType | ComponentMainType[];
@@ -578,10 +577,6 @@ echarts.use([${seriesImportName}]);`);
                 }
             }
         }
-    }
-
-    getCustomRenderer(type: string) {
-        return getCustomSeries(type);
     }
 
     /**
