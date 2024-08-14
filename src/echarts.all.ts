@@ -65,6 +65,7 @@ import {
     SingleAxisComponent,
     ParallelComponent,
     CalendarComponent,
+    MatrixComponent,
     GraphicComponent,
     ToolboxComponent,
     TooltipComponent,
@@ -209,7 +210,14 @@ use(ParallelComponent);
 // );
 use(CalendarComponent);
 
-
+// `matrix` coordinate system. for example,
+// chart.setOption({
+//     matrix: {...},
+//     series: [{
+//         coordinateSystem: 'matrix'
+//     }]
+// );
+use(MatrixComponent);
 
 // ------------------
 // Other components

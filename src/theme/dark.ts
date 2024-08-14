@@ -43,6 +43,14 @@ const axisCommon = function () {
         }
     };
 };
+const matrixAxis = {
+    label: {
+        color: contrastColor
+    },
+    itemStyle: {
+        borderColor: '#484753'
+    }
+};
 
 const colorPalette = [
     '#4992ff',
@@ -167,6 +175,16 @@ const theme = {
         },
         yearLabel: {
             color: contrastColor
+        }
+    },
+    matrix: {
+        x: matrixAxis,
+        y: matrixAxis,
+        backgroundColor: {
+            borderColor: '#817f91'
+        },
+        innerBackgroundStyle: {
+            borderColor: '#484753'
         }
     },
     timeAxis: axisCommon(),

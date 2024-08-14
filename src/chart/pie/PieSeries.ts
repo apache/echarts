@@ -168,8 +168,9 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      * @overwrite
      */
     getInitialData(this: PieSeriesModel): SeriesData {
+        const isMatrix = this.option.coordinateSystem === 'matrix';
         return createSeriesDataSimply(this, {
-            coordDimensions: ['value'],
+            coordDimensions: isMatrix ? ['x', 'y', 'value'] : ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
     }
