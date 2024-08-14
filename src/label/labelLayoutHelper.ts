@@ -322,6 +322,12 @@ export function hideOverlap(labelList: LabelLayoutInfo[]) {
         globalRect.x += 0.05;
         globalRect.y += 0.05;
 
+        if (globalRect.width <= 0 || globalRect.height <= 0) {
+            hideEl(label);
+            labelLine && hideEl(labelLine);
+            continue;
+        }
+
         let obb = labelItem.obb;
         let overlapped = false;
         for (let j = 0; j < displayedLabels.length; j++) {

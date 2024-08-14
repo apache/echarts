@@ -73,7 +73,7 @@ import {
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
 import Scale from './Scale';
-import {TimeScaleTick, ScaleTick} from '../util/types';
+import {TimeScaleTick, ScaleTick, ScaleBreak} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
 import { warn } from '../util/log';
 import { LocaleOption } from '../core/locale';
@@ -102,6 +102,7 @@ const bisect = function (
 type TimeScaleSetting = {
     locale: Model<LocaleOption>;
     useUTC: boolean;
+    breaks?: ScaleBreak[];
 };
 
 class TimeScale extends IntervalScale<TimeScaleSetting> {
@@ -242,11 +243,11 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     }
 
     normalize(val: number): number {
-        return scaleHelper.normalize(this.parse(val), this._extent);
+        return scaleHelper.normalize(this.parse(val), this._extent, this._breaks);
     }
 
     scale(val: number): number {
-        return scaleHelper.scale(val, this._extent);
+        return scaleHelper.scale(val, this._extent, this._breaks);
     }
 
 }

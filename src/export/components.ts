@@ -25,6 +25,7 @@ export {install as RadarComponent} from '../component/radar/install';
 
 export {install as GeoComponent} from '../component/geo/install';
 
+export {install as AxisComponent} from '../component/axis/install';
 export {install as SingleAxisComponent} from '../component/singleAxis/install';
 export {install as ParallelComponent} from '../component/parallel/install';
 export {install as CalendarComponent} from '../component/calendar/install';

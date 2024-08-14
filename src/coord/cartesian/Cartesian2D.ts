@@ -190,7 +190,6 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 
         return new BoundingRect(x, y, width, height);
     }
-
 };
 
 interface Cartesian2DArea extends BoundingRect {}
