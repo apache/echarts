@@ -37,7 +37,8 @@ const mathFloor = Math.floor;
 const mathCeil = Math.ceil;
 const mathPow = Math.pow;
 
-const mathLog = Math.log;
+import * as myMath from '../util/math';
+const mathLog = myMath.log;
 
 class LogScale extends Scale {
     static type = 'log';

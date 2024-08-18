@@ -26,8 +26,8 @@ import LogScale from '../scale/Log';
 import { warn } from '../util/log';
 import { increaseInterval, isValueNice } from '../scale/helper';
 
-const mathLog = Math.log;
-
+import * as myMath from '../util/math';
+const mathLog = myMath.log;
 
 export function alignScaleTicks(
     scale: IntervalScale | LogScale,
