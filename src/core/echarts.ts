@@ -107,7 +107,8 @@ import {
     ScaleDataValue,
     ZRElementEventName,
     ECElementEvent,
-    AnimationOption
+    AnimationOption,
+    Dictionary
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
@@ -322,6 +323,8 @@ export type EChartsInitOpts = {
     locale?: string | LocaleOption,
     renderer?: RendererType,
     devicePixelRatio?: number,
+    darkMode?: 'auto' | 'light' | 'dark',
+    darkColorMap?: Dictionary<string>,
     useDirtyRect?: boolean,
     useCoarsePointer?: boolean,
     pointerSize?: number,
@@ -410,6 +413,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         this._dom = dom;
 
         let defaultRenderer = 'canvas';
+        let defaultDarkMode = 'auto' as const;
         let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
 
@@ -448,6 +452,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             width: opts.width,
             height: opts.height,
             ssr: opts.ssr,
+            darkMode: opts.darkMode || defaultDarkMode,
+            darkColorMap: opts.darkColorMap,
             useDirtyRect: retrieve2(opts.useDirtyRect, defaultUseDirtyRect),
             useCoarsePointer: retrieve2(opts.useCoarsePointer, defaultCoarsePointer),
             pointerSize: opts.pointerSize

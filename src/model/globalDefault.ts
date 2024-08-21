@@ -30,7 +30,7 @@ const decalColor = 'rgba(0, 0, 0, 0.2)';
 export default {
 
     darkMode: 'auto',
-    // backgroundColor: 'rgba(0,0,0,0)',
+    backgroundColor: 'rgba(255,255,255,1)',
 
     colorBy: 'series',
 
