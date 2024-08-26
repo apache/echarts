@@ -247,7 +247,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
     readonly layoutMode = {
         type: 'box',
         // legend.width/height are maxWidth/maxHeight actually,
-        // whereas realy width/height is calculated by its content.
+        // whereas real width/height is calculated by its content.
         // (Setting {left: 10, right: 10} does not make sense).
         // So consider the case:
         // `setOption({legend: {left: 10});`
@@ -350,8 +350,8 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
          */
         this._availableNames = availableNames;
 
-        // If legend.data not specified in option, use availableNames as data,
-        // which is convinient for user preparing option.
+        // If legend.data is not specified in option, use availableNames as data,
+        // which is convenient for user preparing option.
         const rawData = this.get('data') || potentialData;
 
         const legendNameMap = zrUtil.createHashMap();

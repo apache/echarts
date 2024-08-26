@@ -18,7 +18,7 @@
 */
 
 /*
-* A third-party license is embeded for some of the code in this file:
+* A third-party license is embedded for some of the code in this file:
 * The tree layoutHelper implementation was originally copied from
 * "d3.js"(https://github.com/d3/d3-hierarchy) with
 * some modifications made for this project.

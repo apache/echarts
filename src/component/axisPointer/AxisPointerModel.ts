@@ -88,6 +88,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
         // see `modelHelper`.
         snap: false,
         triggerTooltip: true,
+        triggerEmphasis: true,
 
         value: null,
         status: null, // Init value depends on whether handle is used.

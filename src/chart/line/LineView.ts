@@ -404,7 +404,7 @@ function canShowAllSymbolForCategory(
     categoryAxis: Axis2D,
     data: SeriesData
 ) {
-    // In mose cases, line is monotonous on category axis, and the label size
+    // In most cases, line is monotonous on category axis, and the label size
     // is close with each other. So we check the symbol size and some of the
     // label size alone with the category axis to estimate whether all symbol
     // can be shown without overlap.
@@ -624,6 +624,8 @@ class LineView extends ChartView {
 
         this._symbolDraw = symbolDraw;
         this._lineGroup = lineGroup;
+
+        this._changePolyState = zrUtil.bind(this._changePolyState, this);
     }
 
     render(seriesModel: LineSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
@@ -644,7 +646,7 @@ class LineView extends ChartView {
 
         const lineGroup = this._lineGroup;
 
-        const hasAnimation = seriesModel.get('animation');
+        const hasAnimation = !ecModel.ssr && seriesModel.get('animation');
 
         const isAreaChart = !areaStyleModel.isEmpty();
 
@@ -778,7 +780,7 @@ class LineView extends ChartView {
             }
 
             // Always update, or it is wrong in the case turning on legend
-            // because points are not changed
+            // because points are not changed.
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
                 clipShape: clipShapeForSymbol,
@@ -788,8 +790,8 @@ class LineView extends ChartView {
                 }
             });
 
-            // In the case data zoom triggerred refreshing frequently
-            // Data may not change if line has a category axis. So it should animate nothing
+            // In the case data zoom triggered refreshing frequently
+            // Data may not change if line has a category axis. So it should animate nothing.
             if (!isPointsSame(this._stackedOnPoints, stackedOnPoints)
                 || !isPointsSame(this._points, points)
             ) {
@@ -885,9 +887,7 @@ class LineView extends ChartView {
             toggleHoverEmphasis(polygon, focus, blurScope, emphasisDisabled);
         }
 
-        const changePolyState = (toState: DisplayState) => {
-            this._changePolyState(toState);
-        };
+        const changePolyState = this._changePolyState;
 
         data.eachItemGraphicEl(function (el) {
             // Switch polyline / polygon state if element changed its state.
@@ -943,7 +943,7 @@ class LineView extends ChartView {
                     // Null data
                     return;
                 }
-                // fix #11360: should't draw symbol outside clipShapeForSymbol
+                // fix #11360: shouldn't draw symbol outside clipShapeForSymbol
                 if (this._clipShapeForSymbol && !this._clipShapeForSymbol.contain(x, y)) {
                     return;
                 }
@@ -1085,10 +1085,10 @@ class LineView extends ChartView {
         if (zrUtil.isFunction(seriesDuration)) {
             seriesDuration = seriesDuration(null);
         }
-        const seriesDalay = seriesModel.get('animationDelay') || 0;
-        const seriesDalayValue = zrUtil.isFunction(seriesDalay)
-            ? seriesDalay(null)
-            : seriesDalay;
+        const seriesDelay = seriesModel.get('animationDelay') || 0;
+        const seriesDelayValue = zrUtil.isFunction(seriesDelay)
+            ? seriesDelay(null)
+            : seriesDelay;
 
         data.eachItemGraphicEl(function (symbol: SymbolExtended, idx) {
             const el = symbol;
@@ -1131,8 +1131,8 @@ class LineView extends ChartView {
                     ratio = 1 - ratio;
                 }
 
-                const delay = zrUtil.isFunction(seriesDalay) ? seriesDalay(idx)
-                    : (seriesDuration * ratio) + seriesDalayValue;
+                const delay = zrUtil.isFunction(seriesDelay) ? seriesDelay(idx)
+                    : (seriesDuration * ratio) + seriesDelayValue;
 
                 const symbolPath = el.getSymbolPath();
                 const text = symbolPath.getTextContent();
@@ -1299,7 +1299,10 @@ class LineView extends ChartView {
                 });
             }
             if (valueAnimation) {
-                labelInner(endLabel).setLabelText(value);
+                const inner = labelInner(endLabel);
+                if (typeof inner.setLabelText === 'function') {
+                    inner.setLabelText(value);
+                }
             }
         }
     }

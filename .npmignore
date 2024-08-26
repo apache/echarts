@@ -7,8 +7,14 @@
 /npm-debug.log
 /benchmark
 /src
+/ssr/client/src
+/extension-src
+/build
+/tsconfig.json
 .DS_Store
 Thumbs.db
 Desktop.ini
+/asset/contributing-inspect.png
+CONTRIBUTING.md
 # Hidden files
 .*

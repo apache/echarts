@@ -194,7 +194,7 @@ class BrushTargetManager {
             // convert coordRange to global range and set panelId.
             if (targetInfo && targetInfo !== true) {
                 area.panelId = targetInfo.panelId;
-                // (1) area.range shoule always be calculate from coordRange but does
+                // (1) area.range should always be calculate from coordRange but does
                 // not keep its original value, for the sake of the dataZoom scenario,
                 // where area.coordRange remains unchanged but area.range may be changed.
                 // (2) Only support converting one coordRange to pixel range in brush
@@ -244,7 +244,7 @@ class BrushTargetManager {
 
     /**
      * If return Object, a coord found.
-     * If reutrn true, global found.
+     * If return true, global found.
      * Otherwise nothing found.
      */
     findTargetInfo(

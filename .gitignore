@@ -195,6 +195,10 @@ todo
 /index.blank.js
 /extension-esm
 /extension
+/ssr/client/lib
+/ssr/client/types
+/ssr/client/index.js
+/ssr/client/index.d.ts
 /core.js
 /core.d.ts
 /charts.js

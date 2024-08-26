@@ -103,7 +103,8 @@ interface SeriesModel {
     getMarkerPosition(
         value: ScaleDataValue[],
         dims?: typeof dimPermutations[number],
-        startingAtTick?:boolean): number[];
+        startingAtTick?: boolean
+    ): number[];
 
     /**
      * Get legend icon symbol according to each series type
@@ -145,7 +146,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // @readonly
     seriesIndex: number;
 
-    // coodinateSystem will be injected in the echarts/CoordinateSystem
+    // coordinateSystem will be injected in the echarts/CoordinateSystem
     coordinateSystem: CoordinateSystem;
 
     // Injected outside
@@ -346,7 +347,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const task = getCurrentTask(this);
         if (task) {
             const data = task.context.data;
-            return (dataType == null ? data : data.getLinkedData(dataType)) as SeriesData<this>;
+            return (dataType == null || !data.getLinkedData ? data : data.getLinkedData(dataType)) as SeriesData<this>;
         }
         else {
             // When series is not alive (that may happen when click toolbox
@@ -717,7 +718,7 @@ function dataTaskReset(context: SeriesTaskContext) {
 }
 
 function dataTaskProgress(param: StageHandlerProgressParams, context: SeriesTaskContext): void {
-    // Avoid repead cloneShallow when data just created in reset.
+    // Avoid repeat cloneShallow when data just created in reset.
     if (context.outputData && param.end > context.outputData.count()) {
         context.model.getRawData().cloneShallow(context.outputData);
     }

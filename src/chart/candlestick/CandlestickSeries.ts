@@ -124,7 +124,6 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
         },
 
         emphasis: {
-            scale: true,
             itemStyle: {
                 borderWidth: 2
             }

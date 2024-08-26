@@ -2,7 +2,13 @@ name: Node CI
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, reopened, synchronize]
+
+concurrency:
+  # Note that the `teardown-pr-preview` workflow needs the same group name
+  # to cancel the running `ci` workflows
+  group: ${{ github.workflow }}-${{ github.event.number }}
+  cancel-in-progress: true
 
 jobs:
   lint:
@@ -10,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [18.x]
 
     steps:
       - name: Fetch commit count
@@ -19,18 +25,18 @@ jobs:
         run: |
           echo "FETCH_DEPTH=$(($PR_COMMIT_COUNT + 1))" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: ${{ env.FETCH_DEPTH }}
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
         id: cache-dep
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: cache-node-modules
         with:
@@ -58,19 +64,19 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [18.x]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
         id: cache-dep
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         env:
           cache-name: cache-node-modules
         with:
@@ -81,11 +87,43 @@ jobs:
         if: steps.cache-dep.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Unit Test
+        run: npm run test
+
       - name: Build release
         run: npm run release
 
       - name: Test generated DTS
         run: npm run test:dts
 
-      - name: Unit Test
-        run: npm run test
+      - name: Pack npm tarball
+        if: ${{ github.repository_owner == 'apache' }}
+        id: pack-tarball
+        run: |
+          export PR_PREVIEW_DIR='echarts-pr-preview'
+          mkdir -p $PR_PREVIEW_DIR
+          npm pack -pack-destination $PR_PREVIEW_DIR
+          echo "PR_PREVIEW_DIR=$PR_PREVIEW_DIR" >> $GITHUB_ENV
+
+      - name: Save PR metadata and dist files
+        if: ${{ steps.pack-tarball.outcome == 'success' }}
+        id: save-pr-data
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+          PR_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_PREVIEW_DIR: ${{ env.PR_PREVIEW_DIR }}
+        run: |
+          cd $PR_PREVIEW_DIR
+          echo $PR_NUMBER > ./pr_number
+          echo $PR_COMMIT_SHA > ./pr_commit_sha
+          find . -type f -regex ".*\.tgz" -exec tar xvzf {} \;
+          rm -f *.tgz
+          echo -e "Dist files: \n$(ls -l)"
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ steps.save-pr-data.outcome == 'success' }}
+        with:
+          name: pr_preview
+          path: ${{ env.PR_PREVIEW_DIR }}
+          retention-days: 1
+          if-no-files-found: error

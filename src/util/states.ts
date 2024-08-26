@@ -19,7 +19,6 @@
 */
 
 import { Dictionary } from 'zrender/src/core/types';
-import LRU from 'zrender/src/core/LRU';
 import Displayable, { DisplayableState } from 'zrender/src/graphic/Displayable';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { GradientObject } from 'zrender/src/graphic/Gradient';
@@ -45,13 +44,10 @@ import {
     isObject,
     keys,
     isArray,
-    each,
-    isString,
-    isGradientObject,
-    map
+    each
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
-import * as colorTool from 'zrender/src/tool/color';
+import { liftColor } from 'zrender/src/tool/color';
 import SeriesData from '../data/SeriesData';
 import SeriesModel from '../model/Series';
 import { CoordinateSystemMaster, CoordinateSystem } from '../coord/CoordinateSystem';
@@ -108,30 +104,6 @@ type ExtendedDisplayable = Displayable & ExtendedProps;
 
 function hasFillOrStroke(fillOrStroke: string | PatternObject | GradientObject) {
     return fillOrStroke != null && fillOrStroke !== 'none';
-}
-// Most lifted color are duplicated.
-const liftedColorCache = new LRU<string>(100);
-function liftColor(color: GradientObject): GradientObject;
-function liftColor(color: string): string;
-function liftColor(color: string | GradientObject): string | GradientObject {
-    if (isString(color)) {
-        let liftedColor = liftedColorCache.get(color);
-        if (!liftedColor) {
-            liftedColor = colorTool.lift(color, -0.1);
-            liftedColorCache.put(color, liftedColor);
-        }
-        return liftedColor;
-    }
-    else if (isGradientObject(color)) {
-        const ret = extend({}, color) as GradientObject;
-        ret.colorStops = map(color.colorStops, stop => ({
-            offset: stop.offset,
-            color: colorTool.lift(stop.color, -0.1)
-        }));
-        return ret;
-    }
-    // Change nothing.
-    return color;
 }
 
 function doChangeHoverState(el: ECElement, stateName: DisplayState, hoverStateEnum: 0 | 1 | 2) {
@@ -209,7 +181,7 @@ export function setStatesFlag(el: ECElement, stateName: DisplayState) {
 
 /**
  * If we reuse elements when rerender.
- * DONT forget to clearStates before we update the style and shape.
+ * DON'T forget to clearStates before we update the style and shape.
  * Or we may update on the wrong state instead of normal state.
  */
 export function clearStates(el: Element) {
@@ -239,7 +211,7 @@ function getFromStateStyle(
     for (let i = 0; i < el.animators.length; i++) {
         const animator = el.animators[i];
         if (animator.__fromStateTransition
-            // Dont consider the animation to emphasis state.
+            // Don't consider the animation to emphasis state.
             && animator.__fromStateTransition.indexOf(toStateName) < 0
             && animator.targetName === 'style') {
             animator.saveTo(fromState, props);
@@ -506,6 +478,13 @@ export function blurSeries(
         )) {
             const view = api.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
+                // For the elements that have been triggered by other components,
+                // and are still required to be highlighted,
+                // because the current is directly forced to blur the element,
+                // it will cause the focus self to be unable to highlight, so skip the blur of this element.
+                if ((child as ExtendedElement).__highByOuter && sameSeries && focus === 'self') {
+                    return;
+                }
                 singleEnterBlur(child);
             });
 
@@ -843,7 +822,7 @@ export function setStatesStylesFromModel(
 /**
  *
  * Set element as highlight / downplay dispatcher.
- * It will be checked when element recieved mouseover event or from highlight action.
+ * It will be checked when element received mouseover event or from highlight action.
  * It's in change of all highlight/downplay behavior of it's children.
  *
  * @param el
@@ -899,9 +878,9 @@ export function enableComponentHighDownFeatures(
 }
 
 /**
- * Support hightlight/downplay record on each elements.
+ * Support highlight/downplay record on each elements.
  * For the case: hover highlight/downplay (legend, visualMap, ...) and
- * user triggerred hightlight/downplay should not conflict.
+ * user triggered highlight/downplay should not conflict.
  * Only all of the highlightDigit cleared, return to normal.
  * @param {string} highlightKey
  * @return {number} highlightDigit

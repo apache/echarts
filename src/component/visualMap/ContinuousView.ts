@@ -108,8 +108,12 @@ class ContinuousView extends VisualMapView {
 
     private _firstShowIndicator: boolean;
 
-    private _api: ExtensionAPI;
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
+        super.init(ecModel, api);
 
+        this._hoverLinkFromSeriesMouseOver = zrUtil.bind(this._hoverLinkFromSeriesMouseOver, this);
+        this._hideIndicator = zrUtil.bind(this._hideIndicator, this);
+    }
 
     doRender(
         visualMapModel: ContinuousModel,
@@ -117,8 +121,6 @@ class ContinuousView extends VisualMapView {
         api: ExtensionAPI,
         payload: {type: string, from: string}
     ) {
-        this._api = api;
-
         if (!payload || payload.type !== 'selectDataRange' || payload.from !== this.uid) {
             this._buildView();
         }
@@ -296,7 +298,7 @@ class ContinuousView extends VisualMapView {
             draggable: true,
             drift: onDrift,
             onmousemove(e) {
-                // Fot mobile devicem, prevent screen slider on the button.
+                // For mobile device, prevent screen slider on the button.
                 eventTool.stop(e.event);
             },
             ondragend: onDragEnd,
@@ -453,7 +455,7 @@ class ContinuousView extends VisualMapView {
             handleEnds,
             sizeExtent,
             handleIndex,
-            // cross is forbiden
+            // cross is forbidden
             0
         );
 
@@ -532,7 +534,7 @@ class ContinuousView extends VisualMapView {
         }
     ) {
         // Considering colorHue, which is not linear, so we have to sample
-        // to calculate gradient color stops, but not only caculate head
+        // to calculate gradient color stops, but not only calculate head
         // and tail.
         const sampleNumber = 100; // Arbitrary value.
         const colorStops: LinearGradientObject['colorStops'] = [];
@@ -711,7 +713,7 @@ class ContinuousView extends VisualMapView {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
                 // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
-                this._api.enterBlur(handleLabels[i]);
+                this.api.enterBlur(handleLabels[i]);
             }
         }
     }
@@ -856,7 +858,7 @@ class ContinuousView extends VisualMapView {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
                 // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
-                this._api.leaveBlur(handleLabels[i]);
+                this.api.leaveBlur(handleLabels[i]);
             }
         }
     }
@@ -874,6 +876,7 @@ class ContinuousView extends VisualMapView {
         this._hideIndicator();
 
         const zr = this.api.getZr();
+
         zr.off('mouseover', this._hoverLinkFromSeriesMouseOver);
         zr.off('mouseout', this._hideIndicator);
     }
@@ -892,7 +895,7 @@ class ContinuousView extends VisualMapView {
             : graphic.transformDirection(vertex, transform, inverse);
     }
 
- // TODO: TYPE more specified payload types.
+    // TODO: TYPE more specified payload types.
     private _dispatchHighDown(type: 'highlight' | 'downplay', batch: Payload['batch']) {
         batch && batch.length && this.api.dispatchAction({
             type: type,
@@ -904,14 +907,6 @@ class ContinuousView extends VisualMapView {
      * @override
      */
     dispose() {
-        this._clearHoverLinkFromSeries();
-        this._clearHoverLinkToSeries();
-    }
-
-    /**
-     * @override
-     */
-    remove() {
         this._clearHoverLinkFromSeries();
         this._clearHoverLinkToSeries();
     }
@@ -930,7 +925,7 @@ function createPolygon(
         cursor: cursor,
         drift: onDrift,
         onmousemove(e) {
-            // Fot mobile devicem, prevent screen slider on the button.
+            // For mobile device, prevent screen slider on the button.
             eventTool.stop(e.event);
         },
         ondragend: onDragEnd

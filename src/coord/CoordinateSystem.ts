@@ -57,17 +57,17 @@ export interface CoordinateSystemMaster {
 
     update?: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 
-    // This methods is also responsible for determine whether this
-    // coodinate system is applicable to the given `finder`.
-    // Each coordinate system will be tried, util one returns none
+    // This methods is also responsible for determining whether this
+    // coordinate system is applicable to the given `finder`.
+    // Each coordinate system will be tried, until one returns non-
     // null/undefined value.
     convertToPixel?(
         ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]
     ): number | number[];
 
-    // This methods is also responsible for determine whether this
-    // coodinate system is applicable to the given `finder`.
-    // Each coordinate system will be tried, util one returns none
+    // This methods is also responsible for determining whether this
+    // coordinate system is applicable to the given `finder`.
+    // Each coordinate system will be tried, until one returns non-
     // null/undefined value.
     convertFromPixel?(
         ecModel: GlobalModel, finder: ParsedModelFinder, pixelValue: number | number[]
@@ -149,7 +149,7 @@ export interface CoordinateSystem {
 
     getRoamTransform?: () => MatrixArray;
 
-    getArea?: () => CoordinateSystemClipArea
+    getArea?: (tolerance?: number) => CoordinateSystemClipArea
 
     // Only `coord/View.js` implements `getBoundingRect`.
     // But if other coord sys implement it, should follow this signature.

@@ -291,7 +291,7 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
             const refering = this.getReferringComponents(getAxisMainType(axisDim), MULTIPLE_REFERRING);
             // When user set axisIndex as a empty array, we think that user specify axisIndex
             // but do not want use auto mode. Because empty array may be encountered when
-            // some error occured.
+            // some error occurred.
             if (!refering.specified) {
                 return;
             }
@@ -577,8 +577,8 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 
 }
 /**
- * Retrieve the those raw params from option, which will be cached separately.
- * becasue they will be overwritten by normalized/calculated values in the main
+ * Retrieve those raw params from option, which will be cached separately,
+ * because they will be overwritten by normalized/calculated values in the main
  * process.
  */
 function retrieveRawOption<T extends DataZoomOption>(option: T) {

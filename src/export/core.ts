@@ -25,16 +25,23 @@ import { use } from '../extension';
 
 // Import label layout by default.
 // TODO will be treeshaked.
-import {installLabelLayout} from '../label/installLabelLayout';
+import { installLabelLayout } from '../label/installLabelLayout';
 use(installLabelLayout);
 
 
 // Export necessary types
-export {ZRColor as Color, Payload} from '../util/types';
-export {LinearGradientObject} from 'zrender/src/graphic/LinearGradient';
-export {RadialGradientObject} from 'zrender/src/graphic/RadialGradient';
-export {PatternObject, ImagePatternObject, SVGPatternObject} from 'zrender/src/graphic/Pattern';
-export {ElementEvent} from 'zrender/src/Element';
+export {
+    ZRColor as Color,
+    Payload,
+    ECElementEvent,
+    HighlightPayload,
+    DownplayPayload,
+    SelectChangedPayload
+} from '../util/types';
+export { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
+export { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
+export { PatternObject, ImagePatternObject, SVGPatternObject } from 'zrender/src/graphic/Pattern';
+export { ElementEvent } from 'zrender/src/Element';
 
 // ComposeOption
 import type { ComponentOption, ECBasicOption as EChartsCoreOption } from '../util/types';
@@ -45,9 +52,9 @@ import type { AngleAxisOption, RadiusAxisOption } from '../coord/polar/AxisModel
 import type { ParallelAxisOption } from '../coord/parallel/AxisModel';
 
 
-export {EChartsType as ECharts} from '../core/echarts';
+export { EChartsType as ECharts } from '../core/echarts';
 
-export {EChartsCoreOption};
+export { EChartsCoreOption };
 
 // type SeriesSubComponentsTypes = 'markPoint' | 'markLine' | 'markArea' | 'tooltip';
 // type InjectSeriesSubComponents<OptionUnion extends ComponentOption, Injected> =
@@ -92,16 +99,16 @@ type ComposeUnitOption<OptionUnion extends ComponentOption> =
     Omit<EChartsCoreOption, 'baseOption' | 'options'> & {
         [key in GetMainType<OptionUnion>]?: Arrayable<
             ExtractComponentOption<OptionUnion, key>
-            // TODO: It will make error log too complex.
-            // So this more strict type checking will not be used currently to make sure the error msg is friendly.
-            //
-            // Inject markPoint, markLine, markArea, tooltip in series.
-            // ExtractComponentOption<
-            //     InjectSeriesSubComponents<
-            //         OptionUnion, GetSeriesInjectedSubOption<GetMainType<OptionUnion>, OptionUnion>
-            //     >,
-            //     key
-            // >
+        // TODO: It will make error log too complex.
+        // So this more strict type checking will not be used currently to make sure the error msg is friendly.
+        //
+        // Inject markPoint, markLine, markArea, tooltip in series.
+        // ExtractComponentOption<
+        //     InjectSeriesSubComponents<
+        //         OptionUnion, GetSeriesInjectedSubOption<GetMainType<OptionUnion>, OptionUnion>
+        //     >,
+        //     key
+        // >
         >
     } & GetDependencies<GetMainType<OptionUnion>>;
 

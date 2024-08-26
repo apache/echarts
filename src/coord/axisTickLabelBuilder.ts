@@ -60,6 +60,18 @@ type InnerStore = {
 
 const inner = makeInner<InnerStore, any>();
 
+function tickValuesToNumbers(axis: Axis, values: (number | string | Date)[]) {
+    const nums = zrUtil.map(values, val => axis.scale.parse(val));
+    if (axis.type === 'time' && nums.length > 0) {
+        // Time axis needs duplicate first/last tick (see TimeScale.getTicks())
+        // The first and last tick/label don't get drawn
+        nums.sort();
+        nums.unshift(nums[0]);
+        nums.push(nums[nums.length - 1]);
+    }
+    return nums;
+}
+
 export function createAxisLabels(axis: Axis): {
     labels: {
         level?: number,
@@ -69,6 +81,23 @@ export function createAxisLabels(axis: Axis): {
     }[],
     labelCategoryInterval?: number
 } {
+    const custom = axis.getLabelModel().get('customValues');
+    if (custom) {
+        const labelFormatter = makeLabelFormatter(axis);
+        const extent = axis.scale.getExtent();
+        const tickNumbers = tickValuesToNumbers(axis, custom);
+        const ticks = zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1]);
+        return {
+            labels: zrUtil.map(ticks, numval => {
+                const tick = {value: numval};
+                return {
+                    formattedLabel: labelFormatter(tick),
+                    rawLabel: axis.scale.getLabel(tick),
+                    tickValue: numval
+                };
+            })
+        };
+    }
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryLabels(axis)
@@ -87,6 +116,14 @@ export function createAxisTicks(axis: Axis, tickModel: AxisBaseModel): {
     ticks: number[],
     tickCategoryInterval?: number
 } {
+    const custom = axis.getTickModel().get('customValues');
+    if (custom) {
+        const extent = axis.scale.getExtent();
+        const tickNumbers = tickValuesToNumbers(axis, custom);
+        return {
+            ticks: zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1])
+        };
+    }
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryTicks(axis, tickModel)
@@ -123,7 +160,7 @@ function makeCategoryLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption
         labels = makeLabelsByNumericCategoryInterval(axis, numericLabelInterval);
     }
 
-    // Cache to avoid calling interval function repeatly.
+    // Cache to avoid calling interval function repeatedly.
     return listCacheSet(labelsCache, optionLabelInterval as CacheKey, {
         labels: labels, labelCategoryInterval: numericLabelInterval
     });
@@ -165,7 +202,7 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
         ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
     }
 
-    // Cache to avoid calling interval function repeatly.
+    // Cache to avoid calling interval function repeatedly.
     return listCacheSet(ticksCache, optionTickInterval as CacheKey, {
         ticks: ticks, tickCategoryInterval: tickCategoryInterval
     });
@@ -186,13 +223,13 @@ function makeRealNumberLabels(axis: Axis) {
     };
 }
 
-// Large category data calculation is performence sensitive, and ticks and label
-// probably be fetched by multiple times. So we cache the result.
+// Large category data calculation is performance sensitive, and ticks and label
+// probably will be fetched multiple times. So we cache the result.
 // axis is created each time during a ec process, so we do not need to clear cache.
 function getListCache(axis: Axis, prop: 'ticks'): InnerStore['ticks'];
 function getListCache(axis: Axis, prop: 'labels'): InnerStore['labels'];
 function getListCache(axis: Axis, prop: 'ticks' | 'labels') {
-    // Because key can be funciton, and cache size always be small, we use array cache.
+    // Because key can be a function, and cache size always is small, we use array cache.
     return inner(axis)[prop] || (inner(axis)[prop] = []);
 }
 
@@ -296,7 +333,7 @@ export function calculateCategoryInterval(axis: Axis) {
         // point is not the same when zooming in or zooming out.
         && lastAutoInterval > interval
         // If the axis change is caused by chart resize, the cache should not
-        // be used. Otherwise some hiden labels might not be shown again.
+        // be used. Otherwise some hidden labels might not be shown again.
         && cache.axisExtent0 === axisExtent[0]
         && cache.axisExtent1 === axisExtent[1]
     ) {

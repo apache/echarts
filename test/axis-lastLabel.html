@@ -130,10 +130,6 @@ under the License.
                 'echarts'
             ], function (rainfallData, echarts) {
 
-                var chart = echarts.init(document.getElementById('chart0'), null, {
-
-                });
-
                 var option = {
                     tooltip : {
                         trigger: 'axis'
@@ -203,10 +199,6 @@ under the License.
                 'data/rainfall.json.js',
                 'echarts'
             ], function (rainfallData, echarts) {
-
-                var chart = echarts.init(document.getElementById('chart1'), null, {
-
-                });
 
                 var option = {
                     tooltip : {
@@ -289,10 +281,6 @@ under the License.
                 'echarts'
             ], function (rainfallData, echarts) {
 
-                var chart = echarts.init(document.getElementById('chart1'), null, {
-
-                });
-
                 var option = {
                     tooltip: {
                         trigger: 'axis'
@@ -300,8 +288,15 @@ under the License.
                     dataZoom: {
                         show: true,
                         realtime: true,
-                        startValue: '2009-09-20 12:00',
-                        end: 100
+                        // The `startValue` does not exist in the categories as it's splitted by '-' rather than '/'
+                        // It will fallback to the first category
+                        // The same to `endValue` / `end` / `start`
+                        startValue: '2009-07-20 12:00',
+                        // the `endValue` should work
+                        endValue: '2009/8/20 12:00',
+                        // start: 50,
+                        // end: 60,
+                        // end: 'aaaa'
                     },
                     xAxis: {
                         axisTick: {
@@ -371,10 +366,6 @@ under the License.
                 'data/rainfall.json.js',
                 'echarts'
             ], function (rainfallData, echarts) {
-
-                var chart = echarts.init(document.getElementById('chart1'), null, {
-
-                });
 
                 var option = {
                     tooltip : {

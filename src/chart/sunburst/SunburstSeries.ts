@@ -50,7 +50,7 @@ interface SunburstItemStyleOption<TCbParams = never> extends ItemStyleOption<TCb
     borderRadius?: (number | string)[] | number | string
 }
 
-interface SunburstLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
+interface SunburstLabelOption extends Omit<SeriesLabelOption<SunburstDataParams>, 'rotate' | 'position'> {
     rotate?: 'radial' | 'tangential' | number
     minAngle?: number
     silent?: boolean
@@ -77,8 +77,8 @@ export interface SunburstStateOption<TCbParams = never> {
 }
 
 export interface SunburstSeriesNodeItemOption extends
-    SunburstStateOption<CallbackDataParams>,
-    StatesOptionMixin<SunburstStateOption<CallbackDataParams>, SunburstStatesMixin>,
+    SunburstStateOption<SunburstDataParams>,
+    StatesOptionMixin<SunburstStateOption<SunburstDataParams>, SunburstStatesMixin>,
     OptionDataItemObject<OptionDataValue>
 {
     nodeClick?: 'rootToNode' | 'link' | false
@@ -92,8 +92,9 @@ export interface SunburstSeriesNodeItemOption extends
 
     cursor?: string
 }
-export interface SunburstSeriesLevelOption
-    extends SunburstStateOption, StatesOptionMixin<SunburstStateOption, SunburstStatesMixin> {
+export interface SunburstSeriesLevelOption extends
+    SunburstStateOption<SunburstDataParams>,
+    StatesOptionMixin<SunburstStateOption<SunburstDataParams>, SunburstStatesMixin> {
 
     radius?: (number | string)[]
     /**
@@ -118,7 +119,8 @@ interface SortParam {
     getValue(): number
 }
 export interface SunburstSeriesOption extends
-    SeriesOption<SunburstStateOption, SunburstStatesMixin>, SunburstStateOption,
+    SeriesOption<SunburstStateOption<SunburstDataParams>, SunburstStatesMixin>,
+    SunburstStateOption<SunburstDataParams>,
     SunburstColorByMixin,
     CircleLayoutOptionMixin {
 
@@ -141,6 +143,8 @@ export interface SunburstSeriesOption extends
     nodeClick?: 'rootToNode' | 'link' | false
 
     renderLabelForZeroData?: boolean
+
+    data?: SunburstSeriesNodeItemOption[]
 
     levels?: SunburstSeriesLevelOption[]
 
@@ -238,7 +242,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
             rotate: 'radial',
             show: true,
             opacity: 1,
-            // 'left' is for inner side of inside, and 'right' is for outter
+            // 'left' is for inner side of inside, and 'right' is for outer
             // side for inside
             align: 'center',
             position: 'inside',
@@ -269,7 +273,7 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
             }
         },
 
-        // Animation type canbe expansion, scale
+        // Animation type can be expansion, scale.
         animationType: 'expansion',
         animationDuration: 1000,
         animationDurationUpdate: 500,

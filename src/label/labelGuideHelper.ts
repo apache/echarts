@@ -321,7 +321,7 @@ function nearestPointOnPath(pt: Point, path: PathProxy, out: Point) {
     return minDist;
 }
 
-// Temporal varible for intermediate usage.
+// Temporal variable for intermediate usage.
 const pt0 = new Point();
 const pt1 = new Point();
 const pt2 = new Point();
@@ -547,7 +547,6 @@ function setLabelLineState(
     if (smooth > 0) {
         (stateObj.shape as Polyline['shape']).smooth = smooth as number;
     }
-
     const styleObj = stateModel.getModel('lineStyle').getLineStyle();
     isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
 }
@@ -621,6 +620,9 @@ export function setLabelLineStyle(
                 const stateObj = isNormal ? labelLine : (labelLine && labelLine.states[stateName]);
                 if (stateObj) {
                     stateObj.ignore = true;
+                }
+                if (!!labelLine) {
+                    setLabelLineState(labelLine, true, stateName, stateModel);
                 }
                 continue;
             }

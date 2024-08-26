@@ -45,16 +45,16 @@ export interface BaseBarSeriesOption<StateOption, ExtraStateOption extends State
      */
     barMinHeight?: number
     /**
-     * Min angle of bar. Avaiable on polar coordinate system
+     * Min angle of bar. Available on polar coordinate system.
      */
     barMinAngle?: number
 
     /**
-     * Max width of bar. Default to be 1 on cartesian coordinate system. Otherwise it's null
+     * Max width of bar. Defaults to 1 on cartesian coordinate system. Otherwise it's null.
      */
-    barMaxWidth?: number
+    barMaxWidth?: number | string
 
-    barMinWidth?: number
+    barMinWidth?: number | string
 
     /**
      * Bar width. Will be calculated automatically.
@@ -86,24 +86,86 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
         return createSeriesData(null, this, {useEncodeDefaulter: true});
     }
 
-    getMarkerPosition(value: ScaleDataValue[], dims?: typeof dimPermutations[number], startingAtTick: boolean = false) {
+    getMarkerPosition(
+        value: ScaleDataValue[],
+        dims?: typeof dimPermutations[number],
+        startingAtTick?: boolean
+    ) {
         const coordSys = this.coordinateSystem;
         if (coordSys && coordSys.clampData) {
             // PENDING if clamp ?
-            const pt = coordSys.dataToPoint(coordSys.clampData(value));
+            const clampData = coordSys.clampData(value);
+            const pt = coordSys.dataToPoint(clampData);
             if (startingAtTick) {
                 each(coordSys.getAxes(), function (axis: Axis2D, idx: number) {
                     // If axis type is category, use tick coords instead
-                    if (axis.type === 'category') {
+                    if (axis.type === 'category' && dims != null) {
                         const tickCoords = axis.getTicksCoords();
-                        let tickIdx = coordSys.clampData(value)[idx];
+                        const alignTicksWithLabel = axis.getTickModel().get('alignWithLabel');
+
+                        let targetTickId = clampData[idx];
                         // The index of rightmost tick of markArea is 1 larger than x1/y1 index
-                        if (dims && (dims[idx] === 'x1' || dims[idx] === 'y1')) {
-                            tickIdx += 1;
+                        const isEnd = dims[idx] === 'x1' || dims[idx] === 'y1';
+                        if (isEnd && !alignTicksWithLabel) {
+                            targetTickId += 1;
                         }
-                        (tickIdx > tickCoords.length - 1) && (tickIdx = tickCoords.length - 1);
-                        (tickIdx < 0) && (tickIdx = 0);
-                        tickCoords[tickIdx] && (pt[idx] = axis.toGlobalCoord(tickCoords[tickIdx].coord));
+
+                        // The only contains one tick, tickCoords is
+                        // like [{coord: 0, tickValue: 0}, {coord: 0}]
+                        // to the length should always be larger than 1
+                        if (tickCoords.length < 2) {
+                            return;
+                        }
+                        else if (tickCoords.length === 2) {
+                            // The left value and right value of the axis are
+                            // the same. coord is 0 in both items. Use the max
+                            // value of the axis as the coord
+                            pt[idx] = axis.toGlobalCoord(
+                                axis.getExtent()[isEnd ? 1 : 0]
+                            );
+                            return;
+                        }
+
+                        let leftCoord;
+                        let coord;
+                        let stepTickValue = 1;
+                        for (let i = 0; i < tickCoords.length; i++) {
+                            const tickCoord = tickCoords[i].coord;
+                            // The last item of tickCoords doesn't contain
+                            // tickValue
+                            const tickValue = i === tickCoords.length - 1
+                                ? tickCoords[i - 1].tickValue + stepTickValue
+                                : tickCoords[i].tickValue;
+                            if (tickValue === targetTickId) {
+                                coord = tickCoord;
+                                break;
+                            }
+                            else if (tickValue < targetTickId) {
+                                leftCoord = tickCoord;
+                            }
+                            else if (leftCoord != null && tickValue > targetTickId) {
+                                coord = (tickCoord + leftCoord) / 2;
+                                break;
+                            }
+                            if (i === 1) {
+                                // Here we assume the step of category axes is
+                                // the same
+                                stepTickValue = tickValue - tickCoords[0].tickValue;
+                            }
+                        }
+                        if (coord == null) {
+                            if (!leftCoord) {
+                                // targetTickId is smaller than all tick ids in the
+                                // visible area, use the leftmost tick coord
+                                coord = tickCoords[0].coord;
+                            }
+                            else if (leftCoord) {
+                                // targetTickId is larger than all tick ids in the
+                                // visible area, use the rightmost tick coord
+                                coord = tickCoords[tickCoords.length - 1].coord;
+                            }
+                        }
+                        pt[idx] = axis.toGlobalCoord(coord);
                     }
                 });
             }

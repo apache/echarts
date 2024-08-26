@@ -112,7 +112,7 @@ import {
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
 import { getVisualFromData, getItemVisualFromData } from '../visual/helper';
-import { deprecateLog, deprecateReplaceLog, error } from '../util/log';
+import { deprecateLog, deprecateReplaceLog, error, warn } from '../util/log';
 import { handleLegacySelectEvents } from '../legacy/dataSelectAction';
 
 import { registerExternalTransform } from '../data/helper/transform';
@@ -137,12 +137,10 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-const hasWindow = typeof window !== 'undefined';
-
-export const version = '5.4.0';
+export const version = '5.5.1';
 
 export const dependencies = {
-    zrender: '5.4.0'
+    zrender: '5.6.0'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -320,7 +318,7 @@ type ECEventDefinition = {
     // TODO: Use ECActionEvent
     [key: string]: (...args: unknown[]) => void | boolean
 };
-type EChartsInitOpts = {
+export type EChartsInitOpts = {
     locale?: string | LocaleOption,
     renderer?: RendererType,
     devicePixelRatio?: number,
@@ -414,20 +412,34 @@ class ECharts extends Eventful<ECEventDefinition> {
         let defaultRenderer = 'canvas';
         let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
+
         if (__DEV__) {
             const root = (
                 /* eslint-disable-next-line */
-                hasWindow ? window : global
+                env.hasGlobalWindow ? window : global
             ) as any;
 
-            defaultRenderer = root.__ECHARTS__DEFAULT__RENDERER__ || defaultRenderer;
+            if (root) {
+                defaultRenderer = retrieve2(root.__ECHARTS__DEFAULT__RENDERER__, defaultRenderer);
+                defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
+                defaultUseDirtyRect = retrieve2(root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__, defaultUseDirtyRect);
+            }
 
-            defaultCoarsePointer = retrieve2(root.__ECHARTS__DEFAULT__COARSE_POINTER, defaultCoarsePointer);
+        }
 
-            const devUseDirtyRect = root.__ECHARTS__DEFAULT__USE_DIRTY_RECT__;
-            defaultUseDirtyRect = devUseDirtyRect == null
-                ? defaultUseDirtyRect
-                : devUseDirtyRect;
+        if (opts.ssr) {
+            zrender.registerSSRDataGetter(el => {
+                const ecData = getECData(el);
+                const dataIndex = ecData.dataIndex;
+                if (dataIndex == null) {
+                    return;
+                }
+                const hashMap = createHashMap();
+                hashMap.set('series_index', ecData.seriesIndex);
+                hashMap.set('data_index', dataIndex);
+                ecData.ssrType && hashMap.set('ssr_type', ecData.ssrType);
+                return hashMap;
+            });
         }
 
         const zr = this._zr = zrender.init(dom, {
@@ -705,7 +717,7 @@ class ECharts extends Eventful<ECEventDefinition> {
     getDevicePixelRatio(): number {
         return (this._zr.painter as CanvasPainter).dpr
             /* eslint-disable-next-line */
-            || (hasWindow && window.devicePixelRatio) || 1;
+            || (env.hasGlobalWindow && window.devicePixelRatio) || 1;
     }
 
     /**
@@ -974,7 +986,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     }
                     else {
                         if (__DEV__) {
-                            console.warn(key + ': ' + (view
+                            warn(key + ': ' + (view
                                 ? 'The found component do not support containPoint.'
                                 : 'No view mapping to the found component.'
                             ));
@@ -983,7 +995,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
                 else {
                     if (__DEV__) {
-                        console.warn(key + ': containPoint is not supported');
+                        warn(key + ': containPoint is not supported');
                     }
                 }
             }, this);
@@ -1018,7 +1030,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         if (__DEV__) {
             if (!seriesModel) {
-                console.warn('There is no specified seires model');
+                warn('There is no specified series model');
             }
         }
 
@@ -1067,7 +1079,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                         if (ecData && ecData.dataIndex != null) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
                             params = (
-                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType) || {}
+                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
                             ) as ECElementEvent;
                             return true;
                         }
@@ -1113,7 +1125,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                         // be missed, otherwise there is no way to distinguish source component.
                         // See `dataFormat.getDataParams`.
                         if (!isGlobalOut && !(model && view)) {
-                            console.warn('model or view can not be found by params');
+                            warn('model or view can not be found by params');
                         }
                     }
 
@@ -1304,7 +1316,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         this.hideLoading();
         if (!loadingEffects[name]) {
             if (__DEV__) {
-                console.warn('Loading effects ' + name + ' not exists.');
+                warn('Loading effects ' + name + ' not exists.');
             }
             return;
         }
@@ -1582,7 +1594,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             // If dispatchAction before setOption, do nothing.
             ecModel && ecModel.eachComponent(condition, function (model) {
-                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) != null;
                 if (isExcluded) {
                     return;
                 };
@@ -1626,7 +1638,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             }, ecIns);
 
             ecModel && ecModel.eachComponent(condition, function (model) {
-                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) !== null;
+                const isExcluded = excludeSeriesIdMap && excludeSeriesIdMap.get(model.id) != null;
                 if (isExcluded) {
                     return;
                 };
@@ -1863,7 +1875,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
 
             if (__DEV__) {
-                console.warn(
+                warn(
                     'No coordinate system that supports ' + methodName + ' found by the given finder.'
                 );
             }
@@ -2089,12 +2101,12 @@ class ECharts extends Eventful<ECEventDefinition> {
             };
             const componentZLevels: ZLevelItem[] = [];
             const seriesZLevels: ZLevelItem[] = [];
-            let hasSeperateZLevel = false;
+            let hasSeparateZLevel = false;
             ecModel.eachComponent(function (componentType, componentModel) {
                 const zlevel = componentModel.get('zlevel') || 0;
                 const z = componentModel.get('z') || 0;
                 const zlevelKey = componentModel.getZLevelKey();
-                hasSeperateZLevel = hasSeperateZLevel || !!zlevelKey;
+                hasSeparateZLevel = hasSeparateZLevel || !!zlevelKey;
                 (componentType === 'series' ? seriesZLevels : componentZLevels).push({
                     zlevel,
                     z,
@@ -2104,7 +2116,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 });
             });
 
-            if (hasSeperateZLevel) {
+            if (hasSeparateZLevel) {
                 // Series after component
                 const zLevels: ZLevelItem[] = componentZLevels.concat(seriesZLevels);
                 let lastSeriesZLevel: number;
@@ -2594,7 +2606,7 @@ const MOUSE_EVENT_NAMES: ZRElementEventName[] = [
 
 function disposedWarning(id: string): void {
     if (__DEV__) {
-        console.warn('Instance ' + id + ' has been disposed');
+        warn('Instance ' + id + ' has been disposed');
     }
 }
 
@@ -2640,8 +2652,8 @@ const DOM_ATTRIBUTE_KEY = '_echarts_instance_';
  * @param opts.useDirtyRect Enable dirty rectangle rendering or not.
  */
 export function init(
-    dom: HTMLElement,
-    theme?: string | object,
+    dom?: HTMLElement | null,
+    theme?: string | object | null,
     opts?: EChartsInitOpts
 ): EChartsType {
     const isClient = !(opts && opts.ssr);
@@ -2655,7 +2667,7 @@ export function init(
         const existInstance = getInstanceByDom(dom);
         if (existInstance) {
             if (__DEV__) {
-                console.warn('There is a chart instance already initialized on the dom.');
+                warn('There is a chart instance already initialized on the dom.');
             }
             return existInstance;
         }
@@ -2668,7 +2680,7 @@ export function init(
                     || (!dom.clientHeight && (!opts || opts.height == null))
                 )
             ) {
-                console.warn('Can\'t get DOM width or height. Please check '
+                warn('Can\'t get DOM width or height. Please check '
                 + 'dom.clientWidth and dom.clientHeight. They should not be 0.'
                 + 'For example, you may need to call this in the callback '
                 + 'of window.onload.');
@@ -2726,17 +2738,15 @@ export function connect(groupId: string | EChartsType[]): string {
     return groupId as string;
 }
 
-/**
- * @deprecated
- */
-export function disConnect(groupId: string): void {
+export function disconnect(groupId: string): void {
     connectedGroups[groupId] = false;
 }
 
 /**
  * Alias and backward compatibility
+ * @deprecated
  */
-export const disconnect = disConnect;
+export const disConnect = disconnect;
 
 /**
  * Dispose a chart instance

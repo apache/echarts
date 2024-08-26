@@ -20,7 +20,7 @@ import { bind, each, clone, trim, isString, isFunction, isArray, isObject, exten
 import env from 'zrender/src/core/env';
 import TooltipHTMLContent from './TooltipHTMLContent';
 import TooltipRichContent from './TooltipRichContent';
-import { convertToColorString, formatTpl, TooltipMarker } from '../../util/format';
+import { convertToColorString, encodeHTML, formatTpl, TooltipMarker } from '../../util/format';
 import { parsePercent } from '../../util/number';
 import { Rect } from '../../util/graphic';
 import findPointFromSeries from '../axisPointer/findPointFromSeries';
@@ -147,8 +147,6 @@ class TooltipView extends ComponentView {
 
     private _api: ExtensionAPI;
 
-    private _alwaysShowContent: boolean;
-
     private _tooltipContent: TooltipHTMLContent | TooltipRichContent;
 
     private _refreshUpdateTimeout: number;
@@ -173,8 +171,8 @@ class TooltipView extends ComponentView {
 
         this._tooltipContent = renderMode === 'richText'
             ? new TooltipRichContent(api)
-            : new TooltipHTMLContent(api.getDom(), api, {
-                appendToBody: tooltipModel.get('appendToBody', true)
+            : new TooltipHTMLContent(api, {
+                appendTo: tooltipModel.get('appendToBody', true) ? 'body' : tooltipModel.get('appendTo', true)
             });
     }
 
@@ -195,12 +193,6 @@ class TooltipView extends ComponentView {
         this._ecModel = ecModel;
 
         this._api = api;
-
-        /**
-         * @private
-         * @type {boolean}
-         */
-        this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
         const tooltipContent = this._tooltipContent;
         tooltipContent.update(tooltipModel);
@@ -396,7 +388,7 @@ class TooltipView extends ComponentView {
     ) {
         const tooltipContent = this._tooltipContent;
 
-        if (!this._alwaysShowContent && this._tooltipModel) {
+        if (this._tooltipModel) {
             tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
         }
 
@@ -471,6 +463,11 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         else if (el) {
+            const ecData = getECData(el);
+            if (ecData.ssrType === 'legend') {
+                // Don't trigger tooltip for legend tooltip item
+                return;
+            }
             this._lastDataByCoordSys = null;
 
             let seriesDispatcher: Element;
@@ -727,9 +724,11 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
+        const isHTMLRenderMode = this._renderMode === 'html';
         const ecData = getECData(el);
         const tooltipConfig = ecData.tooltipConfig;
         let tooltipOpt = tooltipConfig.option || {};
+        let encodeHTMLContent = tooltipOpt.encodeHTMLContent;
         if (isString(tooltipOpt)) {
             const content = tooltipOpt;
             tooltipOpt = {
@@ -737,6 +736,16 @@ class TooltipView extends ComponentView {
                 // Fixed formatter
                 formatter: content
             };
+            // when `tooltipConfig.option` is a string rather than an object,
+            // we can't know if the content needs to be encoded
+            // for the sake of security, encode it by default.
+            encodeHTMLContent = true;
+        }
+
+        if (encodeHTMLContent && isHTMLRenderMode && tooltipOpt.content) {
+            // clone might be unnecessary?
+            tooltipOpt = clone(tooltipOpt);
+            tooltipOpt.content = encodeHTML(tooltipOpt.content);
         }
 
         const tooltipModelCascade = [tooltipOpt] as TooltipModelOptionCascade[];
@@ -745,8 +754,8 @@ class TooltipView extends ComponentView {
             tooltipModelCascade.push(cmpt as Model<TooltipableOption>);
         }
         // In most cases, component tooltip formatter has different params with series tooltip formatter,
-        // so that they can not share the same formatter. Since the global tooltip formatter is used for series
-        // by convension, we do not use it as the default formatter for component.
+        // so that they cannot share the same formatter. Since the global tooltip formatter is used for series
+        // by convention, we do not use it as the default formatter for component.
         tooltipModelCascade.push({ formatter: tooltipOpt.content });
 
         const positionDefault = e.positionDefault;
@@ -1091,7 +1100,7 @@ function refixTooltipPosition(
 
     if (gapH != null) {
         // Add extra 2 pixels for this case:
-        // At present the "values" in defaut tooltip are using CSS `float: right`.
+        // At present the "values" in default tooltip are using CSS `float: right`.
         // When the right edge of the tooltip box is on the right side of the
         // viewport, the `float` layout might push the "values" to the second line.
         if (x + width + gapH + 2 > viewWidth) {

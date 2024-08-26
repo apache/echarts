@@ -100,7 +100,7 @@ export interface PieDataItemOption extends
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption<PieCallbackDataParams>, ExtraStateOption>, 'labelLine'>,
     PieStateOption<PieCallbackDataParams>,
-    CircleLayoutOptionMixin,
+    Omit<CircleLayoutOptionMixin, 'center'>,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 
@@ -108,8 +108,13 @@ export interface PieSeriesOption extends
 
     roseType?: 'radius' | 'area'
 
+    center?: string | number | (string | number)[]
+
     clockwise?: boolean
     startAngle?: number
+    endAngle?: number | 'auto'
+    padAngle?: number;
+
     minAngle?: number
     minShowLabelAngle?: number
 
@@ -215,6 +220,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         // 默认顺时针
         clockwise: true,
         startAngle: 90,
+        endAngle: 'auto',
+        padAngle: 0,
         // 最小角度改为0
         minAngle: 0,
 

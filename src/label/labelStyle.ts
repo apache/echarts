@@ -144,7 +144,7 @@ function getLabelText<TLabelDataIndex>(
             labelDimIndex,
             normalModel && normalModel.get('formatter'),
             interpolatedValue != null ? {
-                interpolatedValue: interpolatedValue
+                interpolatedValue
             } : null
         );
     }
@@ -263,7 +263,7 @@ function setLabelStyle<TLabelDataIndex>(
 
         // PENDING: if there is many requirements that emphasis position
         // need to be different from normal position, we might consider
-        // auto slient is those cases.
+        // auto silent is those cases.
         textContent.silent = !!normalModel.getShallow('silent');
         // Keep x and y
         if (textContent.style.x != null) {
@@ -460,7 +460,7 @@ const TEXT_PROPS_WITH_GLOBAL = [
     'textShadowColor', 'textShadowBlur', 'textShadowOffsetX', 'textShadowOffsetY'
 ] as const;
 const TEXT_PROPS_SELF = [
-    'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign'
+    'align', 'lineHeight', 'width', 'height', 'tag', 'verticalAlign', 'ellipsis'
 ] as const;
 const TEXT_PROPS_BOX = [
     'padding', 'borderWidth', 'borderRadius', 'borderDashOffset',

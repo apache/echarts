@@ -99,16 +99,20 @@ export function dataTransform(
     seriesModel: SeriesModel,
     item: MarkerPositionOption
 ) {
+    if (!item) {
+        return;
+    }
+
     const data = seriesModel.getData();
     const coordSys = seriesModel.coordinateSystem;
+    const dims = coordSys && coordSys.dimensions;
 
     // 1. If not specify the position with pixel directly
     // 2. If `coord` is not a data array. Which uses `xAxis`,
     // `yAxis` to specify the coord on each dimension
 
     // parseFloat first because item.x and item.y can be percent string like '20%'
-    if (item && !hasXAndY(item) && !isArray(item.coord) && coordSys) {
-        const dims = coordSys.dimensions;
+    if (!hasXAndY(item) && !isArray(item.coord) && isArray(dims)) {
         const axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
 
         // Clone the option
@@ -130,21 +134,26 @@ export function dataTransform(
             // Force to use the value of calculated value.
             // let item use the value without stack.
             item.value = coordInfo[1];
-
         }
         else {
             // FIXME Only has one of xAxis and yAxis.
-            const coord = [
+            item.coord = [
                 item.xAxis != null ? item.xAxis : item.radiusAxis,
                 item.yAxis != null ? item.yAxis : item.angleAxis
             ];
-            // Each coord support max, min, average
-            for (let i = 0; i < 2; i++) {
-                if (markerTypeCalculator[coord[i] as MarkerStatisticType]) {
-                    coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i] as MarkerStatisticType);
-                }
+        }
+    }
+    // x y is provided
+    if (item.coord == null || !isArray(dims)) {
+        item.coord = [];
+    }
+    else {
+        // Each coord support max, min, average
+        const coord = item.coord;
+        for (let i = 0; i < 2; i++) {
+            if (markerTypeCalculator[coord[i] as MarkerStatisticType]) {
+                coord[i] = numCalculate(data, data.mapDimension(dims[i]), coord[i] as MarkerStatisticType);
             }
-            item.coord = coord;
         }
     }
     return item;

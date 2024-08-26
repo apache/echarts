@@ -28,7 +28,9 @@ import {
     AnimationOptionMixin,
     Dictionary,
     CommonTooltipOption,
-    ScaleDataValue
+    ScaleDataValue,
+    CallbackDataParams,
+    SeriesDataType
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
@@ -223,6 +225,20 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
 
     setData(data: SeriesData) {
         this._data = data;
+    }
+
+    getDataParams(
+        dataIndex: number,
+        dataType?: SeriesDataType
+    ): CallbackDataParams {
+        const params = DataFormatMixin.prototype.getDataParams.call(this, dataIndex, dataType);
+        const hostSeries = this.__hostSeries;
+        if (hostSeries) {
+            params.seriesId = hostSeries.id;
+            params.seriesName = hostSeries.name;
+            params.seriesType = hostSeries.subType;
+        }
+        return params;
     }
 
     /**

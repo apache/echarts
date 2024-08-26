@@ -17,11 +17,13 @@
 * under the License.
 */
 
+import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
     AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption
 } from '../util/types';
+import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
@@ -78,6 +80,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * + null/undefined: auto decide max value (consider pretty look and boundaryGap).
      */
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
+    startValue?: number;
 
 }
 
@@ -90,7 +93,7 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     boundaryGap?: [number | string, number | string]
 
     /**
-     * AxisTick and axisLabel and splitLine are caculated based on splitNumber.
+     * AxisTick and axisLabel and splitLine are calculated based on splitNumber.
      */
     splitNumber?: number;
     /**
@@ -127,7 +130,7 @@ export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
     })[];
     /*
      * Set false to faster category collection.
-     * Only usefull in the case like: category is
+     * Only useful in the case like: category is
      * ['2012-01-01', '2012-01-02', ...], where the input
      * data has been ensured not duplicate and is large data.
      * null means "auto":
@@ -149,7 +152,7 @@ export interface ValueAxisBaseOption extends NumericAxisBaseOptionCommon {
     /**
      * Optional value can be:
      * + `false`: always include value 0.
-     * + `false`: always include value 0.
+     * + `true`: the axis may not contain zero position.
      */
      scale?: boolean;
 }
@@ -183,7 +186,8 @@ interface AxisTickOption {
     inside?: boolean,
     // The length of axisTick.
     length?: number,
-    lineStyle?: LineStyleOption
+    lineStyle?: LineStyleOption,
+    customValues?: (number | string | Date)[]
 }
 
 type AxisLabelValueFormatter = (value: number, index: number) => string;
@@ -222,14 +226,24 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     showMinLabel?: boolean,
     // true | false | null/undefined (auto)
     showMaxLabel?: boolean,
+    // 'left' | 'center' | 'right' | null/undefined (auto)
+    alignMinLabel?: TextAlign,
+    // 'left' | 'center' | 'right' | null/undefined (auto)
+    alignMaxLabel?: TextAlign,
+    // 'top' | 'middle' | 'bottom' | null/undefined (auto)
+    verticalAlignMinLabel?: TextVerticalAlign,
+    // 'top' | 'middle' | 'bottom' | null/undefined (auto)
+    verticalAlignMaxLabel?: TextVerticalAlign,
     margin?: number,
     rich?: Dictionary<TextCommonOption>
     /**
      * If hide overlapping labels.
      */
-    hideOverlap?: boolean;
+    hideOverlap?: boolean,
+    customValues?: (number | string | Date)[],
     // Color can be callback
-    color?: ColorString | ((value?: string | number, index?: number) => ColorString)
+    color?: ColorString | ((value?: string | number, index?: number) => ColorString),
+    overflow?: TextStyleProps['overflow']
 }
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]
@@ -244,7 +258,11 @@ interface MinorTickOption {
 
 interface SplitLineOption {
     show?: boolean,
-    interval?: 'auto' | number | ((index:number, value: string) => boolean)
+    interval?: 'auto' | number | ((index:number, value: string) => boolean),
+    // true | false
+    showMinLine?: boolean,
+    // true | false
+    showMaxLine?: boolean,
     // colors will display in turn
     lineStyle?: LineStyleOption<ZRColor | ZRColor[]>
 }
@@ -260,7 +278,6 @@ interface SplitAreaOption {
     // colors will display in turn
     areaStyle?: AreaStyleOption<ZRColor[]>
 }
-
 
 export type AxisBaseOption = ValueAxisBaseOption | LogAxisBaseOption
     | CategoryAxisBaseOption | TimeAxisBaseOption | AxisBaseOptionCommon;
