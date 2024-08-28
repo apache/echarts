@@ -278,7 +278,6 @@ function getSymbolMeta(
         hoverScale: isAnimationEnabled && itemModel.get(['emphasis', 'scale']),
         z2: itemModel.getShallow('z', true) || 0
     } as SymbolMeta;
-    console.log(symbolMeta)
 
     prepareBarLength(itemModel, symbolRepeat, layout, opt, symbolMeta);
 
