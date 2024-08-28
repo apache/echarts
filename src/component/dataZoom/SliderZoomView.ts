@@ -686,7 +686,7 @@ class SliderZoomView extends DataZoomView {
 
         actualMoveZone.attr({
             draggable: true,
-            cursor: getCursor(this._orient),
+            cursor: 'move',
             drift: bind(this._onDragMove, this, 'all'),
             ondragstart: bind(this._showDataInfo, this, true),
             ondragend: bind(this._onDragEnd, this),
