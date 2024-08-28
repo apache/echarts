@@ -21,7 +21,6 @@ import { EChartsExtensionInstallRegisters } from '../../extension';
 
 import {createLegacyDataSelectAction} from '../../legacy/dataSelectAction';
 import pieLayout from '../pie/pieLayout';
-import dataFilter from '../../processor/dataFilter';
 import { curry } from 'zrender/src/core/util';
 import PieView from './PieView';
 import PieSeriesModel from './PieSeries';
@@ -34,6 +33,5 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     createLegacyDataSelectAction('pie', registers.registerAction);
 
     registers.registerLayout(curry(pieLayout, 'pie'));
-    registers.registerProcessor(dataFilter('pie'));
     registers.registerProcessor(negativeDataFilter('pie'));
 }

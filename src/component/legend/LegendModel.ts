@@ -37,6 +37,7 @@ import GlobalModel from '../../model/Global';
 import { ItemStyleProps } from '../../model/mixin/itemStyle';
 import { LineStyleProps } from './../../model/mixin/lineStyle';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
+import SeriesModel from '../../model/Series';
 
 type LegendDefaultSelectorOptionsProps = {
     type: string;
@@ -324,11 +325,11 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
                 const provider = seriesModel.legendVisualProvider;
                 const names = provider.getAllNames();
 
-                if (!ecModel.isSeriesFiltered(seriesModel)) {
+                if (!seriesModel.isColorBySeries() && !ecModel.isSeriesFiltered(seriesModel)) {
                     availableNames = availableNames.concat(names);
                 }
 
-                if (names.length) {
+                if (!seriesModel.isColorBySeries() && names.length) {
                     potentialData = potentialData.concat(names);
                 }
                 else {
@@ -349,6 +350,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
          * @private
          */
         this._availableNames = availableNames;
+        console.log('available names', availableNames);
 
         // If legend.data is not specified in option, use availableNames as data,
         // which is convenient for user preparing option.
@@ -433,6 +435,11 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         const selected = this.option.selected;
         return !(selected.hasOwnProperty(name) && !selected[name])
             && zrUtil.indexOf(this._availableNames, name) >= 0;
+    }
+
+    isFiltered(name: string) {
+        const selected = this.option.selected;
+        return selected.hasOwnProperty(name) && !selected[name];
     }
 
     getOrient(): {index: 0, name: 'horizontal'}
