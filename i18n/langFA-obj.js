@@ -154,10 +154,9 @@ var localeObj = {
             }
         },
         data: {
-            allData: 'نمونه داده‌: ',
+            allData: 'دیتای نمونه: ',
             partialData: 'اولین عنصر از {displayCnt}:',
-            withName: 'the data for {name} is {value}',
-            withName: 'داده {name}, {value} است',
+            withName: 'مقدار {name}, {value} است',
             withoutName: '{value}',
             separator: {
                 middle: ', ',
