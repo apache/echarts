@@ -30,7 +30,9 @@ import {
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
-import RoamController, { RoamEventParams, RoamControllerHost } from '../../component/helper/RoamController';
+import type { RoamControllerHost } from '../../component/helper/roamHelper';
+import type { RoamEventParams } from '../../component/helper/RoamController';
+import RoamController from '../../component/helper/RoamController';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as animationUtil from '../../util/animation';
