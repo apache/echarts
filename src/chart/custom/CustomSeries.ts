@@ -308,6 +308,7 @@ export interface CustomSeriesRenderItemParams {
 
     dataIndexInside: number;
     dataInsideLength: number;
+    itemPayload: Dictionary<unknown>;
 
     actionType?: string;
 }
@@ -334,6 +335,7 @@ export interface CustomSeriesOption extends
     coordinateSystem?: string | 'none';
 
     renderItem?: CustomSeriesRenderItem;
+    itemPayload?: Dictionary<unknown>;
 
     /**
      * @deprecated

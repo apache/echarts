@@ -100,6 +100,7 @@ import {
     stopPreviousKeyframeAnimationAndRestore
 } from '../../animation/customGraphicKeyframeAnimation';
 import type SeriesModel from '../../model/Series';
+import { getCustomSeries } from './customSeriesRegister';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -591,7 +592,18 @@ function makeRenderItem(
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
-    const renderItem = customSeries.get('renderItem');
+    let renderItem = customSeries.get('renderItem');
+    if (typeof renderItem === 'string') {
+        // Find renderItem in registered custom series
+        const registeredRenderItem = getCustomSeries(renderItem);
+        if (registeredRenderItem) {
+            renderItem = registeredRenderItem;
+        }
+        else if (__DEV__) {
+            console.warn(`Custom series renderItem '${renderItem}' not found.
+                Call 'echarts.registerCustomSeries' to register it.`);
+        }
+    }
     const coordSys = customSeries.coordinateSystem;
     let prepareResult = {} as ReturnType<PrepareCustomInfo>;
 
@@ -635,7 +647,8 @@ function makeRenderItem(
         seriesIndex: customSeries.seriesIndex,
         coordSys: prepareResult.coordSys,
         dataInsideLength: data.count(),
-        encode: wrapEncodeDef(customSeries.getData())
+        encode: wrapEncodeDef(customSeries.getData()),
+        itemPayload: customSeries.get('itemPayload') || {}
     } as CustomSeriesRenderItemParams;
 
     // If someday intending to refactor them to a class, should consider do not
