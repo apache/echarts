@@ -31,6 +31,11 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { isString, retrieve3 } from 'zrender/src/core/util';
 import type { GraphEdge } from '../../data/Graph';
+import RoamController from '../../component/helper/RoamController';
+import type { RoamControllerHost } from '../../component/helper/roamHelper';
+import { onIrrelevantElement } from '../../component/helper/cursorHelper';
+import * as roamHelper from '../../component/helper/roamHelper';
+import View from '../../coord/View';
 
 class SankeyPathShape {
     x1 = 0;
@@ -111,6 +116,17 @@ class SankeyView extends ChartView {
 
     private _data: SeriesData;
 
+    private _controller: RoamController;
+    private _controllerHost: RoamControllerHost;
+
+    init(ecModel: GlobalModel, api: ExtensionAPI): void {
+        this._controller = new RoamController(api.getZr());
+
+        this._controllerHost = {
+            target: this.group
+        } as RoamControllerHost;
+    }
+
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const sankeyView = this;
         const graph = seriesModel.getGraph();
@@ -130,6 +146,14 @@ class SankeyView extends ChartView {
 
         group.x = layoutInfo.x;
         group.y = layoutInfo.y;
+
+        const viewCoordSys = seriesModel.coordinateSystem = new View();
+        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
+        viewCoordSys.setBoundingRect(layoutInfo.x, layoutInfo.y, width, height);
+        viewCoordSys.setCenter(seriesModel.get('center'), api);
+        viewCoordSys.setZoom(seriesModel.get('zoom'));
+
+        this._updateController(seriesModel, ecModel, api);
 
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
@@ -346,6 +370,53 @@ class SankeyView extends ChartView {
     }
 
     dispose() {
+        this._controller && this._controller.dispose();
+        this._controllerHost = null;
+    }
+
+    private _updateController(
+        seriesModel: SankeySeriesModel,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
+    ) {
+        const controller = this._controller;
+        const controllerHost = this._controllerHost;
+        const group = this.group;
+        controller.setPointerChecker(function (e, x, y) {
+            const rect = group.getBoundingRect();
+            rect.applyTransform(group.transform);
+            return rect.contain(x, y)
+                && !onIrrelevantElement(e, api, seriesModel);
+        });
+
+        controller.enable(seriesModel.get('roam'));
+        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
+        controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
+
+        controller
+            .off('pan')
+            .off('zoom')
+            .on('pan', (e) => {
+                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
+                api.dispatchAction({
+                    seriesId: seriesModel.id,
+                    type: 'sankeyRoam',
+                    dx: e.dx,
+                    dy: e.dy
+                });
+            })
+            .on('zoom', (e) => {
+                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
+                api.dispatchAction({
+                    seriesId: seriesModel.id,
+                    type: 'sankeyRoam',
+                    zoom: e.scale,
+                    originX: e.originX,
+                    originY: e.originY
+                });
+                // Only update label layout on zoom
+                api.updateLabelLayout();
+            });
     }
 }
 
