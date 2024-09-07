@@ -80,6 +80,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * + null/undefined: auto decide max value (consider pretty look and boundaryGap).
      */
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
+    startValue?: number;
 
 }
 
@@ -185,7 +186,8 @@ interface AxisTickOption {
     inside?: boolean,
     // The length of axisTick.
     length?: number,
-    lineStyle?: LineStyleOption
+    lineStyle?: LineStyleOption,
+    customValues?: (number | string | Date)[]
 }
 
 type AxisLabelValueFormatter = (value: number, index: number) => string;
@@ -237,9 +239,10 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     /**
      * If hide overlapping labels.
      */
-    hideOverlap?: boolean;
+    hideOverlap?: boolean,
+    customValues?: (number | string | Date)[],
     // Color can be callback
-    color?: ColorString | ((value?: string | number, index?: number) => ColorString)
+    color?: ColorString | ((value?: string | number, index?: number) => ColorString),
     overflow?: TextStyleProps['overflow']
 }
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
@@ -255,7 +258,11 @@ interface MinorTickOption {
 
 interface SplitLineOption {
     show?: boolean,
-    interval?: 'auto' | number | ((index:number, value: string) => boolean)
+    interval?: 'auto' | number | ((index:number, value: string) => boolean),
+    // true | false
+    showMinLine?: boolean,
+    // true | false
+    showMaxLine?: boolean,
     // colors will display in turn
     lineStyle?: LineStyleOption<ZRColor | ZRColor[]>
 }
@@ -271,7 +278,6 @@ interface SplitAreaOption {
     // colors will display in turn
     areaStyle?: AreaStyleOption<ZRColor[]>
 }
-
 
 export type AxisBaseOption = ValueAxisBaseOption | LogAxisBaseOption
     | CategoryAxisBaseOption | TimeAxisBaseOption | AxisBaseOptionCommon;

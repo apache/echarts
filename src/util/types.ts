@@ -1336,6 +1336,12 @@ export interface CommonTooltipOption<FormatterParams> {
 export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
     // Default content HTML.
     content?: string;
+    /**
+     * Whether to encode HTML content according to `tooltip.renderMode`.
+     *
+     * e.g. renderMode 'html' needs to encode but 'richText' does not.
+     */
+    encodeHTMLContent?: boolean;
     formatterParams?: ComponentItemTooltipLabelFormatterParams;
 };
 export type ComponentItemTooltipLabelFormatterParams = {
@@ -1727,7 +1733,8 @@ export interface AriaLabelOption {
         separator?: {
             middle?: string;
             end?: string;
-        }
+        },
+        excludeDimensionId?: number[]
     }
 }
 

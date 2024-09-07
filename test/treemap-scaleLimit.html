@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <style>
+        .chart {
+            width: 100%;
+            height: 50%;
+        }
+    </style>
+
+    <body>
+        <div>scaleLimit: { max: 1, min: 0.5 }</div>
+        <div id="main1" class="chart"></div>
+        <div id="main2" class="chart"></div>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main1'), null, {
+
+                });
+
+                chart.setOption({
+
+                    series: [
+                        {
+                            name: '矩形树图scaleLimit',
+                            type: 'treemap',
+                            roam: 'zoom',
+                            scaleLimit: {
+                                max: 1,
+                                min: 0.5
+                            },
+                            label: {
+                                emphasis: {
+                                    show: true
+                                }
+                            },
+                            levels: [
+                                {
+                                    itemStyle: {
+                                        normal: {
+                                            borderWidth: 15,
+                                            gapWidth: 30,
+                                            borderColor: '#999'
+                                        }
+                                    }
+                                },
+                                {
+                                    itemStyle: {
+                                        normal: {
+                                            borderWidth: 15,
+                                            gapWidth: 40,
+                                            borderColor: '#333'
+                                        }
+                                    }
+                                },
+                                {
+                                    itemStyle: {
+                                        normal: {
+                                            borderWidth: 10,
+                                            borderColor: '#555570'
+                                        }
+                                    }
+                                }
+                            ],
+                            data: [
+                                {
+                                    name: '三星',
+                                    value: 6,
+                                },
+                                {
+                                    name: '小米',
+                                    value: 4,
+                                    children: [
+                                        {
+                                            name: '小米0',
+                                            value: 10,
+                                            children: [
+                                                {
+                                                    itemStyle: {
+                                                        normal: {
+                                                            color: 'yellow'
+                                                        }
+                                                    },
+                                                    name: '小尺',
+                                                    value: 400
+                                                },
+                                                {
+                                                    name: '小寸',
+                                                    value: 200
+                                                },
+                                                {
+                                                    name: '小光年',
+                                                    value: 100
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            name: '小米1',
+                                            value: 4
+                                        },
+                                        {
+                                            name: '小米2',
+                                            value: 4
+                                        }
+                                    ]
+                                },
+                                {
+                                    name: '中兴',
+                                    value: 1
+                                }
+                            ]
+                        }
+                    ]
+                });
+
+                var chart1 = echarts.init(document.getElementById('main2'));
+                option = {
+                    series: [{
+                        scaleLimit: {
+                            max: 3,
+                            min: 0.8
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                formatter() {
+                                    return 11111;
+                                }
+                            }
+                        },
+                        type: 'treemap',
+                        data: [{
+                            name: 'nodeA',            // First tree
+                            value: 10,
+                            children: [{
+                                name: 'nodeAa',       // First leaf of first tree
+                                value: 4
+                            }, {
+                                name: 'nodeAb',       // Second leaf of first tree
+                                value: 6
+                            }]
+                        }]
+                    }]
+                };
+
+                chart1.setOption(option);
+                });
+
+        </script>
+    </body>
+</html>
