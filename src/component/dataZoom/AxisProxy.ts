@@ -318,8 +318,12 @@ class AxisProxy {
                         let thisRightOut = value > valueWindow[1];
                         let thisLeftOut = value < valueWindow[0];
                         if (seriesModel.subType !== 'bar') {
-                            thisLeftOut = thisLeftOut && seriesData.get(dataDims[i], dataIndex + 1) < valueWindow[0];
-                            thisRightOut = thisRightOut && seriesData.get(dataDims[i], dataIndex - 1) > valueWindow[1];
+                            const parsedRightValue = seriesData.get(dataDims[i], dataIndex + 1);
+                            const parsedLeftValue = seriesData.get(dataDims[i], dataIndex - 1);
+                            const leftValue = (typeof parsedLeftValue === 'number') ? parsedLeftValue : NaN;
+                            const rightValue = (typeof parsedRightValue === 'number') ? parsedRightValue : NaN;
+                            thisLeftOut = thisLeftOut && leftValue < valueWindow[0];
+                            thisRightOut = thisRightOut && rightValue > valueWindow[1];
                         }
                         if (thisHasValue && !thisLeftOut && !thisRightOut) {
                             return true;
