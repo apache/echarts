@@ -1035,13 +1035,18 @@ class DataStore {
 
         let offset = 0;
         for (let i = 0; i < len; i += frameSize) {
-            let minIndex = this.getRawIndex(i);
-            let minValue = dimStore[minIndex];
-            let maxIndex = this.getRawIndex(i);
-            let maxValue = dimStore[maxIndex];
+            let minIndex = i;
+            let minValue = dimStore[this.getRawIndex(minIndex)];
+            let maxIndex = i;
+            let maxValue = dimStore[this.getRawIndex(maxIndex)];
 
+            let thisFrameSize = frameSize;
+            // Handle final smaller frame
+            if (i + frameSize > len) {
+                thisFrameSize = len - i;
+            }
             // Determine min and max within the current frame
-            for (let k = 0; k < frameSize; k++) {
+            for (let k = 0; k < thisFrameSize; k++) {
                 const rawIndex = this.getRawIndex(i + k);
                 const value = dimStore[rawIndex];
 
