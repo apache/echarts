@@ -23,8 +23,8 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis } from '../../util/states';
-import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
-import {makeBackground} from '../helper/listComponent';
+import { setLabelStyle, createTextStyle } from '../../label/labelStyle';
+import { makeBackground } from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
 import LegendModel, {
@@ -46,8 +46,8 @@ import {
     SymbolOptionMixin
 } from '../../util/types';
 import Model from '../../model/Model';
-import {LineStyleProps} from '../../model/mixin/lineStyle';
-import {createSymbol, ECSymbol} from '../../util/symbol';
+import { LineStyleProps } from '../../model/mixin/lineStyle';
+import { createSymbol, ECSymbol } from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 
@@ -132,7 +132,7 @@ class LegendView extends ComponentView {
 
         // Perform layout.
         const positionInfo = legendModel.getBoxLayoutParams();
-        const viewportSize = {width: api.getWidth(), height: api.getHeight()};
+        const viewportSize = { width: api.getWidth(), height: api.getHeight() };
         const padding = legendModel.get('padding');
 
         const maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
@@ -471,8 +471,8 @@ class LegendView extends ComponentView {
         const selectorGroup = this.getSelectorGroup();
         const selectorRect = selectorGroup.getBoundingRect();
 
-        const margin: number[] = maxSize["margin"] || [0, 0, 0, 0];
-        
+        const margin: number[] = maxSize.margin || [0, 0, 0, 0];
+
         let selectorButtonGap = 0;
         let seletorMaxWidth = 0;
         let selectorLength = 0;
@@ -484,10 +484,10 @@ class LegendView extends ComponentView {
             selectorLength = selectorGroup?._children?.length ?? 0;
             gapLength = selectorLength > 0 ? selectorLength - 1 : 0;
             // @ts-ignore
-            seletorMaxWidth = selectorGroup?._children?.reduce((acc, val) => acc + (val?._rect?.width ?? 0), 0) + selectorButtonGap * gapLength;
+            seletorMaxWidth = selectorGroup?._children?.reduce((acc, val) => acc + (val?._rect?.width ?? 0), 0) + selectorButtonGap * gapLength; // eslint-disable-line
             selectorRect.width = seletorMaxWidth;
         }
-        
+
         const contentMaxWidth = maxSize.width - seletorMaxWidth - margin[1] - margin[3];
         // Place items in contentGroup.
         layoutUtil.box(
@@ -535,7 +535,7 @@ class LegendView extends ComponentView {
             contentGroup.x = contentPos[0];
             contentGroup.y = contentPos[1];
 
-            const mainRect = {x: 0, y: 0} as ZRRectLike;
+            const mainRect = { x: 0, y: 0 } as ZRRectLike;
             mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
             mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
             mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
@@ -588,8 +588,8 @@ function getLegendStyle(
     const iconBrushType = iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke';
     const decalStyle = itemStyleModel.getShallow('decal');
     itemStyle.decal = (!decalStyle || decalStyle === 'inherit')
-                    ? itemVisualStyle.decal
-                    : createOrUpdatePatternFromDecal(decalStyle, api);
+        ? itemVisualStyle.decal
+        : createOrUpdatePatternFromDecal(decalStyle, api);
 
     if (itemStyle.fill === 'inherit') {
         /**

@@ -183,7 +183,7 @@ class ScrollableLegendView extends LegendView {
     ) {
         const selectorGroup = this.getSelectorGroup();
 
-        const margin: number[] = maxSize["margin"] || [0, 0, 0, 0];
+        const margin: number[] = maxSize.margin || [0, 0, 0, 0];
 
         const orientIdx = legendModel.getOrient().index;
         const wh = WH[orientIdx];

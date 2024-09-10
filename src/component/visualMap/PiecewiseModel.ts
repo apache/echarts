@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import VisualMapModel, { VisualMapOption, VisualMeta } from './VisualMapModel';
 import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';
 import visualDefault from '../../visual/visualDefault';
-import {reformIntervals} from '../../util/number';
+import { reformIntervals } from '../../util/number';
 import { VisualOptionPiecewise, BuiltinVisualProperty } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import { inheritDefaultOption } from '../../util/component';
@@ -179,7 +179,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         // appear in `pieces` will not be taken into account in visual encoding.
 
         const option = this.option;
-        const visualTypesInPieces: {[key in BuiltinVisualProperty]?: 0 | 1} = {};
+        const visualTypesInPieces: { [key in BuiltinVisualProperty]?: 0 | 1 } = {};
         const visualTypes = VisualMapping.listVisualTypes();
         const isCategory = this.isCategory();
 
@@ -275,8 +275,8 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         return option.pieces && option.pieces.length > 0
             ? 'pieces'
             : this.option.categories
-            ? 'categories'
-            : 'splitNumber';
+                ? 'categories'
+                : 'splitNumber';
     }
 
     /**
@@ -322,7 +322,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
                 pIdx === pieceIndex && dataIndices.push(dataIndex);
             }, this);
 
-            result.push({seriesId: seriesModel.id, dataIndex: dataIndices});
+            result.push({ seriesId: seriesModel.id, dataIndex: dataIndices });
         }, this);
 
         return result;
@@ -381,8 +381,8 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             }
             else {
                 stops.push(
-                    {value: interval[0], color: color},
-                    {value: interval[1], color: color}
+                    { value: interval[0], color: color },
+                    { value: interval[1], color: color }
                 );
             }
         }
@@ -390,13 +390,13 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
         // Suplement
         const pieceList = this._pieceList.slice();
         if (!pieceList.length) {
-            pieceList.push({interval: [-Infinity, Infinity]});
+            pieceList.push({ interval: [-Infinity, Infinity] });
         }
         else {
             let edge = pieceList[0].interval[0];
-            edge !== -Infinity && pieceList.unshift({interval: [-Infinity, edge]});
+            edge !== -Infinity && pieceList.unshift({ interval: [-Infinity, edge] });
             edge = pieceList[pieceList.length - 1].interval[1];
-            edge !== Infinity && pieceList.push({interval: [edge, Infinity]});
+            edge !== Infinity && pieceList.push({ interval: [edge, Infinity] });
         }
 
         let curr = -Infinity;
@@ -410,7 +410,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             }
         }, this);
 
-        return {stops: stops, outerColors: outerColors};
+        return { stops: stops, outerColors: outerColors };
     }
 
 
@@ -515,10 +515,10 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
         zrUtil.each(thisOption.pieces, function (pieceListItem, index) {
 
             if (!zrUtil.isObject(pieceListItem)) {
-                pieceListItem = {value: pieceListItem};
+                pieceListItem = { value: pieceListItem };
             }
 
-            const item: InnerVisualPiece = {text: '', index: index};
+            const item: InnerVisualPiece = { text: '', index: index };
 
             if (pieceListItem.label != null) {
                 item.text = pieceListItem.label;
@@ -593,7 +593,7 @@ const resetMethods: Dictionary<ResetMethod> & ThisType<PiecewiseModel> = {
 function normalizeReverse(thisOption: PiecewiseVisualMapOption, pieceList: InnerVisualPiece[]) {
     const inverse = thisOption.inverse;
     if (thisOption.orient === 'vertical' ? !inverse : inverse) {
-            pieceList.reverse();
+        pieceList.reverse();
     }
 }
 

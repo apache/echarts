@@ -622,6 +622,9 @@ export function setLabelLineStyle(
                 if (stateObj) {
                     stateObj.ignore = true;
                 }
+                if (!!labelLine) {
+                    setLabelLineState(labelLine, true, stateName, stateModel);
+                }
                 continue;
             }
             // Create labelLine if not exists

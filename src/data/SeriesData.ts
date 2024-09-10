@@ -21,13 +21,13 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import {PathStyleProps} from 'zrender/src/graphic/Path';
+import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import DataDiffer from './DataDiffer';
-import {DataProvider, DefaultDataProvider} from './helper/dataProvider';
-import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
+import { DataProvider, DefaultDataProvider } from './helper/dataProvider';
+import { summarizeDimensions, DimensionSummary } from './helper/dimensionHelper';
 import SeriesDimensionDefine from './SeriesDimensionDefine';
-import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/types';
+import { ArrayLike, Dictionary, FunctionPropertyNames } from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
@@ -37,12 +37,12 @@ import {
     OrdinalNumber,
     OrdinalRawValue
 } from '../util/types';
-import {convertOptionIdName, isDataItemOption} from '../util/model';
+import { convertOptionIdName, isDataItemOption } from '../util/model';
 import { setCommonECData } from '../util/innerStore';
 import type Graph from './Graph';
 import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
-import {isSourceInstance, Source} from './Source';
+import { isSourceInstance, Source } from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
 import DataStore, { DataStoreDimensionDefine, DimValueGetter } from './DataStore';
 import { isSeriesDataSchema, SeriesDataSchema } from './helper/SeriesDataSchema';
@@ -58,7 +58,7 @@ const ID_PREFIX = 'e\0\0';
 
 const INDEX_NOT_FOUND = -1;
 
-type NameRepeatCount = {[name: string]: number};
+type NameRepeatCount = { [name: string]: number };
 type ItrParamDims = DimensionLoose | Array<DimensionLoose>;
 // If Ctx not specified, use List as Ctx
 type CtxOrList<Ctx> = unknown extends Ctx ? SeriesData : Ctx;
@@ -294,10 +294,10 @@ class SeriesData<
 
             const dimensionInfo: SeriesDimensionDefine =
                 zrUtil.isString(dimInfoInput)
-                ? new SeriesDimensionDefine({name: dimInfoInput})
-                : !(dimInfoInput instanceof SeriesDimensionDefine)
-                ? new SeriesDimensionDefine(dimInfoInput)
-                : dimInfoInput;
+                    ? new SeriesDimensionDefine({ name: dimInfoInput })
+                    : !(dimInfoInput instanceof SeriesDimensionDefine)
+                        ? new SeriesDimensionDefine(dimInfoInput)
+                        : dimInfoInput;
 
             const dimensionName = dimensionInfo.name;
             dimensionInfo.type = dimensionInfo.type || 'float';
@@ -406,8 +406,8 @@ class SeriesData<
         return dimInfo
             ? dimInfo.storeDimIndex
             : this._dimOmitted
-            ? this._schema.getSourceDimensionIndex(dim as DimensionName)
-            : -1;
+                ? this._schema.getSourceDimensionIndex(dim as DimensionName)
+                : -1;
     }
 
     /**
@@ -583,7 +583,7 @@ class SeriesData<
      *        Each item is exactly corresponding to a dimension.
      */
     appendValues(values: any[][], names?: string[]): void {
-        const {start, end} = this._store.appendValues(values, names.length);
+        const { start, end } = this._store.appendValues(values, names.length);
         const shouldMakeIdFromName = this._shouldMakeIdFromName();
 
         this._updateOrdinalMeta();
@@ -1124,8 +1124,8 @@ class SeriesData<
      */
     // TODO: Type of data item
     getItemModel<ItemOpts extends unknown = unknown>(idx: number): Model<ItemOpts
-        // Extract item option with value key. FIXME will cause incompatible issue
-        // Extract<HostModel['option']['data'][number], { value?: any }>
+    // Extract item option with value key. FIXME will cause incompatible issue
+    // Extract<HostModel['option']['data'][number], { value?: any }>
     > {
         const hostModel = this.hostModel;
         const dataItem = this.getRawDataItem(idx) as ModelOption;

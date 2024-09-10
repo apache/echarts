@@ -109,7 +109,7 @@ export interface DataStoreDimensionDefine {
     ordinalOffset?: number
 }
 
-let defaultDimValueGetters: {[sourceFormat: string]: DimValueGetter};
+let defaultDimValueGetters: { [sourceFormat: string]: DimValueGetter };
 
 function getIndicesCtor(rawCount: number): DataArrayLikeConstructor {
     // The possible max value in this._indicies is always this._rawCount despite of filtering.
@@ -204,7 +204,7 @@ class DataStore {
 
         const source = provider.getSource();
         const defaultGetter = this.defaultDimValueGetter =
-             defaultDimValueGetters[source.sourceFormat];
+            defaultDimValueGetters[source.sourceFormat];
         // Default dim value getter
         this._dimValueGetter = dimValueGetter || defaultGetter;
 
@@ -225,6 +225,8 @@ class DataStore {
         });
 
         this._initDataFromProvider(0, provider.count());
+
+
     }
 
     getProvider(): DataProvider {
@@ -368,7 +370,7 @@ class DataStore {
 
         this._rawCount = this._count = end;
 
-        return {start, end};
+        return { start, end };
     }
 
     private _initDataFromProvider(
@@ -483,6 +485,8 @@ class DataStore {
         return dimStore ? dimStore[rawIdx] : NaN;
     }
 
+
+
     /**
      * Get sum of data in one dimension
      */
@@ -522,8 +526,8 @@ class DataStore {
         return len === 0
             ? 0
             : len % 2 === 1
-            ? sortedDimDataArray[(len - 1) / 2]
-            : (sortedDimDataArray[len / 2] + sortedDimDataArray[len / 2 - 1]) / 2;
+                ? sortedDimDataArray[(len - 1) / 2]
+                : (sortedDimDataArray[len / 2] + sortedDimDataArray[len / 2 - 1]) / 2;
     }
 
     /**
@@ -716,7 +720,7 @@ class DataStore {
      * Select data in range. (For optimization of filter)
      * (Manually inline code, support 5 million data filtering in data zoom.)
      */
-    selectRange(range: {[dimIdx: number]: [number, number]}): DataStore {
+    selectRange(range: { [dimIdx: number]: [number, number] }): DataStore {
         const newStore = this.clone();
 
         const len = newStore._count;
@@ -774,8 +778,8 @@ class DataStore {
                     const val2 = dimStorage2[i];
                     // Do not filter NaN, see comment above.
                     if ((
-                            (val >= min && val <= max) || isNaN(val as any)
-                        )
+                        (val >= min && val <= max) || isNaN(val as any)
+                    )
                         && (
                             (val2 >= min2 && val2 <= max2) || isNaN(val2 as any)
                         )
