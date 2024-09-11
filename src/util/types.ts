@@ -26,7 +26,7 @@
  */
 
 import Group from 'zrender/src/graphic/Group';
-import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
+import Element, { ElementEvent, ElementTextConfig } from 'zrender/src/Element';
 import { DataFormatMixin } from '../model/mixin/dataFormat';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
@@ -56,7 +56,7 @@ import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 // Common types and constants
 // ---------------------------
 
-export {Dictionary};
+export { Dictionary };
 
 export type RendererType = 'canvas' | 'svg';
 export type NullUndefined = null | undefined;
@@ -143,9 +143,9 @@ export interface DataHost {
     getData(dataType?: SeriesDataType): SeriesData;
 }
 
-export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin {}
-    // Pick<DataHost, 'getData'>,
-    // Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
+export interface DataModel extends Model<unknown>, DataHost, DataFormatMixin { }
+// Pick<DataHost, 'getData'>,
+// Pick<DataFormatMixin, 'getDataParams' | 'formatTooltip'> {}
 
 interface PayloadItem {
     excludeSeriesId?: OptionId | OptionId[];
@@ -948,7 +948,7 @@ export interface AreaStyleOption<Clr = ZRColor> extends ShadowOptionMixin {
 }
 
 type Arrayable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | T[key][] };
-type Dictionaryable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | Dictionary<T[key]>};
+type Dictionaryable<T extends Dictionary<any>> = { [key in keyof T]: T[key] | Dictionary<T[key]> };
 
 export interface VisualOptionUnit {
     symbol?: string
@@ -1073,18 +1073,18 @@ export interface SeriesLabelOption extends LabelOption {
  */
 export interface LineLabelOption extends Omit<LabelOption, 'distance' | 'position'> {
     position?: 'start'
-        | 'middle'
-        | 'end'
-        | 'insideStart'
-        | 'insideStartTop'
-        | 'insideStartBottom'
-        | 'insideMiddle'
-        | 'insideMiddleTop'
-        | 'insideMiddleBottom'
-        | 'insideEnd'
-        | 'insideEndTop'
-        | 'insideEndBottom'
-        | 'insideMiddleBottom'
+    | 'middle'
+    | 'end'
+    | 'insideStart'
+    | 'insideStartTop'
+    | 'insideStartBottom'
+    | 'insideMiddle'
+    | 'insideMiddleTop'
+    | 'insideMiddleBottom'
+    | 'insideEnd'
+    | 'insideEndTop'
+    | 'insideEndBottom'
+    | 'insideMiddleBottom'
     /**
      * Distance can be an array.
      * Which will specify horizontal and vertical distance respectively
@@ -1143,9 +1143,9 @@ export interface LabelLayoutOption {
      * shuffleX/y will move the label around the original position randomly.
      */
     moveOverlap?: 'shiftX'
-        | 'shiftY'
-        | 'shuffleX'
-        | 'shuffleY'
+    | 'shiftY'
+    | 'shuffleX'
+    | 'shuffleY'
     /**
      * If hide the overlapped label. It will be handled after move.
      * @default 'none'
@@ -1195,7 +1195,7 @@ export interface TooltipFormatterCallback<T> {
     (
         params: T, asyncTicket: string,
         callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement | HTMLElement[]) => void
-    ) : string | HTMLElement | HTMLElement[]
+    ): string | HTMLElement | HTMLElement[]
 }
 
 type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
@@ -1320,9 +1320,9 @@ export interface CommonTooltipOption<FormatterParams> {
         'textShadowColor' | 'textShadowBlur' | 'textShadowOffsetX' | 'textShadowOffsetY'
         | 'align'> & {
 
-        // Available when renderMode is html
-        decoration?: string
-    }
+            // Available when renderMode is html
+            decoration?: string
+        }
 }
 
 export type ComponentItemTooltipOption<T> = CommonTooltipOption<T> & {
@@ -1553,8 +1553,7 @@ export interface SeriesOption<
     ComponentOption,
     AnimationOptionMixin,
     ColorPaletteOptionMixin,
-    StatesOptionMixin<StateOption, StatesMixin>
-{
+    StatesOptionMixin<StateOption, StatesMixin> {
     mainType?: 'series'
 
     silent?: boolean

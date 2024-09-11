@@ -55,6 +55,17 @@
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
+    var __assign = function() {
+        __assign = Object.assign || function __assign(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+            }
+            return t;
+        };
+        return __assign.apply(this, arguments);
+    };
+
     var Browser = (function () {
         function Browser() {
             this.firefox = false;
@@ -45834,9 +45845,37 @@
       };
     }
 
+    function parsePosition(seriesModel, api) {
+      var _a = seriesModel === null || seriesModel === void 0 ? void 0 : seriesModel.option,
+          top = _a.top,
+          right = _a.right,
+          bottom = _a.bottom,
+          left = _a.left;
+
+      var center = seriesModel.get('center'); // !TODO: we don't have cases without arrays but...
+
+      var radius = seriesModel.get('radius'); // !TODO: we don't have cases without arrays but...
+
+      var width = api.getWidth();
+      var height = api.getHeight();
+      var size = Math.min(width, height);
+      var cx = parsePercent$1(center[0], width);
+      var cy = parsePercent$1(center[1], height);
+      var r = parsePercent$1(radius[0], size / 2);
+      var offsetX = (+left - +right) / 2;
+      var offsetY = (+top - +bottom) / 2;
+      return {
+        cx: cx,
+        cy: cy,
+        r: r,
+        offsetX: offsetX,
+        offsetY: offsetY
+      };
+    }
     /**
      * Piece of pie including Sector, Label, LabelLine
      */
+
 
     var PiePiece =
     /** @class */
@@ -46076,6 +46115,8 @@
         if (seriesModel.get('animationTypeUpdate') !== 'expansion') {
           this._data = data;
         }
+
+        this._renderTitle(seriesModel, ecModel, api);
       };
 
       PieView.prototype.dispose = function () {};
@@ -46090,6 +46131,54 @@
           var radius = Math.sqrt(dx * dx + dy * dy);
           return radius <= itemLayout.r && radius >= itemLayout.r0;
         }
+      };
+
+      PieView.prototype._renderTitle = function (seriesModel, ecModel, api) {
+        var _a, _b, _c, _d, _e;
+
+        var title = seriesModel === null || seriesModel === void 0 ? void 0 : seriesModel.option.title;
+
+        if (!title) {
+          if (this._titleEls) {
+            this.group.remove(this._titleEls[0]);
+            this._titleEls = null;
+          }
+
+          return;
+        }
+
+        var posInfo = parsePosition(seriesModel, api);
+        var data = seriesModel.getData();
+        var valueDim = data.mapDimension('value');
+        var titleStr = title.str;
+
+        if (title.isSum) {
+          var sumVal = data.getSum(valueDim);
+          titleStr += (title === null || title === void 0 ? void 0 : title.formatter) ? title.formatter(sumVal) : "" + sumVal;
+        }
+
+        var newTitleEls = this._titleEls || [new ZRText({
+          silent: true
+        })];
+        var itemModel = data.getItemModel(0);
+        var titleX = posInfo.cx + posInfo.offsetX + parsePercent$1((_b = (_a = title.offset) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : 0, posInfo.r);
+        var titleY = posInfo.cy + posInfo.offsetY + parsePercent$1((_d = (_c = title.offset) === null || _c === void 0 ? void 0 : _c[1]) !== null && _d !== void 0 ? _d : 0, posInfo.r);
+        var labelEl = newTitleEls[0];
+        labelEl.attr({
+          z2: 2,
+          style: createTextStyle(itemModel, __assign({
+            x: titleX,
+            y: titleY,
+            text: titleStr,
+            align: 'center',
+            verticalAlign: 'middle',
+            fill: ((_e = title === null || title === void 0 ? void 0 : title.style) === null || _e === void 0 ? void 0 : _e.color) || '#000000',
+            fontWeight: 600,
+            overflow: 'break'
+          }, title.style), {})
+        });
+        this.group.add(labelEl);
+        this._titleEls = newTitleEls;
       };
 
       PieView.type = 'pie';
@@ -46325,6 +46414,7 @@
         bottom: 0,
         width: null,
         height: null,
+        title: undefined,
         label: {
           // color: 'inherit',
           // If rotate around circle
@@ -61959,7 +62049,7 @@
       return PointerPath;
     }(Path);
 
-    function parsePosition(seriesModel, api) {
+    function parsePosition$1(seriesModel, api) {
       var center = seriesModel.get('center');
       var width = api.getWidth();
       var height = api.getHeight();
@@ -62003,7 +62093,7 @@
       GaugeView.prototype.render = function (seriesModel, ecModel, api) {
         this.group.removeAll();
         var colorList = seriesModel.get(['axisLine', 'lineStyle', 'color']);
-        var posInfo = parsePosition(seriesModel, api);
+        var posInfo = parsePosition$1(seriesModel, api);
 
         this._renderMain(seriesModel, ecModel, api, colorList, posInfo);
 
