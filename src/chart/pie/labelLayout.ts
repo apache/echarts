@@ -18,13 +18,13 @@
 */
 
 // FIXME emphasis label position is not same with normal label position
-import {parsePercent} from '../../util/number';
+import { parsePercent } from '../../util/number';
 import PieSeriesModel, { PieSeriesOption, PieDataItemOption } from './PieSeries';
 import { VectorArray } from 'zrender/src/core/vector';
 import { HorizontalAlign, ZRTextAlign } from '../../util/types';
 import { Sector, Polyline, Point } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
-import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import { each, isNumber } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
 import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
@@ -102,7 +102,7 @@ function adjustSingleSide(
     // Adjust X based on the shifted y. Make tight labels aligned on an ellipse curve.
     function recalculateX(items: LabelLayout[]) {
         // Extremes of
-        const topSemi = { list: [], maxY: 0} as SemiInfo;
+        const topSemi = { list: [], maxY: 0 } as SemiInfo;
         const bottomSemi = { list: [], maxY: 0 } as SemiInfo;
 
         for (let i = 0; i < items.length; i++) {
@@ -187,11 +187,11 @@ function avoidOverlap(
             if (layout.labelAlignTo === 'edge') {
                 if (label.x < cx) {
                     targetTextWidth = linePoints[2][0] - layout.labelDistance
-                            - viewLeft - layout.edgeDistance;
+                        - viewLeft - layout.edgeDistance;
                 }
                 else {
                     targetTextWidth = viewLeft + viewWidth - layout.edgeDistance
-                            - linePoints[2][0] - layout.labelDistance;
+                        - linePoints[2][0] - layout.labelDistance;
                 }
             }
             else if (layout.labelAlignTo === 'labelLine') {
@@ -237,7 +237,7 @@ function avoidOverlap(
                 }
                 else {
                     linePoints[2][0] = viewLeft + viewWidth - layout.edgeDistance
-                            - realTextWidth - layout.labelDistance;
+                        - realTextWidth - layout.labelDistance;
                 }
             }
             else {
@@ -318,9 +318,9 @@ function constrainTextWidth(
                             // width.
                             : availableInnerWidth
                         )
-                    // Current available width is enough, so no need to
-                    // constrain.
-                    : null
+                        // Current available width is enough, so no need to
+                        // constrain.
+                        : null
                 );
             label.setStyle('width', newWidth);
         }
@@ -355,8 +355,12 @@ export default function pieLabelLayout(
     const viewTop = viewRect.y;
     const viewHeight = viewRect.height;
 
-    function setNotShow(el: {ignore: boolean}) {
+    function setNotShow(el: { ignore: boolean }) {
         el.ignore = true;
+    }
+
+    function setShow(el: { ignore: boolean }) {
+        el.ignore = false;
     }
 
     function isLabelShown(label: ZRText) {
@@ -392,14 +396,12 @@ export default function pieLabelLayout(
         let labelLineLen2 = labelLineModel.get('length2');
         labelLineLen2 = parsePercent(labelLineLen2, viewWidth);
 
-        if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
-            each(label.states, setNotShow);
-            label.ignore = true;
-            if (labelLine) {
-                each(labelLine.states, setNotShow);
-                labelLine.ignore = true;
-            }
-            return;
+        const isLabelHidden = Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian;
+        each(label.states, isLabelHidden ? setNotShow : setShow);
+        label.ignore = isLabelHidden;
+        if (labelLine) {
+            each(labelLine.states, isLabelHidden ? setNotShow : setShow);
+            labelLine.ignore = isLabelHidden;
         }
 
         if (!isLabelShown(label)) {

@@ -44453,6 +44453,10 @@
         el.ignore = true;
       }
 
+      function setShow(el) {
+        el.ignore = false;
+      }
+
       function isLabelShown(label) {
         if (!label.ignore) {
           return true;
@@ -44485,17 +44489,13 @@
         labelLineLen = parsePercent$1(labelLineLen, viewWidth);
         var labelLineLen2 = labelLineModel.get('length2');
         labelLineLen2 = parsePercent$1(labelLineLen2, viewWidth);
+        var isLabelHidden = Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian;
+        each(label.states, isLabelHidden ? setNotShow : setShow);
+        label.ignore = isLabelHidden;
 
-        if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
-          each(label.states, setNotShow);
-          label.ignore = true;
-
-          if (labelLine) {
-            each(labelLine.states, setNotShow);
-            labelLine.ignore = true;
-          }
-
-          return;
+        if (labelLine) {
+          each(labelLine.states, isLabelHidden ? setNotShow : setShow);
+          labelLine.ignore = isLabelHidden;
         }
 
         if (!isLabelShown(label)) {
