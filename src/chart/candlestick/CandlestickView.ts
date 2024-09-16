@@ -34,6 +34,7 @@ import Model from '../../model/Model';
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 import { getBorderColor, getColor } from './candlestickVisual';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const SKIP_PROPS = ['color', 'borderColor'] as const;
 
@@ -119,7 +120,15 @@ class CandlestickView extends ChartView {
                     graphic.initProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
 
                     setBoxCommon(el, data, newIdx, isSimpleBox);
-
+                    if (__EDITOR__) {
+                        addEditorInfo(el, {
+                            component: 'series',
+                            subType: 'candlestick',
+                            element: 'candlestick',
+                            componentIndex: seriesModel.componentIndex,
+                            dataIndex: newIdx
+                        });
+                    }
                     group.add(el);
 
                     data.setItemGraphicEl(newIdx, el);
@@ -152,7 +161,15 @@ class CandlestickView extends ChartView {
 
                     saveOldStyle(el);
                 }
-
+                if (__EDITOR__) {
+                    addEditorInfo(el, {
+                        component: 'series',
+                        subType: 'candlestick',
+                        element: 'candlestick',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIdx
+                    });
+                }
                 setBoxCommon(el, data, newIdx, isSimpleBox);
 
                 group.add(el);

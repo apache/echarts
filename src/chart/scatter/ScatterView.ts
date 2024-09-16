@@ -29,6 +29,7 @@ import SeriesData from '../../data/SeriesData';
 import { TaskProgressParams } from '../../core/task';
 import type { StageHandlerProgressExecutor } from '../../util/types';
 import Element from 'zrender/src/Element';
+import { addEditorInfo } from '../../util/editorInfo';
 
 class ScatterView extends ChartView {
     static readonly type = 'scatter';
@@ -51,7 +52,7 @@ class ScatterView extends ChartView {
             // shape will be more general.
             // But bounding volume like bounding rect will be much faster in the contain calculation
             clipShape: this._getClipShape(seriesModel)
-        });
+        }, seriesModel.componentIndex);
 
         this._finished = true;
     }
@@ -68,7 +69,7 @@ class ScatterView extends ChartView {
     incrementalRender(taskParams: TaskProgressParams, seriesModel: ScatterSeriesModel, ecModel: GlobalModel) {
         this._symbolDraw.incrementalUpdate(taskParams, seriesModel.getData(), {
             clipShape: this._getClipShape(seriesModel)
-        });
+        }, seriesModel.componentIndex);
 
         this._finished = taskParams.end === seriesModel.getData().count();
     }
@@ -116,11 +117,23 @@ class ScatterView extends ChartView {
             symbolDraw && symbolDraw.remove();
             symbolDraw = this._symbolDraw = isLargeDraw
                 ? new LargeSymbolDraw()
-                : new SymbolDraw();
+                : new SymbolDraw(undefined,
+                    {
+                        component: 'series',
+                        subType: 'scatter',
+                        element: 'symbol'
+                    });
             this._isLargeDraw = isLargeDraw;
             this.group.removeAll();
         }
-
+        if (__EDITOR__) {
+            addEditorInfo(symbolDraw.group, {
+                component: 'series',
+                subType: 'scatter',
+                element: 'scatter',
+                componentIndex: seriesModel.componentIndex
+            });
+        }
         this.group.add(symbolDraw.group);
 
         return symbolDraw;

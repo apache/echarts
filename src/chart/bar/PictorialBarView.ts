@@ -39,6 +39,7 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
 import { createClipPath } from '../helper/createClipPathFromCoordSys';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
@@ -147,7 +148,7 @@ class PictorialBarView extends ChartView {
         const coordSysRect = cartesian.master.getRect();
 
         const opt: CreateOpts = {
-            ecSize: {width: api.getWidth(), height: api.getHeight()},
+            ecSize: { width: api.getWidth(), height: api.getHeight() },
             seriesModel: seriesModel,
             coordSys: cartesian,
             coordSysExtent: [
@@ -171,6 +172,14 @@ class PictorialBarView extends ChartView {
                 const bar = createBar(data, opt, symbolMeta);
 
                 data.setItemGraphicEl(dataIndex, bar);
+                if (__EDITOR__) {
+                    addEditorInfo(bar, {
+                        component: 'series',
+                        subType: 'pictorialBar',
+                        element: 'symbolPath',
+                        dataIndex
+                    });
+                }
                 group.add(bar);
 
                 updateCommon(bar, opt, symbolMeta);
@@ -203,6 +212,14 @@ class PictorialBarView extends ChartView {
                 data.setItemGraphicEl(newIndex, bar);
                 bar.__pictorialSymbolMeta = symbolMeta;
                 // Add back
+                if (__EDITOR__) {
+                    addEditorInfo(bar, {
+                        component: 'series',
+                        subType: 'pictorialBar',
+                        element: 'symbolPath',
+                        dataIndex: newIndex
+                    });
+                }
                 group.add(bar);
 
                 updateCommon(bar, opt, symbolMeta);
@@ -505,8 +522,8 @@ function prepareLayoutInfo(
     pathPosition[valueDim.index] = symbolPosition === 'start'
         ? sizeFix
         : symbolPosition === 'end'
-        ? boundingLength - sizeFix
-        : boundingLength / 2; // 'center'
+            ? boundingLength - sizeFix
+            : boundingLength / 2; // 'center'
     if (symbolOffset) {
         pathPosition[0] += symbolOffset[0];
         pathPosition[1] += symbolOffset[1];
@@ -699,7 +716,7 @@ function createOrUpdateBarRect(
         bar.add(barRect);
     }
     else {
-        updateAttr(barRect, null, {shape: rectShape}, symbolMeta, isUpdate);
+        updateAttr(barRect, null, { shape: rectShape }, symbolMeta, isUpdate);
     }
 }
 
@@ -719,12 +736,12 @@ function createOrUpdateClip(
 
         if (clipPath) {
             graphic.updateProps(
-                clipPath, {shape: clipShape}, animationModel, dataIndex
+                clipPath, { shape: clipShape }, animationModel, dataIndex
             );
         }
         else {
             clipShape[valueDim.wh] = 0;
-            clipPath = new graphic.Rect({shape: clipShape});
+            clipPath = new graphic.Rect({ shape: clipShape });
             bar.__pictorialBundle.setClipPath(clipPath);
             bar.__pictorialClipPath = clipPath;
 
@@ -732,7 +749,7 @@ function createOrUpdateClip(
             target[valueDim.wh] = symbolMeta.clipShape[valueDim.wh];
 
             graphic[isUpdate ? 'updateProps' : 'initProps'](
-                clipPath, {shape: target}, animationModel, dataIndex
+                clipPath, { shape: target }, animationModel, dataIndex
             );
         }
     }
@@ -792,9 +809,9 @@ function updateBar(bar: PictorialBarElement, opt: CreateOpts, symbolMeta: Symbol
 
     graphic.updateProps(
         bundle, {
-            x: symbolMeta.bundlePosition[0],
-            y: symbolMeta.bundlePosition[1]
-        }, animationModel, dataIndex
+        x: symbolMeta.bundlePosition[0],
+        y: symbolMeta.bundlePosition[1]
+    }, animationModel, dataIndex
     );
 
     if (symbolMeta.symbolRepeat) {
@@ -938,6 +955,14 @@ function updateCommon(
             inheritColor: symbolMeta.style.fill as ColorString,
             defaultOpacity: symbolMeta.style.opacity,
             defaultOutsidePosition: barPositionOutside
+        },
+        undefined,
+        {
+            component: 'series',
+            element: 'label',
+            subType: 'pictorialBar',
+            componentIndex: opt.seriesModel.componentIndex,
+            dataIndex
         }
     );
 

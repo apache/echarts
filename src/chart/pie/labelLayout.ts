@@ -18,16 +18,17 @@
 */
 
 // FIXME emphasis label position is not same with normal label position
-import {parsePercent} from '../../util/number';
+import { parsePercent } from '../../util/number';
 import PieSeriesModel, { PieSeriesOption, PieDataItemOption } from './PieSeries';
 import { VectorArray } from 'zrender/src/core/vector';
 import { HorizontalAlign, ZRTextAlign } from '../../util/types';
 import { Sector, Polyline, Point } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
-import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import { each, isNumber } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
 import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const RADIAN = Math.PI / 180;
 
@@ -102,7 +103,7 @@ function adjustSingleSide(
     // Adjust X based on the shifted y. Make tight labels aligned on an ellipse curve.
     function recalculateX(items: LabelLayout[]) {
         // Extremes of
-        const topSemi = { list: [], maxY: 0} as SemiInfo;
+        const topSemi = { list: [], maxY: 0 } as SemiInfo;
         const bottomSemi = { list: [], maxY: 0 } as SemiInfo;
 
         for (let i = 0; i < items.length; i++) {
@@ -187,11 +188,11 @@ function avoidOverlap(
             if (layout.labelAlignTo === 'edge') {
                 if (label.x < cx) {
                     targetTextWidth = linePoints[2][0] - layout.labelDistance
-                            - viewLeft - layout.edgeDistance;
+                        - viewLeft - layout.edgeDistance;
                 }
                 else {
                     targetTextWidth = viewLeft + viewWidth - layout.edgeDistance
-                            - linePoints[2][0] - layout.labelDistance;
+                        - linePoints[2][0] - layout.labelDistance;
                 }
             }
             else if (layout.labelAlignTo === 'labelLine') {
@@ -237,7 +238,7 @@ function avoidOverlap(
                 }
                 else {
                     linePoints[2][0] = viewLeft + viewWidth - layout.edgeDistance
-                            - realTextWidth - layout.labelDistance;
+                        - realTextWidth - layout.labelDistance;
                 }
             }
             else {
@@ -318,9 +319,9 @@ function constrainTextWidth(
                             // width.
                             : availableInnerWidth
                         )
-                    // Current available width is enough, so no need to
-                    // constrain.
-                    : null
+                        // Current available width is enough, so no need to
+                        // constrain.
+                        : null
                 );
             label.setStyle('width', newWidth);
         }
@@ -355,7 +356,7 @@ export default function pieLabelLayout(
     const viewTop = viewRect.y;
     const viewHeight = viewRect.height;
 
-    function setNotShow(el: {ignore: boolean}) {
+    function setNotShow(el: { ignore: boolean }) {
         el.ignore = true;
     }
 
@@ -376,7 +377,22 @@ export default function pieLabelLayout(
         const sectorShape = sector.shape;
         const label = sector.getTextContent();
         const labelLine = sector.getTextGuideLine();
-
+        if (__EDITOR__) {
+            addEditorInfo(label, {
+                component: 'series',
+                subType: 'pie',
+                element: 'label',
+                dataIndex: idx,
+                componentIndex: seriesModel.componentIndex
+            });
+            addEditorInfo(labelLine, {
+                component: 'series',
+                subType: 'pie',
+                element: 'labelLine',
+                dataIndex: idx,
+                componentIndex: seriesModel.componentIndex
+            });
+        }
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const labelModel = itemModel.getModel('label');
         // Use position in normal or emphasis

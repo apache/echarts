@@ -27,6 +27,7 @@ import PiecewiseModel from './PiecewiseModel';
 import { TextAlign } from 'zrender/src/core/types';
 import { VisualMappingOption } from '../../visual/VisualMapping';
 import { createTextStyle } from '../../label/labelStyle';
+import { addEditorInfo } from '../../util/editorInfo';
 
 class PiecewiseVisualMapView extends VisualMapView {
 
@@ -73,8 +74,7 @@ class PiecewiseVisualMapView extends VisualMapView {
 
             if (showLabel) {
                 const visualState = this.visualMapModel.getValueState(representValue);
-
-                itemGroup.add(new graphic.Text({
+                const visualMapLabel = new graphic.Text({
                     style: {
                         x: itemAlign === 'right' ? -textGap : itemSize[0] + textGap,
                         y: itemSize[1] / 2,
@@ -85,7 +85,14 @@ class PiecewiseVisualMapView extends VisualMapView {
                         fill: textFill,
                         opacity: visualState === 'outOfRange' ? 0.5 : 1
                     }
-                }));
+                });
+                if (__EDITOR__) {
+                    addEditorInfo(visualMapLabel, {
+                        component: 'visualMap',
+                        element: 'label'
+                    });
+                }
+                itemGroup.add(visualMapLabel);
             }
 
             thisGroup.add(itemGroup);
@@ -154,8 +161,7 @@ class PiecewiseVisualMapView extends VisualMapView {
 
         const itemGroup = new graphic.Group();
         const textStyleModel = this.visualMapModel.textStyleModel;
-
-        itemGroup.add(new graphic.Text({
+        const endText = new graphic.Text({
             style: createTextStyle(textStyleModel, {
                 x: showLabel ? (itemAlign === 'right' ? itemSize[0] : 0) : itemSize[0] / 2,
                 y: itemSize[1] / 2,
@@ -163,7 +169,14 @@ class PiecewiseVisualMapView extends VisualMapView {
                 align: showLabel ? (itemAlign as TextAlign) : 'center',
                 text
             })
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(endText, {
+                component: 'visualMap',
+                element: 'endText'
+            });
+        }
+        itemGroup.add(endText);
 
         group.add(itemGroup);
     }
@@ -201,13 +214,20 @@ class PiecewiseVisualMapView extends VisualMapView {
         representValue: number,
         shapeParam: number[]
     ) {
-        group.add(createSymbol(
+        const symbol = createSymbol(
             // symbol will be string
             this.getControllerVisual(representValue, 'symbol') as string,
             shapeParam[0], shapeParam[1], shapeParam[2], shapeParam[3],
             // color will be string
             this.getControllerVisual(representValue, 'color') as string
-        ));
+        );
+        if (__EDITOR__) {
+            addEditorInfo(symbol, {
+                component: 'visualMap',
+                element: 'symbol'
+            });
+        }
+        group.add(symbol);
     }
 
     private _onItemClick(

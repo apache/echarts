@@ -31,6 +31,7 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { isString, retrieve3 } from 'zrender/src/core/util';
 import type { GraphEdge } from '../../data/Graph';
+import { addEditorInfo } from '../../util/editorInfo';
 
 class SankeyPathShape {
     x1 = 0;
@@ -237,6 +238,15 @@ class SankeyView extends ChartView {
                 return style;
             });
 
+            if (__EDITOR__) {
+                addEditorInfo(curve, {
+                    component: 'series',
+                    subType: 'sankey',
+                    element: 'edge',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex: edge.dataIndex
+                });
+            }
             group.add(curve);
 
             edgeData.setItemGraphicEl(edge.dataIndex, curve);
@@ -283,6 +293,14 @@ class SankeyView extends ChartView {
                     },
                     labelDataIndex: node.dataIndex,
                     defaultText: node.id
+                },
+                undefined,
+                {
+                    subType: 'sankey',
+                    component: 'series',
+                    componentIndex: seriesModel.componentIndex,
+                    element: 'label',
+                    dataIndex: node.dataIndex
                 }
             );
 
@@ -293,6 +311,15 @@ class SankeyView extends ChartView {
 
             setStatesStylesFromModel(rect, itemModel);
 
+            if (__EDITOR__) {
+                addEditorInfo(rect, {
+                    component: 'series',
+                    subType: 'sankey',
+                    element: 'node',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex: node.dataIndex
+                });
+            }
             group.add(rect);
 
             nodeData.setItemGraphicEl(node.dataIndex, rect);
