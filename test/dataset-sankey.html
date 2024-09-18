@@ -1,0 +1,758 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+    <title>dataset-sankey</title>
+</head>
+
+<body>
+    <style>
+    </style>
+
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+
+    <script>
+        var objectRows0 = [
+            {
+                "source": "Agricultural 'waste'",
+                "target": "Bio-conversion",
+                "value": 124.729
+            },
+            {
+                "source": "Bio-conversion",
+                "target": "Liquid",
+                "value": 0.597
+            },
+            {
+                "source": "Bio-conversion",
+                "target": "Losses",
+                "value": 26.862
+            },
+            {
+                "source": "Bio-conversion",
+                "target": "Solid",
+                "value": 280.322
+            },
+            {
+                "source": "Bio-conversion",
+                "target": "Gas",
+                "value": 81.144
+            },
+            {
+                "source": "Biofuel imports",
+                "target": "Liquid",
+                "value": 35
+            },
+            {
+                "source": "Biomass imports",
+                "target": "Solid",
+                "value": 35
+            },
+            {
+                "source": "Coal imports",
+                "target": "Coal",
+                "value": 11.606
+            },
+            {
+                "source": "Coal reserves",
+                "target": "Coal",
+                "value": 63.965
+            },
+            {
+                "source": "Coal",
+                "target": "Solid",
+                "value": 75.571
+            },
+            {
+                "source": "District heating",
+                "target": "Industry",
+                "value": 10.639
+            },
+            {
+                "source": "District heating",
+                "target": "Heating and cooling - commercial",
+                "value": 22.505
+            },
+            {
+                "source": "District heating",
+                "target": "Heating and cooling - homes",
+                "value": 46.184
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Over generation / exports",
+                "value": 104.453
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Heating and cooling - homes",
+                "value": 113.726
+            },
+            {
+                "source": "Electricity grid",
+                "target": "H2 conversion",
+                "value": 27.14
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Industry",
+                "value": 342.165
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Road transport",
+                "value": 37.797
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Agriculture",
+                "value": 4.412
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Heating and cooling - commercial",
+                "value": 40.858
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Losses",
+                "value": 56.691
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Rail transport",
+                "value": 7.863
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Lighting & appliances - commercial",
+                "value": 90.008
+            },
+            {
+                "source": "Electricity grid",
+                "target": "Lighting & appliances - homes",
+                "value": 93.494
+            },
+            {
+                "source": "Gas imports",
+                "target": "Ngas",
+                "value": 40.719
+            },
+            {
+                "source": "Gas reserves",
+                "target": "Ngas",
+                "value": 82.233
+            },
+            {
+                "source": "Gas",
+                "target": "Heating and cooling - commercial",
+                "value": 0.129
+            },
+            {
+                "source": "Gas",
+                "target": "Losses",
+                "value": 1.401
+            },
+            {
+                "source": "Gas",
+                "target": "Thermal generation",
+                "value": 151.891
+            },
+            {
+                "source": "Gas",
+                "target": "Agriculture",
+                "value": 2.096
+            },
+            {
+                "source": "Gas",
+                "target": "Industry",
+                "value": 48.58
+            },
+            {
+                "source": "Geothermal",
+                "target": "Electricity grid",
+                "value": 7.013
+            },
+            {
+                "source": "H2 conversion",
+                "target": "H2",
+                "value": 20.897
+            },
+            {
+                "source": "H2 conversion",
+                "target": "Losses",
+                "value": 6.242
+            },
+            {
+                "source": "H2",
+                "target": "Road transport",
+                "value": 20.897
+            },
+            {
+                "source": "Hydro",
+                "target": "Electricity grid",
+                "value": 6.995
+            },
+            {
+                "source": "Liquid",
+                "target": "Industry",
+                "value": 121.066
+            },
+            {
+                "source": "Liquid",
+                "target": "International shipping",
+                "value": 128.69
+            },
+            {
+                "source": "Liquid",
+                "target": "Road transport",
+                "value": 135.835
+            },
+            {
+                "source": "Liquid",
+                "target": "Domestic aviation",
+                "value": 14.458
+            },
+            {
+                "source": "Liquid",
+                "target": "International aviation",
+                "value": 206.267
+            },
+            {
+                "source": "Liquid",
+                "target": "Agriculture",
+                "value": 3.64
+            },
+            {
+                "source": "Liquid",
+                "target": "National navigation",
+                "value": 33.218
+            },
+            {
+                "source": "Liquid",
+                "target": "Rail transport",
+                "value": 4.413
+            },
+            {
+                "source": "Marine algae",
+                "target": "Bio-conversion",
+                "value": 4.375
+            },
+            {
+                "source": "Ngas",
+                "target": "Gas",
+                "value": 122.952
+            },
+            {
+                "source": "Nuclear",
+                "target": "Thermal generation",
+                "value": 839.978
+            },
+            {
+                "source": "Oil imports",
+                "target": "Oil",
+                "value": 504.287
+            },
+            {
+                "source": "Oil reserves",
+                "target": "Oil",
+                "value": 107.703
+            },
+            {
+                "source": "Oil",
+                "target": "Liquid",
+                "value": 611.99
+            },
+            {
+                "source": "Other waste",
+                "target": "Solid",
+                "value": 56.587
+            },
+            {
+                "source": "Other waste",
+                "target": "Bio-conversion",
+                "value": 77.81
+            },
+            {
+                "source": "Pumped heat",
+                "target": "Heating and cooling - homes",
+                "value": 193.026
+            },
+            {
+                "source": "Pumped heat",
+                "target": "Heating and cooling - commercial",
+                "value": 70.672
+            },
+            {
+                "source": "Solar PV",
+                "target": "Electricity grid",
+                "value": 59.901
+            },
+            {
+                "source": "Solar Thermal",
+                "target": "Heating and cooling - homes",
+                "value": 19.263
+            },
+            {
+                "source": "Solar",
+                "target": "Solar Thermal",
+                "value": 19.263
+            },
+            {
+                "source": "Solar",
+                "target": "Solar PV",
+                "value": 59.901
+            },
+            {
+                "source": "Solid",
+                "target": "Agriculture",
+                "value": 0.882
+            },
+            {
+                "source": "Solid",
+                "target": "Thermal generation",
+                "value": 400.12
+            },
+            {
+                "source": "Solid",
+                "target": "Industry",
+                "value": 46.477
+            },
+            {
+                "source": "Thermal generation",
+                "target": "Electricity grid",
+                "value": 525.531
+            },
+            {
+                "source": "Thermal generation",
+                "target": "Losses",
+                "value": 787.129
+            },
+            {
+                "source": "Thermal generation",
+                "target": "District heating",
+                "value": 79.329
+            },
+            {
+                "source": "Tidal",
+                "target": "Electricity grid",
+                "value": 9.452
+            },
+            {
+                "source": "UK land based bioenergy",
+                "target": "Bio-conversion",
+                "value": 182.01
+            },
+            {
+                "source": "Wave",
+                "target": "Electricity grid",
+                "value": 19.013
+            },
+            {
+                "source": "Wind",
+                "target": "Electricity grid",
+                "value": 289.366
+            }
+        ]
+
+        var arrayRows1 = [
+            ['source', 'target', 'value'],
+            ["Agricultural 'waste'", "Bio-conversion", 124.729],
+            ["Bio-conversion", "Liquid", 0.597],
+            ["Bio-conversion", "Losses", 26.862],
+            ["Bio-conversion", "Solid", 280.322],
+            ["Bio-conversion", "Gas", 81.144],
+            ["Biofuel imports", "Liquid", 35],
+            ["Biomass imports", "Solid", 35],
+            ["Coal imports", "Coal", 11.606],
+            ["Coal reserves", "Coal", 63.965],
+            ["Coal", "Solid", 75.571],
+            ["District heating", "Industry", 10.639],
+            ["District heating", "Heating and cooling - commercial", 22.505],
+            ["District heating", "Heating and cooling - homes", 46.184],
+            ["Electricity grid", "Over generation / exports", 104.453],
+            ["Electricity grid", "Heating and cooling - homes", 113.726],
+            ["Electricity grid", "H2 conversion", 27.14],
+            ["Electricity grid", "Industry", 342.165],
+            ["Electricity grid", "Road transport", 37.797],
+            ["Electricity grid", "Agriculture", 4.412],
+            ["Electricity grid", "Heating and cooling - commercial", 40.858],
+            ["Electricity grid", "Losses", 56.691],
+            ["Electricity grid", "Rail transport", 7.863],
+            ["Electricity grid", "Lighting & appliances - commercial", 90.008],
+            ["Electricity grid", "Lighting & appliances - homes", 93.494],
+            ["Gas imports", "Ngas", 40.719],
+            ["Gas reserves", "Ngas", 82.233],
+            ["Gas", "Heating and cooling - commercial", 0.129],
+            ["Gas", "Losses", 1.401],
+            ["Gas", "Thermal generation", 151.891],
+            ["Gas", "Agriculture", 2.096],
+            ["Gas", "Industry", 48.58],
+            ["Geothermal", "Electricity grid", 7.013],
+            ["H2 conversion", "H2", 20.897],
+            ["H2 conversion", "Losses", 6.242],
+            ["H2", "Road transport", 20.897],
+            ["Hydro", "Electricity grid", 6.995],
+            ["Liquid", "Industry", 121.066],
+            ["Liquid", "International shipping", 128.69],
+            ["Liquid", "Road transport", 135.835],
+            ["Liquid", "Domestic aviation", 14.458],
+            ["Liquid", "International aviation", 206.267],
+            ["Liquid", "Agriculture", 3.64],
+            ["Liquid", "National navigation", 33.218],
+            ["Liquid", "Rail transport", 4.413],
+            ["Marine algae", "Bio-conversion", 4.375],
+            ["Ngas", "Gas", 122.952],
+            ["Nuclear", "Thermal generation", 839.978],
+            ["Oil imports", "Oil", 504.287],
+            ["Oil reserves", "Oil", 107.703],
+            ["Oil", "Liquid", 611.99],
+            ["Other waste", "Solid", 56.587],
+            ["Other waste", "Bio-conversion", 77.81],
+            ["Pumped heat", "Heating and cooling - homes", 193.026],
+            ["Pumped heat", "Heating and cooling - commercial", 70.672],
+            ["Solar PV", "Electricity grid", 59.901],
+            ["Solar Thermal", "Heating and cooling - homes", 19.263],
+            ["Solar", "Solar Thermal", 19.263],
+            ["Solar", "Solar PV", 59.901],
+            ["Solid", "Agriculture", 0.882],
+            ["Solid", "Thermal generation", 400.12],
+            ["Solid", "Industry", 46.477],
+            ["Thermal generation", "Electricity grid", 525.531],
+            ["Thermal generation", "Losses", 787.129],
+            ["Thermal generation", "District heating", 79.329],
+            ["Tidal", "Electricity grid", 9.452],
+            ["UK land based bioenergy", "Bio-conversion", 182.01],
+            ["Wave", "Electricity grid", 19.013],
+            ["Wind", "Electricity grid", 289.366]
+        ];
+
+        var arrayRowsNoColumnHeader = [
+            ["Agricultural 'waste'", "Bio-conversion", 124.729],
+            ["Bio-conversion", "Liquid", 0.597],
+            ["Bio-conversion", "Losses", 26.862],
+            ["Bio-conversion", "Solid", 280.322],
+            ["Bio-conversion", "Gas", 81.144],
+            ["Biofuel imports", "Liquid", 35],
+            ["Biomass imports", "Solid", 35],
+            ["Coal imports", "Coal", 11.606],
+            ["Coal reserves", "Coal", 63.965],
+            ["Coal", "Solid", 75.571],
+            ["District heating", "Industry", 10.639],
+            ["District heating", "Heating and cooling - commercial", 22.505],
+            ["District heating", "Heating and cooling - homes", 46.184],
+            ["Electricity grid", "Over generation / exports", 104.453],
+            ["Electricity grid", "Heating and cooling - homes", 113.726],
+            ["Electricity grid", "H2 conversion", 27.14],
+            ["Electricity grid", "Industry", 342.165],
+            ["Electricity grid", "Road transport", 37.797],
+            ["Electricity grid", "Agriculture", 4.412],
+            ["Electricity grid", "Heating and cooling - commercial", 40.858],
+            ["Electricity grid", "Losses", 56.691],
+            ["Electricity grid", "Rail transport", 7.863],
+            ["Electricity grid", "Lighting & appliances - commercial", 90.008],
+            ["Electricity grid", "Lighting & appliances - homes", 93.494],
+            ["Gas imports", "Ngas", 40.719],
+            ["Gas reserves", "Ngas", 82.233],
+            ["Gas", "Heating and cooling - commercial", 0.129],
+            ["Gas", "Losses", 1.401],
+            ["Gas", "Thermal generation", 151.891],
+            ["Gas", "Agriculture", 2.096],
+            ["Gas", "Industry", 48.58],
+            ["Geothermal", "Electricity grid", 7.013],
+            ["H2 conversion", "H2", 20.897],
+            ["H2 conversion", "Losses", 6.242],
+            ["H2", "Road transport", 20.897],
+            ["Hydro", "Electricity grid", 6.995],
+            ["Liquid", "Industry", 121.066],
+            ["Liquid", "International shipping", 128.69],
+            ["Liquid", "Road transport", 135.835],
+            ["Liquid", "Domestic aviation", 14.458],
+            ["Liquid", "International aviation", 206.267],
+            ["Liquid", "Agriculture", 3.64],
+            ["Liquid", "National navigation", 33.218],
+            ["Liquid", "Rail transport", 4.413],
+            ["Marine algae", "Bio-conversion", 4.375],
+            ["Ngas", "Gas", 122.952],
+            ["Nuclear", "Thermal generation", 839.978],
+            ["Oil imports", "Oil", 504.287],
+            ["Oil reserves", "Oil", 107.703],
+            ["Oil", "Liquid", 611.99],
+            ["Other waste", "Solid", 56.587],
+            ["Other waste", "Bio-conversion", 77.81],
+            ["Pumped heat", "Heating and cooling - homes", 193.026],
+            ["Pumped heat", "Heating and cooling - commercial", 70.672],
+            ["Solar PV", "Electricity grid", 59.901],
+            ["Solar Thermal", "Heating and cooling - homes", 19.263],
+            ["Solar", "Solar Thermal", 19.263],
+            ["Solar", "Solar PV", 59.901],
+            ["Solid", "Agriculture", 0.882],
+            ["Solid", "Thermal generation", 400.12],
+            ["Solid", "Industry", 46.477],
+            ["Thermal generation", "Electricity grid", 525.531],
+            ["Thermal generation", "Losses", 787.129],
+            ["Thermal generation", "District heating", 79.329],
+            ["Tidal", "Electricity grid", 9.452],
+            ["UK land based bioenergy", "Bio-conversion", 182.01],
+            ["Wave", "Electricity grid", 19.013],
+            ["Wind", "Electricity grid", 289.366]
+        ];
+        var errorArrayRows = [
+            ["Agricultural 'waste'", "Bio-conversion", 124.729, "errordata"],
+            ["Bio-conversion", "Liquid", 0.597, "errordata"],
+            ["Bio-conversion", "Losses", 26.862, "errordata"],
+            ["Bio-conversion", "Solid", 280.322, "errordata"],
+            ["Bio-conversion", "Gas", 81.144, "errordata"],
+            ["Biofuel imports", "Liquid", 35, "errordata"],
+            ["Biomass imports", "Solid", 35, "errordata"],
+            ["Coal imports", "Coal", 11.606, "errordata"],
+            ["Coal reserves", "Coal", 63.965, "errordata"],
+            ["Coal", "Solid", 75.571, "errordata"],
+            ["District heating", "Industry", 10.639, "errordata"],
+            ["District heating", "Heating and cooling - commercial", 22.505, "errordata"],
+            ["District heating", "Heating and cooling - homes", 46.184, "errordata"],
+            ["Electricity grid", "Over generation / exports", 104.453, "errordata"],
+            ["Electricity grid", "Heating and cooling - homes", 113.726, "errordata"],
+            ["Electricity grid", "H2 conversion", 27.14, "errordata"],
+            ["Electricity grid", "Industry", 342.165, "errordata"],
+            ["Electricity grid", "Road transport", 37.797, "errordata"],
+            ["Electricity grid", "Agriculture", 4.412, "errordata"],
+            ["Electricity grid", "Heating and cooling - commercial", 40.858, "errordata"],
+            ["Electricity grid", "Losses", 56.691, "errordata"],
+            ["Electricity grid", "Rail transport", 7.863, "errordata"],
+            ["Electricity grid", "Lighting & appliances - commercial", 90.008, "errordata"],
+            ["Electricity grid", "Lighting & appliances - homes", 93.494, "errordata"],
+            ["Gas imports", "Ngas", 40.719, "errordata"],
+            ["Gas reserves", "Ngas", 82.233, "errordata"],
+            ["Gas", "Heating and cooling - commercial", 0.129, "errordata"],
+            ["Gas", "Losses", 1.401, "errordata"],
+            ["Gas", "Thermal generation", 151.891, "errordata"],
+            ["Gas", "Agriculture", 2.096, "errordata"],
+            ["Gas", "Industry", 48.58, "errordata"],
+            ["Geothermal", "Electricity grid", 7.013, "errordata"],
+            ["H2 conversion", "H2", 20.897, "errordata"],
+            ["H2 conversion", "Losses", 6.242, "errordata"],
+            ["H2", "Road transport", 20.897, "errordata"],
+            ["Hydro", "Electricity grid", 6.995, "errordata"],
+            ["Liquid", "Industry", 121.066, "errordata"],
+            ["Liquid", "International shipping", 128.69, "errordata"],
+            ["Liquid", "Road transport", 135.835, "errordata"],
+            ["Liquid", "Domestic aviation", 14.458, "errordata"],
+            ["Liquid", "International aviation", 206.267, "errordata"],
+            ["Liquid", "Agriculture", 3.64, "errordata"],
+            ["Liquid", "National navigation", 33.218, "errordata"],
+            ["Liquid", "Rail transport", 4.413, "errordata"],
+            ["Marine algae", "Bio-conversion", 4.375, "errordata"],
+            ["Ngas", "Gas", 122.952, "errordata"],
+            ["Nuclear", "Thermal generation", 839.978, "errordata"],
+            ["Oil imports", "Oil", 504.287, "errordata"],
+            ["Oil reserves", "Oil", 107.703, "errordata"],
+            ["Oil", "Liquid", 611.99, "errordata"],
+            ["Other waste", "Solid", 56.587, "errordata"],
+            ["Other waste", "Bio-conversion", 77.81, "errordata"],
+            ["Pumped heat", "Heating and cooling - homes", 193.026, "errordata"],
+            ["Pumped heat", "Heating and cooling - commercial", 70.672, "errordata"],
+            ["Solar PV", "Electricity grid", 59.901, "errordata"],
+            ["Solar Thermal", "Heating and cooling - homes", 19.263, "errordata"],
+            ["Solar", "Solar Thermal", 19.263, "errordata"],
+            ["Solar", "Solar PV", 59.901, "errordata"],
+            ["Solid", "Agriculture", 0.882, "errordata"],
+            ["Solid", "Thermal generation", 400.12, "errordata"],
+            ["Solid", "Industry", 46.477, "errordata"],
+            ["Thermal generation", "Electricity grid", 525.531, "errordata"],
+            ["Thermal generation", "Losses", 787.129, "errordata"],
+            ["Thermal generation", "District heating", 79.329, "errordata"],
+            ["Tidal", "Electricity grid", 9.452, "errordata"],
+            ["UK land based bioenergy", "Bio-conversion", 182.01, "errordata"],
+            ["Wave", "Electricity grid", 19.013, "errordata"],
+            ["Wind", "Electricity grid", 289.366, "errordata"]
+        ];
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = {
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove'
+                },
+                dataset: {
+                    source: objectRows0
+                },
+                series: [
+                    {
+                        type: 'sankey',
+                        focusNodeAdjacency: true,
+                        lineStyle: {
+                            color: 'gradient',
+                            curveness: 0.5
+                        }
+                    }
+                ]
+            };
+
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: 'objectRows0',
+                option: option
+            });
+
+            if (chart) {
+                window.onresize = function () {
+                    chart.resize();
+                };
+                chart.on('click', function (params) {
+                    console.log(params, params.data);
+                });
+            }
+        });
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
+
+            var option = {
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove'
+                },
+                dataset: {
+                    source: arrayRows1
+                },
+                series: [
+                    {
+                        type: 'sankey',
+                        focusNodeAdjacency: true,
+                        lineStyle: {
+                            color: 'gradient',
+                            curveness: 0.5
+                        }
+                    }
+                ]
+            };
+
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: 'arrayRows1',
+                option: option
+            });
+
+            if (chart) {
+                window.onresize = function () {
+                    chart.resize();
+                };
+                chart.on('click', function (params) {
+                    console.log(params, params.data);
+                });
+            }
+        });
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
+
+            var option = {
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove'
+                },
+                dataset: {
+                    source: arrayRowsNoColumnHeader
+                },
+                series: [
+                    {
+                        type: 'sankey',
+                        focusNodeAdjacency: true,
+                        lineStyle: {
+                            color: 'gradient',
+                            curveness: 0.5
+                        }
+                    }
+                ]
+            };
+
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: 'arrayRowsNoColumnHeader',
+                option: option
+            });
+
+            if (chart) {
+                window.onresize = function () {
+                    chart.resize();
+                };
+                chart.on('click', function (params) {
+                    console.log(params, params.data);
+                });
+            }
+        });
+    </script>
+    <script>
+        require(['echarts'], function (echarts) {
+
+            var option = {
+                tooltip: {
+                    trigger: 'item',
+                    triggerOn: 'mousemove'
+                },
+                dataset: {
+                    source: errorArrayRows
+                },
+                series: [
+                    {
+                        type: 'sankey',
+                        focusNodeAdjacency: true,
+                        lineStyle: {
+                            color: 'gradient',
+                            curveness: 0.5
+                        }
+                    }
+                ]
+            };
+
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: 'errorArrayRows',
+                option: option
+            });
+
+            if (chart) {
+                window.onresize = function () {
+                    chart.resize();
+                };
+                chart.on('click', function (params) {
+                    console.log(params, params.data);
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
