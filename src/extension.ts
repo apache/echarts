@@ -41,6 +41,8 @@ import { Constructor } from './util/clazz';
 import { SubTypeDefaulter } from './util/component';
 import { registerImpl } from './core/impl';
 import { registerPainter } from 'zrender/src/zrender';
+import { CustomSeriesRenderItem } from './chart/custom/CustomSeries';
+import { registerCustomSeries } from './chart/custom/customSeriesRegister';
 
 const extensions: (EChartsExtensionInstaller | EChartsExtension)[] = [];
 
@@ -77,6 +79,9 @@ const extensionRegisters = {
     },
     registerChartView(ChartViewClass: typeof ChartView) {
         ChartView.registerClass(ChartViewClass);
+    },
+    registerCustomSeries(seriesType: string, renderItem: CustomSeriesRenderItem) {
+        registerCustomSeries(seriesType, renderItem);
     },
     registerSubTypeDefaulter(componentType: string, defaulter: SubTypeDefaulter) {
         ComponentModel.registerSubTypeDefaulter(componentType, defaulter);
