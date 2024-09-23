@@ -33,7 +33,6 @@ import { isString, retrieve3 } from 'zrender/src/core/util';
 import type { GraphEdge } from '../../data/Graph';
 import RoamController from '../../component/helper/RoamController';
 // eslint-disable-next-line no-duplicate-imports
-import type { RoamControllerHost } from '../../component/helper/roamHelper';
 import { onIrrelevantElement } from '../../component/helper/cursorHelper';
 import * as roamHelper from '../../component/helper/roamHelper';
 import View from '../../coord/View';
@@ -118,14 +117,14 @@ class SankeyView extends ChartView {
     private _data: SeriesData;
 
     private _controller: RoamController;
-    private _controllerHost: RoamControllerHost;
+    private _controllerHost: roamHelper.RoamControllerHost;
 
     init(ecModel: GlobalModel, api: ExtensionAPI): void {
         this._controller = new RoamController(api.getZr());
 
         this._controllerHost = {
             target: this.group
-        } as RoamControllerHost;
+        } as roamHelper.RoamControllerHost;
     }
 
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
