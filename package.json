@@ -94,7 +94,7 @@
     "jshint": "2.13.5",
     "magic-string": "^0.25.7",
     "open": "6.4.0",
-    "rollup": "2.34.2",
+    "rollup": "3.29.5",
     "rollup-plugin-terser": "^7.0.2",
     "seedrandom": "3.0.3",
     "semver": "6.3.0",
