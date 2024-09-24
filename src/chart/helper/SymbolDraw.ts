@@ -41,6 +41,9 @@ import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../../model/Series';
+import { fixJitter, needFixJitter } from '../../util/jitter';
+import type Axis2D from '../../coord/cartesian/Axis2D';
+import type SingleAxis from '../../coord/single/SingleAxis';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -182,17 +185,51 @@ class SymbolDraw {
         opt = normalizeUpdateOpt(opt);
 
         const group = this.group;
-        const seriesModel = data.hostModel;
+        const seriesModel = data.hostModel as SeriesModel;
         const oldData = this._data;
         const SymbolCtor = this._SymbolCtor;
         const disableAnimation = opt.disableAnimation;
+        const coord = seriesModel.coordinateSystem;
+        const baseAxis = coord.getBaseAxis ? coord.getBaseAxis() : null;
+        const hasJitter = baseAxis && needFixJitter(seriesModel, baseAxis);
 
         const seriesScope = makeSeriesScope(data);
 
         const symbolUpdateOpt = { disableAnimation };
 
         const getSymbolPoint = opt.getSymbolPoint || function (idx: number) {
-            return data.getItemLayout(idx);
+            const layout = data.getItemLayout(idx);
+            const rawSize = data.getItemVisual(idx, 'symbolSize');
+            const size = rawSize instanceof Array ? (rawSize[1] + rawSize[0]) / 2 : rawSize;
+
+            // return layout
+            if (hasJitter) {
+                const dim = baseAxis.dim;
+                const orient = (baseAxis as SingleAxis).orient;
+                const isSingleY = orient === 'horizontal' && baseAxis.type !== 'category'
+                    || orient === 'vertical' && baseAxis.type === 'category';
+                if (dim === 'y' || dim === 'single' && isSingleY) {
+                    // x is fixed, and y is floating
+                    const jittered = fixJitter(
+                        baseAxis as Axis2D | SingleAxis,
+                        layout[0],
+                        layout[1],
+                        size / 2
+                    );
+                    return [layout[0], jittered];
+                }
+                else if (dim === 'x' || dim === 'single' && !isSingleY) {
+                    // y is fixed, and x is floating
+                    const jittered = fixJitter(
+                        baseAxis as Axis2D | SingleAxis,
+                        layout[1],
+                        layout[0],
+                        size / 2
+                    );
+                    return [jittered, layout[1]];
+                }
+            }
+            return layout;
         };
 
 
