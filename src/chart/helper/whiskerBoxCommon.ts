@@ -58,7 +58,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
     _hasEncodeRule(key: string) {
         const encodeRules = this.getEncode();
         if (encodeRules && encodeRules.data && encodeRules.data.has(key)) {
-            return encodeRules.data.get(key) !== null;
+            return encodeRules.data.get(key) != null;
         }
         return false;
     }
