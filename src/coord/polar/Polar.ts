@@ -214,7 +214,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
         const angleExtent = angleAxis.getExtent();
 
         const RADIAN = Math.PI / 180;
-
+        const EPSILON = 1e-4;
         return {
             cx: this.cx,
             cy: this.cy,
@@ -233,7 +233,8 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
                 const r0 = this.r0;
 
                 // minus a tiny value 1e-4 in double side to avoid being clipped unexpectedly
-                return (d2 - 1e-4) <= r * r && (d2 + 1e-4) >= r0 * r0;
+                // r == r0 contain nothing
+                return r !== r0 && (d2 - EPSILON) <= r * r && (d2 + EPSILON) >= r0 * r0;
             }
         };
     }
