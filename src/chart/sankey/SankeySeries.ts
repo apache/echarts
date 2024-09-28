@@ -156,8 +156,8 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
      * Init a graph data structure from data in option series
      */
     getInitialData(option: SankeySeriesOption, ecModel: GlobalModel) {
-        const links = option.edges || option.links;
-        const nodes = option.data || option.nodes;
+        const links = option.edges || option.links || [];
+        const nodes = option.data || option.nodes || [];
         const levels = option.levels;
         this.levelModels = [];
         const levelModels = this.levelModels;
