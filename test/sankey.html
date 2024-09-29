@@ -182,8 +182,16 @@ under the License.
             require([
                 'echarts',
             ], function (echarts) {
-
+                var title = 'The sankey chart should be rendered without any error in console when `**nodes**` or `**links**` is set as `**undefined**`';
                 var option = {
+                    title: {
+                        text: title,
+                        top: 'center',
+                        left: 'center',
+                        textStyle: {
+                            overflow: 'break'
+                        }
+                    },
                     series: [{
                         type: 'sankey',
                         layout: 'none',
@@ -194,12 +202,21 @@ under the License.
                 }
 
                 var chart = testHelper.create(echarts, 'main3', {
-                    title: 'The sankey chart should be rendered without any error in console when `**nodes**` or `**links**` is set as `**undefined**`',
-                    option: option
+                    title,
+                    option
                 });
-                if (chart) {
-                    window.addEventListener('resize', chart.resize);
-                }
+                var resizeChart = function () {
+                    chart.resize();
+                    chart.setOption({
+                        title: {
+                            textStyle: {
+                                width: chart.getWidth() * 0.8
+                            }
+                        }
+                    });
+                };
+                resizeChart();
+                window.addEventListener('resize', resizeChart);
             });
         </script>
 
