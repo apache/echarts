@@ -80,9 +80,8 @@ under the License.
                 });
 
                 if (chart) {
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                    window.addEventListener('resize', chart.resize);
+
                     chart.on('click', function (params) {
                         console.log(params, params.data);
                     });
@@ -132,9 +131,8 @@ under the License.
 
 
                 if (chart) {
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                    window.addEventListener('resize', chart.resize);
+
                     chart.on('click', function (params) {
                         console.log(params, params.data);
                     });
@@ -171,9 +169,8 @@ under the License.
                 });
 
                 if (chart) {
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                    window.addEventListener('resize', chart.resize);
+
                     chart.on('click', function (params) {
                        console.log(params, params.data);
                     });
@@ -191,7 +188,8 @@ under the License.
                         type: 'sankey',
                         layout: 'none',
                         data: undefined,
-                        links: undefined
+                        links: undefined,
+                        levels: undefined
                     }]
                 }
 
@@ -200,9 +198,7 @@ under the License.
                     option: option
                 });
                 if (chart) {
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                    window.addEventListener('resize', chart.resize);
                 }
             });
         </script>
