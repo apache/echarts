@@ -158,7 +158,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     getInitialData(option: SankeySeriesOption, ecModel: GlobalModel) {
         const links = option.edges || option.links || [];
         const nodes = option.data || option.nodes || [];
-        const levels = option.levels;
+        const levels = option.levels || [];
         this.levelModels = [];
         const levelModels = this.levelModels;
 
@@ -172,10 +172,10 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
                 }
             }
         }
-        if (nodes && links) {
-            const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
-            return graph.data;
-        }
+
+        const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
+        return graph.data;
+
         function beforeLink(nodeData: SeriesData, edgeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
                 const seriesModel = model.parentModel as SankeySeriesModel;
