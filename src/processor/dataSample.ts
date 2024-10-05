@@ -61,22 +61,6 @@ const samplers: Dictionary<Sampler> = {
         // NaN will cause illegal axis extent.
         return isFinite(min) ? min : NaN;
     },
-    minmax: function (frame) {
-        let turningPointAbsoluteValue = -Infinity;
-        let turningPointOriginalValue = -Infinity;
-
-        for (let i = 0; i < frame.length; i++) {
-            const originalValue = frame[i];
-            const absoluteValue = Math.abs(originalValue);
-
-            if (absoluteValue > turningPointAbsoluteValue) {
-                turningPointAbsoluteValue = absoluteValue;
-                turningPointOriginalValue = originalValue;
-            }
-        }
-
-        return isFinite(turningPointOriginalValue) ? turningPointOriginalValue : NaN;
-    },
     // TODO
     // Median
     nearest: function (frame) {
@@ -114,6 +98,9 @@ export default function dataSample(seriesType: string): StageHandler {
                 if (isFinite(rate) && rate > 1) {
                     if (sampling === 'lttb') {
                         seriesModel.setData(data.lttbDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
+                    }
+                    else if (sampling === 'minmax') {
+                        seriesModel.setData(data.minmaxDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
                     }
                     let sampler;
                     if (isString(sampling)) {
