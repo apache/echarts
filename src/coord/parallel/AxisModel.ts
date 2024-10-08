@@ -138,6 +138,15 @@ class ParallelAxisModel extends ComponentModel<ParallelAxisOption> {
         return 'inactive';
     }
 
+
+    /**
+     * Clear the active intervals
+    */
+   clearSelection(): void {
+        this.activeIntervals = [];
+   }
+
+
 }
 interface ParallelAxisModel extends AxisModelCommonMixin<ParallelAxisOption>,
     AxisModelExtendedInCreator {}
@@ -145,3 +154,4 @@ interface ParallelAxisModel extends AxisModelCommonMixin<ParallelAxisOption>,
 zrUtil.mixin(ParallelAxisModel, AxisModelCommonMixin);
 
 export default ParallelAxisModel;
+
