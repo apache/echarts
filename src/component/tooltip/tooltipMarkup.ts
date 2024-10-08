@@ -42,6 +42,17 @@ type TextStyle = string | RichTextStyle;
 
 const TOOLTIP_LINE_HEIGHT_CSS = 'line-height:1';
 
+function getTooltipLineHeight(
+    textStyle: TooltipOption['textStyle']
+) {
+    const lineHeight = textStyle.lineHeight;
+    if (lineHeight === undefined) {
+        return TOOLTIP_LINE_HEIGHT_CSS;
+    }
+    else {
+        return `line-height:${encodeHTML(lineHeight + '')}px`;
+    }
+}
 // TODO: more textStyle option
 function getTooltipTextStyle(
     textStyle: TooltipOption['textStyle'],
@@ -272,6 +283,7 @@ function buildSection(
     const subMarkupText = ctx.renderMode === 'richText'
         ? subMarkupTextList.join(gaps.richText)
         : wrapBlockHTML(
+            toolTipTextStyle,
             subMarkupTextList.join(''),
             noHeader ? topMarginForOuterGap : gaps.html
         );
@@ -282,13 +294,15 @@ function buildSection(
 
     const displayableHeader = makeValueReadable(fragment.header, 'ordinal', ctx.useUTC);
     const {nameStyle} = getTooltipTextStyle(toolTipTextStyle, ctx.renderMode);
+    const tooltipLineHeight = getTooltipLineHeight(toolTipTextStyle);
     if (ctx.renderMode === 'richText') {
         return wrapInlineNameRichText(ctx, displayableHeader, nameStyle as RichTextStyle) + gaps.richText
             + subMarkupText;
     }
     else {
         return wrapBlockHTML(
-            `<div style="${nameStyle};${TOOLTIP_LINE_HEIGHT_CSS};">`
+            toolTipTextStyle,
+            `<div style="${nameStyle};${tooltipLineHeight};">`
                 + encodeHTML(displayableHeader)
                 + '</div>'
                 + subMarkupText,
@@ -350,6 +364,7 @@ function buildNameValue(
             ))
         )
         : wrapBlockHTML(
+            toolTipTextStyle,
             (noMarker ? '' : markerStr)
             + (noName ? '' : wrapInlineNameHTML(readableName, !noMarker, nameStyle as string))
             + (noValue ? '' : wrapInlineValueHTML(
@@ -406,12 +421,14 @@ function getGap(gapLevel: number): {
 }
 
 function wrapBlockHTML(
+    textStyle: TooltipOption['textStyle'],
     encodedContent: string,
     topGap: number
 ): string {
     const clearfix = '<div style="clear:both"></div>';
     const marginCSS = `margin: ${topGap}px 0 0`;
-    return `<div style="${marginCSS};${TOOLTIP_LINE_HEIGHT_CSS};">`
+    const tooltipLineHeight = getTooltipLineHeight(textStyle);
+    return `<div style="${marginCSS};${tooltipLineHeight};">`
         + encodedContent + clearfix
         + '</div>';
 }
