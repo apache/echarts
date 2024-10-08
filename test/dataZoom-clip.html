@@ -96,7 +96,17 @@ under the License.
                         type: 'slider',
                         filterMode: 'none',
                         start: 5,
-                        end: 40
+                        end: 40,
+                        borderRadius: 20,
+                        moveHandleSize: 14,
+                        moveHandleStyle: {
+                            borderRadius: 8
+                        },
+                        emphasis: {
+                            moveHandleStyle: {
+                                borderRadius: 0
+                            }
+                        }
                     }],
                     series: [{
                         type: 'line',
