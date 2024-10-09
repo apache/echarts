@@ -364,8 +364,14 @@ function createEl(elOption: CustomElementOption): Element {
             throwError(errMsg);
         }
         const paths = map(shape.paths as Path[], function (path) {
+            if (path.type === 'path') {
+                return createEl(path as unknown as CustomPathOption);
+            }
             const Clz = graphicUtil.getShapeClass(path.type);
             if (!Clz) {
+                if (typeof path.buildPath === 'function') {
+                    return path;
+                }
                 let errMsg = '';
                 if (__DEV__) {
                     errMsg = 'graphic type "' + graphicType + '" can not be found.';

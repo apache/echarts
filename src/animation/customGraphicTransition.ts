@@ -149,8 +149,25 @@ export function applyUpdateTransition(
     const propsToSet = {} as ElementProps;
 
     prepareTransformAllPropsFinal(el, elOption, propsToSet);
-    prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
-    prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
+
+    if (el.type === 'compound') {
+        /**
+         * We cannot directly clone shape for compoundPath,
+         * because it makes the path to be an object instead of a Path instance,
+         * and thus missing `buildPath` method.
+         */
+        const paths: Path[] = (el as Path).shape.paths;
+        const optionPaths = elOption.shape.paths as TransitionElementOption['shape']['paths'];
+        for (let i = 0; i < optionPaths.length; i++) {
+            const path = optionPaths[i];
+            prepareShapeOrExtraAllPropsFinal('shape', path, paths[i]);
+            prepareShapeOrExtraAllPropsFinal('extra', path, paths[i]);
+        }
+    }
+    else {
+        prepareShapeOrExtraAllPropsFinal('shape', elOption, propsToSet);
+        prepareShapeOrExtraAllPropsFinal('extra', elOption, propsToSet);
+    }
 
     if (!isInit && hasAnimation) {
         prepareTransformTransitionFrom(el, elOption, transFromProps);
