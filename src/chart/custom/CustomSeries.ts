@@ -234,9 +234,24 @@ export interface CustomTextOption extends CustomDisplayableOption, TransitionOpt
     keyframeAnimation?: ElementKeyframeAnimationOption<TextProps> | ElementKeyframeAnimationOption<TextProps>[]
 }
 
+export interface CustomompoundPathOptionOnState extends CustomDisplayableOptionOnState {
+    style?: PathStyleProps;
+}
+export interface CustomCompoundPathOption extends CustomDisplayableOption, TransitionOptionMixin<PathProps> {
+    type: 'compoundPath';
+    shape?: PathProps['shape'];
+    style?: PathStyleProps & TransitionOptionMixin<PathStyleProps>;
+    emphasis?: CustomompoundPathOptionOnState;
+    blur?: CustomompoundPathOptionOnState;
+    select?: CustomompoundPathOptionOnState;
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<PathProps> | ElementKeyframeAnimationOption<PathProps>[]
+}
+
 export type CustomElementOption = CustomPathOption
     | CustomImageOption
     | CustomTextOption
+    | CustomCompoundPathOption
     | CustomGroupOption;
 
 // Can only set focus, blur on the root element.
