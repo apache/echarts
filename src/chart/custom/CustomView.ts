@@ -365,7 +365,7 @@ function createEl(elOption: CustomElementOption): Element {
         }
         const paths = map(shape.paths as Path[], function (path) {
             if (path.type === 'path') {
-                return createEl(path as unknown as CustomPathOption);
+                return graphicUtil.makePath(path.shape.pathData, path, null);
             }
             const Clz = graphicUtil.getShapeClass(path.type);
             if (!Clz) {
