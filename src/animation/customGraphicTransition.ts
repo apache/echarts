@@ -161,7 +161,6 @@ export function applyUpdateTransition(
         for (let i = 0; i < optionPaths.length; i++) {
             const path = optionPaths[i];
             prepareShapeOrExtraAllPropsFinal('shape', path, paths[i]);
-            prepareShapeOrExtraAllPropsFinal('extra', path, paths[i]);
         }
     }
     else {
