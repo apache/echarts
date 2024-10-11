@@ -55,10 +55,9 @@ import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Displayable from 'zrender/src/graphic/Displayable';
-import Path from 'zrender/src/graphic/Path';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
+import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import {
     convertToEC4StyleForCustomSerise,
