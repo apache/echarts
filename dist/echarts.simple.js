@@ -55,6 +55,27 @@
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     }
 
+    var __assign = function() {
+        __assign = Object.assign || function __assign(t) {
+            for (var s, i = 1, n = arguments.length; i < n; i++) {
+                s = arguments[i];
+                for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+            }
+            return t;
+        };
+        return __assign.apply(this, arguments);
+    };
+
+    function __spreadArray(to, from, pack) {
+        if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+            if (ar || !(i in from)) {
+                if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+                ar[i] = from[i];
+            }
+        }
+        return to.concat(ar || from);
+    }
+
     var Browser = (function () {
         function Browser() {
             this.firefox = false;
@@ -23145,6 +23166,9 @@
       legend: {
         textStyle: {
           color: contrastColor
+        },
+        pageTextStyle: {
+          color: contrastColor
         }
       },
       textStyle: {
@@ -31285,7 +31309,7 @@
     barWidthAndOffset) {
       // Get Axis Length
       var axisExtent = model.axis.getExtent();
-      var axisLength = axisExtent[1] - axisExtent[0];
+      var axisLength = Math.abs(axisExtent[1] - axisExtent[0]);
       // Get bars on current base axis and calculate min and max overflow
       var barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
       if (barsOnCurrentAxis === undefined) {
@@ -31436,53 +31460,8 @@
       // in category axis.
       return axis.type === 'category' ? axis.scale.getLabel(tick) : tick.value;
     }
-    /**
-     * @param axis
-     * @return Be null/undefined if no labels.
-     */
-    function estimateLabelUnionRect(axis) {
-      var axisModel = axis.model;
-      var scale = axis.scale;
-      if (!axisModel.get(['axisLabel', 'show']) || scale.isBlank()) {
-        return;
-      }
-      var realNumberScaleTicks;
-      var tickCount;
-      var categoryScaleExtent = scale.getExtent();
-      // Optimize for large category data, avoid call `getTicks()`.
-      if (scale instanceof OrdinalScale) {
-        tickCount = scale.count();
-      } else {
-        realNumberScaleTicks = scale.getTicks();
-        tickCount = realNumberScaleTicks.length;
-      }
-      var axisLabelModel = axis.getLabelModel();
-      var labelFormatter = makeLabelFormatter(axis);
-      var rect;
-      var step = 1;
-      // Simple optimization for large amount of labels
-      if (tickCount > 40) {
-        step = Math.ceil(tickCount / 40);
-      }
-      for (var i = 0; i < tickCount; i += step) {
-        var tick = realNumberScaleTicks ? realNumberScaleTicks[i] : {
-          value: categoryScaleExtent[0] + i
-        };
-        var label = labelFormatter(tick, i);
-        var unrotatedSingleRect = axisLabelModel.getTextRect(label);
-        var singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
-        rect ? rect.union(singleRect) : rect = singleRect;
-      }
-      return rect;
-    }
-    function rotateTextRect(textRect, rotate) {
-      var rotateRadians = rotate * Math.PI / 180;
-      var beforeWidth = textRect.width;
-      var beforeHeight = textRect.height;
-      var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians)) + Math.abs(beforeHeight * Math.sin(rotateRadians));
-      var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians)) + Math.abs(beforeHeight * Math.cos(rotateRadians));
-      var rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
-      return rotatedRect;
+    function isNameLocationCenter(nameLocation) {
+      return nameLocation === 'middle' || nameLocation === 'center';
     }
     /**
      * @param model axisLabelModel or axisTickModel
@@ -32097,37 +32076,9 @@
         merge: merge
     });
 
+    var RADIAN = Math.PI / 180;
     var inner$5 = makeInner();
-    function tickValuesToNumbers(axis, values) {
-      var nums = map(values, function (val) {
-        return axis.scale.parse(val);
-      });
-      if (axis.type === 'time' && nums.length > 0) {
-        // Time axis needs duplicate first/last tick (see TimeScale.getTicks())
-        // The first and last tick/label don't get drawn
-        nums.sort();
-        nums.unshift(nums[0]);
-        nums.push(nums[nums.length - 1]);
-      }
-      return nums;
-    }
     function createAxisLabels(axis) {
-      var custom = axis.getLabelModel().get('customValues');
-      if (custom) {
-        var labelFormatter_1 = makeLabelFormatter(axis);
-        return {
-          labels: tickValuesToNumbers(axis, custom).map(function (numval) {
-            var tick = {
-              value: numval
-            };
-            return {
-              formattedLabel: labelFormatter_1(tick),
-              rawLabel: axis.scale.getLabel(tick),
-              tickValue: numval
-            };
-          })
-        };
-      }
       // Only ordinal scale support tick interval
       return axis.type === 'category' ? makeCategoryLabels(axis) : makeRealNumberLabels(axis);
     }
@@ -32140,12 +32091,6 @@
      * }
      */
     function createAxisTicks(axis, tickModel) {
-      var custom = axis.getTickModel().get('customValues');
-      if (custom) {
-        return {
-          ticks: tickValuesToNumbers(axis, custom)
-        };
-      }
       // Only ordinal scale support tick interval
       return axis.type === 'category' ? makeCategoryTicks(axis, tickModel) : {
         ticks: map(axis.scale.getTicks(), function (tick) {
@@ -32153,12 +32098,31 @@
         })
       };
     }
+    /**
+     * @param {module:echats/coord/Axis} axis
+     *
+     */
+    function getAxisNameGap(axis) {
+      var _a;
+      var axesModel = axis.model;
+      var nameGap = (_a = axesModel.get('nameGap')) !== null && _a !== void 0 ? _a : 0;
+      if (axesModel.get('nameLayout') === 'auto' && isNameLocationCenter(axis.model.get('nameLocation'))) {
+        var labelUnionRect = estimateLabelUnionRect(axis);
+        if (labelUnionRect) {
+          var labelMargin = axesModel.get(['axisLabel', 'margin']);
+          var dim = isHorizontalAxis(axis) ? 'height' : 'width';
+          return labelUnionRect[dim] + labelMargin + nameGap;
+        }
+      }
+      return nameGap;
+    }
     function makeCategoryLabels(axis) {
       var labelModel = axis.getLabelModel();
       var result = makeCategoryLabelsActually(axis, labelModel);
       return !labelModel.get('show') || axis.scale.isBlank() ? {
         labels: [],
-        labelCategoryInterval: result.labelCategoryInterval
+        labelCategoryInterval: result.labelCategoryInterval,
+        rotation: 0
       } : result;
     }
     function makeCategoryLabelsActually(axis, labelModel) {
@@ -32169,18 +32133,20 @@
         return result;
       }
       var labels;
-      var numericLabelInterval;
+      var layout;
       if (isFunction(optionLabelInterval)) {
         labels = makeLabelsByCustomizedCategoryInterval(axis, optionLabelInterval);
       } else {
-        numericLabelInterval = optionLabelInterval === 'auto' ? makeAutoCategoryInterval(axis) : optionLabelInterval;
-        labels = makeLabelsByNumericCategoryInterval(axis, numericLabelInterval);
+        var autoInterval = optionLabelInterval === 'auto';
+        layout = autoInterval || getOptionLabelAutoRotate(labelModel) ? makeAutoCategoryLayout(axis, autoInterval ? undefined : optionLabelInterval) : {
+          interval: optionLabelInterval
+        };
+        labels = makeLabelsByNumericCategoryInterval(axis, layout.interval);
       }
       // Cache to avoid calling interval function repeatedly.
-      return listCacheSet(labelsCache, optionLabelInterval, {
-        labels: labels,
-        labelCategoryInterval: numericLabelInterval
-      });
+      return listCacheSet(labelsCache, optionLabelInterval, __assign({
+        labels: labels
+      }, layout));
     }
     function makeCategoryTicks(axis, tickModel) {
       var ticksCache = getListCache(axis, 'ticks');
@@ -32229,7 +32195,8 @@
             rawLabel: axis.scale.getLabel(tick),
             tickValue: tick.value
           };
-        })
+        }),
+        rotation: 0
       };
     }
     function getListCache(axis, prop) {
@@ -32250,9 +32217,124 @@
       });
       return value;
     }
-    function makeAutoCategoryInterval(axis) {
-      var result = inner$5(axis).autoInterval;
-      return result != null ? result : inner$5(axis).autoInterval = axis.calculateCategoryInterval();
+    /**
+     * @param {module:echats/coord/Axis} axis
+     * @return null/undefined if no labels.
+     */
+    function estimateLabelUnionRect(axis) {
+      var _a;
+      var axisModel = axis.model;
+      var scale = axis.scale;
+      if (!axisModel.get(['axisLabel', 'show']) || scale.isBlank()) {
+        return;
+      }
+      var axisLabelModel = axis.getLabelModel();
+      if (scale instanceof OrdinalScale) {
+        // reuse category axis's cached labels info
+        var _b = makeCategoryLabelsActually(axis, axisLabelModel),
+          labels_1 = _b.labels,
+          labelCategoryInterval = _b.labelCategoryInterval,
+          rotation = _b.rotation;
+        var step_1 = layoutScaleStep(labels_1.length, axisLabelModel, labelCategoryInterval);
+        return getLabelUnionRect(axis, function (i) {
+          return labels_1[i].formattedLabel;
+        }, labels_1.length, step_1, rotation !== null && rotation !== void 0 ? rotation : 0);
+      }
+      var labelFormatter = makeLabelFormatter(axis);
+      var realNumberScaleTicks = scale.getTicks();
+      var step = layoutScaleStep(realNumberScaleTicks.length, axisLabelModel);
+      return getLabelUnionRect(axis, function (i) {
+        return labelFormatter(realNumberScaleTicks[i], i);
+      }, realNumberScaleTicks.length, step, (_a = axisLabelModel.get('rotate')) !== null && _a !== void 0 ? _a : 0);
+    }
+    /**
+     * @param {module:echats/coord/Axis} axis
+     * @return Axis name dimensions.
+     */
+    function estimateAxisNameSize(axis) {
+      var _a, _b;
+      var axisModel = axis.model;
+      var name = axisModel.get('name');
+      if (!name) {
+        return {
+          width: 0,
+          height: 0
+        };
+      }
+      var textStyleModel = axisModel.getModel('nameTextStyle');
+      var padding = normalizePadding((_a = textStyleModel.get('padding')) !== null && _a !== void 0 ? _a : 0);
+      var nameRotate = (_b = axisModel.get('nameRotate')) !== null && _b !== void 0 ? _b : 0;
+      var bounds = rotateLabel(textStyleModel.getTextRect(name), nameRotate).bounds;
+      return applyPadding(bounds, padding);
+    }
+    function getLabelUnionRect(axis, getLabel, tickCount, step, rotation) {
+      var cache = getListCache(axis, 'labelUnionRect');
+      var key = tickCount + '_' + step + '_' + rotation + '_' + (tickCount > 0 ? getLabel(0) : '');
+      var result = listCacheGet(cache, key);
+      if (result) {
+        return result;
+      }
+      return listCacheSet(cache, key, calculateLabelUnionRect(axis, getLabel, tickCount, step, rotation));
+    }
+    function calculateLabelUnionRect(axis, getLabel, tickCount, step, rotation) {
+      var labelModel = axis.getLabelModel();
+      var padding = getOptionLabelPadding(labelModel);
+      var isHorizontal = isHorizontalAxis(axis);
+      var rect;
+      for (var i = 0; i < tickCount; i += step) {
+        var labelRect = rotateLabelRect(labelModel.getTextRect(getLabel(i)), rotation, padding, isHorizontal);
+        rect ? rect.union(labelRect) : rect = labelRect;
+      }
+      return rect;
+    }
+    function rotateLabelRect(originalRect, rotation, padding, isHorizontal) {
+      var _a = rotateLabel(originalRect, rotation),
+        bounds = _a.bounds,
+        offset = _a.offset;
+      var _b = applyPadding(bounds, padding),
+        width = _b.width,
+        height = _b.height;
+      return new BoundingRect(0, 0, width - (isHorizontal ? 0 : offset.x), height - (isHorizontal ? offset.y : 0));
+    }
+    function makeAutoCategoryLayout(axis, interval) {
+      var result = inner$5(axis).autoLayout;
+      return result != null && (interval === undefined || result.interval === interval) ? result : inner$5(axis).autoLayout = axis.calculateCategoryAutoLayout(interval);
+    }
+    function calculateUnitDimensions(axis) {
+      var rotation = getAxisRotate(axis) * RADIAN;
+      var ordinalScale = axis.scale;
+      var ordinalExtent = ordinalScale.getExtent();
+      var tickValue = ordinalExtent[0];
+      var unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
+      return {
+        width: Math.abs(unitSpan * Math.cos(rotation)),
+        height: Math.abs(unitSpan * Math.sin(rotation))
+      };
+    }
+    function calculateMaxLabelDimensions(axis) {
+      var labelFormatter = makeLabelFormatter(axis);
+      var axisLabelModel = axis.getLabelModel();
+      var ordinalScale = axis.scale;
+      var ordinalExtent = ordinalScale.getExtent();
+      var step = layoutScaleStep(ordinalScale.count(), axisLabelModel);
+      var maxW = 0;
+      var maxH = 0;
+      // Caution: Performance sensitive for large category data.
+      // Consider dataZoom, we should make appropriate step to avoid O(n) loop.
+      for (var tickValue = ordinalExtent[0]; tickValue <= ordinalExtent[1]; tickValue += step) {
+        var label = labelFormatter({
+          value: tickValue
+        });
+        var rect = axisLabelModel.getTextRect(label);
+        // Min size, void long loop.
+        maxW = Math.max(maxW, rect.width, 5);
+        maxH = Math.max(maxH, rect.height, 5);
+      }
+      var labelPadding = getOptionLabelPadding(axisLabelModel);
+      return applyPadding({
+        width: maxW,
+        height: maxH
+      }, labelPadding);
     }
     /**
      * Calculate interval for category axis ticks and labels.
@@ -32260,55 +32342,131 @@
      * should be implemented in axis.
      */
     function calculateCategoryInterval(axis) {
-      var params = fetchAutoCategoryIntervalCalculationParams(axis);
-      var labelFormatter = makeLabelFormatter(axis);
-      var rotation = (params.axisRotate - params.labelRotate) / 180 * Math.PI;
-      var ordinalScale = axis.scale;
-      var ordinalExtent = ordinalScale.getExtent();
-      // Providing this method is for optimization:
-      // avoid generating a long array by `getTicks`
-      // in large category data case.
-      var tickCount = ordinalScale.count();
-      if (ordinalExtent[1] - ordinalExtent[0] < 1) {
-        return 0;
-      }
-      var step = 1;
-      // Simple optimization. Empirical value: tick count should less than 40.
-      if (tickCount > 40) {
-        step = Math.max(1, Math.floor(tickCount / 40));
-      }
-      var tickValue = ordinalExtent[0];
-      var unitSpan = axis.dataToCoord(tickValue + 1) - axis.dataToCoord(tickValue);
-      var unitW = Math.abs(unitSpan * Math.cos(rotation));
-      var unitH = Math.abs(unitSpan * Math.sin(rotation));
-      var maxW = 0;
-      var maxH = 0;
-      // Caution: Performance sensitive for large category data.
-      // Consider dataZoom, we should make appropriate step to avoid O(n) loop.
-      for (; tickValue <= ordinalExtent[1]; tickValue += step) {
-        var width = 0;
-        var height = 0;
-        // Not precise, do not consider align and vertical align
-        // and each distance from axis line yet.
-        var rect = getBoundingRect(labelFormatter({
-          value: tickValue
-        }), params.font, 'center', 'top');
-        // Magic number
-        width = rect.width * 1.3;
-        height = rect.height * 1.3;
-        // Min size, void long loop.
-        maxW = Math.max(maxW, width, 7);
-        maxH = Math.max(maxH, height, 7);
-      }
-      var dw = maxW / unitW;
-      var dh = maxH / unitH;
+      return calculateCategoryAutoLayout(axis).interval;
+    }
+    function layoutScaleStep(tickCount, labelModel, interval) {
+      var _a;
+      // Simple optimization for large amount of labels: trigger sparse label iteration
+      // if tick count is over the threshold
+      var treshhold = (_a = labelModel.get('layoutApproximationThreshold')) !== null && _a !== void 0 ? _a : 40;
+      var step = Math.max((interval !== null && interval !== void 0 ? interval : 0) + 1, 1);
+      return tickCount > treshhold ? Math.max(step, Math.floor(tickCount / treshhold)) : step;
+    }
+    function calculateLabelInterval(unitSize, maxLabelSize, minDistance) {
+      var dw = (maxLabelSize.width + minDistance) / unitSize.width;
+      var dh = (maxLabelSize.height + minDistance) / unitSize.height;
       // 0/0 is NaN, 1/0 is Infinity.
       isNaN(dw) && (dw = Infinity);
       isNaN(dh) && (dh = Infinity);
-      var interval = Math.max(0, Math.floor(Math.min(dw, dh)));
-      var cache = inner$5(axis.model);
+      return Math.max(0, Math.floor(Math.min(dw, dh)));
+    }
+    /**
+     * Rotate label's rectangle, see https://codepen.io/agurtovoy/pen/WNPyqWx for the visualization of the math
+     * below.
+     *
+     * @return {Object} {
+     *   axesIntersection: Size, // intersection of the rotated label's rectangle with the corresponding axes
+     *   bounds: Size // dimensions of the rotated label's bounding rectangle
+     *   offset: PointLike // bounding rectangle's offset from the assumed rotation origin
+     *  }
+     */
+    function rotateLabel(_a, rotation) {
+      var width = _a.width,
+        height = _a.height;
+      var rad = rotation * RADIAN;
+      var sin = Math.abs(Math.sin(rad));
+      var cos = Math.abs(Math.cos(rad));
+      // width and height of the intersection of the rotated label's rectangle with the corresponding axes, see
+      // https://math.stackexchange.com/questions/1449352/intersection-between-a-side-of-rotated-rectangle-and-axis
+      var axesIntersection = {
+        width: Math.min(width / cos, height / sin),
+        height: Math.min(height / cos, width / sin)
+      };
+      // width and height of the rotated label's bounding rectangle; note th
+      var bounds = {
+        width: width * cos + height * sin,
+        height: width * sin + height * cos
+      };
+      // label's bounding box's rotation origin is at the vertical center of the bbox's axis edge
+      // rather than the corresponding corner point
+      var asbRotation = Math.abs(rotation);
+      var bboxOffset = asbRotation === 0 || asbRotation === 180 ? 0 : height / 2;
+      var offset = {
+        x: bboxOffset * sin,
+        y: bboxOffset * cos
+      };
+      return {
+        axesIntersection: axesIntersection,
+        bounds: bounds,
+        offset: offset
+      };
+    }
+    function getCandidateLayouts(axis) {
+      var _a;
+      var unitSize = calculateUnitDimensions(axis);
+      var maxLabelSize = calculateMaxLabelDimensions(axis);
+      var isHorizontal = isHorizontalAxis(axis);
+      var labelModel = axis.getLabelModel();
+      var labelRotations = normalizeLabelRotations(getLabelRotations(labelModel), isHorizontal);
+      var labelMinDistance = (_a = labelModel.get('minDistance')) !== null && _a !== void 0 ? _a : 0;
+      var candidateLayouts = [];
+      for (var _i = 0, labelRotations_1 = labelRotations; _i < labelRotations_1.length; _i++) {
+        var rotation = labelRotations_1[_i];
+        var _b = rotateLabel(maxLabelSize, rotation),
+          axesIntersection = _b.axesIntersection,
+          bounds = _b.bounds,
+          offset = _b.offset;
+        var labelSize = isHorizontal ? {
+          width: axesIntersection.width,
+          height: bounds.height - offset.y
+        } : {
+          width: bounds.width - offset.x,
+          height: axesIntersection.height
+        };
+        var interval = calculateLabelInterval(unitSize, labelSize, labelMinDistance);
+        candidateLayouts.push({
+          labelSize: labelSize,
+          interval: interval,
+          rotation: rotation
+        });
+      }
+      return candidateLayouts;
+    }
+    function chooseAutoLayout(candidateLayouts) {
+      var autoLayout = {
+        interval: Infinity,
+        rotation: 0
+      };
+      for (var _i = 0, candidateLayouts_1 = candidateLayouts; _i < candidateLayouts_1.length; _i++) {
+        var layout = candidateLayouts_1[_i];
+        if (layout.interval < autoLayout.interval || layout.interval > 0 && layout.interval === autoLayout.interval) {
+          autoLayout = layout;
+        }
+      }
+      return autoLayout;
+    }
+    /**
+     * Calculate max label dimensions, interval, and rotation for category axis ticks and labels.
+     * To get precise result, at least one of `getRotate` and `isHorizontal`
+     * should be implemented in axis.
+     */
+    function calculateCategoryAutoLayout(axis, interval) {
+      var ordinalScale = axis.scale;
+      var ordinalExtent = ordinalScale.getExtent();
+      if (ordinalExtent[1] - ordinalExtent[0] < 1) {
+        return {
+          interval: 0,
+          rotation: 0
+        };
+      }
+      var candidateLayouts = getCandidateLayouts(axis);
+      var autoLayout = __assign(__assign({}, chooseAutoLayout(candidateLayouts)), interval === undefined ? {} : {
+        interval: interval
+      });
       var axisExtent = axis.getExtent();
-      var lastAutoInterval = cache.lastAutoInterval;
+      var tickCount = ordinalScale.count();
+      var cache = inner$5(axis.model);
+      var lastAutoLayout = cache.lastAutoLayout;
       var lastTickCount = cache.lastTickCount;
       // Use cache to keep interval stable while moving zoom window,
       // otherwise the calculated interval might jitter when the zoom
@@ -32316,31 +32474,65 @@
       // For example, if all of the axis labels are `a, b, c, d, e, f, g`.
       // The jitter will cause that sometimes the displayed labels are
       // `a, d, g` (interval: 2) sometimes `a, c, e`(interval: 1).
-      if (lastAutoInterval != null && lastTickCount != null && Math.abs(lastAutoInterval - interval) <= 1 && Math.abs(lastTickCount - tickCount) <= 1
+      if (lastAutoLayout != null && lastTickCount != null && Math.abs(lastAutoLayout.interval - autoLayout.interval) <= 1 && Math.abs(lastTickCount - tickCount) <= 1
       // Always choose the bigger one, otherwise the critical
       // point is not the same when zooming in or zooming out.
-      && lastAutoInterval > interval
+      && lastAutoLayout.interval > autoLayout.interval
       // If the axis change is caused by chart resize, the cache should not
       // be used. Otherwise some hidden labels might not be shown again.
       && cache.axisExtent0 === axisExtent[0] && cache.axisExtent1 === axisExtent[1]) {
-        interval = lastAutoInterval;
+        autoLayout = lastAutoLayout;
       }
       // Only update cache if cache not used, otherwise the
       // changing of interval is too insensitive.
       else {
         cache.lastTickCount = tickCount;
-        cache.lastAutoInterval = interval;
+        cache.lastAutoLayout = autoLayout;
         cache.axisExtent0 = axisExtent[0];
         cache.axisExtent1 = axisExtent[1];
       }
-      return interval;
+      return autoLayout;
     }
-    function fetchAutoCategoryIntervalCalculationParams(axis) {
-      var labelModel = axis.getLabelModel();
+    function isHorizontalAxis(axis) {
+      return isFunction(axis.isHorizontal) && axis.isHorizontal();
+    }
+    function getAxisRotate(axis) {
+      return isFunction(axis.getRotate) ? axis.getRotate() : isHorizontalAxis(axis) ? 0 : 90;
+    }
+    function getLabelRotations(labelModel) {
+      var labelRotate = labelModel.get('rotate');
+      var autoRotate = labelModel.get('autoRotate');
+      return labelRotate ? [labelRotate] : isArray(autoRotate) && autoRotate.length > 0 ? autoRotate : autoRotate ? [0, 45, 90] : [0];
+    }
+    function normalizeLabelRotations(rotations, isHorizontal) {
+      // for horizontal axes, we want to iterate through the rotation angles in the ascending order
+      // so that the smaller angles are considered first; conversely, for vertical axes, the larger
+      // angles need to be considered first, since in that case the 0 degree rotation corresponds
+      // to the smaller possible vertical label size and the largest horizontal extent.
+      return __spreadArray([], rotations, true).sort(isHorizontal ? function (a, b) {
+        return Math.abs(a) - Math.abs(b);
+      } : function (a, b) {
+        return Math.abs(b) - Math.abs(a);
+      });
+    }
+    function getOptionLabelAutoRotate(labelModel) {
+      var labelRotate = labelModel.get('rotate');
+      var autoRotate = labelModel.get('autoRotate');
+      return !labelRotate && (isArray(autoRotate) ? autoRotate.length > 1 : Boolean(autoRotate));
+    }
+    function getOptionLabelPadding(labelModel) {
+      var _a;
+      return normalizePadding((_a = labelModel.get('padding')) !== null && _a !== void 0 ? _a : 0);
+    }
+    function normalizePadding(padding) {
+      return isArray(padding) ? padding.length === 4 ? padding : [padding[0], padding[1], padding[0], padding[1]] : [padding, padding, padding, padding];
+    }
+    function applyPadding(_a, padding) {
+      var width = _a.width,
+        height = _a.height;
       return {
-        axisRotate: axis.getRotate ? axis.getRotate() : axis.isHorizontal && !axis.isHorizontal() ? 90 : 0,
-        labelRotate: labelModel.get('rotate') || 0,
-        font: labelModel.getFont()
+        width: width + padding[1] + padding[3],
+        height: height + padding[0] + padding[2]
       };
     }
     function makeLabelsByNumericCategoryInterval(axis, categoryInterval, onlyTick) {
@@ -32538,6 +32730,12 @@
       Axis.prototype.getViewLabels = function () {
         return createAxisLabels(this).labels;
       };
+      Axis.prototype.getViewLabelsAndRotation = function () {
+        return createAxisLabels(this);
+      };
+      Axis.prototype.getNameGap = function () {
+        return getAxisNameGap(this);
+      };
       Axis.prototype.getLabelModel = function () {
         return this.model.getModel('axisLabel');
       };
@@ -32571,6 +32769,14 @@
       Axis.prototype.calculateCategoryInterval = function () {
         return calculateCategoryInterval(this);
       };
+      /**
+       * Only be called in category axis.
+       * Can be overridden, consider other axes like in 3D.
+       * @return Auto layout properties (interval, rotation) for cateogry axis tick and label
+       */
+      Axis.prototype.calculateCategoryAutoLayout = function (interval) {
+        return calculateCategoryAutoLayout(this, interval);
+      };
       return Axis;
     }();
     function fixExtentWithBands(extent, nTick) {
@@ -32600,7 +32806,8 @@
       if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {
-          coord: axisExtent[1]
+          coord: axisExtent[1],
+          tickValue: ticksCoords[0].tickValue
         };
       } else {
         var crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
@@ -32611,7 +32818,8 @@
         var dataExtent = axis.scale.getExtent();
         diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
         last = {
-          coord: ticksCoords[ticksLen - 1].coord + shift_1 * diffSize
+          coord: ticksCoords[ticksLen - 1].coord + shift_1 * diffSize,
+          tickValue: dataExtent[1] + 1
         };
         ticksCoords.push(last);
       }
@@ -35172,7 +35380,7 @@
       var y = rect.y;
       var width = rect.width;
       var height = rect.height;
-      var lineWidth = seriesModel.get(['lineStyle', 'width']) || 2;
+      var lineWidth = seriesModel.get(['lineStyle', 'width']) || 0;
       // Expand the clip path a bit to avoid the border is clipped and looks thinner
       x -= lineWidth / 2;
       y -= lineWidth / 2;
@@ -35721,9 +35929,9 @@
         this.group.add(symbolDraw.group);
         this._symbolDraw = symbolDraw;
         this._lineGroup = lineGroup;
+        this._changePolyState = bind(this._changePolyState, this);
       };
       LineView.prototype.render = function (seriesModel, ecModel, api) {
-        var _this = this;
         var coordSys = seriesModel.coordinateSystem;
         var group = this.group;
         var data = seriesModel.getData();
@@ -35913,9 +36121,7 @@
           getECData(polygon).seriesIndex = seriesModel.seriesIndex;
           toggleHoverEmphasis(polygon, focus, blurScope, emphasisDisabled);
         }
-        var changePolyState = function (toState) {
-          _this._changePolyState(toState);
-        };
+        var changePolyState = this._changePolyState;
         data.eachItemGraphicEl(function (el) {
           // Switch polyline / polygon state if element changed its state.
           el && (el.onHoverStateChange = changePolyState);
@@ -37812,7 +38018,7 @@
     }
 
     var PI2$6 = Math.PI * 2;
-    var RADIAN = Math.PI / 180;
+    var RADIAN$1 = Math.PI / 180;
     function getViewRect(seriesModel, api) {
       return getLayoutRect(seriesModel.getBoxLayoutParams(), {
         width: api.getWidth(),
@@ -37864,11 +38070,11 @@
           cy = _a.cy,
           r = _a.r,
           r0 = _a.r0;
-        var startAngle = -seriesModel.get('startAngle') * RADIAN;
+        var startAngle = -seriesModel.get('startAngle') * RADIAN$1;
         var endAngle = seriesModel.get('endAngle');
-        var padAngle = seriesModel.get('padAngle') * RADIAN;
-        endAngle = endAngle === 'auto' ? startAngle - PI2$6 : -endAngle * RADIAN;
-        var minAngle = seriesModel.get('minAngle') * RADIAN;
+        var padAngle = seriesModel.get('padAngle') * RADIAN$1;
+        endAngle = endAngle === 'auto' ? startAngle - PI2$6 : -endAngle * RADIAN$1;
+        var minAngle = seriesModel.get('minAngle') * RADIAN$1;
         var minAndPadAngle = minAngle + padAngle;
         var validDataCount = 0;
         data.each(valueDim, function (value) {
@@ -38070,7 +38276,7 @@
       };
     }
 
-    var RADIAN$1 = Math.PI / 180;
+    var RADIAN$2 = Math.PI / 180;
     function adjustSingleSide(list, cx, cy, r, dir, viewWidth, viewHeight, viewLeft, viewTop, farthestX) {
       if (list.length < 2) {
         return;
@@ -38085,7 +38291,7 @@
           var rA = r + item.len;
           var rA2 = rA * rA;
           // Use ellipse implicit function to calculate x
-          var dx = Math.sqrt((1 - Math.abs(dy * dy / rB2)) * rA2);
+          var dx = Math.sqrt(Math.abs((1 - dy * dy / rB2) * rA2));
           var newX = cx + (dx + item.len2) * dir;
           var deltaX = newX - item.label.x;
           var newTargetWidth = item.targetTextWidth - deltaX * dir;
@@ -38297,7 +38503,7 @@
       var cx;
       var cy;
       var hasLabelRotate = false;
-      var minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN$1;
+      var minShowLabelRadian = (seriesModel.get('minShowLabelAngle') || 0) * RADIAN$2;
       var viewRect = data.getLayout('viewRect');
       var r = data.getLayout('r');
       var viewWidth = viewRect.width;
@@ -39116,6 +39322,7 @@
         // Whether axisLabel is inside the grid or outside the grid.
         inside: false,
         rotate: 0,
+        minDistance: 10,
         // true | false | null/undefined (auto)
         showMinLabel: null,
         // true | false | null/undefined (auto)
@@ -39126,6 +39333,8 @@
       },
       splitLine: {
         show: true,
+        showMinLine: true,
+        showMaxLine: true,
         lineStyle: {
           color: ['#E0E6F1'],
           width: 1,
@@ -39243,23 +39452,23 @@
      */
 
     /*
-    * Licensed to the Apache Software Foundation (ASF) under one
-    * or more contributor license agreements.  See the NOTICE file
-    * distributed with this work for additional information
-    * regarding copyright ownership.  The ASF licenses this file
-    * to you under the Apache License, Version 2.0 (the
-    * "License"); you may not use this file except in compliance
-    * with the License.  You may obtain a copy of the License at
-    *
-    *   http://www.apache.org/licenses/LICENSE-2.0
-    *
-    * Unless required by applicable law or agreed to in writing,
-    * software distributed under the License is distributed on an
-    * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    * KIND, either express or implied.  See the License for the
-    * specific language governing permissions and limitations
-    * under the License.
-    */
+     * Licensed to the Apache Software Foundation (ASF) under one
+     * or more contributor license agreements.  See the NOTICE file
+     * distributed with this work for additional information
+     * regarding copyright ownership.  The ASF licenses this file
+     * to you under the Apache License, Version 2.0 (the
+     * "License"); you may not use this file except in compliance
+     * with the License.  You may obtain a copy of the License at
+     *
+     *   http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing,
+     * software distributed under the License is distributed on an
+     * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     * KIND, either express or implied.  See the License for the
+     * specific language governing permissions and limitations
+     * under the License.
+     */
     var AXIS_TYPES = {
       value: 1,
       category: 1,
@@ -39695,7 +39904,7 @@
     var Grid = /** @class */function () {
       function Grid(gridModel, ecModel, api) {
         // FIXME:TS where used (different from registered type 'cartesian2d')?
-        this.type = 'grid';
+        this.type = "grid";
         this._coordsMap = {};
         this._coordsList = [];
         this._axesMap = {};
@@ -39728,7 +39937,7 @@
             var scale = axis.scale;
             if (
             // Only value and log axis without interval support alignTicks.
-            isIntervalOrLogScale(scale) && model.get('alignTicks') && model.get('interval') == null) {
+            isIntervalOrLogScale(scale) && model.get("alignTicks") && model.get("interval") == null) {
               axisNeedsAlign.push(axis);
             } else {
               niceScaleExtent(scale, model);
@@ -39755,10 +39964,10 @@
         // Key: axisDim_axisIndex, value: boolean, whether onZero target.
         var onZeroRecords = {};
         each(axesMap.x, function (xAxis) {
-          fixAxisOnZero(axesMap, 'y', xAxis, onZeroRecords);
+          fixAxisOnZero(axesMap, "y", xAxis, onZeroRecords);
         });
         each(axesMap.y, function (yAxis) {
-          fixAxisOnZero(axesMap, 'x', yAxis, onZeroRecords);
+          fixAxisOnZero(axesMap, "x", yAxis, onZeroRecords);
         });
         // Resize again if containLabel is enabled
         // FIXME It may cause getting wrong grid size in data processing stage
@@ -39769,38 +39978,58 @@
        */
       Grid.prototype.resize = function (gridModel, api, ignoreContainLabel) {
         var boxLayoutParams = gridModel.getBoxLayoutParams();
-        var isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
+        var isContainLabel = !ignoreContainLabel && gridModel.get("containLabel");
         var gridRect = getLayoutRect(boxLayoutParams, {
           width: api.getWidth(),
           height: api.getHeight()
         });
         this._rect = gridRect;
-        var axesList = this._axesList;
-        adjustAxes();
+        // sort axes to make sure we estimate ordinal axes' label dimensions after we adjusted
+        // the available grid space based on the value axes' label dimensions
+        var axesList = __spreadArray([], this._axesList, true).sort(function (a, b) {
+          return axisOrder(a) - axisOrder(b);
+        });
         // Minus label size
         if (isContainLabel) {
           each(axesList, function (axis) {
-            if (!axis.model.get(['axisLabel', 'inside'])) {
+            var _a;
+            var dim = axis.isHorizontal() ? "height" : "width";
+            if (!axis.model.get(["axisLabel", "inside"])) {
               var labelUnionRect = estimateLabelUnionRect(axis);
               if (labelUnionRect) {
-                var dim = axis.isHorizontal() ? 'height' : 'width';
-                var margin = axis.model.get(['axisLabel', 'margin']);
+                var margin = axis.model.get(["axisLabel", "margin"]);
                 gridRect[dim] -= labelUnionRect[dim] + margin;
-                if (axis.position === 'top') {
+                if (axis.position === "top") {
                   gridRect.y += labelUnionRect.height + margin;
-                } else if (axis.position === 'left') {
+                } else if (axis.position === "left") {
                   gridRect.x += labelUnionRect.width + margin;
                 }
               }
             }
+            if (axis.model.get("nameLayout") === "auto" && isNameLocationCenter(axis.model.get("nameLocation"))) {
+              var nameGap = (_a = axis.model.get("nameGap")) !== null && _a !== void 0 ? _a : 0;
+              var nameSize = estimateAxisNameSize(axis);
+              gridRect[dim] -= nameSize.height + nameGap;
+              if (axis.position === "top") {
+                gridRect.y += nameSize.height + nameGap;
+              } else if (axis.position === "left") {
+                gridRect.x += nameSize.height + nameGap;
+              }
+            }
+            // adjust axes after each potential change to grid dimensions
+            // so that the next (ordinal) axis' label estimations are more precise
+            adjustAxes();
           });
-          adjustAxes();
         }
+        adjustAxes();
         each(this._coordsList, function (coord) {
           // Calculate affine matrix to accelerate the data to point transform.
           // If all the axes scales are time or value.
           coord.calcAffineTransform();
         });
+        function axisOrder(a) {
+          return a.type === "category" ? 1 : 0;
+        }
         function adjustAxes() {
           each(axesList, function (axis) {
             var isHorizontal = axis.isHorizontal();
@@ -39822,7 +40051,7 @@
       };
       Grid.prototype.getCartesian = function (xAxisIndex, yAxisIndex) {
         if (xAxisIndex != null && yAxisIndex != null) {
-          var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
+          var key = "x" + xAxisIndex + "y" + yAxisIndex;
           return this._coordsMap[key];
         }
         if (isObject(xAxisIndex)) {
@@ -39830,7 +40059,7 @@
           xAxisIndex = xAxisIndex.xAxisIndex;
         }
         for (var i = 0, coordList = this._coordsList; i < coordList.length; i++) {
-          if (coordList[i].getAxis('x').index === xAxisIndex || coordList[i].getAxis('y').index === yAxisIndex) {
+          if (coordList[i].getAxis("x").index === xAxisIndex || coordList[i].getAxis("y").index === yAxisIndex) {
             return coordList[i];
           }
         }
@@ -39854,8 +40083,8 @@
       };
       Grid.prototype._findConvertTarget = function (finder) {
         var seriesModel = finder.seriesModel;
-        var xAxisModel = finder.xAxisModel || seriesModel && seriesModel.getReferringComponents('xAxis', SINGLE_REFERRING).models[0];
-        var yAxisModel = finder.yAxisModel || seriesModel && seriesModel.getReferringComponents('yAxis', SINGLE_REFERRING).models[0];
+        var xAxisModel = finder.xAxisModel || seriesModel && seriesModel.getReferringComponents("xAxis", SINGLE_REFERRING).models[0];
+        var yAxisModel = finder.yAxisModel || seriesModel && seriesModel.getReferringComponents("yAxis", SINGLE_REFERRING).models[0];
         var gridModel = finder.gridModel;
         var coordsList = this._coordsList;
         var cartesian;
@@ -39866,9 +40095,9 @@
         } else if (xAxisModel && yAxisModel) {
           cartesian = this.getCartesian(xAxisModel.componentIndex, yAxisModel.componentIndex);
         } else if (xAxisModel) {
-          axis = this.getAxis('x', xAxisModel.componentIndex);
+          axis = this.getAxis("x", xAxisModel.componentIndex);
         } else if (yAxisModel) {
-          axis = this.getAxis('y', yAxisModel.componentIndex);
+          axis = this.getAxis("y", yAxisModel.componentIndex);
         }
         // Lowest priority.
         else if (gridModel) {
@@ -39912,8 +40141,8 @@
           y: 0
         };
         // Create axis
-        ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
-        ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
+        ecModel.eachComponent("xAxis", createAxisCreator("x"), this);
+        ecModel.eachComponent("yAxis", createAxisCreator("y"), this);
         if (!axesCount.x || !axesCount.y) {
           // Roll back when there no either x or y axis
           this._axesMap = {};
@@ -39924,7 +40153,7 @@
         // Create cartesian2d
         each(axesMap.x, function (xAxis, xAxisIndex) {
           each(axesMap.y, function (yAxis, yAxisIndex) {
-            var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
+            var key = "x" + xAxisIndex + "y" + yAxisIndex;
             var cartesian = new Cartesian2D(key);
             cartesian.master = _this;
             cartesian.model = gridModel;
@@ -39939,25 +40168,25 @@
             if (!isAxisUsedInTheGrid(axisModel, gridModel)) {
               return;
             }
-            var axisPosition = axisModel.get('position');
-            if (dimName === 'x') {
+            var axisPosition = axisModel.get("position");
+            if (dimName === "x") {
               // Fix position
-              if (axisPosition !== 'top' && axisPosition !== 'bottom') {
+              if (axisPosition !== "top" && axisPosition !== "bottom") {
                 // Default bottom of X
-                axisPosition = axisPositionUsed.bottom ? 'top' : 'bottom';
+                axisPosition = axisPositionUsed.bottom ? "top" : "bottom";
               }
             } else {
               // Fix position
-              if (axisPosition !== 'left' && axisPosition !== 'right') {
+              if (axisPosition !== "left" && axisPosition !== "right") {
                 // Default left of Y
-                axisPosition = axisPositionUsed.left ? 'right' : 'left';
+                axisPosition = axisPositionUsed.left ? "right" : "left";
               }
             }
             axisPositionUsed[axisPosition] = true;
-            var axis = new Axis2D(dimName, createScaleByModel(axisModel), [0, 0], axisModel.get('type'), axisPosition);
-            var isCategory = axis.type === 'category';
-            axis.onBand = isCategory && axisModel.get('boundaryGap');
-            axis.inverse = axisModel.get('inverse');
+            var axis = new Axis2D(dimName, createScaleByModel(axisModel), [0, 0], axisModel.get("type"), axisPosition);
+            var isCategory = axis.type === "category";
+            axis.onBand = isCategory && axisModel.get("boundaryGap");
+            axis.inverse = axisModel.get("inverse");
             // Inject axis into axisModel
             axisModel.axis = axis;
             // Inject axisModel into axis
@@ -39979,8 +40208,8 @@
         // Reset scale
         each(this._axesList, function (axis) {
           axis.scale.setExtent(Infinity, -Infinity);
-          if (axis.type === 'category') {
-            var categorySortInfo = axis.model.get('categorySortInfo');
+          if (axis.type === "category") {
+            var categorySortInfo = axis.model.get("categorySortInfo");
             axis.scale.setSortInfo(categorySortInfo);
           }
         });
@@ -39994,8 +40223,8 @@
             }
             var cartesian = this.getCartesian(xAxisModel.componentIndex, yAxisModel.componentIndex);
             var data = seriesModel.getData();
-            var xAxis = cartesian.getAxis('x');
-            var yAxis = cartesian.getAxis('y');
+            var xAxis = cartesian.getAxis("x");
+            var yAxis = cartesian.getAxis("y");
             unionExtent(data, xAxis);
             unionExtent(data, yAxis);
           }
@@ -40013,7 +40242,7 @@
         var baseAxes = [];
         var otherAxes = [];
         each(this.getCartesians(), function (cartesian) {
-          var baseAxis = dim != null && dim !== 'auto' ? cartesian.getAxis(dim) : cartesian.getBaseAxis();
+          var baseAxis = dim != null && dim !== "auto" ? cartesian.getAxis(dim) : cartesian.getBaseAxis();
           var otherAxis = cartesian.getOtherAxis(baseAxis);
           indexOf(baseAxes, baseAxis) < 0 && baseAxes.push(baseAxis);
           indexOf(otherAxes, otherAxis) < 0 && otherAxes.push(otherAxis);
@@ -40025,9 +40254,9 @@
       };
       Grid.create = function (ecModel, api) {
         var grids = [];
-        ecModel.eachComponent('grid', function (gridModel, idx) {
+        ecModel.eachComponent("grid", function (gridModel, idx) {
           var grid = new Grid(gridModel, ecModel, api);
-          grid.name = 'grid_' + idx;
+          grid.name = "grid_" + idx;
           // dataSampling requires axis extent, so resize
           // should be performed in create stage.
           grid.resize(gridModel, api, true);
@@ -40045,10 +40274,10 @@
           var gridModel = xAxisModel.getCoordSysModel();
           if ("development" !== 'production') {
             if (!gridModel) {
-              throw new Error('Grid "' + retrieve3(xAxisModel.get('gridIndex'), xAxisModel.get('gridId'), 0) + '" not found');
+              throw new Error('Grid "' + retrieve3(xAxisModel.get("gridIndex"), xAxisModel.get("gridId"), 0) + '" not found');
             }
             if (xAxisModel.getCoordSysModel() !== yAxisModel.getCoordSysModel()) {
-              throw new Error('xAxis and yAxis must use the same grid');
+              throw new Error("xAxis and yAxis must use the same grid");
             }
           }
           var grid = gridModel.coordinateSystem;
@@ -40079,8 +40308,8 @@
       var otherAxes = axesMap[otherAxisDim];
       var otherAxisOnZeroOf;
       var axisModel = axis.model;
-      var onZero = axisModel.get(['axisLine', 'onZero']);
-      var onZeroAxisIndex = axisModel.get(['axisLine', 'onZeroAxisIndex']);
+      var onZero = axisModel.get(["axisLine", "onZero"]);
+      var onZeroAxisIndex = axisModel.get(["axisLine", "onZeroAxisIndex"]);
       if (!onZero) {
         return;
       }
@@ -40092,10 +40321,10 @@
       } else {
         // Find the first available other axis.
         for (var idx in otherAxes) {
-          if (otherAxes.hasOwnProperty(idx) && canOnZeroToAxis(otherAxes[idx])
+          if (otherAxes.hasOwnProperty(idx) && canOnZeroToAxis(otherAxes[idx]) &&
           // Consider that two Y axes on one value axis,
           // if both onZero, the two Y axes overlap.
-          && !onZeroRecords[getOnZeroRecordKey(otherAxes[idx])]) {
+          !onZeroRecords[getOnZeroRecordKey(otherAxes[idx])]) {
             otherAxisOnZeroOf = otherAxes[idx];
             break;
           }
@@ -40105,22 +40334,22 @@
         onZeroRecords[getOnZeroRecordKey(otherAxisOnZeroOf)] = true;
       }
       function getOnZeroRecordKey(axis) {
-        return axis.dim + '_' + axis.index;
+        return axis.dim + "_" + axis.index;
       }
     }
     function canOnZeroToAxis(axis) {
-      return axis && axis.type !== 'category' && axis.type !== 'time' && ifAxisCrossZero(axis);
+      return axis && axis.type !== "category" && axis.type !== "time" && ifAxisCrossZero(axis);
     }
     function updateAxisTransform(axis, coordBase) {
       var axisExtent = axis.getExtent();
       var axisExtentSum = axisExtent[0] + axisExtent[1];
       // Fast transform
-      axis.toGlobalCoord = axis.dim === 'x' ? function (coord) {
+      axis.toGlobalCoord = axis.dim === "x" ? function (coord) {
         return coord + coordBase;
       } : function (coord) {
         return axisExtentSum - coord + coordBase;
       };
-      axis.toLocalCoord = axis.dim === 'x' ? function (coord) {
+      axis.toLocalCoord = axis.dim === "x" ? function (coord) {
         return coord - coordBase;
       } : function (coord) {
         return axisExtentSum - coord + coordBase;
@@ -40192,18 +40421,18 @@
         var textVerticalAlign;
         if (isRadianAroundZero(rotationDiff)) {
           // Label is parallel with axis line.
-          textVerticalAlign = direction > 0 ? 'top' : 'bottom';
-          textAlign = 'center';
+          textVerticalAlign = direction > 0 ? "top" : "bottom";
+          textAlign = "center";
         } else if (isRadianAroundZero(rotationDiff - PI$4)) {
           // Label is inverse parallel with axis line.
-          textVerticalAlign = direction > 0 ? 'bottom' : 'top';
-          textAlign = 'center';
+          textVerticalAlign = direction > 0 ? "bottom" : "top";
+          textAlign = "center";
         } else {
-          textVerticalAlign = 'middle';
+          textVerticalAlign = "middle";
           if (rotationDiff > 0 && rotationDiff < PI$4) {
-            textAlign = direction > 0 ? 'right' : 'left';
+            textAlign = direction > 0 ? "right" : "left";
           } else {
-            textAlign = direction > 0 ? 'left' : 'right';
+            textAlign = direction > 0 ? "left" : "right";
           }
         }
         return {
@@ -40217,22 +40446,22 @@
           componentType: axisModel.mainType,
           componentIndex: axisModel.componentIndex
         };
-        eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
+        eventData[axisModel.mainType + "Index"] = axisModel.componentIndex;
         return eventData;
       };
       AxisBuilder.isLabelSilent = function (axisModel) {
-        var tooltipOpt = axisModel.get('tooltip');
-        return axisModel.get('silent')
+        var tooltipOpt = axisModel.get("tooltip");
+        return axisModel.get("silent") ||
         // Consider mouse cursor, add these restrictions.
-        || !(axisModel.get('triggerEvent') || tooltipOpt && tooltipOpt.show);
+        !(axisModel.get("triggerEvent") || tooltipOpt && tooltipOpt.show);
       };
       return AxisBuilder;
     }();
     var builders = {
       axisLine: function (opt, axisModel, group, transformGroup) {
-        var shown = axisModel.get(['axisLine', 'show']);
-        if (shown === 'auto' && opt.handleAutoShown) {
-          shown = opt.handleAutoShown('axisLine');
+        var shown = axisModel.get(["axisLine", "show"]);
+        if (shown === "auto" && opt.handleAutoShown) {
+          shown = opt.handleAutoShown("axisLine");
         }
         if (!shown) {
           return;
@@ -40247,8 +40476,8 @@
           applyTransform(pt2, pt2, matrix);
         }
         var lineStyle = extend({
-          lineCap: 'round'
-        }, axisModel.getModel(['axisLine', 'lineStyle']).getLineStyle());
+          lineCap: "round"
+        }, axisModel.getModel(["axisLine", "lineStyle"]).getLineStyle());
         var line = new Line({
           shape: {
             x1: pt1[0],
@@ -40262,11 +40491,11 @@
           z2: 1
         });
         subPixelOptimizeLine$1(line.shape, line.style.lineWidth);
-        line.anid = 'line';
+        line.anid = "line";
         group.add(line);
-        var arrows = axisModel.get(['axisLine', 'symbol']);
+        var arrows = axisModel.get(["axisLine", "symbol"]);
         if (arrows != null) {
-          var arrowSize = axisModel.get(['axisLine', 'symbolSize']);
+          var arrowSize = axisModel.get(["axisLine", "symbolSize"]);
           if (isString(arrows)) {
             // Use the same arrow for start and end point
             arrows = [arrows, arrows];
@@ -40275,7 +40504,7 @@
             // Use the same size for width and height
             arrowSize = [arrowSize, arrowSize];
           }
-          var arrowOffset = normalizeSymbolOffset(axisModel.get(['axisLine', 'symbolOffset']) || 0, arrowSize);
+          var arrowOffset = normalizeSymbolOffset(axisModel.get(["axisLine", "symbolOffset"]) || 0, arrowSize);
           var symbolWidth_1 = arrowSize[0];
           var symbolHeight_1 = arrowSize[1];
           each([{
@@ -40287,7 +40516,7 @@
             offset: arrowOffset[1],
             r: Math.sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0]) + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))
           }], function (point, index) {
-            if (arrows[index] !== 'none' && arrows[index] != null) {
+            if (arrows[index] !== "none" && arrows[index] != null) {
               var symbol = createSymbol(arrows[index], -symbolWidth_1 / 2, -symbolHeight_1 / 2, symbolWidth_1, symbolHeight_1, lineStyle.stroke, true);
               // Calculate arrow position with offset
               var r = point.r + point.offset;
@@ -40311,7 +40540,7 @@
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
         // This bit fixes the label overlap issue for the time chart.
         // See https://github.com/apache/echarts/issues/14266 for more.
-        if (axisModel.get(['axisLabel', 'hideOverlap'])) {
+        if (axisModel.get(["axisLabel", "hideOverlap"])) {
           var labelList = prepareLayoutList(map(labelEls, function (label) {
             return {
               label: label,
@@ -40325,21 +40554,21 @@
         }
       },
       axisName: function (opt, axisModel, group, transformGroup) {
-        var name = retrieve(opt.axisName, axisModel.get('name'));
+        var name = retrieve(opt.axisName, axisModel.get("name"));
         if (!name) {
           return;
         }
-        var nameLocation = axisModel.get('nameLocation');
+        var nameLocation = axisModel.get("nameLocation");
         var nameDirection = opt.nameDirection;
-        var textStyleModel = axisModel.getModel('nameTextStyle');
-        var gap = axisModel.get('nameGap') || 0;
+        var textStyleModel = axisModel.getModel("nameTextStyle");
+        var gap = axisModel.get("nameGap") || 0;
         var extent = axisModel.axis.getExtent();
         var gapSignal = extent[0] > extent[1] ? -1 : 1;
-        var pos = [nameLocation === 'start' ? extent[0] - gapSignal * gap : nameLocation === 'end' ? extent[1] + gapSignal * gap : (extent[0] + extent[1]) / 2,
+        var pos = [nameLocation === "start" ? extent[0] - gapSignal * gap : nameLocation === "end" ? extent[1] + gapSignal * gap : (extent[0] + extent[1]) / 2,
         // Reuse labelOffset.
         isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0];
         var labelLayout;
-        var nameRotation = axisModel.get('nameRotate');
+        var nameRotation = axisModel.get("nameRotate");
         if (nameRotation != null) {
           nameRotation = nameRotation * PI$4 / 180; // To radian.
         }
@@ -40358,7 +40587,7 @@
           }
         }
         var textFont = textStyleModel.getFont();
-        var truncateOpt = axisModel.get('nameTruncate', true) || {};
+        var truncateOpt = axisModel.get("nameTruncate", true) || {};
         var ellipsis = truncateOpt.ellipsis;
         var maxWidth = retrieve(opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth);
         var textEl = new ZRText({
@@ -40369,12 +40598,12 @@
           style: createTextStyle(textStyleModel, {
             text: name,
             font: textFont,
-            overflow: 'truncate',
+            overflow: "truncate",
             width: maxWidth,
             ellipsis: ellipsis,
-            fill: textStyleModel.getTextColor() || axisModel.get(['axisLine', 'lineStyle', 'color']),
-            align: textStyleModel.get('align') || labelLayout.textAlign,
-            verticalAlign: textStyleModel.get('verticalAlign') || labelLayout.textVerticalAlign
+            fill: textStyleModel.getTextColor() || axisModel.get(["axisLine", "lineStyle", "color"]),
+            align: textStyleModel.get("align") || labelLayout.textAlign,
+            verticalAlign: textStyleModel.get("verticalAlign") || labelLayout.textVerticalAlign
           }),
           z2: 1
         });
@@ -40385,10 +40614,10 @@
         });
         textEl.__fullText = name;
         // Id for animation
-        textEl.anid = 'name';
-        if (axisModel.get('triggerEvent')) {
+        textEl.anid = "name";
+        if (axisModel.get("triggerEvent")) {
           var eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
-          eventData.targetType = 'axisName';
+          eventData.targetType = "axisName";
           eventData.name = name;
           getECData(textEl).eventData = eventData;
         }
@@ -40404,19 +40633,19 @@
       var textAlign;
       var textVerticalAlign;
       var inverse = extent[0] > extent[1];
-      var onLeft = textPosition === 'start' && !inverse || textPosition !== 'start' && inverse;
+      var onLeft = textPosition === "start" && !inverse || textPosition !== "start" && inverse;
       if (isRadianAroundZero(rotationDiff - PI$4 / 2)) {
-        textVerticalAlign = onLeft ? 'bottom' : 'top';
-        textAlign = 'center';
+        textVerticalAlign = onLeft ? "bottom" : "top";
+        textAlign = "center";
       } else if (isRadianAroundZero(rotationDiff - PI$4 * 1.5)) {
-        textVerticalAlign = onLeft ? 'top' : 'bottom';
-        textAlign = 'center';
+        textVerticalAlign = onLeft ? "top" : "bottom";
+        textAlign = "center";
       } else {
-        textVerticalAlign = 'middle';
+        textVerticalAlign = "middle";
         if (rotationDiff < PI$4 * 1.5 && rotationDiff > PI$4 / 2) {
-          textAlign = onLeft ? 'left' : 'right';
+          textAlign = onLeft ? "left" : "right";
         } else {
-          textAlign = onLeft ? 'right' : 'left';
+          textAlign = onLeft ? "right" : "left";
         }
       }
       return {
@@ -40432,8 +40661,8 @@
       // If min or max are user set, we need to check
       // If the tick on min(max) are overlap on their neighbour tick
       // If they are overlapped, we need to hide the min(max) tick label
-      var showMinLabel = axisModel.get(['axisLabel', 'showMinLabel']);
-      var showMaxLabel = axisModel.get(['axisLabel', 'showMaxLabel']);
+      var showMinLabel = axisModel.get(["axisLabel", "showMinLabel"]);
+      var showMaxLabel = axisModel.get(["axisLabel", "showMaxLabel"]);
       // FIXME
       // Have not consider onBand yet, where tick els is more than label els.
       labelEls = labelEls || [];
@@ -40489,9 +40718,6 @@
       nextRect.applyTransform(mul$1([], mRotationBack, next.getLocalTransform()));
       return firstRect.intersect(nextRect);
     }
-    function isNameLocationCenter(nameLocation) {
-      return nameLocation === 'middle' || nameLocation === 'center';
-    }
     function createTicks(ticksCoords, tickTransform, tickEndCoord, tickLineStyle, anidPrefix) {
       var tickEls = [];
       var pt1 = [];
@@ -40520,27 +40746,27 @@
           silent: true
         });
         subPixelOptimizeLine$1(tickEl.shape, tickEl.style.lineWidth);
-        tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;
+        tickEl.anid = anidPrefix + "_" + ticksCoords[i].tickValue;
         tickEls.push(tickEl);
       }
       return tickEls;
     }
     function buildAxisMajorTicks(group, transformGroup, axisModel, opt) {
       var axis = axisModel.axis;
-      var tickModel = axisModel.getModel('axisTick');
-      var shown = tickModel.get('show');
-      if (shown === 'auto' && opt.handleAutoShown) {
-        shown = opt.handleAutoShown('axisTick');
+      var tickModel = axisModel.getModel("axisTick");
+      var shown = tickModel.get("show");
+      if (shown === "auto" && opt.handleAutoShown) {
+        shown = opt.handleAutoShown("axisTick");
       }
       if (!shown || axis.scale.isBlank()) {
         return;
       }
-      var lineStyleModel = tickModel.getModel('lineStyle');
-      var tickEndCoord = opt.tickDirection * tickModel.get('length');
+      var lineStyleModel = tickModel.getModel("lineStyle");
+      var tickEndCoord = opt.tickDirection * tickModel.get("length");
       var ticksCoords = axis.getTicksCoords();
       var ticksEls = createTicks(ticksCoords, transformGroup.transform, tickEndCoord, defaults(lineStyleModel.getLineStyle(), {
-        stroke: axisModel.get(['axisLine', 'lineStyle', 'color'])
-      }), 'ticks');
+        stroke: axisModel.get(["axisLine", "lineStyle", "color"])
+      }), "ticks");
       for (var i = 0; i < ticksEls.length; i++) {
         group.add(ticksEls[i]);
       }
@@ -40548,21 +40774,21 @@
     }
     function buildAxisMinorTicks(group, transformGroup, axisModel, tickDirection) {
       var axis = axisModel.axis;
-      var minorTickModel = axisModel.getModel('minorTick');
-      if (!minorTickModel.get('show') || axis.scale.isBlank()) {
+      var minorTickModel = axisModel.getModel("minorTick");
+      if (!minorTickModel.get("show") || axis.scale.isBlank()) {
         return;
       }
       var minorTicksCoords = axis.getMinorTicksCoords();
       if (!minorTicksCoords.length) {
         return;
       }
-      var lineStyleModel = minorTickModel.getModel('lineStyle');
-      var tickEndCoord = tickDirection * minorTickModel.get('length');
-      var minorTickLineStyle = defaults(lineStyleModel.getLineStyle(), defaults(axisModel.getModel('axisTick').getLineStyle(), {
-        stroke: axisModel.get(['axisLine', 'lineStyle', 'color'])
+      var lineStyleModel = minorTickModel.getModel("lineStyle");
+      var tickEndCoord = tickDirection * minorTickModel.get("length");
+      var minorTickLineStyle = defaults(lineStyleModel.getLineStyle(), defaults(axisModel.getModel("axisTick").getLineStyle(), {
+        stroke: axisModel.get(["axisLine", "lineStyle", "color"])
       }));
       for (var i = 0; i < minorTicksCoords.length; i++) {
-        var minorTicksEls = createTicks(minorTicksCoords[i], transformGroup.transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i);
+        var minorTicksEls = createTicks(minorTicksCoords[i], transformGroup.transform, tickEndCoord, minorTickLineStyle, "minorticks_" + i);
         for (var k = 0; k < minorTicksEls.length; k++) {
           group.add(minorTicksEls[k]);
         }
@@ -40570,22 +40796,24 @@
     }
     function buildAxisLabel(group, transformGroup, axisModel, opt) {
       var axis = axisModel.axis;
-      var show = retrieve(opt.axisLabelShow, axisModel.get(['axisLabel', 'show']));
+      var show = retrieve(opt.axisLabelShow, axisModel.get(["axisLabel", "show"]));
       if (!show || axis.scale.isBlank()) {
         return;
       }
-      var labelModel = axisModel.getModel('axisLabel');
-      var labelMargin = labelModel.get('margin');
-      var labels = axis.getViewLabels();
+      var labelModel = axisModel.getModel("axisLabel");
+      var labelMargin = labelModel.get("margin");
+      var _a = axis.getViewLabelsAndRotation(),
+        labels = _a.labels,
+        rotation = _a.rotation;
       // Special label rotate.
-      var labelRotation = (retrieve(opt.labelRotate, labelModel.get('rotate')) || 0) * PI$4 / 180;
+      var labelRotation = (opt.labelRotate || labelModel.get("rotate") || rotation || 0) * PI$4 / 180;
       var labelLayout = AxisBuilder.innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
       var rawCategoryData = axisModel.getCategories && axisModel.getCategories(true);
       var labelEls = [];
       var silent = AxisBuilder.isLabelSilent(axisModel);
-      var triggerEvent = axisModel.get('triggerEvent');
+      var triggerEvent = axisModel.get("triggerEvent");
       each(labels, function (labelItem, index) {
-        var tickValue = axis.scale.type === 'ordinal' ? axis.scale.getRawOrdinalNumber(labelItem.tickValue) : labelItem.tickValue;
+        var tickValue = axis.scale.type === "ordinal" ? axis.scale.getRawOrdinalNumber(labelItem.tickValue) : labelItem.tickValue;
         var formattedLabel = labelItem.formattedLabel;
         var rawLabel = labelItem.rawLabel;
         var itemLabelModel = labelModel;
@@ -40595,14 +40823,14 @@
             itemLabelModel = new Model(rawCategoryItem.textStyle, labelModel, axisModel.ecModel);
           }
         }
-        var textColor = itemLabelModel.getTextColor() || axisModel.get(['axisLine', 'lineStyle', 'color']);
+        var textColor = itemLabelModel.getTextColor() || axisModel.get(["axisLine", "lineStyle", "color"]);
         var tickCoord = axis.dataToCoord(tickValue);
-        var align = itemLabelModel.getShallow('align', true) || labelLayout.textAlign;
-        var alignMin = retrieve2(itemLabelModel.getShallow('alignMinLabel', true), align);
-        var alignMax = retrieve2(itemLabelModel.getShallow('alignMaxLabel', true), align);
-        var verticalAlign = itemLabelModel.getShallow('verticalAlign', true) || itemLabelModel.getShallow('baseline', true) || labelLayout.textVerticalAlign;
-        var verticalAlignMin = retrieve2(itemLabelModel.getShallow('verticalAlignMinLabel', true), verticalAlign);
-        var verticalAlignMax = retrieve2(itemLabelModel.getShallow('verticalAlignMaxLabel', true), verticalAlign);
+        var align = itemLabelModel.getShallow("align", true) || labelLayout.textAlign;
+        var alignMin = retrieve2(itemLabelModel.getShallow("alignMinLabel", true), align);
+        var alignMax = retrieve2(itemLabelModel.getShallow("alignMaxLabel", true), align);
+        var verticalAlign = itemLabelModel.getShallow("verticalAlign", true) || itemLabelModel.getShallow("baseline", true) || labelLayout.textVerticalAlign;
+        var verticalAlignMin = retrieve2(itemLabelModel.getShallow("verticalAlignMinLabel", true), verticalAlign);
+        var verticalAlignMax = retrieve2(itemLabelModel.getShallow("verticalAlignMaxLabel", true), verticalAlign);
         var textEl = new ZRText({
           x: tickCoord,
           y: opt.labelOffset + opt.labelDirection * labelMargin,
@@ -40621,17 +40849,17 @@
             // input. But in interval scale the formatted label is like '223,445', which
             // maked user replace ','. So we modify it to return original val but remain
             // it as 'string' to avoid error in replacing.
-            axis.type === 'category' ? rawLabel : axis.type === 'value' ? tickValue + '' : tickValue, index) : textColor
+            axis.type === "category" ? rawLabel : axis.type === "value" ? tickValue + "" : tickValue, index) : textColor
           })
         });
-        textEl.anid = 'label_' + tickValue;
+        textEl.anid = "label_" + tickValue;
         // Pack data for mouse event
         if (triggerEvent) {
           var eventData = AxisBuilder.makeAxisEventDataBase(axisModel);
-          eventData.targetType = 'axisLabel';
+          eventData.targetType = "axisLabel";
           eventData.value = rawLabel;
           eventData.tickIndex = index;
-          if (axis.type === 'category') {
+          if (axis.type === "category") {
             eventData.dataIndex = tickValue;
           }
           getECData(textEl).eventData = eventData;
@@ -40921,6 +41149,8 @@
         var splitLineModel = axisModel.getModel('splitLine');
         var lineStyleModel = splitLineModel.getModel('lineStyle');
         var lineColors = lineStyleModel.get('color');
+        var showMinLine = splitLineModel.get('showMinLine') !== false;
+        var showMaxLine = splitLineModel.get('showMaxLine') !== false;
         lineColors = isArray(lineColors) ? lineColors : [lineColors];
         var gridRect = gridModel.coordinateSystem.getRect();
         var isHorizontal = axis.isHorizontal();
@@ -40933,6 +41163,10 @@
         var lineStyle = lineStyleModel.getLineStyle();
         for (var i = 0; i < ticksCoords.length; i++) {
           var tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
+          if (i === 0 && !showMinLine || i === ticksCoords.length - 1 && !showMaxLine) {
+            continue;
+          }
+          var tickValue = ticksCoords[i].tickValue;
           if (isHorizontal) {
             p1[0] = tickCoord;
             p1[1] = gridRect.y;
@@ -40945,9 +41179,8 @@
             p2[1] = tickCoord;
           }
           var colorIndex = lineCount++ % lineColors.length;
-          var tickValue = ticksCoords[i].tickValue;
           var line = new Line({
-            anid: tickValue != null ? 'line_' + ticksCoords[i].tickValue : null,
+            anid: tickValue != null ? 'line_' + tickValue : null,
             autoBatch: true,
             shape: {
               x1: p1[0],
@@ -41170,6 +41403,7 @@
         if (!labelModel.get('enabled')) {
           return;
         }
+        dom.setAttribute('role', 'img');
         if (labelModel.get('description')) {
           dom.setAttribute('aria-label', labelModel.get('description'));
           return;
@@ -41220,11 +41454,14 @@
               }
               var middleSeparator_1 = labelModel.get(['data', 'separator', 'middle']);
               var endSeparator_1 = labelModel.get(['data', 'separator', 'end']);
+              var excludeDimensionId_1 = labelModel.get(['data', 'excludeDimensionId']);
               var dataLabels = [];
               for (var i = 0; i < data.count(); i++) {
                 if (i < maxDataCnt) {
                   var name_1 = data.getName(i);
-                  var value = data.getValues(i);
+                  var value = !excludeDimensionId_1 ? data.getValues(i) : filter(data.getValues(i), function (v, j) {
+                    return indexOf(excludeDimensionId_1, j) === -1;
+                  });
                   var dataLabel = labelModel.get(['data', name_1 ? 'withName' : 'withoutName']);
                   dataLabels.push(replace(dataLabel, {
                     name: name_1,

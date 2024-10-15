@@ -21,7 +21,7 @@
  * Language: Swedish.
  */
 
-export default  {
+export default {
     time: {
       month: [
         'januari', 'februari', 'mars', 'april', 'maj', 'juni',
