@@ -623,10 +623,10 @@ class ContinuousView extends VisualMapView {
             if (this._orient === 'horizontal') {
                 // If visualMap controls symbol size, an additional offset needs to be added to labels to avoid collision at minimum size.
                 // Offset reaches value of 0 at "maximum" position, so maximum position is not altered at all.
-                const minimumOffset = align === 'left' || align === "top"
+                const minimumOffset = align === 'left' || align === 'top'
                     ? (itemSize[0] - symbolSize) / 2
                     : (itemSize[0] - symbolSize) / -2;
-    
+
                 textPoint[1] += minimumOffset;
             }
 
