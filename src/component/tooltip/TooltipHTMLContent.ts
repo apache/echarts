@@ -461,7 +461,7 @@ class TooltipHTMLContent {
 
     getSize() {
         const el = this.el;
-        return [el?.offsetWidth, el?.offsetHeight];
+        return el ? [el.offsetWidth, el.offsetHeight] : [0, 0];
     }
 
     moveTo(zrX: number, zrY: number) {
@@ -469,7 +469,7 @@ class TooltipHTMLContent {
         makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
-            const style: any = this.el?.style || {};
+            const style: any = this.el ? (this.el.style || {}) : {}
             const transforms = assembleTransform(styleCoord[0], styleCoord[1]) as string[][];
             each(transforms, (transform) => {
               style[transform[0] as any] = transform[1];
