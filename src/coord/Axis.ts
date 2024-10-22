@@ -291,18 +291,30 @@ function fixExtentWithBands(extent: [number, number], nTick: number): void {
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
 function fixOnBandTicksCoords(
-    axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, isCustomIntervalTick:boolean, clamp: boolean
+    axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, isCustomIntervalTick: boolean, clamp: boolean
 ) {
     const ticksLen = ticksCoords.length;
 
-    if (!axis.onBand || alignWithLabel || isCustomIntervalTick || !ticksLen) {
+    if (!axis.onBand || alignWithLabel || !ticksLen) {
         return;
     }
 
     const axisExtent = axis.getExtent();
     let last;
     let diffSize;
-    if (ticksLen === 1) {
+    if (isCustomIntervalTick) {
+        const dataExtent = axis.scale.getExtent();
+        const shift = (axisExtent[1] - axisExtent[0]) / (dataExtent[1] - dataExtent[0] + 1);
+        each(ticksCoords, function (ticksItem) {
+            ticksItem.coord -= shift / 2;
+        });
+        diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
+        last = {
+            coord: ticksCoords[ticksLen - 1].coord + shift
+        };
+        ticksCoords.push(last);
+    }
+    else if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         last = ticksCoords[1] = {coord: axisExtent[1], tickValue: ticksCoords[0].tickValue};
     }
