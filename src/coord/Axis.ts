@@ -17,13 +17,14 @@
 * under the License.
 */
 
-import {each, map} from 'zrender/src/core/util';
+import {each, map, isFunction} from 'zrender/src/core/util';
 import {linearMap, getPixelPrecision, round} from '../util/number';
 import {
     createAxisTicks,
     createAxisLabels,
     calculateCategoryInterval
 } from './axisTickLabelBuilder';
+import { getOptionCategoryInterval } from './axisHelper';
 import Scale from '../scale/Scale';
 import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
@@ -188,9 +189,10 @@ class Axis {
         }, this);
 
         const alignWithLabel = tickModel.get('alignWithLabel');
+        const isCustomIntervalTick = isFunction(getOptionCategoryInterval(tickModel as AxisBaseModel));
 
         fixOnBandTicksCoords(
-            this, ticksCoords, alignWithLabel, opt.clamp
+            this, ticksCoords, alignWithLabel, isCustomIntervalTick, opt.clamp
         );
 
         return ticksCoords;
@@ -289,11 +291,11 @@ function fixExtentWithBands(extent: [number, number], nTick: number): void {
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
 function fixOnBandTicksCoords(
-    axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, clamp: boolean
+    axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, isCustomIntervalTick:boolean, clamp: boolean
 ) {
     const ticksLen = ticksCoords.length;
 
-    if (!axis.onBand || alignWithLabel || !ticksLen) {
+    if (!axis.onBand || alignWithLabel || isCustomIntervalTick || !ticksLen) {
         return;
     }
 
