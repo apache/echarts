@@ -461,10 +461,13 @@ class TooltipHTMLContent {
 
     getSize() {
         const el = this.el;
-        return [el.offsetWidth, el.offsetHeight];
+        return el ? [el.offsetWidth, el.offsetHeight] : [0, 0];
     }
 
     moveTo(zrX: number, zrY: number) {
+        if (!this.el) {
+            return;
+        }
         const styleCoord = this._styleCoord;
         makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
