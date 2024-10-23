@@ -465,11 +465,14 @@ class TooltipHTMLContent {
     }
 
     moveTo(zrX: number, zrY: number) {
+        if (!this.el) {
+            return;
+        }
         const styleCoord = this._styleCoord;
         makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
-            const style: any = this.el ? (this.el.style || {}) : {};
+            const style = this.el.style;
             const transforms = assembleTransform(styleCoord[0], styleCoord[1]) as string[][];
             each(transforms, (transform) => {
               style[transform[0] as any] = transform[1];
