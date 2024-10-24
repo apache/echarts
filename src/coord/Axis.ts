@@ -312,7 +312,10 @@ function fixOnBandTicksCoords(
         last = {
             coord: ticksCoords[ticksLen - 1].coord + shift
         };
-        ticksCoords.push(last);
+        // if the last tick is end of axis show it. Otherwise, the last tick will be hidden.
+        if (last.coord === axisExtent[1]) {
+            ticksCoords.push(last);
+        }
     }
     else if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
