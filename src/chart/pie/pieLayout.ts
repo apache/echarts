@@ -115,6 +115,7 @@ export default function pieLayout(
         const clockwise = seriesModel.get('clockwise');
 
         const roseType = seriesModel.get('roseType');
+        const radiusPercent = seriesModel.get(['itemStyle', 'radiusPercent']);
         const stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // [0...max]
@@ -194,6 +195,25 @@ export default function pieLayout(
                 actualEndAngle = endAngle - halfPadAngle;
             }
 
+            let outerRadius = r;
+            if (radiusPercent != null) {
+                let scale = 0;
+                if (zrUtil.isFunction(radiusPercent)) {
+                    // calculate the radius of the current pie item based on the scale from the user-defined function
+                    scale = radiusPercent(seriesModel.getDataParams(idx)) || 0;
+                }
+                else if (zrUtil.isNumber(radiusPercent)) {
+                    scale = radiusPercent;
+                }
+                // scale should always be between 0 and 1
+                scale = Math.max(0, Math.min(scale, 1));
+                // r0 is used here to scale radius properly in case of 'donut' style.
+                outerRadius = (r - r0) * scale + r0;
+            }
+            else if (roseType) {
+                outerRadius = linearMap(value, extent, [r0, r]);
+            }
+
             data.setItemLayout(idx, {
                 angle: angle,
                 startAngle: actualStartAngle,
@@ -202,9 +222,7 @@ export default function pieLayout(
                 cx: cx,
                 cy: cy,
                 r0: r0,
-                r: roseType
-                    ? linearMap(value, extent, [r0, r])
-                    : r
+                r: outerRadius
             });
 
             currentAngle = endAngle;
