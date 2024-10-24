@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isString, indexOf, each, bind, isFunction, isArray, isDom } from 'zrender/src/core/util';
+import { isString, indexOf, each, bind, isFunction, isArray, isDom, retrieve2 } from 'zrender/src/core/util';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
@@ -152,7 +152,7 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     cssText.push('font:' + textStyleModel.getFont());
 
     // @ts-ignore, leave it to the tooltip refactor.
-    const lineHeight = textStyleModel.get('lineHeight') ?? Math.round(fontSize * 3 / 2);
+    const lineHeight = retrieve2(textStyleModel.get('lineHeight'), Math.round(fontSize * 3 / 2));
 
     fontSize
         && cssText.push('line-height:' + lineHeight + 'px');
