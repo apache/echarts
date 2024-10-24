@@ -19,15 +19,27 @@
 
 // @ts-nocheck
 import * as zrUtil from 'zrender/src/core/util';
+import { getNodeGlobalScale } from '../graph/graphHelper';
+import { GraphNodeItemOption } from './GraphSeries';
 
 const KEY_DELIMITER = '-->';
+
 /**
- * params handler
+ * curveness params handler
  * @param {module:echarts/model/SeriesModel} seriesModel
  * @returns {*}
  */
 const getAutoCurvenessParams = function (seriesModel) {
     return seriesModel.get('autoCurveness') || null;
+};
+
+/**
+ * offset params handler
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @returns {*}
+ */
+const getAutoOffsetParams = function (seriesModel) {
+    return seriesModel.get('autoOffset') || null;
 };
 
 /**
@@ -63,6 +75,35 @@ const createCurveness = function (seriesModel, appendLength) {
         curvenessList.push((i % 2 ? i + 1 : i) / 10 * (i % 2 ? -1 : 1));
     }
     seriesModel.__curvenessList = curvenessList;
+};
+
+/**
+ * Generates a list of edge offsets
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @param {number} appendLength
+ * @return  appendLength => [0, -offset, offset, -2*offset, 2*offset, ...]
+ */
+const createOffsets = function (seriesModel, appendLength) {
+    const autoOffsetParams = getAutoOffsetParams(seriesModel);
+    const length = appendLength;
+    const offsetList = [0];
+    let offsetStep = 0;
+
+    if (zrUtil.isNumber(autoOffsetParams)) {
+        offsetStep = autoOffsetParams;
+    }
+    if (zrUtil.isArray(autoOffsetParams)) {
+        seriesModel.__offsetList = autoOffsetParams;
+        return;
+    }
+
+    // make sure the length is odd
+    const len = length % 2 ? length : length + 1;
+
+    for (let i = 1; i < len / 2; i++) {
+        offsetList.push(-i * offsetStep, i * offsetStep);
+    }
+    seriesModel.__offsetList = offsetList;
 };
 
 /**
@@ -126,11 +167,12 @@ const getEdgeMapLengthWithKey = function (key, seriesModel) {
  * @param {module:echarts/model/SeriesModel} seriesModel
  */
 export function initCurvenessList(seriesModel) {
-    if (!getAutoCurvenessParams(seriesModel)) {
+    if (!(getAutoCurvenessParams(seriesModel) || getAutoOffsetParams(seriesModel))) {
         return;
     }
 
     seriesModel.__curvenessList = [];
+    seriesModel.__offsetList = [];
     seriesModel.__edgeMap = {};
     // calc the array of curveness List
     createCurveness(seriesModel);
@@ -144,7 +186,7 @@ export function initCurvenessList(seriesModel) {
  * @param {number} index
  */
 export function createEdgeMapForCurveness(n1, n2, seriesModel, index) {
-    if (!getAutoCurvenessParams(seriesModel)) {
+    if (!(getAutoCurvenessParams(seriesModel) || getAutoOffsetParams(seriesModel))) {
         return;
     }
 
@@ -156,6 +198,7 @@ export function createEdgeMapForCurveness(n1, n2, seriesModel, index) {
         edgeMap[key].isForward = true;
     }
     else if (oppositeEdges && edgeMap[key]) {
+        // NOTE: not necessary
         oppositeEdges.isForward = true;
         edgeMap[key].isForward = false;
     }
@@ -199,7 +242,6 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse?: bool
     const curvenessList = seriesModel.__curvenessList;
     // if pass array no need parity
     const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
-
     if (!edgeArray.isForward) {
         // the opposite edge show outside
         const oppositeKey = getOppositeKey(curKey);
@@ -226,5 +268,58 @@ export function getCurvenessForEdge(edge, seriesModel, index, needReverse?: bool
     }
     else {
         return curvenessList[parityCorrection + edgeIndex];
+    }
+}
+
+/**
+ * get offset for edge
+ * @param edge
+ * @param {module:echarts/model/SeriesModel} seriesModel
+ * @param index
+ */
+export function getOffsetForEdge(edge, seriesModel, index) {
+    const autoOffsetParams = getAutoOffsetParams(seriesModel);
+    const isArrayParam = zrUtil.isArray(autoOffsetParams);
+    if (!autoOffsetParams) {
+        return null;
+    }
+
+    const edgeArray = getEdgeFromMap(edge, seriesModel);
+    if (!edgeArray) {
+        return null;
+    }
+
+    let edgeIndex = -1;
+    for (let i = 0; i < edgeArray.length; i++) {
+        if (edgeArray[i] === index) {
+            edgeIndex = i;
+            break;
+        }
+    }
+    // if totalLen is Longer createOffsets
+    const totalLen = getTotalLengthBetweenNodes(edge, seriesModel);
+    const nodesSizes = [edge.node1, edge.node2].map(node => {
+        let symbolSize = node.getModel<GraphNodeItemOption>().get('symbolSize');
+        if (symbolSize instanceof Array) {
+            symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
+        }
+        return +symbolSize;
+    });
+
+    createOffsets(seriesModel, totalLen);
+    edge.lineStyle = edge.lineStyle || {};
+    // if is opposite edge, must set curvenss to opposite number
+    const curKey = getKeyOfEdges(edge.node1, edge.node2, seriesModel);
+    const offsetList = seriesModel.__offsetList;
+    // if pass array no need parity
+    const parityCorrection = isArrayParam ? 0 : totalLen % 2 ? 0 : 1;
+    if (!edgeArray.isForward) {
+        // the opposite edge show outside
+        const oppositeKey = getOppositeKey(curKey);
+        const len = getEdgeMapLengthWithKey(oppositeKey, seriesModel);
+        return -offsetList[edgeIndex + len + parityCorrection] * getNodeGlobalScale(seriesModel);
+    }
+    else {
+        return offsetList[parityCorrection + edgeIndex] * getNodeGlobalScale(seriesModel);
     }
 }
