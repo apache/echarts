@@ -250,7 +250,6 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
     // @ts-ignore
     breakArea(axisView, axisGroup, axisModel, gridModel, api) {
         const scale = axisModel.axis.scale;
-        console.log(scale)
         if (scale.type !== 'ordinal') {
             rectCoordBuildBreakAxis(axisGroup, axisModel, gridModel, api);
         }

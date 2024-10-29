@@ -146,12 +146,10 @@ export function normalize(
     let beforeBreakRange = 0;
     for (let i = 0; i < unexpandedBreaks.length; ++i) {
         const brk = unexpandedBreaks[i];
-        if (!brk.isExpanded) {
-            if (brk.gap < 0) {
-                warn('Break axis gap should not be negative');
-            }
-            beforeBreakRange += brk.end - brk.start - brk.gap;
+        if (brk.gap < 0) {
+            warn('Break axis gap should not be negative');
         }
+        beforeBreakRange += brk.end - brk.start - brk.gap;
     }
     const beforeValueRange = Math.max(0, extent[1] - extent[0] - beforeBreakRange);
 
@@ -160,9 +158,6 @@ export function normalize(
     let lastBreakEnd = extent[0];
     for (let i = 0; i < unexpandedBreaks.length; i++) {
         const brk = unexpandedBreaks[i];
-        if (brk.isExpanded) {
-            continue;
-        }
         if (val <= brk.end) {
             if (val > brk.start) {
                 elapsedVal += brk.start - lastBreakEnd
