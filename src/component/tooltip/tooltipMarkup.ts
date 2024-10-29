@@ -46,7 +46,7 @@ function getTooltipLineHeight(
     textStyle: TooltipOption['textStyle']
 ) {
     const lineHeight = textStyle.lineHeight;
-    if (lineHeight === undefined || lineHeight === null) {
+    if (lineHeight == null) {
         return TOOLTIP_LINE_HEIGHT_CSS;
     }
     else {
