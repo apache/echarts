@@ -308,12 +308,12 @@ function fixOnBandTicksCoords(
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
         });
-        diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
         last = {
-            coord: ticksCoords[ticksLen - 1].coord + shift
+            coord: axisExtent[1],
+            tickValue: dataExtent[1] + 1
         };
-        // if the last tick is end of axis show it. Otherwise, the last tick will be hidden.
-        if (last.coord === axisExtent[1]) {
+        // if have tick add last tick
+        if (ticksCoords.length) {
             ticksCoords.push(last);
         }
     }
