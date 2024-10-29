@@ -35,6 +35,15 @@ class DataZoomView extends ComponentView {
         this.dataZoomModel = dataZoomModel;
         this.ecModel = ecModel;
         this.api = api;
+
+        // force to refresh the chart 
+        this.api.dispatchAction({
+            type: 'dataZoom',
+            batch: [{
+                start: 0,
+                end: 100
+            }]
+        });
     }
 
 }
