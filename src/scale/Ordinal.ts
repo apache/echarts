@@ -161,7 +161,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @return raw ordinal number.
      */
     scale(val: number): OrdinalNumber {
-        val = Math.round(scaleHelper.scale(val, this._extent));
+        val = Math.round(scaleHelper.scale(val, this._extent, this._breaks));
         return this.getRawOrdinalNumber(val);
     }
 
@@ -171,9 +171,11 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         let rank = extent[0];
 
         while (rank <= extent[1]) {
-            ticks.push({
-                value: rank
-            });
+            if (this.getBreakIndex(rank) < 0) {
+                ticks.push({
+                    value: rank
+                });
+            }
             rank++;
         }
 

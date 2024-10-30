@@ -18,9 +18,12 @@
 */
 
 import {getPrecision, round, nice, quantityExponent} from '../util/number';
+import { OrdinalNumber, ScaleBreak } from '../util/types';
+import { warn } from '../util/log';
 import IntervalScale from './Interval';
 import LogScale from './Log';
 import Scale from './Scale';
+import { filter } from 'zrender/src/core/util';
 
 type intervalScaleNiceTicksResult = {
     interval: number,
@@ -48,6 +51,7 @@ export function isIntervalOrLogScale(scale: Scale): scale is LogScale | Interval
  */
 export function intervalScaleNiceTicks(
     extent: [number, number],
+    spanWithoutBreaks: number,
     splitNumber: number,
     minInterval?: number,
     maxInterval?: number
@@ -55,8 +59,7 @@ export function intervalScaleNiceTicks(
 
     const result = {} as intervalScaleNiceTicksResult;
 
-    const span = extent[1] - extent[0];
-    let interval = result.interval = nice(span / splitNumber, true);
+    let interval = result.interval = nice(spanWithoutBreaks / splitNumber, true);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
     }
@@ -126,13 +129,103 @@ export function contain(val: number, extent: [number, number]): boolean {
     return val >= extent[0] && val <= extent[1];
 }
 
-export function normalize(val: number, extent: [number, number]): number {
+export function normalize(
+    val: number,
+    extent: [number, number],
+    breaks?: ScaleBreak[]
+): number {
     if (extent[1] === extent[0]) {
         return 0.5;
     }
-    return (val - extent[0]) / (extent[1] - extent[0]);
+    const unexpandedBreaks = filter(breaks || [], brk => !brk.isExpanded);
+    if (unexpandedBreaks.length === 0) {
+        // console.log(`val: ${val}, extent: ${extent} => ${val / (extent[1] - extent[0])}`);
+        return (val - extent[0]) / (extent[1] - extent[0]);
+    }
+
+    let beforeBreakRange = 0;
+    for (let i = 0; i < unexpandedBreaks.length; ++i) {
+        const brk = unexpandedBreaks[i];
+        if (brk.gap < 0) {
+            warn('Break axis gap should not be negative');
+        }
+        beforeBreakRange += brk.end - brk.start - brk.gap;
+    }
+    const beforeValueRange = Math.max(0, extent[1] - extent[0] - beforeBreakRange);
+
+    // If the value is in the break, return the normalized value in the break
+    let elapsedVal = 0;
+    let lastBreakEnd = extent[0];
+    for (let i = 0; i < unexpandedBreaks.length; i++) {
+        const brk = unexpandedBreaks[i];
+        if (val <= brk.end) {
+            if (val > brk.start) {
+                elapsedVal += brk.start - lastBreakEnd
+                    + (val - brk.start) / (brk.end - brk.start) * brk.gap;
+            }
+            else {
+                elapsedVal += val - lastBreakEnd;
+            }
+            lastBreakEnd = brk.end;
+            break;
+        }
+        elapsedVal += brk.start - lastBreakEnd + brk.gap;
+        lastBreakEnd = brk.end;
+    }
+    const lastBreak = unexpandedBreaks[unexpandedBreaks.length - 1];
+    if (val >= lastBreak.end) {
+        elapsedVal += val - lastBreak.end;
+    }
+    return Math.min(1, elapsedVal / beforeValueRange);
 }
 
-export function scale(val: number, extent: [number, number]): number {
-    return val * (extent[1] - extent[0]) + extent[0];
+export function scale(
+    val: number,
+    extent: [number, number],
+    breaks?: ScaleBreak[]
+): number {
+    return val * getExtentSpanWithoutBreaks(extent, breaks) + extent[0];
+}
+
+export function getExtentSpanWithoutBreaks(extent: [number, number], breaks: ScaleBreak[]): number {
+    // When breaks is defined, calculate the sum of break gaps
+    let span = extent[1] - extent[0];
+    if (!isFinite(span)) {
+        return span;
+    }
+    for (let i = 0; i < breaks.length; i++) {
+        const brk = breaks[i];
+        if (!brk.isExpanded) {
+            span -= breaks[i].end - breaks[i].start - breaks[i].gap;
+        }
+    }
+    return span;
+}
+
+export function adjustInBreakPosition(
+    normalizedData: OrdinalNumber,
+    extent: [number, number],
+    breaks: ScaleBreak[],
+    breakIndex: number,
+    inBreakPosition: 'start' | 'center' | 'end'
+) {
+    inBreakPosition = inBreakPosition || 'center';
+    const span = getExtentSpanWithoutBreaks(extent, breaks);
+    const brk = breaks[breakIndex];
+    const bandWidth = 1 / span * brk.gap;
+
+    // if (inBreakPosition === 'start') {
+    //     // return normalizedData - bandWidth;
+    //     return normalizedData;
+    // }
+    if (inBreakPosition === 'end') {
+        return normalizedData + bandWidth;
+    }
+    if (inBreakPosition === 'center') {
+        return normalizedData + bandWidth / 2;
+    }
+    // if (normalizedData === 1) {
+    //     return normalizedData + bandWidth;
+    // }
+    return normalizedData;
 }

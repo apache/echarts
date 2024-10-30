@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+        <div id="main1"></div>
+
+
+        <div id="main2"></div>
+
+
+        <div id="main3"></div>
+<!--
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                animation: 0,
+                grid: {
+                    left: 100,
+                    width: 800,
+                    top: 50,
+                    height: 300
+                },
+                xAxis: {
+                    data: ['a', 'b', 'c', 'd'],
+                    // axisTick: {
+                    //     show: false
+                    // }
+                    breaks: [{
+                        start: 1,
+                        end: 3,
+                        gap: 0.2
+                    }]
+                },
+                yAxis: {
+                    triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
+                    breaks: [{
+                        start: 20,
+                        end: 260,
+                        gap: 10
+                    }]
+                },
+                series: [{
+                    type: 'bar',
+                    data: [100, 200, 300, 400],
+                    barWidth: 100,
+                    // label: {
+                    //     show: true,
+                    //     position: 'top'
+                    // }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'yAxis with breaks'
+                ],
+                option: option,
+                width: 1000,
+                height: 400
+            });
+        });
+        </script> -->
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                animation: 0,
+                xAxis: {
+                    data: ['a', 'b', 'c', 'd', 'e'],
+                    axisTick: {
+                        show: false
+                    }
+                },
+                yAxis: {
+                    triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
+                    breaks: [{
+                        start: 100,
+                        end: 2300,
+                        gap: 10
+                    }, {
+                        start: 2400,
+                        end: 7400,
+                        gap: 0
+                    }]
+                },
+                series: [{
+                    type: 'bar',
+                    data: [12, 88, 650, 1200, 7435],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
+                }, {
+                    type: 'line',
+                    data: [12, 88, 650, 1200, 7435]
+                }, {
+                    type: 'scatter',
+                    data: [12, 88, 650, 1200, 7435],
+                    symbolSize: 30
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'yAxis with breaks'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                animation: 0,
+                yAxis: {
+                    data: ['a', 'b', 'c', 'd', 'e'],
+                    axisTick: {
+                        show: false
+                    }
+                },
+                xAxis: {
+                    triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
+                    breaks: [{
+                        start: 100,
+                        end: 2300,
+                        gap: 10
+                    }, {
+                        start: 2400,
+                        end: 7400,
+                        gap: 0
+                    }]
+                },
+                series: [{
+                    type: 'bar',
+                    data: [12, 88, 650, 1200, 7435],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
+                }, {
+                    type: 'line',
+                    data: [12, 88, 650, 1200, 7435]
+                }, {
+                    type: 'scatter',
+                    data: [12, 88, 650, 1200, 7435],
+                    symbolSize: 30
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'xAxis with breaks'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                let option;
+
+                const xData = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+                const xAxis = {
+                    data: xData,
+                    axisTick: {
+                    },
+                    breaks: [{
+                        start: 1,
+                        end: 2,
+                        gap: 0.2
+                    }, {
+                        start: 4,
+                        end: 6,
+                        gap: 0
+                    }],
+                    axisLabel: {
+                        breakFormatter: (value, index, start, end, gap) => {
+                            return index === 1 ? 'b' : 'e~f'
+                        }
+                    }
+                };
+
+                option = {
+                    title: [{
+                        text: 'xAxis.boundaryGap: true',
+                        left: '25%',
+                        textAlign: 'center'
+                    }, {
+                        text: 'xAxis.boundaryGap: false',
+                        left: '75%',
+                        textAlign: 'center'
+                    }],
+                    animation: 0,
+                    grid: [{
+                        left: 100,
+                        right: '55%'
+                    }, {
+                        right: 150,
+                        left: '55%'
+                    }],
+                    xAxis: [{
+                        gridIndex: 0,
+                        boundaryGap: true,
+                        ...xAxis
+                    }, {
+                        gridIndex: 1,
+                        boundaryGap: false,
+                        ...xAxis
+                    }],
+                    yAxis: [{
+                        gridIndex: 0
+                    }, {
+                        gridIndex: 1
+                    }],
+                    series: [{
+                        type: 'bar',
+                        data: [12, 88, 65, 120, 200, 40, 75],
+                        label: {
+                            show: true,
+                            position: 'top'
+                        },
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        type: 'line',
+                        data: [12, 88, 65, 120, 200, 40, 75],
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        type: 'scatter',
+                        data: [12, 88, 65, 120, 200, 40, 75],
+                        symbolSize: 30,
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, {
+                        type: 'bar',
+                        data: [12, 88, 65, 120, 200, 40, 75],
+                        label: {
+                            show: true,
+                            position: 'top'
+                        },
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }, {
+                        type: 'line',
+                        data: [12, 88, 65, 120, 200, 40, 75],
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }, {
+                        type: 'scatter',
+                        data: [12, 88, 65, 120, 200, 40, 75],
+                        symbolSize: 30,
+                        xAxisIndex: 1,
+                        yAxisIndex: 1
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Category break axis',
+                        'Break axis is not supported.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                let option;
+
+                const data = [];
+                const date = new Date('2024-04-09 9:30:00');
+                const endTime = new Date('2024-04-09 15:00:00').getTime();
+                const breakStart = new Date('2024-04-09 11:30:00');
+                const breakEnd = new Date('2024-04-09 13:00:00');
+                for (let val = 1669; date.getTime() <= endTime; ) {
+                    if (date <= breakStart || date >= breakEnd) {
+                        val = val + Math.floor((Math.random() - 0.5 * Math.sin(val / 1000)) * 20 * 100) / 100;
+                        data.push([date.getTime(), val]);
+                    }
+                    date.setMinutes(date.getMinutes() + 1);
+                }
+
+                option = {
+                    tooltip: {
+                        show: true,
+                        trigger: 'axis',
+                    },
+                    xAxis: [{
+                        type: 'time',
+                        axisLabel: {
+                            showMinLabel: true,
+                            showMaxLabel: true,
+                            breakFormatter: (value, index, start, end, gap) => {
+                                console.log(value, index, start, end, gap);
+                            }
+                        },
+                        breaks: [{
+                            start: breakStart,
+                            end: breakEnd,
+                            gap: 0
+                        }]
+                    }],
+                    yAxis: {
+                        type: 'value',
+                        min: 'dataMin',
+                        axisLabel: {
+                            formatter: n => n.toFixed(2)
+                        }
+                    },
+                    series: [{
+                        type: 'line',
+                        data: data,
+                        symbolSize: 0
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Intraday stock chart'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+    </body>
+</html>
+

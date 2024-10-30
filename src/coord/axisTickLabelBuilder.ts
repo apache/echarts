@@ -77,7 +77,9 @@ export function createAxisLabels(axis: Axis): {
         level?: number,
         formattedLabel: string,
         rawLabel: string,
-        tickValue: number
+        tickValue: number,
+        breakStart?: number,
+        breakEnd?: number
     }[],
     labelCategoryInterval?: number
 } {
@@ -125,9 +127,30 @@ export function createAxisTicks(axis: Axis, tickModel: AxisBaseModel): {
         };
     }
     // Only ordinal scale support tick interval
-    return axis.type === 'category'
-        ? makeCategoryTicks(axis, tickModel)
-        : {ticks: zrUtil.map(axis.scale.getTicks(), tick => tick.value) };
+    if (axis.type === 'category') {
+        return makeCategoryTicks(axis, tickModel);
+    }
+
+    const ticks = axis.scale.getTicks();
+    // Remove the break axis ticks because it's rendered using zigzag line
+    const filteredTicks = [];
+    for (let i = 0; i < ticks.length; ++i) {
+        if (ticks[i].breakStart != null
+            || i > 0 && ticks[i - 1].breakStart != null
+            && ticks[i].value >= ticks[i - 1].breakStart
+            && ticks[i].value <= ticks[i - 1].breakEnd
+            || i < ticks.length - 1 && ticks[i + 1].breakStart != null
+            && ticks[i].value >= ticks[i + 1].breakStart
+            && ticks[i].value <= ticks[i + 1].breakEnd
+        ) {
+            // Current is in a break, ignore
+            continue;
+        }
+        else {
+            filteredTicks.push(ticks[i].value);
+        }
+    }
+    return {ticks: filteredTicks};
 }
 
 function makeCategoryLabels(axis: Axis) {
@@ -169,6 +192,7 @@ function makeCategoryLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption
 function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
     const ticksCache = getListCache(axis, 'ticks');
     const optionTickInterval = getOptionCategoryInterval(tickModel);
+    // TODO: cache could consider breaks
     const result = listCacheGet(ticksCache, optionTickInterval as CacheKey);
 
     if (result) {
@@ -202,6 +226,10 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
         ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
     }
 
+    ticks = zrUtil.filter(ticks, tick => {
+        return axis.scale.getBreakIndex(tick) < 0;
+    });
+
     // Cache to avoid calling interval function repeatedly.
     return listCacheSet(ticksCache, optionTickInterval as CacheKey, {
         ticks: ticks, tickCategoryInterval: tickCategoryInterval
@@ -217,7 +245,9 @@ function makeRealNumberLabels(axis: Axis) {
                 level: tick.level,
                 formattedLabel: labelFormatter(tick, idx),
                 rawLabel: axis.scale.getLabel(tick),
-                tickValue: tick.value
+                tickValue: tick.value,
+                breakStart: tick.breakStart,
+                breakEnd: tick.breakEnd
             };
         })
     };
@@ -380,6 +410,7 @@ function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: numbe
     const ordinalExtent = ordinalScale.getExtent();
     const labelModel = axis.getLabelModel();
     const result: (MakeLabelsResultObj | number)[] = [];
+    const scale = axis.scale as OrdinalScale;
 
     // TODO: axisType: ordinalTime, pick the tick from each month/day/year/...
 
@@ -418,16 +449,40 @@ function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: numbe
         addItem(ordinalExtent[1]);
     }
 
+    const breaks = scale.getBreaks();
+    const breakLabelFormatter = labelModel.get('breakFormatter');
+    const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
+    for (let i = 0; i < breaks.length; ++i) {
+        const brk = breaks[i];
+        if (brk.isExpanded) {
+            continue;
+        }
+        const label = breakLabelFormatter ? breakLabelFormatter(
+            brk.start,
+            brk.start - categoryTickStart,
+            brk.start,
+            brk.end,
+            brk.gap
+        ) : '';
+        result.push(onlyTick ? tickValue : {
+            formattedLabel: label,
+            rawLabel: ordinalScale.getLabel({ value: brk.start }),
+            tickValue: brk.start
+        });
+    }
+
     function addItem(tickValue: number) {
-        const tickObj = { value: tickValue };
-        result.push(onlyTick
-            ? tickValue
-            : {
-                formattedLabel: labelFormatter(tickObj),
-                rawLabel: ordinalScale.getLabel(tickObj),
-                tickValue: tickValue
-            }
-        );
+        if (scale.getBreakIndex(tickValue) < 0) {
+            const tickObj = { value: tickValue };
+            result.push(onlyTick
+                ? tickValue
+                : {
+                    formattedLabel: labelFormatter(tickObj),
+                    rawLabel: ordinalScale.getLabel(tickObj),
+                    tickValue: tickValue
+                }
+            );
+        }
     }
 
     return result;
@@ -447,11 +502,12 @@ function makeLabelsByCustomizedCategoryInterval(axis: Axis, categoryInterval: Ca
     const ordinalScale = axis.scale;
     const labelFormatter = makeLabelFormatter(axis);
     const result: (MakeLabelsResultObj | number)[] = [];
+    const scale = axis.scale as OrdinalScale;
 
     zrUtil.each(ordinalScale.getTicks(), function (tick) {
         const rawLabel = ordinalScale.getLabel(tick);
         const tickValue = tick.value;
-        if (categoryInterval(tick.value, rawLabel)) {
+        if (categoryInterval(tick.value, rawLabel) && !scale.getBreakIndex(tickValue)) {
             result.push(
                 onlyTick
                 ? tickValue
