@@ -121,6 +121,8 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         out = out || [];
         const xVal = data[0];
         const yVal = data[1];
+        const xAxis = this.getAxis('x');
+        const yAxis = this.getAxis('y');
         // Fast path
         if (this._transform
             // It's supported that if data is like `[Inifity, 123]`, where only Y pixel calculated.
@@ -128,11 +130,11 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
             && isFinite(xVal as number)
             && yVal != null
             && isFinite(yVal as number)
+            && xAxis.scale.getBreaks().length === 0
+            && yAxis.scale.getBreaks().length === 0
         ) {
             return applyTransform(out, data as number[], this._transform);
         }
-        const xAxis = this.getAxis('x');
-        const yAxis = this.getAxis('y');
         out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(xVal, clamp));
         out[1] = yAxis.toGlobalCoord(yAxis.dataToCoord(yVal, clamp));
         return out;
