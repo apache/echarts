@@ -1,0 +1,122 @@
+html, body, #main, #main2 {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+
+.clearfix {
+    clear: both;
+}
+
+.tooltip-content {
+    line-height: 1;
+}
+
+.tooltip-name-size-14 {
+    font-size: 14px;
+}
+
+.tooltip-name-color-666 {
+    color: #6e7079;
+}
+
+.tooltip-name-size-12 {
+    font-size: 12px;
+}
+
+.tooltip-name-weight-400 {
+    font-weight: 400;
+}
+
+.tooltip-value-color-464646 {
+    color: #464646;
+}
+
+.tooltip-value-size-14 {
+    font-size: 14px;
+}
+
+.tooltip-value-weight-900 {
+    font-weight: 900;
+}
+
+.margin-top-0 {
+    margin-top: 0px;
+}
+
+.tooltip-value-right {
+    float: right;
+    margin-left: 20px; /* Adjust as needed */
+}
+
+.tooltip-value-left {
+    float: left;
+    margin-right: 20px; /* Adjust as needed */
+}
+
+.tooltip-marker,
+.tooltip-marker-sub {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.tooltip-marker {
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+}
+
+.tooltip-marker-sub {
+    margin-left: 3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 2px;
+}
+
+/* Color styles for markers */
+.tooltip-marker-color-6e7079 {
+    background-color: #6e7079;
+}
+
+/* Base styles for the arrow */
+.tooltip-arrow {
+    position: absolute;
+    width: 6px; /* Adjust as needed */
+    height: 6px; /* Adjust as needed */
+    z-index: -1;
+}
+
+/* Horizontal arrow styles */
+.tooltip-arrow-horizontal {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Vertical arrow styles */
+.tooltip-arrow-vertical {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Rotation styles */
+.tooltip-arrow-rotate-225 {
+    transform: translateY(-50%) rotate(225deg);
+}
+
+.tooltip-arrow-rotate-45 {
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.tooltip-arrow-rotate--225 {
+    transform: translateY(-50%) rotate(-225deg);
+}
+
+.tooltip-arrow-rotate--45 {
+    transform: translateY(-50%) rotate(-45deg);
+}
+
+.tooltip-arrow-background-color-fff {
+    background-color: #ffffff;
+}

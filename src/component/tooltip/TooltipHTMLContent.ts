@@ -58,6 +58,22 @@ function mirrorPos(pos: string): string {
     return pos;
 }
 
+function calculateArrowOffset(rotatedWH: number, borderWidth: number, arrowWH: number) {
+    return Math.round(
+        (
+            ((rotatedWH - Math.SQRT2 * borderWidth) / 2
+                + Math.SQRT2 * borderWidth
+                - (rotatedWH - arrowWH) / 2)
+            * 100
+        ) / 100
+    );
+}
+
+function getColorClassName(color: ZRColor) {
+    const colorValue = convertToColorString(color);
+    return colorValue.replace(/[^a-zA-Z0-9]/g, '');
+}
+
 function assembleArrow(
     tooltipModel: Model<TooltipOption>,
     borderColor: ZRColor,
@@ -73,34 +89,33 @@ function assembleArrow(
     borderColor = convertToColorString(borderColor);
     const arrowPos = mirrorPos(arrowPosition);
     const arrowSize = Math.max(Math.round(borderWidth) * 1.5, 6);
-    let positionStyle = '';
-    let transformStyle = CSS_TRANSFORM_VENDOR + ':';
+
+    const arrowClasses = ['tooltip-arrow'];
+    const transformClasses = [];
     let rotateDeg;
-    if (indexOf(['left', 'right'], arrowPos) > -1) {
-        positionStyle += 'top:50%';
-        transformStyle += `translateY(-50%) rotate(${rotateDeg = arrowPos === 'left' ? -225 : -45}deg)`;
+
+    if (['left', 'right'].includes(arrowPos)) {
+        arrowClasses.push('tooltip-arrow-horizontal');
+        transformClasses.push(`tooltip-arrow-rotate-${rotateDeg = arrowPos === 'left' ? -225 : -45}`);
     }
     else {
-        positionStyle += 'left:50%';
-        transformStyle += `translateX(-50%) rotate(${rotateDeg = arrowPos === 'top' ? 225 : 45}deg)`;
+        arrowClasses.push('tooltip-arrow-vertical');
+        transformClasses.push(`tooltip-arrow-rotate-${rotateDeg = arrowPos === 'top' ? 225 : 45}`);
     }
+
     const rotateRadian = rotateDeg * Math.PI / 180;
     const arrowWH = arrowSize + borderWidth;
     const rotatedWH = arrowWH * Math.abs(Math.cos(rotateRadian)) + arrowWH * Math.abs(Math.sin(rotateRadian));
-    const arrowOffset = Math.round(((rotatedWH - Math.SQRT2 * borderWidth) / 2
-        + Math.SQRT2 * borderWidth - (rotatedWH - arrowWH) / 2) * 100) / 100;
-    positionStyle += `;${arrowPos}:-${arrowOffset}px`;
+    const arrowOffset = calculateArrowOffset(rotatedWH, borderWidth, arrowWH);
 
-    const borderStyle = `${borderColor} solid ${borderWidth}px;`;
-    const styleCss = [
-        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;z-index:-1;`,
-        `${positionStyle};${transformStyle};`,
-        `border-bottom:${borderStyle}`,
-        `border-right:${borderStyle}`,
-        `background-color:${backgroundColor};`
-    ];
+    arrowClasses.push(`tooltip-arrow-offset-${arrowPos}-${arrowOffset}`);
 
-    return `<div style="${styleCss.join('')}"></div>`;
+    const borderColorClass = `tooltip-arrow-border-color-${getColorClassName(borderColor)}`;
+    const backgroundColorClass = `tooltip-arrow-background-color-${getColorClassName(backgroundColor)}`;
+
+    const classes = [...arrowClasses, borderColorClass, backgroundColorClass, ...transformClasses];
+
+    return `<div class="${classes.join(' ')}"></div>`;
 }
 
 function assembleTransition(duration: number, onlyFade?: boolean): string {
@@ -418,24 +433,53 @@ class TooltipHTMLContent {
         borderColor?: ZRColor,
         arrowPosition?: TooltipOption['position']
     ) {
+        function clearContent(el: HTMLElement) {
+            while (el.firstChild) {
+                el.removeChild(el.firstChild);
+            }
+        }
+
+        function setTextContent(el: HTMLElement, text: string) {
+            clearContent(el);
+
+            const fragment = document.createRange().createContextualFragment(text);
+            while (fragment.firstChild) {
+                el.appendChild(fragment.firstChild);
+            }
+        }
+
+        function appendArrow(el: HTMLElement, arrow: string) {
+            if (!arrow) {
+                return;
+            }
+            const arrowEl = document.createElement('div');
+            arrowEl.classList.add('tooltip-arrow');
+            arrowEl.innerHTML = arrow;
+            el.appendChild(arrowEl);
+        }
+
         const el = this.el;
 
         if (content == null) {
-            el.innerHTML = '';
+            clearContent(el);
             return;
         }
 
         let arrow = '';
-        if (isString(arrowPosition) && tooltipModel.get('trigger') === 'item'
-            && !shouldTooltipConfine(tooltipModel)) {
+        if (
+            isString(arrowPosition)
+            && tooltipModel.get('trigger') === 'item'
+            && !shouldTooltipConfine(tooltipModel)
+        ) {
             arrow = assembleArrow(tooltipModel, borderColor, arrowPosition);
         }
         if (isString(content)) {
-            el.innerHTML = content + arrow;
+            setTextContent(el, content);
+            appendArrow(el, arrow);
         }
         else if (content) {
             // Clear previous
-            el.innerHTML = '';
+            clearContent(el);
             if (!isArray(content)) {
                 content = [content];
             }
@@ -448,9 +492,7 @@ class TooltipHTMLContent {
             if (arrow && el.childNodes.length) {
                 // no need to create a new parent element, but it's not supported by IE 10 and older.
                 // const arrowEl = document.createRange().createContextualFragment(arrow);
-                const arrowEl = document.createElement('div');
-                arrowEl.innerHTML = arrow;
-                el.appendChild(arrowEl);
+                appendArrow(el, arrow);
             }
         }
     }
