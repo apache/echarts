@@ -165,6 +165,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         const innerTicks = getIntervalTicks(
             this._minLevelUnit,
             this._approxInterval,
+            this._isIntervalCustom ? interval : null,
             useUTC,
             extent
         );
@@ -429,6 +430,7 @@ function getFirstTimestampOfUnit(date: Date, unitName: TimeUnit, isUTC: boolean)
 function getIntervalTicks(
     bottomUnitName: TimeUnit,
     approxInterval: number,
+    customInterval: number | null,
     isUTC: boolean,
     extent: number[]
 ): TimeScaleTick[] {
@@ -437,7 +439,10 @@ function getIntervalTicks(
     // const bottomPrimaryUnitName = getPrimaryTimeUnit(bottomUnitName);
 
     interface InnerTimeTick extends TimeScaleTick {
-        notAdd?: boolean
+        // The notAdd field has been replaced with startDate so that the countdown does not start over with
+        // the start of a new higher level unit
+        // notAdd?: boolean;
+        startDate?: boolean;
     }
 
     let iter = 0;
@@ -471,8 +476,15 @@ function getIntervalTicks(
         // This extra tick is for calcuating ticks of next level. Will not been added to the final result
         out.push({
             value: dateTime,
-            notAdd: true
+            // The notAdd field has been replaced with startDate so that the countdown does not start over with
+            // the start of a new higher level unit
+            // notAdd: true,
+            startDate: true
         });
+    }
+
+    function getCustomInterval(divisor: number = 1) {
+        return customInterval ? customInterval / divisor : null;
     }
 
     function addLevelTicks(
@@ -498,11 +510,10 @@ function getIntervalTicks(
 
         for (let i = 0; i < lastLevelTicks.length - 1; i++) {
             const startTick = lastLevelTicks[i].value;
-            const endTick = lastLevelTicks[i + 1].value;
+            const endTick = lastLevelTicks[i + 1].value > extent[1] ? extent[1] : lastLevelTicks[i + 1].value;
             if (startTick === endTick) {
                 continue;
             }
-
             let interval: number;
             let getterName;
             let setterName;
@@ -517,14 +528,14 @@ function getIntervalTicks(
                 case 'half-year':
                 case 'quarter':
                 case 'month':
-                    interval = getMonthInterval(approxInterval);
+                    interval = getCustomInterval(30 * ONE_DAY) ?? getMonthInterval(approxInterval);
                     getterName = monthGetterName(isUTC);
                     setterName = monthSetterName(isUTC);
                     break;
                 case 'week':    // PENDING If week is added. Ignore day.
                 case 'half-week':
                 case 'day':
-                    interval = getDateInterval(approxInterval, 31); // Use 32 days and let interval been 16
+                    interval = getCustomInterval(ONE_DAY) ?? getDateInterval(approxInterval, 31); // Use 32 days and let interval been 16
                     getterName = dateGetterName(isUTC);
                     setterName = dateSetterName(isUTC);
                     isDate = true;
@@ -532,29 +543,34 @@ function getIntervalTicks(
                 case 'half-day':
                 case 'quarter-day':
                 case 'hour':
-                    interval = getHourInterval(approxInterval);
+                    interval = getCustomInterval(ONE_HOUR) ?? getHourInterval(approxInterval);
                     getterName = hoursGetterName(isUTC);
                     setterName = hoursSetterName(isUTC);
                     break;
                 case 'minute':
-                    interval = getMinutesAndSecondsInterval(approxInterval, true);
+                    interval = getCustomInterval(ONE_MINUTE) ?? getMinutesAndSecondsInterval(approxInterval, true);
                     getterName = minutesGetterName(isUTC);
                     setterName = minutesSetterName(isUTC);
                     break;
                 case 'second':
-                    interval = getMinutesAndSecondsInterval(approxInterval, false);
+                    interval = getCustomInterval(ONE_SECOND) ?? getMinutesAndSecondsInterval(approxInterval, false);
                     getterName = secondsGetterName(isUTC);
                     setterName = secondsSetterName(isUTC);
                     break;
                 case 'millisecond':
-                    interval = getMillisecondsInterval(approxInterval);
+                    interval = getCustomInterval() ?? getMillisecondsInterval(approxInterval);
                     getterName = millisecondsGetterName(isUTC);
                     setterName = millisecondsSetterName(isUTC);
                     break;
             }
 
+            const noAddedTicks = newAddedTicks
+                .filter((tick) => tick.startDate === true)
+                .map(tick => tick.value);
+            const newStartTick = noAddedTicks.slice(-1)?.[0] ?? startTick;
+
             addTicksInSpan(
-                interval, startTick, endTick, getterName, setterName, isDate, newAddedTicks
+                interval, newStartTick, endTick, getterName, setterName, isDate, newAddedTicks
             );
 
             if (unitName === 'year' && levelTicks.length > 1 && i === 0) {
@@ -628,7 +644,7 @@ function getIntervalTicks(
     }
 
     const levelsTicksInExtent = filter(map(levelsTicks, levelTicks => {
-        return filter(levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1] && !tick.notAdd);
+        return filter(levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1]);
     }), levelTicks => levelTicks.length > 0);
 
     const ticks: TimeScaleTick[] = [];

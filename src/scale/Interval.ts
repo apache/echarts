@@ -33,6 +33,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
 
     // Step is calculated in adjustExtent.
     protected _interval: number = 0;
+    protected _isIntervalCustom: boolean = false;
     protected _niceExtent: [number, number];
     private _intervalPrecision: number = 2;
 
@@ -79,6 +80,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
 
     setInterval(interval: number): void {
         this._interval = interval;
+        this._isIntervalCustom = true;
         // Dropped auto calculated niceExtent and use user-set extent.
         // We assume user wants to set both interval, min, max to get a better result.
         this._niceExtent = this._extent.slice() as [number, number];
