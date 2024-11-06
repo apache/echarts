@@ -115,7 +115,7 @@ function adjustScaleForOverflow(
 
     // Get Axis Length
     const axisExtent = model.axis.getExtent();
-    const axisLength = axisExtent[1] - axisExtent[0];
+    const axisLength = Math.abs(axisExtent[1] - axisExtent[0]);
 
     // Get bars on current base axis and calculate min and max overflow
     const barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);

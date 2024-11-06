@@ -32,7 +32,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
-import { ColorString, Payload } from '../../util/types';
+import { ColorString, Payload, VerticalAlign } from '../../util/types';
 import { parsePercent } from 'zrender/src/contain/text';
 import { setAsHighDownDispatcher } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
@@ -601,6 +601,7 @@ class ContinuousView extends VisualMapView {
         const handleLabels = shapes.handleLabels;
         const itemSize = visualMapModel.itemSize;
         const dataExtent = visualMapModel.getExtent();
+        const align = this._applyTransform('left', shapes.mainGroup);
 
         each([0, 1], function (handleIndex) {
             const handleThumb = handleThumbs[handleIndex];
@@ -618,6 +619,17 @@ class ContinuousView extends VisualMapView {
                 shapes.handleLabelPoints[handleIndex],
                 graphic.getTransform(handleThumb, this.group)
             );
+
+            if (this._orient === 'horizontal') {
+                // If visualMap controls symbol size, an additional offset needs to be added to labels to avoid collision at minimum size.
+                // Offset reaches value of 0 at "maximum" position, so maximum position is not altered at all.
+                const minimumOffset = align === 'left' || align === 'top'
+                    ? (itemSize[0] - symbolSize) / 2
+                    : (itemSize[0] - symbolSize) / -2;
+
+                textPoint[1] += minimumOffset;
+            }
+
             handleLabels[handleIndex].setStyle({
                 x: textPoint[0],
                 y: textPoint[1],

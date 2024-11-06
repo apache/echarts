@@ -144,7 +144,9 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 
     color?: ColorString[] | 'none'
 
-    decal?: DecalObject[] | 'none'
+    decal?: DecalObject[] | 'none',
+
+    cursor?: string
 }
 
 export interface TreemapSeriesOption
