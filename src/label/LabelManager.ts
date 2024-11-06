@@ -425,24 +425,24 @@ class LabelManager {
                 }
 
 
-                if (layoutOption.draggable) {
-                    label.draggable = true;
-                    label.cursor = 'move';
-                    if (hostEl) {
-                        let hostModel: Model<LabelLineOptionMixin> =
-                            labelItem.seriesModel as SeriesModel<LabelLineOptionMixin>;
-                        if (labelItem.dataIndex != null) {
-                            const data = labelItem.seriesModel.getData(labelItem.dataType);
-                            hostModel = data.getItemModel<LabelLineOptionMixin>(labelItem.dataIndex);
-                        }
-                        label.on('drag', createDragHandler(hostEl, hostModel.getModel('labelLine')));
+            }
+            if (layoutOption.draggable) {
+                label.draggable = true;
+                label.cursor = 'move';
+                if (hostEl) {
+                    let hostModel: Model<LabelLineOptionMixin> =
+                        labelItem.seriesModel as SeriesModel<LabelLineOptionMixin>;
+                    if (labelItem.dataIndex != null) {
+                        const data = labelItem.seriesModel.getData(labelItem.dataType);
+                        hostModel = data.getItemModel<LabelLineOptionMixin>(labelItem.dataIndex);
                     }
+                    label.on('drag', createDragHandler(hostEl, hostModel.getModel('labelLine')));
                 }
-                else {
-                    // TODO Other drag functions?
-                    label.off('drag');
-                    label.cursor = defaultLabelAttr.cursor;
-                }
+            }
+            else {
+                // TODO Other drag functions?
+                label.off('drag');
+                label.cursor = defaultLabelAttr.cursor;
             }
         }
     }
