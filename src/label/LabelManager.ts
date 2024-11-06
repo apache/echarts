@@ -403,6 +403,15 @@ class LabelManager {
                     labelState.y = defaultLabelAttr.y;
                 }
 
+                if (layoutOption.align != null) {
+                    labelState.style = labelState.style || {};
+                    labelState.style.align = layoutOption.align;
+                }
+
+                if (layoutOption.verticalAlign != null) {
+                    labelState.style = labelState.style || {};
+                    labelState.style.verticalAlign = layoutOption.verticalAlign;
+                }
 
                 labelState.rotation = layoutOption.rotate != null
                     ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
