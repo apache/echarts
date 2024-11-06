@@ -18,6 +18,7 @@
 */
 
 // TODO: move labels out of viewport.
+import { DISPLAY_STATES } from '../util/states';
 
 import {
     Text as ZRText,
@@ -359,23 +360,19 @@ class LabelManager {
             let needsUpdateLabelLine = false;
             if (layoutOption.x != null) {
                 // TODO width of chart view.
-                label.x = parsePercent(layoutOption.x, width);
                 label.setStyle('x', 0);  // Ignore movement in style. TODO: origin.
                 needsUpdateLabelLine = true;
             }
             else {
-                label.x = defaultLabelAttr.x;
                 label.setStyle('x', defaultLabelAttr.style.x);
             }
 
             if (layoutOption.y != null) {
                 // TODO height of chart view.
-                label.y = parsePercent(layoutOption.y, height);
                 label.setStyle('y', 0);  // Ignore movement in style.
                 needsUpdateLabelLine = true;
             }
             else {
-                label.y = defaultLabelAttr.y;
                 label.setStyle('y', defaultLabelAttr.style.y);
             }
 
@@ -390,36 +387,53 @@ class LabelManager {
 
             const labelLayoutStore = labelLayoutInnerStore(label);
             labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
-
-            label.rotation = layoutOption.rotate != null
-                ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
-
-            label.scaleX = defaultLabelAttr.scaleX;
-            label.scaleY = defaultLabelAttr.scaleY;
-
-            for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
-                const key = LABEL_OPTION_TO_STYLE_KEYS[k];
-                label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
-            }
-
-
-            if (layoutOption.draggable) {
-                label.draggable = true;
-                label.cursor = 'move';
-                if (hostEl) {
-                    let hostModel: Model<LabelLineOptionMixin> =
-                        labelItem.seriesModel as SeriesModel<LabelLineOptionMixin>;
-                    if (labelItem.dataIndex != null) {
-                        const data = labelItem.seriesModel.getData(labelItem.dataType);
-                        hostModel = data.getItemModel<LabelLineOptionMixin>(labelItem.dataIndex);
-                    }
-                    label.on('drag', createDragHandler(hostEl, hostModel.getModel('labelLine')));
+            for (const state of DISPLAY_STATES) {
+                const labelState = state === 'normal' ? label : label.ensureState(state);
+                if (layoutOption.x != null) {
+                    labelState.x = parsePercent(layoutOption.x, width);
                 }
-            }
-            else {
-                // TODO Other drag functions?
-                label.off('drag');
-                label.cursor = defaultLabelAttr.cursor;
+                else {
+                    labelState.x = defaultLabelAttr.x;
+                }
+
+                if (layoutOption.y != null) {
+                    labelState.y = parsePercent(layoutOption.y, height);
+                }
+                else {
+                    labelState.y = defaultLabelAttr.y;
+                }
+
+
+                labelState.rotation = layoutOption.rotate != null
+                    ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
+
+                labelState.scaleX = defaultLabelAttr.scaleX;
+                labelState.scaleY = defaultLabelAttr.scaleY;
+
+                for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
+                    const key = LABEL_OPTION_TO_STYLE_KEYS[k];
+                    label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
+                }
+
+
+                if (layoutOption.draggable) {
+                    label.draggable = true;
+                    label.cursor = 'move';
+                    if (hostEl) {
+                        let hostModel: Model<LabelLineOptionMixin> =
+                            labelItem.seriesModel as SeriesModel<LabelLineOptionMixin>;
+                        if (labelItem.dataIndex != null) {
+                            const data = labelItem.seriesModel.getData(labelItem.dataType);
+                            hostModel = data.getItemModel<LabelLineOptionMixin>(labelItem.dataIndex);
+                        }
+                        label.on('drag', createDragHandler(hostEl, hostModel.getModel('labelLine')));
+                    }
+                }
+                else {
+                    // TODO Other drag functions?
+                    label.off('drag');
+                    label.cursor = defaultLabelAttr.cursor;
+                }
             }
         }
     }
