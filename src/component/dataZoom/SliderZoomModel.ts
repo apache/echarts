@@ -28,6 +28,10 @@ import {
 } from '../../util/types';
 import { inheritDefaultOption } from '../../util/component';
 
+interface SliderHandleLabelOption {
+    show?: boolean
+}
+
 export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
 
     show?: boolean
@@ -79,7 +83,7 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
 
     handleIcon?: string
 
-    handleLabelShow?: boolean
+    handleLabel?: SliderHandleLabelOption
 
     /**
      * number: height of icon. width will be calculated according to the aspect of icon.
@@ -119,7 +123,7 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
     brushStyle?: ItemStyleOption
 
     emphasis?: {
-        handleLabelShow?: boolean
+        handleLabel: SliderHandleLabelOption
         handleStyle?: ItemStyleOption
         moveHandleStyle?: ItemStyleOption
     }
@@ -174,7 +178,6 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         // Color of selected window.
         fillerColor: 'rgba(135,175,274,0.2)',
         handleIcon: 'path://M-9.35,34.56V42m0-40V9.5m-2,0h4a2,2,0,0,1,2,2v21a2,2,0,0,1-2,2h-4a2,2,0,0,1-2-2v-21A2,2,0,0,1-11.35,9.5Z',
-        handleLabelShow: false,
         // Percent of the slider height
         handleSize: '100%',
 
@@ -205,7 +208,9 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         },
 
         emphasis: {
-            handleLabelShow: true,
+            handleLabel: {
+                show: true
+            },
             handleStyle: {
                 borderColor: '#8FB0F7'
             },

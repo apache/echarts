@@ -619,7 +619,8 @@ class SliderZoomView extends DataZoomView {
             sliderGroup.add(handles[handleIndex] = path);
 
             const textStyleModel = dataZoomModel.getModel('textStyle');
-            const handleLabelShow = dataZoomModel.get('handleLabelShow');
+            const handleLabel = dataZoomModel.get('handleLabel') || {};
+            const handleLabelShow = handleLabel.show || false;
 
             thisGroup.add(
                 handleLabels[handleIndex] = new graphic.Text({
@@ -889,9 +890,10 @@ class SliderZoomView extends DataZoomView {
      * @param isEmphasis true: show, false: hide
      */
     private _showDataInfo(isEmphasis?: boolean) {
-        const normalShow = this.dataZoomModel.get('handleLabelShow');
-        const emphasisShow = this.dataZoomModel.getModel('emphasis')
-            .get('handleLabelShow');
+        const handleLabel = this.dataZoomModel.get('handleLabel') || {};
+        const normalShow = handleLabel.show || false;
+        const emphasisHandleLabel = this.dataZoomModel.getModel(['emphasis', 'handleLabel']);
+        const emphasisShow = emphasisHandleLabel.get('show') || false;
         // Dragging is considered as emphasis, unless emphasisShow is false
         const toShow = (isEmphasis || this._dragging)
             ? emphasisShow

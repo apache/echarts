@@ -64,18 +64,22 @@ under the License.
                 },
                 dataZoom: [{
                     type: 'slider',
-                    handleLabelShow: true
+                    handleLabel: {
+                        show: true
+                    }
                 }, {
                     type: 'slider',
                     yAxisIndex: 0,
-                    handleLabelShow: true,
+                    handleLabel: {
+                        show: true
+                    },
                     right: 30
                 }]
             };
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'handleLabelShow: true, (emphasis.handleLabelShow: true)',
+                    'handleLabel.show: true, (emphasis.handleLabel.show: true)',
                     'Always show the handle label.'
                 ],
                 option: option
@@ -83,126 +87,146 @@ under the License.
         });
         </script>
 
-<script>
-    require([
-        'echarts',
-        // 'map/js/china',
-        // './data/nutrients.json'
-    ], function (echarts) {
-        var option;
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
 
-        option = {
-            xAxis: {},
-            yAxis: {},
-            series: {
-                type: 'line',
-                data: [[11, 22], [33, 44]]
-            },
-            dataZoom: [{
-                type: 'slider',
-                handleLabelShow: true,
-                emphasis: {
-                    handleLabelShow: false
-                },
-            }, {
-                type: 'slider',
-                yAxisIndex: 0,
-                handleLabelShow: true,
-                emphasis: {
-                    handleLabelShow: false
-                },
-                right: 30
-            }]
-        };
+                option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: {
+                        type: 'line',
+                        data: [[11, 22], [33, 44]]
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        handleLabel: {
+                            show: true
+                        },
+                        emphasis: {
+                            handleLabel: {
+                                show: false
+                            },
+                        },
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        handleLabel: {
+                            show: true
+                        },
+                        emphasis: {
+                            handleLabel: {
+                                show: false
+                            },
+                        },
+                        right: 30
+                    }]
+                };
 
-        var chart = testHelper.create(echarts, 'main1', {
-            title: [
-                'handleLabelShow: true, emphasis.handleLabelShow: false',
-                'Hide the handle label when mouse over, which may be useful to hide information when dragging so that user is more focused.'
-            ],
-            option: option
-        });
-    });
-    </script>
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'handleLabel.show: true, emphasis.handleLabel.show: false',
+                        'Hide the handle label when mouse over, which may be useful to hide information when dragging so that user is more focused.'
+                    ],
+                    option: option
+                });
+            });
+            </script>
 
 
-<script>
-    require([
-        'echarts',
-        // 'map/js/china',
-        // './data/nutrients.json'
-    ], function (echarts) {
-        var option;
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
 
-        option = {
-            xAxis: {},
-            yAxis: {},
-            series: {
-                type: 'line',
-                data: [[11, 22], [33, 44]]
-            },
-            dataZoom: [{
-                type: 'slider',
-                handleLabelShow: false,
-            }, {
-                type: 'slider',
-                yAxisIndex: 0,
-                handleLabelShow: false,
-                right: 30
-            }]
-        };
+                option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: {
+                        type: 'line',
+                        data: [[11, 22], [33, 44]]
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        handleLabel: {
+                            show: false
+                        }
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        handleLabel: {
+                            show: false
+                        },
+                        right: 30
+                    }]
+                };
 
-        var chart = testHelper.create(echarts, 'main2', {
-            title: [
-                'handleLabelShow: false, (emphasis.handleLabelShow: true)',
-                'Handle label is displayed whem hovering, which is the same as default.'
-            ],
-            option: option
-        });
-    });
-    </script>
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'handleLabel.show: false, (emphasis.handleLabel.show: true)',
+                        'Handle label is displayed whem hovering, which is the same as default.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
 
-<script>
-    require([
-        'echarts',
-        // 'map/js/china',
-        // './data/nutrients.json'
-    ], function (echarts) {
-        var option;
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
 
-        option = {
-            xAxis: {},
-            yAxis: {},
-            series: {
-                type: 'line',
-                data: [[11, 22], [33, 44]]
-            },
-            dataZoom: [{
-                type: 'slider',
-                handleLabelShow: false,
-                emphasis: {
-                    handleLabelShow: false
-                },
-            }, {
-                type: 'slider',
-                yAxisIndex: 0,
-                handleLabelShow: false,
-                emphasis: {
-                    handleLabelShow: false
-                },
-                right: 30
-            }]
-        };
+                option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: {
+                        type: 'line',
+                        data: [[11, 22], [33, 44]]
+                    },
+                    dataZoom: [{
+                        type: 'slider',
+                        handleLabel: {
+                            show: false
+                        },
+                        emphasis: {
+                            handleLabel: {
+                                show: false
+                            },
+                        },
+                    }, {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        handleLabel: {
+                            show: false
+                        },
+                        emphasis: {
+                            handleLabel: {
+                                show: false
+                            },
+                        },
+                        right: 30
+                    }]
+                };
 
-        var chart = testHelper.create(echarts, 'main3', {
-            title: [
-                'handleLabelShow: false, emphasis.handleLabelShow: false',
-                'Never show the handle labels.'
-            ],
-            option: option
-        });
-    });
-    </script>
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'handleLabel.show: false, emphasis.handleLabel.show: false',
+                        'Never show the handle labels.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
     </body>
 </html>
 
