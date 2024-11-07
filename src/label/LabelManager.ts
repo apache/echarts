@@ -388,18 +388,19 @@ class LabelManager {
             const labelLayoutStore = labelLayoutInnerStore(label);
             labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
             for (const state of DISPLAY_STATES) {
-                const labelState = state === 'normal' ? label : label.ensureState(state);
+                const isNormal = state === 'normal';
+                const labelState = isNormal ? label : label.ensureState(state);
                 if (layoutOption.x != null) {
                     labelState.x = parsePercent(layoutOption.x, width);
                 }
-                else {
+                else if (isNormal) {
                     labelState.x = defaultLabelAttr.x;
                 }
 
                 if (layoutOption.y != null) {
                     labelState.y = parsePercent(layoutOption.y, height);
                 }
-                else {
+                else if (isNormal) {
                     labelState.y = defaultLabelAttr.y;
                 }
 
