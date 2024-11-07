@@ -28,6 +28,7 @@ under the License.
     </head>
     <body>
         <div id="main0"></div>
+        <div id="main1"></div>
 
         <script>
             require([
@@ -132,5 +133,69 @@ under the License.
                 chart.on('legendselectchanged', logFn);
             });
         </script>
+
+<script>
+    require([
+        'echarts'
+    ], function (echarts) {
+        var option = {
+            dataset: {
+                source: [
+                    ['type', '2012', '2013', '2014', '2015', '2016'],
+                    ['Forest', 320, 332, 301, 334, 390],
+                    ['Steppe', 220, 182, 191, 234, 290],
+                    ['Desert', 150, 232, 201, 154, 190],
+                    ['Wetland', 98, 77, 101, 99, 40]
+                ]
+            },
+            legend: [
+                {
+                    id: 1,
+                    name: 'legend1',
+                    data: ['Steppe', 'Forest'],
+                    left: '10%'
+                },
+                {
+                    id: 2,
+                    name: 'legend2',
+                    data: ['Desert', 'Wetland', 'Steppe' /* test for the same item in other legend */],
+                    right: '10%'
+                }
+            ],
+            xAxis: {
+                type: 'category'
+            },
+            yAxis: {},
+            series: [
+                {
+                    type: 'bar',
+                    seriesLayoutBy: 'row'
+                },
+                {
+                    type: 'bar',
+                    seriesLayoutBy: 'row'
+                },
+                {
+                    type: 'bar',
+                    seriesLayoutBy: 'row'
+                },
+                {
+                    type: 'bar',
+                    seriesLayoutBy: 'row'
+                }
+            ]
+        };
+        var chart = window.myChart0 = testHelper.create(echarts, 'main1', {
+            title: [
+                'Legend mouseover mouseout action'
+            ],
+            option: option,
+            renderer:"svg"
+        });
+        var logFn = e => console.log(JSON.stringify(e, null, 2));
+        chart.on('legendmouseover', logFn);
+        chart.on('legendmouseout', logFn);
+    });
+</script>
     </body>
 </html>
