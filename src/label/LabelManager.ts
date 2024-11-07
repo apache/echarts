@@ -364,6 +364,7 @@ class LabelManager {
                 needsUpdateLabelLine = true;
             }
             else {
+                label.x = defaultLabelAttr.x;
                 label.setStyle('x', defaultLabelAttr.style.x);
             }
 
@@ -373,6 +374,7 @@ class LabelManager {
                 needsUpdateLabelLine = true;
             }
             else {
+                label.y = defaultLabelAttr.y;
                 label.setStyle('y', defaultLabelAttr.style.y);
             }
 
@@ -393,15 +395,9 @@ class LabelManager {
                 if (layoutOption.x != null) {
                     labelState.x = parsePercent(layoutOption.x, width);
                 }
-                else if (isNormal) {
-                    labelState.x = defaultLabelAttr.x;
-                }
 
                 if (layoutOption.y != null) {
                     labelState.y = parsePercent(layoutOption.y, height);
-                }
-                else if (isNormal) {
-                    labelState.y = defaultLabelAttr.y;
                 }
 
                 if (layoutOption.align != null) {
