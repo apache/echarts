@@ -66318,7 +66318,7 @@ var LegendView2 = class extends Component_default2 {
         const legendIcon = data.getVisual("legendIcon");
         const style = data.getVisual("style");
         const itemGroup = this._createItem(seriesModel, name, dataIndex, legendItemModel, legendModel, itemAlign, lineVisualStyle, style, legendIcon, selectMode, api2);
-        itemGroup.on("click", curry2(dispatchSelectAction, name, null, api2, excludeSeriesId)).on("mouseover", curry2(dispatchHighlightAction, seriesModel.name, null, api2, excludeSeriesId)).on("mouseout", curry2(dispatchDownplayAction, seriesModel.name, null, api2, excludeSeriesId)).on("legendmouseover", curry2(dispatchEvent, null));
+        itemGroup.on("click", curry2(dispatchSelectAction, name, null, api2, excludeSeriesId)).on("legendmouseover", curry2(dispatchHighlightAction, seriesModel.name, null, api2, excludeSeriesId)).on("mouseout", curry2(dispatchDownplayAction, seriesModel.name, null, api2, excludeSeriesId));
         if (ecModel.ssr) {
           itemGroup.eachChild((child) => {
             const ecData = getECData(child);
@@ -66347,7 +66347,7 @@ var LegendView2 = class extends Component_default2 {
               style = extend(extend({}, style), {fill: stringify(colorArr, "rgba")});
             }
             const itemGroup = this._createItem(seriesModel2, name, dataIndex, legendItemModel, legendModel, itemAlign, {}, style, legendIcon, selectMode, api2);
-            itemGroup.on("click", curry2(dispatchSelectAction, null, name, api2, excludeSeriesId)).on("mouseover", curry2(dispatchHighlightAction, null, name, api2, excludeSeriesId)).on("mouseout", curry2(dispatchDownplayAction, null, name, api2, excludeSeriesId)).on("legendmouseover", curry2(dispatchEvent, null));
+            itemGroup.on("click", curry2(dispatchSelectAction, null, name, api2, excludeSeriesId)).on("legendmouseover", curry2(dispatchHighlightAction, null, name, api2, excludeSeriesId)).on("mouseout", curry2(dispatchDownplayAction, null, name, api2, excludeSeriesId));
             if (ecModel.ssr) {
               itemGroup.eachChild((child) => {
                 const ecData = getECData(child);

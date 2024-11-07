@@ -223,9 +223,8 @@ class LegendView extends ComponentView {
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
-                    .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
-                    .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId))
-                    .on('legendmouseover', curry(dispatchEvent, null));
+                    .on('legendmouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
+                    .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
 
                 if (ecModel.ssr) {
                     itemGroup.eachChild(child => {
@@ -277,9 +276,8 @@ class LegendView extends ComponentView {
                         itemGroup.on('click', curry(dispatchSelectAction, null, name, api, excludeSeriesId))
                             // Should not specify the series name, consider legend controls
                             // more than one pie series.
-                            .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
-                            .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId))
-                            .on('legendmouseover', curry(dispatchEvent, null));
+                            .on('legendmouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
+                            .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
 
 
                         if (ecModel.ssr) {
