@@ -23,8 +23,8 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { parse, stringify } from 'zrender/src/tool/color';
 import * as graphic from '../../util/graphic';
 import { enableHoverEmphasis } from '../../util/states';
-import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
-import {makeBackground} from '../helper/listComponent';
+import { setLabelStyle, createTextStyle } from '../../label/labelStyle';
+import { makeBackground } from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
 import ComponentView from '../../view/Component';
 import LegendModel, {
@@ -46,8 +46,8 @@ import {
     SymbolOptionMixin
 } from '../../util/types';
 import Model from '../../model/Model';
-import {LineStyleProps} from '../../model/mixin/lineStyle';
-import {createSymbol, ECSymbol} from '../../util/symbol';
+import { LineStyleProps } from '../../model/mixin/lineStyle';
+import { createSymbol, ECSymbol } from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import { getECData } from '../../util/innerStore';
@@ -133,7 +133,7 @@ class LegendView extends ComponentView {
 
         // Perform layout.
         const positionInfo = legendModel.getBoxLayoutParams();
-        const viewportSize = {width: api.getWidth(), height: api.getHeight()};
+        const viewportSize = { width: api.getWidth(), height: api.getHeight() };
         const padding = legendModel.get('padding');
 
         const maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
@@ -224,7 +224,8 @@ class LegendView extends ComponentView {
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
                     .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
-                    .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
+                    .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId))
+                    .on('legendmouseover', curry(dispatchEvent, null));
 
                 if (ecModel.ssr) {
                     itemGroup.eachChild(child => {
@@ -277,7 +278,9 @@ class LegendView extends ComponentView {
                             // Should not specify the series name, consider legend controls
                             // more than one pie series.
                             .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
-                            .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
+                            .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId))
+                            .on('legendmouseover', curry(dispatchEvent, null));
+
 
                         if (ecModel.ssr) {
                             itemGroup.eachChild(child => {
@@ -444,7 +447,7 @@ class LegendView extends ComponentView {
                 fill: textColor,
                 align: textAlign,
                 verticalAlign: 'middle'
-            }, {inheritColor: textColor})
+            }, { inheritColor: textColor })
         }));
 
         // Add a invisible rect to increase the area of mouse hover
@@ -542,7 +545,7 @@ class LegendView extends ComponentView {
             contentGroup.x = contentPos[0];
             contentGroup.y = contentPos[1];
 
-            const mainRect = {x: 0, y: 0} as ZRRectLike;
+            const mainRect = { x: 0, y: 0 } as ZRRectLike;
             mainRect[wh] = contentRect[wh] + selectorButtonGap + selectorRect[wh];
             mainRect[hw] = Math.max(contentRect[hw], selectorRect[hw]);
             mainRect[yx] = Math.min(0, selectorRect[yx] + selectorPos[1 - orientIdx]);
@@ -595,8 +598,8 @@ function getLegendStyle(
     const iconBrushType = iconType.lastIndexOf('empty', 0) === 0 ? 'fill' : 'stroke';
     const decalStyle = itemStyleModel.getShallow('decal');
     itemStyle.decal = (!decalStyle || decalStyle === 'inherit')
-                    ? itemVisualStyle.decal
-                    : createOrUpdatePatternFromDecal(decalStyle, api);
+        ? itemVisualStyle.decal
+        : createOrUpdatePatternFromDecal(decalStyle, api);
 
     if (itemStyle.fill === 'inherit') {
         /**

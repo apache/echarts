@@ -18,37 +18,39 @@ under the License.
 
 
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/simpleRequire.js"></script>
-        <script src="lib/config.js"></script>
-        <script src="lib/jquery.min.js"></script>
-        <script src="lib/facePrint.js"></script>
-        <script src="lib/testHelper.js"></script>
-        <!-- <script src="ut/lib/canteen.js"></script> -->
-        <link rel="stylesheet" href="lib/reset.css" />
-    </head>
-    <body>
-        <style>
-        </style>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <style>
+    </style>
 
 
-        <div id="main1"></div>
-        <div id="main2"></div>
-        <div id="main3"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
 
-        <script>
-            function getData(seriesId) {
-                var data = [];
-                for (var i = 0; i < 7; ++i) {
-                    data.push(Math.random() * 100 + (seriesId + 1) * 200);
-                }
-                return data;
+    <script>
+        function getData(seriesId) {
+            var data = [];
+            for (var i = 0; i < 7; ++i) {
+                data.push(Math.random() * 100 + (seriesId + 1) * 200);
             }
-        </script>
+            return data;
+        }
+    </script>
 
-        <script>
+    <script>
         require(['echarts'], function (echarts) {
             var option = {
                 xAxis: {
@@ -209,11 +211,12 @@ under the License.
                 ],
                 option: option
             });
+
         });
-        </script>
+    </script>
 
 
-        <script>
+    <script>
         require(['echarts'], function (echarts) {
             var option = {
                 xAxis: {
@@ -275,7 +278,7 @@ under the License.
                 option: option
             });
         });
-        </script>
+    </script>
 
 
     <script>
@@ -331,5 +334,6 @@ under the License.
             });
         });
     </script>
-    </body>
+</body>
+
 </html>
