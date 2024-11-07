@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ECharts legendmouseover Event Test</title>
+    <!-- 引入 ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.0.0/dist/echarts.min.js"></script>
+</head>
+
+<body>
+    <!-- 图表容器 -->
+    <div id="main" style="width: 600px;height:400px;"></div>
+    <script>
+        // 基于准备好的dom，初始化echarts实例
+        var chart = echarts.init(document.getElementById('main'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            xAxis: {
+                type: 'category',
+                data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                data: [120, 200, 150, 80, 70, 110, 130],
+                type: 'bar'
+            }]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        chart.setOption(option);
+
+        // 添加 mousemove 事件监听
+        chart.on('legendmouseover', function (params) {
+            console.log('Legendmouseover event:', params);
+            // params 包含当前鼠标位置的 x, y 坐标，以及当前鼠标下的图表元素信息等
+        });
+    </script>
+</body>
+
+</html>
