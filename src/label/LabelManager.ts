@@ -55,6 +55,7 @@ import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
 import { labelInner, animateLabelValue } from './labelStyle';
 import { normalizeRadian } from 'zrender/src/contain/util';
+import { TextProps } from 'zrender';
 
 interface LabelDesc {
     label: ZRText
@@ -389,6 +390,13 @@ class LabelManager {
 
             const labelLayoutStore = labelLayoutInnerStore(label);
             labelLayoutStore.needsUpdateLabelLine = needsUpdateLabelLine;
+
+            label.rotation = layoutOption.rotate != null
+                ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
+
+            label.scaleX = defaultLabelAttr.scaleX;
+            label.scaleY = defaultLabelAttr.scaleY;
+
             for (const state of DISPLAY_STATES) {
                 const isNormal = state === 'normal';
                 const labelState = isNormal ? label : label.ensureState(state);
@@ -400,25 +408,17 @@ class LabelManager {
                     labelState.y = parsePercent(layoutOption.y, height);
                 }
 
-                if (layoutOption.align != null) {
-                    labelState.style = labelState.style || {};
-                    labelState.style.align = layoutOption.align;
-                }
-
-                if (layoutOption.verticalAlign != null) {
-                    labelState.style = labelState.style || {};
-                    labelState.style.verticalAlign = layoutOption.verticalAlign;
-                }
-
-                labelState.rotation = layoutOption.rotate != null
-                    ? layoutOption.rotate * degreeToRadian : defaultLabelAttr.rotation;
-
-                labelState.scaleX = defaultLabelAttr.scaleX;
-                labelState.scaleY = defaultLabelAttr.scaleY;
 
                 for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
                     const key = LABEL_OPTION_TO_STYLE_KEYS[k];
-                    label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
+                    const val = layoutOption[key];
+                    if (isNormal) {
+                        label.setStyle(key, val != null ? val : defaultLabelAttr.style[key]);
+                    }
+                    else if (val != null) {
+                        labelState.style = labelState.style || {};
+                        (labelState.style[key] as TextProps['style'][typeof key]) = val;
+                    }
                 }
 
 
