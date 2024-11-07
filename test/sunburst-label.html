@@ -315,14 +315,10 @@ under the License.
                 })
             }
         })
-        let counter = 1
-        setInterval(() => {
-            counter++
-            chart.dispatchAction({
-                type: 'highlight',
-                dataIndex: counter % 5 + 1
-            })
-        }, 1000)
+        chart.dispatchAction({
+            type: 'highlight',
+            dataIndex: 2
+        })
     });
     </script>
 
