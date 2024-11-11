@@ -127,11 +127,8 @@ export function contain(val: number, extent: [number, number]): boolean {
 }
 
 export function normalize(val: number, extent: [number, number]): number {
-    if (isNaN(val)) {
-        return NaN;
-    }
     if (extent[1] === extent[0]) {
-        return 0.5;
+        return isNaN(val) ? NaN : 0.5;
     }
     return (val - extent[0]) / (extent[1] - extent[0]);
 }
