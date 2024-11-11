@@ -20,10 +20,10 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { toggleHoverEmphasis } from '../../util/states';
-import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
-import {parsePercent, isNumeric} from '../../util/number';
+import { createSymbol, normalizeSymbolOffset } from '../../util/symbol';
+import { parsePercent, isNumeric } from '../../util/number';
 import ChartView from '../../view/Chart';
-import PictorialBarSeriesModel, {PictorialBarDataItemOption} from './PictorialBarSeries';
+import PictorialBarSeriesModel, { PictorialBarDataItemOption } from './PictorialBarSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
@@ -44,19 +44,19 @@ const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
 // index: +isHorizontal
 const LAYOUT_ATTRS = [
-    {xy: 'x', wh: 'width', index: 0, posDesc: ['left', 'right']},
-    {xy: 'y', wh: 'height', index: 1, posDesc: ['top', 'bottom']}
+    { xy: 'x', wh: 'width', index: 0, posDesc: ['left', 'right'] },
+    { xy: 'y', wh: 'height', index: 1, posDesc: ['top', 'bottom'] }
 ] as const;
 
 const pathForLineWidth = new graphic.Circle();
 
 type ItemModel = Model<PictorialBarDataItemOption> & {
-    getAnimationDelayParams(path: any): {index: number, count: number}
+    getAnimationDelayParams(path: any): { index: number, count: number }
     isAnimationEnabled(): boolean
 };
 type RectShape = graphic.Rect['shape'];
 type RectLayout = RectShape;
-
+type CartesianCoordArea = ReturnType<Cartesian2D['getArea']>;
 type PictorialSymbol = ReturnType<typeof createSymbol> & {
     __pictorialAnimationIndex: number
     __pictorialRepeatTimes: number
@@ -147,7 +147,7 @@ class PictorialBarView extends ChartView {
         const coordSysRect = cartesian.master.getRect();
 
         const opt: CreateOpts = {
-            ecSize: {width: api.getWidth(), height: api.getHeight()},
+            ecSize: { width: api.getWidth(), height: api.getHeight() },
             seriesModel: seriesModel,
             coordSys: cartesian,
             coordSysExtent: [
@@ -279,6 +279,9 @@ function getSymbolMeta(
         z2: itemModel.getShallow('z', true) || 0
     } as SymbolMeta;
 
+    const coordSysClipArea = opt.coordSys && opt.coordSys.getArea();
+    clipToCoordSys(coordSysClipArea, layout);
+
     prepareBarLength(itemModel, symbolRepeat, layout, opt, symbolMeta);
 
     prepareSymbolSize(
@@ -298,6 +301,46 @@ function getSymbolMeta(
     );
 
     return symbolMeta;
+}
+
+
+function clipToCoordSys(coordSysArea: CartesianCoordArea, layout: RectLayout) {
+    const WSign = layout.width < 0 ? -1 : 1;
+    const HSign = layout.height < 0 ? -1 : 1;
+    if (layout.width < 0) {
+        layout.x += layout.width;
+        layout.width = -layout.width;
+    }
+    if (layout.height < 0) {
+        layout.y += layout.height;
+        layout.height = -layout.height;
+    }
+
+    const rightEdge = coordSysArea.x + coordSysArea.width;
+    const bottomEdge = coordSysArea.y + coordSysArea.height;
+    let left = Math.max(layout.x, coordSysArea.x);
+    let right = Math.min(layout.x + layout.width, rightEdge);
+    let top = Math.max(layout.y, coordSysArea.y);
+    let bottom = Math.min(layout.y + layout.height, bottomEdge);
+
+    let isXClipped = right < left;
+    let isYClipped = bottom < top;
+
+    layout.x = (isXClipped && left > rightEdge) ? right : left;
+    layout.y = (isYClipped && top > bottomEdge) ? bottom : top;
+    layout.width = isXClipped ? 0 : right - left;
+    layout.height = isYClipped ? 0 : bottom - top;
+
+    if (WSign < 0) {
+        layout.x += layout.width;
+        layout.width = -layout.width;
+    }
+    if (HSign < 0) {
+        layout.y += layout.height;
+        layout.height = -layout.height;
+    }
+    let result = isXClipped || isYClipped;
+    return result;
 }
 
 // bar length can be negative.
@@ -505,8 +548,8 @@ function prepareLayoutInfo(
     pathPosition[valueDim.index] = symbolPosition === 'start'
         ? sizeFix
         : symbolPosition === 'end'
-        ? boundingLength - sizeFix
-        : boundingLength / 2; // 'center'
+            ? boundingLength - sizeFix
+            : boundingLength / 2; // 'center'
     if (symbolOffset) {
         pathPosition[0] += symbolOffset[0];
         pathPosition[1] += symbolOffset[1];
@@ -699,7 +742,7 @@ function createOrUpdateBarRect(
         bar.add(barRect);
     }
     else {
-        updateAttr(barRect, null, {shape: rectShape}, symbolMeta, isUpdate);
+        updateAttr(barRect, null, { shape: rectShape }, symbolMeta, isUpdate);
     }
 }
 
@@ -719,12 +762,12 @@ function createOrUpdateClip(
 
         if (clipPath) {
             graphic.updateProps(
-                clipPath, {shape: clipShape}, animationModel, dataIndex
+                clipPath, { shape: clipShape }, animationModel, dataIndex
             );
         }
         else {
             clipShape[valueDim.wh] = 0;
-            clipPath = new graphic.Rect({shape: clipShape});
+            clipPath = new graphic.Rect({ shape: clipShape });
             bar.__pictorialBundle.setClipPath(clipPath);
             bar.__pictorialClipPath = clipPath;
 
@@ -732,7 +775,7 @@ function createOrUpdateClip(
             target[valueDim.wh] = symbolMeta.clipShape[valueDim.wh];
 
             graphic[isUpdate ? 'updateProps' : 'initProps'](
-                clipPath, {shape: target}, animationModel, dataIndex
+                clipPath, { shape: target }, animationModel, dataIndex
             );
         }
     }
@@ -792,9 +835,9 @@ function updateBar(bar: PictorialBarElement, opt: CreateOpts, symbolMeta: Symbol
 
     graphic.updateProps(
         bundle, {
-            x: symbolMeta.bundlePosition[0],
-            y: symbolMeta.bundlePosition[1]
-        }, animationModel, dataIndex
+        x: symbolMeta.bundlePosition[0],
+        y: symbolMeta.bundlePosition[1]
+    }, animationModel, dataIndex
     );
 
     if (symbolMeta.symbolRepeat) {
