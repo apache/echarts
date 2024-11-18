@@ -165,18 +165,6 @@ export function radialCoordinate(rad: number, r: number) {
 }
 
 /**
- * Get the layout position of the whole view.
- */
-export function getViewRect(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
-    return layout.getLayoutRect(
-        seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
-    );
-}
-
-/**
  * All other shifts, applied to the smaller subtrees between w- and w+, are
  * performed by this function.
  *
