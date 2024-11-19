@@ -1,8 +1,8 @@
+import { extend } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import SeriesData from '../../data/SeriesData';
-import ChordSeriesModel, { ChordNodeItemOption } from './ChordSeries';
-import { extend } from 'zrender/src/core/util';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
+import ChordSeriesModel, { ChordNodeItemOption } from './ChordSeries';
 
 export default class ChordPiece extends graphic.Sector {
 
@@ -40,4 +40,5 @@ export default class ChordPiece extends graphic.Sector {
         sector.setShape(sectorShape);
         sector.useStyle(data.getItemVisual(idx, 'style'));
     }
+
 }

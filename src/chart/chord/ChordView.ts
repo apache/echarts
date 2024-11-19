@@ -50,7 +50,6 @@ class ChordView extends ChartView {
             .update(function (newIdx, oldIdx) {
                 const chordPiece = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
                 chordPiece.updateData(data, newIdx);
-                group.add(chordPiece);
                 data.setItemGraphicEl(newIdx, chordPiece);
             })
 
@@ -61,6 +60,7 @@ class ChordView extends ChartView {
 
             .execute();
 
+        this._data = data;
     }
 
     dispose() {

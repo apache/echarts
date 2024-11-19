@@ -24,6 +24,8 @@ import { getViewRect, getCircleLayout } from '../../util/layout';
 import SeriesModel from '../../model/Series';
 import { CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
 
+const RADIAN = Math.PI / 180;
+
 export default function chordCircularLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('chord', function (seriesModel: ChordSeriesModel) {
         chordLayout(seriesModel, api);
@@ -37,4 +39,55 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         seriesModel as unknown as SeriesModel<CircleLayoutOptionMixin & SeriesOption<unknown>>,
         api
     );
+
+    const nodeData = seriesModel.getData();
+    const nodeGraph = nodeData.graph;
+
+    const edgeData = seriesModel.getEdgeData();
+    const edgeCount = edgeData.count();
+
+    nodeData.setLayout({
+        cx: cx,
+        cy: cy
+    });
+
+    if (!edgeCount) {
+        return;
+    }
+
+    nodeGraph.eachNode(node => {
+        node.setLayout({
+            value: 0
+        });
+    })
+
+    nodeGraph.eachEdge(function (edge) {
+        const value = edge.getValue('value') as number;
+        edge.node1.setLayout({
+            value: edge.node1.getLayout().value + value
+        });
+        edge.node2.setLayout({
+            value: edge.node2.getLayout().value + value
+        });
+    });
+
+    let angle = -seriesModel.get('startAngle') * RADIAN;
+    // * 2 for two edges for a pair of nodes
+    const sum = edgeData.getSum('value') * 2;
+    const unitAngle = Math.PI * 2 / (sum || edgeCount);
+    nodeGraph.eachNode(node => {
+        const value = node.getLayout().value as number;
+
+        const radian = unitAngle * (sum ? value : 1);
+
+        node.setLayout({
+            cx,
+            cy,
+            r0,
+            r,
+            startAngle: angle,
+            endAngle: angle + radian
+        });
+        angle += radian;
+    });
 }

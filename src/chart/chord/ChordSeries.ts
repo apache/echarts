@@ -45,6 +45,8 @@ import SeriesModel from '../../model/Series';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
+import Graph from '../../data/Graph';
+import { LineDataVisual } from '../../visual/commonVisualTypes';
 
 interface ChordStatesMixin {
     emphasis?: DefaultEmphasisFocus
@@ -178,6 +180,14 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
         }
     }
 
+    getGraph(): Graph {
+        return this.getData().graph;
+    }
+
+    getEdgeData() {
+        return this.getGraph().edgeData as SeriesData<ChordSeriesModel, LineDataVisual>;
+    }
+
     static defaultOption: ChordSeriesOption = {
         // zlevel: 0,
         z: 2,
@@ -185,6 +195,7 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
         coordinateSystem: 'none',
 
         legendHoverLink: true,
+        colorBy: 'data',
 
         left: 0,
         top: 0,
