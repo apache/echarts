@@ -74,7 +74,7 @@ under the License.
                         },
                         lineStyle: {
                             color: 'source',
-                            curveness: 0.3
+                            curveness: 0.1
                         },
                         emphasis: {
                             label: {
@@ -97,14 +97,14 @@ under the License.
                                 itemStyle: null,
                                 name: 'C',
                             },
-                            // {
-                            //     itemStyle: null,
-                            //     name: 'D',
-                            // },
-                            // {
-                            //     itemStyle: null,
-                            //     name: 'E',
-                            // }
+                            {
+                                itemStyle: null,
+                                name: 'D',
+                            },
+                            {
+                                itemStyle: null,
+                                name: 'E',
+                            }
                         ],
                         links: [
                             {
@@ -122,11 +122,31 @@ under the License.
                                 target: 'C',
                                 value: 5
                             },
-                            // {
-                            //     source: 'B',
-                            //     target: 'C',
-                            //     value: 15
-                            // },
+                            {
+                                source: 'B',
+                                target: 'D',
+                                value: 15
+                            },
+                            {
+                                source: 'B',
+                                target: 'E',
+                                value: 10
+                            },
+                            {
+                                source: 'C',
+                                target: 'D',
+                                value: 5
+                            },
+                            {
+                                source: 'C',
+                                target: 'E',
+                                value: 20
+                            },
+                            {
+                                source: 'D',
+                                target: 'E',
+                                value: 10
+                            }
                         ]
                     }]
                 };

@@ -17,12 +17,15 @@
 * under the License.
 */
 
+import Group from 'zrender/src/graphic/Group';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import ChordSeriesModel from './ChordSeries';
 import ChordPiece from './ChordPiece';
+import { Polygon } from '../../util/graphic';
+import { ChordEdge } from './ChordEdge';
 
 class ChordView extends ChartView {
 
@@ -30,8 +33,11 @@ class ChordView extends ChartView {
     readonly type: string = ChordView.type;
 
     private _data: SeriesData;
+    private _edgeGroup: Group;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
+        this._edgeGroup = new Group();
+        this.group.add(this._edgeGroup);
     }
 
     render(seriesModel: ChordSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
@@ -60,7 +66,35 @@ class ChordView extends ChartView {
 
             .execute();
 
+        this.renderEdges(seriesModel);
+
         this._data = data;
+    }
+
+    renderEdges(seriesModel: ChordSeriesModel) {
+        this._edgeGroup.removeAll();
+
+        const nodeData = seriesModel.getData();
+        const nodeGraph = nodeData.graph;
+
+        const edgeGroup = this._edgeGroup;
+        nodeGraph.eachEdge(function (edge, index) {
+            // if (index != 1) {
+            //     return;
+            // }
+            const layout = edge.getLayout();
+            console.log(layout);
+
+            const polygon = new ChordEdge({
+                shape: layout,
+                style: {
+                    stroke: '#f00',
+                    fill: 'rgba(100,0,0,0.2)',
+                    lineWidth: 2
+                }
+            });
+            edgeGroup.add(polygon);
+        });
     }
 
     dispose() {

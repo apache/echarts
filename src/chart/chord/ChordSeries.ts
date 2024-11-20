@@ -76,7 +76,7 @@ interface ChordEdgeLineStyleOption extends LineStyleOption {
 }
 
 export interface ChordEdgeStateOption {
-    lineStyle?: LineStyleOption
+    lineStyle?: ChordEdgeLineStyleOption
     label?: SeriesLineLabelOption
 }
 
@@ -205,7 +205,7 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
         height: null,
 
         center: ['50%', '50%'],
-        radius: ['65%', '75%'],
+        radius: ['75%', '80%'],
 
         startAngle: 90,
         endAngle: 'auto',
