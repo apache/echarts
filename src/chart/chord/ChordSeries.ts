@@ -106,6 +106,7 @@ export interface ChordSeriesOption
     startAngle?: number
     endAngle?: number | 'auto'
     padAngle?: number
+    minAngle?: number
 
     data?: (ChordNodeItemOption | ChordDataValue)[]
     nodes?: (ChordNodeItemOption | ChordDataValue)[]
@@ -132,7 +133,6 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
     getInitialData(option: ChordSeriesOption, ecModel: GlobalModel): SeriesData {
         const edges = option.edges || option.links || [];
         const nodes = option.data || option.nodes || [];
-        const self = this;
 
         if (nodes && edges) {
             // auto curveness
@@ -209,7 +209,8 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
 
         startAngle: 90,
         endAngle: 'auto',
-        padAngle: 10
+        minAngle: 0,
+        padAngle: 3
     };
 }
 

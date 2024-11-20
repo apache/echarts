@@ -37,55 +37,40 @@ export default function chordCircularLayout(ecModel: GlobalModel, api: Extension
 }
 
 function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
-    const viewRect = getViewRect(seriesModel, api);
-
-    const { cx, cy, r, r0 } = getCircleLayout(
-        seriesModel as unknown as SeriesModel<CircleLayoutOptionMixin & SeriesOption<unknown>>,
-        api
-    );
-
     const nodeData = seriesModel.getData();
     const nodeGraph = nodeData.graph;
-
     const edgeData = seriesModel.getEdgeData();
     const edgeCount = edgeData.count();
-
-    nodeData.setLayout({
-        cx: cx,
-        cy: cy
-    });
 
     if (!edgeCount) {
         return;
     }
 
-    nodeGraph.eachNode(node => {
-        node.setLayout({
-            value: 0
-        });
-    })
+    const { cx, cy, r, r0 } = getCircleLayout(
+        seriesModel as unknown as SeriesModel<CircleLayoutOptionMixin & SeriesOption<unknown>>,
+        api
+    );
+    const padAngle = (seriesModel.get('padAngle') || 0) * RADIAN;
+    const minAngle = (seriesModel.get('minAngle') || 0) * RADIAN;
 
-    const updateNodeLayout = (node: GraphNode, edgeValue: number) => {
-        const layout = node.getLayout();
-        node.setLayout({
-            value: layout.value + edgeValue
-        });
-    };
-
+    // Sum of each node's edge values
+    const nodeValues: number[] = [];
     nodeGraph.eachEdge(function (edge) {
         const value = edge.getValue('value') as number;
-        updateNodeLayout(edge.node1, value);
-        updateNodeLayout(edge.node2, value);
+        const node1Index = edge.node1.dataIndex;
+        const node2Index = edge.node2.dataIndex;
+        nodeValues[node1Index] = (nodeValues[node1Index] || 0) + value;
+        nodeValues[node2Index] = (nodeValues[node2Index] || 0) + value;
     });
 
-    let angle = -seriesModel.get('startAngle') * RADIAN;
     const sum = edgeData.getSum('value');
-    // / 2 for two edges for a pair of nodes
-    const unitAngle = Math.PI * 2 / (sum || edgeCount) / 2;
+    const unitAngle = (Math.PI * 2 - padAngle * nodeData.count())
+        / (sum || edgeCount) / 2; // / 2 for two edges for a pair of nodes
+
+    let angle = -seriesModel.get('startAngle') * RADIAN;
     const edgeAccAngle: number[] = [];
     nodeGraph.eachNode(node => {
-        const value = node.getLayout().value as number;
-
+        const value = nodeValues[node.dataIndex] || 0;
         const spanAngle = unitAngle * (sum ? value : 1);
 
         node.setLayout({
@@ -99,7 +84,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
 
         edgeAccAngle[node.dataIndex] = angle;
 
-        angle += spanAngle;
+        angle += spanAngle + padAngle;
     });
 
     nodeGraph.eachEdge(function (edge) {

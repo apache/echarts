@@ -40,7 +40,6 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
 
         // Draw the arc from n11 to n12
         ctx.arc(shape.cx, shape.cy, shape.r, shape.sStartAngle, shape.sEndAngle, false);
-        // ctx.lineTo(shape.s2[0], shape.s2[1]);
 
         // // Bezier curve to cp1 and then to n21
         ctx.bezierCurveTo(
@@ -51,11 +50,9 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
             shape.t1[0],
             shape.t1[1]
         );
-        // ctx.lineTo(shape.t1[0], shape.t1[1]);
 
         // Draw the arc from n21 to n22
         ctx.arc(shape.cx, shape.cy, shape.r, shape.tStartAngle, shape.tEndAngle, false);
-        // ctx.lineTo(shape.t2[0], shape.t2[1]);
 
         // Bezier curve back to cp2 and then to n11
         ctx.bezierCurveTo(
@@ -66,7 +63,6 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
             shape.s1[0],
             shape.s1[1]
         );
-        // ctx.lineTo(shape.s1[0], shape.s1[1]);
 
         ctx.closePath();
     }
