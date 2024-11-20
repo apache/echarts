@@ -79,21 +79,24 @@ class ChordView extends ChartView {
 
         const edgeGroup = this._edgeGroup;
         nodeGraph.eachEdge(function (edge, index) {
-            // if (index != 1) {
+            // if (index > 0) {
             //     return;
             // }
             const layout = edge.getLayout();
-            console.log(layout);
+            const itemModel = edge.node1.getModel();
 
-            const polygon = new ChordEdge({
+            const style = nodeData.getItemVisual(edge.node1.dataIndex, 'style');
+            console.log();
+            const edgeShape = new ChordEdge({
                 shape: layout,
                 style: {
-                    stroke: '#f00',
-                    fill: 'rgba(100,0,0,0.2)',
-                    lineWidth: 2
+                    fill: style.fill,
+                    // fill: 'rgba(200,0,0,0.2)',
+                    // stroke: '#f00',
+                    opacity: 0.5
                 }
             });
-            edgeGroup.add(polygon);
+            edgeGroup.add(edgeShape);
         });
     }
 

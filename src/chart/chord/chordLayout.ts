@@ -82,6 +82,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     const sum = edgeData.getSum('value');
     // / 2 for two edges for a pair of nodes
     const unitAngle = Math.PI * 2 / (sum || edgeCount) / 2;
+    const edgeAccAngle: number[] = [];
     nodeGraph.eachNode(node => {
         const value = node.getLayout().value as number;
 
@@ -93,69 +94,57 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
             r0,
             r,
             startAngle: angle,
-            endAngle: angle + spanAngle,
-            accAngle: angle // For edge shapes
+            endAngle: angle + spanAngle
         });
+
+        edgeAccAngle[node.dataIndex] = angle;
+
         angle += spanAngle;
     });
 
-    const layoutNodeOfEdge = (node: GraphNode, spanAngle: number): number[][] => {
-        const node1Layout = node.getLayout();
-        const node1AccAngle = node1Layout.accAngle;
-        const point1 = [
-            node1Layout.cx + r0 * Math.cos(node1AccAngle),
-            node1Layout.cy + r0 * Math.sin(node1AccAngle)
-        ];
-        const point2 = [
-            node1Layout.cx + r0 * Math.cos(node1AccAngle + spanAngle),
-            node1Layout.cy + r0 * Math.sin(node1AccAngle + spanAngle)
-        ];
-        node.setLayout({
-            accAngle: node1AccAngle + spanAngle
-        }, true);
-        return [point1, point2];
-    };
-
-    nodeGraph.eachEdge(function (edge, index) {
-        let curveness = zrUtil.retrieve3(
-            edge.getModel<ChordEdgeItemOption>().get(['lineStyle', 'curveness']),
-            getCurvenessForEdge(edge, seriesModel, index),
-            0
-        );
-        console.log(curveness);
-
+    nodeGraph.eachEdge(function (edge) {
         const value = edge.getValue('value') as number;
         const spanAngle = unitAngle * (sum ? value : 1);
 
-        const node1Points = layoutNodeOfEdge(edge.node1, spanAngle);
-        const node2Points = layoutNodeOfEdge(edge.node2, spanAngle);
-        const cp: number[][] = [];
-        zrUtil.each([0, 1], i => {
-            const p1 = node1Points[i];
-            const p2 = node2Points[1 - i];
-            cp[i] = null;
-            const x12 = (p1[0] + p2[0]) / 2;
-            const y12 = (p1[1] + p2[1]) / 2;
-            if (+curveness) {
-                curveness *= 3;
-                cp[i] = [
-                    cx * curveness + x12 * (1 - curveness),
-                    cy * curveness + y12 * (1 - curveness)
-                ];
-            }
-        });
+        const node1Index = edge.node1.dataIndex;
+        const sStartAngle = edgeAccAngle[node1Index] || 0;
+        const sEndAngle = sStartAngle + spanAngle;
+        const s1 = [
+            cx + r0 * Math.cos(sStartAngle),
+            cy + r0 * Math.sin(sStartAngle)
+        ];
+        const s2 = [
+            cx + r0 * Math.cos(sEndAngle),
+            cy + r0 * Math.sin(sEndAngle)
+        ];
+
+        const node2Index = edge.node2.dataIndex;
+        const tStartAngle = edgeAccAngle[node2Index] || 0;
+        const tEndAngle = tStartAngle + spanAngle;
+        const t1 = [
+            cx + r0 * Math.cos(tStartAngle),
+            cy + r0 * Math.sin(tStartAngle)
+        ];
+        const t2 = [
+            cx + r0 * Math.cos(tEndAngle),
+            cy + r0 * Math.sin(tEndAngle)
+        ];
+
         edge.setLayout({
-            n11: node1Points[0],
-            n12: node1Points[1],
-            n21: node2Points[0],
-            n22: node2Points[1],
-
-            cp1: cp[0],
-            cp2: cp[1],
-
+            s1,
+            s2,
+            sStartAngle,
+            sEndAngle,
+            t1,
+            t2,
+            tStartAngle,
+            tEndAngle,
             cx,
             cy,
             r: r0
-        } as ChordPathShape);
+        });
+
+        edgeAccAngle[node1Index] = sEndAngle;
+        edgeAccAngle[node2Index] = tEndAngle;
     });
 }
