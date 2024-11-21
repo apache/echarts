@@ -52,6 +52,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     );
     const padAngle = (seriesModel.get('padAngle') || 0) * RADIAN;
     const minAngle = (seriesModel.get('minAngle') || 0) * RADIAN;
+    const totalAngle = Math.PI * 2;
 
     // Sum of each node's edge values
     const nodeValues: number[] = [];
@@ -63,37 +64,77 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         nodeValues[node2Index] = (nodeValues[node2Index] || 0) + value;
     });
 
-    const sum = edgeData.getSum('value');
-    const unitAngle = (Math.PI * 2 - padAngle * nodeData.count())
-        / (sum || edgeCount) / 2; // / 2 for two edges for a pair of nodes
+    let renderedNodeCount = minAngle
+        // If mingAngle is set, node count is always the number in the option
+        ? nodeData.count()
+        // If not, node count is those with value > 0 to avoid padAngle
+        // being rendered multiple times on void data
+        : nodeValues.filter(val => val > 0).length;
 
-    let angle = -seriesModel.get('startAngle') * RADIAN;
-    const edgeAccAngle: number[] = [];
-    nodeGraph.eachNode(node => {
-        const value = nodeValues[node.dataIndex] || 0;
-        const spanAngle = unitAngle * (sum ? value : 1);
+    const edgeValueSum = edgeData.getSum('value');
+    const unitAngle = (totalAngle - padAngle * renderedNodeCount)
+        / (edgeValueSum * 2 || edgeCount); // / 2 for two edges for a pair of nodes
 
-        node.setLayout({
-            cx,
-            cy,
-            r0,
-            r,
-            startAngle: angle,
-            endAngle: angle + spanAngle
+    let edgeAccAngle: number[] = [];
+    let nonMinAngleAccAngle = 0;
+    let minAngleCount = 0;
+
+    const calculateNodeLayout = (scale: number = 1) => {
+        let angle = -seriesModel.get('startAngle') * RADIAN;
+        nonMinAngleAccAngle = 0;
+        edgeAccAngle = [];
+        minAngleCount = 0;
+        nodeGraph.eachNode(node => {
+            const value = nodeValues[node.dataIndex] || 0;
+            let spanAngle = unitAngle * (edgeValueSum ? value : 1) * scale;
+            let nodeScale = 1;
+
+            if (spanAngle <= minAngle) {
+                nodeScale = spanAngle ? minAngle / spanAngle * scale : 1;
+                spanAngle = minAngle;
+                minAngleCount++;
+            }
+            else {
+                nonMinAngleAccAngle += spanAngle;
+                nodeScale = scale;
+            }
+
+            node.setLayout({
+                cx,
+                cy,
+                r0,
+                r,
+                startAngle: angle,
+                endAngle: angle + spanAngle,
+                scale: nodeScale
+            });
+
+            edgeAccAngle[node.dataIndex] = angle;
+
+            angle += spanAngle + padAngle;
         });
+    }
+    calculateNodeLayout();
 
-        edgeAccAngle[node.dataIndex] = angle;
-
-        angle += spanAngle + padAngle;
-    });
+    // Total angle may exceed Math.PI * 2 due to mingAngle, scale down
+    let scale = 1;
+    const currentSpan = nonMinAngleAccAngle + minAngleCount * minAngle
+        + padAngle * renderedNodeCount;
+    if ((currentSpan > totalAngle) && nonMinAngleAccAngle) {
+        const restAngle = totalAngle - minAngle * minAngleCount
+            - padAngle * renderedNodeCount;
+        scale = restAngle / nonMinAngleAccAngle;
+        calculateNodeLayout(scale);
+    }
 
     nodeGraph.eachEdge(function (edge) {
         const value = edge.getValue('value') as number;
-        const spanAngle = unitAngle * (sum ? value : 1);
+        const spanAngle = unitAngle * (edgeValueSum ? value : 1);
 
         const node1Index = edge.node1.dataIndex;
         const sStartAngle = edgeAccAngle[node1Index] || 0;
-        const sEndAngle = sStartAngle + spanAngle;
+        const sSpan = edge.node1.getLayout().scale * spanAngle;
+        const sEndAngle = sStartAngle + sSpan;
         const s1 = [
             cx + r0 * Math.cos(sStartAngle),
             cy + r0 * Math.sin(sStartAngle)
@@ -105,7 +146,8 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
 
         const node2Index = edge.node2.dataIndex;
         const tStartAngle = edgeAccAngle[node2Index] || 0;
-        const tEndAngle = tStartAngle + spanAngle;
+        const tSpan = edge.node2.getLayout().scale * spanAngle;
+        const tEndAngle = tStartAngle + tSpan;
         const t1 = [
             cx + r0 * Math.cos(tStartAngle),
             cy + r0 * Math.sin(tStartAngle)
