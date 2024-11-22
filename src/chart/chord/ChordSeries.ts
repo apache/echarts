@@ -38,7 +38,8 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ZRColor
 } from '../../util/types';
 import Model from '../../model/Model';
 import SeriesModel from '../../model/Series';
@@ -58,8 +59,12 @@ interface ChordEdgeStatesMixin {
 
 type ChordDataValue = OptionDataValue | OptionDataValue[];
 
+export interface ChordItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
+    borderRadius?: (number | string)[] | number | string
+}
+
 export interface ChordNodeStateOption<TCbParams = never> {
-    itemStyle?: ItemStyleOption<TCbParams>
+    itemStyle?: ChordItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
 
@@ -71,8 +76,9 @@ export interface ChordNodeItemOption extends ChordNodeStateOption,
     value?: ChordDataValue
 }
 
-interface ChordEdgeLineStyleOption extends LineStyleOption {
+export interface ChordEdgeLineStyleOption<Clr = ZRColor> extends LineStyleOption {
     curveness?: number
+    color: 'source' | 'target' | 'gradient' | Clr
 }
 
 export interface ChordEdgeStateOption {
@@ -117,7 +123,7 @@ export interface ChordSeriesOption
     edgeLabel?: SeriesLineLabelOption
     label?: SeriesLabelOption
 
-    itemStyle?: ItemStyleOption<CallbackDataParams>
+    itemStyle?: ChordItemStyleOption<CallbackDataParams>
     lineStyle?: ChordEdgeLineStyleOption
 }
 
@@ -205,12 +211,21 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
         height: null,
 
         center: ['50%', '50%'],
-        radius: ['75%', '80%'],
+        radius: ['70%', '80%'],
 
         startAngle: 90,
         endAngle: 'auto',
         minAngle: 0,
-        padAngle: 3
+        padAngle: 3,
+
+        itemStyle: {
+            borderRadius: [0, 0, 5, 5]
+        },
+
+        lineStyle: {
+            color: 'source',
+            opacity: 0.5
+        }
     };
 }
 

@@ -18,14 +18,17 @@
 */
 
 import Group from 'zrender/src/graphic/Group';
+import type { PathStyleProps } from 'zrender/src/graphic/Path';
+import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
-import ChordSeriesModel from './ChordSeries';
+import ChordSeriesModel, { ChordEdgeItemOption, ChordEdgeLineStyleOption, ChordNodeItemOption } from './ChordSeries';
 import ChordPiece from './ChordPiece';
-import { Polygon } from '../../util/graphic';
 import { ChordEdge } from './ChordEdge';
+import type { GraphEdge } from '../../data/Graph';
+import { isString } from 'zrender/src/core/util';
 
 class ChordView extends ChartView {
 
@@ -78,30 +81,75 @@ class ChordView extends ChartView {
         const nodeGraph = nodeData.graph;
 
         const edgeGroup = this._edgeGroup;
-        nodeGraph.eachEdge(function (edge, index) {
-            // if (index > 0) {
-            //     return;
-            // }
+        const edgeData = seriesModel.getEdgeData();
+        nodeGraph.eachEdge(function (edge) {
             const layout = edge.getLayout();
-            const itemModel = edge.node1.getModel();
+            const itemModel = edge.node1.getModel<ChordNodeItemOption>();
+            const borderRadius = itemModel.get(['itemStyle', 'borderRadius']);
+            const edgeModel = edgeData.getItemModel<ChordEdgeItemOption>(edge.dataIndex);
+            const lineStyle = edgeModel.getModel('lineStyle');
+            const lineColor = lineStyle.get('color');
 
-            const style = nodeData.getItemVisual(edge.node1.dataIndex, 'style');
-            console.log();
+            // const style = nodeData.getItemVisual(edge.node1.dataIndex, 'style');
             const edgeShape = new ChordEdge({
-                shape: layout,
-                style: {
-                    fill: style.fill,
-                    // fill: 'rgba(200,0,0,0.2)',
-                    // stroke: '#f00',
-                    opacity: 0.5
-                }
+                shape: {
+                    r: borderRadius,
+                    ...layout
+                },
+                style: lineStyle.getItemStyle()
             });
+            applyEdgeFill(edgeShape, edge, nodeData, lineColor);
             edgeGroup.add(edgeShape);
+
+            edgeData.setItemGraphicEl(edge.node1.dataIndex, edgeShape);
         });
     }
 
     dispose() {
 
+    }
+}
+
+function applyEdgeFill(
+    edgeShape: ChordEdge,
+    edge: GraphEdge,
+    nodeData: SeriesData<ChordSeriesModel>,
+    color: ChordEdgeLineStyleOption['color']
+) {
+    const node1 = edge.node1;
+    const node2 = edge.node2;
+    const edgeStyle = edgeShape.style as PathStyleProps;
+    switch (color) {
+        case 'source':
+            // TODO: use visual and node1.getVisual('color');
+            edgeStyle.fill = nodeData.getItemVisual(edge.node1.dataIndex, 'style').fill;
+            edgeStyle.decal = edge.node1.getVisual('style').decal;
+            break;
+        case 'target':
+            edgeStyle.fill = nodeData.getItemVisual(edge.node2.dataIndex, 'style').fill;
+            edgeStyle.decal = edge.node2.getVisual('style').decal;
+            break;
+        case 'gradient':
+            const sourceColor = nodeData.getItemVisual(edge.node1.dataIndex, 'style').fill;
+            const targetColor = nodeData.getItemVisual(edge.node2.dataIndex, 'style').fill;
+            if (isString(sourceColor) && isString(targetColor)) {
+                // Gradient direction is perpendicular to the mid-angles
+                // of source and target nodes.
+                const shape = edgeShape.shape;
+                const sMidX = (shape.s1[0] + shape.s2[0]) / 2;
+                const sMidY = (shape.s1[1] + shape.s2[1]) / 2;
+                const tMidX = (shape.t1[0] + shape.t2[0]) / 2;
+                const tMidY = (shape.t1[1] + shape.t2[1]) / 2;
+                edgeStyle.fill = new graphic.LinearGradient(
+                    sMidX, sMidY, tMidX, tMidY,
+                    [
+                        { offset: 0, color: sourceColor },
+                        { offset: 1, color: targetColor }
+                    ],
+                    true
+                );
+            }
+            break;
     }
 }
 
