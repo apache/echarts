@@ -34,7 +34,6 @@ import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
-import type TSpan from 'zrender/src/graphic/TSpan';
 import OrdinalScale from '../../scale/Ordinal';
 import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
 
