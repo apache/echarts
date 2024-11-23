@@ -866,7 +866,7 @@ class SeriesData<
                 throw new Error('Do not supported yet');
             }
         }
-        const rawIndex = invertedIndices[value];
+        const rawIndex = invertedIndices && invertedIndices[value];
         if (rawIndex == null || isNaN(rawIndex)) {
             return INDEX_NOT_FOUND;
         }
