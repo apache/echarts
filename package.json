@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "5.6.0"
+    "zrender": "github:ecomfe/zrender"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
