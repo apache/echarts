@@ -48,6 +48,8 @@ import SeriesData from '../../data/SeriesData';
 import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import Graph from '../../data/Graph';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
+import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 
 interface ChordStatesMixin {
     emphasis?: DefaultEmphasisFocus
@@ -76,9 +78,8 @@ export interface ChordNodeItemOption extends ChordNodeStateOption,
     value?: ChordDataValue
 }
 
-export interface ChordEdgeLineStyleOption<Clr = ZRColor> extends LineStyleOption {
+export interface ChordEdgeLineStyleOption extends LineStyleOption {
     curveness?: number
-    color: 'source' | 'target' | 'gradient' | Clr
 }
 
 export interface ChordEdgeStateOption {
@@ -192,6 +193,37 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
 
     getEdgeData() {
         return this.getGraph().edgeData as SeriesData<ChordSeriesModel, LineDataVisual>;
+    }
+
+    formatTooltip(
+        dataIndex: number,
+        multipleSeries: boolean,
+        dataType: string
+    ) {
+        if (dataType === 'edge') {
+            const nodeData = this.getData();
+            const params = this.getDataParams(dataIndex, dataType);
+            const edge = nodeData.graph.getEdgeByIndex(dataIndex);
+            const sourceName = nodeData.getName(edge.node1.dataIndex);
+            const targetName = nodeData.getName(edge.node2.dataIndex);
+
+            const nameArr = [];
+            sourceName != null && nameArr.push(sourceName);
+            targetName != null && nameArr.push(targetName);
+
+            return createTooltipMarkup('nameValue', {
+                name: nameArr.join(' > '),
+                value: params.value,
+                noValue: params.value == null
+            });
+        }
+        // dataType === 'node' or empty
+        const nodeMarkup = defaultSeriesFormatTooltip({
+            series: this,
+            dataIndex: dataIndex,
+            multipleSeries: multipleSeries
+        });
+        return nodeMarkup;
     }
 
     static defaultOption: ChordSeriesOption = {

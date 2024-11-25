@@ -17,16 +17,12 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import ChordSeriesModel, { ChordEdgeItemOption } from './ChordSeries';
+import ChordSeriesModel from './ChordSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { getViewRect, getCircleLayout } from '../../util/layout';
+import { getCircleLayout } from '../../util/layout';
 import SeriesModel from '../../model/Series';
 import { CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
-import { GraphNode } from '../../data/Graph';
-import { getCurvenessForEdge } from '../helper/multipleGraphEdgeHelper';
-import {ChordPathShape} from './ChordEdge';
 
 const RADIAN = Math.PI / 180;
 
