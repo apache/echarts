@@ -53,6 +53,17 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
     defaultValueDimensions: CoordDimensionDefinition['dimsDef'];
 
     /**
+     * @private
+     */
+    _hasEncodeRule(key: string) {
+        const encodeRules = this.getEncode();
+        if (encodeRules && encodeRules.data && encodeRules.data.has(key)) {
+            return encodeRules.data.get(key) != null;
+        }
+        return false;
+    }
+
+    /**
      * @override
      */
     getInitialData(option: Opts, ecModel: GlobalModel): SeriesData {
@@ -74,12 +85,12 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
         if (xAxisType === 'category') {
             option.layout = 'horizontal';
             ordinalMeta = xAxisModel.getOrdinalMeta();
-            addOrdinal = true;
+            addOrdinal = !this._hasEncodeRule('x');
         }
         else if (yAxisType === 'category') {
             option.layout = 'vertical';
             ordinalMeta = yAxisModel.getOrdinalMeta();
-            addOrdinal = true;
+            addOrdinal = !this._hasEncodeRule('y');
         }
         else {
             option.layout = option.layout || 'horizontal';

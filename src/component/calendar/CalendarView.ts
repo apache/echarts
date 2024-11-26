@@ -337,7 +337,8 @@ class CalendarView extends ComponentView {
             z2: 30,
             style: createTextStyle(yearLabel, {
                 text: content
-            })
+            }),
+            silent: yearLabel.get('silent')
         });
         yearText.attr(this._yearTextPositionControl(yearText, posPoints[pos], orient, pos, margin));
 
@@ -422,6 +423,8 @@ class CalendarView extends ComponentView {
         margin = pos === 'start' ? -margin : margin;
         const isCenter = (align === 'center');
 
+        const labelSilent = monthLabel.get('silent');
+
         for (let i = 0; i < termPoints[idx].length - 1; i++) {
 
             const tmp = termPoints[idx][i].slice();
@@ -449,7 +452,8 @@ class CalendarView extends ComponentView {
                 style: extend(
                     createTextStyle(monthLabel, {text: content}),
                     this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
-                )
+                ),
+                silent: labelSilent
             });
 
             group.add(monthText);
@@ -533,6 +537,8 @@ class CalendarView extends ComponentView {
             margin = -margin;
         }
 
+        const labelSilent = dayLabel.get('silent');
+
         for (let i = 0; i < 7; i++) {
 
             const tmpD = coordSys.getNextNDay(start, i);
@@ -544,7 +550,8 @@ class CalendarView extends ComponentView {
                 style: extend(
                     createTextStyle(dayLabel, {text: nameMap[day]}),
                     this._weekTextPositionControl(point, orient, pos, margin, cellSize)
-                )
+                ),
+                silent: labelSilent
             });
 
             group.add(weekText);

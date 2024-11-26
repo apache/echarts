@@ -153,6 +153,8 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             return;
         }
 
+        dom.setAttribute('role', 'img');
+
         if (labelModel.get('description')) {
             dom.setAttribute('aria-label', labelModel.get('description'));
             return;
@@ -216,11 +218,14 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
                     const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
                     const endSeparator = labelModel.get(['data', 'separator', 'end']);
+                    const excludeDimensionId = labelModel.get(['data', 'excludeDimensionId']);
                     const dataLabels = [];
                     for (let i = 0; i < data.count(); i++) {
                         if (i < maxDataCnt) {
                             const name = data.getName(i);
-                            const value = data.getValues(i);
+                            const value = !excludeDimensionId ? data.getValues(i)
+                                : zrUtil.filter(data.getValues(i), (v, j) =>
+                                    zrUtil.indexOf(excludeDimensionId, j) === -1);
                             const dataLabel = labelModel.get(['data', name ? 'withName' : 'withoutName']);
                             dataLabels.push(
                                 replace(dataLabel, {
