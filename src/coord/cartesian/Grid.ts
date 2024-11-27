@@ -187,6 +187,12 @@ class Grid implements CoordinateSystemMaster {
         // Minus label size
         if (isContainLabel) {
             each(axesList, function (axis) {
+                if (
+                    (isContainLabel === 'horizontal' && !axis.isHorizontal())
+                    || (isContainLabel === 'vertical' && axis.isHorizontal())
+                ) {
+                    return;
+                }
                 if (!axis.model.get(['axisLabel', 'inside'])) {
                     const labelUnionRect = estimateLabelUnionRect(axis);
                     if (labelUnionRect) {
