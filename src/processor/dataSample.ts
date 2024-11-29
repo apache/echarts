@@ -21,6 +21,8 @@ import { StageHandler, SeriesOption, SeriesSamplingOptionMixin } from '../util/t
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import { isFunction, isString } from 'zrender/src/core/util';
+import SeriesData from '../data/SeriesData';
+import { CoordinateSystem } from '../coord/CoordinateSystem';
 
 
 type Sampler = (frame: ArrayLike<number>) => number;
@@ -72,6 +74,47 @@ const indexSampler = function (frame: ArrayLike<number>) {
     return Math.round(frame.length / 2);
 };
 
+export function doDataSampling(
+    data: SeriesData,
+    sampling: SeriesSamplingOptionMixin['sampling'],
+    coordSys: CoordinateSystem,
+    dpr: number
+) {
+    const count = data.count();
+    // Only cartesian2d support down sampling. Disable it when there is few data.
+    if (count > 10 && coordSys.type === 'cartesian2d' && sampling) {
+        const baseAxis = coordSys.getBaseAxis();
+        const valueAxis = coordSys.getOtherAxis(baseAxis);
+        const extent = baseAxis.getExtent();
+        // Coordinste system has been resized
+        const size = Math.abs(extent[1] - extent[0]) * (dpr || 1);
+        const rate = Math.round(count / size);
+
+        if (isFinite(rate) && rate > 1) {
+            if (sampling === 'lttb') {
+                return data.lttbDownSample(data.mapDimension(valueAxis.dim), 1 / rate);
+            }
+            else if (sampling === 'minmax') {
+                return data.minmaxDownSample(data.mapDimension(valueAxis.dim), 1 / rate);
+            }
+            let sampler;
+            if (isString(sampling)) {
+                sampler = samplers[sampling];
+            }
+            else if (isFunction(sampling)) {
+                sampler = sampling;
+            }
+            if (sampler) {
+                // Only support sample the first dim mapped from value axis.
+                return data.downSample(
+                    data.mapDimension(valueAxis.dim), 1 / rate, sampler, indexSampler
+                );
+            }
+        }
+    }
+    return null;
+}
+
 export default function dataSample(seriesType: string): StageHandler {
     return {
 
@@ -84,38 +127,10 @@ export default function dataSample(seriesType: string): StageHandler {
             const data = seriesModel.getData();
             const sampling = seriesModel.get('sampling');
             const coordSys = seriesModel.coordinateSystem;
-            const count = data.count();
-            // Only cartesian2d support down sampling. Disable it when there is few data.
-            if (count > 10 && coordSys.type === 'cartesian2d' && sampling) {
-                const baseAxis = coordSys.getBaseAxis();
-                const valueAxis = coordSys.getOtherAxis(baseAxis);
-                const extent = baseAxis.getExtent();
-                const dpr = api.getDevicePixelRatio();
-                // Coordinste system has been resized
-                const size = Math.abs(extent[1] - extent[0]) * (dpr || 1);
-                const rate = Math.round(count / size);
-
-                if (isFinite(rate) && rate > 1) {
-                    if (sampling === 'lttb') {
-                        seriesModel.setData(data.lttbDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
-                    }
-                    else if (sampling === 'minmax') {
-                        seriesModel.setData(data.minmaxDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
-                    }
-                    let sampler;
-                    if (isString(sampling)) {
-                        sampler = samplers[sampling];
-                    }
-                    else if (isFunction(sampling)) {
-                        sampler = sampling;
-                    }
-                    if (sampler) {
-                        // Only support sample the first dim mapped from value axis.
-                        seriesModel.setData(data.downSample(
-                            data.mapDimension(valueAxis.dim), 1 / rate, sampler, indexSampler
-                        ));
-                    }
-                }
+            const dpr = api.getDevicePixelRatio();
+            const resampled = doDataSampling(data, sampling, coordSys, dpr);
+            if (resampled) {
+                seriesModel.setData(resampled);
             }
         }
     };
