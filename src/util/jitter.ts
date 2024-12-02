@@ -3,7 +3,6 @@ import type { AxisBaseModel } from '../coord/AxisBaseModel';
 import Axis2D from '../coord/cartesian/Axis2D';
 import type SingleAxis from '../coord/single/SingleAxis';
 import type SeriesModel from '../model/Series';
-import { makeInner } from './model';
 
 export function needFixJitter(seriesModel: SeriesModel, axis: Axis): boolean {
     const { coordinateSystem } = seriesModel;
@@ -24,7 +23,16 @@ export type JitterData = {
     r: number
 };
 
-const inner = makeInner<{ items: JitterData[] }, Axis2D | SingleAxis>();
+/**
+ * JitterStorable is a mixin for Axis2D and SingleAxis with jitterOverlap being
+ * `true`. It stores the jitter data for each axis so that the jittered data
+ * points can avoid overlapping. If jitterOverlap is `false`, the jitter data
+ * is not stored.
+ * It's created in layout stage when data update.
+ */
+export interface JitterStorable {
+    jitterStore: JitterData[]
+}
 
 /**
  * Fix jitter for overlapping data points.
@@ -74,11 +82,7 @@ function fixJitterAvoidOverlaps(
     jitter: number,
     margin: number
 ): number {
-    const store = inner(fixedAxis);
-    if (!store.items) {
-        store.items = [];
-    }
-    const items = store.items;
+    const items = fixedAxis.jitterStore || [];
 
     const floatA = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, 1);
     const floatB = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, -1);
