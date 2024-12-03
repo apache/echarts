@@ -22,6 +22,7 @@ import Scale from '../../scale/Scale';
 import { OptionAxisType } from '../axisCommonTypes';
 import SingleAxisModel, { SingleAxisPosition } from './AxisModel';
 import { LayoutOrient } from '../../util/types';
+import { JitterStorable, JitterData } from '../../util/jitter';
 import Single from './Single';
 
 interface SingleAxis {
@@ -46,6 +47,11 @@ class SingleAxis extends Axis {
     coordinateSystem: Single;
 
     model: SingleAxisModel;
+
+    /**
+     * See the comment of `JitterStorable`.
+     */
+    jitterStore: JitterData[] = [];
 
     constructor(
         dim: string,

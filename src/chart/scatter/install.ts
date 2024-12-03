@@ -22,13 +22,16 @@ import ScatterSeriesModel from './ScatterSeries';
 import ScatterView from './ScatterView';
 import {install as installGridSimple} from '../../component/grid/installSimple';
 import layoutPoints from '../../layout/points';
+import jitterLayout from './jitterLayout';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     // In case developer forget to include grid component
     use(installGridSimple);
 
     registers.registerSeriesModel(ScatterSeriesModel);
-    registers.registerChartView(ScatterView);
-    registers.registerLayout(layoutPoints('scatter'));
 
+    registers.registerChartView(ScatterView);
+
+    registers.registerLayout(layoutPoints('scatter'));
+    registers.registerLayout(registers.PRIORITY.VISUAL.POST_CHART_LAYOUT, jitterLayout);
 }
