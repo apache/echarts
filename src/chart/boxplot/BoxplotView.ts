@@ -28,6 +28,8 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import { BoxplotItemLayout } from './boxplotLayout';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { ViewRootGroup } from '../../util/types';
+import { setBoxLabels } from '../../label/labelStyle';
 
 class BoxplotView extends ChartView {
     static type = 'boxplot';
@@ -52,7 +54,7 @@ class BoxplotView extends ChartView {
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
                     const itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
-                    const symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
+                    const symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, group, true);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
@@ -68,11 +70,11 @@ class BoxplotView extends ChartView {
 
                 const itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
                 if (!symbolEl) {
-                    symbolEl = createNormalBox(itemLayout, data, newIdx, constDim);
+                    symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, group);
                 }
                 else {
                     saveOldStyle(symbolEl);
-                    updateNormalBoxData(itemLayout, symbolEl, data, newIdx);
+                    updateNormalBoxData(itemLayout, symbolEl, data, newIdx, group);
                 }
 
                 group.add(symbolEl);
@@ -144,6 +146,7 @@ function createNormalBox(
     data: SeriesData,
     dataIndex: number,
     constDim: number,
+    group: ViewRootGroup,
     isInit?: boolean
 ) {
     const ends = itemLayout.ends;
@@ -156,7 +159,7 @@ function createNormalBox(
         }
     });
 
-    updateNormalBoxData(itemLayout, el, data, dataIndex, isInit);
+    updateNormalBoxData(itemLayout, el, data, dataIndex, group, isInit);
 
     return el;
 }
@@ -166,6 +169,7 @@ function updateNormalBoxData(
     el: BoxPath,
     data: SeriesData,
     dataIndex: number,
+    group: ViewRootGroup,
     isInit?: boolean
 ) {
     const seriesModel = data.hostModel;
@@ -180,11 +184,19 @@ function updateNormalBoxData(
 
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.strokeNoScale = true;
-
     el.z2 = 100;
 
     const itemModel = data.getItemModel<BoxplotDataItemOption>(dataIndex);
     const emphasisModel = itemModel.getModel('emphasis');
+    const labelModel = seriesModel.get('label');
+
+    if (labelModel.show) {
+        const formattedLabels =
+            ((seriesModel as BoxplotSeriesModel).getRawValue(dataIndex) as number[])
+            .splice(1).map((value: number) => labelModel.formatter(value).toString());
+
+        setBoxLabels(itemLayout.ends, formattedLabels, labelModel, group);
+    }
 
     setStatesStylesFromModel(el, itemModel);
 
