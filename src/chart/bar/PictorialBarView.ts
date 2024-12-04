@@ -341,7 +341,9 @@ function prepareBarLength(
 
     // if 'pxSign' means sign of pixel,  it can't be zero, or symbolScale will be zero
     // and when borderWidth be settled, the actual linewidth will be NaN
-    outputSymbolMeta.pxSign = (valueDim.xy === 'x' !== valueAxis.inverse)
+    const isXAxis = valueDim.xy === 'x';
+    const isInverse = valueAxis.inverse;
+    outputSymbolMeta.pxSign = (isXAxis && !isInverse || !isXAxis && isInverse)
         ? boundingLength >= 0 ? 1 : -1
         : boundingLength > 0 ? 1 : -1;
 }
