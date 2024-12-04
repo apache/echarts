@@ -135,7 +135,7 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
         console.error('Failed to convert screenshot to webp', e);
     }
 
-    console.log('Screenshot: ', webpScreenshotPath);
+    console.log('Screenshot: ', webpScreenshotPath || screenshotPath);
 
     return {
         screenshotName,
