@@ -347,7 +347,18 @@ class BarView extends ChartView {
                     }
                     const bgLayout = getLayout[coord.type](data, newIndex);
                     const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
-                    updateProps<RectProps | SectorProps>(bgEl, { shape }, animationModel, newIndex);
+
+                    if (realtimeSortCfg) {
+                        updateProps<RectProps | SectorProps>(
+                            bgEl,
+                            { shape },
+                            animationModel ? realtimeSortCfg.baseAxis.model : null,
+                            newIndex
+                        );
+                    }
+                    else {
+                        updateProps<RectProps | SectorProps>(bgEl, { shape }, animationModel, newIndex);
+                    }
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
@@ -361,6 +372,11 @@ class BarView extends ChartView {
                     isClipped = clip[coord.type](coordSysClipArea, layout);
                     if (isClipped) {
                         group.remove(el);
+
+                        bgEls[newIndex]?.hide();
+                    }
+                    else {
+                        bgEls[newIndex]?.show();
                     }
                 }
 
