@@ -162,9 +162,11 @@ async function waitForNetworkIdle(page) {
         page.off('requestfailed', ended);
         page.off('requestfinished', ended);
     };
-  }
+}
 
-
+/**
+ * @param {puppeteer.Browser} browser
+ */
 async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
@@ -333,6 +335,9 @@ function writePNG(diffPNG, diffPath) {
     });
 };
 
+/**
+ * @param {puppeteer.Browser} browser
+ */
 async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
     if (program.save) {
         testOpt.status === 'running';
