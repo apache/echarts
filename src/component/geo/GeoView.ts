@@ -96,7 +96,7 @@ class GeoView extends ComponentView {
     }
 
     findHighDownDispatchers(name: string): Element[] {
-        return this._mapDraw && this._mapDraw.findHighDownDispatchers(name, this._model);
+        return this._mapDraw && this._mapDraw.findHighDownDispatchers(name, this._model.coordinateSystem);
     }
 
     dispose(): void {
