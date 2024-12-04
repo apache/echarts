@@ -343,7 +343,7 @@ function prepareBarLength(
     // and when borderWidth be settled, the actual linewidth will be NaN
     const isXAxis = valueDim.xy === 'x';
     const isInverse = valueAxis.inverse;
-    outputSymbolMeta.pxSign = (isXAxis && !isInverse || !isXAxis && isInverse)
+    outputSymbolMeta.pxSign = (isXAxis && !isInverse) || (!isXAxis && isInverse)
         ? boundingLength >= 0 ? 1 : -1
         : boundingLength > 0 ? 1 : -1;
 }
