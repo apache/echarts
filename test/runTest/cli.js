@@ -117,9 +117,9 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     if (minor) {
         screenshotName += '-' + minor;
     }
-    let screenshotPrefix = isExpected ? 'expected' : 'actual';
+    const screenshotPrefix = isExpected ? 'expected' : 'actual';
     fse.ensureDirSync(getScreenshotDir());
-    let screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
+    const screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
     await page.screenshot({
         path: screenshotPath,
         // https://github.com/puppeteer/puppeteer/issues/7043
@@ -128,11 +128,18 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
         fullPage
     });
 
-    const webpScreenshotPath = await convertToWebP(screenshotPath);
+    let webpScreenshotPath;
+    try {
+        webpScreenshotPath = await convertToWebP(screenshotPath);
+    } catch (e) {
+        console.error('Failed to convert screenshot to webp', e);
+    }
+
+    console.log('Screenshot: ', webpScreenshotPath);
 
     return {
         screenshotName,
-        screenshotPath: webpScreenshotPath,
+        screenshotPath: webpScreenshotPath || screenshotPath,
         rawScreenshotPath: screenshotPath
     };
 }
@@ -269,7 +276,8 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         });
         await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`, {
             waitUntil: 'networkidle2',
-            timeout: 10000
+            timeout: 10000,
+            // timeout: 0
         });
 
         if (!vstInited) {    // Not using simpleRequire in the test
@@ -316,11 +324,12 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     };
 }
 
-async function writePNG(diffPNG, diffPath) {
-    return new Promise(resolve => {
-        let writer = fs.createWriteStream(diffPath);
+function writePNG(diffPNG, diffPath) {
+    return new Promise((resolve, reject) => {
+        const writer = fs.createWriteStream(diffPath);
         diffPNG.pack().pipe(writer);
-        writer.on('finish', () => {resolve();});
+        writer.on('finish', resolve);
+        writer.on('error', reject);
     });
 };
 
@@ -353,9 +362,15 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
 
                 const diffPath = `${getScreenshotDir()}/${shot.screenshotName}-diff.png`;
                 await writePNG(diffPNG, diffPath);
-                const diffWebpPath = await convertToWebP(diffPath);
 
-                result.diff = getClientRelativePath(diffWebpPath);
+                let diffWebpPath;
+                try {
+                    diffWebpPath = await convertToWebP(diffPath);
+                } catch (e) {
+                    console.error('Failed to convert diff png to webp', e);
+                }
+
+                result.diff = getClientRelativePath(diffWebpPath || diffPath);
                 result.diffRatio = diffRatio;
 
                 // Remove png files
@@ -363,7 +378,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
                     await Promise.all([
                         fse.unlink(actual.rawScreenshotPath),
                         fse.unlink(expected.rawScreenshotPath),
-                        fse.unlink(diffPath)
+                        diffWebpPath && fse.unlink(diffPath)
                     ]);
                 }
                 catch (e) {}
@@ -456,3 +471,4 @@ runTests(program.tests.split(',').map(testName => {
         status: 'pending'
     };
 }));
+
