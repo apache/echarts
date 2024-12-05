@@ -302,6 +302,14 @@ class MapDraw {
                     ? mapOrGeoModel.getRegionModel(regionName)
                     : (data ? data.getItemModel(dataIdx) as Model<MapDataItemOption> : null);
 
+                // allow specified itemStyle in GeoJSON data
+                const regionItemStyle = region.properties && region.properties.itemStyle;
+                if (regionItemStyle) {
+                    const regionModelOption = regionModel.option;
+                    const modelItemStyle = regionModelOption.itemStyle || (regionModelOption.itemStyle = {});
+                    modelItemStyle && zrUtil.defaults(modelItemStyle, regionItemStyle);
+                }
+
                 regionsInfoByName.set(regionName, { dataIdx, regionModel });
             }
 
