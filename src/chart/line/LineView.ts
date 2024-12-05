@@ -1031,7 +1031,6 @@ class LineView extends ChartView {
 
     _changePolyState(toState: DisplayState) {
         const polygon = this._polygon;
-        setStatesFlag(this._polyline, toState);
         polygon && setStatesFlag(polygon, toState);
     }
 
