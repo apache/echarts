@@ -25,7 +25,7 @@ import { GeoJSON, GeoProjection, GeoSVGGraphicRoot } from './geoTypes';
 import * as matrix from 'zrender/src/core/matrix';
 import type Element from 'zrender/src/Element';
 import { each } from 'zrender/src/core/util';
-import type { GeoItemStyleOption } from './GeoModel';
+import type { RegoinOption } from './GeoModel';
 
 const TMP_TRANSFORM = [] as number[];
 
@@ -137,7 +137,7 @@ export class GeoJSONRegion extends Region {
 
     // Injected outside.
     properties: GeoJSON['features'][0]['properties'] & {
-        itemStyle?: GeoItemStyleOption
+        echartsStyle?: Omit<RegoinOption, 'name' | 'selected'>
     };
 
     constructor(

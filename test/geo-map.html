@@ -463,18 +463,14 @@ under the License.
                         map: 'china',
                         roam: true,
                         label: {
-                            normal: {
-                                show: true,
-                                textStyle: {
-                                    color: 'rgba(0,0,0,0.4)'
-                                }
-                            }
+                            show: true,
+                            color: 'rgba(0,0,0,0.4)'
                         },
                         itemStyle: {
-                            normal:{
-                                borderColor: 'rgba(0, 0, 0, 0.2)'
-                            },
-                            emphasis:{
+                            borderColor: 'rgba(0, 0, 0, 0.2)'
+                        },
+                        emphasis:{
+                            itemStyle: {
                                 color: null,
                                 areaColor: null,
                                 shadowOffsetX: 0,
@@ -495,18 +491,16 @@ under the License.
                                 return val[2] / 10;
                             },
                             label: {
-                                normal: {
-                                    formatter: '{b}',
-                                    position: 'right',
-                                    show: false
-                                },
-                                emphasis: {
-                                    show: true
-                                }
+                                formatter: '{b}',
+                                position: 'right',
+                                show: false
                             },
                             itemStyle: {
-                                normal: {
-                                    color: '#ddb926'
+                                color: '#ddb926'
+                            },
+                            emphasis: {
+                                label: {
+                                    show: true
                                 }
                             }
                         },
@@ -623,21 +617,73 @@ under the License.
                 'data/usa.json'
             ], function (echarts, usaGeoJSON) {
                 usaGeoJSON = JSON.parse(JSON.stringify(usaGeoJSON));
-                usaGeoJSON.features[0].properties.itemStyle = {
-                    areaColor: '#f00'
+                const features = usaGeoJSON.features
+                features[0].properties.echartsStyle = {
+                    itemStyle: {
+                        areaColor: '#f00'
+                    },
+                    label: {
+                        show: true,
+                        color: 'blue',
+                        fontWeight: 'bold'
+                    }
+                }
+                features[1].properties.echartsStyle = {
+                    itemStyle: {
+                        borderColor: '#f00',
+                        borderType: [5, 5],
+                        borderWidth: 2
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            areaColor: 'purple'
+                        }
+                    },
+                    label: {
+                        fontStyle: 'italic',
+                        fontSize: 20,
+                        show: true,
+                        offset: [0, -30]
+                    }
                 };
-                usaGeoJSON.features[1].properties.itemStyle = {
-                    borderColor: '#f00',
-                    borderType: [5, 5]
+                features[2].properties.echartsStyle = {
+                    itemStyle: {
+                        opacity: 0.5
+                    }
                 };
-                usaGeoJSON.features[2].properties.itemStyle = {
-                    opacity: 0.5
+                features[3].properties.echartsStyle = {
+                    itemStyle: {
+                        borderWidth: 4
+                    }
                 };
-                usaGeoJSON.features[3].properties.itemStyle = {
-                   borderWidth: 4
+                features[4].properties.echartsStyle = {
+                    itemStyle: {
+                        areaColor: 'green'
+                    },
+                    emphasis: {
+                        focus: 'self'
+                    },
+                    label: {
+                        show: true,
+                        offset: [-60, 0],
+                        formatter: '{a}→'
+                    }
                 };
-                usaGeoJSON.features[4].properties.itemStyle = {
-                   areaColor: 'green'
+                features[5].properties.echartsStyle = {
+                    label: {
+                        show: true,
+                        formatter: 'GeoJSON\nlabel',
+                        color: '#fff'
+                    },
+                    tooltip: {
+                        show: true,
+                        formatter: 'This is a tooltip specified in GeoJSON data.'
+                    },
+                    select: {
+                        itemStyle: {
+                            areaColor: 'red'
+                        }
+                    }
                 };
 
                 echarts.registerMap('usa', usaGeoJSON, {
@@ -665,8 +711,10 @@ under the License.
                         itemStyle: {
                             areaColor: '#14c4ba',
                             borderColor: '#000'
-                        }
-                    }
+                        },
+                        selectedMode: 'single',
+                    },
+                    tooltip: {}
                 };
 
                 var chart = testHelper.create(echarts, 'main2', {

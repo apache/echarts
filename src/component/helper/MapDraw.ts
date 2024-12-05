@@ -302,13 +302,9 @@ class MapDraw {
                     ? mapOrGeoModel.getRegionModel(regionName)
                     : (data ? data.getItemModel(dataIdx) as Model<MapDataItemOption> : null);
 
-                // allow specified itemStyle in GeoJSON data
-                const regionItemStyle = region.properties && region.properties.itemStyle;
-                if (regionItemStyle) {
-                    const regionModelOption = regionModel.option;
-                    const modelItemStyle = regionModelOption.itemStyle || (regionModelOption.itemStyle = {});
-                    modelItemStyle && zrUtil.defaults(modelItemStyle, regionItemStyle);
-                }
+                // allow specified echarts style in GeoJSON data
+                const specifiedRegionStyle = region.properties && region.properties.echartsStyle;
+                specifiedRegionStyle && zrUtil.merge(regionModel.option, specifiedRegionStyle);
 
                 regionsInfoByName.set(regionName, { dataIdx, regionModel });
             }
