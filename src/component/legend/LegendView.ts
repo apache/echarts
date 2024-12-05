@@ -404,7 +404,8 @@ class LegendView extends ComponentView {
         }
         else {
             // Use default legend icon policy for most series
-            const rotate = legendIconType === 'inherit' && seriesModel.getData().getVisual('symbol')
+            const rotate = (!legendIconType || legendIconType === 'inherit')
+             && seriesModel.getData().getVisual('symbol')
                 ? (iconRotate === 'inherit'
                     ? seriesModel.getData().getVisual('symbolRotate')
                     : iconRotate
