@@ -302,6 +302,10 @@ class MapDraw {
                     ? mapOrGeoModel.getRegionModel(regionName)
                     : (data ? data.getItemModel(dataIdx) as Model<MapDataItemOption> : null);
 
+                // allow specified echarts style in GeoJSON data
+                const specifiedRegionStyle = region.properties && region.properties.echartsStyle;
+                specifiedRegionStyle && zrUtil.merge(regionModel.option, specifiedRegionStyle);
+
                 regionsInfoByName.set(regionName, { dataIdx, regionModel });
             }
 
