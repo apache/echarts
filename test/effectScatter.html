@@ -39,10 +39,8 @@ under the License.
 
             require([
                 'echarts',
-                './data/map/json/china.json'
-            ], function (echarts, chinaJson) {
-
-                echarts.registerMap('china', chinaJson);
+                './data/map/js/china-map.js'
+            ], function (echarts, china) {
 
                 var data = [
                     {name: '海门', value: 9},
@@ -437,7 +435,10 @@ under the License.
                         if (geoCoord) {
                             res.push({
                                 name: data[i].name,
-                                value: geoCoord.concat(data[i].value)
+                                value: geoCoord.concat(data[i].value),
+                                lineStyle: {
+                                    color: 'red'
+                                }
                             });
                         }
                     }
@@ -478,10 +479,8 @@ under the License.
                         },
                         roam: true,
                         itemStyle: {
-                            normal: {
-                                areaColor: '#323c48',
-                                borderColor: '#111'
-                            },
+                            areaColor: '#323c48',
+                            borderColor: '#111',
                             emphasis: {
                                 areaColor: '#2a333d'
                             }
@@ -548,7 +547,7 @@ under the License.
 
                 setInterval(function () {
                     var rippleEffectCount = ~~(Math.random() * 9) + 1;
-                    console.log('rippleEffectCount', rippleEffectCount);
+                    // console.log('rippleEffectCount', rippleEffectCount);
                     myChart.setOption({
                         series: [{
                             name: 'Top 5',
