@@ -42,6 +42,7 @@ module.exports = {
     testMatch: [
         '**/spec/api/*.test.ts',
         '**/spec/component/**/*.test.ts',
+        '**/spec/chart/**/*.test.ts',
         '**/spec/series/**/*.test.ts',
         '**/spec/data/*.test.ts',
         '**/spec/model/*.test.ts',
