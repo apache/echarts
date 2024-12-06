@@ -583,7 +583,7 @@ class SeriesData<
      *        Each item is exactly corresponding to a dimension.
      */
     appendValues(values: any[][], names?: string[]): void {
-        const {start, end} = this._store.appendValues(values, names.length);
+        const {start, end} = this._store.appendValues(values, names && names.length);
         const shouldMakeIdFromName = this._shouldMakeIdFromName();
 
         this._updateOrdinalMeta();
