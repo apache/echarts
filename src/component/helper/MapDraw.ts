@@ -352,6 +352,12 @@ class MapDraw {
                     viewBuildCtx, compoundPath, regionName, regionModel, mapOrGeoModel, dataIdx, centerPt
                 );
 
+                const z = (regionModel as Model<RegionOption>).get('z', true);
+                z != null && (compoundPath.attr('z', z));
+
+                const silent = (regionModel as Model<RegionOption>).get('silent', true);
+                silent != null && (compoundPath.silent = silent);
+
                 if (isLine) {
                     fixLineStyle(compoundPath);
                     zrUtil.each(compoundPath.states, fixLineStyle);

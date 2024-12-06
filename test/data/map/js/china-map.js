@@ -56,7 +56,9 @@
                         borderType: [5, 5],
                         // Developers should set this to chart background color
                         borderColor: '#fff'
-                    }
+                    },
+                    z: 10,
+                    silent: true
                 };
                 // Put this feature at the begining of the features so that
                 // the line will be displayed at top.
