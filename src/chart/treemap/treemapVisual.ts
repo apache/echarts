@@ -19,7 +19,7 @@
 
 import VisualMapping, { VisualMappingOption } from '../../visual/VisualMapping';
 import { each, extend, isArray } from 'zrender/src/core/util';
-import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } from './TreemapSeries';
+import TreemapSeriesModel, { TreemapSeriesNodeItemOption } from './TreemapSeries';
 import { TreemapLayoutNode, TreemapItemLayout } from './treemapLayout';
 import Model from '../../model/Model';
 import { ColorString, ZRColor } from '../../util/types';
@@ -40,8 +40,6 @@ interface TreemapVisual {
     colorAlpha?: number
     colorSaturation?: number
 }
-
-type TreemapLevelItemStyleOption = TreemapSeriesOption['levels'][number]['itemStyle'];
 
 export default {
     seriesType: 'treemap',

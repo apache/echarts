@@ -30,7 +30,7 @@ import {
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption, RegoinOption } from '../../coord/geo/GeoModel';
+import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption, RegionOption } from '../../coord/geo/GeoModel';
 import MapSeries, { MapDataItemOption } from '../../chart/map/MapSeries';
 import GlobalModel from '../../model/Global';
 import { Payload, ECElement, LineStyleOption, InnerFocus, DisplayState } from '../../util/types';
@@ -240,7 +240,7 @@ class MapDraw {
         const regionsGroupByName = this._regionsGroupByName = zrUtil.createHashMap<RegionsGroup, string>();
         const regionsInfoByName = zrUtil.createHashMap<{
             dataIdx: number;
-            regionModel: Model<RegoinOption> | Model<MapDataItemOption>;
+            regionModel: Model<RegionOption> | Model<MapDataItemOption>;
         }, string>();
         const regionsGroup = this._regionsGroup;
         const transformInfoRaw = viewBuildCtx.transformInfoRaw;

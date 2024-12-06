@@ -61,7 +61,7 @@ under the License.
             <div v-for="action in actions" :class="{'action-item': true, 'active': action.name === currentAction.name}" @click.self="select(action.name)">
                 {{action.name}}
                 <div style="float:right" class="operations">
-                    <el-popover>
+                    <el-popover popper-class="action-popover">
                         <div style="text-align: center">{ scrollX: {{action.scrollX}}, scrollY: {{action.scrollY}} }</div>
                         <div v-for="op in action.ops" style="text-align: center">{{op}}</div>
                         <div slot="reference">

@@ -66,6 +66,38 @@ under the License.
             ], function (ec, geoJSON) {
                 echarts = ec;
 
+                geoJSON.features[0].properties.echartsStyle = {
+                    itemStyle: {
+                        areaColor: 'green'
+                    }
+                }
+
+                geoJSON.features[1].properties.echartsStyle = {
+                    selected: true,
+                    label: {
+                        formatter: 'Default Selected:\n{b}'
+                    }
+                }
+
+                geoJSON.features[2].properties.echartsStyle = {
+                    itemStyle: {
+                        borderType: 'dotted',
+                        borderColor: 'blue'
+                    }
+                }
+
+                geoJSON.features[11].properties.echartsStyle = {
+                    itemStyle: {
+                        // This region will be overridden as `cyan` by the data item option
+                        areaColor: 'black'
+                    },
+                    tooltip: {
+                        formatter: function (params) {
+                            return 'This is a custom tooltip from GeoJSON: ' + params.name;
+                        }
+                    }
+                }
+
                 echarts.registerMap('nestedMap', geoJSON);
 
                 var option = {
@@ -102,8 +134,8 @@ under the License.
                             },
                             data:[
                                 {name: 'Praha', value: 123},
-                                {name: 'Plzeňský kraj', value: 321},
-                                {name: 'Středočeský kraj', value: 521}
+                                {name: 'Plzeňský kraj', value: 321, itemStyle: {areaColor: 'cyan'}},
+                                {name: 'Středočeský kraj', value: 521},
                             ]
                         }
                     ]
