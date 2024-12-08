@@ -67,7 +67,15 @@
 
             const echartsStyle = properties.echartsStyle = {
                 z: 10,
-                silent: true
+                silent: true,
+                label: {
+                    show: false
+                },
+                emphasis: {
+                    label: {
+                        show: false
+                    }
+                }
             };
             if (
                 gbcode === '156980000' ||
