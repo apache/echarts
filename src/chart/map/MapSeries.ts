@@ -55,6 +55,8 @@ export interface MapDataItemOption extends MapStateOption,
     StatesOptionMixin<MapStateOption, StatesMixinBase>,
     OptionDataItemObject<OptionDataValueNumeric> {
     cursor?: string
+    z?: number
+    silent?: boolean
 }
 
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
