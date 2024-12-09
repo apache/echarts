@@ -63,7 +63,6 @@ export interface RegionOption extends GeoStateOption, StatesOptionMixin<GeoState
     name?: string
     selected?: boolean
     tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
-    z?: number
     silent?: boolean
 }
 
@@ -139,8 +138,6 @@ class GeoModel extends ComponentModel<GeoOption> {
 
     static type = 'geo';
     readonly type = GeoModel.type;
-
-    preventAutoZ = true;
 
     coordinateSystem: Geo;
 

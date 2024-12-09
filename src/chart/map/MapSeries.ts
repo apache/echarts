@@ -55,7 +55,6 @@ export interface MapDataItemOption extends MapStateOption,
     StatesOptionMixin<MapStateOption, StatesMixinBase>,
     OptionDataItemObject<OptionDataValueNumeric> {
     cursor?: string
-    z?: number
     silent?: boolean
 }
 
