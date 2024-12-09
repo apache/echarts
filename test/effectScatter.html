@@ -39,8 +39,8 @@ under the License.
 
             require([
                 'echarts',
-                './data/map/js/china-map.js'
-            ], function (echarts, china) {
+                './data/map/js/china.js'
+            ], function (echarts) {
 
                 var data = [
                     {name: '海门', value: 9},
@@ -435,10 +435,7 @@ under the License.
                         if (geoCoord) {
                             res.push({
                                 name: data[i].name,
-                                value: geoCoord.concat(data[i].value),
-                                lineStyle: {
-                                    color: 'red'
-                                }
+                                value: geoCoord.concat(data[i].value)
                             });
                         }
                     }
@@ -449,7 +446,7 @@ under the License.
 
                 myChart.setOption({
                     backgroundColor: '#404a59',
-                    title: {
+                    title: [{
                         text: '全国主要城市空气质量',
                         subtext: 'data from PM25.in',
                         sublink: 'http://www.pm25.in',
@@ -457,7 +454,21 @@ under the License.
                         textStyle: {
                             color: '#fff'
                         }
-                    },
+                    }, {
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 15,
+                        textStyle: {
+                            color: '#ccc',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     tooltip : {
                         trigger: 'item'
                     },
@@ -490,7 +501,9 @@ under the License.
                             itemStyle: {
                                 borderColor: '#404a59'
                             }
-                        }]
+                        }],
+                        center: [104.2, 36],
+                        zoom: 1.4
                     },
                     series : [
                         {
