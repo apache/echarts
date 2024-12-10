@@ -271,16 +271,17 @@ class GeoCreator implements CoordinateSystemCreator {
         const source = geoSourceManager.load(mapName, nameMap, nameProperty);
         zrUtil.each(source.regions, function (region) {
             const name = region.name;
-            if (!dataNameMap.get(name)) {
-                const regionOption = {
-                    name: name
+            let regionOption = dataNameMap.get(name);
+            // apply specified echarts style in GeoJSON data
+            const specifiedGeoJSONRegionStyle = (region as GeoJSONRegion).properties
+                && (region as GeoJSONRegion).properties.echartsStyle;
+            if (!regionOption) {
+                regionOption = {
+                   name: name
                 };
-                // apply specified echarts style in GeoJSON data
-                const specifiedGeoJSONRegionStyle = (region as GeoJSONRegion).properties
-                    && (region as GeoJSONRegion).properties.echartsStyle;
-                specifiedGeoJSONRegionStyle && zrUtil.merge(regionOption, specifiedGeoJSONRegionStyle);
                 regionsArr.push(regionOption);
             }
+            specifiedGeoJSONRegionStyle && zrUtil.merge(regionOption, specifiedGeoJSONRegionStyle);
         });
 
         return regionsArr;

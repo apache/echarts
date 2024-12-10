@@ -302,6 +302,9 @@ class MapDraw {
                     ? mapOrGeoModel.getRegionModel(regionName)
                     : (data ? data.getItemModel(dataIdx) as Model<MapDataItemOption> : null);
 
+                const silent = (regionModel as Model<RegionOption>).get('silent', true);
+                silent != null && (regionGroup.silent = silent);
+
                 regionsInfoByName.set(regionName, { dataIdx, regionModel });
             }
 
@@ -420,6 +423,9 @@ class MapDraw {
             if (el instanceof Displayable) {
                 el.culling = true;
             }
+
+            const silent = (regionModel as Model<RegionOption>).get('silent', true);
+            silent != null && (el.silent = silent);
 
             // We do not know how the SVG like so we'd better not to change z2.
             // Otherwise it might bring some unexpected result. For example,

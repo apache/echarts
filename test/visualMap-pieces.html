@@ -54,11 +54,25 @@ under the License.
                 'map/js/china'
             ], function (echarts) {
                 const option = {
-                    title : {
+                    title : [{
                         text: '订单量',
                         subtext: '纯属虚构',
                         x:'center'
-                    },
+                    }, {
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 15,
+                        textStyle: {
+                            color: '#ccc',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     tooltip : {
                         trigger: 'item'
                     },
@@ -117,41 +131,43 @@ under the License.
                             label: {
                                 show: true
                             },
-                            data:[
-                                {name: '北京', value: 5},
-                                {name: '天津', value: Math.round(Math.random()*2000)},
-                                {name: '上海', value: Math.round(Math.random()*2000)},
-                                {name: '重庆', value: Math.round(Math.random()*2000)},
-                                {name: '河北', value: 0},
-                                {name: '河南', value: Math.round(Math.random()*2000)},
-                                {name: '云南', value: 123},
-                                {name: '辽宁', value: 305},
-                                {name: '黑龙江', value: Math.round(Math.random()*2000), visualMap: false},
-                                {name: '湖南', value: 200},
-                                {name: '安徽', value: Math.round(Math.random()*2000)},
-                                {name: '山东', value: Math.round(Math.random()*2000)},
-                                {name: '新疆', value: Math.round(Math.random()*2000)},
-                                {name: '江苏', itemStyle: {color: 'red'}, value: Math.round(Math.random()*2000), visualMap: false},
-                                {name: '浙江', value: Math.round(Math.random()*2000)},
-                                {name: '江西', value: Math.round(Math.random()*2000)},
-                                {name: '湖北', value: Math.round(Math.random()*2000)},
-                                {name: '广西', value: Math.round(Math.random()*2000)},
-                                {name: '甘肃', value: Math.round(Math.random()*2000)},
-                                {name: '山西', value: Math.round(Math.random()*2000)},
-                                {name: '内蒙古', value: Math.round(Math.random()*2000)},
-                                {name: '陕西', value: Math.round(Math.random()*2000)},
-                                {name: '吉林', value: Math.round(Math.random()*2000)},
-                                {name: '福建', value: Math.round(Math.random()*2000)},
-                                {name: '贵州', value: Math.round(Math.random()*2000)},
-                                {name: '广东', value: Math.round(Math.random()*2000)},
-                                {name: '青海', value: Math.round(Math.random()*2000)},
-                                {name: '西藏', value: Math.round(Math.random()*2000)},
-                                {name: '四川', value: Math.round(Math.random()*2000)},
-                                {name: '宁夏', value: Math.round(Math.random()*2000)},
-                                {name: '海南', value: Math.round(Math.random()*2000)},
-                                {name: '台湾', value: Math.round(Math.random()*2000)},
-                                {name: '香港', value: Math.round(Math.random()*2000)},
-                                {name: '澳门', value: Math.round(Math.random()*2000)}
+                            center: [104.2, 36],
+                            zoom: 1.4,
+                            data: [
+                                {name: '北京市', value: 5},
+                                {name: '天津市', value: Math.round(Math.random()*2000)},
+                                {name: '上海市', value: Math.round(Math.random()*2000)},
+                                {name: '重庆市', value: Math.round(Math.random()*2000)},
+                                {name: '河北省', value: 0},
+                                {name: '河南省', value: Math.round(Math.random()*2000)},
+                                {name: '云南省', value: 123},
+                                {name: '辽宁省', value: 305},
+                                {name: '黑龙江省', value: Math.round(Math.random()*2000), visualMap: false},
+                                {name: '湖南省', value: 200},
+                                {name: '安徽省', value: Math.round(Math.random()*2000)},
+                                {name: '山东省', value: Math.round(Math.random()*2000)},
+                                {name: '新疆维吾尔自治区', value: Math.round(Math.random()*2000)},
+                                {name: '江苏省', itemStyle: {color: 'red'}, value: Math.round(Math.random()*2000), visualMap: false},
+                                {name: '浙江省', value: Math.round(Math.random()*2000)},
+                                {name: '江西省', value: Math.round(Math.random()*2000)},
+                                {name: '湖北省', value: Math.round(Math.random()*2000)},
+                                {name: '广西壮族自治区', value: Math.round(Math.random()*2000)},
+                                {name: '甘肃省', value: Math.round(Math.random()*2000)},
+                                {name: '山西省', value: Math.round(Math.random()*2000)},
+                                {name: '内蒙古自治区', value: Math.round(Math.random()*2000)},
+                                {name: '陕西省', value: Math.round(Math.random()*2000)},
+                                {name: '吉林省', value: Math.round(Math.random()*2000)},
+                                {name: '福建省', value: Math.round(Math.random()*2000)},
+                                {name: '贵州省', value: Math.round(Math.random()*2000)},
+                                {name: '广东省', value: Math.round(Math.random()*2000)},
+                                {name: '青海省', value: Math.round(Math.random()*2000)},
+                                {name: '西藏自治区', value: Math.round(Math.random()*2000)},
+                                {name: '四川省', value: Math.round(Math.random()*2000)},
+                                {name: '宁夏回族自治区', value: Math.round(Math.random()*2000)},
+                                {name: '海南省', value: Math.round(Math.random()*2000)},
+                                {name: '台湾省', value: Math.round(Math.random()*2000)},
+                                {name: '香港特别行政区', value: Math.round(Math.random()*2000)},
+                                {name: '澳门特别行政区', value: Math.round(Math.random()*2000)}
                             ]
                         }
                     ]

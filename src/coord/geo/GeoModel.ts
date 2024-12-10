@@ -63,6 +63,7 @@ export interface RegionOption extends GeoStateOption, StatesOptionMixin<GeoState
     name?: string
     selected?: boolean
     tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
+    silent?: boolean
 }
 
 /**
