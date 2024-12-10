@@ -65,6 +65,22 @@ under the License.
             ], function (echarts) {
 
                 option = {
+                    title: [{
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 15,
+                        textStyle: {
+                            color: '#888',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
+
                     tooltip: {
                         trigger: 'item',
                         formatter: '{b}'
@@ -90,11 +106,11 @@ under the License.
                             },
                             roam: true,
                             nameMap: {
-                                '广东': 'guangdong',
-                                '广西': 'guangxi'
+                                '广东省': 'guangdong',
+                                '广西壮族自治区': 'guangxi'
                             },
                             data:[
-                                {name:'广东', selected:true}
+                                {name:'广东省', selected:true}
                             ]
                         },
                         {
@@ -112,12 +128,12 @@ under the License.
                             },
                             roam: true,
                             // nameMap: {
-                            //     '广东': 'guangdong',
-                            //     '广西': 'guangxi'
+                            //     '广东省': 'guangdong',
+                            //     '广西壮族自治区': 'guangxi'
                             // },
                             data:[
-                                {name:'广东', selected: true},
-                                {name:'山东', selected: true}
+                                {name:'广东省', selected: true},
+                                {name:'山东省', selected: true}
                             ]
                         }
                     ]

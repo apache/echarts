@@ -189,6 +189,11 @@ iframe {
     margin-left: 10px;
 }
 
+.action-popover {
+    max-height: 90%;
+    overflow: auto;
+}
+
 ::-webkit-scrollbar {
     height: 8px;
     width: 8px;

@@ -22,7 +22,7 @@ const pixelmatch = require('pixelmatch');
 const fs = require('fs');
 
 function readPNG(path) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         fs.createReadStream(path)
             .pipe(new PNG())
             .on('parsed', function () {
@@ -31,7 +31,8 @@ function readPNG(path) {
                     width: this.width,
                     height: this.height
                 });
-            });
+            })
+            .on('error', (err) => reject(`failed to read PNG from '${path}'\n` + err));
     });
 }
 
