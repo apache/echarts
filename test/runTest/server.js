@@ -25,6 +25,8 @@ process.on('uncaughtException', (err) => {
         console.log();
         console.error(`Please run \`${chalk.yellow('npm install')}\` in \`${chalk.green('test/runTest')}\` folder first!`);
         console.log();
+    } else {
+        console.error('Uncaught err:', err);
     }
     process.exit(1);
 });
@@ -53,6 +55,9 @@ const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
 const genReport = require('./genReport');
+const useCNMirror = process.argv.includes('--useCNMirror') || !!process.env.USE_CN_MIRROR;
+
+console.info(chalk.green('useCNMirror:'), useCNMirror);
 
 const CLI_FIXED_THREADS_COUNT = 1;
 
@@ -231,6 +236,18 @@ async function start() {
         return;
     }
 
+    let stableVersions;
+    let nightlyVersions;
+    try {
+        stableVersions = await fetchVersions(false, useCNMirror);
+        nightlyVersions = (await fetchVersions(true, useCNMirror)).slice(0, 100);
+        stableVersions.unshift('local');
+        nightlyVersions.unshift('local');
+    } catch (e) {
+        console.error('Failed to fetch version list:', e);
+        console.log(`Try again later or try the CN mirror with: ${chalk.yellow('npm run test:visual -- -- --useCNMirror')}`)
+        return;
+    }
 
     let _currentTestHash;
     let _currentRunConfig;
@@ -240,11 +257,6 @@ async function start() {
 
     // Start a static server for puppeteer open the html test cases.
     let {io} = serve();
-
-    const stableVersions = await fetchVersions(false);
-    const nightlyVersions = (await fetchVersions(true)).slice(0, 100);
-    stableVersions.unshift('local');
-    nightlyVersions.unshift('local');
 
     io.of('/client').on('connect', async socket => {
 
@@ -328,8 +340,8 @@ async function start() {
 
             let startTime = Date.now();
 
-            await prepareEChartsLib(data.expectedVersion); // Expected version.
-            await prepareEChartsLib(data.actualVersion); // Version to test
+            await prepareEChartsLib(data.expectedVersion, useCNMirror); // Expected version.
+            await prepareEChartsLib(data.actualVersion, useCNMirror); // Version to test
 
             // If aborted in the time downloading lib.
             if (isAborted) {

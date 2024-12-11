@@ -44,9 +44,6 @@ type VisualState = VisualMapModel['stateList'][number];
 
 type InnerVisualPiece = VisualMappingOption['pieceList'][number];
 
-type GetPieceValueType<T extends InnerVisualPiece>
-    = T extends { interval: InnerVisualPiece['interval'] } ? number : string;
-
 /**
  * Order Rule:
  *
