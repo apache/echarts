@@ -36,11 +36,8 @@ class ChordView extends ChartView {
     readonly type: string = ChordView.type;
 
     private _data: SeriesData;
-    private _edgeGroup: Group;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-        this._edgeGroup = new Group();
-        this.group.add(this._edgeGroup);
     }
 
     render(seriesModel: ChordSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
@@ -51,20 +48,25 @@ class ChordView extends ChartView {
 
         data.diff(oldData)
             .add(function (newIdx) {
-                const chordPiece = new ChordPiece(data, newIdx, 90);
-                data.setItemGraphicEl(newIdx, chordPiece);
-                group.add(chordPiece);
+                const el = new ChordPiece(data, newIdx, 90);
+                data.setItemGraphicEl(newIdx, el);
+                group.add(el);
             })
 
             .update(function (newIdx, oldIdx) {
-                const chordPiece = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
-                chordPiece.updateData(data, newIdx);
-                data.setItemGraphicEl(newIdx, chordPiece);
+                let el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
+                if (!el) {
+                    el = new ChordPiece(data, newIdx, 90);
+                }
+
+                el.updateData(data, newIdx);
+                group.add(el);
+                data.setItemGraphicEl(newIdx, el);
             })
 
             .remove(function (oldIdx) {
-                const chordPiece = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
-                group.remove(chordPiece);
+                const el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
+                el && graphic.removeElementWithFadeOut(el, seriesModel, oldIdx);
             })
 
             .execute();
@@ -75,12 +77,12 @@ class ChordView extends ChartView {
     }
 
     renderEdges(seriesModel: ChordSeriesModel) {
-        this._edgeGroup.removeAll();
+        const edgeGroup = new Group();
+        this.group.add(edgeGroup);
 
         const nodeData = seriesModel.getData();
         const nodeGraph = nodeData.graph;
 
-        const edgeGroup = this._edgeGroup;
         const edgeData = seriesModel.getEdgeData();
         nodeGraph.eachEdge(function (edge) {
             const layout = edge.getLayout();
@@ -90,18 +92,20 @@ class ChordView extends ChartView {
             const lineStyle = edgeModel.getModel('lineStyle');
             const lineColor = lineStyle.get('color');
 
-            // const style = nodeData.getItemVisual(edge.node1.dataIndex, 'style');
-            const edgeShape = new ChordEdge({
-                shape: {
-                    r: borderRadius,
-                    ...layout
-                },
-                style: lineStyle.getItemStyle()
-            });
-            applyEdgeFill(edgeShape, edge, nodeData, lineColor);
-            edgeGroup.add(edgeShape);
+            let el = edgeData.getItemGraphicEl(edge.dataIndex) as ChordEdge;
+            if (!el) {
+                el = new ChordEdge({
+                    shape: {
+                        r: borderRadius,
+                        ...layout
+                    },
+                    style: lineStyle.getItemStyle()
+                });
+            }
+            applyEdgeFill(el, edge, nodeData, lineColor);
+            edgeGroup.add(el);
 
-            edgeData.setItemGraphicEl(edge.node1.dataIndex, edgeShape);
+            edgeData.setItemGraphicEl(edge.dataIndex, el);
         });
     }
 

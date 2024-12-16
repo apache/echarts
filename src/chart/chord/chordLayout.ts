@@ -60,7 +60,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         nodeValues[node2Index] = (nodeValues[node2Index] || 0) + value;
     });
 
-    let renderedNodeCount = minAngle
+    const renderedNodeCount = minAngle
         // If mingAngle is set, node count is always the number in the option
         ? nodeData.count()
         // If not, node count is those with value > 0 to avoid padAngle
@@ -109,7 +109,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
 
             angle += spanAngle + padAngle;
         });
-    }
+    };
     calculateNodeLayout();
 
     // Total angle may exceed Math.PI * 2 due to mingAngle, scale down
