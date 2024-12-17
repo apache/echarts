@@ -1,6 +1,14 @@
-import { PathProps } from 'zrender/src/graphic/Path';
-import PathProxy from 'zrender/src/core/PathProxy';
+import type { PathProps } from 'zrender/src/graphic/Path';
+import type PathProxy from 'zrender/src/core/PathProxy';
+import type { PathStyleProps } from 'zrender/src/graphic/Path';
+import { extend, isString } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
+import SeriesData from '../../data/SeriesData';
+import { GraphEdge } from '../../data/Graph';
+import type Model from '../../model/Model';
+import { getSectorCornerRadius } from '../helper/sectorHelper';
+import { saveOldStyle } from '../../animation/basicTransition';
+import ChordSeriesModel, { ChordEdgeItemOption, ChordEdgeLineStyleOption, ChordNodeItemOption } from './ChordSeries';
 
 export class ChordPathShape {
     // Souce node, two points forming an arc
@@ -28,8 +36,15 @@ interface ChordEdgePathProps extends PathProps {
 export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
     shape: ChordPathShape;
 
-    constructor(opts?: ChordEdgePathProps) {
-        super(opts);
+    constructor(
+        nodeData: SeriesData<ChordSeriesModel>,
+        edgeData: SeriesData,
+        edgeIdx: number,
+        startAngle: number
+    ) {
+        super();
+
+        this.updateData(nodeData, edgeData, edgeIdx, startAngle, true);
     }
 
     buildPath(ctx: PathProxy | CanvasRenderingContext2D, shape: ChordPathShape): void {
@@ -65,5 +80,123 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
         );
 
         ctx.closePath();
+    }
+
+    updateData(
+        nodeData: SeriesData<ChordSeriesModel>,
+        edgeData: SeriesData,
+        edgeIdx: number,
+        startAngle: number,
+        firstCreate?: boolean
+    ): void {
+        const seriesModel = nodeData.hostModel as ChordSeriesModel;
+        const edge = edgeData.graph.getEdgeByIndex(edgeIdx);
+        const layout = edge.getLayout();
+        const itemModel = edge.node1.getModel<ChordNodeItemOption>();
+        const edgeModel = edgeData.getItemModel<ChordEdgeItemOption>(edge.dataIndex);
+        const lineStyle = edgeModel.getModel('lineStyle');
+
+        const shape: ChordPathShape = extend(
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true),
+            layout
+        );
+
+        const el = this;
+
+        // Ignore NaN data.
+        if (isNaN(shape.sStartAngle) || isNaN(shape.tStartAngle)) {
+            // Use NaN shape to avoid drawing shape.
+            el.setShape(shape);
+            return;
+        }
+
+        if (firstCreate) {
+            el.setShape(shape);
+            applyEdgeFill(el, edge, nodeData, lineStyle);
+
+            if (startAngle != null) {
+                const x = shape.cx + shape.r * Math.cos(startAngle);
+                const y = shape.cy + shape.r * Math.sin(startAngle);
+                el.setShape({
+                    s1: [x, y],
+                    s2: [x, y],
+                    sStartAngle: startAngle,
+                    sEndAngle: startAngle,
+                    t1: [x, y],
+                    t2: [x, y],
+                    tStartAngle: startAngle,
+                    tEndAngle: startAngle
+                });
+                graphic.initProps(el, {
+                    shape
+                }, seriesModel, edgeIdx);
+            }
+            else {
+                el.setShape({
+                    sEndAngle: el.shape.sStartAngle,
+                    tEndAngle: el.shape.tStartAngle
+                });
+                graphic.updateProps(el, {
+                    shape
+                }, seriesModel, edgeIdx);
+            }
+        }
+        else {
+            saveOldStyle(el);
+
+            applyEdgeFill(el, edge, nodeData, lineStyle);
+            graphic.updateProps(el, {
+                shape: shape
+            }, seriesModel, edgeIdx);
+        }
+
+        edgeData.setItemGraphicEl(edge.dataIndex, el);
+    }
+}
+
+function applyEdgeFill(
+    edgeShape: ChordEdge,
+    edge: GraphEdge,
+    nodeData: SeriesData<ChordSeriesModel>,
+    lineStyleModel: Model<ChordEdgeLineStyleOption>
+) {
+    const node1 = edge.node1;
+    const node2 = edge.node2;
+    const edgeStyle = edgeShape.style as PathStyleProps;
+
+    edgeShape.setStyle(lineStyleModel.getLineStyle());
+
+    const color = lineStyleModel.get('color');
+    switch (color) {
+        case 'source':
+            // TODO: use visual and node1.getVisual('color');
+            edgeStyle.fill = nodeData.getItemVisual(node1.dataIndex, 'style').fill;
+            edgeStyle.decal = node1.getVisual('style').decal;
+            break;
+        case 'target':
+            edgeStyle.fill = nodeData.getItemVisual(node2.dataIndex, 'style').fill;
+            edgeStyle.decal = node2.getVisual('style').decal;
+            break;
+        case 'gradient':
+            const sourceColor = nodeData.getItemVisual(node1.dataIndex, 'style').fill;
+            const targetColor = nodeData.getItemVisual(node2.dataIndex, 'style').fill;
+            if (isString(sourceColor) && isString(targetColor)) {
+                // Gradient direction is perpendicular to the mid-angles
+                // of source and target nodes.
+                const shape = edgeShape.shape;
+                const sMidX = (shape.s1[0] + shape.s2[0]) / 2;
+                const sMidY = (shape.s1[1] + shape.s2[1]) / 2;
+                const tMidX = (shape.t1[0] + shape.t2[0]) / 2;
+                const tMidY = (shape.t1[1] + shape.t2[1]) / 2;
+                edgeStyle.fill = new graphic.LinearGradient(
+                    sMidX, sMidY, tMidX, tMidY,
+                    [
+                        { offset: 0, color: sourceColor },
+                        { offset: 1, color: targetColor }
+                    ],
+                    true
+                );
+            }
+            break;
     }
 }

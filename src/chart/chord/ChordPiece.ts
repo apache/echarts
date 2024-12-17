@@ -27,7 +27,42 @@ export default class ChordPiece extends graphic.Sector {
 
         // layout position is the center of the sector
         const layout = data.getItemLayout(idx) as graphic.Sector['shape'];
-        // console.log(layout)
+        const shape: graphic.Sector['shape'] = extend(
+            getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true),
+            layout
+        );
+
+        const el = this;
+
+        // Ignore NaN data.
+        if (isNaN(shape.startAngle)) {
+            // Use NaN shape to avoid drawing shape.
+            el.setShape(shape);
+            return;
+        }
+
+        if (firstCreate) {
+            el.setShape(shape);
+            console.log(startAngle)
+
+            if (startAngle != null) {
+                el.setShape({
+                    startAngle,
+                    endAngle: startAngle
+                });
+                graphic.initProps(el, {
+                    shape: {
+                        startAngle: shape.startAngle,
+                        endAngle: shape.endAngle
+                    }
+                }, seriesModel, idx);
+            }
+            else {
+                graphic.updateProps(el, {
+                    shape: shape
+                }, seriesModel, idx);
+            }
+        }
 
         const sectorShape = extend(
             getSectorCornerRadius(

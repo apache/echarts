@@ -255,6 +255,7 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
         },
 
         lineStyle: {
+            width: 0,
             color: 'source',
             opacity: 0.5
         }

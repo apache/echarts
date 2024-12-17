@@ -18,17 +18,18 @@
 */
 
 import Group from 'zrender/src/graphic/Group';
-import type { PathStyleProps } from 'zrender/src/graphic/Path';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
-import ChordSeriesModel, { ChordEdgeItemOption, ChordEdgeLineStyleOption, ChordNodeItemOption } from './ChordSeries';
+import ChordSeriesModel from './ChordSeries';
 import ChordPiece from './ChordPiece';
 import { ChordEdge } from './ChordEdge';
-import type { GraphEdge } from '../../data/Graph';
-import { isString } from 'zrender/src/core/util';
+import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
+
+const PI2 = Math.PI * 2;
+const RADIAN = Math.PI / 180;
 
 class ChordView extends ChartView {
 
@@ -36,32 +37,31 @@ class ChordView extends ChartView {
     readonly type: string = ChordView.type;
 
     private _data: SeriesData;
+    private _edgeData: SeriesData;
+    private _edgeGroup: Group;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     render(seriesModel: ChordSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
-
         const oldData = this._data;
         const group = this.group;
 
+        const startAngle = -seriesModel.get('startAngle') * RADIAN;
+
         data.diff(oldData)
             .add(function (newIdx) {
-                const el = new ChordPiece(data, newIdx, 90);
+                const el = new ChordPiece(data, newIdx, startAngle);
                 data.setItemGraphicEl(newIdx, el);
                 group.add(el);
             })
 
             .update(function (newIdx, oldIdx) {
-                let el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
-                if (!el) {
-                    el = new ChordPiece(data, newIdx, 90);
-                }
-
-                el.updateData(data, newIdx);
-                group.add(el);
+                const el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
+                el.updateData(data, newIdx, startAngle);
                 data.setItemGraphicEl(newIdx, el);
+                group.add(el);
             })
 
             .remove(function (oldIdx) {
@@ -71,42 +71,46 @@ class ChordView extends ChartView {
 
             .execute();
 
-        this.renderEdges(seriesModel);
-
         this._data = data;
+
+        this.renderEdges(seriesModel, startAngle);
     }
 
-    renderEdges(seriesModel: ChordSeriesModel) {
-        const edgeGroup = new Group();
-        this.group.add(edgeGroup);
+    renderEdges(seriesModel: ChordSeriesModel, startAngle: number) {
+        if (!this._edgeGroup) {
+            this._edgeGroup = new Group();
+            this.group.add(this._edgeGroup);
+        }
+
+        const edgeGroup = this._edgeGroup;
+        edgeGroup.removeAll();
 
         const nodeData = seriesModel.getData();
-        const nodeGraph = nodeData.graph;
-
         const edgeData = seriesModel.getEdgeData();
-        nodeGraph.eachEdge(function (edge) {
-            const layout = edge.getLayout();
-            const itemModel = edge.node1.getModel<ChordNodeItemOption>();
-            const borderRadius = itemModel.get(['itemStyle', 'borderRadius']);
-            const edgeModel = edgeData.getItemModel<ChordEdgeItemOption>(edge.dataIndex);
-            const lineStyle = edgeModel.getModel('lineStyle');
-            const lineColor = lineStyle.get('color');
+        const oldData = this._edgeData;
 
-            let el = edgeData.getItemGraphicEl(edge.dataIndex) as ChordEdge;
-            if (!el) {
-                el = new ChordEdge({
-                    shape: {
-                        r: borderRadius,
-                        ...layout
-                    },
-                    style: lineStyle.getItemStyle()
-                });
-            }
-            applyEdgeFill(el, edge, nodeData, lineColor);
-            edgeGroup.add(el);
+        edgeData.diff(oldData)
+            .add(function (newIdx) {
+                const el = new ChordEdge(nodeData, edgeData, newIdx, startAngle);
+                edgeData.setItemGraphicEl(newIdx, el);
+                edgeGroup.add(el);
+            })
 
-            edgeData.setItemGraphicEl(edge.dataIndex, el);
-        });
+            .update(function (newIdx, oldIdx) {
+                const el = oldData.getItemGraphicEl(oldIdx) as ChordEdge;
+                el.updateData(nodeData, edgeData, newIdx, startAngle);
+                edgeData.setItemGraphicEl(newIdx, el);
+                edgeGroup.add(el);
+            })
+
+            .remove(function (oldIdx) {
+                const el = oldData.getItemGraphicEl(oldIdx) as ChordEdge;
+                el && graphic.removeElementWithFadeOut(el, seriesModel, oldIdx);
+            })
+
+            .execute();
+
+        this._edgeData = edgeData;
     }
 
     dispose() {
@@ -114,47 +118,5 @@ class ChordView extends ChartView {
     }
 }
 
-function applyEdgeFill(
-    edgeShape: ChordEdge,
-    edge: GraphEdge,
-    nodeData: SeriesData<ChordSeriesModel>,
-    color: ChordEdgeLineStyleOption['color']
-) {
-    const node1 = edge.node1;
-    const node2 = edge.node2;
-    const edgeStyle = edgeShape.style as PathStyleProps;
-    switch (color) {
-        case 'source':
-            // TODO: use visual and node1.getVisual('color');
-            edgeStyle.fill = nodeData.getItemVisual(edge.node1.dataIndex, 'style').fill;
-            edgeStyle.decal = edge.node1.getVisual('style').decal;
-            break;
-        case 'target':
-            edgeStyle.fill = nodeData.getItemVisual(edge.node2.dataIndex, 'style').fill;
-            edgeStyle.decal = edge.node2.getVisual('style').decal;
-            break;
-        case 'gradient':
-            const sourceColor = nodeData.getItemVisual(edge.node1.dataIndex, 'style').fill;
-            const targetColor = nodeData.getItemVisual(edge.node2.dataIndex, 'style').fill;
-            if (isString(sourceColor) && isString(targetColor)) {
-                // Gradient direction is perpendicular to the mid-angles
-                // of source and target nodes.
-                const shape = edgeShape.shape;
-                const sMidX = (shape.s1[0] + shape.s2[0]) / 2;
-                const sMidY = (shape.s1[1] + shape.s2[1]) / 2;
-                const tMidX = (shape.t1[0] + shape.t2[0]) / 2;
-                const tMidY = (shape.t1[1] + shape.t2[1]) / 2;
-                edgeStyle.fill = new graphic.LinearGradient(
-                    sMidX, sMidY, tMidX, tMidY,
-                    [
-                        { offset: 0, color: sourceColor },
-                        { offset: 1, color: targetColor }
-                    ],
-                    true
-                );
-            }
-            break;
-    }
-}
 
 export default ChordView;
