@@ -23,6 +23,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { getCircleLayout } from '../../util/layout';
 import SeriesModel from '../../model/Series';
 import { CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
+import { getSpanAngle, normalizeArcAngles } from 'zrender/src/core/PathProxy';
 
 const RADIAN = Math.PI / 180;
 
@@ -46,9 +47,24 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         seriesModel as unknown as SeriesModel<CircleLayoutOptionMixin & SeriesOption<unknown>>,
         api
     );
+
     const padAngle = (seriesModel.get('padAngle') || 0) * RADIAN;
     const minAngle = (seriesModel.get('minAngle') || 0) * RADIAN;
-    const totalAngle = Math.PI * 2;
+    let startAngle = -seriesModel.get('startAngle') * RADIAN;
+    let endAngle = startAngle + Math.PI * 2;
+    const totalAngle = Math.abs(endAngle - startAngle);
+
+    // let endAngle = seriesModel.get('endAngle');
+    // endAngle = endAngle === 'auto' ? startAngle - Math.PI * 2 : -endAngle * RADIAN;
+
+    const clockwise = seriesModel.get('clockwise');
+    // const dir = clockwise ? 1 : -1;
+    // const angles = [startAngle, endAngle];
+    // normalizeArcAngles(angles, !clockwise);
+    // [startAngle, endAngle] = angles;
+
+    // const totalAngle = Math.abs(getSpanAngle(angles, !clockwise));
+    // console.log(endAngle, startAngle,'totalAngle', totalAngle);
 
     // Sum of each node's edge values
     const nodeValues: number[] = [];
@@ -76,7 +92,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     let minAngleCount = 0;
 
     const calculateNodeLayout = (scale: number = 1) => {
-        let angle = -seriesModel.get('startAngle') * RADIAN;
+        let angle = startAngle;
         nonMinAngleAccAngle = 0;
         edgeAccAngle = [];
         minAngleCount = 0;
@@ -95,19 +111,22 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
                 nodeScale = scale;
             }
 
+            // const dir = clockwise ? 1 : -1;
+            const dir = 1;
             node.setLayout({
                 cx,
                 cy,
                 r0,
                 r,
                 startAngle: angle,
-                endAngle: angle + spanAngle,
+                endAngle: angle + spanAngle * dir,
                 scale: nodeScale
             });
 
             edgeAccAngle[node.dataIndex] = angle;
 
-            angle += spanAngle + padAngle;
+            // TODO: not correct here
+            angle += (spanAngle + padAngle) * dir;
         });
     };
     calculateNodeLayout();

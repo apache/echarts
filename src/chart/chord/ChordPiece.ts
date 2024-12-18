@@ -43,7 +43,6 @@ export default class ChordPiece extends graphic.Sector {
 
         if (firstCreate) {
             el.setShape(shape);
-            console.log(startAngle)
 
             if (startAngle != null) {
                 el.setShape({
