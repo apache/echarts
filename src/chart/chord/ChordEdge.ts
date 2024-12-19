@@ -113,33 +113,6 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
         if (firstCreate) {
             el.setShape(shape);
             applyEdgeFill(el, edge, nodeData, lineStyle);
-
-            if (startAngle != null) {
-                const x = shape.cx + shape.r * Math.cos(startAngle);
-                const y = shape.cy + shape.r * Math.sin(startAngle);
-                el.setShape({
-                    s1: [x, y],
-                    s2: [x, y],
-                    sStartAngle: startAngle,
-                    sEndAngle: startAngle,
-                    t1: [x, y],
-                    t2: [x, y],
-                    tStartAngle: startAngle,
-                    tEndAngle: startAngle
-                });
-                graphic.initProps(el, {
-                    shape
-                }, seriesModel, edgeIdx);
-            }
-            else {
-                el.setShape({
-                    sEndAngle: el.shape.sStartAngle,
-                    tEndAngle: el.shape.tStartAngle
-                });
-                graphic.updateProps(el, {
-                    shape
-                }, seriesModel, edgeIdx);
-            }
         }
         else {
             saveOldStyle(el);

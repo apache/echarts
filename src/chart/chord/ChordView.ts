@@ -26,9 +26,8 @@ import SeriesData from '../../data/SeriesData';
 import ChordSeriesModel from './ChordSeries';
 import ChordPiece from './ChordPiece';
 import { ChordEdge } from './ChordEdge';
-import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
+import { parsePercent } from '../../util/number';
 
-const PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
 
 class ChordView extends ChartView {
@@ -70,6 +69,18 @@ class ChordView extends ChartView {
             })
 
             .execute();
+
+        if (!oldData) {
+            const center = seriesModel.get('center');
+            this.group.scaleX = 0.01;
+            this.group.scaleY = 0.01;
+            this.group.originX = parsePercent(center[0], api.getWidth());
+            this.group.originY = parsePercent(center[1], api.getHeight());
+            graphic.initProps(this.group, {
+                scaleX: 1,
+                scaleY: 1
+            }, seriesModel);
+        }
 
         this._data = data;
 

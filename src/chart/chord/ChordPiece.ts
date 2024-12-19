@@ -43,24 +43,11 @@ export default class ChordPiece extends graphic.Sector {
 
         if (firstCreate) {
             el.setShape(shape);
-
-            if (startAngle != null) {
-                el.setShape({
-                    startAngle,
-                    endAngle: startAngle
-                });
-                graphic.initProps(el, {
-                    shape: {
-                        startAngle: shape.startAngle,
-                        endAngle: shape.endAngle
-                    }
-                }, seriesModel, idx);
-            }
-            else {
-                graphic.updateProps(el, {
-                    shape: shape
-                }, seriesModel, idx);
-            }
+        }
+        else {
+            graphic.updateProps(el, {
+                shape: shape
+            }, seriesModel, idx);
         }
 
         const sectorShape = extend(
