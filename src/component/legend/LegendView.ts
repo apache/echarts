@@ -404,12 +404,7 @@ class LegendView extends ComponentView {
         }
         else {
             // Use default legend icon policy for most series
-            const rotate = legendIconType === 'inherit' && seriesModel.getData().getVisual('symbol')
-                ? (iconRotate === 'inherit'
-                    ? seriesModel.getData().getVisual('symbolRotate')
-                    : iconRotate
-                )
-                : 0; // No rotation for no icon
+            const rotate = zrUtil.retrieve2(seriesModel.getData().getVisual('symbolRotate'), iconRotate);
             itemGroup.add(getDefaultLegendIcon({
                 itemWidth,
                 itemHeight,
