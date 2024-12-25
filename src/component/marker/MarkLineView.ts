@@ -386,7 +386,9 @@ class MarkLineView extends MarkerView {
             getECData(el).dataModel = mlModel;
 
             el.traverse(function (child) {
-                getECData(child).dataModel = mlModel;
+                const ecData = getECData(child);
+                ecData.dataModel = mlModel;
+                ecData.dataType = 'marker';
             });
         });
 
