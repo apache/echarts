@@ -49,6 +49,59 @@ under the License.
 
 
 
+    <script>
+
+        var option;
+        var cnt = 0;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                tooltip: {},
+                legend: {},
+                series: [
+                    {
+                        type: 'chord',
+                        name: 'Gene',
+                        minAngle: 15,
+                        startAngle: 90,
+                        endAngle: -270,
+                        circular: { rotateLabel: true },
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        label: { show: true },
+                        lineStyle: { color: 'target', curveness: 0.1 },
+                        emphasis: {
+                            label: { color: 'blue' },
+                            lineStyle: { width: 10 }
+                        },
+                        data: [
+                            { name: 'A' },
+                            { name: 'B' },
+                            { name: 'C' },
+                            { name: 'D' },
+                            { name: 'E' },
+                            { name: 'F' }
+                        ],
+                        links: [
+                            { source: 'A', target: 'B', value: 40 },
+                            { source: 'A', target: 'C', value: 20 },
+                        ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                option: option,
+                title: [
+                    'D, E, F are all 0, minAngle: 15',
+                    'With minAngle: 15, D, E, F sector should be 15 degree.'
+                ]
+            });
+        });
+
+    </script>
 
 
 
@@ -67,61 +120,45 @@ under the License.
                     {
                         type: 'chord',
                         name: 'Gene',
-                        minAngle: 45,
+                        minAngle: 55,
                         startAngle: 90,
                         endAngle: -270,
                         circular: { rotateLabel: true },
                         roam: true,
                         focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'gradient', curveness: 0.1 },
+                        lineStyle: { color: 'target', curveness: 0.1 },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
                         },
                         data: [
-                            { itemStyle: null, name: 'A' },
-                            { itemStyle: null, name: 'B' },
-                            { itemStyle: null, name: 'C' },
-                            { itemStyle: null, name: 'D' },
-                            { itemStyle: null, name: 'E' },
-                            { itemStyle: null, name: 'F' }
+                            { name: 'A' },
+                            { name: 'B' },
+                            { name: 'C' },
+                            { name: 'D' },
+                            { name: 'E' },
+                            { name: 'F' }
                         ],
                         links: [
-                            { source: 'A', target: 'B', value: 11 },
-                            { source: 'A', target: 'C', value: 30 },
-                            { source: 'B', target: 'C', value: 5 },
-                            { source: 'B', target: 'D', value: 15 },
-                            { source: 'B', target: 'E', value: 3 },
-                            { source: 'C', target: 'D', value: 5 },
-                            { source: 'C', target: 'E', value: 20 },
-                            { source: 'D', target: 'E', value: 10 },
-                            { source: 'E', target: 'A', value: 5 },
-                            { source: 'E', target: 'B', value: 10 },
-                            { source: 'E', target: 'C', value: 5 },
-                            { source: 'E', target: 'D', value: 5 }
+                            { source: 'B', target: 'A', value: 40 },
+                            { source: 'B', target: 'C', value: 20 },
                         ]
                     }
                 ]
             };
 
-            var chart = testHelper.create(echarts, 'main0', {
+            var chart = testHelper.create(echarts, 'main1', {
                 option: option,
-                title: ['minAngle: 45', 'The green sector should be 45 degree.'],
-                buttons: [{
-                    text: 'Update',
-                    onclick: function () {
-                        option.series[0].links[0].value = Math.floor(Math.random() * 50);
-                        option.series[0].links[4].value = Math.floor(Math.random() * 30);
-                        // console.log(JSON.stringify(option));
-                        chart.setOption(option);
-                    }
-                }]
+                title: [
+                    'C can only be borrowed 1 degree from, so this case cannot borrow evenly from A, B, C',
+                    'D, E, F are all 0, minAngle: 55',
+                    'This is the test case for surplusAsMuchAsPossible in the code.'
+                ]
             });
         });
 
     </script>
-
 </body>
 
 </html>
