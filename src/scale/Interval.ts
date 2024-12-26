@@ -151,58 +151,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
             }
         }
 
-        // Add broken ranges to ticks
-        let unexpandedBreaks = 0;
-        for (let i = 0; i < this._breaks.length; i++) {
-            const brk = this._breaks[i];
-            if (brk.isExpanded) {
-                continue;
-            }
-            ticks.push({
-                value: brk.start,
-                breakStart: brk.start,
-                breakEnd: brk.end,
-                breakGap: brk.gap
-            });
-            if (brk.gap > 0) {
-                // When gap is 0, start tick is overlap with end tick, so do
-                // not count it. If developers want to solve overlapping when
-                // gap is larger than 0, they should write breakFormattter
-                ticks.push({
-                    value: brk.end,
-                    breakStart: brk.start,
-                    breakEnd: brk.end,
-                    breakGap: brk.gap
-                });
-            }
-            unexpandedBreaks++;
-        }
-
-        // Sort ticks by value
-        if (unexpandedBreaks > 0) {
-            ticks.sort(function (a, b) {
-                return a.value - b.value;
-            });
-            // Remove non-break ticks that are too close to breaks
-            const newTicks = [];
-            for (let i = 0; i < ticks.length; i++) {
-                const prevTick = i > 0 ? ticks[i - 1] : null;
-                const nextTick = i < ticks.length - 1 ? ticks[i + 1] : null;
-                const tick = ticks[i];
-                if (tick.breakStart == null
-                    && (prevTick && prevTick.breakEnd != null
-                    && tick.value - prevTick.breakEnd < interval
-                    || nextTick && nextTick.breakStart != null
-                    && nextTick.breakStart - tick.value < interval)
-                ) {
-                    continue;
-                }
-                newTicks.push(tick);
-            }
-            return newTicks;
-        }
-
-        return ticks;
+        return helper.addBreakTicks(ticks, this._breaks, this._interval);
     }
 
     getMinorTicks(splitNumber: number): number[][] {

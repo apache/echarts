@@ -247,7 +247,8 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
                 const formatter = tick.breakStart == null || !breakTpl
                     ? tpl
                     : breakTpl as TimeAxisLabelFormatterOption;
-                return (axis.scale as TimeScale).getFormattedLabel(tick, idx, formatter);
+                const result = (axis.scale as TimeScale).getFormattedLabel(tick, idx, formatter);
+                return result;
             };
         })(labelFormatter as TimeAxisLabelFormatterOption, breakLabelFormatter);
     }

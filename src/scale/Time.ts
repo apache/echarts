@@ -116,6 +116,17 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
 
     constructor(settings?: TimeScaleSetting) {
         super(settings);
+
+        // Normalize Date into timestamp in breaks
+        for (let i = 0; i < this._breaks.length; i++) {
+            const brk = this._breaks[i];
+            if ((brk.start as unknown) instanceof Date) {
+                brk.start = (brk.start as unknown as Date).getTime();
+            }
+            if ((brk.end as unknown) instanceof Date) {
+                brk.end = (brk.end as unknown as Date).getTime();
+            }
+        }
     }
 
     /**
@@ -177,7 +188,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             level: 0
         });
 
-        return ticks;
+        return scaleHelper.addBreakTicks(ticks, this._breaks, interval);
     }
 
     calcNiceExtent(

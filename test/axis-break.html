@@ -360,18 +360,22 @@ under the License.
                     },
                     xAxis: [{
                         type: 'time',
+                        interval: 1000 * 60 * 30, // 30 minutes
                         axisLabel: {
                             showMinLabel: true,
                             showMaxLabel: true,
                             breakFormatter: (value, index, start, end, gap) => {
-                                console.log(value, index, start, end, gap);
+                                return '11:30/13:00'
                             }
                         },
                         breaks: [{
                             start: breakStart,
                             end: breakEnd,
                             gap: 0
-                        }]
+                        }],
+                        breakArea: {
+                            zigzagAmplitude: 0
+                        }
                     }],
                     yAxis: {
                         type: 'value',

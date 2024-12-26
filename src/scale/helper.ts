@@ -18,7 +18,7 @@
 */
 
 import {getPrecision, round, nice, quantityExponent} from '../util/number';
-import { OrdinalNumber, ScaleBreak } from '../util/types';
+import type { OrdinalNumber, ScaleBreak, ScaleTick } from '../util/types';
 import { warn } from '../util/log';
 import IntervalScale from './Interval';
 import LogScale from './Log';
@@ -139,7 +139,6 @@ export function normalize(
     }
     const unexpandedBreaks = filter(breaks || [], brk => !brk.isExpanded);
     if (unexpandedBreaks.length === 0) {
-        // console.log(`val: ${val}, extent: ${extent} => ${val / (extent[1] - extent[0])}`);
         return (val - extent[0]) / (extent[1] - extent[0]);
     }
 
@@ -228,4 +227,65 @@ export function adjustInBreakPosition(
     //     return normalizedData + bandWidth;
     // }
     return normalizedData;
+}
+
+export function addBreakTicks(
+    ticks: ScaleTick[],
+    breaks: ScaleBreak[],
+    interval: number
+) {
+    let unexpandedBreaks = 0;
+    for (let i = 0; i < breaks.length; i++) {
+        const brk = breaks[i];
+        if (brk.isExpanded) {
+            continue;
+        }
+        ticks.push({
+            value: brk.start,
+            breakStart: brk.start,
+            breakEnd: brk.end,
+            breakGap: brk.gap
+        });
+        if (brk.gap > 0) {
+            // When gap is 0, start tick is overlap with end tick, so do
+            // not count it. If developers want to solve overlapping when
+            // gap is larger than 0, they should write breakFormattter
+            ticks.push({
+                value: brk.end,
+                breakStart: brk.start,
+                breakEnd: brk.end,
+                breakGap: brk.gap
+            });
+        }
+        unexpandedBreaks++;
+    }
+
+    // Sort ticks by value
+    if (unexpandedBreaks > 0) {
+        ticks.sort(function (a, b) {
+            // If there is a tick with break and a tick without break at the
+            // same position, the tick with break should be placed before the
+            // tick without break
+            if (a.value === b.value) {
+                return a.breakStart != null ? -1 : 1;
+            }
+            return a.value - b.value;
+        });
+        // Remove non-break ticks that are too close to breaks
+        const newTicks = [];
+        let prevEnd: number = null;
+        for (let i = 0; i < ticks.length; i++) {
+            const tick = ticks[i];
+            if (prevEnd != null && tick.value <= (prevEnd + interval)) {
+                continue;
+            }
+            newTicks.push(tick);
+
+            if (tick.breakStart != null) {
+                prevEnd = tick.breakEnd;
+            }
+        }
+        return newTicks;
+    }
+    return ticks;
 }
