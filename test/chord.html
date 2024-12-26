@@ -51,13 +51,12 @@ under the License.
 
     <script>
 
-        var option;
         var cnt = 0;
 
         require([
             'echarts'/*, 'map/js/china' */
         ], function (echarts) {
-            option = {
+            const option = {
                 tooltip: {},
                 legend: {},
                 series: [
@@ -95,8 +94,65 @@ under the License.
             var chart = testHelper.create(echarts, 'main0', {
                 option: option,
                 title: [
+                    '**Zero value with minAngle**',
                     'D, E, F are all 0, minAngle: 15',
-                    'With minAngle: 15, D, E, F sector should be 15 degree.'
+                    'D, E, F sector should be 15 degree.'
+                ]
+            });
+        });
+
+    </script>
+
+
+
+    <script>
+
+        var option;
+        var cnt = 0;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                tooltip: {},
+                legend: {},
+                series: [
+                    {
+                        type: 'chord',
+                        name: 'Gene',
+                        startAngle: 90,
+                        endAngle: -270,
+                        circular: { rotateLabel: true },
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        label: { show: true },
+                        lineStyle: { color: 'target', curveness: 0.1 },
+                        emphasis: {
+                            label: { color: 'blue' },
+                            lineStyle: { width: 10 }
+                        },
+                        data: [
+                            { name: 'A' },
+                            { name: 'B' },
+                            { name: 'C' },
+                            { name: 'D' },
+                            { name: 'E' },
+                            { name: 'F' }
+                        ],
+                        links: [
+                            { source: 'A', target: 'B', value: 40 },
+                            { source: 'A', target: 'C', value: 20 },
+                        ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                option: option,
+                title: [
+                    '**Zero value without minAngle**',
+                    'D, E, F are all 0, minAngle: undefined (0 as default)',
+                    'D, E, F sector and padding should not be displayed.'
                 ]
             });
         });
@@ -148,16 +204,223 @@ under the License.
                 ]
             };
 
-            var chart = testHelper.create(echarts, 'main1', {
+            var chart = testHelper.create(echarts, 'main2', {
                 option: option,
                 title: [
                     'C can only be borrowed 1 degree from, so this case cannot borrow evenly from A, B, C',
                     'D, E, F are all 0, minAngle: 55',
-                    'This is the test case for surplusAsMuchAsPossible in the code.'
+                    'This is the test case for **surplusAsMuchAsPossible** in the code.'
                 ]
             });
         });
 
+    </script>
+
+
+
+    <script>
+
+        var option;
+        var cnt = 0;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                tooltip: {},
+                legend: {},
+                series: [
+                    {
+                        type: 'chord',
+                        name: 'Gene',
+                        minAngle: 65,
+                        startAngle: 90,
+                        endAngle: -270,
+                        circular: { rotateLabel: true },
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        label: { show: true },
+                        lineStyle: { color: 'target', curveness: 0.1 },
+                        emphasis: {
+                            label: { color: 'blue' },
+                            lineStyle: { width: 10 }
+                        },
+                        data: [
+                            { name: 'A' },
+                            { name: 'B' },
+                            { name: 'C' },
+                            { name: 'D' },
+                            { name: 'E' },
+                            { name: 'F' }
+                        ],
+                        links: [
+                            { source: 'A', target: 'B', value: 40 },
+                            { source: 'A', target: 'C', value: 20 },
+                        ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                option: option,
+                title: [
+                    '**minAngle and padAngle being too large**',
+                    '(minAngle + padAngle) * count is larger than 360',
+                    'minAngle: 65, padAngle: 3',
+                    'Each sector should be 57 degree, with 3 degree as padAngle'
+                ]
+            });
+        });
+    </script>
+
+
+
+    <script>
+
+        var option;
+        var cnt = 0;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                tooltip: {},
+                legend: {},
+                series: [
+                    {
+                        type: 'chord',
+                        name: 'Gene',
+                        minAngle: 15,
+                        padAngle: 90,
+                        startAngle: 90,
+                        endAngle: -270,
+                        circular: { rotateLabel: true },
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        label: { show: true },
+                        lineStyle: { color: 'target', curveness: 0.1 },
+                        emphasis: {
+                            label: { color: 'blue' },
+                            lineStyle: { width: 10 }
+                        },
+                        data: [
+                            { name: 'A' },
+                            { name: 'B' },
+                            { name: 'C' },
+                            { name: 'D' },
+                            { name: 'E' },
+                            { name: 'F' }
+                        ],
+                        links: [
+                            { source: 'A', target: 'B', value: 40 },
+                            { source: 'A', target: 'C', value: 20 },
+                        ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main4', {
+                option: option,
+                title: [
+                    '**padAngle being too large**',
+                    'padAngle * count is larger than 360, should be ignored',
+                    'minAngle: 15, padAngle: 90',
+                    'padAngle should be 0'
+                ]
+            });
+        });
+    </script>
+
+
+
+    <script>
+
+        var option;
+        var cnt = 0;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            const option = {
+                tooltip: {},
+                legend: {},
+                series: [
+                    {
+                        type: 'chord',
+                        name: 'Gene',
+                        minAngle: 45,
+                        startAngle: 90,
+                        endAngle: -270,
+                        circular: { rotateLabel: true },
+                        roam: true,
+                        focusNodeAdjacency: true,
+                        label: { show: true },
+                        lineStyle: { color: 'gradient', curveness: 0.1 },
+                        emphasis: {
+                            label: { color: 'blue' },
+                            lineStyle: { width: 10 }
+                        },
+                        data: [
+                            { itemStyle: null, name: 'A' },
+                            { itemStyle: null, name: 'B' },
+                            { itemStyle: null, name: 'C' },
+                            { itemStyle: null, name: 'D' },
+                            { itemStyle: null, name: 'E' },
+                            { itemStyle: null, name: 'F' }
+                        ],
+                        links: [
+                            { source: 'A', target: 'B', value: 11 },
+                            { source: 'A', target: 'C', value: 30 },
+                            { source: 'B', target: 'C', value: 5 },
+                            { source: 'B', target: 'D', value: 15 },
+                            { source: 'B', target: 'E', value: 3 },
+                            { source: 'C', target: 'D', value: 5 },
+                            { source: 'C', target: 'E', value: 20 },
+                            { source: 'D', target: 'E', value: 10 },
+                            { source: 'E', target: 'A', value: 5 },
+                            { source: 'E', target: 'B', value: 10 },
+                            { source: 'E', target: 'C', value: 5 },
+                            { source: 'E', target: 'D', value: 5 }
+                        ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main5', {
+                option: option,
+                title: [
+                    'Update data'
+                ],
+                buttons: [{
+                    text: 'Update',
+                    onclick: function () {
+                        const cnt = option.series[0].links.length;
+                        for (let i = 0; i < cnt; i++) {
+                            option.series[0].links[i].value = Math.floor(Math.random() * 50);
+                        }
+                        chart.setOption(option);
+                    }
+                }, {
+                    text: 'Color: source',
+                    onclick: function () {
+                        option.series[0].lineStyle.color = 'source';
+                        chart.setOption(option);
+                    }
+                }, {
+                    text: 'Color: target',
+                    onclick: function () {
+                        option.series[0].lineStyle.color = 'target';
+                        chart.setOption(option);
+                    }
+                }, {
+                    text: 'Color: gradient',
+                    onclick: function () {
+                        option.series[0].lineStyle.color = 'gradient';
+                        chart.setOption(option);
+                    }
+                }]
+            });
+        });
     </script>
 </body>
 
