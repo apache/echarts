@@ -537,6 +537,8 @@ class TooltipView extends ComponentView {
         // Only for legacy: `Serise['formatTooltip']` returns a string.
         const markupTextArrLegacy: string[] = [];
         const markupStyleCreator = new TooltipMarkupStyleCreator();
+		// @ts-ignore
+		Object.assign(markupStyleCreator.richTextStyles, singleTooltipModel.get('textStyle.rich'));
 
         each(dataByCoordSys, function (itemCoordSys) {
             each(itemCoordSys.dataByAxis, function (axisItem) {
