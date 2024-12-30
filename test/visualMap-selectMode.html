@@ -91,6 +91,13 @@ under the License.
                     title: "mouse on visualMap should be **pointer**",
                     option,
                 });
+                const tipDOM = document.createElement('span');
+                tipDOM.style.cssText = 'position: absolute;top:10px;left:10px;color:#000';
+                chart.getDom().appendChild(tipDOM);
+                chart.getDom().addEventListener('mousemove', function () {
+                    const cursor = chart.getZr().painter.getViewportRoot().style.cursor || 'default';
+                    tipDOM.innerText = 'visualMap piece cursor: ' + cursor;
+                });
             });
         </script>
 
@@ -137,6 +144,13 @@ under the License.
                 const chart = testHelper.create(echarts, "line-symbol1", {
                     title: "mouse on visualMap should be **default**",
                     option,
+                });
+                const tipDOM = document.createElement('span');
+                tipDOM.style.cssText = 'position: absolute;top:10px;left:10px;color:#000';
+                chart.getDom().appendChild(tipDOM);
+                chart.getDom().addEventListener('mousemove', function () {
+                    const cursor = chart.getZr().painter.getViewportRoot().style.cursor || 'default';
+                    tipDOM.innerText = 'visualMap piece cursor: ' + cursor;
                 });
             });
         </script>
