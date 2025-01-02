@@ -364,6 +364,14 @@ class BarView extends ChartView {
                     }
                 }
 
+                const roundCapChanged = el && (el.type === 'sector' && roundCap || el.type === 'sausage' && !roundCap);
+                if (roundCapChanged) {
+                    // roundCap changed, there is no way to use animation from a `sector` to a `sausage` shape,
+                    // so remove the old one and create a new shape
+                    el && removeElementWithFadeOut(el, seriesModel, oldIndex);
+                    el = null;
+                }
+
                 if (!el) {
                     el = elementCreator[coord.type](
                         seriesModel,
@@ -373,7 +381,7 @@ class BarView extends ChartView {
                         isHorizontalOrRadial,
                         animationModel,
                         baseAxis.model,
-                        !!el,
+                        true,
                         roundCap
                     );
                 }
