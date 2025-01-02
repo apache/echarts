@@ -347,8 +347,8 @@ function getVisualGradient(
     }
 
     const tinyExtent = 10; // Arbitrary value: 10px
-    const minCoord = colorStopsInRange[0].coord - tinyExtent;
-    const maxCoord = colorStopsInRange[inRangeStopLen - 1].coord + tinyExtent;
+    const minCoord = (colorStopsInRange[0]?.coord || 0) - tinyExtent;
+    const maxCoord = (colorStopsInRange[inRangeStopLen - 1]?.coord || 0) + tinyExtent;
     const coordSpan = maxCoord - minCoord;
 
     if (coordSpan < 1e-3) {

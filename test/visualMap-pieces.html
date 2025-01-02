@@ -47,6 +47,7 @@ under the License.
 
         <div class="chart" id="map"></div>
         <div class="chart" id="line-symbol"></div>
+        <div class="chart" id="line-lte"></div>
 
         <script>
             require([
@@ -237,5 +238,75 @@ under the License.
             });
         </script>
 
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    xAxis: [
+                        {
+                            type: 'category'
+                        }
+                    ],
+                    legend: {
+                        show: false
+                    },
+                    grid: {},
+                    tooltip: {},
+                    series: [
+                        {
+                            type: 'line',
+                            name: 'profit'
+                        }
+                    ],
+                    dataset: [
+                        {
+                            dimensions: ['year', 'profit'],
+                            source: [
+                                {
+                                    year: '2010',
+                                    'profit': 100
+                                },
+                                {
+                                    year: '2011',
+                                    'profit': 200
+                                },
+                                {
+                                    year: '2012',
+                                    'profit': 150
+                                },
+                                {
+                                    year: '2013',
+                                    'profit': 300
+                                }
+                            ]
+                        }
+                    ],
+                    visualMap: {
+                        pieces: [
+                            {
+                                gte: 0,
+                                lte: null,
+                                color: 'blue'
+                            }
+                        ],
+                        top: 10,
+                        orient: 'horizontal',
+                        left: 'center'
+                    }
+                };
+                var chart = testHelper.create(echarts, 'line-lte', {
+                    option,
+                    title: [
+                        'Line Charts **should work** when lte is set to null'
+                    ]
+                })
+            })
+        </script> 
     </body>
 </html>
