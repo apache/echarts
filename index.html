@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8" />
+	<title>title</title>
+	<script type="module">
+		import { init } from "/dist/echarts.esm.mjs";
+
+		const cc = init(document.getElementById("test"));
+		cc.setOption({
+			xAxis: { type: 'value', min: "dataMin", max: "dataMax" },
+			yAxis: { type: 'value', minInterval: 1 },
+			grid: { left: 60, top: 10, right: 60, bottom: 70 },
+			tooltip: { show: true, trigger: "axis" },
+			dataZoom: [
+				{ type: "slider", filterMode: "none", },
+				{ type: "inside", filterMode: "none", zoomOnMouseWheel: "no-function-keys", moveOnMouseWheel: "shift" },
+				{ type: "slider", filterMode: "none", orient: "vertical" },
+				{ type: "inside", filterMode: "none", orient: "vertical", zoomOnMouseWheel: false }
+			],
+			series: [
+				{ data: [[0, 0], [50, 50], [100, 100]], type: 'line', showSymbol: false }
+			]
+		});
+		window.cc = cc;
+	</script>
+</head>
+
+<body>
+	<div id="test" style="height: 512px;width: 512px;"></div>
+</body>
+
+</html>
