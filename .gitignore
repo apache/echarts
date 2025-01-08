@@ -210,3 +210,5 @@ todo
 /features.js
 /features.d.ts
 *.tgz
+/dist
+/index.html
