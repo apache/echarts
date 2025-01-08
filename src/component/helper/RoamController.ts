@@ -28,7 +28,7 @@ import Group from 'zrender/src/graphic/Group';
 // Can be null/undefined or true/false
 // or 'pan/move' or 'zoom'/'scale'
 export type RoamType = RoamOptionMixin['roam'];
-type RoamKeysSetting = boolean | 'ctrl' | 'shift' | 'alt' | 'no-function-keys';
+export type RoamKeysSetting = boolean | 'ctrl' | 'shift' | 'alt' | 'no-function-keys';
 
 interface RoamOption {
     zoomOnMouseWheel?: RoamKeysSetting
