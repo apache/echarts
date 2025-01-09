@@ -277,6 +277,7 @@
 .test-errors, .test-logs {
     margin-top: 20px;
     padding: 0 20px;
+    word-wrap: break-word;
 }
 
 .test-logs .log-item {

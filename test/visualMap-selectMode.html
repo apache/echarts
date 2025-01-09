@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            h1 {
+                line-height: 60px;
+                height: 60px;
+                background: #a60;
+                text-align: center;
+                font-weight: bold;
+                color: #eee;
+                font-size: 14px;
+            }
+            .chart {
+                height: 500px;
+            }
+        </style>
+
+        <div class="chart" id="line-symbol"></div>
+        <div class="chart" id="line-symbol1"></div>
+
+        <script>
+            require(["echarts"], function (echarts) {
+                option = {
+                    visualMap: [
+                        {
+                            type: "piecewise",
+                            pieces: [
+                                { min: 200, label: "≥ 200", color: "green" },
+                                {
+                                    min: 150,
+                                    max: 199,
+                                    label: "150-199",
+                                    color: "blue",
+                                },
+                                { max: 149, label: "< 150", color: "red" },
+                            ],
+                            right: 0,
+                            top: 0,
+                            itemWidth: 16,
+                            itemHeight: 16,
+                            itemGap: 15,
+                            textGap: 5,
+                            orient: "horizontal",
+                        },
+                    ],
+                    xAxis: {
+                        type: "category",
+                        data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    },
+                    yAxis: {
+                        type: "value",
+                    },
+                    series: [
+                        {
+                            data: [150, 230, 224, 218, 135, 147, 260],
+                            type: "line",
+                        },
+                    ],
+                };
+                const chart = testHelper.create(echarts, "line-symbol", {
+                    title: "mouse on visualMap should be **pointer**",
+                    option,
+                });
+                const tipDOM = document.createElement('span');
+                tipDOM.style.cssText = 'position: absolute;top:10px;left:10px;color:#000';
+                chart.getDom().appendChild(tipDOM);
+                chart.getDom().addEventListener('mousemove', function () {
+                    const cursor = chart.getZr().painter.getViewportRoot().style.cursor || 'default';
+                    tipDOM.innerText = 'visualMap piece cursor: ' + cursor;
+                });
+            });
+        </script>
+
+        <script>
+            require(["echarts"], function (echarts) {
+                option = {
+                    visualMap: [
+                        {
+                            type: "piecewise",
+                            selectedMode: false,
+                            pieces: [
+                                { min: 200, label: "≥ 200", color: "green" },
+                                {
+                                    min: 150,
+                                    max: 199,
+                                    label: "150-199",
+                                    color: "blue",
+                                },
+                                { max: 149, label: "< 150", color: "red" },
+                            ],
+                            right: 0,
+                            top: 0,
+                            itemWidth: 16,
+                            itemHeight: 16,
+                            itemGap: 15,
+                            textGap: 5,
+                            orient: "horizontal",
+                        },
+                    ],
+                    xAxis: {
+                        type: "category",
+                        data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    },
+                    yAxis: {
+                        type: "value",
+                    },
+                    series: [
+                        {
+                            data: [150, 230, 224, 218, 135, 147, 260],
+                            type: "line",
+                        },
+                    ],
+                };
+                const chart = testHelper.create(echarts, "line-symbol1", {
+                    title: "mouse on visualMap should be **default**",
+                    option,
+                });
+                const tipDOM = document.createElement('span');
+                tipDOM.style.cssText = 'position: absolute;top:10px;left:10px;color:#000';
+                chart.getDom().appendChild(tipDOM);
+                chart.getDom().addEventListener('mousemove', function () {
+                    const cursor = chart.getZr().painter.getViewportRoot().style.cursor || 'default';
+                    tipDOM.innerText = 'visualMap piece cursor: ' + cursor;
+                });
+            });
+        </script>
+    </body>
+</html>
