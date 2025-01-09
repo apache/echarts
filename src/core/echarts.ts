@@ -142,10 +142,10 @@ declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-export const version = '5.5.1';
+export const version = '5.6.0';
 
 export const dependencies = {
-    zrender: '5.6.0'
+    zrender: '5.6.1'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;

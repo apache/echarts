@@ -38,6 +38,8 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
 
 
 
@@ -105,6 +107,109 @@ under the License.
         </script>
 
 
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        data: [null, 250, null, 260, 270, 280, null],
+                        type: 'line',
+                        areaStyle: { opacity: 0.2 },
+                        step: 'end',
+                        connectNulls: true
+                    },
+                    {
+                        data: [null, 150, 160, null, 170, 180, 190],
+                        type: 'line',
+                        areaStyle: { opacity: 0.2 },
+                        step: 'end',
+                        connectNulls: true
+                    },
+                    {
+                        data: [40, 50, 60, null, 70, null, null],
+                        type: 'line',
+                        areaStyle: { opacity: 0.2 },
+                        step: 'end',
+                        connectNulls: true
+                    },
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'null points in step line with connectNull: true',
+                    'AreaStyle should be correct.'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        data: [null, 250, null, 260, 270, 280, null],
+                        type: 'line',
+                        areaStyle: { opacity: 0.2 },
+                        step: 'end',
+                        connectNulls: false
+                    },
+                    {
+                        data: [null, 150, 160, null, 170, 180, 190],
+                        type: 'line',
+                        areaStyle: { opacity: 0.2 },
+                        step: 'end',
+                        connectNulls: false
+                    },
+                    {
+                        data: [40, 50, 60, null, 70, null, null],
+                        type: 'line',
+                        areaStyle: { opacity: 0.2 },
+                        step: 'end',
+                        connectNulls: false
+                    },
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'null points in step line with connectNull: false',
+                    'AreaStyle should be correct.'
+                ],
+                option: option
+            });
+        });
+        </script>
     </body>
 </html>
 

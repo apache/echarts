@@ -56,7 +56,7 @@ module.exports.getEChartsTestFileName = function () {
     return `echarts.test-${config.testVersion}.js`;
 };
 
-module.exports.prepareEChartsLib = function (version) {
+module.exports.prepareEChartsLib = function (version, useCNMirror) {
 
     const versionFolder = path.join(__dirname, getVersionDir(version));
     const ecDownloadPath = `${versionFolder}/echarts.js`;
@@ -69,27 +69,31 @@ module.exports.prepareEChartsLib = function (version) {
 
         return Promise.resolve();
     }
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
         if (!fs.existsSync(ecDownloadPath)) {
             const file = fs.createWriteStream(ecDownloadPath);
             const isNightly = version.includes('-dev');
             const packageName = isNightly ? 'echarts-nightly' : 'echarts'
 
-            const url = `https://unpkg.com/${packageName}@${version}/dist/echarts.js`;
-            console.log(`Downloading ${packageName}@${version} from ${url}`, );
+            const url = useCNMirror
+                ? `https://registry.npmmirror.com/${packageName}/${version}/files/dist/echarts.js`
+                : `https://unpkg.com/${packageName}@${version}/dist/echarts.js`;
+            console.log(`Downloading ${packageName}@${version} from ${url}`);
             https.get(url, response => {
                 response.pipe(file);
 
                 file.on('finish', () => {
-                    let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
+                    const code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
                     fs.writeFileSync(testLibPath, code, 'utf-8');
                     resolve();
                 });
+            }).on('error', (e) => {
+                reject(`Failed to download ${packageName}@${version} from ${url}: ${e}`);
             });
         }
         else {
-            // Always do code modifaction.
+            // Always do code modification.
             // In case we need to do replacement on old downloads.
             let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
             fs.writeFileSync(testLibPath, code, 'utf-8');
@@ -98,16 +102,16 @@ module.exports.prepareEChartsLib = function (version) {
     });
 };
 
-module.exports.fetchVersions = function (isNighlty) {
+module.exports.fetchVersions = function (isNightly, useCNMirror) {
     return new Promise((resolve, reject) => {
-        https.get(
-            isNighlty
-                ? `https://registry.npmjs.org/echarts-nightly`
-                : `https://registry.npmjs.org/echarts`
-        , res => {
+        const npmRegistry = useCNMirror
+            ? 'https://registry.npmmirror.com'
+            : 'https://registry.npmjs.org';
+        const endpoint = `${npmRegistry}/echarts${isNightly ? '-nightly' : ''}`;
+        https.get(endpoint, res => {
             if (res.statusCode !== 200) {
                 res.destroy();
-                reject('Failed fetch versions from https://registry.npmjs.org/echarts');
+                reject('status code: ' + res.statusCode);
                 return;
             }
             var buffers = [];
@@ -118,10 +122,11 @@ module.exports.fetchVersions = function (isNighlty) {
                     resolve(Object.keys(JSON.parse(data).versions).reverse());
                 }
                 catch (e) {
-                    reject(e.toString());
+                    reject(e);
                 }
             });
-        });
+        })
+        .on('error', reject);
     });
 };
 

@@ -1013,6 +1013,75 @@ class DataStore {
         return target;
     }
 
+    /**
+     * Large data down sampling using min-max
+     * @param {string} valueDimension
+     * @param {number} rate
+     */
+    minmaxDownSample(
+        valueDimension: DimensionIndex,
+        rate: number
+    ): DataStore {
+        const target = this.clone([valueDimension], true);
+        const targetStorage = target._chunks;
+
+        const frameSize = Math.floor(1 / rate);
+
+        const dimStore = targetStorage[valueDimension];
+        const len = this.count();
+
+        // Each frame results in 2 data points, one for min and one for max
+        const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize) * 2);
+
+        let offset = 0;
+        for (let i = 0; i < len; i += frameSize) {
+            let minIndex = i;
+            let minValue = dimStore[this.getRawIndex(minIndex)];
+            let maxIndex = i;
+            let maxValue = dimStore[this.getRawIndex(maxIndex)];
+
+            let thisFrameSize = frameSize;
+            // Handle final smaller frame
+            if (i + frameSize > len) {
+                thisFrameSize = len - i;
+            }
+            // Determine min and max within the current frame
+            for (let k = 0; k < thisFrameSize; k++) {
+                const rawIndex = this.getRawIndex(i + k);
+                const value = dimStore[rawIndex];
+
+                if (value < minValue) {
+                    minValue = value;
+                    minIndex = i + k;
+                }
+                if (value > maxValue) {
+                    maxValue = value;
+                    maxIndex = i + k;
+                }
+            }
+
+            const rawMinIndex = this.getRawIndex(minIndex);
+            const rawMaxIndex = this.getRawIndex(maxIndex);
+
+            // Set the order of the min and max values, based on their ordering in the frame
+            if (minIndex < maxIndex) {
+                newIndices[offset++] = rawMinIndex;
+                newIndices[offset++] = rawMaxIndex;
+            }
+            else {
+                newIndices[offset++] = rawMaxIndex;
+                newIndices[offset++] = rawMinIndex;
+            }
+        }
+
+        target._count = offset;
+        target._indices = newIndices;
+
+        target._updateGetRawIdx();
+
+        return target;
+    }
+
 
     /**
      * Large data down sampling on given dimension

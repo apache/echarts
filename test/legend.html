@@ -72,6 +72,8 @@ under the License.
         <div id="only-single-item"></div>
         <div id="vary-size"></div>
         <div id="index-to-no-name"></div>
+        <h1>Legend page text color should be light in dark mode</h1>
+        <div class="chart" id="dark-pageTextStyle"></div>
 
         <script>
 
@@ -1099,6 +1101,30 @@ under the License.
             })
         </script>
 
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
 
+                var seriesInfo = makeSeries(5, 3);
+
+                var option = {
+                    legend: [{
+                        type: 'scroll',
+                        width: 200,
+                        data: seriesInfo.legendData
+                    }],
+                    series: seriesInfo.series,
+                    xAxis: {
+                        data: seriesInfo.xAxisData
+                    },
+                    yAxis: {}
+                };
+                var chart = echarts.init(document.getElementById('dark-pageTextStyle'), 'dark', {
+                    renderer: 'svg'
+                });
+                chart.setOption(option);
+            })
+        </script>
     </body>
 </html>
