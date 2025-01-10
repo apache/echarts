@@ -42,9 +42,10 @@ module.exports.fileNameFromTest = function (testName) {
     return testName + '.html';
 };
 
-function getVersionDir(version) {
+function getVersionDir(source, version) {
     version = version || 'local';
-    return `tmp/__version__/${version}`;
+    const dir = source === 'branch' ? 'branch/' : '';
+    return `tmp/__version__/${dir}${version}`;
 };
 module.exports.getVersionDir = getVersionDir;
 
@@ -56,31 +57,52 @@ module.exports.getEChartsTestFileName = function () {
     return `echarts.test-${config.testVersion}.js`;
 };
 
-module.exports.prepareEChartsLib = function (version, useCNMirror) {
+// Clean branch directory at the start of initing because code in branch may change
+module.exports.cleanBranchDirectory = function () {
+    const branchDir = path.join(__dirname, 'tmp/__version__/branch');
+    if (fs.existsSync(branchDir)) {
+        fse.removeSync(branchDir);
+    }
+}
 
-    const versionFolder = path.join(__dirname, getVersionDir(version));
+module.exports.prepareEChartsLib = function (source, version, useCNMirror) {
+    console.log(`Preparing ECharts lib: ${source} ${version}`);
+
+    const versionFolder = path.join(__dirname, getVersionDir(source, version));
     const ecDownloadPath = `${versionFolder}/echarts.js`;
     fse.ensureDirSync(versionFolder);
+
     if (!version || version === 'local') {
         // Developing version, make sure it's new build
         fse.copySync(path.join(__dirname, '../../dist/echarts.js'), `${versionFolder}/echarts.js`);
         let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
         fs.writeFileSync(`${versionFolder}/${module.exports.getEChartsTestFileName()}`, code, 'utf-8');
-
         return Promise.resolve();
     }
+
     return new Promise((resolve, reject) => {
         const testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
         if (!fs.existsSync(ecDownloadPath)) {
             const file = fs.createWriteStream(ecDownloadPath);
-            const isNightly = version.includes('-dev');
-            const packageName = isNightly ? 'echarts-nightly' : 'echarts'
+            let url;
 
-            const url = useCNMirror
-                ? `https://registry.npmmirror.com/${packageName}/${version}/files/dist/echarts.js`
-                : `https://unpkg.com/${packageName}@${version}/dist/echarts.js`;
-            console.log(`Downloading ${packageName}@${version} from ${url}`);
+            if (source === 'branch') {
+                url = `https://raw.githubusercontent.com/apache/echarts/${version}/dist/echarts.js`;
+            }
+            else {
+                const isNightly = source === 'nightly';
+                const packageName = isNightly ? 'echarts-nightly' : 'echarts';
+                url = useCNMirror
+                    ? `https://registry.npmmirror.com/${packageName}/${version}/files/dist/echarts.js`
+                    : `https://unpkg.com/${packageName}@${version}/dist/echarts.js`;
+            }
+
+            console.log(`Downloading ECharts from ${url}`);
             https.get(url, response => {
+                if (response.statusCode === 404) {
+                    reject(`Failed to download: ${url} (404 Not Found)`);
+                    return;
+                }
                 response.pipe(file);
 
                 file.on('finish', () => {
@@ -89,7 +111,7 @@ module.exports.prepareEChartsLib = function (version, useCNMirror) {
                     resolve();
                 });
             }).on('error', (e) => {
-                reject(`Failed to download ${packageName}@${version} from ${url}: ${e}`);
+                reject(`Failed to download from ${url}: ${e}`);
             });
         }
         else {

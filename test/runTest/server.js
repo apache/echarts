@@ -48,9 +48,10 @@ const {
     getAllTestsRuns,
     delTestsRun,
     RESULTS_ROOT_DIR,
-    checkStoreVersion
+    checkStoreVersion,
+    clearStaledResults
 } = require('./store');
-const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
+const {prepareEChartsLib, getActionsFullPath, fetchVersions, cleanBranchDirectory} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
@@ -62,6 +63,8 @@ console.info(chalk.green('useCNMirror:'), useCNMirror);
 const CLI_FIXED_THREADS_COUNT = 1;
 
 function serve() {
+    clearStaledResults();
+
     const server = http.createServer((request, response) => {
         return handler(request, response, {
             cleanUrls: false,
@@ -144,7 +147,9 @@ function startTests(testsNameList, socket, {
     noHeadless,
     threadsCount,
     replaySpeed,
+    actualSource,
     actualVersion,
+    expectedSource,
     expectedVersion,
     renderer,
     useCoarsePointer,
@@ -206,6 +211,8 @@ function startTests(testsNameList, socket, {
                 '--speed', replaySpeed || 5,
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
+                '--actual-source', actualSource,
+                '--expected-source', expectedSource,
                 '--renderer', renderer || '',
                 '--use-coarse-pointer', useCoarsePointer,
                 '--threads', Math.min(threadsCount, CLI_FIXED_THREADS_COUNT),
@@ -230,6 +237,9 @@ function checkPuppeteer() {
 
 
 async function start() {
+    // Clean branch directory before starting
+    cleanBranchDirectory();
+
     if (!checkPuppeteer()) {
         // TODO Check version.
         console.error(`Can't find puppeteer >= 9.0.0, run 'npm install' to update in the 'test/runTest' folder`);
@@ -241,8 +251,6 @@ async function start() {
     try {
         stableVersions = await fetchVersions(false, useCNMirror);
         nightlyVersions = (await fetchVersions(true, useCNMirror)).slice(0, 100);
-        stableVersions.unshift('local');
-        nightlyVersions.unshift('local');
     } catch (e) {
         console.error('Failed to fetch version list:', e);
         console.log(`Try again later or try the CN mirror with: ${chalk.yellow('npm run test:visual -- -- --useCNMirror')}`)
@@ -283,20 +291,10 @@ async function start() {
                 return;
             }
 
-            const expectedVersionsList = _currentRunConfig.isExpectedNightly ? nightlyVersions : stableVersions;
-            const actualVersionsList = _currentRunConfig.isActualNightly ? nightlyVersions : stableVersions;
-            if (!expectedVersionsList.includes(_currentRunConfig.expectedVersion)) {
-                // Pick first version not local
-                _currentRunConfig.expectedVersion = expectedVersionsList[1];
-            }
-            if (!actualVersionsList.includes(_currentRunConfig.actualVersion)) {
-                _currentRunConfig.actualVersion = 'local';
-            }
-
             socket.emit('syncRunConfig_return', {
                 runConfig: _currentRunConfig,
-                expectedVersionsList,
-                actualVersionsList
+                versions: stableVersions,
+                nightlyVersions: nightlyVersions
             });
 
             if (_currentTestHash !== getRunHash(_currentRunConfig)) {
@@ -320,6 +318,7 @@ async function start() {
         });
 
         socket.on('genTestsRunReport', async (params) => {
+            console.log('genTestsRunReport', params);
             const absPath = await genReport(
                 path.join(RESULTS_ROOT_DIR, getRunHash(params))
             );
@@ -340,16 +339,16 @@ async function start() {
 
             let startTime = Date.now();
 
-            await prepareEChartsLib(data.expectedVersion, useCNMirror); // Expected version.
-            await prepareEChartsLib(data.actualVersion, useCNMirror); // Version to test
-
-            // If aborted in the time downloading lib.
-            if (isAborted) {
-                return;
-            }
-
-            // TODO Should broadcast to all sockets.
             try {
+                await prepareEChartsLib(data.expectedSource, data.expectedVersion, useCNMirror);
+                await prepareEChartsLib(data.actualSource, data.actualVersion, useCNMirror);
+
+                // If aborted in the time downloading lib.
+                if (isAborted) {
+                    return;
+                }
+
+                // TODO Should broadcast to all sockets.
                 if (!checkStoreVersion(data)) {
                     throw new Error('Unmatched store version and run version.');
                 }
@@ -361,7 +360,9 @@ async function start() {
                         noHeadless: data.noHeadless,
                         threadsCount: data.threads,
                         replaySpeed: data.replaySpeed,
+                        actualSource: data.actualSource,
                         actualVersion: data.actualVersion,
+                        expectedSource: data.expectedSource,
                         expectedVersion: data.expectedVersion,
                         renderer: data.renderer,
                         useCoarsePointer: data.useCoarsePointer,
