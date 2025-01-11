@@ -1067,14 +1067,15 @@ class ECharts extends Eventful<ECEventDefinition> {
             const handler = (e: ElementEvent) => {
                 const ecModel = this.getModel();
                 const el = e.target;
+                let dispatcher: ECElement | undefined;
                 let params: ECElementEvent;
                 const isGlobalOut = eveName === 'globalout';
                 // no e.target when 'globalout'.
                 if (isGlobalOut) {
                     params = {} as ECElementEvent;
                 }
-                else {
-                    el && findEventDispatcher(el, (parent) => {
+                else if (el) {
+                    dispatcher = findEventDispatcher(el, (parent) => {
                         const ecData = getECData(parent);
                         if (ecData && ecData.dataIndex != null) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
@@ -1131,6 +1132,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
                     params.event = e;
                     params.type = eveName;
+                    params.dimensionIndex = dispatcher ? dispatcher.__dimIdx : undefined;
 
                     (this._$eventProcessor as ECEventProcessor).eventInfo = {
                         targetEl: el,

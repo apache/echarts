@@ -681,6 +681,7 @@ class TooltipView extends ComponentView {
         params.marker = markupStyleCreator.makeTooltipMarker(
             'item', convertToColorString(params.color), renderMode
         );
+        params.dimensionIndex = dispatcher.__dimIdx;
 
         const seriesTooltipResult = normalizeTooltipFormatResult(
             dataModel.formatTooltip(dataIndex, false, dataType)

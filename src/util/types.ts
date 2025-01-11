@@ -137,6 +137,11 @@ export interface ECElement extends Element {
      * Force disable morphing
      */
     disableMorphing?: boolean
+
+    /**
+     * From RadarSymbol
+     */
+    __dimIdx?: number;
 }
 
 export interface DataHost {
