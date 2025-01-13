@@ -51,7 +51,7 @@ const {
     checkStoreVersion,
     clearStaledResults
 } = require('./store');
-const {prepareEChartsLib, getActionsFullPath, fetchVersions, cleanBranchDirectory} = require('./util');
+const {prepareEChartsLib, getActionsFullPath, fetchVersions, cleanBranchDirectory, fetchRecentPRs} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
@@ -237,11 +237,11 @@ function checkPuppeteer() {
 
 
 async function start() {
-    // Clean branch directory before starting
-    cleanBranchDirectory();
+    // Clean PR directories before starting
+    const {cleanPRDirectories} = require('./util');
+    cleanPRDirectories();
 
     if (!checkPuppeteer()) {
-        // TODO Check version.
         console.error(`Can't find puppeteer >= 9.0.0, run 'npm install' to update in the 'test/runTest' folder`);
         return;
     }
@@ -342,37 +342,42 @@ async function start() {
             try {
                 await prepareEChartsLib(data.expectedSource, data.expectedVersion, useCNMirror);
                 await prepareEChartsLib(data.actualSource, data.actualVersion, useCNMirror);
-
-                // If aborted in the time downloading lib.
-                if (isAborted) {
-                    return;
-                }
-
-                // TODO Should broadcast to all sockets.
-                if (!checkStoreVersion(data)) {
-                    throw new Error('Unmatched store version and run version.');
-                }
-
-                await startTests(
-                    data.tests,
-                    io.of('/client'),
-                    {
-                        noHeadless: data.noHeadless,
-                        threadsCount: data.threads,
-                        replaySpeed: data.replaySpeed,
-                        actualSource: data.actualSource,
-                        actualVersion: data.actualVersion,
-                        expectedSource: data.expectedSource,
-                        expectedVersion: data.expectedVersion,
-                        renderer: data.renderer,
-                        useCoarsePointer: data.useCoarsePointer,
-                        noSave: false
-                    }
-                );
             }
             catch (e) {
                 console.error(e);
+                // Send error to client
+                socket.emit('run_error', {
+                    message: e.toString()
+                });
+                return;
             }
+
+            // If aborted in the time downloading lib.
+            if (isAborted) {
+                return;
+            }
+
+            // TODO Should broadcast to all sockets.
+            if (!checkStoreVersion(data)) {
+                throw new Error('Unmatched store version and run version.');
+            }
+
+            await startTests(
+                data.tests,
+                io.of('/client'),
+                {
+                    noHeadless: data.noHeadless,
+                    threadsCount: data.threads,
+                    replaySpeed: data.replaySpeed,
+                    actualSource: data.actualSource,
+                    actualVersion: data.actualVersion,
+                    expectedSource: data.expectedSource,
+                    expectedVersion: data.expectedVersion,
+                    renderer: data.renderer,
+                    useCoarsePointer: data.useCoarsePointer,
+                    noSave: false
+                }
+            );
 
             if (!isAborted) {
                 const deltaTime = Date.now() - startTime;

@@ -110,8 +110,9 @@ try {
 catch (e) {}
 
 function getVersionFromSource(source, versions, nightlyVersions) {
-    if (source === 'branch') {
-        return 'master';
+    if (source === 'PR') {
+        // Default PR version can be empty since it needs to be manually selected
+        return '#';
     }
     else if (source === 'nightly') {
         return nightlyVersions.length ? nightlyVersions[0] : null;
@@ -150,6 +151,7 @@ const app = new Vue({
 
         versions: [],
         nightlyVersions: [],
+        prVersions: [],
         branchVersions: [],
 
         runConfig: Object.assign({
@@ -178,6 +180,7 @@ const app = new Vue({
         socket.on('syncRunConfig_return', res => {
             this.versions = res.versions || [];
             this.nightlyVersions = res.nightlyVersions || [];
+            this.prVersions = res.prVersions || [];
 
             // Only set versions if they haven't been manually set
             handlingSourceChange = true;
@@ -221,6 +224,16 @@ const app = new Vue({
             else {
                 this.pageInvisible = true;
             }
+        });
+
+        socket.on('run_error', err => {
+            app.$notify({
+                title: 'Error',
+                message: err.message,
+                type: 'error',
+                duration: 5000
+            });
+            app.running = false;
         });
     },
 
@@ -312,8 +325,8 @@ const app = new Vue({
                     return this.versions;
                 case 'nightly':
                     return this.nightlyVersions;
-                case 'branch':
-                    return this.branchVersions;
+                case 'PR':
+                    return this.prVersions;
                 case 'local':
                     return ['local'];
                 default:
@@ -327,8 +340,8 @@ const app = new Vue({
                     return this.versions;
                 case 'nightly':
                     return this.nightlyVersions;
-                case 'branch':
-                    return this.branchVersions;
+                case 'PR':
+                    return this.prVersions;
                 case 'local':
                     return ['local'];
                 default:
@@ -632,8 +645,16 @@ app.$watch('runConfig', (newVal, oldVal) => {
     if (!app.pageInvisible && !handlingSourceChange) {
         socket.emit('syncRunConfig', {
             runConfig: app.runConfig,
-            // Override server config from URL.
             forceSet: true
+        }, err => {
+            if (err) {
+                app.$notify({
+                    title: 'Error',
+                    message: err,
+                    type: 'error',
+                    duration: 5000
+                });
+            }
         });
     }
 }, { deep: true });

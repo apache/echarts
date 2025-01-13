@@ -77,11 +77,19 @@ class Test {
  * It depends on two versions and rendering mode.
  */
 function getRunHash(params) {
+    // Replace # with PR- in the hash to avoid URL issues
+    const expectedVersion = params.expectedSource === 'PR'
+        ? params.expectedVersion.replace('#', 'PR-')
+        : params.expectedVersion;
+    const actualVersion = params.actualSource === 'PR'
+        ? params.actualVersion.replace('#', 'PR-')
+        : params.actualVersion;
+
     return [
         params.expectedSource,
-        params.expectedVersion,
+        expectedVersion,
         params.actualSource,
-        params.actualVersion,
+        actualVersion,
         params.renderer,
         params.useCoarsePointer
     ].join(TEST_HASH_SPLITTER);
@@ -92,11 +100,19 @@ function getRunHash(params) {
  */
 function parseRunHash(str) {
     const parts = str.split(TEST_HASH_SPLITTER);
+    // Convert back PR-123 to #123 for PR versions
+    const expectedVersion = parts[0] === 'PR'
+        ? parts[1].replace('PR-', '#')
+        : parts[1];
+    const actualVersion = parts[2] === 'PR'
+        ? parts[3].replace('PR-', '#')
+        : parts[3];
+
     return {
         expectedSource: parts[0],
-        expectedVersion: parts[1],
+        expectedVersion: expectedVersion,
         actualSource: parts[2],
-        actualVersion: parts[3],
+        actualVersion: actualVersion,
         renderer: parts[4],
         useCoarsePointer: parts[5]
     };
