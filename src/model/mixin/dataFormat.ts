@@ -31,7 +31,8 @@ import {
     ComponentMainType,
     ComponentSubType,
     DimensionLoose,
-    InterpolatableValue
+    InterpolatableValue,
+    ECElement
 } from '../../util/types';
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
@@ -57,7 +58,8 @@ export class DataFormatMixin {
      */
     getDataParams(
         dataIndex: number,
-        dataType?: SeriesDataType
+        dataType?: SeriesDataType,
+        el?: ECElement
     ): CallbackDataParams {
 
         const data = this.getData(dataType);
@@ -88,6 +90,7 @@ export class DataFormatMixin {
             color: color,
             borderColor: borderColor,
             dimensionNames: userOutput ? userOutput.fullDimensions : null,
+            dimensionIndex: el ? el.__dimIdx : null,
             encode: userOutput ? userOutput.encode : null,
 
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
