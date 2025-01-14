@@ -472,7 +472,9 @@ const app = new Vue({
             let ecVersion = test[version + 'Version'];
             let ecSource = test[version + 'Source'];
             if (ecVersion !== 'local') {
-                let distPath = ecSource === 'branch' ? 'branch/' + ecVersion : ecVersion;
+                let distPath = ecSource === 'PR'
+                    ? 'pr-' + ecVersion.replace(/^#/, '')
+                    : ecVersion;
                 searches.push('__ECDIST__=' + distPath);
             }
             if (test.useSVG) {

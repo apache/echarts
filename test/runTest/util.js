@@ -81,12 +81,6 @@ module.exports.prepareEChartsLib = function (source, version, useCNMirror) {
     const ecDownloadPath = `${versionFolder}/echarts.js`;
     const testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
 
-    // Check if both files exist and are not empty
-    if (fs.existsSync(ecDownloadPath) && fs.existsSync(testLibPath) &&
-        fs.statSync(ecDownloadPath).size > 0 && fs.statSync(testLibPath).size > 0) {
-        return Promise.resolve();
-    }
-
     fse.ensureDirSync(versionFolder);
 
     if (!version || version === 'local') {
@@ -94,6 +88,10 @@ module.exports.prepareEChartsLib = function (source, version, useCNMirror) {
         fse.copySync(path.join(__dirname, '../../dist/echarts.js'), ecDownloadPath);
         let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
         fs.writeFileSync(testLibPath, code, 'utf-8');
+        return Promise.resolve();
+    }
+    else if (fs.existsSync(ecDownloadPath) && fs.existsSync(testLibPath) &&
+        fs.statSync(ecDownloadPath).size > 0 && fs.statSync(testLibPath).size > 0) {
         return Promise.resolve();
     }
 
