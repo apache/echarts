@@ -138,13 +138,13 @@ export function rectCoordBuildBreakAxis(
             lineDash: borderType,
             fill: 'none'
         };
-        let x = isHorizontal ? startCoord : gridRect.x;
-        let y = isHorizontal ? gridRect.y : startCoord;
-        let width = isHorizontal ? endCoord - startCoord : gridRect.width;
-        let height = isHorizontal ? gridRect.height : endCoord - startCoord;
+        const x = isHorizontal ? startCoord : gridRect.x;
+        const y = isHorizontal ? gridRect.y : startCoord;
+        const width = isHorizontal ? endCoord - startCoord : gridRect.width;
+        const height = isHorizontal ? gridRect.height : endCoord - startCoord;
 
-        let pointsA = [];
-        let pointsB = [];
+        const pointsA = [];
+        const pointsB = [];
         let current = isHorizontal ? y : x;
         const max = isHorizontal ? y + height : x + width;
         let isSwap = true;
@@ -188,7 +188,7 @@ export function rectCoordBuildBreakAxis(
             }));
 
             // Creating the polygon that fills the area between the polylines
-            let polygonPoints = pointsA.concat(pointsB);
+            const polygonPoints = pointsA.concat(pointsB);
             breakGroup.add(new graphic.Polygon({
                 shape: {
                     points: polygonPoints

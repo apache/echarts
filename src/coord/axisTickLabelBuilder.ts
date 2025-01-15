@@ -192,7 +192,6 @@ function makeCategoryLabelsActually(axis: Axis, labelModel: Model<AxisBaseOption
 function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
     const ticksCache = getListCache(axis, 'ticks');
     const optionTickInterval = getOptionCategoryInterval(tickModel);
-    // TODO: cache could consider breaks
     const result = listCacheGet(ticksCache, optionTickInterval as CacheKey);
 
     if (result) {
@@ -225,10 +224,6 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
         tickCategoryInterval = optionTickInterval;
         ticks = makeLabelsByNumericCategoryInterval(axis, tickCategoryInterval, true);
     }
-
-    ticks = zrUtil.filter(ticks, tick => {
-        return axis.scale.getBreakIndex(tick) < 0;
-    });
 
     // Cache to avoid calling interval function repeatedly.
     return listCacheSet(ticksCache, optionTickInterval as CacheKey, {
@@ -507,7 +502,7 @@ function makeLabelsByCustomizedCategoryInterval(axis: Axis, categoryInterval: Ca
     zrUtil.each(ordinalScale.getTicks(), function (tick) {
         const rawLabel = ordinalScale.getLabel(tick);
         const tickValue = tick.value;
-        if (categoryInterval(tick.value, rawLabel) && !scale.getBreakIndex(tickValue)) {
+        if (categoryInterval(tick.value, rawLabel) && scale.getBreakIndex(tickValue) < 0) {
             result.push(
                 onlyTick
                 ? tickValue

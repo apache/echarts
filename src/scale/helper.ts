@@ -192,6 +192,10 @@ export function getExtentSpanWithoutBreaks(extent: [number, number], breaks: Sca
     if (!isFinite(span)) {
         return span;
     }
+
+    if (!breaks) {
+        breaks = [];
+    }
     for (let i = 0; i < breaks.length; i++) {
         const brk = breaks[i];
         if (!brk.isExpanded) {

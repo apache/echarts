@@ -130,16 +130,14 @@ class Axis {
     ): number {
         let extent = this._extent;
         const scale = this.scale;
-        const normalizedData = scale.normalize(data);
+        data = scale.normalize(data);
 
-        if (scale.type === 'ordinal') {
-            if (this.onBand) {
-                extent = extent.slice() as [number, number];
-                fixExtentWithBands(extent, (scale as OrdinalScale).count());
-            }
+        if (this.onBand && scale.type === 'ordinal') {
+            extent = extent.slice() as [number, number];
+            fixExtentWithBands(extent, (scale as OrdinalScale).count());
         }
 
-        return linearMap(normalizedData, NORMALIZED_EXTENT, extent, clamp);
+        return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
     }
 
     /**
@@ -323,10 +321,7 @@ function fixOnBandTicksCoords(
         last = ticksCoords[1] = {coord: axisExtent[1], tickValue: ticksCoords[0].tickValue};
     }
     else {
-        const crossLen = getExtentSpanWithoutBreaks(
-            axis.scale.getExtent(),
-            []
-        );
+        const crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
         const shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
 
         each(ticksCoords, function (ticksItem) {

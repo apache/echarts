@@ -274,6 +274,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
         }
         else {
             dataIndices = series.indicesOfNearest(
+                dim,
                 dataDim[0],
                 value as number,
                 // Add a threshold to avoid find the wrong dataIndex
