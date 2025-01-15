@@ -1580,7 +1580,7 @@ export interface SeriesOption<
     /**
      * Cursor when mouse on the elements
      */
-    cursor?: string
+    cursor?: string | ((p: CallbackDataParams) => string)
 
     /**
      * groupId of data. can be used for doing drilldown / up animation

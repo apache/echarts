@@ -27,7 +27,8 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     DefaultEmphasisFocus,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
@@ -106,7 +107,7 @@ export interface PictorialBarDataItemOption extends PictorialBarSeriesSymbolOpti
 
     z?: number
 
-    cursor?: string
+    cursor?: string | ((p: CallbackDataParams) => string)
 }
 
 export interface PictorialBarSeriesOption

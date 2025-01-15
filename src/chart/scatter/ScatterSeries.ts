@@ -70,7 +70,7 @@ export interface ScatterSeriesOption
 
     coordinateSystem?: string
 
-    cursor?: string
+    cursor?: string | ((p: CallbackDataParams) => string)
     clip?: boolean
 
     data?: (ScatterDataItemOption | OptionDataValue | OptionDataValue[])[]

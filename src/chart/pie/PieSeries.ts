@@ -95,7 +95,7 @@ interface ExtraStateOption {
 export interface PieDataItemOption extends
     OptionDataItemObject<OptionDataValueNumeric>,
     PieStateOption, StatesOptionMixin<PieStateOption, ExtraStateOption> {
-    cursor?: string
+    cursor?: string | ((p: PieCallbackDataParams) => string)
 }
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption<PieCallbackDataParams>, ExtraStateOption>, 'labelLine'>,

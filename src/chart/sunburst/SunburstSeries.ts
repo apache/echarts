@@ -90,7 +90,7 @@ export interface SunburstSeriesNodeItemOption extends
 
     collapsed?: boolean
 
-    cursor?: string
+    cursor?: string | ((p: CallbackDataParams) => string)
 }
 export interface SunburstSeriesLevelOption extends
     SunburstStateOption<SunburstDataParams>,

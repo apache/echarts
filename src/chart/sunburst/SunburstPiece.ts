@@ -143,7 +143,7 @@ class SunburstPiece extends graphic.Sector {
 
         this._updateLabel(seriesModel);
 
-        const cursorStyle = itemModel.getShallow('cursor');
+        const cursorStyle = itemModel.getShallow('cursor') as string;
         cursorStyle && sector.attr('cursor', cursorStyle);
 
         this._seriesModel = seriesModel || this._seriesModel;

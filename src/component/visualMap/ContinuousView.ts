@@ -32,7 +32,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Element, { ElementEvent } from 'zrender/src/Element';
 import { TextVerticalAlign, TextAlign } from 'zrender/src/core/types';
-import { ColorString, Payload } from '../../util/types';
+import { CallbackDataParams, ColorString, Payload } from '../../util/types';
 import { parsePercent } from 'zrender/src/contain/text';
 import { setAsHighDownDispatcher } from '../../util/states';
 import { createSymbol } from '../../util/symbol';
@@ -915,14 +915,14 @@ class ContinuousView extends VisualMapView {
 
 function createPolygon(
     points?: number[][],
-    cursor?: string,
+    cursor?: string | ((p: CallbackDataParams) => string),
     onDrift?: (x: number, y: number) => void,
     onDragEnd?: () => void
 ) {
     return new graphic.Polygon({
         shape: {points: points},
         draggable: !!onDrift,
-        cursor: cursor,
+        cursor: cursor as string,
         drift: onDrift,
         onmousemove(e) {
             // For mobile device, prevent screen slider on the button.

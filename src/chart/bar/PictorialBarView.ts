@@ -921,7 +921,7 @@ function updateCommon(
         path.ensureState('blur').style = blurStyle;
         path.ensureState('select').style = selectStyle;
 
-        cursorStyle && (path.cursor = cursorStyle);
+        cursorStyle && (path.cursor = cursorStyle as string);
         path.z2 = symbolMeta.z2;
     });
 

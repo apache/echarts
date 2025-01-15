@@ -33,7 +33,8 @@ import {
     StatesOptionMixin,
     BlurScope,
     DisplayState,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    CallbackDataParams
 } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
@@ -108,7 +109,7 @@ export interface SymbolDrawItemModelOption extends SymbolOptionMixin<object>,
     }>,
     SymbolDrawStateOption {
 
-    cursor?: string
+    cursor?: string | ((p: CallbackDataParams) => string)
 
     // If has ripple effect
     rippleEffect?: RippleEffectOption
@@ -149,7 +150,7 @@ function makeSeriesScope(data: SeriesData): SymbolDrawSeriesScope {
 
         labelStatesModels: getLabelStatesModels(seriesModel),
 
-        cursorStyle: seriesModel.get('cursor')
+        cursorStyle: seriesModel.get('cursor') as string
     };
 }
 

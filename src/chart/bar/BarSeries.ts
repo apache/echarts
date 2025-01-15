@@ -59,7 +59,7 @@ export interface BarItemStyleOption<TCbParams = never> extends ItemStyleOption<T
 export interface BarDataItemOption extends BarStateOption,
     StatesOptionMixin<BarStateOption, BarStatesMixin>,
     OptionDataItemObject<OptionDataValue> {
-    cursor?: string
+    cursor?: string | ((p: CallbackDataParams) => string)
 }
 
 export interface BarSeriesOption

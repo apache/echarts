@@ -106,7 +106,7 @@ export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOp
     category?: number | string
 
     draggable?: boolean
-    cursor?: string
+    cursor?: string | ((p: CallbackDataParams) => string)
 }
 
 export interface GraphEdgeStateOption {
