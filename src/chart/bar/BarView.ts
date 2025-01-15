@@ -19,7 +19,7 @@
 
 import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
-import {extend, each, map} from 'zrender/src/core/util';
+import {extend, each, map, isFunction} from 'zrender/src/core/util';
 import {BuiltinTextPosition} from 'zrender/src/core/types';
 import {SectorProps} from 'zrender/src/graphic/shape/Sector';
 import {RectProps} from 'zrender/src/graphic/shape/Rect';
@@ -1008,8 +1008,16 @@ function updateStyle(
 
     el.useStyle(style);
 
+    // Apply the user-defined cursor type when it is a string
+    // If it's a function, the cursor style will be managed by the function defined by the user
     const cursorStyle = itemModel.getShallow('cursor');
-    cursorStyle && (el as Path).attr('cursor', cursorStyle);
+    if (isFunction(cursorStyle)) {
+        const cursor = cursorStyle(seriesModel.getDataParams(dataIndex));
+        cursor && (el as Path).attr('cursor', cursor);
+    }
+    else {
+        cursorStyle && (el as Path).attr('cursor', cursorStyle);
+    }
 
     const labelPositionOutside = isPolar
         ? (isHorizontalOrRadial

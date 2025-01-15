@@ -41314,8 +41314,15 @@
         el.setShape(sectorShape);
       }
       el.useStyle(style);
+      // Apply the user-defined cursor type when it is a string
+      // If it's a function, the cursor style will be managed by the function defined by the user
       var cursorStyle = itemModel.getShallow('cursor');
-      cursorStyle && el.attr('cursor', cursorStyle);
+      if (isFunction(cursorStyle)) {
+        var cursor = cursorStyle(seriesModel.getDataParams(dataIndex));
+        cursor && el.attr('cursor', cursor);
+      } else {
+        cursorStyle && el.attr('cursor', cursorStyle);
+      }
       var labelPositionOutside = isPolar ? isHorizontalOrRadial ? layout.r >= layout.r0 ? 'endArc' : 'startArc' : layout.endAngle >= layout.startAngle ? 'endAngle' : 'startAngle' : isHorizontalOrRadial ? layout.height >= 0 ? 'bottom' : 'top' : layout.width >= 0 ? 'right' : 'left';
       var labelStatesModels = getLabelStatesModels(itemModel);
       setLabelStyle(el, labelStatesModels, {
@@ -42305,8 +42312,12 @@
         var offset = seriesModel.get('selectedOffset');
         var dx = Math.cos(midAngle) * offset;
         var dy = Math.sin(midAngle) * offset;
+        // Apply the user-defined cursor type when it is a string
+        // If it's a function, the cursor style will be managed by the updateCursorStyle function
         var cursorStyle = itemModel.getShallow('cursor');
-        cursorStyle && sector.attr('cursor', cursorStyle);
+        if (!isFunction(cursorStyle) && cursorStyle) {
+          sector.attr('cursor', cursorStyle);
+        }
         this._updateLabel(seriesModel, data, idx);
         sector.ensureState('emphasis').shape = extend({
           r: layout.r + (emphasisModel.get('scale') ? emphasisModel.get('scaleSize') || 0 : 0)
@@ -42417,12 +42428,16 @@
           var piePiece = new PiePiece(data, idx, startAngle);
           data.setItemGraphicEl(idx, piePiece);
           group.add(piePiece);
+          // Allows dynamic application of the cursor type.
+          updateCursorStyle(piePiece, data, idx, seriesModel);
         }).update(function (newIdx, oldIdx) {
           var piePiece = oldData.getItemGraphicEl(oldIdx);
           piePiece.updateData(data, newIdx, startAngle);
           piePiece.off('click');
           group.add(piePiece);
           data.setItemGraphicEl(newIdx, piePiece);
+          // Allows dynamic application of the cursor type.
+          updateCursorStyle(piePiece, data, newIdx, seriesModel);
         }).remove(function (idx) {
           var piePiece = oldData.getItemGraphicEl(idx);
           removeElementWithFadeOut(piePiece, seriesModel, idx);
@@ -42447,6 +42462,17 @@
       PieView.type = 'pie';
       return PieView;
     }(ChartView);
+    /**
+     * Dynamically applies the cursor type using a user-defined function.
+     */
+    function updateCursorStyle(el, data, dataIndex, seriesModel) {
+      var itemModel = data.getItemModel(dataIndex);
+      var cursorStyle = itemModel.getShallow('cursor');
+      if (isFunction(cursorStyle)) {
+        var cursor = cursorStyle(seriesModel.getDataParams(dataIndex));
+        el.attr('cursor', cursor !== null && cursor !== void 0 ? cursor : 'pointer');
+      }
+    }
 
     /**
      * [Usage]:

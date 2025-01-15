@@ -18,8 +18,7 @@
 * under the License.
 */
 
-
-import { extend, retrieve3 } from 'zrender/src/core/util';
+import { extend, retrieve3, isFunction } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
@@ -133,8 +132,12 @@ class PiePiece extends graphic.Sector {
         const dx = Math.cos(midAngle) * offset;
         const dy = Math.sin(midAngle) * offset;
 
+        // Apply the user-defined cursor type when it is a string
+        // If it's a function, the cursor style will be managed by the updateCursorStyle function
         const cursorStyle = itemModel.getShallow('cursor');
-        cursorStyle && sector.attr('cursor', cursorStyle);
+        if (!isFunction(cursorStyle) && cursorStyle) {
+            sector.attr('cursor', cursorStyle);
+        }
 
         this._updateLabel(seriesModel, data, idx);
 
@@ -276,6 +279,9 @@ class PieView extends ChartView {
                 data.setItemGraphicEl(idx, piePiece);
 
                 group.add(piePiece);
+
+                // Allows dynamic application of the cursor type.
+                updateCursorStyle(piePiece as graphic.Path, data, idx, seriesModel);
             })
             .update(function (newIdx, oldIdx) {
                 const piePiece = oldData.getItemGraphicEl(oldIdx) as PiePiece;
@@ -286,6 +292,9 @@ class PieView extends ChartView {
 
                 group.add(piePiece);
                 data.setItemGraphicEl(newIdx, piePiece);
+
+                // Allows dynamic application of the cursor type.
+                updateCursorStyle(piePiece as graphic.Path, data, newIdx, seriesModel);
             })
             .remove(function (idx) {
                 const piePiece = oldData.getItemGraphicEl(idx);
@@ -312,6 +321,25 @@ class PieView extends ChartView {
             const radius = Math.sqrt(dx * dx + dy * dy);
             return radius <= itemLayout.r && radius >= itemLayout.r0;
         }
+    }
+}
+
+/**
+ * Dynamically applies the cursor type using a user-defined function.
+ */
+function updateCursorStyle(
+    el: graphic.Sector | graphic.Path,
+    data: SeriesData,
+    dataIndex: number,
+    seriesModel: PieSeriesModel,
+) {
+    const itemModel = data.getItemModel<PieDataItemOption>(dataIndex);
+    const cursorStyle = itemModel.getShallow('cursor');
+
+    if (isFunction(cursorStyle)) {
+        const cursor = cursorStyle(seriesModel.getDataParams(dataIndex));
+        (el as graphic.Path).attr('cursor', cursor ?? 'pointer');
+
     }
 }
 
