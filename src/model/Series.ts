@@ -443,7 +443,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * @param axisDim axis dimension
      * @param dim data dimension
      * @param value
-     * @param [maxDistance=Infinity]
+     * @param [maxDistance=Infinity] The maximum distance in view coordinate space
      * @return If and only if multiple indices has
      *         the same value, they are put to the result.
      */
