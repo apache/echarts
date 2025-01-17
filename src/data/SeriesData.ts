@@ -874,20 +874,6 @@ class SeriesData<
     }
 
     /**
-     * Retrieve the index of nearest value
-     * @param dim
-     * @param value
-     * @param [maxDistance=Infinity]
-     * @return If and only if multiple indices has
-     *         the same value, they are put to the result.
-     */
-    indicesOfNearest(dim: DimensionLoose, value: number, maxDistance?: number): number[] {
-        return this._store.indicesOfNearest(
-            this._getStoreDimIndex(dim),
-            value, maxDistance
-        );
-    }
-    /**
      * Data iteration
      * @param ctx default this
      * @example
