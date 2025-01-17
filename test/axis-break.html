@@ -47,65 +47,6 @@ under the License.
 
 
         <div id="main3"></div>
-<!--
-        <script>
-        require([
-            'echarts'
-        ], function (echarts) {
-            var option;
-
-            option = {
-                animation: 0,
-                grid: {
-                    left: 100,
-                    width: 800,
-                    top: 50,
-                    height: 300
-                },
-                xAxis: {
-                    data: ['a', 'b', 'c', 'd'],
-                    // axisTick: {
-                    //     show: false
-                    // }
-                    breaks: [{
-                        start: 1,
-                        end: 3,
-                        gap: 0.2
-                    }]
-                },
-                yAxis: {
-                    triggerEvent: true,
-                    axisTick: {
-                        show: true
-                    },
-                    breaks: [{
-                        start: 20,
-                        end: 260,
-                        gap: 10
-                    }]
-                },
-                series: [{
-                    type: 'bar',
-                    data: [100, 200, 300, 400],
-                    barWidth: 100,
-                    // label: {
-                    //     show: true,
-                    //     position: 'top'
-                    // }
-                }]
-            };
-
-            var chart = testHelper.create(echarts, 'main0', {
-                title: [
-                    'yAxis with breaks'
-                ],
-                option: option,
-                width: 1000,
-                height: 400
-            });
-        });
-        </script> -->
-
 
         <script>
         require([
@@ -157,7 +98,32 @@ under the License.
                 title: [
                     'yAxis with breaks'
                 ],
-                option: option
+                option: option,
+                buttons: [{
+                    text: 'Revert Break Axis',
+                    onclick: function (event) {
+                        chart.dispatchAction({type: 'axisBreakRevert'});
+                    }
+                }, {
+                    text: 'Expand Break Axis 100~2300',
+                    onclick: function (event) {
+                        chart.dispatchAction({
+                            type: 'axisBreakExpand',
+                            breaks: [{
+                                start: 100,
+                                end: 2300
+                            }]
+                        });
+                    }
+                }]
+            });
+
+            chart.on('axisBreakExpanded', function (params) {
+                console.log('axisBreakExpanded', params);
+            });
+
+            chart.on('axisBreakReverted', function (params) {
+                console.log('axisBreakReverted', params);
             });
         });
         </script>

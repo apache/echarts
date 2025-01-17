@@ -145,6 +145,16 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
         }
     }
 
+    /**
+     * Revert all breaks to their initial state
+     */
+    revertBreaks(): void {
+        for (let i = 0; i < this._breaks.length; i++) {
+            const brk = this._breaks[i];
+            brk.isExpanded = false;
+        }
+    }
+
     getExtentSpanWithoutBreaks() {
         return getExtentSpanWithoutBreaks(this._extent, this._breaks);
     }
