@@ -22,7 +22,7 @@ import Geo, { geo2DDimensions } from './Geo';
 import * as layout from '../../util/layout';
 import * as numberUtil from '../../util/number';
 import geoSourceManager from './geoSourceManager';
-import GeoModel, { GeoCommonOptionMixin, GeoOption, RegoinOption } from './GeoModel';
+import GeoModel, { GeoCommonOptionMixin, GeoOption, RegionOption } from './GeoModel';
 import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemCreator } from '../CoordinateSystem';
@@ -34,6 +34,7 @@ import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
 import type ComponentModel from '../../model/Component';
 import * as vector from 'zrender/src/core/vector';
+import type { GeoJSONRegion } from './Region';
 
 export type resizeGeoType = typeof resizeGeo;
 
@@ -254,11 +255,11 @@ class GeoCreator implements CoordinateSystemCreator {
      * Fill given regions array
      */
     getFilledRegions(
-        originRegionArr: RegoinOption[],
+        originRegionArr: RegionOption[],
         mapName: string,
         nameMap: NameMap,
         nameProperty: string
-    ): RegoinOption[] {
+    ): RegionOption[] {
         // Not use the original
         const regionsArr = (originRegionArr || []).slice();
 
@@ -270,7 +271,17 @@ class GeoCreator implements CoordinateSystemCreator {
         const source = geoSourceManager.load(mapName, nameMap, nameProperty);
         zrUtil.each(source.regions, function (region) {
             const name = region.name;
-            !dataNameMap.get(name) && regionsArr.push({name: name});
+            let regionOption = dataNameMap.get(name);
+            // apply specified echarts style in GeoJSON data
+            const specifiedGeoJSONRegionStyle = (region as GeoJSONRegion).properties
+                && (region as GeoJSONRegion).properties.echartsStyle;
+            if (!regionOption) {
+                regionOption = {
+                   name: name
+                };
+                regionsArr.push(regionOption);
+            }
+            specifiedGeoJSONRegionStyle && zrUtil.merge(regionOption, specifiedGeoJSONRegionStyle);
         });
 
         return regionsArr;

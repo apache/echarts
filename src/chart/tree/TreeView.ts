@@ -25,7 +25,7 @@ import {radialCoordinate} from './layoutHelper';
 import * as bbox from 'zrender/src/core/bbox';
 import View from '../../coord/View';
 import * as roamHelper from '../../component/helper/roamHelper';
-import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
+import RoamController from '../../component/helper/RoamController';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
@@ -132,7 +132,7 @@ class TreeView extends ChartView {
     private _mainGroup = new graphic.Group();
 
     private _controller: RoamController;
-    private _controllerHost: RoamControllerHost;
+    private _controllerHost: roamHelper.RoamControllerHost;
 
     private _data: SeriesData<TreeSeriesModel>;
 
@@ -145,7 +145,7 @@ class TreeView extends ChartView {
 
         this._controllerHost = {
             target: this.group
-        } as RoamControllerHost;
+        } as roamHelper.RoamControllerHost;
 
         this.group.add(this._mainGroup);
     }

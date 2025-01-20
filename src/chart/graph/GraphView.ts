@@ -19,8 +19,12 @@
 
 import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
-import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
-import * as roamHelper from '../../component/helper/roamHelper';
+import RoamController from '../../component/helper/RoamController';
+import {
+    updateViewOnZoom,
+    updateViewOnPan,
+    RoamControllerHost
+} from '../../component/helper/roamHelper';
 import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
@@ -35,9 +39,12 @@ import Symbol from '../helper/Symbol';
 import SeriesData from '../../data/SeriesData';
 import Line from '../helper/Line';
 import { getECData } from '../../util/innerStore';
+import Thumbnail from './Thumbnail';
 
 import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
+import { clone, extend } from 'zrender/src/core/util';
+import ECLinePath from '../helper/LinePath';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -62,45 +69,50 @@ class GraphView extends ChartView {
 
     private _layouting: boolean;
 
+    private _thumbnail: Thumbnail = new Thumbnail();
+
+    private _mainGroup: graphic.Group;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const symbolDraw = new SymbolDraw();
         const lineDraw = new LineDraw();
         const group = this.group;
-
+        const mainGroup = new graphic.Group();
         this._controller = new RoamController(api.getZr());
         this._controllerHost = {
-            target: group
+            target: mainGroup
         } as RoamControllerHost;
 
-        group.add(symbolDraw.group);
-        group.add(lineDraw.group);
+        mainGroup.add(symbolDraw.group);
+        mainGroup.add(lineDraw.group);
+        group.add(mainGroup);
 
         this._symbolDraw = symbolDraw;
         this._lineDraw = lineDraw;
+
+        this._mainGroup = mainGroup;
 
         this._firstRender = true;
     }
 
     render(seriesModel: GraphSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const coordSys = seriesModel.coordinateSystem;
+        let isForceLayout = false;
 
         this._model = seriesModel;
 
         const symbolDraw = this._symbolDraw;
         const lineDraw = this._lineDraw;
-
-        const group = this.group;
-
         if (isViewCoordSys(coordSys)) {
             const groupNewProp = {
                 x: coordSys.x, y: coordSys.y,
                 scaleX: coordSys.scaleX, scaleY: coordSys.scaleY
             };
             if (this._firstRender) {
-                group.attr(groupNewProp);
+                this._mainGroup.attr(groupNewProp);
             }
             else {
-                graphic.updateProps(group, groupNewProp, seriesModel);
+                graphic.updateProps(this._mainGroup, groupNewProp, seriesModel);
             }
         }
         // Fix edge contact point with node
@@ -121,7 +133,8 @@ class GraphView extends ChartView {
         const forceLayout = seriesModel.forceLayout;
         const layoutAnimation = seriesModel.get(['force', 'layoutAnimation']);
         if (forceLayout) {
-            this._startForceLayoutIteration(forceLayout, layoutAnimation);
+            isForceLayout = true;
+            this._startForceLayoutIteration(forceLayout, api, layoutAnimation);
         }
 
         const layout = seriesModel.get('layout');
@@ -144,7 +157,7 @@ class GraphView extends ChartView {
                         case 'force':
                             forceLayout.warmUp();
                             !this._layouting
-                                && this._startForceLayoutIteration(forceLayout, layoutAnimation);
+                                && this._startForceLayoutIteration(forceLayout, api, layoutAnimation);
                             forceLayout.setFixed(idx);
                             // Write position back to layout
                             data.setItemLayout(idx, [el.x, el.y]);
@@ -205,6 +218,7 @@ class GraphView extends ChartView {
         });
 
         this._firstRender = false;
+        isForceLayout || this._renderThumbnail(seriesModel, api, this._symbolDraw, this._lineDraw);
     }
 
     dispose() {
@@ -212,15 +226,20 @@ class GraphView extends ChartView {
 
         this._controller && this._controller.dispose();
         this._controllerHost = null;
+        this._thumbnail.dispose();
     }
 
-    _startForceLayoutIteration(
+    private _startForceLayoutIteration(
         forceLayout: GraphSeriesModel['forceLayout'],
+        api: ExtensionAPI,
         layoutAnimation?: boolean
     ) {
         const self = this;
         (function step() {
             forceLayout.step(function (stopped) {
+                if (stopped) {
+                    self._renderThumbnail(self._model, api, self._symbolDraw, self._lineDraw);
+                }
                 self.updateLayout(self._model);
                 (self._layouting = !stopped) && (
                     layoutAnimation
@@ -231,7 +250,7 @@ class GraphView extends ChartView {
         })();
     }
 
-    _updateController(
+    private _updateController(
         seriesModel: GraphSeriesModel,
         ecModel: GlobalModel,
         api: ExtensionAPI
@@ -240,10 +259,11 @@ class GraphView extends ChartView {
         const controllerHost = this._controllerHost;
         const group = this.group;
 
-        controller.setPointerChecker(function (e, x, y) {
+        controller.setPointerChecker((e, x, y) => {
             const rect = group.getBoundingRect();
             rect.applyTransform(group.transform);
             return rect.contain(x, y)
+                && !this._thumbnail.contain(x, y)
                 && !onIrrelevantElement(e, api, seriesModel);
         });
 
@@ -259,32 +279,53 @@ class GraphView extends ChartView {
             .off('pan')
             .off('zoom')
             .on('pan', (e) => {
-                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'graphRoam',
-                    dx: e.dx,
-                    dy: e.dy
-                });
+                this._updateViewOnPan(seriesModel, api, e.dx, e.dy);
             })
             .on('zoom', (e) => {
-                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'graphRoam',
-                    zoom: e.scale,
-                    originX: e.originX,
-                    originY: e.originY
-                });
-                this._updateNodeAndLinkScale();
-                adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
-                this._lineDraw.updateLayout();
-                // Only update label layout on zoom
-                api.updateLabelLayout();
+                this._updateViewOnZoom(seriesModel, api, e.scale, e.originX, e.originY);
             });
     }
 
-    _updateNodeAndLinkScale() {
+    private _updateViewOnPan(
+        seriesModel: GraphSeriesModel,
+        api: ExtensionAPI,
+        dx: number,
+        dy: number
+    ): void {
+        updateViewOnPan(this._controllerHost, dx, dy);
+        api.dispatchAction({
+            seriesId: seriesModel.id,
+            type: 'graphRoam',
+            dx: dx,
+            dy: dy
+        });
+        this._thumbnail.updateWindow();
+    }
+
+    private _updateViewOnZoom(
+        seriesModel: GraphSeriesModel,
+        api: ExtensionAPI,
+        scale: number,
+        originX: number,
+        originY: number
+    ) {
+        updateViewOnZoom(this._controllerHost, scale, originX, originY);
+        api.dispatchAction({
+            seriesId: seriesModel.id,
+            type: 'graphRoam',
+            zoom: scale,
+            originX: originX,
+            originY: originY
+        });
+        this._updateNodeAndLinkScale();
+        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
+        this._lineDraw.updateLayout();
+        // Only update label layout on zoom
+        api.updateLabelLayout();
+        this._thumbnail.updateWindow();
+    }
+
+    private _updateNodeAndLinkScale() {
         const seriesModel = this._model;
         const data = seriesModel.getData();
 
@@ -309,7 +350,87 @@ class GraphView extends ChartView {
 
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
+        this._controller && this._controller.disable();
+        this._thumbnail.remove();
+    }
+
+    // TODO: register thumbnail (consider code size).
+    private _renderThumbnail(
+        seriesModel: GraphSeriesModel,
+        api: ExtensionAPI,
+        symbolDraw: SymbolDraw,
+        lineDraw: LineDraw
+    ) {
+        const thumbnail = this._thumbnail;
+        this.group.add(thumbnail.group);
+
+        const renderThumbnailContent = (viewGroup: graphic.Group) => {
+            const symbolNodes = symbolDraw.group.children();
+            const lineNodes = lineDraw.group.children();
+
+            const lineGroup = new graphic.Group();
+            const symbolGroup = new graphic.Group();
+            viewGroup.add(symbolGroup);
+            viewGroup.add(lineGroup);
+
+            for (let i = 0; i < symbolNodes.length; i++) {
+                const node = symbolNodes[i];
+                const sub = (node as graphic.Group).children()[0];
+                const x = (node as Symbol).x;
+                const y = (node as Symbol).y;
+                const subShape = clone((sub as graphic.Path).shape);
+                const shape = extend(subShape, {
+                    width: sub.scaleX,
+                    height: sub.scaleY,
+                    x: x - sub.scaleX / 2,
+                    y: y - sub.scaleY / 2
+                });
+                const style = clone((sub as graphic.Path).style);
+                const subThumbnail = new (sub as any).constructor({
+                    shape,
+                    style,
+                    z2: 151
+                });
+                symbolGroup.add(subThumbnail);
+            }
+
+            for (let i = 0; i < lineNodes.length; i++) {
+                const node = lineNodes[i];
+                const line = (node as graphic.Group).children()[0];
+                const style = clone((line as ECLinePath).style);
+                const shape = clone((line as ECLinePath).shape);
+                const lineThumbnail = new ECLinePath({
+                    style,
+                    shape,
+                    z2: 151
+                });
+                lineGroup.add(lineThumbnail);
+            }
+        };
+
+        thumbnail.render({
+            seriesModel,
+            api,
+            roamType: seriesModel.get('roam'),
+            z2Setting: {
+                background: 150,
+                window: 160
+            },
+            seriesBoundingRect: this._mainGroup.getBoundingRect(),
+            renderThumbnailContent
+        });
+
+        thumbnail
+            .off('pan')
+            .off('zoom')
+            .on('pan', (event) => {
+                this._updateViewOnPan(seriesModel, api, event.dx, event.dy);
+            })
+            .on('zoom', (event) => {
+                this._updateViewOnZoom(seriesModel, api, event.scale, event.originX, event.originY);
+            });
     }
 }
 
 export default GraphView;
+
