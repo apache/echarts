@@ -404,11 +404,6 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         opts = opts || {};
 
-        // Get theme by name
-        if (isString(theme)) {
-            theme = themeStorage[theme] as object;
-        }
-
         this._dom = dom;
 
         let defaultRenderer = 'canvas';
@@ -459,10 +454,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         // Expect 60 fps.
         this._throttledZrFlush = throttle(bind(zr.flush, zr), 17);
 
-        theme = clone(theme);
-        theme && backwardCompat(theme as ECUnitOption, true);
-
-        this._theme = theme;
+        this._updateTheme(theme);
 
         this._locale = createLocaleObject(opts.locale || SYSTEM_LANG);
 
@@ -693,10 +685,30 @@ class ECharts extends Eventful<ECEventDefinition> {
     }
 
     /**
-     * @deprecated
+     * Update theme with name or theme option and repaint the chart.
+     * @param theme Theme name or theme option.
      */
-    private setTheme(): void {
-        deprecateLog('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
+    setTheme(theme: string | ThemeOption): void {
+        this._updateTheme(theme);
+        if (this._model) {
+            this._model.setTheme(this._theme);
+            // Force refresh to apply theme changes
+            updateMethods.prepareAndUpdate.call(this, {
+                type: 'themeChanged'
+            });
+        }
+    }
+
+    private _updateTheme(theme: string | ThemeOption): void {
+        if (isString(theme)) {
+            theme = themeStorage[theme] as object;
+        }
+
+        if (theme) {
+            theme = clone(theme);
+            theme && backwardCompat(theme as ECUnitOption, true);
+            this._theme = theme;
+        }
     }
 
     // We don't want developers to use getModel directly.
