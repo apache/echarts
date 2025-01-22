@@ -35,12 +35,12 @@ export default {
     colorBy: 'series',
 
     color: [
-        '#5470c6',
-        '#91cc75',
-        '#fac858',
-        '#ee6666',
-        '#73c0de',
-        '#3ba272',
+        '#5780fe',
+        '#b5e45a',
+        '#656990',
+        '#ffa75c',
+        '#5adfd3',
+        '#f47da3',
         '#fc8452',
         '#9a60b4',
         '#ea7ccc'

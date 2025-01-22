@@ -692,10 +692,8 @@ class ECharts extends Eventful<ECEventDefinition> {
         this._updateTheme(theme);
         if (this._model) {
             this._model.setTheme(this._theme);
-            // Force refresh to apply theme changes
-            updateMethods.prepareAndUpdate.call(this, {
-                type: 'themeChanged'
-            });
+            // Just call update directly without event type
+            updateMethods.prepareAndUpdate.call(this);
         }
     }
 
@@ -1672,7 +1670,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             prepareAndUpdate(this: ECharts, payload: Payload): void {
                 prepare(this);
-                updateMethods.update.call(this, payload, {
+                updateMethods.update.call(this, payload, payload && {
                     // Needs to mark option changed if newOption is given.
                     // It's from MagicType.
                     // TODO If use a separate flag optionChanged in payload?
