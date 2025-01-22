@@ -29,9 +29,10 @@ import {
     createScaleByModel,
     ifAxisCrossZero,
     niceScaleExtent,
-    estimateLabelUnionRect,
-    getDataDimensionsOnAxis
+    getDataDimensionsOnAxis,
+    isNameLocationCenter
 } from '../../coord/axisHelper';
+import { estimateLabelUnionRect, estimateAxisNameSize } from '../../coord/axisTickLabelBuilder';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
@@ -168,7 +169,6 @@ class Grid implements CoordinateSystemMaster {
      * Resize the grid
      */
     resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
-
         const boxLayoutParams = gridModel.getBoxLayoutParams();
         const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
 
@@ -180,17 +180,18 @@ class Grid implements CoordinateSystemMaster {
 
         this._rect = gridRect;
 
-        const axesList = this._axesList;
-
-        adjustAxes();
+        // sort axes to make sure we estimate ordinal axes' label dimensions after we adjusted
+        // the available grid space based on the value axes' label dimensions
+        const axesList = [...this._axesList].sort((a, b) => axisOrder(a) - axisOrder(b));
 
         // Minus label size
         if (isContainLabel) {
             each(axesList, function (axis) {
+                const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
+
                 if (!axis.model.get(['axisLabel', 'inside'])) {
                     const labelUnionRect = estimateLabelUnionRect(axis);
                     if (labelUnionRect) {
-                        const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
                         const margin = axis.model.get(['axisLabel', 'margin']);
                         gridRect[dim] -= labelUnionRect[dim] + margin;
                         if (axis.position === 'top') {
@@ -201,16 +202,38 @@ class Grid implements CoordinateSystemMaster {
                         }
                     }
                 }
-            });
 
-            adjustAxes();
+                if (axis.model.get('nameLayout') === 'auto'
+                    && isNameLocationCenter(axis.model.get('nameLocation'))
+                ) {
+                    const nameGap = axis.model.get('nameGap') ?? 0;
+                    const nameSize = estimateAxisNameSize(axis);
+                    gridRect[dim] -= nameSize.height + nameGap;
+                    if (axis.position === 'top') {
+                        gridRect.y += nameSize.height + nameGap;
+                    }
+                    else if (axis.position === 'left') {
+                        gridRect.x += nameSize.height + nameGap;
+                    }
+                }
+
+                // adjust axes after each potential change to grid dimensions
+                // so that the next (ordinal) axis' label estimations are more precise
+                adjustAxes();
+            });
         }
+
+        adjustAxes();
 
         each(this._coordsList, function (coord) {
             // Calculate affine matrix to accelerate the data to point transform.
             // If all the axes scales are time or value.
             coord.calcAffineTransform();
         });
+
+        function axisOrder(a: Axis2D) {
+            return a.type === 'category' ? 1 : 0;
+        }
 
         function adjustAxes() {
             each(axesList, function (axis) {
