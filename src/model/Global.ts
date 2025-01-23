@@ -543,6 +543,11 @@ echarts.use([${seriesImportName}]);`);
         return option;
     }
 
+    setTheme(theme: object) {
+        this._theme = new Model(theme);
+        this._resetOption('recreate', null);
+    }
+
     getTheme(): Model {
         return this._theme;
     }
