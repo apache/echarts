@@ -73,7 +73,7 @@ import {
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
 import Scale from './Scale';
-import {TimeScaleTick, ScaleTick} from '../util/types';
+import {TimeScaleTick, ScaleTick, ScaleBreak} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
 import { warn } from '../util/log';
 import { LocaleOption } from '../core/locale';
@@ -102,6 +102,7 @@ const bisect = function (
 type TimeScaleSetting = {
     locale: Model<LocaleOption>;
     useUTC: boolean;
+    breaks?: ScaleBreak[];
 };
 
 class TimeScale extends IntervalScale<TimeScaleSetting> {
@@ -115,6 +116,17 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
 
     constructor(settings?: TimeScaleSetting) {
         super(settings);
+
+        // Normalize Date into timestamp in breaks
+        for (let i = 0; i < this._breaks.length; i++) {
+            const brk = this._breaks[i];
+            if ((brk.start as unknown) instanceof Date) {
+                brk.start = (brk.start as unknown as Date).getTime();
+            }
+            if ((brk.end as unknown) instanceof Date) {
+                brk.end = (brk.end as unknown as Date).getTime();
+            }
+        }
     }
 
     /**
@@ -176,7 +188,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             level: 0
         });
 
-        return ticks;
+        return scaleHelper.addBreakTicks(ticks, this._breaks, interval);
     }
 
     calcNiceExtent(
@@ -242,11 +254,11 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     }
 
     normalize(val: number): number {
-        return scaleHelper.normalize(this.parse(val), this._extent);
+        return scaleHelper.normalize(this.parse(val), this._extent, this._breaks);
     }
 
     scale(val: number): number {
-        return scaleHelper.scale(val, this._extent);
+        return scaleHelper.scale(val, this._extent, this._breaks);
     }
 
 }
