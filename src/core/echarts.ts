@@ -232,6 +232,10 @@ export interface ResizeOpts {
     silent?: boolean // by default false.
 };
 
+export interface SetThemeOpts {
+    silent?: boolean;
+}
+
 interface PostIniter {
     (chart: EChartsType): void
 }
@@ -687,14 +691,55 @@ class ECharts extends Eventful<ECEventDefinition> {
     /**
      * Update theme with name or theme option and repaint the chart.
      * @param theme Theme name or theme option.
+     * @param opts Optional settings
      */
-    setTheme(theme: string | ThemeOption): void {
-        this._updateTheme(theme);
-        if (this._model) {
-            this._model.setTheme(this._theme);
-            // Just call update directly without event type
-            updateMethods.prepareAndUpdate.call(this);
+    setTheme(theme: string | ThemeOption, opts?: SetThemeOpts): void {
+        if (this[IN_MAIN_PROCESS_KEY]) {
+            if (__DEV__) {
+                error('`setTheme` should not be called during main process.');
+            }
+            return;
         }
+
+        if (this._disposed) {
+            disposedWarning(this.id);
+            return;
+        }
+
+        const ecModel = this._model;
+        if (!ecModel) {
+            return;
+        }
+
+        let silent = opts && opts.silent;
+        let updateParams = null as UpdateLifecycleParams;
+
+        if (this[PENDING_UPDATE]) {
+            if (silent == null) {
+                silent = (this[PENDING_UPDATE] as any).silent;
+            }
+            updateParams = (this[PENDING_UPDATE] as any).updateParams;
+            this[PENDING_UPDATE] = null;
+        }
+
+        this[IN_MAIN_PROCESS_KEY] = true;
+
+        try {
+            this._updateTheme(theme);
+            ecModel.setTheme(this._theme);
+
+            prepare(this);
+            updateMethods.update.call(this, {type: 'setTheme'}, updateParams);
+        }
+        catch (e) {
+            this[IN_MAIN_PROCESS_KEY] = false;
+            throw e;
+        }
+
+        this[IN_MAIN_PROCESS_KEY] = false;
+
+        flushPendingActions.call(this, silent);
+        triggerUpdatedEvent.call(this, silent);
     }
 
     private _updateTheme(theme: string | ThemeOption): void {
