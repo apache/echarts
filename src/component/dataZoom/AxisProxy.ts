@@ -271,7 +271,22 @@ class AxisProxy {
         const valueWindow = this._valueWindow;
 
         if (filterMode === 'none') {
-            return;
+          each(seriesModels, function (seriesModel) {
+            if (seriesModel.subType === 'bar' || seriesModel.subType === 'scatter') {
+              // For series type bar and scatter, get the range bound data so that the
+              // bar and scatter bubbles should not exceed beyond the axis.
+              // Instead of clipping the bars in such scenario,
+              // it should show the whole bars within the range.
+              const seriesData = seriesModel.getData();
+              const dataDims = seriesData.mapDimensionsAll(axisDim);
+              each(dataDims, function (dim) {
+                const range: Dictionary<[number, number]> = {};
+                range[dim] = valueWindow;
+                seriesData.selectRange(range);
+              });
+            }
+          });
+          return;
         }
 
         // FIXME
