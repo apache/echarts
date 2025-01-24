@@ -486,6 +486,42 @@ export type SeriesDataType = 'main' | 'node' | 'edge';
 // echarts option types (base and common part)
 // --------------------------------------------
 
+export interface TokenOption {
+    color?: {
+        // General colors
+        accent0?: string;
+        accent1?: string;
+        accent2?: string;
+        accent3?: string;
+        accent4?: string;
+        accent5?: string;
+        accent6?: string;
+        accent7?: string;
+        accent8?: string;
+
+        border?: string;
+        borderTint?: string;
+        borderShade?: string;
+
+        // Chart colors
+        chartBg?: string;
+
+        // Component colors
+        axisLine?: string;
+        axisTick?: string;
+        axisLabel?: string;
+        splitLine?: string;
+        splitArea?: string;
+        titleText?: string;
+        markText?: string;
+        tooltipBg?: string;
+        tooltipBorder?: string;
+        tooltipText?: string;
+
+        // Series colors
+    }
+}
+
 /**
  * [ECUnitOption]:
  * An object that contains definitions of components
