@@ -108,7 +108,8 @@ import {
     ScaleDataValue,
     ZRElementEventName,
     ECElementEvent,
-    AnimationOption
+    AnimationOption,
+    TokenOption
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
@@ -211,6 +212,12 @@ type ConnectStatus =
     typeof CONNECT_STATUS_PENDING
     | typeof CONNECT_STATUS_UPDATING
     | typeof CONNECT_STATUS_UPDATED;
+
+export interface SetTokenOpts {
+    notMerge?: boolean;
+    lazyUpdate?: boolean;
+    silent?: boolean;
+}
 
 export type SetOptionTransitionOpt = UpdateLifecycleTransitionOpt;
 export type SetOptionTransitionOptItem = UpdateLifecycleTransitionItem;
@@ -397,6 +404,8 @@ class ECharts extends Eventful<ECEventDefinition> {
     private [IN_MAIN_PROCESS_KEY]: boolean;
     private [CONNECT_STATUS_KEY]: ConnectStatus;
     private [STATUS_NEEDS_UPDATE_KEY]: boolean;
+
+    private _tokens: TokenOption;
 
     constructor(
         dom: HTMLElement,
@@ -587,6 +596,123 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     isSSR(): boolean {
         return this._ssr;
+    }
+
+    setToken(tokens: TokenOption): void;
+    setToken(tokens: TokenOption, notMerge?: boolean, lazyUpdate?: boolean): void;
+    setToken(tokens: TokenOption, opts?: SetTokenOpts): void;
+    /* eslint-disable-next-line */
+    setToken(tokens: TokenOption, notMerge?: boolean | SetTokenOpts, lazyUpdate?: boolean): void {
+        if (this[IN_MAIN_PROCESS_KEY]) {
+            if (__DEV__) {
+                error('`setToken` should not be called during main process.');
+            }
+            return;
+        }
+
+        if (this._disposed) {
+            disposedWarning(this.id);
+            return;
+        }
+
+        let silent;
+        let replaceMerge;
+        if (isObject(notMerge)) {
+            lazyUpdate = notMerge.lazyUpdate;
+            silent = notMerge.silent;
+            notMerge = notMerge.notMerge;
+        }
+
+        this[IN_MAIN_PROCESS_KEY] = true;
+
+        if (!this._model || notMerge) {
+            this._tokens = tokens;
+            this[IN_MAIN_PROCESS_KEY] = false;
+            return;
+        }
+
+        try {
+            if (notMerge) {
+                this._tokens = tokens;
+            }
+            else {
+                // Merge tokens
+                this._tokens = this._tokens || {};
+                each(tokens, (value, key) => {
+                    if (isObject(value)) {
+                        this._tokens[key] = this._tokens[key] || {};
+                        extend(this._tokens[key], value);
+                    }
+                    else {
+                        this._tokens[key] = value;
+                    }
+                });
+            }
+        }
+        catch (e) {
+            this[IN_MAIN_PROCESS_KEY] = false;
+            throw e;
+        }
+
+        const updateParams = {
+            optionChanged: false
+        } as UpdateLifecycleParams;
+
+        if (lazyUpdate) {
+            this[PENDING_UPDATE] = {
+                silent: silent,
+                updateParams: updateParams
+            };
+            this[IN_MAIN_PROCESS_KEY] = false;
+
+            this.getZr().wakeUp();
+        }
+        else {
+            try {
+                prepare(this);
+                updateMethods.update.call(this, null, updateParams);
+            }
+            catch (e) {
+                this[PENDING_UPDATE] = null;
+                this[IN_MAIN_PROCESS_KEY] = false;
+                throw e;
+            }
+        }
+
+        if (!this._ssr) {
+            this._zr.flush();
+        }
+
+        this[PENDING_UPDATE] = null;
+        this[IN_MAIN_PROCESS_KEY] = false;
+
+        flushPendingActions.call(this, silent);
+        triggerUpdatedEvent.call(this, silent);
+    }
+
+    getToken(): TokenOption;
+    getToken(path: string): unknown;
+    getToken(path?: string): TokenOption | unknown {
+        if (this._disposed) {
+            disposedWarning(this.id);
+            return;
+        }
+
+        if (!path) {
+            return clone(this._tokens || {});
+        }
+
+        // Use type assertion for the nested access
+        let result: unknown = this._tokens;
+        const pathParts = path.split('.');
+        for (let i = 0; i < pathParts.length; i++) {
+            if (!result || typeof result !== 'object') {
+                return;
+            }
+            result = (result as Record<string, unknown>)[pathParts[i]];
+        }
+
+        return result;
     }
 
     /**
@@ -2832,7 +2958,14 @@ export function getInstanceById(key: string): EChartsType | undefined {
 /**
  * Register theme
  */
-export function registerTheme(name: string, theme: ThemeOption): void {
+export function registerTheme(
+    name: string,
+    theme: ThemeOption,
+    tokens?: TokenOption
+): void {
+    if (tokens) {
+        theme.designTokens = tokens;
+    }
     themeStorage[name] = theme;
 }
 
