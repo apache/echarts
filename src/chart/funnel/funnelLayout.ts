@@ -25,15 +25,6 @@ import SeriesData from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import { isFunction } from 'zrender/src/core/util';
 
-function getViewRect(seriesModel: FunnelSeriesModel, api: ExtensionAPI) {
-    return layout.getLayoutRect(
-        seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
-    );
-}
-
 function getSortedIndices(data: SeriesData, sort: FunnelSeriesOption['sort']) {
     const valueDim = data.mapDimension('value');
     const valueArr = data.mapArray(valueDim, function (val: number) {
@@ -251,7 +242,7 @@ export default function funnelLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
         const sort = seriesModel.get('sort');
-        const viewRect = getViewRect(seriesModel, api);
+        const viewRect = layout.getViewRect(seriesModel, api);
         const orient = seriesModel.get('orient');
         const viewWidth = viewRect.width;
         const viewHeight = viewRect.height;
