@@ -40,6 +40,7 @@ under the License.
 
         <div id="main1"></div>
         <div id="main0"></div>
+        <div id="main2"></div>
 
 
 
@@ -235,6 +236,90 @@ under the License.
                 gui.add(config, 'clockwise')
                     .onChange(update);
         });
+    </script>
+
+<script>
+    require([
+        'echarts',
+        // 'map/js/china',
+        // './data/nutrients.json'
+    ], function (echarts) {
+        var option;
+
+        var data = [{
+            name: 'sum',
+            children: [{
+                name:'text1',
+                value: 42,
+                itemStyle: {
+                    color: 'blue'
+                },
+                children: [{
+                    name:'other',
+                    value: 42,
+                    itemStyle: {
+                        color: 'red'
+                    }
+                }]
+            }, {
+                name:'text2',
+                value: 91,
+                itemStyle: {
+                    color: 'green'
+                },
+                children: [{
+                    name:'other',
+                    value: 91,
+                    itemStyle: {
+                        color: 'orange'
+                    }
+                }]
+            }]
+        }];
+
+        option = {
+            series: {
+                radius: ['0%', '80%'],
+                type: 'sunburst',
+                sort: null,
+                highlightPolicy: 'ancestor',
+                nodeClick: 'false',
+                data: data,
+                levels: [
+                    {},
+                    {
+                        label: {align: 'center', rotate: 0}
+                    }
+                ]
+            }
+        };
+
+        var chart = testHelper.create(echarts, 'main2', {
+            title: [
+                'Label shoudn\'t move when labelLayout is set.'
+            ],
+            option: option
+            // height: 300,
+            // buttons: [{text: 'btn-txt', onclick: function () {}}],
+            // recordCanvas: true,
+        });
+        chart.setOption({
+            series: {
+                labelLayout: (p) => ({
+                    x:
+                        p.labelRect.x > chart.getWidth() / 2 ? chart.getWidth() - 100 : 100,
+                    moveOverlap: 'shiftY',
+                    rotate: 0,
+                    align: p.labelRect.x > chart.getWidth() / 2 ? 'left' : 'right',
+                    verticalAlign: 'middle'
+                })
+            }
+        })
+        chart.dispatchAction({
+            type: 'highlight',
+            dataIndex: 2
+        })
+    });
     </script>
 
 
