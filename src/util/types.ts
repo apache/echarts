@@ -137,6 +137,10 @@ export interface ECElement extends Element {
      * Force disable morphing
      */
     disableMorphing?: boolean
+    /**
+     * Force disable triggering tooltip
+     */
+    disableTooltip?: boolean
 }
 
 export interface DataHost {
