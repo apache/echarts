@@ -50817,8 +50817,10 @@
           return _this._longHide = true;
         }, 500);
       };
-      TooltipHTMLContent.prototype.hideLater = function (time) {
-        if (this._show && !(this._inContent && this._enterable) && !this._alwaysShowContent) {
+      TooltipHTMLContent.prototype.hideLater = function (time, forceHide) {
+        if (this._show && !(this._inContent && this._enterable)
+        // If `forceHide` is `true`, override `_alwaysShowContent` and ensure the tooltip is hidden
+        && (!this._alwaysShowContent && !forceHide || this._alwaysShowContent && forceHide)) {
           if (time) {
             this._hideDelay = time;
             // Set show false to avoid invoke hideLater multiple times
@@ -51192,7 +51194,7 @@
       TooltipView.prototype.manuallyHideTip = function (tooltipModel, ecModel, api, payload) {
         var tooltipContent = this._tooltipContent;
         if (this._tooltipModel) {
-          tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
+          tooltipContent.hideLater(this._tooltipModel.get('hideDelay'), payload.forceHide);
         }
         this._lastX = this._lastY = this._lastDataByCoordSys = null;
         if (payload.from !== this.uid) {

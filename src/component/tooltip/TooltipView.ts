@@ -100,6 +100,7 @@ interface ShowTipPayload {
 interface HideTipPayload {
     type?: 'hideTip'
     from?: string
+    forceHide?: boolean
 
     dispatchAction?: ExtensionAPI['dispatchAction']
 }
@@ -387,9 +388,8 @@ class TooltipView extends ComponentView {
         payload: HideTipPayload
     ) {
         const tooltipContent = this._tooltipContent;
-
         if (this._tooltipModel) {
-            tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
+            tooltipContent.hideLater(this._tooltipModel.get('hideDelay'), payload.forceHide);
         }
 
         this._lastX = this._lastY = this._lastDataByCoordSys = null;
@@ -410,6 +410,7 @@ class TooltipView extends ComponentView {
     ) {
         const seriesIndex = payload.seriesIndex;
         const dataIndex = payload.dataIndex;
+
         // @ts-ignore
         const coordSysAxesInfo = ecModel.getComponent('axisPointer').coordSysAxesInfo;
 

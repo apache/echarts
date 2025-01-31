@@ -501,8 +501,11 @@ class TooltipHTMLContent {
         this._longHideTimeout = setTimeout(() => this._longHide = true, 500) as any;
     }
 
-    hideLater(time?: number) {
-        if (this._show && !(this._inContent && this._enterable) && !this._alwaysShowContent) {
+    hideLater(time?: number, forceHide?: boolean) {
+        if (this._show
+            && !(this._inContent && this._enterable)
+            // If `forceHide` is `true`, override `_alwaysShowContent` and ensure the tooltip is hidden
+            && (!this._alwaysShowContent && !forceHide || this._alwaysShowContent && forceHide)) {
             if (time) {
                 this._hideDelay = time;
                 // Set show false to avoid invoke hideLater multiple times
