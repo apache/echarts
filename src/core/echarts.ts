@@ -135,6 +135,7 @@ import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
 import { getImpl } from './impl';
 import type geoSourceManager from '../coord/geo/geoSourceManager';
 import {registerCustomSeries as registerCustom} from '../chart/custom/customSeriesRegister';
+import { DEFAULT_TOKENS } from '../theme/tokens';
 
 declare let global: any;
 
@@ -616,7 +617,6 @@ class ECharts extends Eventful<ECEventDefinition> {
         }
 
         let silent;
-        let replaceMerge;
         if (isObject(notMerge)) {
             lazyUpdate = notMerge.lazyUpdate;
             silent = notMerge.silent;
@@ -3267,8 +3267,8 @@ registerAction({
 }, noop);
 
 // Default theme
-registerTheme('light', lightTheme);
-registerTheme('dark', darkTheme);
+registerTheme('light', lightTheme, DEFAULT_TOKENS);
+registerTheme('dark', darkTheme, DEFAULT_TOKENS);
 
 // For backward compatibility, where the namespace `dataTool` will
 // be mounted on `echarts` is the extension `dataTool` is imported.

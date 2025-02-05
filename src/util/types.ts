@@ -519,6 +519,26 @@ export interface TokenOption {
         tooltipText?: string;
 
         // Series colors
+    },
+
+    spacing?: {
+        base?: number;
+        small?: number;
+        medium?: number;
+        large?: number;
+    },
+
+    borderRadius?: {
+        small?: number;
+        base?: number;
+        large?: number;
+    },
+
+    fontSize?: {
+        sm?: number;
+        base?: number;
+        lg?: number;
+        xl?: number;
     }
 }
 
