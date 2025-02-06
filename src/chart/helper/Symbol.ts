@@ -27,7 +27,7 @@ import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin 
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
-import { extend } from 'zrender/src/core/util';
+import { extend, isFunction } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTransition';
@@ -254,7 +254,7 @@ class Symbol extends graphic.Group {
             labelStatesModels = getLabelStatesModels(itemModel);
 
             hoverScale = emphasisModel.getShallow('scale');
-            cursorStyle = itemModel.getShallow('cursor') as string;
+            cursorStyle = itemModel.getShallow('cursor');
         }
 
         const symbolRotate = data.getItemVisual(idx, 'symbolRotate');
@@ -266,7 +266,8 @@ class Symbol extends graphic.Group {
             symbolPath.y = symbolOffset[1];
         }
 
-        cursorStyle && symbolPath.attr('cursor', cursorStyle);
+        // Apply the user-defined cursor type
+        cursorStyle && updateCursorStyle(cursorStyle, symbolPath, idx, seriesModel);
 
         const symbolStyle = data.getItemVisual(idx, 'style');
         const visualColor = symbolStyle.fill;
@@ -410,6 +411,25 @@ class Symbol extends graphic.Group {
 
 function driftSymbol(this: ECSymbol, dx: number, dy: number) {
     this.parent.drift(dx, dy);
+}
+
+
+/**
+ * Dynamically applies the cursor type using a user-defined function.
+ */
+function updateCursorStyle(
+    cursorStyle: SymbolDrawSeriesScope['cursorStyle'],
+    el: ECSymbol,
+    dataIndex: number,
+    seriesModel: SeriesModel,
+) {
+    if (!isFunction(cursorStyle)) {
+        el.attr('cursor', cursorStyle);
+    } else {
+        const dataParams = seriesModel.getDataParams(dataIndex);
+        const cursor = cursorStyle(dataParams);
+        el.attr('cursor', cursor)
+    }
 }
 
 export default Symbol;

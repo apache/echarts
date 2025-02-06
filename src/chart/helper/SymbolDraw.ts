@@ -130,7 +130,7 @@ export interface SymbolDrawSeriesScope {
 
     hoverScale?: boolean | number
 
-    cursorStyle?: string
+    cursorStyle?: string | ((p: CallbackDataParams) => string),
     fadeIn?: boolean
 }
 

@@ -38108,7 +38108,15 @@
           symbolPath.x = symbolOffset[0];
           symbolPath.y = symbolOffset[1];
         }
-        cursorStyle && symbolPath.attr('cursor', cursorStyle);
+        // Apply the user-defined cursor type when it is a string
+        // If it's a function, the cursor style will be managed by the updateCursorStyle function
+        if (cursorStyle) {
+          if (!isFunction(cursorStyle)) {
+            symbolPath.attr('cursor', cursorStyle);
+          } else {
+            symbolPath.attr('cursor', cursorStyle(data.getName(idx)));
+          }
+        }
         var symbolStyle = data.getItemVisual(idx, 'style');
         var visualColor = symbolStyle.fill;
         if (symbolPath instanceof ZRImage) {
