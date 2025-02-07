@@ -1,6 +1,5 @@
-import type { PathProps } from 'zrender/src/graphic/Path';
+import type { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import type PathProxy from 'zrender/src/core/PathProxy';
-import type { PathStyleProps } from 'zrender/src/graphic/Path';
 import { extend, isString } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import SeriesData from '../../data/SeriesData';

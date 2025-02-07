@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { parsePercent, linearMap } from '../../util/number';
+import { linearMap } from '../../util/number';
 import * as layout from '../../util/layout';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';

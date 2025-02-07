@@ -23,7 +23,6 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { getCircleLayout } from '../../util/layout';
 import SeriesModel from '../../model/Series';
 import { CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
-import { getSpanAngle, normalizeArcAngles } from 'zrender/src/core/PathProxy';
 
 const RADIAN = Math.PI / 180;
 
@@ -50,10 +49,10 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
 
     let padAngle = (seriesModel.get('padAngle') || 0) * RADIAN;
     let minAngle = (seriesModel.get('minAngle') || 0) * RADIAN;
-    let startAngle = -seriesModel.get('startAngle') * RADIAN;
-    let endAngle = startAngle + Math.PI * 2;
+    const startAngle = -seriesModel.get('startAngle') * RADIAN;
+    const endAngle = startAngle + Math.PI * 2;
     const totalAngle = Math.abs(endAngle - startAngle);
-    const clockwise = seriesModel.get('clockwise');
+    // const clockwise = seriesModel.get('clockwise'); // TODO: support clockwise
 
     // Sum of each node's edge values
     const nodeValues: number[] = [];
@@ -92,10 +91,9 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     let totalSurplus = 0; // sum of (spans - minAngle) of nodes with span > minAngle
     let totalSurplusSpan = 0; // sum of spans of nodes with span > minAngle
     let minSurplus = Infinity; // min of (spans - minAngle) of nodes with span > minAngle
-    let surplusCount = 0;
     nodeGraph.eachNode(node => {
         const value = nodeValues[node.dataIndex] || 0;
-        let spanAngle = unitAngle * (edgeValueSum ? value : 1);
+        const spanAngle = unitAngle * (edgeValueSum ? value : 1);
         if (spanAngle < minAngle) {
             totalDeficit += minAngle - spanAngle;
         }
@@ -103,7 +101,6 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
             minSurplus = Math.min(minSurplus, spanAngle - minAngle);
             totalSurplus += spanAngle - minAngle;
             totalSurplusSpan += spanAngle;
-            ++surplusCount;
         }
         node.setLayout({
             angle: spanAngle

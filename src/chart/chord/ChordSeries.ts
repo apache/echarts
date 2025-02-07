@@ -38,8 +38,7 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     CallbackDataParams,
-    DefaultEmphasisFocus,
-    ZRColor
+    DefaultEmphasisFocus
 } from '../../util/types';
 import Model from '../../model/Model';
 import SeriesModel from '../../model/Series';
