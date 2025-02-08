@@ -47,7 +47,8 @@ import createGraphFromNodeEdge from '../helper/createGraphFromNodeEdge';
 import Graph from '../../data/Graph';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
-import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
+import LegendVisualProvider from '../../visual/LegendVisualProvider';
+import * as zrUtil from 'zrender/src/core/util';
 
 interface ChordStatesMixin {
     emphasis?: DefaultEmphasisFocus
@@ -134,6 +135,11 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
     init(option: ChordSeriesOption) {
         super.init.apply(this, arguments as any);
         this.fillDataTextStyle(option.edges || option.links);
+
+        // Enable legend selection for each data item
+        this.legendVisualProvider = new LegendVisualProvider(
+            zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
+        );
     }
 
     mergeOption(option: ChordSeriesOption) {
