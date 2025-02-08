@@ -139,10 +139,22 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
                 throw new Error('Line not support coordinateSystem besides cartesian and polar');
             }
         }
-        return createSeriesData(null, this, {
+        
+        const seriesData = createSeriesData(null, this, {
             useEncodeDefaulter: true
         });
+    
+        // Ensure labels are added even if symbol is 'none'
+        seriesData.each(function (idx) {
+            const label = seriesData.getItemVisual(idx, 'label');
+            if (!label) {
+                seriesData.setItemVisual(idx, 'label', createLabel(/* label parameters */));
+            }
+        });
+    
+        return seriesData;
     }
+    
 
     static defaultOption: LineSeriesOption = {
         // zlevel: 0,
@@ -152,9 +164,11 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         clip: true,
 
-        label: {
-            position: 'top'
-        },
+        symbol: 'none', // Keep 'none' to disable symbols
+         label: {
+         show: true, // Always show labels
+         position: 'top', // Label positioning
+    },
 
         // itemStyle: {
         // },
@@ -230,24 +244,41 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         );
         group.add(line);
         line.setStyle(opt.lineStyle);
-
         const visualType = this.getData().getVisual('symbol');
         const visualRotate = this.getData().getVisual('symbolRotate');
-        const symbolType = visualType === 'none' ? 'circle' : visualType;
+        const symbolType = visualType === 'none' ? 'circle' : visualType; // Use `null` for no symbol.
+if (symbolType) {
+    const symbol = createSymbol(
+        symbolType,
+        (opt.itemWidth - size) / 2,
+        (opt.itemHeight - size) / 2,
+        size,
+        size,
+        opt.itemStyle.fill
+    );
+    group.add(symbol);
+    symbol.setStyle(opt.itemStyle);
 
-        // Symbol size is 80% when there is a line
-        const size = opt.itemHeight * 0.8;
-        const symbol = createSymbol(
-            symbolType,
-            (opt.itemWidth - size) / 2,
-            (opt.itemHeight - size) / 2,
-            size,
-            size,
-            opt.itemStyle.fill
-        );
-        group.add(symbol);
+    const symbolRotate = opt.iconRotate === 'inherit'
+        ? visualRotate
+        : (opt.iconRotate || 0);
+    symbol.rotation = symbolRotate * Math.PI / 180;
+    symbol.setOrigin([opt.itemWidth / 2, opt.itemHeight / 2]);
 
-        symbol.setStyle(opt.itemStyle);
+    if (symbolType.indexOf('empty') > -1) {
+        symbol.style.stroke = symbol.style.fill;
+        symbol.style.fill = '#fff';
+        symbol.style.lineWidth = 2;
+    }
+}
+
+// Always render labels, even if no symbol
+if (opt.lineStyle && opt.label) {
+    const label = createLabel(
+        // Add logic to position and display labels correctly
+    );
+    group.add(label);
+}
 
         const symbolRotate = opt.iconRotate === 'inherit'
             ? visualRotate
