@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,
@@ -134,6 +133,12 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
 
     init(option: ChordSeriesOption) {
         super.init.apply(this, arguments as any);
+        this.fillDataTextStyle(option.edges || option.links);
+    }
+
+    mergeOption(option: ChordSeriesOption) {
+        super.mergeOption.apply(this, arguments as any);
+        this.fillDataTextStyle(option.edges || option.links);
     }
 
     getInitialData(option: ChordSeriesOption, ecModel: GlobalModel): SeriesData {
@@ -141,21 +146,11 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
         const nodes = option.data || option.nodes || [];
 
         if (nodes && edges) {
-            // auto curveness
-            // initCurvenessList(this);
             const graph = createGraphFromNodeEdge(nodes as ChordNodeItemOption[], edges, this, true, beforeLink);
-            zrUtil.each(graph.edges, function (edge) {
-                // createEdgeMapForCurveness(edge.node1, edge.node2, this, edge.dataIndex);
-            }, this);
             return graph.data;
         }
 
         function beforeLink(nodeData: SeriesData, edgeData: SeriesData) {
-            // Overwrite nodeData.getItemModel to
-            // nodeData.wrapMethod('getItemModel', function (model) {
-
-            // });
-
             // TODO Inherit resolveParentPath by default in Model#getModel?
             const oldGetModel = Model.prototype.getModel;
             function newGetModel(this: Model, path: any, parentModel?: Model) {
@@ -199,9 +194,10 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
         multipleSeries: boolean,
         dataType: string
     ) {
+        const params = this.getDataParams(dataIndex, dataType as 'node' | 'edge');
+
         if (dataType === 'edge') {
             const nodeData = this.getData();
-            const params = this.getDataParams(dataIndex, dataType);
             const edge = nodeData.graph.getEdgeByIndex(dataIndex);
             const sourceName = nodeData.getName(edge.node1.dataIndex);
             const targetName = nodeData.getName(edge.node2.dataIndex);
@@ -217,12 +213,29 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
             });
         }
         // dataType === 'node' or empty
-        const nodeMarkup = defaultSeriesFormatTooltip({
-            series: this,
-            dataIndex: dataIndex,
-            multipleSeries: multipleSeries
+        return createTooltipMarkup('nameValue', {
+            name: params.name,
+            value: params.value,
+            noValue: params.value == null
         });
-        return nodeMarkup;
+    }
+
+    getDataParams(dataIndex: number, dataType: 'node' | 'edge') {
+        const params = super.getDataParams(dataIndex, dataType);
+        if (dataType === 'node') {
+            const nodeData = this.getData();
+            const node = this.getGraph().getNodeByIndex(dataIndex);
+            // Set name if not already set
+            if (params.name == null) {
+                params.name = nodeData.getName(dataIndex);
+            }
+            // Set value if not already set
+            if (params.value == null) {
+                const nodeValue = node.getLayout().value;
+                params.value = nodeValue;
+            }
+        }
+        return params;
     }
 
     static defaultOption: ChordSeriesOption = {

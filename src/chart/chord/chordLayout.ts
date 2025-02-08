@@ -103,7 +103,8 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
             totalSurplusSpan += spanAngle;
         }
         node.setLayout({
-            angle: spanAngle
+            angle: spanAngle,
+            value: value
         });
     });
 
@@ -117,13 +118,13 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
                 node.setLayout({
                     angle: spanAngle * scale,
                     ratio: scale
-                });
+                }, true);
             }
             else {
                 node.setLayout({
                     angle: minAngle,
                     ratio: minAngle === 0 ? 1 : spanAngle / minAngle
-                });
+                }, true);
             }
         });
     }
@@ -166,13 +167,13 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
             node.setLayout({
                 angle: spanAngle - borrowAngle,
                 ratio: (spanAngle - borrowAngle) / spanAngle
-            });
+            }, true);
         }
         else if (minAngle > 0) {
             node.setLayout({
                 angle: minAngle,
                 ratio: spanAngle === 0 ? 1 : minAngle / spanAngle
-            });
+            }, true);
         }
     });
 
@@ -186,7 +187,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
             r0,
             r,
             startAngle: angle,
-            endAngle: angle + spanAngle,
+            endAngle: angle + spanAngle
         }, true);
         edgeAccAngle[node.dataIndex] = angle;
         angle += spanAngle + padAngle;
@@ -233,7 +234,8 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
             tEndAngle,
             cx,
             cy,
-            r: r0
+            r: r0,
+            value: value
         });
 
         edgeAccAngle[node1Index] = sEndAngle;
