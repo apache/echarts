@@ -64,6 +64,14 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         nodeValues[node2Index] = (nodeValues[node2Index] || 0) + value;
     });
 
+    // Update nodeValues with data.value if exists
+    nodeGraph.eachNode(node => {
+        const dataValue = node.getValue('value') as number;
+        if (!isNaN(dataValue)) {
+            nodeValues[node.dataIndex] = Math.max(dataValue, nodeValues[node.dataIndex] || 0);
+        }
+    });
+
     const renderedNodeCount = minAngle
         // If mingAngle is set, node count is always the number in the option
         ? nodeData.count()
@@ -83,9 +91,13 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         minAngle = (totalAngle - padAngle * renderedNodeCount) / renderedNodeCount;
     }
 
-    const edgeValueSum = edgeData.getSum('value');
+    let nodeValueSum = 0;
+    for (let i = 0; i < nodeValues.length; i++) {
+        nodeValueSum += nodeValues[i];
+    }
+
     const unitAngle = (totalAngle - padAngle * renderedNodeCount)
-        / (edgeValueSum * 2 || edgeCount); // / 2 for two edges for a pair of nodes
+        / (nodeValueSum || edgeCount);
 
     let totalDeficit = 0; // sum of deficits of nodes with span < minAngle
     let totalSurplus = 0; // sum of (spans - minAngle) of nodes with span > minAngle
@@ -93,7 +105,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     let minSurplus = Infinity; // min of (spans - minAngle) of nodes with span > minAngle
     nodeGraph.eachNode(node => {
         const value = nodeValues[node.dataIndex] || 0;
-        const spanAngle = unitAngle * (edgeValueSum ? value : 1);
+        const spanAngle = unitAngle * (nodeValueSum ? value : 1);
         if (spanAngle < minAngle) {
             totalDeficit += minAngle - spanAngle;
         }
@@ -195,7 +207,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
 
     nodeGraph.eachEdge(function (edge) {
         const value = edge.getValue('value') as number;
-        const spanAngle = unitAngle * (edgeValueSum ? value : 1);
+        const spanAngle = unitAngle * (nodeValueSum ? value : 1);
 
         const node1Index = edge.node1.dataIndex;
         const sStartAngle = edgeAccAngle[node1Index] || 0;
