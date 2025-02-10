@@ -47,6 +47,7 @@ under the License.
     <div id='main6'></div>
     <div id='main7'></div>
     <div id='main8'></div>
+    <div id='main9'></div>
 
 
 
@@ -67,11 +68,8 @@ under the License.
                         minAngle: 15,
                         startAngle: 90,
                         endAngle: -270,
-                        circular: { rotateLabel: true },
-                        roam: true,
-                        focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'target', curveness: 0.1 },
+                        lineStyle: { color: 'target' },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
@@ -123,11 +121,8 @@ under the License.
                         name: 'Gene',
                         startAngle: 90,
                         endAngle: -270,
-                        circular: { rotateLabel: true },
-                        roam: true,
-                        focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'target', curveness: 0.1 },
+                        lineStyle: { color: 'target' },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
@@ -180,11 +175,8 @@ under the License.
                         minAngle: 55,
                         startAngle: 90,
                         endAngle: -270,
-                        circular: { rotateLabel: true },
-                        roam: true,
-                        focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'target', curveness: 0.1 },
+                        lineStyle: { color: 'target' },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
@@ -237,11 +229,8 @@ under the License.
                         minAngle: 65,
                         startAngle: 90,
                         endAngle: -270,
-                        circular: { rotateLabel: true },
-                        roam: true,
-                        focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'target', curveness: 0.1 },
+                        lineStyle: { color: 'target' },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
@@ -295,11 +284,8 @@ under the License.
                         padAngle: 90,
                         startAngle: 90,
                         endAngle: -270,
-                        circular: { rotateLabel: true },
-                        roam: true,
-                        focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'target', curveness: 0.1 },
+                        lineStyle: { color: 'target' },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
@@ -351,11 +337,8 @@ under the License.
                         type: 'chord',
                         name: 'Gene',
                         minAngle: 15,
-                        circular: { rotateLabel: true },
-                        roam: true,
-                        focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'target', curveness: 0.1 },
+                        lineStyle: { color: 'target' },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
@@ -405,11 +388,8 @@ under the License.
                         type: 'chord',
                         name: 'Gene',
                         minAngle: 15,
-                        circular: { rotateLabel: true },
-                        roam: true,
-                        focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'target', curveness: 0.1 },
+                        lineStyle: { color: 'target' },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
@@ -442,6 +422,49 @@ under the License.
     </script>
 
 
+
+    <script>
+
+        var option;
+        var cnt = 0;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                tooltip: {},
+                legend: {},
+                series: [
+                    {
+                        type: 'chord',
+                        name: 'Gene',
+                        data: [
+                            { name: 'A' },
+                            { name: 'B' },
+                            { name: 'C' },
+                            { name: 'D' },
+                            { name: 'E' },
+                            { name: 'F' }
+                        ],
+                        links: [
+                            { source: 'A', target: 'B' },
+                            { source: 'A', target: 'C' },
+                        ],
+                        lineStyle: { color: 'gradient' },
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main7', {
+                option: option,
+                title: [
+                    'When all links have no value, the same value should be used for all links'
+                ]
+            });
+        });
+    </script>
+
+
     <script>
 
         var option;
@@ -460,11 +483,8 @@ under the License.
                         minAngle: 45,
                         startAngle: 90,
                         endAngle: -270,
-                        circular: { rotateLabel: true },
-                        roam: true,
-                        focusNodeAdjacency: true,
                         label: { show: true },
-                        lineStyle: { color: 'gradient', curveness: 0.1 },
+                        lineStyle: { color: 'gradient' },
                         emphasis: {
                             label: { color: 'blue' },
                             lineStyle: { width: 10 }
@@ -495,7 +515,7 @@ under the License.
                 ]
             };
 
-            var chart = testHelper.create(echarts, 'main7', {
+            var chart = testHelper.create(echarts, 'main8', {
                 option: option,
                 title: [
                     'Update data'

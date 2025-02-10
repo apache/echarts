@@ -54,10 +54,13 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     const totalAngle = Math.abs(endAngle - startAngle);
     // const clockwise = seriesModel.get('clockwise'); // TODO: support clockwise
 
+    const allZero = nodeData.getSum('value') === 0 && edgeData.getSum('value') === 0;
+
     // Sum of each node's edge values
     const nodeValues: number[] = [];
     nodeGraph.eachEdge(function (edge) {
-        const value = edge.getValue('value') as number;
+        // All links use the same value 1 when allZero is true
+        const value = allZero ? 1 : edge.getValue('value') as number;
         const node1Index = edge.node1.dataIndex;
         const node2Index = edge.node2.dataIndex;
         nodeValues[node1Index] = (nodeValues[node1Index] || 0) + value;
@@ -65,19 +68,18 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     });
 
     // Update nodeValues with data.value if exists
+    let renderedNodeCount = 0;
+    let nodeValueSum = 0;
     nodeGraph.eachNode(node => {
         const dataValue = node.getValue('value') as number;
         if (!isNaN(dataValue)) {
             nodeValues[node.dataIndex] = Math.max(dataValue, nodeValues[node.dataIndex] || 0);
         }
+        if (nodeValues[node.dataIndex] > 0 || minAngle) {
+            renderedNodeCount++;
+        }
+        nodeValueSum += nodeValues[node.dataIndex] || 0;
     });
-
-    const renderedNodeCount = minAngle
-        // If mingAngle is set, node count is always the number in the option
-        ? nodeData.count()
-        // If not, node count is those with value > 0 to avoid padAngle
-        // being rendered multiple times on void data
-        : nodeValues.filter(val => val > 0).length;
 
     if (renderedNodeCount === 0) {
         return;
@@ -89,11 +91,6 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     if ((padAngle + minAngle) * renderedNodeCount >= totalAngle) {
         // Not enough angle to render the minAngle, so ignore the minAngle
         minAngle = (totalAngle - padAngle * renderedNodeCount) / renderedNodeCount;
-    }
-
-    let nodeValueSum = 0;
-    for (let i = 0; i < nodeValues.length; i++) {
-        nodeValueSum += nodeValues[i];
     }
 
     const unitAngle = (totalAngle - padAngle * renderedNodeCount)
@@ -206,7 +203,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     });
 
     nodeGraph.eachEdge(function (edge) {
-        const value = edge.getValue('value') as number;
+        const value = allZero ? 1 : edge.getValue('value') as number;
         const spanAngle = unitAngle * (nodeValueSum ? value : 1);
 
         const node1Index = edge.node1.dataIndex;
