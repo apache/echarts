@@ -38,6 +38,7 @@ under the License.
     </style>
 
 
+    <div id='main-clockwise'></div>
     <div id='main0'></div>
     <div id='main1'></div>
     <div id='main2'></div>
@@ -49,6 +50,73 @@ under the License.
     <div id='main8'></div>
     <div id='main9'></div>
 
+
+
+    <script>
+
+        var cnt = 0;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            const option = {
+                tooltip: {},
+                legend: {},
+                series: [
+                    {
+                        type: 'chord',
+                        name: 'Gene',
+                        // minAngle: 15,
+                        startAngle: 90,
+                        endAngle: -270,
+                        // clockwise: false,
+                        label: { show: true },
+                        lineStyle: { color: 'target' },
+                        emphasis: {
+                            label: { color: 'blue' },
+                            lineStyle: { width: 10 }
+                        },
+                        data: [
+                            { name: 'A' },
+                            { name: 'B' },
+                            { name: 'C' },
+                            { name: 'D' },
+                            { name: 'E' },
+                            { name: 'F' }
+                        ],
+                        links: [
+                            { source: 'A', target: 'B', value: 40 },
+                            { source: 'A', target: 'C', value: 20 },
+                        ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main-clockwise', {
+                option: option,
+                title: [
+                    'Clockwise: false',
+                    'Click to set clockwise: true (default)',
+                    'Pay attention to the gradient style should be updated.'
+                ],
+                buttons: [{
+                    text: 'Clockwise: true',
+                    onclick: function () {
+                        option.series[0].clockwise = true;
+                        chart.setOption(option);
+                    }
+                }, {
+                    text: 'Clockwise: false',
+                    onclick: function () {
+                        option.series[0].clockwise = false;
+                        chart.setOption(option);
+                    }
+                }]
+            });
+        });
+
+    </script>
+<!--
 
 
     <script>
@@ -101,8 +169,6 @@ under the License.
         });
 
     </script>
-
-
 
     <script>
 
@@ -550,7 +616,7 @@ under the License.
                 }]
             });
         });
-    </script>
+    </script> -->
 </body>
 
 </html>

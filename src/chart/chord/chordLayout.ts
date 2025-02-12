@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 import GlobalModel from '../../model/Global';
 import ChordSeriesModel from './ChordSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -47,12 +48,19 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         api
     );
 
-    let padAngle = (seriesModel.get('padAngle') || 0) * RADIAN;
-    let minAngle = (seriesModel.get('minAngle') || 0) * RADIAN;
+    let padAngle = Math.max((seriesModel.get('padAngle') || 0) * RADIAN, 0);
+    let minAngle = Math.max((seriesModel.get('minAngle') || 0) * RADIAN, 0);
     const startAngle = -seriesModel.get('startAngle') * RADIAN;
     const endAngle = startAngle + Math.PI * 2;
-    const totalAngle = Math.abs(endAngle - startAngle);
-    // const clockwise = seriesModel.get('clockwise'); // TODO: support clockwise
+    const clockwise = seriesModel.get('clockwise');
+    const dir = clockwise ? 1 : -1;
+
+    // Normalize angles
+    const angles = [startAngle, endAngle];
+    normalizeArcAngles(angles, !clockwise);
+    const [normalizedStartAngle, normalizedEndAngle] = angles;
+    const totalAngle = normalizedEndAngle - normalizedStartAngle;
+    console.log('normalized angles:', normalizedStartAngle / Math.PI * 180, normalizedEndAngle / Math.PI * 180, totalAngle / Math.PI * 180, 'dir:', dir);
 
     const allZero = nodeData.getSum('value') === 0 && edgeData.getSum('value') === 0;
 
@@ -84,17 +92,18 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     if (renderedNodeCount === 0) {
         return;
     }
-    if (padAngle * renderedNodeCount >= totalAngle) {
+    if (padAngle * renderedNodeCount >= Math.abs(totalAngle)) {
         // Not enough angle to render the pad, so ignore the padAngle
         padAngle = 0;
     }
-    if ((padAngle + minAngle) * renderedNodeCount >= totalAngle) {
+    if ((padAngle + minAngle) * renderedNodeCount >= Math.abs(totalAngle)) {
         // Not enough angle to render the minAngle, so ignore the minAngle
-        minAngle = (totalAngle - padAngle * renderedNodeCount) / renderedNodeCount;
+        minAngle = (Math.abs(totalAngle) - padAngle * renderedNodeCount) / renderedNodeCount;
     }
 
-    const unitAngle = (totalAngle - padAngle * renderedNodeCount)
-        / (nodeValueSum || edgeCount);
+    const unitAngle = (totalAngle - padAngle * renderedNodeCount * dir)
+        / (allZero ? edgeCount : nodeValueSum);
+    console.log('unitAngle:', unitAngle / Math.PI * 180, 'nodeValueSum:', nodeValueSum, 'renderedNodeCount:', renderedNodeCount);
 
     let totalDeficit = 0; // sum of deficits of nodes with span < minAngle
     let totalSurplus = 0; // sum of (spans - minAngle) of nodes with span > minAngle
@@ -102,14 +111,15 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     let minSurplus = Infinity; // min of (spans - minAngle) of nodes with span > minAngle
     nodeGraph.eachNode(node => {
         const value = nodeValues[node.dataIndex] || 0;
-        const spanAngle = unitAngle * (nodeValueSum ? value : 1);
-        if (spanAngle < minAngle) {
-            totalDeficit += minAngle - spanAngle;
+        const spanAngle = unitAngle * (nodeValueSum ? value : 1) * dir;
+        console.log('node:', node.dataIndex, 'value:', value, 'spanAngle:', spanAngle / Math.PI * 180);
+        if (Math.abs(spanAngle) < minAngle) {
+            totalDeficit += minAngle - Math.abs(spanAngle);
         }
         else {
-            minSurplus = Math.min(minSurplus, spanAngle - minAngle);
-            totalSurplus += spanAngle - minAngle;
-            totalSurplusSpan += spanAngle;
+            minSurplus = Math.min(minSurplus, Math.abs(spanAngle) - minAngle);
+            totalSurplus += Math.abs(spanAngle) - minAngle;
+            totalSurplusSpan += Math.abs(spanAngle);
         }
         node.setLayout({
             angle: spanAngle,
@@ -123,7 +133,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         const scale = totalDeficit / totalSurplus;
         nodeGraph.eachNode(node => {
             const spanAngle = node.getLayout().angle;
-            if (spanAngle >= minAngle) {
+            if (Math.abs(spanAngle) >= minAngle) {
                 node.setLayout({
                     angle: spanAngle * scale,
                     ratio: scale
@@ -186,30 +196,31 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         }
     });
 
-    let angle = startAngle;
+    let angle = normalizedStartAngle;
     const edgeAccAngle: number[] = [];
     nodeGraph.eachNode(node => {
         const spanAngle = Math.max(node.getLayout().angle, minAngle);
+        console.log('final layout:', node.dataIndex, 'angle:', angle / Math.PI * 180, 'spanAngle:', spanAngle / Math.PI * 180);
         node.setLayout({
             cx,
             cy,
             r0,
             r,
             startAngle: angle,
-            endAngle: angle + spanAngle
+            endAngle: angle + spanAngle * dir
         }, true);
         edgeAccAngle[node.dataIndex] = angle;
-        angle += spanAngle + padAngle;
+        angle += (spanAngle + padAngle) * dir;
     });
 
     nodeGraph.eachEdge(function (edge) {
         const value = allZero ? 1 : edge.getValue('value') as number;
-        const spanAngle = unitAngle * (nodeValueSum ? value : 1);
+        const spanAngle = unitAngle * (nodeValueSum ? value : 1) * dir;
 
         const node1Index = edge.node1.dataIndex;
         const sStartAngle = edgeAccAngle[node1Index] || 0;
-        const sSpan = (edge.node1.getLayout().ratio || 1) * spanAngle;
-        const sEndAngle = sStartAngle + sSpan;
+        const sSpan = Math.abs((edge.node1.getLayout().ratio || 1) * spanAngle);
+        const sEndAngle = sStartAngle + sSpan * dir;
         const s1 = [
             cx + r0 * Math.cos(sStartAngle),
             cy + r0 * Math.sin(sStartAngle)
@@ -221,8 +232,8 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
 
         const node2Index = edge.node2.dataIndex;
         const tStartAngle = edgeAccAngle[node2Index] || 0;
-        const tSpan = (edge.node2.getLayout().ratio || 1) * spanAngle;
-        const tEndAngle = tStartAngle + tSpan;
+        const tSpan = Math.abs((edge.node2.getLayout().ratio || 1) * spanAngle);
+        const tEndAngle = tStartAngle + tSpan * dir;
         const t1 = [
             cx + r0 * Math.cos(tStartAngle),
             cy + r0 * Math.sin(tStartAngle)

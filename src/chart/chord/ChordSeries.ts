@@ -262,6 +262,7 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
 
         center: ['50%', '50%'],
         radius: ['70%', '80%'],
+        clockwise: true,
 
         startAngle: 90,
         endAngle: 'auto',
