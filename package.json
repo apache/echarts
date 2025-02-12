@@ -84,7 +84,7 @@
     "chalk": "^3.0.0",
     "commander": "2.11.0",
     "dtslint": "^4.0.5",
-    "esbuild": "^0.8.39",
+    "esbuild": "^0.25.0",
     "eslint": "^7.15.0",
     "fs-extra": "^10.0.0",
     "globby": "11.0.0",
