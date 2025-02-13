@@ -60,15 +60,20 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     normalizeArcAngles(angles, !clockwise);
     const [normalizedStartAngle, normalizedEndAngle] = angles;
     const totalAngle = normalizedEndAngle - normalizedStartAngle;
-    console.log('normalized angles:', normalizedStartAngle / Math.PI * 180, normalizedEndAngle / Math.PI * 180, totalAngle / Math.PI * 180, 'dir:', dir);
 
     const allZero = nodeData.getSum('value') === 0 && edgeData.getSum('value') === 0;
 
     // Sum of each node's edge values
     const nodeValues: number[] = [];
+    let renderedNodeCount = 0;
     nodeGraph.eachEdge(function (edge) {
         // All links use the same value 1 when allZero is true
         const value = allZero ? 1 : edge.getValue('value') as number;
+        if (allZero && (value > 0 || minAngle)) {
+            // When allZero is true, angle is in direct proportion to number
+            // of links both in and out of the node.
+            renderedNodeCount += 2;
+        }
         const node1Index = edge.node1.dataIndex;
         const node2Index = edge.node2.dataIndex;
         nodeValues[node1Index] = (nodeValues[node1Index] || 0) + value;
@@ -76,20 +81,21 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     });
 
     // Update nodeValues with data.value if exists
-    let renderedNodeCount = 0;
     let nodeValueSum = 0;
     nodeGraph.eachNode(node => {
         const dataValue = node.getValue('value') as number;
         if (!isNaN(dataValue)) {
             nodeValues[node.dataIndex] = Math.max(dataValue, nodeValues[node.dataIndex] || 0);
         }
-        if (nodeValues[node.dataIndex] > 0 || minAngle) {
+        if (!allZero && (nodeValues[node.dataIndex] > 0 || minAngle)) {
+            // When allZero is false, angle is in direct proportion to node's
+            // value
             renderedNodeCount++;
         }
         nodeValueSum += nodeValues[node.dataIndex] || 0;
     });
 
-    if (renderedNodeCount === 0) {
+    if (renderedNodeCount === 0 || nodeValueSum === 0) {
         return;
     }
     if (padAngle * renderedNodeCount >= Math.abs(totalAngle)) {
@@ -102,8 +108,7 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     }
 
     const unitAngle = (totalAngle - padAngle * renderedNodeCount * dir)
-        / (allZero ? edgeCount : nodeValueSum);
-    console.log('unitAngle:', unitAngle / Math.PI * 180, 'nodeValueSum:', nodeValueSum, 'renderedNodeCount:', renderedNodeCount);
+        / nodeValueSum;
 
     let totalDeficit = 0; // sum of deficits of nodes with span < minAngle
     let totalSurplus = 0; // sum of (spans - minAngle) of nodes with span > minAngle
@@ -112,7 +117,6 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     nodeGraph.eachNode(node => {
         const value = nodeValues[node.dataIndex] || 0;
         const spanAngle = unitAngle * (nodeValueSum ? value : 1) * dir;
-        console.log('node:', node.dataIndex, 'value:', value, 'spanAngle:', spanAngle / Math.PI * 180);
         if (Math.abs(spanAngle) < minAngle) {
             totalDeficit += minAngle - Math.abs(spanAngle);
         }
@@ -200,20 +204,20 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
     const edgeAccAngle: number[] = [];
     nodeGraph.eachNode(node => {
         const spanAngle = Math.max(node.getLayout().angle, minAngle);
-        console.log('final layout:', node.dataIndex, 'angle:', angle / Math.PI * 180, 'spanAngle:', spanAngle / Math.PI * 180);
         node.setLayout({
             cx,
             cy,
             r0,
             r,
             startAngle: angle,
-            endAngle: angle + spanAngle * dir
+            endAngle: angle + spanAngle * dir,
+            clockwise
         }, true);
         edgeAccAngle[node.dataIndex] = angle;
         angle += (spanAngle + padAngle) * dir;
     });
 
-    nodeGraph.eachEdge(function (edge) {
+    nodeGraph.eachEdge(edge => {
         const value = allZero ? 1 : edge.getValue('value') as number;
         const spanAngle = unitAngle * (nodeValueSum ? value : 1) * dir;
 
@@ -255,7 +259,8 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
             cx,
             cy,
             r: r0,
-            value: value
+            value,
+            clockwise
         });
 
         edgeAccAngle[node1Index] = sEndAngle;

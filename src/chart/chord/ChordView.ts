@@ -51,16 +51,45 @@ class ChordView extends ChartView {
 
         data.diff(oldData)
             .add(function (newIdx) {
-                const el = new ChordPiece(data, newIdx, startAngle);
-                data.setItemGraphicEl(newIdx, el);
-                group.add(el);
+                /* Consider the case when there are only two nodes A and B,
+                 * and there is a link between A and B.
+                 * At first, they are both disselected from legend. And then
+                 * when A is selected, A will go into `add` method. But since
+                 * there are no edges to be displayed, A should not be added.
+                 * So we should only add A when layout is defined.
+                 */
+                const layout = data.getItemLayout(newIdx);
+                if (layout) {
+                    const el = new ChordPiece(data, newIdx, startAngle);
+                    data.setItemGraphicEl(newIdx, el);
+                    group.add(el);
+                }
             })
 
             .update(function (newIdx, oldIdx) {
-                const el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
-                el.updateData(data, newIdx, startAngle);
-                data.setItemGraphicEl(newIdx, el);
-                group.add(el);
+                let el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
+                const layout = data.getItemLayout(newIdx);
+
+                /* Consider the case when there are only two nodes A and B,
+                 * and there is a link between A and B.
+                 * and when A is disselected from legend, there should be nothing
+                 * to display. But in the `data.diff` method, B will go into
+                 * `update` method and having no layout.
+                 * In this case, we need to remove B.
+                 */
+                if (!layout) {
+                    el && graphic.removeElementWithFadeOut(el, seriesModel, oldIdx);
+                }
+                else {
+                    if (!el) {
+                        el = new ChordPiece(data, newIdx, startAngle);
+                        group.add(el);
+                    }
+                    else {
+                        el.updateData(data, newIdx, startAngle);
+                    }
+                    data.setItemGraphicEl(newIdx, el);
+                }
             })
 
             .remove(function (oldIdx) {

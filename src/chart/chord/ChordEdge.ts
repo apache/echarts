@@ -26,6 +26,8 @@ export class ChordPathShape {
     cy: number = 0;
     // series.r0 of ChordSeries
     r: number = 0;
+
+    clockwise: boolean = true;
 }
 
 interface ChordEdgePathProps extends PathProps {
@@ -51,11 +53,12 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
         ctx.moveTo(shape.s1[0], shape.s1[1]);
 
         const ratio = 0.7;
+        const clockwise = shape.clockwise;
 
         // Draw the arc from n11 to n12
-        ctx.arc(shape.cx, shape.cy, shape.r, shape.sStartAngle, shape.sEndAngle, false);
+        ctx.arc(shape.cx, shape.cy, shape.r, shape.sStartAngle, shape.sEndAngle, !clockwise);
 
-        // // Bezier curve to cp1 and then to n21
+        // Bezier curve to cp1 and then to n21
         ctx.bezierCurveTo(
             (shape.cx - shape.s2[0]) * ratio + shape.s2[0],
             (shape.cy - shape.s2[1]) * ratio + shape.s2[1],
@@ -66,7 +69,7 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
         );
 
         // Draw the arc from n21 to n22
-        ctx.arc(shape.cx, shape.cy, shape.r, shape.tStartAngle, shape.tEndAngle, false);
+        ctx.arc(shape.cx, shape.cy, shape.r, shape.tStartAngle, shape.tEndAngle, !clockwise);
 
         // Bezier curve back to cp2 and then to n11
         ctx.bezierCurveTo(
