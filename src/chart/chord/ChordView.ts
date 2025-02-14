@@ -23,10 +23,11 @@ import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
-import ChordSeriesModel from './ChordSeries';
+import ChordSeriesModel, { ChordNodeItemOption } from './ChordSeries';
 import ChordPiece from './ChordPiece';
 import { ChordEdge } from './ChordEdge';
 import { parsePercent } from '../../util/number';
+import { getLabelStatesModels, setLabelStyle } from '../../label/labelStyle';
 
 const RADIAN = Math.PI / 180;
 
@@ -50,7 +51,7 @@ class ChordView extends ChartView {
         const startAngle = -seriesModel.get('startAngle') * RADIAN;
 
         data.diff(oldData)
-            .add(function (newIdx) {
+            .add( (newIdx) => {
                 /* Consider the case when there are only two nodes A and B,
                  * and there is a link between A and B.
                  * At first, they are both disselected from legend. And then
@@ -66,7 +67,7 @@ class ChordView extends ChartView {
                 }
             })
 
-            .update(function (newIdx, oldIdx) {
+            .update( (newIdx, oldIdx) => {
                 let el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
                 const layout = data.getItemLayout(newIdx);
 
@@ -92,7 +93,7 @@ class ChordView extends ChartView {
                 }
             })
 
-            .remove(function (oldIdx) {
+            .remove(oldIdx => {
                 const el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
                 el && graphic.removeElementWithFadeOut(el, seriesModel, oldIdx);
             })

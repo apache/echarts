@@ -1,8 +1,12 @@
-import { extend } from 'zrender/src/core/util';
+import { extend, retrieve3 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import SeriesData from '../../data/SeriesData';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 import ChordSeriesModel, { ChordNodeItemOption } from './ChordSeries';
+import type Model from '../../model/Model';
+import type { GraphNode } from '../../data/Graph';
+import { getLabelStatesModels, setLabelStyle } from '../../label/labelStyle';
+import type { BuiltinTextPosition } from 'zrender/src/core/types';
 
 export default class ChordPiece extends graphic.Sector {
 
@@ -60,6 +64,88 @@ export default class ChordPiece extends graphic.Sector {
         );
         sector.setShape(sectorShape);
         sector.useStyle(data.getItemVisual(idx, 'style'));
+
+        this._updateLabel(seriesModel, itemModel, node);
     }
 
+    protected _updateLabel(
+        seriesModel: ChordSeriesModel,
+        itemModel: Model<ChordNodeItemOption>,
+        node: GraphNode
+    ) {
+        const label = this.getTextContent();
+        const layout = node.getLayout();
+        const midAngle = (layout.startAngle + layout.endAngle) / 2;
+        const dx = Math.cos(midAngle);
+        const dy = Math.sin(midAngle);
+
+        const normalLabelModel = itemModel.getModel('label');
+        label.ignore = !normalLabelModel.get('show');
+
+        // Set label style
+        const labelStateModels = getLabelStatesModels(itemModel);
+        const style = node.getVisual('style');
+        setLabelStyle(
+            label,
+            labelStateModels,
+            {
+                labelFetcher: {
+                    getFormattedLabel(dataIndex, stateName, dataType, labelDimIndex, formatter, extendParams) {
+                        return seriesModel.getFormattedLabel(
+                            dataIndex, stateName, 'node',
+                            labelDimIndex,
+                            // ensure edgeLabel formatter is provided
+                            // to prevent the inheritance from `label.formatter` of the series
+                            retrieve3(
+                                formatter,
+                                labelStateModels.normal && labelStateModels.normal.get('formatter'),
+                                itemModel.get('name')
+                            ),
+                            extendParams
+                        );
+                    }
+                },
+                labelDataIndex: node.dataIndex,
+                defaultText: node.dataIndex + '',
+                inheritColor: style.fill,
+                defaultOpacity: style.opacity,
+                defaultOutsidePosition: 'startArc' as BuiltinTextPosition
+            }
+        );
+
+        // Set label position
+        const labelPosition = normalLabelModel.get('position') || 'outside';
+        const labelPadding = normalLabelModel.get('distance') || 0;
+
+        let r;
+        if (labelPosition === 'outside') {
+            r = layout.r + labelPadding;
+        }
+        else {
+            r = (layout.r + layout.r0) / 2;
+        }
+
+        this.textConfig = {
+            inside: labelPosition !== 'outside'
+        };
+
+        const align = labelPosition !== 'outside'
+            ? normalLabelModel.get('align') || 'center'
+            : (dx > 0 ? 'left' : 'right');
+
+        const verticalAlign = labelPosition !== 'outside'
+            ? normalLabelModel.get('verticalAlign') || 'middle'
+            : (dy > 0 ? 'top' : 'bottom');
+
+        label.attr({
+            x: dx * r + layout.cx,
+            y: dy * r + layout.cy,
+            rotation: 0,
+            style: {
+                align,
+                verticalAlign
+            }
+        });
+    }
 }
+

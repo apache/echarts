@@ -66,7 +66,7 @@ export interface ChordItemStyleOption<TCbParams = never> extends ItemStyleOption
 
 export interface ChordNodeStateOption<TCbParams = never> {
     itemStyle?: ChordItemStyleOption<TCbParams>
-    label?: SeriesLabelOption
+    label?: ChordNodeLabelOption
 }
 
 export interface ChordNodeItemOption extends ChordNodeStateOption,
@@ -79,6 +79,11 @@ export interface ChordNodeItemOption extends ChordNodeStateOption,
 
 export interface ChordEdgeLineStyleOption extends LineStyleOption {
     curveness?: number
+}
+
+export interface ChordNodeLabelOption extends Omit<SeriesLabelOption<CallbackDataParams>, 'position'> {
+    silent?: boolean
+    position?: SeriesLabelOption['position'] | 'outside'
 }
 
 export interface ChordEdgeStateOption {
@@ -121,7 +126,7 @@ export interface ChordSeriesOption
     links?: ChordEdgeItemOption[]
 
     edgeLabel?: SeriesLineLabelOption
-    label?: SeriesLabelOption
+    label?: ChordNodeLabelOption
 
     itemStyle?: ChordItemStyleOption<CallbackDataParams>
     lineStyle?: ChordEdgeLineStyleOption
@@ -277,6 +282,12 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
             width: 0,
             color: 'source',
             opacity: 0.5
+        },
+
+        label: {
+            show: true,
+            position: 'outside',
+            distance: 5
         }
     };
 }
