@@ -25,6 +25,7 @@ import * as helper from './helper';
 import {ScaleTick, Dictionary} from '../util/types';
 
 const roundNumber = numberUtil.round;
+export const SPLIT_NUMBER_DEFAULT = 5;
 
 class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> extends Scale<SETTING> {
 
@@ -218,7 +219,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
      * @param splitNumber By default `5`.
      */
     calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
-        splitNumber = splitNumber || 5;
+        splitNumber = splitNumber || SPLIT_NUMBER_DEFAULT;
         const extent = this._extent;
         let span = extent[1] - extent[0];
         if (!isFinite(span)) {

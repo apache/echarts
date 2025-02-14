@@ -44,7 +44,6 @@ import {
     ONE_MINUTE,
     ONE_HOUR,
     ONE_DAY,
-    ONE_YEAR,
     format,
     leveledFormat,
     PrimaryTimeUnit,
@@ -68,10 +67,15 @@ import {
     dateGetterName,
     minutesGetterName,
     secondsGetterName,
-    millisecondsGetterName
+    millisecondsGetterName,
+    scaleIntervals,
+    getIndexByInterval,
+    getUnitByInterval,
+    ONE_LEAP_YEAR,
+    ONE_MONTH
 } from '../util/time';
 import * as scaleHelper from './helper';
-import IntervalScale from './Interval';
+import IntervalScale, { SPLIT_NUMBER_DEFAULT } from './Interval';
 import Scale from './Scale';
 import {TimeScaleTick, ScaleTick} from '../util/types';
 import {TimeAxisLabelFormatterOption} from '../coord/axisCommonTypes';
@@ -80,8 +84,10 @@ import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 import { filter, isNumber, map } from 'zrender/src/core/util';
 
+const roundNumber = numberUtil.round;
+
 // FIXME 公用？
-const bisect = function (
+export const bisect = function (
     a: [string | number, number][],
     x: number,
     lo: number,
@@ -145,7 +151,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     /**
      * @override
      */
-    getTicks(): TimeScaleTick[] {
+    // onlyMaxLevel is used in minor ticks for filtering
+    getTicks(expandToNicedExtent?: boolean, onlyMaxLevel?: boolean): TimeScaleTick[] {
         const interval = this._interval;
         const extent = this._extent;
 
@@ -167,7 +174,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             this._approxInterval,
             this._isIntervalCustom ? interval : null,
             useUTC,
-            extent
+            extent,
+            onlyMaxLevel
         );
 
         ticks = ticks.concat(innerTicks);
@@ -178,6 +186,66 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         });
 
         return ticks;
+    }
+
+    getMinorTicks(): number[][] {
+        const ticks = this.getTicks(true, true);
+        const minorTicks = [];
+        const extent = this.getExtent();
+
+        for (let i = 1; i < ticks.length; i++) {
+            const nextTick = ticks[i];
+            const prevTick = ticks[i - 1];
+            let count = 0;
+            const minorTicksGroup = [];
+            const interval = nextTick.value - prevTick.value;
+            const minorSplits = this.getMinorSplits(interval);
+            const splitNumber = minorSplits > 10 ? Math.ceil(minorSplits / 2) : minorSplits; // reduce too many splits
+            const minorInterval = interval / splitNumber;
+            const unit = getUnitByInterval(this._interval);
+            const currentUnit = getUnitByInterval(interval);
+
+            if (getPrimaryTimeUnit(currentUnit) !== getPrimaryTimeUnit(unit)) {
+                continue;
+            }
+
+            while (count < splitNumber - 1) {
+                const minorTick = roundNumber(prevTick.value + (count + 1) * minorInterval);
+
+                // For the first and last interval. The count may be less than splitNumber.
+                if (minorTick > extent[0] && minorTick < extent[1]) {
+                    minorTicksGroup.push(minorTick);
+                }
+                count++;
+            }
+            minorTicks.push(minorTicksGroup);
+        }
+
+        return minorTicks;
+    }
+
+    getMinorSplits(interval: number): number {
+        if (interval <= 0) {
+            return 0;
+        }
+        const unit = getUnitByInterval(interval);
+        const unitMap: Partial<Record<TimeUnit, number>> = {
+            'second': ONE_SECOND,
+            'minute': ONE_MINUTE,
+            'hour': ONE_HOUR,
+            'half-day': ONE_HOUR,
+            'quarter-day': ONE_HOUR,
+            'day': ONE_DAY,
+            'half-week': ONE_DAY,
+            'week': ONE_DAY,
+            'month': ONE_DAY,
+            'quarter': ONE_MONTH,
+            'half-year': ONE_MONTH,
+            'year': ONE_LEAP_YEAR
+        };
+        const getSplit = (period: number) => Math.ceil(interval / period);
+
+        return unit in unitMap ? getSplit(unitMap[unit]) : SPLIT_NUMBER_DEFAULT;
     }
 
     calcNiceExtent(
@@ -220,11 +288,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             this._approxInterval = maxInterval;
         }
 
-        const scaleIntervalsLen = scaleIntervals.length;
-        const idx = Math.min(
-            bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen),
-            scaleIntervalsLen - 1
-        );
+        const idx = getIndexByInterval(this._approxInterval);
 
         // Interval that can be used to calculate ticks
         this._interval = scaleIntervals[idx][1];
@@ -251,29 +315,6 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     }
 
 }
-
-
-/**
- * This implementation was originally copied from "d3.js"
- * <https://github.com/d3/d3/blob/b516d77fb8566b576088e73410437494717ada26/src/time/scale.js>
- * with some modifications made for this program.
- * See the license statement at the head of this file.
- */
-const scaleIntervals: [TimeUnit, number][] = [
-    // Format                           interval
-    ['second', ONE_SECOND],             // 1s
-    ['minute', ONE_MINUTE],             // 1m
-    ['hour', ONE_HOUR],                 // 1h
-    ['quarter-day', ONE_HOUR * 6],      // 6h
-    ['half-day', ONE_HOUR * 12],        // 12h
-    ['day', ONE_DAY * 1.2],             // 1d
-    ['half-week', ONE_DAY * 3.5],       // 3.5d
-    ['week', ONE_DAY * 7],              // 7d
-    ['month', ONE_DAY * 31],            // 1M
-    ['quarter', ONE_DAY * 95],          // 3M
-    ['half-year', ONE_YEAR / 2],        // 6M
-    ['year', ONE_YEAR]                  // 1Y
-];
 
 function isUnitValueSame(
     unit: PrimaryTimeUnit,
@@ -432,7 +473,8 @@ function getIntervalTicks(
     approxInterval: number,
     customInterval: number | null,
     isUTC: boolean,
-    extent: number[]
+    extent: number[],
+    onlyMaxLevel: boolean
 ): TimeScaleTick[] {
     const safeLimit = 10000;
     const unitNames = timeUnits;
@@ -647,16 +689,30 @@ function getIntervalTicks(
         return filter(levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1]);
     }), levelTicks => levelTicks.length > 0);
 
-    const ticks: TimeScaleTick[] = [];
+    let ticks: TimeScaleTick[] = [];
     const maxLevel = levelsTicksInExtent.length - 1;
-    for (let i = 0; i < levelsTicksInExtent.length; ++i) {
-        const levelTicks = levelsTicksInExtent[i];
+    if (onlyMaxLevel) {
+        const levelTicks = levelsTicksInExtent[maxLevel];
+        ticks = getLevelTicks(levelTicks);
+    }
+    else {
+        for (let i = 0; i < levelsTicksInExtent.length; ++i) {
+            const levelTicks = levelsTicksInExtent[i];
+            ticks.push(...getLevelTicks(levelTicks, i));
+        }
+    }
+
+    function getLevelTicks(levelTicks: InnerTimeTick[], level: number = 0): TimeScaleTick[] {
+        const ticks: TimeScaleTick[] = [];
+
         for (let k = 0; k < levelTicks.length; ++k) {
             ticks.push({
                 value: levelTicks[k].value,
-                level: maxLevel - i
+                level: maxLevel - level
             });
         }
+
+        return ticks;
     }
 
     ticks.sort((a, b) => a.value - b.value);

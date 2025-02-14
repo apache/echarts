@@ -23,12 +23,15 @@ import * as numberUtil from './number';
 import {TimeScaleTick} from './types';
 import { getDefaultLocaleModel, getLocaleModel, SYSTEM_LANG, LocaleOption } from '../core/locale';
 import Model from '../model/Model';
+import { bisect } from '../scale/Time';
 
 export const ONE_SECOND = 1000;
 export const ONE_MINUTE = ONE_SECOND * 60;
 export const ONE_HOUR = ONE_MINUTE * 60;
 export const ONE_DAY = ONE_HOUR * 24;
+export const ONE_MONTH = ONE_DAY * 31;
 export const ONE_YEAR = ONE_DAY * 365;
+export const ONE_LEAP_YEAR = ONE_DAY * 366;
 
 export const defaultLeveledFormatter = {
     year: '{yyyy}',
@@ -40,6 +43,39 @@ export const defaultLeveledFormatter = {
     millisecond: '{HH}:{mm}:{ss} {SSS}',
     none: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss} {SSS}'
 };
+
+/**
+ * This implementation was originally copied from "d3.js"
+ * <https://github.com/d3/d3/blob/b516d77fb8566b576088e73410437494717ada26/src/time/scale.js>
+ * with some modifications made for this program.
+ * See the license statement at the head of this file.
+ */
+export const scaleIntervals: [TimeUnit, number][] = [
+    // Format                           interval
+    ['second', ONE_SECOND],             // 1s
+    ['minute', ONE_MINUTE],             // 1m
+    ['hour', ONE_HOUR],                 // 1h
+    ['quarter-day', ONE_HOUR * 6],      // 6h
+    ['half-day', ONE_HOUR * 12],        // 12h
+    ['day', ONE_DAY * 1.2],             // 1d
+    ['half-week', ONE_DAY * 3.5],       // 3.5d
+    ['week', ONE_DAY * 7],              // 7d
+    ['month', ONE_DAY * 31],            // 1M
+    ['quarter', ONE_DAY * 95],          // 3M
+    ['half-year', ONE_YEAR / 2],        // 6M
+    ['year', ONE_YEAR]                  // 1Y
+];
+
+export function getIndexByInterval(interval: number) {
+    return Math.min(
+        bisect(scaleIntervals, interval, 0, scaleIntervals.length),
+        scaleIntervals.length - 1
+    );
+}
+
+export function getUnitByInterval(interval: number) {
+    return scaleIntervals[Math.max(getIndexByInterval(interval), 0)][0];
+}
 
 const fullDayFormatter = '{yyyy}-{MM}-{dd}';
 
