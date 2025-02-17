@@ -7,6 +7,7 @@ import type Model from '../../model/Model';
 import type { GraphNode } from '../../data/Graph';
 import { getLabelStatesModels, setLabelStyle } from '../../label/labelStyle';
 import type { BuiltinTextPosition } from 'zrender/src/core/types';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 
 export default class ChordPiece extends graphic.Sector {
 
@@ -28,6 +29,7 @@ export default class ChordPiece extends graphic.Sector {
 
         const seriesModel = data.hostModel as ChordSeriesModel;
         const itemModel = node.getModel<ChordNodeItemOption>();
+        const emphasisModel = itemModel.getModel('emphasis');
 
         // layout position is the center of the sector
         const layout = data.getItemLayout(idx) as graphic.Sector['shape'];
@@ -64,8 +66,18 @@ export default class ChordPiece extends graphic.Sector {
         );
         sector.setShape(sectorShape);
         sector.useStyle(data.getItemVisual(idx, 'style'));
+        setStatesStylesFromModel(sector, itemModel);
 
         this._updateLabel(seriesModel, itemModel, node);
+
+        // Add focus/blur states handling
+        const focus = emphasisModel.get('focus');
+        toggleHoverEmphasis(
+            this,
+            focus === 'source' || focus === 'target' ? 'self' : focus,
+            emphasisModel.get('blurScope'),
+            emphasisModel.get('disabled')
+        );
     }
 
     protected _updateLabel(

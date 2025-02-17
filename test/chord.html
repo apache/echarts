@@ -49,9 +49,10 @@ under the License.
     <div id='main7'></div>
     <div id='main8'></div>
     <div id='main9'></div>
+    <div id='main10'></div>
 
 
-
+<!--
     <script>
 
         var cnt = 0;
@@ -71,10 +72,6 @@ under the License.
                         clockwise: false,
                         label: { show: true },
                         lineStyle: { color: 'target' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { name: 'A' },
                             { name: 'B' },
@@ -137,10 +134,6 @@ under the License.
                         endAngle: -270,
                         label: { show: true },
                         lineStyle: { color: 'target' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { name: 'A' },
                             { name: 'B' },
@@ -191,10 +184,6 @@ under the License.
                         endAngle: -270,
                         label: { show: true },
                         lineStyle: { color: 'target' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { name: 'A' },
                             { name: 'B' },
@@ -245,10 +234,6 @@ under the License.
                         endAngle: -270,
                         label: { show: true },
                         lineStyle: { color: 'target' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { name: 'A' },
                             { name: 'B' },
@@ -299,10 +284,6 @@ under the License.
                         endAngle: -270,
                         label: { show: true },
                         lineStyle: { color: 'target' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { name: 'A' },
                             { name: 'B' },
@@ -354,10 +335,6 @@ under the License.
                         endAngle: -270,
                         label: { show: true },
                         lineStyle: { color: 'target' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { name: 'A' },
                             { name: 'B' },
@@ -407,10 +384,6 @@ under the License.
                         minAngle: 15,
                         label: { show: true },
                         lineStyle: { color: 'target' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { name: 'A', value: 70 },
                             { name: 'B' },
@@ -458,10 +431,6 @@ under the License.
                         minAngle: 15,
                         label: { show: true },
                         lineStyle: { color: 'target' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { name: 'A', value: 30 },
                             { name: 'B' },
@@ -553,10 +522,6 @@ under the License.
                         endAngle: -270,
                         label: { show: true },
                         lineStyle: { color: 'gradient' },
-                        emphasis: {
-                            label: { color: 'blue' },
-                            lineStyle: { width: 10 }
-                        },
                         data: [
                             { itemStyle: null, name: 'A' },
                             { itemStyle: null, name: 'B' },
@@ -616,6 +581,131 @@ under the License.
                         chart.setOption(option);
                     }
                 }]
+            });
+        });
+    </script> -->
+
+
+
+    <script>
+
+        var option;
+        var cnt = 0;
+
+        require([
+            'echarts'/*, 'map/js/china' */
+        ], function (echarts) {
+            option = {
+                tooltip: {},
+                title: [{
+                    text: 'emphasis.focus: series',
+                    left: '20%',
+                    textAlign: 'center'
+                }, {
+                    text: 'emphasis.focus: self',
+                    left: '50%',
+                    textAlign: 'center'
+                }, {
+                    text: 'emphasis.focus: adjacency',
+                    left: '80%',
+                    textAlign: 'center'
+                }],
+                series: [
+                    {
+                        type: 'chord',
+                        name: '1',
+                        minAngle: 15,
+                        lineStyle: { color: 'target' },
+                        emphasis: {
+                            focus: 'series'
+                        },
+                        center: ['20%', '50%'],
+                        radius: [100, 110],
+                        data: [
+                            { name: 'A1' },
+                            { name: 'B1' },
+                            { name: 'C1' },
+                            { name: 'D1' },
+                            { name: 'E1' },
+                            { name: 'F1' }
+                        ],
+                        links: [
+                            { source: 'A1', target: 'B1', value: 40 },
+                            { source: 'A1', target: 'C1', value: 20 },
+                            { source: 'A1', target: 'D1', value: 10 },
+                            { source: 'A1', target: 'E1', value: 2 },
+                            { source: 'C1', target: 'E1', value: 10 },
+                            { source: 'C1', target: 'D1', value: 5 },
+                            { source: 'D1', target: 'E1', value: 5 },
+                            { source: 'E1', target: 'A1', value: 5 },
+                        ]
+                    }, {
+                        type: 'chord',
+                        name: '2',
+                        minAngle: 15,
+                        label: { show: true },
+                        lineStyle: { color: 'target' },
+                        emphasis: {
+                            focus: 'self'
+                        },
+                        center: ['50%', '50%'],
+                        radius: [100, 110],
+                        data: [
+                            { name: 'A2' },
+                            { name: 'B2' },
+                            { name: 'C2' },
+                            { name: 'D2' },
+                            { name: 'E2' },
+                            { name: 'F2' }
+                        ],
+                        links: [
+                            { source: 'A2', target: 'B2', value: 40 },
+                            { source: 'A2', target: 'C2', value: 20 },
+                            { source: 'A2', target: 'D2', value: 10 },
+                            { source: 'A2', target: 'E2', value: 2 },
+                            { source: 'C2', target: 'E2', value: 10 },
+                            { source: 'C2', target: 'D2', value: 5 },
+                            { source: 'D2', target: 'E2', value: 5 },
+                            { source: 'E2', target: 'A2', value: 5 },
+                        ]
+                    },  {
+                        type: 'chord',
+                        name: '3',
+                        minAngle: 15,
+                        label: { show: true },
+                        lineStyle: { color: 'target' },
+                        emphasis: {
+                            focus: 'adjacency'
+                        },
+                        center: ['80%', '50%'],
+                        radius: [100, 110],
+                        data: [
+                            { name: 'A3' },
+                            { name: 'B3' },
+                            { name: 'C3' },
+                            { name: 'D3' },
+                            { name: 'E3' },
+                            { name: 'F3' }
+                        ],
+                        links: [
+                            { source: 'A3', target: 'B3', value: 40 },
+                            { source: 'A3', target: 'C3', value: 20 },
+                            { source: 'A3', target: 'D3', value: 10 },
+                            { source: 'A3', target: 'E3', value: 2 },
+                            { source: 'C3', target: 'E3', value: 10 },
+                            { source: 'C3', target: 'D3', value: 5 },
+                            { source: 'D3', target: 'E3', value: 5 },
+                            { source: 'E3', target: 'A3', value: 5 },
+                        ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main10', {
+                option: option,
+                title: [
+                    'emphasis.focus: target',
+                ]
             });
         });
     </script>

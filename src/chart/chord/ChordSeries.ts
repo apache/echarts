@@ -50,12 +50,29 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import LegendVisualProvider from '../../visual/LegendVisualProvider';
 import * as zrUtil from 'zrender/src/core/util';
 
+interface ExtraEmphasisState {
+    /**
+     * For focus on nodes:
+     * self: Focus self node, and all edges connected to it.
+     * source: Focus self node and edges starting from it.
+     * target: Focus self node and edges ending at it.
+     *
+     * For focus on edges:
+     * self: Focus self edge, and all nodes connected to it.
+     * source: Focus self edge and nodes starting from it and
+     * the edges connected to these nodes.
+     * target: Focus self edge and nodes ending at it and
+     * the edges connected to these nodes.
+     */
+    focus?: DefaultEmphasisFocus | 'source' | 'target'
+}
+
 interface ChordStatesMixin {
-    emphasis?: DefaultEmphasisFocus
+    emphasis?: ExtraEmphasisState
 }
 
 interface ChordEdgeStatesMixin {
-    emphasis?: DefaultEmphasisFocus
+    emphasis?: ExtraEmphasisState
 }
 
 type ChordDataValue = OptionDataValue | OptionDataValue[];
