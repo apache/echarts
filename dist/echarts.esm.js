@@ -35602,7 +35602,7 @@ function adjustScaleForOverflow(min, max, model, // Only support cartesian coord
 barWidthAndOffset) {
   // Get Axis Length
   var axisExtent = model.axis.getExtent();
-  var axisLength = axisExtent[1] - axisExtent[0]; // Get bars on current base axis and calculate min and max overflow
+  var axisLength = Math.abs(axisExtent[1] - axisExtent[0]); // Get bars on current base axis and calculate min and max overflow
 
   var barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
 
