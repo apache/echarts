@@ -40,14 +40,12 @@ class ChordView extends ChartView {
 
     private _data: SeriesData;
     private _edgeData: SeriesData;
-    private _edgeGroup: Group;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     render(seriesModel: ChordSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
-        const edgeData = seriesModel.getEdgeData();
         const oldData = this._data;
         const group = this.group;
 
@@ -55,92 +53,45 @@ class ChordView extends ChartView {
 
         data.diff(oldData)
             .add((newIdx) => {
+                /* Consider the case when there are only two nodes A and B,
+                 * and there is a link between A and B.
+                 * At first, they are both disselected from legend. And then
+                 * when A is selected, A will go into `add` method. But since
+                 * there are no edges to be displayed, A should not be added.
+                 * So we should only add A when layout is defined.
+                 */
+
                 const layout = data.getItemLayout(newIdx);
                 if (layout) {
                     const el = new ChordPiece(data, newIdx, startAngle);
-                    data.setItemGraphicEl(newIdx, el);
+                    getECData(el).dataIndex = newIdx;
                     group.add(el);
-
-                    // Add focus setting
-                    const itemModel = data.getItemModel<ChordNodeItemOption>(newIdx);
-                    const focus = itemModel.get(['emphasis', 'focus']);
-                    if (focus) {
-                        console.log('Node focus config:', {
-                            type: focus,
-                            nodeIndex: newIdx,
-                            focusInfo: getECData(el).focus
-                        });
-                    }
-                    if (focus === 'self') {
-                        // self: Focus self node, and all edges connected to it.
-                        const edges: number[] = [];
-                        edgeData.graph.eachEdge(edge => {
-                            if (edge.node1.dataIndex === newIdx
-                                || edge.node2.dataIndex === newIdx
-                            ) {
-                                edges.push(edge.dataIndex);
-                            }
-                        });
-
-                        getECData(el).focus = {
-                            node: [newIdx],
-                            edge: edges
-                        };
-                    }
-                    else if (focus === 'source') {
-                        // source: Focus self node and edges starting from it
-                        const edges: number[] = [];
-                        edgeData.graph.eachEdge(edge => {
-                            if (edge.node1.dataIndex === newIdx) {
-                                edges.push(edge.dataIndex);
-                            }
-                        });
-                        getECData(el).focus = {
-                            node: [newIdx],
-                            edge: edges
-                        };
-                    }
-                    else if (focus === 'target') {
-                        // target: Focus self node and edges ending at it
-                        const edges: number[] = [];
-                        edgeData.graph.eachEdge(edge => {
-                            if (edge.node2.dataIndex === newIdx) {
-                                edges.push(edge.dataIndex);
-                            }
-                        });
-                        getECData(el).focus = {
-                            node: [newIdx],
-                            edge: edges
-                        };
-                        console.log('target', getECData(el).focus);
-                    }
                 }
             })
 
-            .update( (newIdx, oldIdx) => {
+            .update((newIdx, oldIdx) => {
                 let el = oldData.getItemGraphicEl(oldIdx) as ChordPiece;
                 const layout = data.getItemLayout(newIdx);
 
                 /* Consider the case when there are only two nodes A and B,
                  * and there is a link between A and B.
-                 * and when A is disselected from legend, there should be nothing
-                 * to display. But in the `data.diff` method, B will go into
-                 * `update` method and having no layout.
+                 * and when A is disselected from legend, there should be
+                 * nothing to display. But in the `data.diff` method, B will go
+                 * into `update` method and having no layout.
                  * In this case, we need to remove B.
                  */
                 if (!layout) {
                     el && graphic.removeElementWithFadeOut(el, seriesModel, oldIdx);
+                    return;
+                }
+
+                if (!el) {
+                    el = new ChordPiece(data, newIdx, startAngle);
                 }
                 else {
-                    if (!el) {
-                        el = new ChordPiece(data, newIdx, startAngle);
-                        group.add(el);
-                    }
-                    else {
-                        el.updateData(data, newIdx, startAngle);
-                    }
-                    data.setItemGraphicEl(newIdx, el);
+                    el.updateData(data, newIdx, startAngle);
                 }
+                group.add(el);
             })
 
             .remove(oldIdx => {
@@ -168,82 +119,22 @@ class ChordView extends ChartView {
     }
 
     renderEdges(seriesModel: ChordSeriesModel, startAngle: number) {
-        if (!this._edgeGroup) {
-            this._edgeGroup = new Group();
-            this.group.add(this._edgeGroup);
-        }
-
-        const edgeGroup = this._edgeGroup;
-        edgeGroup.removeAll();
-
         const nodeData = seriesModel.getData();
         const edgeData = seriesModel.getEdgeData();
         const oldData = this._edgeData;
+        const group = this.group;
 
         edgeData.diff(oldData)
             .add(function (newIdx) {
                 const el = new ChordEdge(nodeData, edgeData, newIdx, startAngle);
-                edgeData.setItemGraphicEl(newIdx, el);
-                edgeGroup.add(el);
-
-                // Add focus setting for edges
-                const itemModel = edgeData.getItemModel<ChordEdgeItemOption>(newIdx);
-                const focus = itemModel.get(['emphasis', 'focus']);
-                if (focus) {
-                    console.log('Edge focus config:', {
-                        type: focus,
-                        edgeIndex: newIdx,
-                        source: edgeData.graph.getEdgeByIndex(newIdx).node1.dataIndex,
-                        target: edgeData.graph.getEdgeByIndex(newIdx).node2.dataIndex,
-                        focusInfo: getECData(el).focus
-                    });
-                }
-                const edge = edgeData.graph.getEdgeByIndex(newIdx);
-                const source = edge.node1.dataIndex;
-                const target = edge.node2.dataIndex;
-
-                if (focus === 'self') {
-                    // self: Focus self edge, and the nodes connected to it.
-                    getECData(el).focus = {
-                        edge: [newIdx],
-                        node: [source, target]
-                    };
-                }
-                else if (focus === 'source') {
-                    // source: Focus self edge and nodes starting from it and
-                    // the edges connected to these nodes.
-                    const edges: number[] = [];
-                    edgeData.graph.eachEdge(e => {
-                        if (e.node1.dataIndex === source || newIdx === e.node2.dataIndex) {
-                            edges.push(e.dataIndex);
-                        }
-                    });
-                    getECData(el).focus = {
-                        edge: edges,
-                        node: [source]
-                    };
-                }
-                else if (focus === 'target') {
-                    // target: Focus self edge and nodes ending at it and
-                    // the edges connected to these nodes.
-                    const edges: number[] = [];
-                    edgeData.graph.eachEdge(e => {
-                        if (e.node2.dataIndex === target || newIdx === e.node1.dataIndex) {
-                            edges.push(e.dataIndex);
-                        }
-                    });
-                    getECData(el).focus = {
-                        edge: edges,
-                        node: [target]
-                    };
-                }
+                getECData(el).dataIndex = newIdx;
+                group.add(el);
             })
 
             .update(function (newIdx, oldIdx) {
                 const el = oldData.getItemGraphicEl(oldIdx) as ChordEdge;
                 el.updateData(nodeData, edgeData, newIdx, startAngle);
-                edgeData.setItemGraphicEl(newIdx, el);
-                edgeGroup.add(el);
+                group.add(el);
             })
 
             .remove(function (oldIdx) {

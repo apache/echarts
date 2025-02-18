@@ -52,7 +52,7 @@ under the License.
     <div id='main10'></div>
 
 
-<!--
+
     <script>
 
         var cnt = 0;
@@ -583,7 +583,7 @@ under the License.
                 }]
             });
         });
-    </script> -->
+    </script>
 
 
 
@@ -598,7 +598,7 @@ under the License.
             option = {
                 tooltip: {},
                 title: [{
-                    text: 'emphasis.focus: series',
+                    text: 'emphasis.focus: none',
                     left: '20%',
                     textAlign: 'center'
                 }, {
@@ -606,7 +606,7 @@ under the License.
                     left: '50%',
                     textAlign: 'center'
                 }, {
-                    text: 'emphasis.focus: adjacency',
+                    text: 'emphasis.focus: adjacency (default)',
                     left: '80%',
                     textAlign: 'center'
                 }],
@@ -617,7 +617,7 @@ under the License.
                         minAngle: 15,
                         lineStyle: { color: 'target' },
                         emphasis: {
-                            focus: 'series'
+                            focus: 'none'
                         },
                         center: ['20%', '50%'],
                         radius: [100, 110],
@@ -676,6 +676,11 @@ under the License.
                         lineStyle: { color: 'target' },
                         emphasis: {
                             focus: 'adjacency'
+                        },
+                        blur: {
+                            lineStyle: {
+                                opacity: 0.02
+                            }
                         },
                         center: ['80%', '50%'],
                         radius: [100, 110],

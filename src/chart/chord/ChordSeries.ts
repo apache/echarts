@@ -53,18 +53,16 @@ import * as zrUtil from 'zrender/src/core/util';
 interface ExtraEmphasisState {
     /**
      * For focus on nodes:
-     * self: Focus self node, and all edges connected to it.
-     * source: Focus self node and edges starting from it.
-     * target: Focus self node and edges ending at it.
+     * - self: Focus self node, and all edges connected to it.
+     * - adjacency: Focus self nodes and two edges (source and target)
+     *   connected to the focused node.
      *
      * For focus on edges:
-     * self: Focus self edge, and all nodes connected to it.
-     * source: Focus self edge and nodes starting from it and
-     * the edges connected to these nodes.
-     * target: Focus self edge and nodes ending at it and
-     * the edges connected to these nodes.
+     * - self: Focus self edge, and all nodes connected to it.
+     * - adjacency: Focus self edge and all edges connected to it and all
+     *   nodes connected to these edges.
      */
-    focus?: DefaultEmphasisFocus | 'source' | 'target'
+    focus?: DefaultEmphasisFocus | 'adjacency'
 }
 
 interface ChordStatesMixin {
@@ -147,6 +145,29 @@ export interface ChordSeriesOption
 
     itemStyle?: ChordItemStyleOption<CallbackDataParams>
     lineStyle?: ChordEdgeLineStyleOption
+
+    emphasis?: {
+        focus?: Exclude<ChordNodeItemOption['emphasis'], undefined>['focus']
+        scale?: boolean | number
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
+
+    blur?: {
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
+
+    select?: {
+        label?: SeriesLabelOption
+        edgeLabel?: SeriesLabelOption
+        itemStyle?: ItemStyleOption
+        lineStyle?: LineStyleOption
+    }
 }
 
 class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
@@ -298,13 +319,20 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
         lineStyle: {
             width: 0,
             color: 'source',
-            opacity: 0.5
+            opacity: 0.2
         },
 
         label: {
             show: true,
             position: 'outside',
             distance: 5
+        },
+
+        emphasis: {
+            focus: 'adjacency',
+            lineStyle: {
+                opacity: 0.5
+            }
         }
     };
 }

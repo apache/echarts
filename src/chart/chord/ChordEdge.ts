@@ -8,6 +8,8 @@ import type Model from '../../model/Model';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 import { saveOldStyle } from '../../animation/basicTransition';
 import ChordSeriesModel, { ChordEdgeItemOption, ChordEdgeLineStyleOption, ChordNodeItemOption } from './ChordSeries';
+import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
+import { getECData } from '../../util/innerStore';
 
 export class ChordPathShape {
     // Souce node, two points forming an arc
@@ -44,7 +46,7 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
         startAngle: number
     ) {
         super();
-
+        getECData(this).dataType = 'edge';
         this.updateData(nodeData, edgeData, edgeIdx, startAngle, true);
     }
 
@@ -97,6 +99,8 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
         const itemModel = edge.node1.getModel<ChordNodeItemOption>();
         const edgeModel = edgeData.getItemModel<ChordEdgeItemOption>(edge.dataIndex);
         const lineStyle = edgeModel.getModel('lineStyle');
+        const emphasisModel = edgeModel.getModel('emphasis');
+        const focus = emphasisModel.get('focus');
 
         const shape: ChordPathShape = extend(
             getSectorCornerRadius(itemModel.getModel('itemStyle'), layout, true),
@@ -124,6 +128,17 @@ export class ChordEdge extends graphic.Path<ChordEdgePathProps> {
                 shape: shape
             }, seriesModel, edgeIdx);
         }
+
+        toggleHoverEmphasis(
+            this,
+            focus === 'adjacency'
+                ? edge.getAdjacentDataIndices()
+                : focus,
+            emphasisModel.get('blurScope'),
+            emphasisModel.get('disabled')
+        );
+
+        setStatesStylesFromModel(el, edgeModel, 'lineStyle');
 
         edgeData.setItemGraphicEl(edge.dataIndex, el);
     }

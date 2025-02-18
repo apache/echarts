@@ -8,12 +8,13 @@ import type { GraphNode } from '../../data/Graph';
 import { getLabelStatesModels, setLabelStyle } from '../../label/labelStyle';
 import type { BuiltinTextPosition } from 'zrender/src/core/types';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
+import { getECData } from '../../util/innerStore';
 
 export default class ChordPiece extends graphic.Sector {
 
     constructor(data: SeriesData, idx: number, startAngle: number) {
         super();
-
+        getECData(this).dataType = 'node';
         this.z2 = 2;
 
         const text = new graphic.Text();
@@ -70,11 +71,16 @@ export default class ChordPiece extends graphic.Sector {
 
         this._updateLabel(seriesModel, itemModel, node);
 
+        data.setItemGraphicEl(idx, el);
+        setStatesStylesFromModel(el, itemModel, 'itemStyle');
+
         // Add focus/blur states handling
         const focus = emphasisModel.get('focus');
         toggleHoverEmphasis(
             this,
-            focus === 'source' || focus === 'target' ? 'self' : focus,
+            focus === 'adjacency'
+                ? node.getAdjacentDataIndices()
+                : focus,
             emphasisModel.get('blurScope'),
             emphasisModel.get('disabled')
         );
