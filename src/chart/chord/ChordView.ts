@@ -17,19 +17,16 @@
 * under the License.
 */
 
-import Group from 'zrender/src/graphic/Group';
 import * as graphic from '../../util/graphic';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
-import ChordSeriesModel, { ChordEdgeItemOption, ChordNodeItemOption } from './ChordSeries';
+import ChordSeriesModel from './ChordSeries';
 import ChordPiece from './ChordPiece';
 import { ChordEdge } from './ChordEdge';
 import { parsePercent } from '../../util/number';
-import { getLabelStatesModels, setLabelStyle } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
-import { toggleHoverEmphasis } from '../../util/states';
 
 const RADIAN = Math.PI / 180;
 
