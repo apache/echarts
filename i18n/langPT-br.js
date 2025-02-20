@@ -65,7 +65,7 @@ var localeObj = {
     legend: {
         selector: {
             all: 'Todas',
-            inverse: 'Inv'
+            inverse: 'Inverter'
         }
     },
     toolbox: {
@@ -98,7 +98,7 @@ var localeObj = {
             }
         },
         restore: {
-            title: 'Restore'
+            title: 'Restaurar'
         },
         saveAsImage: {
             title: 'Salvar como imagem',
@@ -113,22 +113,22 @@ var localeObj = {
             scatter: 'Gráfico de dispersão',
             effectScatter: 'Gráfico de dispersão ondulado',
             radar: 'Gráfico radar',
-            tree: 'Árvore',
-            treemap: 'Treemap',
-            boxplot: 'Boxplot',
-            candlestick: 'Candlestick',
-            k: 'Gráfico K line',
+            tree: 'Gráfico de árvore',
+            treemap: 'Mapa de árvore',
+            boxplot: 'Gráfico de caixa',
+            candlestick: 'Gráfico de vela',
+            k: 'Gráfico de linha K',
             heatmap: 'Mapa de calor',
             map: 'Mapa',
             parallel: 'Coordenadas paralelas',
             lines: 'Gráfico de linhas',
-            graph: 'Relationship graph',
+            graph: 'Grafo',
             sankey: 'Gráfico Sankey',
             funnel: 'Gráfico de funil',
-            gauge: 'Gauge',
-            pictorialBar: 'Pictorial bar',
-            themeRiver: 'Theme River Map',
-            sunburst: 'Sunburst',
+            gauge: 'Gráfico de medidor',
+            pictorialBar: 'Barra pictórica',
+            themeRiver: 'Gráfico de rio de tema',
+            sunburst: 'Gráfico de explosão solar',
             custom: 'Gráfico personalizado',
             chart: 'Gráfico'
         }

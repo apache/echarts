@@ -88,7 +88,7 @@ export interface MarkLineOption extends MarkerOption,
     symbol?: string[] | string
     symbolSize?: number[] | number
     symbolRotate?: number[] | number
-    symbolOffset?: number | string | (number | string)[]
+    symbolOffset?: number | string | (number | string)[] | (number | string)[][]
 
     /**
      * Precision used on statistic method
