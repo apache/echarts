@@ -54,7 +54,7 @@ class SingleAxisView extends AxisView {
 
         const layout = singleAxisHelper.layout(axisModel);
 
-        const axisBuilder = new AxisBuilder(axisModel, layout);
+        const axisBuilder = new AxisBuilder(axisModel, api, layout);
 
         zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
 

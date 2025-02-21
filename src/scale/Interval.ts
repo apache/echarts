@@ -46,11 +46,11 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     }
 
     normalize(val: number): number {
-        return helper.normalize(val, this._extent);
+        return helper.normalize(val, this._extent, this._breaks);
     }
 
     scale(val: number): number {
-        return helper.scale(val, this._extent);
+        return helper.scale(val, this._extent, this._breaks);
     }
 
     setExtent(start: number | string, end: number | string): void {
@@ -119,12 +119,14 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         let tick = niceTickExtent[0];
 
         while (tick <= niceTickExtent[1]) {
-            ticks.push({
-                value: tick
-            });
+            if (this.getBreakIndex(tick) < 0) {
+                ticks.push({
+                    value: tick
+                });
+            }
             // Avoid rounding error
             tick = roundNumber(tick + interval, intervalPrecision);
-            if (tick === ticks[ticks.length - 1].value) {
+            if (ticks.length > 0 && tick === ticks[ticks.length - 1].value) {
                 // Consider out of safe float point, e.g.,
                 // -3711126.9907707 + 2e-10 === -3711126.9907707
                 break;
@@ -149,7 +151,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
             }
         }
 
-        return ticks;
+        return helper.addBreakTicks(ticks, this._breaks, this._interval);
     }
 
     getMinorTicks(splitNumber: number): number[][] {
@@ -218,7 +220,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
     calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
         splitNumber = splitNumber || 5;
         const extent = this._extent;
-        let span = extent[1] - extent[0];
+        let span = this.getExtentSpanWithoutBreaks();
         if (!isFinite(span)) {
             return;
         }
@@ -230,7 +232,7 @@ class IntervalScale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> e
         }
 
         const result = helper.intervalScaleNiceTicks(
-            extent, splitNumber, minInterval, maxInterval
+            extent, span, splitNumber, minInterval, maxInterval
         );
 
         this._intervalPrecision = result.intervalPrecision;

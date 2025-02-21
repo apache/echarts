@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {each, map} from 'zrender/src/core/util';
+import {each, map, filter, find} from 'zrender/src/core/util';
 import {linearMap, getPixelPrecision, round} from '../util/number';
 import {
     createAxisTicks,
@@ -25,11 +25,12 @@ import {
     calculateCategoryInterval
 } from './axisTickLabelBuilder';
 import Scale from '../scale/Scale';
-import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
+import { DimensionName, ScaleBreak, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
+import { getExtentSpanWithoutBreaks } from '../scale/helper';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -120,6 +121,13 @@ class Axis {
      * Convert data to coord. Data is the rank if it has an ordinal scale
      */
     dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
+        return this.dataToCoordWithBreaks(data, clamp);
+    }
+
+    dataToCoordWithBreaks(
+        data: ScaleDataValue,
+        clamp?: boolean
+    ): number {
         let extent = this._extent;
         const scale = this.scale;
         data = scale.normalize(data);
@@ -175,8 +183,9 @@ class Axis {
         const tickModel = opt.tickModel || this.getTickModel();
         const result = createAxisTicks(this, tickModel as AxisBaseModel);
         const ticks = result.ticks;
+        const breaks = this.scale.getBreaks();
 
-        const ticksCoords = map(ticks, function (tickVal) {
+        const ticksCoords = filter(map(ticks, function (tickVal) {
             return {
                 coord: this.dataToCoord(
                     this.scale.type === 'ordinal'
@@ -185,12 +194,14 @@ class Axis {
                 ),
                 tickValue: tickVal
             };
-        }, this);
+        }, this), coords => {
+            return !find(breaks, brk => brk.start === coords.tickValue - 1);
+        });
 
         const alignWithLabel = tickModel.get('alignWithLabel');
 
         fixOnBandTicksCoords(
-            this, ticksCoords, alignWithLabel, opt.clamp
+            this, ticksCoords, breaks, alignWithLabel, opt.clamp
         );
 
         return ticksCoords;
@@ -246,7 +257,8 @@ class Axis {
         const axisExtent = this._extent;
         const dataExtent = this.scale.getExtent();
 
-        let len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
+        let len = getExtentSpanWithoutBreaks(dataExtent, this.scale.getBreaks())
+            + (this.onBand ? 1 : 0);
         // Fix #2728, avoid NaN when only one data.
         len === 0 && (len = 1);
 
@@ -273,8 +285,8 @@ class Axis {
 
 function fixExtentWithBands(extent: [number, number], nTick: number): void {
     const size = extent[1] - extent[0];
-    const len = nTick;
-    const margin = size / len / 2;
+    const len = getExtentSpanWithoutBreaks([0, nTick - 1], []) + 1;
+    const margin = size / Math.max(len, 1) / 2;
     extent[0] += margin;
     extent[1] -= margin;
 }
@@ -289,7 +301,11 @@ function fixExtentWithBands(extent: [number, number], nTick: number): void {
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
 function fixOnBandTicksCoords(
-    axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, clamp: boolean
+    axis: Axis,
+    ticksCoords: TickCoord[],
+    breaks: ScaleBreak[],
+    alignWithLabel: boolean,
+    clamp: boolean
 ) {
     const ticksLen = ticksCoords.length;
 
