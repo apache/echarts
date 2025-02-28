@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {curry, each, hasOwn} from 'zrender/src/core/util';
+import { curry, each, hasOwn, noop } from 'zrender/src/core/util';
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import { Payload } from '../../util/types';
 import type GlobalModel from '../../model/Global';
@@ -134,5 +134,27 @@ export function installLegendAction(registers: EChartsExtensionInstallRegisters)
     registers.registerAction(
         'legendUnSelect', 'legendunselected',
         curry(legendSelectActionHandler, 'unSelect')
+    );
+
+    /**
+     * @event legendMouseover
+     * @type {Object}
+     * @property {string} type 'legendMouseover'
+     * @property {string} name Series name or data item name
+     */
+    registers.registerAction(
+        { type: 'legendMouseover', update: 'none', event: 'legendmouseover' },
+        noop
+    );
+
+    /**
+     * @event legendMouseout
+     * @type {Object}
+     * @property {string} type 'legendMouseout'
+     * @property {string} name Series name or data item name
+     */
+    registers.registerAction(
+        { type: 'legendMouseout', update: 'none', event: 'legendmouseout' },
+        noop
     );
 }
