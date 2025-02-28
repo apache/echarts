@@ -164,9 +164,11 @@ class Line extends graphic.Group {
     _createLine(lineData: LineList, idx: number, seriesScope?: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
         const linePoints = lineData.getItemLayout(idx);
+        const z2 = lineData.getItemVisual(idx, 'z2');
         const line = createLine(linePoints);
         line.shape.percent = 0;
         graphic.initProps(line, {
+            z2,
             shape: {
                 percent: 1
             }

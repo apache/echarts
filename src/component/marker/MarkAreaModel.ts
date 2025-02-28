@@ -25,6 +25,7 @@ import GlobalModel from '../../model/Global';
 interface MarkAreaStateOption {
     itemStyle?: ItemStyleOption
     label?: SeriesLabelOption
+    z2?: number
 }
 
 interface MarkAreaDataItemOptionBase extends MarkAreaStateOption,

@@ -143,12 +143,14 @@ class MarkPointView extends MarkerView {
             }
 
             const style = itemModel.getModel('itemStyle').getItemStyle();
+            const z2 = itemModel.getModel('z2').option;
             const color = getVisualFromData(seriesData, 'color') as ZRColor;
             if (!style.fill) {
                 style.fill = color;
             }
 
             mpData.setItemVisual(idx, {
+                z2,
                 symbol: symbol,
                 symbolSize: symbolSize,
                 symbolRotate: symbolRotate,
