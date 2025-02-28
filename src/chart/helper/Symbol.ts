@@ -64,6 +64,7 @@ class Symbol extends graphic.Group {
         data: SeriesData,
         idx: number,
         symbolSize: number[],
+        z2: number,
         keepAspect: boolean
     ) {
         // Remove paths created before
@@ -80,7 +81,7 @@ class Symbol extends graphic.Group {
         );
 
         symbolPath.attr({
-            z2: 100,
+            z2,
             culling: true,
             scaleX: symbolSize[0] / 2,
             scaleY: symbolSize[1] / 2
@@ -156,12 +157,13 @@ class Symbol extends graphic.Group {
         const symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         const seriesModel = data.hostModel as SeriesModel;
         const symbolSize = Symbol.getSymbolSize(data, idx);
+        const z2 = Symbol.getSymbolZ2(data, idx);
         const isInit = symbolType !== this._symbolType;
         const disableAnimation = opts && opts.disableAnimation;
 
         if (isInit) {
             const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
-            this._createSymbol(symbolType as string, data, idx, symbolSize, keepAspect);
+            this._createSymbol(symbolType as string, data, idx, symbolSize, z2, keepAspect);
         }
         else {
             const symbolPath = this.childAt(0) as ECSymbol;
@@ -404,6 +406,9 @@ class Symbol extends graphic.Group {
 
     static getSymbolSize(data: SeriesData, idx: number) {
         return normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+    }
+    static getSymbolZ2(data: SeriesData, idx: number) {
+        return data.getItemVisual(idx, 'z2');
     }
 }
 

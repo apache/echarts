@@ -301,8 +301,9 @@ class MarkAreaView extends MarkerView {
                 allClipped: allClipped
             });
 
-
-            const style = areaData.getItemModel<MarkAreaMergedItemOption>(idx).getModel('itemStyle').getItemStyle();
+            const itemModel = areaData.getItemModel<MarkAreaMergedItemOption>(idx);
+            const style = itemModel.getModel('itemStyle').getItemStyle();
+            const z2 = itemModel.getModel('z2').option;
             const color = getVisualFromData(seriesData, 'color') as ZRColor;
             if (!style.fill) {
                 style.fill = color;
@@ -315,14 +316,17 @@ class MarkAreaView extends MarkerView {
             }
             // Visual
             areaData.setItemVisual(idx, 'style', style);
+            areaData.setItemVisual(idx, 'z2', z2);
         });
 
 
         areaData.diff(inner(polygonGroup).data)
             .add(function (idx) {
                 const layout = areaData.getItemLayout(idx);
+                const z2 = areaData.getItemVisual(idx, 'z2');
                 if (!layout.allClipped) {
                     const polygon = new graphic.Polygon({
+                        z2,
                         shape: {
                             points: layout.points
                         }
@@ -334,9 +338,11 @@ class MarkAreaView extends MarkerView {
             .update(function (newIdx, oldIdx) {
                 let polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
                 const layout = areaData.getItemLayout(newIdx);
+                const z2 = areaData.getItemVisual(newIdx, 'z2');
                 if (!layout.allClipped) {
                     if (polygon) {
                         graphic.updateProps(polygon, {
+                            z2,
                             shape: {
                                 points: layout.points
                             }
