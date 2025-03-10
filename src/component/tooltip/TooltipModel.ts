@@ -73,6 +73,9 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
     className?: string
 
     order?: TooltipOrderMode
+
+    /** specified container ref where  tooltip will be placed */
+    container?: HTMLElement
 }
 
 class TooltipModel extends ComponentModel<TooltipOption> {

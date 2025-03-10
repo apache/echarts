@@ -170,10 +170,12 @@ class TooltipView extends ComponentView {
 
         const tooltipModel = ecModel.getComponent('tooltip') as TooltipModel;
         const renderMode = this._renderMode = getTooltipRenderMode(tooltipModel.get('renderMode'));
+        const container = tooltipModel.option.container
+            ? tooltipModel.option.container : api.getDom();
 
         this._tooltipContent = renderMode === 'richText'
             ? new TooltipRichContent(api)
-            : new TooltipHTMLContent(api.getDom(), api, {
+            : new TooltipHTMLContent(container, api, {
                 appendToBody: tooltipModel.get('appendToBody', true)
             });
     }
@@ -692,13 +694,13 @@ class TooltipView extends ComponentView {
         const valueFormatter = tooltipModel.get('valueFormatter');
         const frag = seriesTooltipResult.frag;
         const markupText = frag ? buildTooltipMarkup(
-                valueFormatter ? extend({ valueFormatter }, frag) : frag,
-                markupStyleCreator,
-                renderMode,
-                orderMode,
-                ecModel.get('useUTC'),
-                tooltipModel.get('textStyle')
-            )
+            valueFormatter ? extend({ valueFormatter }, frag) : frag,
+            markupStyleCreator,
+            renderMode,
+            orderMode,
+            ecModel.get('useUTC'),
+            tooltipModel.get('textStyle')
+        )
             : seriesTooltipResult.text;
 
         const asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
@@ -1144,25 +1146,25 @@ function calcTooltipPosition(
     const rectWidth = rect.width;
     const rectHeight = rect.height;
     switch (position) {
-        case 'inside':
-            x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y + rectHeight / 2 - domHeight / 2;
-            break;
-        case 'top':
-            x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y - domHeight - offset;
-            break;
-        case 'bottom':
-            x = rect.x + rectWidth / 2 - domWidth / 2;
-            y = rect.y + rectHeight + offset;
-            break;
-        case 'left':
-            x = rect.x - domWidth - offset;
-            y = rect.y + rectHeight / 2 - domHeight / 2;
-            break;
-        case 'right':
-            x = rect.x + rectWidth + offset;
-            y = rect.y + rectHeight / 2 - domHeight / 2;
+    case 'inside':
+        x = rect.x + rectWidth / 2 - domWidth / 2;
+        y = rect.y + rectHeight / 2 - domHeight / 2;
+        break;
+    case 'top':
+        x = rect.x + rectWidth / 2 - domWidth / 2;
+        y = rect.y - domHeight - offset;
+        break;
+    case 'bottom':
+        x = rect.x + rectWidth / 2 - domWidth / 2;
+        y = rect.y + rectHeight + offset;
+        break;
+    case 'left':
+        x = rect.x - domWidth - offset;
+        y = rect.y + rectHeight / 2 - domHeight / 2;
+        break;
+    case 'right':
+        x = rect.x + rectWidth + offset;
+        y = rect.y + rectHeight / 2 - domHeight / 2;
     }
     return [x, y];
 }
