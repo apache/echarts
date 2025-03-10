@@ -56061,7 +56061,8 @@
 
         var tooltipModel = ecModel.getComponent('tooltip');
         var renderMode = this._renderMode = getTooltipRenderMode(tooltipModel.get('renderMode'));
-        this._tooltipContent = renderMode === 'richText' ? new TooltipRichContent(api) : new TooltipHTMLContent(api.getDom(), api, {
+        var container = tooltipModel.option.container ? tooltipModel.option.container : api.getDom();
+        this._tooltipContent = renderMode === 'richText' ? new TooltipRichContent(api) : new TooltipHTMLContent(container, api, {
           appendToBody: tooltipModel.get('appendToBody', true)
         });
       };
