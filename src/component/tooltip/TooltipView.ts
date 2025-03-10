@@ -243,6 +243,11 @@ class TooltipView extends ComponentView {
         const api = this._api;
         const triggerOn = tooltipModel.get('triggerOn');
 
+        if (tooltipModel.option.trigger !== 'axis') {
+            // _lastDataByCoordSys is used for axis tooltip.
+            this._lastDataByCoordSys = null;
+        }
+
         // Try to keep the tooltip show when refreshing
         if (this._lastX != null
             && this._lastY != null
@@ -365,11 +370,13 @@ class TooltipView extends ComponentView {
         else if (payload.x != null && payload.y != null) {
             // FIXME
             // should wrap dispatchAction like `axisPointer/globalListener` ?
-            api.dispatchAction({
-                type: 'updateAxisPointer',
-                x: payload.x,
-                y: payload.y
-            });
+            if (tooltipModel.option.trigger === 'axis') {
+                api.dispatchAction({
+                    type: 'updateAxisPointer',
+                    x: payload.x,
+                    y: payload.y
+                });
+            }
 
             this._tryShow({
                 offsetX: payload.x,
