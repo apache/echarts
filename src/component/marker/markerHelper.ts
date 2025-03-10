@@ -146,7 +146,9 @@ export function dataTransform(
     // x y is provided
     if (item.coord == null || !isArray(dims)) {
         item.coord = [];
-        item.value = numCalculate(data, data.mapDimension(dims[1]), item.type);
+        const baseAxis = seriesModel.getBaseAxis();
+        const otherAxis = coordSys.getOtherAxis(baseAxis);
+        item.value = numCalculate(data, data.mapDimension(otherAxis.dim), item.type);
     }
     else {
         // Each coord support max, min, average
