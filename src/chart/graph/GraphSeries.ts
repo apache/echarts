@@ -54,6 +54,7 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
+import Thumbnail, { ThumbnailOption } from './Thumbnail';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -66,7 +67,6 @@ export interface GraphNodeStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
-
 
 interface ExtraEmphasisState {
     focus?: DefaultEmphasisFocus | 'adjacency'
@@ -229,6 +229,8 @@ export interface GraphSeriesOption
      * auto curveness for multiple edge, invalid when `lineStyle.curveness` is set
      */
     autoCurveness?: boolean | number | number[]
+
+    thumbnail?: ThumbnailOption
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
@@ -509,7 +511,9 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
             itemStyle: {
                 borderColor: '#212121'
             }
-        }
+        },
+
+        thumbnail: Thumbnail.defaultOption
     };
 }
 

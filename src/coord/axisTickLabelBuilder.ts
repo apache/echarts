@@ -84,8 +84,11 @@ export function createAxisLabels(axis: Axis): {
     const custom = axis.getLabelModel().get('customValues');
     if (custom) {
         const labelFormatter = makeLabelFormatter(axis);
+        const extent = axis.scale.getExtent();
+        const tickNumbers = tickValuesToNumbers(axis, custom);
+        const ticks = zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1]);
         return {
-            labels: tickValuesToNumbers(axis, custom).map(numval => {
+            labels: zrUtil.map(ticks, numval => {
                 const tick = {value: numval};
                 return {
                     formattedLabel: labelFormatter(tick),
@@ -115,8 +118,10 @@ export function createAxisTicks(axis: Axis, tickModel: AxisBaseModel): {
 } {
     const custom = axis.getTickModel().get('customValues');
     if (custom) {
+        const extent = axis.scale.getExtent();
+        const tickNumbers = tickValuesToNumbers(axis, custom);
         return {
-            ticks: tickValuesToNumbers(axis, custom)
+            ticks: zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1])
         };
     }
     // Only ordinal scale support tick interval

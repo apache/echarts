@@ -147,8 +147,19 @@ function getStackedOnPoints(
     return points;
 }
 
+/**
+ * Filter the null data and extend data for step considering `stepTurnAt`
+ *
+ * @param points data to convert, that may containing null
+ * @param basePoints base data to reference, used only for areaStyle points
+ * @param coordSys coordinate system
+ * @param stepTurnAt 'start' | 'end' | 'middle' | true
+ * @param connectNulls whether to connect nulls
+ * @returns converted point positions
+ */
 function turnPointsIntoStep(
     points: ArrayLike<number>,
+    basePoints: ArrayLike<number> | null,
     coordSys: Cartesian2D | Polar,
     stepTurnAt: 'start' | 'end' | 'middle',
     connectNulls: boolean
@@ -163,12 +174,18 @@ function turnPointsIntoStep(
     const nextPt: number[] = [];
     const filteredPoints = [];
     if (connectNulls) {
-      for (i = 0; i < points.length; i += 2) {
-          if (!isNaN(points[i]) && !isNaN(points[i + 1])) {
-              filteredPoints.push(points[i], points[i + 1]);
-          }
-      }
-      points = filteredPoints;
+        for (i = 0; i < points.length; i += 2) {
+            /**
+             * For areaStyle of stepped lines, `stackedOnPoints` should be
+             * filtered the same as `points` so that the base axis values
+             * should stay the same as the lines above. See #20021
+             */
+            const reference = basePoints || points;
+            if (!isNaN(reference[i]) && !isNaN(reference[i + 1])) {
+                filteredPoints.push(points[i], points[i + 1]);
+            }
+        }
+        points = filteredPoints;
     }
     for (i = 0; i < points.length - 2; i += 2) {
         nextPt[0] = points[i + 2];
@@ -624,6 +641,8 @@ class LineView extends ChartView {
 
         this._symbolDraw = symbolDraw;
         this._lineGroup = lineGroup;
+
+        this._changePolyState = zrUtil.bind(this._changePolyState, this);
     }
 
     render(seriesModel: LineSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
@@ -717,12 +736,11 @@ class LineView extends ChartView {
             );
 
             if (step) {
-                // TODO If stacked series is not step
-                points = turnPointsIntoStep(points, coordSys, step, connectNulls);
-
                 if (stackedOnPoints) {
-                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step, connectNulls);
+                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, points, coordSys, step, connectNulls);
                 }
+                // TODO If stacked series is not step
+                points = turnPointsIntoStep(points, null, coordSys, step, connectNulls);
             }
 
             polyline = this._newPolyline(points);
@@ -801,11 +819,11 @@ class LineView extends ChartView {
                 else {
                     // Not do it in update with animation
                     if (step) {
-                        // TODO If stacked series is not step
-                        points = turnPointsIntoStep(points, coordSys, step, connectNulls);
                         if (stackedOnPoints) {
-                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step, connectNulls);
+                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, points, coordSys, step, connectNulls);
                         }
+                        // TODO If stacked series is not step
+                        points = turnPointsIntoStep(points, null, coordSys, step, connectNulls);
                     }
 
                     polyline.setShape({
@@ -885,9 +903,7 @@ class LineView extends ChartView {
             toggleHoverEmphasis(polygon, focus, blurScope, emphasisDisabled);
         }
 
-        const changePolyState = (toState: DisplayState) => {
-            this._changePolyState(toState);
-        };
+        const changePolyState = this._changePolyState;
 
         data.eachItemGraphicEl(function (el) {
             // Switch polyline / polygon state if element changed its state.
@@ -1337,10 +1353,10 @@ class LineView extends ChartView {
         let stackedOnNext = diff.stackedOnNext;
         if (step) {
             // TODO If stacked series is not step
-            current = turnPointsIntoStep(diff.current, coordSys, step, connectNulls);
-            stackedOnCurrent = turnPointsIntoStep(diff.stackedOnCurrent, coordSys, step, connectNulls);
-            next = turnPointsIntoStep(diff.next, coordSys, step, connectNulls);
-            stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step, connectNulls);
+            stackedOnCurrent = turnPointsIntoStep(diff.stackedOnCurrent, diff.current, coordSys, step, connectNulls);
+            current = turnPointsIntoStep(diff.current, null, coordSys, step, connectNulls);
+            stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, diff.next, coordSys, step, connectNulls);
+            next = turnPointsIntoStep(diff.next, null, coordSys, step, connectNulls);
         }
         // Don't apply animation if diff is large.
         // For better result and avoid memory explosion problems like

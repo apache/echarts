@@ -411,7 +411,8 @@ class GlobalModel extends Model<ECUnitOption> {
                 else {
                     const isSeriesType = mainType === 'series';
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
-                        mainType, resultItem.keyInfo.subType,
+                        mainType,
+                        resultItem.keyInfo.subType,
                         !isSeriesType // Give a more detailed warn later if series don't exists
                     );
 
@@ -540,6 +541,11 @@ echarts.use([${seriesImportName}]);`);
         delete option[OPTION_INNER_KEY];
 
         return option;
+    }
+
+    setTheme(theme: object) {
+        this._theme = new Model(theme);
+        this._resetOption('recreate', null);
     }
 
     getTheme(): Model {
