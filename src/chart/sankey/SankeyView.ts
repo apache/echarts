@@ -32,7 +32,6 @@ import { getECData } from '../../util/innerStore';
 import { isString, retrieve3 } from 'zrender/src/core/util';
 import type { GraphEdge } from '../../data/Graph';
 import RoamController from '../../component/helper/RoamController';
-// eslint-disable-next-line no-duplicate-imports
 import { onIrrelevantElement } from '../../component/helper/cursorHelper';
 import * as roamHelper from '../../component/helper/roamHelper';
 import View from '../../coord/View';
