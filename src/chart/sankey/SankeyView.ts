@@ -111,7 +111,7 @@ class SankeyView extends ChartView {
     readonly type = SankeyView.type;
 
     private _model: SankeySeriesModel;
-
+    private _mainGroup = new graphic.Group();
     private _focusAdjacencyDisabled = false;
 
     private _data: SeriesData;
@@ -125,12 +125,14 @@ class SankeyView extends ChartView {
         this._controllerHost = {
             target: this.group
         } as roamHelper.RoamControllerHost;
+
+        this.group.add(this._mainGroup);
     }
 
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const sankeyView = this;
         const graph = seriesModel.getGraph();
-        const group = this.group;
+        const group = this._mainGroup;
         const layoutInfo = seriesModel.layoutInfo;
         // view width
         const width = layoutInfo.width;
@@ -144,15 +146,7 @@ class SankeyView extends ChartView {
 
         group.removeAll();
 
-        group.x = layoutInfo.x;
-        group.y = layoutInfo.y;
-
-        const viewCoordSys = seriesModel.coordinateSystem = new View();
-        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
-        viewCoordSys.setBoundingRect(layoutInfo.x, layoutInfo.y, width, height);
-        viewCoordSys.setCenter(seriesModel.get('center'), api);
-        viewCoordSys.setZoom(seriesModel.get('zoom'));
-
+        this._updateViewCoordSys(seriesModel, api);
         this._updateController(seriesModel, ecModel, api);
 
         // generate a bezire Curve for each edge
@@ -417,6 +411,23 @@ class SankeyView extends ChartView {
                 // Only update label layout on zoom
                 api.updateLabelLayout();
             });
+    }
+
+    private _updateViewCoordSys(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
+        const layoutInfo = seriesModel.layoutInfo;
+        const width = layoutInfo.width;
+        const height = layoutInfo.height;
+
+        const viewCoordSys = seriesModel.coordinateSystem = new View();
+        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
+
+        viewCoordSys.setBoundingRect(0, 0, width, height);
+
+        viewCoordSys.setCenter(seriesModel.get('center'), api);
+        viewCoordSys.setZoom(seriesModel.get('zoom'));
+
+        this._mainGroup.x = layoutInfo.x;
+        this._mainGroup.y = layoutInfo.y;
     }
 }
 

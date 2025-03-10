@@ -41,7 +41,7 @@ import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
-import View from '../../coord/View';
+import type View from '../../coord/View';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
@@ -216,6 +216,14 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         const dataItem = nodes[dataIndex];
         dataItem.localX = localPosition[0];
         dataItem.localY = localPosition[1];
+    }
+
+    setCenter(center: number[]) {
+        this.option.center = center;
+    }
+
+    setZoom(zoom: number) {
+        this.option.zoom = zoom;
     }
 
     /**
