@@ -119,11 +119,15 @@ under the License.
             };
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Sankey Roam'
+                    'Sankey Roam',
+                    'Pan and then click "Update" and the center should be kept'
                 ],
                 option: option,
                 // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                buttons: [{text: 'Update', onclick: function () {
+                    option.series.links[0].value = Math.random() * 10;
+                    chart.setOption(option);
+                }}],
                 // recordCanvas: true,
             });
         });
