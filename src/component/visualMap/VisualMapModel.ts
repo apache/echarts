@@ -91,7 +91,7 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
     /**
      * Dimension to be encoded
      */
-    dimension?: number
+    dimension?: number | number[]
 
     /**
      * Visual configuration for the data in selection
@@ -406,8 +406,17 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     //     }
     // }
 
-    getDataDimensionIndex(data: SeriesData): DimensionIndex {
+    getDimension(seriesIndex: number): number {
         const optDim = this.option.dimension;
+        if (isArray(optDim) && seriesIndex != null) {
+            const idx = this.getTargetSeriesIndices().indexOf(seriesIndex);
+            return optDim[idx] ?? optDim[optDim.length - 1];
+        }
+        return [].concat(optDim)[0];
+    }
+
+    getDataDimensionIndex(data: SeriesData, seriesIndex: number): DimensionIndex {
+        const optDim = this.getDimension(seriesIndex);
 
         if (optDim != null) {
             return data.getDimensionIndex(optDim);

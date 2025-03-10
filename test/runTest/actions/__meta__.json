@@ -238,6 +238,7 @@
   "universalTransition2": 3,
   "universalTransition3": 2,
   "visualMap-categories": 1,
+  "visualmap-dimension": 3,
   "visualMap-multi-continuous": 1,
   "visualMap-on-data": 1,
   "visualMap-selectMode": 2

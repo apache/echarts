@@ -221,7 +221,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
             const dataIndices: number[] = [];
             const data = seriesModel.getData();
 
-            data.each(this.getDataDimensionIndex(data), function (value: number, dataIndex) {
+            data.each(this.getDataDimensionIndex(data, seriesModel.seriesIndex), function (value: number, dataIndex) {
                 range[0] <= value && value <= range[1] && dataIndices.push(dataIndex);
             }, this);
 
