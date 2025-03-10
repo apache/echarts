@@ -235,7 +235,13 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
                 // minus a tiny value 1e-4 in double side to avoid being clipped unexpectedly
                 // r == r0 contain nothing
                 return r !== r0 && (d2 - EPSILON) <= r * r && (d2 + EPSILON) >= r0 * r0;
-            }
+            },
+
+            // As the bounding box
+            x: this.cx - radiusExtent[1],
+            y: this.cy - radiusExtent[1],
+            width: radiusExtent[1] * 2,
+            height: radiusExtent[1] * 2
         };
     }
 
