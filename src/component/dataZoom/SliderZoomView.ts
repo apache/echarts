@@ -999,7 +999,15 @@ class SliderZoomView extends DataZoomView {
             linearMap(brushShape.x + brushShape.width, viewExtend, percentExtent, true)
         ]);
 
-        this._handleEnds = [brushShape.x, brushShape.x + brushShape.width];
+        // Restrict range.
+        const minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+
+        sliderMove(0, this._range, viewExtend, 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
+
+        this._handleEnds = [
+            linearMap(this._range[0], [0, 100], viewExtend, true),
+            linearMap(this._range[1], [0, 100], viewExtend, true)
+        ];
 
         this._updateView();
 
