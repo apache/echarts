@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isString, indexOf, each, bind, isFunction, isArray, isDom } from 'zrender/src/core/util';
+import { isString, indexOf, each, bind, isFunction, isArray, isDom, retrieve2 } from 'zrender/src/core/util';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
@@ -151,9 +151,11 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
 
     cssText.push('font:' + textStyleModel.getFont());
 
+    // @ts-ignore, leave it to the tooltip refactor.
+    const lineHeight = retrieve2(textStyleModel.get('lineHeight'), Math.round(fontSize * 3 / 2));
+
     fontSize
-        // @ts-ignore, leave it to the tooltip refactor.
-        && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
+        && cssText.push('line-height:' + lineHeight + 'px');
 
     const shadowColor = textStyleModel.get('textShadowColor');
     const shadowBlur = textStyleModel.get('textShadowBlur') || 0;
@@ -461,10 +463,13 @@ class TooltipHTMLContent {
 
     getSize() {
         const el = this.el;
-        return [el.offsetWidth, el.offsetHeight];
+        return el ? [el.offsetWidth, el.offsetHeight] : [0, 0];
     }
 
     moveTo(zrX: number, zrY: number) {
+        if (!this.el) {
+            return;
+        }
         const styleCoord = this._styleCoord;
         makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
