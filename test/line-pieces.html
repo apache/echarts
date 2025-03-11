@@ -71,14 +71,23 @@ under the License.
                             color: 'blue',
                             type: 'dash'
                         }
-                    }]
+                    }],
+                    emphasis: {
+                        linePieces: [{
+                            startDataIndices: [4, 3],
+                            lineStyle: {
+                                color: 'green',
+                                width: 2
+                            }
+                        }]
+                    }
                 }
             };
 
             var chart = testHelper.create(echarts, 'main0', {
                 title: [
                     'Test Case Description of main0',
-                    '(Muliple lines and **emphasis** are supported in description)'
+                    '(Muliple lines and **emphasis** are supported )'
                 ],
                 option: option
                 // height: 300,

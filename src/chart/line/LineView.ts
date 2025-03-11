@@ -616,13 +616,13 @@ class LineView extends ChartView {
     _symbolDraw: SymbolDraw;
 
     _lineGroup: graphic.Group;
+    _compoundLinesGroup: graphic.Group;
     _coordSys: Cartesian2D | Polar;
 
     _endLabel: graphic.Text;
 
     _polyline: ECPolyline;
     _polygon: ECPolygon;
-    _linePieces: graphic.CompoundPath[];
 
     _stackedOnPoints: ArrayLike<number>;
     _points: ArrayLike<number>;
@@ -642,7 +642,9 @@ class LineView extends ChartView {
 
         this._symbolDraw = symbolDraw;
         this._lineGroup = lineGroup;
-        this._linePieces = [];
+
+        this._compoundLinesGroup = new graphic.Group();
+        this.group.add(this._compoundLinesGroup);
 
         this._changePolyState = zrUtil.bind(this._changePolyState, this);
     }
@@ -698,6 +700,11 @@ class LineView extends ChartView {
             symbolDraw.remove();
         }
 
+        const hadCompoundLines = this._compoundLinesGroup.childCount() > 0;
+        if (hadCompoundLines) {
+            this._compoundLinesGroup.removeAll();
+        }
+
         group.add(lineGroup);
 
         // FIXME step not support polar
@@ -723,7 +730,10 @@ class LineView extends ChartView {
             || data.getVisual('style')[data.getVisual('drawType')];
         // Initialization animation or coordinate system changed
         if (
-            !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
+            !((polyline || hadCompoundLines)
+                && prevCoordSys.type === coordSys.type
+                && step === this._step
+            )
         ) {
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
@@ -758,7 +768,6 @@ class LineView extends ChartView {
                     points,
                     valueOrigin
                 );
-                return;
             }
             else {
                 polyline = this._newPolyline(points);
@@ -1106,11 +1115,10 @@ class LineView extends ChartView {
         points: ArrayLike<number>,
         valueOrigin: LineSeriesOption['areaStyle']['origin']
     ) {
-        this._linePieces = [];
         const dataCount = seriesModel.getData().count();
         // The segments that are not in pieces takes the last piece index
         const NOT_IN_PIECES_INDEX = linePieces.length;
-        const paths: number[][][] = []
+        const paths: number[][][] = [];
         for (let i = 0; i < dataCount - 1; ++i) {
             let pieceId = NOT_IN_PIECES_INDEX;
             for (let j = 0; j < linePieces.length; ++j) {
@@ -1127,7 +1135,7 @@ class LineView extends ChartView {
                 points[i * 2 + 1],
                 points[i * 2 + 2],
                 points[i * 2 + 3]
-            ])
+            ]);
         }
 
         const excludeLast = true; // TODO: only for debug
@@ -1152,8 +1160,7 @@ class LineView extends ChartView {
                     segmentIgnoreThreshold: 2,
                     z2: 10
                 });
-                this._linePieces.push(path);
-                this._lineGroup.add(path);
+                this._compoundLinesGroup.add(path);
             }
         }
     }
