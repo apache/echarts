@@ -768,6 +768,9 @@ class LineView extends ChartView {
                     points,
                     valueOrigin
                 );
+
+                // TODO: should not return
+                return;
             }
             else {
                 polyline = this._newPolyline(points);

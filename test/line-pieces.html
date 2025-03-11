@@ -89,9 +89,15 @@ under the License.
                     'Test Case Description of main0',
                     '(Muliple lines and **emphasis** are supported )'
                 ],
-                option: option
+                option: option,
                 // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                buttons: [{
+                    text: 'Update',
+                    onclick: function () {
+                        option.series.data[3] = [30, Math.random() * 100];
+                        chart.setOption(option);
+                    }
+                }],
                 // recordCanvas: true,
             });
         });
