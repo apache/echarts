@@ -34,7 +34,8 @@ interface MarkLineStateOption {
      * itemStyle for symbol
      */
     itemStyle?: ItemStyleOption
-    label?: SeriesLineLabelOption
+    label?: SeriesLineLabelOption,
+    z2?: number
 }
 interface MarkLineDataItemOptionBase extends MarkLineStateOption,
     StatesOptionMixin<MarkLineStateOption, StatesMixinBase> {
