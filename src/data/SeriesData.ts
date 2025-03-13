@@ -113,7 +113,7 @@ export interface DefaultDataVisual {
     symbolRotate?: number
     symbolKeepAspect?: boolean
     symbolOffset?: string | number | (string | number)[]
-
+    z2: number,
     liftZ?: number
     // For legend.
     legendIcon?: string
