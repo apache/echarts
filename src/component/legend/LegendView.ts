@@ -51,6 +51,7 @@ import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import { getECData } from '../../util/innerStore';
+import Element from 'zrender/src/Element';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -177,6 +178,7 @@ class LegendView extends ComponentView {
         const contentGroup = this.getContentGroup();
         const legendDrawnMap = zrUtil.createHashMap();
         const selectMode = legendModel.get('selectedMode');
+        const triggerEvent = legendModel.get('triggerEvent');
 
         const excludeSeriesId: string[] = [];
         ecModel.eachRawSeries(function (seriesModel) {
@@ -234,6 +236,11 @@ class LegendView extends ComponentView {
                         ecData.ssrType = 'legend';
                     });
                 }
+                itemGroup.eachChild(child => {
+                    if (triggerEvent) {
+                        this.packEventData(child, legendModel, seriesModel, dataIndex, name);
+                    }
+                });
 
                 legendDrawnMap.set(name, true);
             }
@@ -287,7 +294,11 @@ class LegendView extends ComponentView {
                                 ecData.ssrType = 'legend';
                             });
                         }
-
+                        itemGroup.eachChild(child => {
+                            if (triggerEvent) {
+                                this.packEventData(child, legendModel, seriesModel, dataIndex, name);
+                            }
+                        });
                         legendDrawnMap.set(name, true);
                     }
 
@@ -307,7 +318,22 @@ class LegendView extends ComponentView {
             this._createSelector(selector, legendModel, api, orient, selectorPosition);
         }
     }
-
+    private packEventData(
+        el: Element,
+        legendModel: LegendModel,
+        seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin>,
+        dataIndex: number,
+        name: string
+    ) {
+        const eventData = {
+            componentType: 'legend',
+            componentIndex: legendModel.componentIndex,
+            dataIndex,
+            value: name,
+            seriesIndex: seriesModel.seriesIndex,
+        };
+        getECData(el).eventData = eventData;
+    };
     private _createSelector(
         selector: LegendSelectorButtonOption[],
         legendModel: LegendModel,
