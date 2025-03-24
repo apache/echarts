@@ -18,7 +18,8 @@
 */
 
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, indexOf
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, indexOf,
+    map
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../../util/graphic';
 import { setDefaultStateProxy, toggleHoverEmphasis } from '../../util/states';
@@ -56,7 +57,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
+import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import {
     convertToEC4StyleForCustomSerise,
@@ -87,7 +88,8 @@ import CustomSeriesModel, {
     PrepareCustomInfo,
     CustomPathOption,
     CustomRootElementOption,
-    CustomSeriesOption
+    CustomSeriesOption,
+    CustomCompoundPathOption
 } from './CustomSeries';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import {
@@ -352,7 +354,36 @@ function createEl(elOption: CustomElementOption): Element {
         el = new graphicUtil.Group();
     }
     else if (graphicType === 'compoundPath') {
-        throw new Error('"compoundPath" is not supported yet.');
+        const shape = (elOption as CustomCompoundPathOption).shape;
+        if (!shape || !shape.paths) {
+            let errMsg = '';
+            if (__DEV__) {
+                errMsg = 'shape.paths must be specified in compoundPath';
+            }
+            throwError(errMsg);
+        }
+        const paths = map(shape.paths as Path[], function (path) {
+            if (path.type === 'path') {
+                return graphicUtil.makePath(path.shape.pathData, path, null);
+            }
+            const Clz = graphicUtil.getShapeClass(path.type);
+            if (!Clz) {
+                if (typeof path.buildPath === 'function') {
+                    return path;
+                }
+                let errMsg = '';
+                if (__DEV__) {
+                    errMsg = 'graphic type "' + graphicType + '" can not be found.';
+                }
+                throwError(errMsg);
+            }
+            return new Clz();
+        });
+        el = new graphicUtil.CompoundPath({
+            shape: {
+                paths
+            }
+        });
     }
     else {
         const Clz = graphicUtil.getShapeClass(graphicType);
@@ -1148,7 +1179,7 @@ function doCreateOrUpdateAttachedTx(
     attachedTxInfo: AttachedTxInfo
 ): void {
     // Group does not support textContent temporarily until necessary.
-    if (el.isGroup) {
+    if (el.isGroup || el.type === 'compoundPath') {
         return;
     }
 
