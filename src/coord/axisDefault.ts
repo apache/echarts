@@ -65,7 +65,8 @@ const defaultOption: AxisBaseOption = {
         },
         // The arrow at both ends the the axis.
         symbol: ['none', 'none'],
-        symbolSize: [10, 15]
+        symbolSize: [10, 15],
+        breakLine: true,
     },
     axisTick: {
         show: true,
@@ -120,7 +121,8 @@ const defaultOption: AxisBaseOption = {
         zigzagAmplitude: 4,
         zigzagMinSpan: 4,
         zigzagMaxSpan: 20,
-        expandOnClick: true
+        zigzagZ: 100,
+        expandOnClick: true,
     }
 };
 

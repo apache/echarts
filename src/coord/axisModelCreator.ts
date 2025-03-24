@@ -25,11 +25,16 @@ import {
     fetchLayoutMode
 } from '../util/layout';
 import OrdinalMeta from '../data/OrdinalMeta';
-import { DimensionName, BoxLayoutOptionMixin, OrdinalRawValue } from '../util/types';
+import {
+    DimensionName, BoxLayoutOptionMixin, OrdinalRawValue,
+} from '../util/types';
 import { AxisBaseOption, AXIS_TYPES, CategoryAxisBaseOption } from './axisCommonTypes';
 import GlobalModel from '../model/Global';
-import { each, merge } from 'zrender/src/core/util';
+import { each, find, merge } from 'zrender/src/core/util';
 import { EChartsExtensionInstallRegisters } from '../extension';
+import { AxisBreakPayloadBreak } from '../component/axis/axisAction';
+import { warn } from '../util/log';
+import { identifyAxisBreak } from '../scale/break';
 
 
 type Constructor<T> = new (...args: any[]) => T;
@@ -37,6 +42,7 @@ type Constructor<T> = new (...args: any[]) => T;
 export interface AxisModelExtendedInCreator {
     getCategories(rawData?: boolean): OrdinalRawValue[] | CategoryAxisBaseOption['data']
     getOrdinalMeta(): OrdinalMeta
+    updateAxisBreaks(inpuBreaks: AxisBreakPayloadBreak[]): void;
 }
 
 /**
@@ -112,6 +118,26 @@ export default function axisModelCreator<
             getOrdinalMeta(): OrdinalMeta {
                 return this.__ordinalMeta;
             }
+
+            updateAxisBreaks(inputBreaks: AxisBreakPayloadBreak[]): void {
+                each(inputBreaks, inputBrk => {
+                    if (!inputBrk) {
+                        return;
+                    }
+                    const breakOption = find(
+                        this.get('breaks', true),
+                        brkOption => identifyAxisBreak(brkOption, inputBrk)
+                    );
+                    if (!breakOption) {
+                        if (__DEV__) {
+                            warn(`Can not find axis break by start: ${inputBrk.start}, end: ${inputBrk.end}`);
+                        }
+                        return;
+                    }
+                    breakOption.isExpanded = !!inputBrk.isExpanded;
+                });
+            }
+
         }
 
         registers.registerComponentModel(AxisModel);

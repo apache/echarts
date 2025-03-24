@@ -1,17 +1,23 @@
-import { Payload } from '../../util/types';
+import { ModelFinderIdQuery, ModelFinderIndexQuery, ModelFinderNameQuery } from '../../util/model';
+import { Payload, ScaleBreakOption, ScaleBreakOptionIdentifier } from '../../util/types';
 
 export interface AxisBreakPayload extends Payload {
-    // Add any specific payload properties if needed
+    xAxisIndex?: ModelFinderIndexQuery,
+    xAxisId?: ModelFinderIdQuery,
+    xAxisName?: ModelFinderNameQuery
+    yAxisIndex?: ModelFinderIndexQuery,
+    yAxisId?: ModelFinderIdQuery,
+    yAxisName?: ModelFinderNameQuery,
+    singleAxisIndex?: ModelFinderIndexQuery,
+    singleAxisId?: ModelFinderIdQuery,
+    singleAxisName?: ModelFinderNameQuery,
+
+    breaks: AxisBreakPayloadBreak[];
 }
+export type AxisBreakPayloadBreak = ScaleBreakOptionIdentifier & Pick<ScaleBreakOption, 'isExpanded'>;
 
-export const axisBreakActionInfo = {
-    type: 'axisBreakExpand',
-    event: 'axisBreakExpanded',
-    update: 'update'
-};
-
-export const axisBreakRevertActionInfo = {
-    type: 'axisBreakRevert',
-    event: 'axisBreakReverted',
+export const axisBreakUpdateActionInfo = {
+    type: 'updateAxisBreak',
+    event: 'axisBreakUpdated',
     update: 'update'
 };

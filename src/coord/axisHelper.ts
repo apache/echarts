@@ -32,21 +32,22 @@ import TimeScale from '../scale/Time';
 import Model from '../model/Model';
 import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
-import Axis from './Axis';
+import type Axis from './Axis';
 import {
     AxisBaseOption,
-    AxisLabelBreakFormatter,
     CategoryAxisBaseOption,
     LogAxisBaseOption,
     TimeAxisLabelFormatterOption,
-    ValueAxisBaseOption
+    ValueAxisBaseOption,
+    AxisBaseOptionCommon
 } from './axisCommonTypes';
 import CartesianAxisModel, { CartesianAxisPosition, inverseCartesianAxisPositionMap } from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
-import { Dictionary, DimensionName, ScaleTick, TimeScaleTick } from '../util/types';
+import { Dictionary, DimensionName, ScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
 import Axis2D from './cartesian/Axis2D';
+import { parseTimeAxisLabelFormatter } from '../util/time';
 
 
 type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
@@ -168,6 +169,7 @@ export function niceScaleExtent(
     const interval = model.get('interval');
     const isIntervalOrTime = scaleType === 'interval' || scaleType === 'time';
 
+    scale.setBreaksFromOption(retrieveAxisBreaksOption(model));
     scale.setExtent(extent[0], extent[1]);
     scale.calcNiceExtent({
         splitNumber: splitNumber,
@@ -206,13 +208,10 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
                 return new TimeScale({
                     locale: model.ecModel.getLocaleModel(),
                     useUTC: model.ecModel.get('useUTC'),
-                    breaks: model.get('breaks')
                 });
             default:
                 // case 'value'/'interval', 'log', or others.
-                return new (Scale.getClass(axisType) || IntervalScale)({
-                    breaks: model.get('breaks')
-                });
+                return new (Scale.getClass(axisType) || IntervalScale)();
         }
     }
 }
@@ -236,29 +235,21 @@ export function ifAxisCrossZero(axis: Axis) {
  *         return: {string} label string.
  */
 export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) => string {
-    const labelModel = axis.getLabelModel() as Model<ValueAxisBaseOption['axisLabel']>;
-    const labelFormatter = labelModel.get('formatter');
-    const breakLabelFormatter = labelModel.get('breakFormatter');
+    const labelFormatter = (axis.getLabelModel() as Model<ValueAxisBaseOption['axisLabel']>)
+        .get('formatter');
     const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
 
     if (axis.scale.type === 'time') {
-        return (function (tpl, breakTpl) {
+        return (function (tpl) {
+            const parsed = parseTimeAxisLabelFormatter(tpl);
             return function (tick: ScaleTick, idx: number) {
-                const formatter = tick.breakStart == null || !breakTpl
-                    ? tpl
-                    : breakTpl as TimeAxisLabelFormatterOption;
-                const result = (axis.scale as TimeScale).getFormattedLabel(tick, idx, formatter);
-                return result;
+                return (axis.scale as TimeScale).getFormattedLabel(tick, idx, parsed);
             };
-        })(labelFormatter as TimeAxisLabelFormatterOption, breakLabelFormatter);
+        })(labelFormatter as TimeAxisLabelFormatterOption);
     }
     else if (zrUtil.isString(labelFormatter)) {
-        return (function (tpl, breakLabelFormatter: AxisLabelBreakFormatter) {
-            return function (tick: ScaleTick, idx: number) {
-                if (tick.breakStart != null && breakLabelFormatter) {
-                    return breakLabelFormatter(tick.value, idx, tick.breakStart, tick.breakEnd, tick.breakGap);
-                }
-
+        return (function (tpl) {
+            return function (tick: ScaleTick) {
                 // For category axis, get raw value; for numeric axis,
                 // get formatted label like '1,333,444'.
                 const label = axis.scale.getLabel(tick);
@@ -266,10 +257,10 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
 
                 return text;
             };
-        })(labelFormatter, breakLabelFormatter);
+        })(labelFormatter);
     }
     else if (zrUtil.isFunction(labelFormatter)) {
-        return (function (cb, breakCb: AxisLabelBreakFormatter) {
+        return (function (cb) {
             return function (tick: ScaleTick, idx: number) {
                 // The original intention of `idx` is "the index of the tick in all ticks".
                 // But the previous implementation of category axis do not consider the
@@ -280,44 +271,22 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
                 if (categoryTickStart != null) {
                     idx = tick.value - categoryTickStart;
                 }
-                if (tick.breakStart != null && breakCb) {
-                    return breakCb(
-                        tick.value,
-                        idx,
-                        tick.breakStart,
-                        tick.breakEnd,
-                        tick.breakGap
-                    );
-                }
                 return cb(
                     getAxisRawValue(axis, tick) as number,
                     idx,
-                    (tick as TimeScaleTick).level != null ? {
-                        level: (tick as TimeScaleTick).level
-                    } : null
+                    {
+                        break: tick.break ? {
+                            type: tick.break.type,
+                            start: tick.break.parsedBreak.vmin,
+                            end: tick.break.parsedBreak.vmax,
+                        } : undefined
+                    }
                 );
             };
-        })(
-            labelFormatter as (...args: any[]) => string,
-            breakLabelFormatter as AxisLabelBreakFormatter
-        );
+        })(labelFormatter as (...args: any[]) => string);
     }
     else {
         return function (tick: ScaleTick) {
-            if (tick.breakStart != null) {
-                if (breakLabelFormatter) {
-                    return breakLabelFormatter(
-                        tick.value,
-                        null,
-                        tick.breakStart,
-                        tick.breakEnd,
-                        tick.breakGap
-                    );
-                }
-                else if (tick.breakGap === 0) {
-                    return tick.breakStart + ' ~ ' + tick.breakEnd;
-                }
-            }
             return axis.scale.getLabel(tick);
         };
     }
@@ -586,4 +555,16 @@ export function computeReservedSpace(
         }
     }
     return reservedSpace;
+}
+
+export function retrieveAxisBreaksOption(model: AxisBaseModel): AxisBaseOptionCommon['breaks'] {
+    return isSupportAxisBreak(model.axis)
+        ? model.get('breaks', true)
+        : null;
+}
+
+function isSupportAxisBreak(axis: Axis): boolean {
+    // The polar radius axis can also support break feasibly. Do not do it until the requirements are met.
+    return (axis.dim === 'x' || axis.dim === 'y' || axis.dim === 'z' || axis.dim === 'single')
+        && axis.type !== 'category';
 }

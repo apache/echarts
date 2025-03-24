@@ -18,38 +18,100 @@
 */
 
 import * as graphic from '../../util/graphic';
-import GridModel from '../../coord/cartesian/GridModel';
 import type SingleAxisModel from '../../coord/single/AxisModel';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
-import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import ExtensionAPI from '../../core/ExtensionAPI';
-import { ExtendedElementProps } from '../../core/ExtendedElement';
+import type { AxisBaseModel } from '../../coord/AxisBaseModel';
+import type ExtensionAPI from '../../core/ExtensionAPI';
+import type { ExtendedElementProps } from '../../core/ExtendedElement';
+import type CartesianAxisView from './CartesianAxisView';
+import { makeInner } from '../../util/model';
+import type { NullUndefined, ParsedScaleBreak } from '../../util/types';
+import { assert, each, extend, find, map } from 'zrender/src/core/util';
+import { identifyAxisBreak, retrieveAxisBreakPairs, serializeAxisBreakIdentifier } from '../../scale/break';
+import type { PathProps } from 'zrender/src/graphic/Path';
+import { subPixelOptimizeLine } from 'zrender/src/graphic/helper/subPixelOptimize';
+import { applyTransform } from 'zrender/src/core/vector';
+import * as matrixUtil from 'zrender/src/core/matrix';
+import type { AxisBreakPayload } from './axisAction';
+import { detectAxisLabelPairIntersection } from '../../label/labelLayoutHelper';
+import type SingleAxisView from './SingleAxisView';
+import type { AxisBuilderCfg } from './AxisBuilder';
+
+/**
+ * The zigzag shapes for axis breaks are generated according to some random
+ * factors. It should persist as much as possible to avoid constantly
+ * changing by every user operation.
+ */
+export const viewCache = makeInner<{
+    visualList: CacheBreakVisual[];
+}, CartesianAxisView | SingleAxisView>();
+type CacheBreakVisual = {
+    parsedBreak: ParsedScaleBreak;
+    zigzagRandomList: number[];
+    shouldRemove: boolean;
+};
+
+function ensureVisualInCache(
+    visualList: CacheBreakVisual[],
+    targetBreak: ParsedScaleBreak
+): CacheBreakVisual {
+    let visual = find(
+        visualList,
+        item => identifyAxisBreak(item.parsedBreak.breakOption, targetBreak.breakOption)
+    );
+    if (!visual) {
+        visualList.push(visual = {
+            zigzagRandomList: [],
+            parsedBreak: targetBreak,
+            shouldRemove: false
+        });
+    }
+    return visual;
+}
+
+function resetCacheVisualRemoveFlag(visualList: CacheBreakVisual[]): void {
+    each(visualList, item => (item.shouldRemove = true));
+}
+
+function removeUnusedCacheVisual(visualList: CacheBreakVisual[]): void {
+    for (let i = visualList.length - 1; i >= 0; i--) {
+        if (visualList[i].shouldRemove) {
+            visualList.splice(i, 1);
+        }
+    }
+}
 
 export function rectCoordBuildBreakAxis(
     axisGroup: graphic.Group,
-    axisModel: SingleAxisModel | CartesianAxisModel,
-    gridModel: GridModel | SingleAxisModel,
+    axisView: CartesianAxisView | SingleAxisView,
+    axisModel: CartesianAxisModel | SingleAxisModel,
+    coordSysRect: graphic.BoundingRect,
     api: ExtensionAPI
-): graphic.Group {
+): void {
     const axis = axisModel.axis;
-    const isOrdinal = axis.scale.type === 'ordinal';
-    const axisMax = axis.scale.getExtent()[1];
 
     if (axis.scale.isBlank()) {
-        return null;
+        return;
     }
 
     const breakAreaModel = (axisModel as AxisBaseModel).getModel('breakArea');
-    const breaks = axis.scale.getBreaks();
-    if (!breaks.length) {
-        return null;
+    const breakPairs = retrieveAxisBreakPairs(
+        axis.scale.getTicks({breakTicks: 'only_break'}),
+        tick => tick.break
+    );
+    if (!breakPairs.length) {
+        return;
     }
-    const zigzagAmplitude = breakAreaModel.get('zigzagAmplitude');
-    const zigzagMinSpan = breakAreaModel.get('zigzagMinSpan');
-    const zigzagMaxSpan = breakAreaModel.get('zigzagMaxSpan');
-    const expandOnClick = breakAreaModel.get('expandOnClick');
 
-    const gridRect = gridModel.coordinateSystem.getRect();
+    const zigzagAmplitude = breakAreaModel.get('zigzagAmplitude');
+    let zigzagMinSpan = breakAreaModel.get('zigzagMinSpan');
+    let zigzagMaxSpan = breakAreaModel.get('zigzagMaxSpan');
+    // Use arbitrary value to avoid dead loop if user gives inappropriate settings.
+    zigzagMinSpan = Math.max(2, zigzagMinSpan || 0);
+    zigzagMaxSpan = Math.max(zigzagMinSpan, zigzagMaxSpan || 0);
+    const expandOnClick = breakAreaModel.get('expandOnClick');
+    const zigzagZ = breakAreaModel.get('zigzagZ');
+
     const itemStyleModel = breakAreaModel.getModel('itemStyle');
     const itemStyle = itemStyleModel.getItemStyle();
     const borderColor = itemStyle.stroke;
@@ -61,76 +123,65 @@ export function rectCoordBuildBreakAxis(
         ignoreModelZ: true
     } as ExtendedElementProps);
 
-    const isHorizontal = axis.isHorizontal();
-    const clipEl = new graphic.Rect({
-        shape: {
-            x: gridRect.x - (isHorizontal ? zigzagAmplitude : 0),
-            y: gridRect.y - (isHorizontal ? 0 : zigzagAmplitude),
-            width: gridRect.width + (isHorizontal ? zigzagAmplitude * 2 : 0),
-            height: gridRect.height + (isHorizontal ? 0 : zigzagAmplitude * 2)
-        }
-    });
+    const isAxisHorizontal = axis.isHorizontal();
 
-    for (let i = 0; i < breaks.length; i++) {
-        const brk = breaks[i];
-        if (brk.isExpanded) {
-            continue;
-        }
+    const cachedVisualList = viewCache(axisView).visualList || (viewCache(axisView).visualList = []);
+    resetCacheVisualRemoveFlag(cachedVisualList);
+
+    for (let i = 0; i < breakPairs.length; i++) {
+        const parsedBreak = breakPairs[i][0].break.parsedBreak;
 
         // Even if brk.gap is 0, we should also draw the breakArea because
         // border is sometimes required to be visible (as a line)
-        let startCoord;
-        let endCoord;
-        const end = brk.end - (isOrdinal ? 1 : 0);
-        const isEndBreak = end >= axisMax;
-        if (isEndBreak) {
-            // The break area is bigger than the max value
-            startCoord = axis.toGlobalCoord(
-                axis.dataToCoordWithBreaks(axisMax, false)
-            );
-            endCoord = startCoord;
+        const coords: number[] = [];
+        coords[0] = axis.toGlobalCoord(axis.dataToCoord(parsedBreak.vmin, true));
+        coords[1] = axis.toGlobalCoord(axis.dataToCoord(parsedBreak.vmax, true));
+        if (coords[1] < coords[0]) {
+            coords.reverse();
         }
-        else {
-            startCoord = axis.toGlobalCoord(
-                axis.dataToCoordWithBreaks(brk.start, false)
-            );
-            endCoord = axis.toGlobalCoord(
-                axis.dataToCoordWithBreaks(end, false)
-            );
-        }
+
+        const cachedVisual = ensureVisualInCache(cachedVisualList, parsedBreak);
+        cachedVisual.shouldRemove = false;
         const breakGroup = new graphic.Group();
 
         addZigzagShapes(
+            cachedVisual.zigzagRandomList,
             breakGroup,
-            clipEl,
-            startCoord,
-            endCoord,
-            isHorizontal,
-            brk.gap === 0 || brk.end === brk.start
+            coords[0],
+            coords[1],
+            isAxisHorizontal,
+            parsedBreak,
         );
 
         if (expandOnClick) {
             breakGroup.on('click', () => {
-                axis.scale.expandBreak(brk.start, brk.end);
-                api.dispatchAction({
-                    type: 'axisBreakExpand',
-                    breakStart: brk.start,
-                    breakEnd: brk.end,
-                });
+                const payload: AxisBreakPayload = {
+                    type: 'updateAxisBreak',
+                    breaks: [{
+                        start: parsedBreak.breakOption.start,
+                        end: parsedBreak.breakOption.end,
+                        isExpanded: true,
+                    }]
+                };
+                payload[`${axis.dim}AxisIndex`] = axisModel.componentIndex;
+                api.dispatchAction(payload);
             });
         }
+        breakGroup.silent = !expandOnClick;
 
         group.add(breakGroup);
     }
     axisGroup.add(group);
 
+    removeUnusedCacheVisual(cachedVisualList);
+
     function addZigzagShapes(
+        zigzagRandomList: number[],
         breakGroup: graphic.Group,
-        clipEl: graphic.Path,
         startCoord: number,
         endCoord: number,
-        isHorizontal: boolean,
-        isGapZero: boolean
+        isAxisHorizontal: boolean,
+        trimmedBreak: ParsedScaleBreak
     ) {
         const polylineStyle = {
             stroke: borderColor,
@@ -138,58 +189,106 @@ export function rectCoordBuildBreakAxis(
             lineDash: borderType,
             fill: 'none'
         };
-        const x = isHorizontal ? startCoord : gridRect.x;
-        const y = isHorizontal ? gridRect.y : startCoord;
-        const width = isHorizontal ? endCoord - startCoord : gridRect.width;
-        const height = isHorizontal ? gridRect.height : endCoord - startCoord;
+
+        const XY = ['x', 'y'] as const;
+        const WH = ['width', 'height'] as const;
+
+        const dimBrk = isAxisHorizontal ? 0 : 1;
+        const dimZigzag = 1 - dimBrk;
+        const zigzagCoordMax = coordSysRect[XY[dimZigzag]] + coordSysRect[WH[dimZigzag]];
+
+        // Apply `subPixelOptimizeLine` for alignning with break ticks.
+        function subPixelOpt(brkCoord: number): number {
+            const pBrk: number[] = [];
+            const dummyP: number[] = [];
+            pBrk[dimBrk] = dummyP[dimBrk] = brkCoord;
+            pBrk[dimZigzag] = coordSysRect[XY[dimZigzag]];
+            dummyP[dimZigzag] = zigzagCoordMax;
+            const dummyShape = {x1: pBrk[0], y1: pBrk[1], x2: dummyP[0], y2: dummyP[1]};
+            subPixelOptimizeLine(dummyShape, dummyShape, {lineWidth: 1});
+            pBrk[0] = dummyShape.x1;
+            pBrk[1] = dummyShape.y1;
+            return pBrk[dimBrk];
+        }
+        startCoord = subPixelOpt(startCoord);
+        endCoord = subPixelOpt(endCoord);
 
         const pointsA = [];
         const pointsB = [];
-        let current = isHorizontal ? y : x;
-        const max = isHorizontal ? y + height : x + width;
-        let isSwap = true;
 
-        while (current <= max + zigzagMaxSpan) {
-            if (isHorizontal) {
-                pointsA.push([x + (isSwap ? -zigzagAmplitude : zigzagAmplitude), current]);
-                // unshift for bottom to reverse order
-                pointsB.unshift([x + width - (!isSwap ? -zigzagAmplitude : zigzagAmplitude), current]);
+        let isSwap = true;
+        let current = coordSysRect[XY[dimZigzag]];
+        for (let idx = 0; ; idx++) {
+            // Use `isFirstPoint` `isLastPoint` to ensure the intersections between zigzag
+            // and axis are precise, thus it can join its axis tick correctly.
+            const isFirstPoint = current === coordSysRect[XY[dimZigzag]];
+            const isLastPoint = current >= zigzagCoordMax;
+            if (isLastPoint) {
+                current = zigzagCoordMax;
+            }
+
+            const pA: number[] = [];
+            const pB: number[] = [];
+            pA[dimBrk] = startCoord;
+            pB[dimBrk] = endCoord;
+            if (!isFirstPoint && !isLastPoint) {
+                pA[dimBrk] += isSwap ? -zigzagAmplitude : zigzagAmplitude;
+                pB[dimBrk] -= !isSwap ? -zigzagAmplitude : zigzagAmplitude;
+            }
+            pA[dimZigzag] = current;
+            pB[dimZigzag] = current;
+            pointsA.push(pA);
+            pointsB.push(pB);
+
+            let randomVal: number;
+            if (idx < zigzagRandomList.length) {
+                randomVal = zigzagRandomList[idx];
             }
             else {
-                pointsA.push([current, y + (isSwap ? -zigzagAmplitude : zigzagAmplitude)]);
-                // unshift for bottom to reverse order
-                pointsB.unshift([current, y + height - (!isSwap ? -zigzagAmplitude : zigzagAmplitude)]);
+                randomVal = Math.random();
+                zigzagRandomList.push(randomVal);
             }
-            current += Math.random() * (zigzagMaxSpan - zigzagMinSpan) + zigzagMinSpan;
+            current += randomVal * (zigzagMaxSpan - zigzagMinSpan) + zigzagMinSpan;
             isSwap = !isSwap;
+
+            if (isLastPoint) {
+                break;
+            }
         }
+
+        const anidSuffix = serializeAxisBreakIdentifier(trimmedBreak.breakOption);
 
         // Create two polylines and add them to the breakGroup
         breakGroup.add(new graphic.Polyline({
+            anid: `break_a_${anidSuffix}`,
             shape: {
                 points: pointsA
             },
             style: polylineStyle,
-            clipPath: clipEl,
-            z: 100
+            z: zigzagZ
         }));
 
         /* Add the second polyline and a polygon only if the gap is not zero
          * Otherwise if the polyline is with dashed line or being opaque,
          * it may not be constant with breaks with non-zero gaps. */
-        if (!isGapZero) {
+        if (trimmedBreak.gapReal !== 0) {
             breakGroup.add(new graphic.Polyline({
+                anid: `break_b_${anidSuffix}`,
                 shape: {
+                    // Not reverse to keep the dash stable when dragging resizing.
                     points: pointsB
                 },
                 style: polylineStyle,
-                clipPath: clipEl,
-                z: 100
+                z: zigzagZ
             }));
 
             // Creating the polygon that fills the area between the polylines
-            const polygonPoints = pointsA.concat(pointsB);
+            // From end to start for polygon.
+            const pointsB2 = pointsB.slice();
+            pointsB2.reverse();
+            const polygonPoints = pointsA.concat(pointsB2);
             breakGroup.add(new graphic.Polygon({
+                anid: `break_c_${anidSuffix}`,
                 shape: {
                     points: polygonPoints
                 },
@@ -197,9 +296,201 @@ export function rectCoordBuildBreakAxis(
                     fill: color,
                     opacity: itemStyle.opacity
                 },
-                clipPath: clipEl,
-                z: 100
+                z: zigzagZ
             }));
         }
     }
+}
+
+export function buildAxisBreakLine(
+    axisModel: AxisBaseModel,
+    group: graphic.Group,
+    transformGroup: graphic.Group,
+    pathBaseProp: PathProps,
+): void {
+    const axis = axisModel.axis;
+    const transform = transformGroup.transform;
+    assert(pathBaseProp.style);
+    let extent: number[] = axis.getExtent();
+
+    if (axis.inverse) {
+        extent = extent.slice();
+        extent.reverse();
+    }
+
+    const breakPairs = retrieveAxisBreakPairs(
+        axis.scale.getTicks({breakTicks: 'only_break'}),
+        tick => tick.break
+    );
+    const brkLayoutList = map(breakPairs, breakPair => {
+        const parsedBreak = breakPair[0].break.parsedBreak;
+        const coordPair = [
+            axis.dataToCoord(parsedBreak.vmin, true),
+            axis.dataToCoord(parsedBreak.vmax, true),
+        ];
+        (coordPair[0] > coordPair[1]) && coordPair.reverse();
+        return {
+            coordPair,
+            brkId: serializeAxisBreakIdentifier(parsedBreak.breakOption),
+        };
+    });
+    brkLayoutList.sort((layout1, layout2) => layout1.coordPair[0] - layout2.coordPair[0]);
+
+    let ySegMin = extent[0];
+    let lastLayout = null;
+    for (let idx = 0; idx < brkLayoutList.length; idx++) {
+        const layout = brkLayoutList[idx];
+        const brkTirmmedMin = Math.max(layout.coordPair[0], extent[0]);
+        const brkTirmmedMax = Math.min(layout.coordPair[1], extent[1]);
+        if (ySegMin <= brkTirmmedMin) {
+            addSeg(ySegMin, brkTirmmedMin, lastLayout, layout);
+        }
+        ySegMin = brkTirmmedMax;
+        lastLayout = layout;
+    }
+    if (ySegMin <= extent[1]) {
+        addSeg(ySegMin, extent[1], lastLayout, null);
+    }
+
+    function addSeg(
+        min: number,
+        max: number,
+        layout1: {brkId: string} | NullUndefined,
+        layout2: {brkId: string} | NullUndefined
+    ): void {
+
+        function trans(p1: number[], p2: number[]): void {
+            if (transform) {
+                applyTransform(p1, p1, transform);
+                applyTransform(p2, p2, transform);
+            }
+        }
+
+        function subPixelOptimizePP(p1: number[], p2: number[]): void {
+            const shape = {x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1]};
+            subPixelOptimizeLine(shape, shape, pathBaseProp.style);
+            p1[0] = shape.x1;
+            p1[1] = shape.y1;
+            p2[0] = shape.x2;
+            p2[1] = shape.y2;
+        }
+        const lineP1 = [min, 0];
+        const lineP2 = [max, 0];
+
+        // dummy tick is used to align the line segment ends with axis ticks
+        // after `subPixelOptimizeLine` being applied.
+        const dummyTickEnd1 = [min, 5];
+        const dummyTickEnd2 = [max, 5];
+        trans(lineP1, dummyTickEnd1);
+        subPixelOptimizePP(lineP1, dummyTickEnd1);
+        trans(lineP2, dummyTickEnd2);
+        subPixelOptimizePP(lineP2, dummyTickEnd2);
+        // Apply it keeping the same as the normal axis line.
+        subPixelOptimizePP(lineP1, lineP2);
+
+        const seg = new graphic.Line(extend({shape: {
+            x1: lineP1[0],
+            y1: lineP1[1],
+            x2: lineP2[0],
+            y2: lineP2[1],
+        }}, pathBaseProp));
+
+        group.add(seg);
+        // Animation should be precise to be consistent with tick and split line animation.
+        seg.anid = `breakLine_${layout1 ? layout1.brkId : '\0'}_\0_${layout2 ? layout2.brkId : '\0'}`;
+    }
+}
+
+/**
+ * Resolve the overlap of a pair of labels.
+ */
+export function adjustBreakLabelPair(
+    axisInverse: boolean,
+    axisRotation: AxisBuilderCfg['rotation'],
+    labelPair: graphic.Text[], // Means [brk_min_label, brk_max_label]
+): void {
+
+    const intersection = detectAxisLabelPairIntersection(
+        // Assert `labelPair` is `[break_min, break_max]`.
+        // `axis.inverse: true` means a smaller scale value corresponds to a bigger value in axis.extent.
+        // The axisRotation indicates mtv direction of OBB intersecting.
+        axisInverse ? axisRotation + Math.PI : axisRotation,
+        labelPair,
+        0,
+        true
+    );
+    if (!intersection) {
+        return;
+    }
+
+    const WH = ['width', 'height'] as const;
+    const layoutPair = intersection.layoutPair;
+    const mtv = new graphic.Point(intersection.mtv.x, intersection.mtv.y);
+
+    // Rotate axis back to (1, 0) direction, to be a standard axis.
+    const axisStTrans = matrixUtil.create();
+    matrixUtil.rotate(axisStTrans, axisStTrans, -axisRotation);
+
+    const labelPairStTrans = map(
+        layoutPair,
+        layout => matrixUtil.mul(matrixUtil.create(), axisStTrans, layout.transform)
+    );
+
+    function isParallelToAxis(whIdx: number): boolean {
+        // Assert label[0] and lable[1] has the same rotation, so only use [0].
+        const localRect = layoutPair[0].localRect;
+        const labelVec0 = new graphic.Point(
+            localRect[WH[whIdx]] * labelPairStTrans[0][0],
+            localRect[WH[whIdx]] * labelPairStTrans[0][1]
+        );
+        return Math.abs(labelVec0.y) < 1e-5;
+    }
+
+    // If overlapping, move pair[0] pair[1] apart a little. We need to calculate a ratio k to
+    // distribute mtv to pair[0] and pair[1]. This is to place the text gap as close as possible
+    // to the center of the break ticks, otherwise it might looks weird or misleading.
+
+    // - When labels' width/height are not parallel to axis (usually by rotation),
+    //  we can simply treat the k as `0.5`.
+    let k = 0.5;
+
+    // - When labels' width/height are parallel to axis, the width/height need to be considered,
+    //  since they may differ significantly. In this case we keep textAlign as 'center' rather
+    //  than 'left'/'right', due to considerations of space utilization for wide break.gap.
+    //  A sample case: break on xAxis(no inverse) is [200, 300000].
+    //  We calculate k based on the formula below:
+    //      Rotated axis and labels to the direction of (1, 0).
+    //      uval = ( (pair[0].insidePt - mtv*k) + (pair[1].insidePt + mtv*(1-k)) ) / 2 - brkCenter
+    //      0 <= k <= 1
+    //      |uval| should be as small as possible.
+    //  Derived as follows:
+    //      qval = (pair[0].insidePt + pair[1].insidePt + mtv) / 2 - brkCenter
+    //      k = (qval - uval) / mtv
+    //      min(qval, qval-mtv) <= uval <= max(qval, qval-mtv)
+    if (isParallelToAxis(0) || isParallelToAxis(1)) {
+        const rectSt = map(layoutPair, (layout, idx) => {
+            const rect = layout.localRect.clone();
+            rect.applyTransform(labelPairStTrans[idx]);
+            return rect;
+        });
+
+        const brkCenterSt = new graphic.Point();
+        brkCenterSt.copy(labelPair[0]).add(labelPair[1]).scale(0.5);
+        brkCenterSt.transform(axisStTrans);
+
+        const mtvSt = mtv.clone().transform(axisStTrans);
+        const insidePtSum = rectSt[0].x + rectSt[1].x
+            + (mtvSt.x >= 0 ? rectSt[0].width : rectSt[1].width);
+        const qval = (insidePtSum + mtvSt.x) / 2 - brkCenterSt.x;
+        const uvalMin = Math.min(qval, qval - mtvSt.x);
+        const uvalMax = Math.max(qval, qval - mtvSt.x);
+        const uval =
+            uvalMax < 0 ? uvalMax
+            : uvalMin > 0 ? uvalMin
+            : 0;
+        k = (qval - uval) / mtvSt.x;
+    }
+
+    graphic.Point.scaleAndAdd(labelPair[0], labelPair[0], mtv, -k);
+    graphic.Point.scaleAndAdd(labelPair[1], labelPair[1], mtv, 1 - k);
 }

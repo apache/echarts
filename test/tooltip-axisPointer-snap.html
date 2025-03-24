@@ -94,17 +94,19 @@ under the License.
                     option: option
                 });
 
-                const coord = chart.convertToPixel({
-                    seriesIndex: 0, 
-                    xAxisIndex: 0,
-                    yAxisIndex: 0
-                }, [1000, 120]);
+                if (chart) {
+                    const coord = chart.convertToPixel({
+                        seriesIndex: 0,
+                        xAxisIndex: 0,
+                        yAxisIndex: 0
+                    }, [1000, 120]);
 
-                chart.dispatchAction({
-                    type: 'showTip',
-                    x: coord[0],
-                    y: coord[1]
-                });
+                    chart.dispatchAction({
+                        type: 'showTip',
+                        x: coord[0],
+                        y: coord[1]
+                    });
+                }
             });
         </script>
 
@@ -162,17 +164,19 @@ under the License.
                     option: option
                 });
 
-                const coord = chart.convertToPixel({
-                    seriesIndex: 0, 
-                    angleAxisIndex: 0,
-                    radiusAxisIndex: 0
-                }, [30, 92]);
+                if (chart) {
+                    const coord = chart.convertToPixel({
+                        seriesIndex: 0,
+                        angleAxisIndex: 0,
+                        radiusAxisIndex: 0
+                    }, [30, 92]);
 
-                chart.dispatchAction({
-                    type: 'showTip',
-                    x: coord[0],
-                    y: coord[1]
-                });
+                    chart.dispatchAction({
+                        type: 'showTip',
+                        x: coord[0],
+                        y: coord[1]
+                    });
+                }
             });
         </script>
 

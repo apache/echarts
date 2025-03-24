@@ -53,7 +53,8 @@ export function rectCoordAxisBuildSplitArea(
 
     const ticksCoords = axis.getTicksCoords({
         tickModel: splitAreaModel,
-        clamp: true
+        clamp: true,
+        breakTicks: 'none',
     });
 
     if (!ticksCoords.length) {

@@ -18,9 +18,16 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import {TimeAxisLabelFormatterOption} from './../coord/axisCommonTypes';
+import {
+    TimeAxisLabelFormatterDictionary,
+    TimeAxisLabelFormatterDictionaryOption,
+    TimeAxisLabelFormatterOption,
+    TimeAxisLabelFormatterParsed,
+    TimeAxisLabelFormatterUpperDictionary,
+    TimeAxisLabelLeveledFormatterOption,
+} from './../coord/axisCommonTypes';
 import * as numberUtil from './number';
-import {TimeScaleTick} from './types';
+import {NullUndefined, ScaleTick} from './types';
 import { getDefaultLocaleModel, getLocaleModel, SYSTEM_LANG, LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 
@@ -30,7 +37,18 @@ export const ONE_HOUR = ONE_MINUTE * 60;
 export const ONE_DAY = ONE_HOUR * 24;
 export const ONE_YEAR = ONE_DAY * 365;
 
-export const defaultLeveledFormatter = {
+
+const primaryTimeUnitFormatterMatchers: {[key in PrimaryTimeUnit]: RegExp} = {
+    year: /({yyyy}|{yy})/,
+    month: /({MMMM}|{MMM}|{MM}|{M})/,
+    day: /({dd}|{d})/,
+    hour: /({HH}|{H}|{hh}|{h})/,
+    minute: /({mm}|{m})/,
+    second: /({ss}|{s})/,
+    millisecond: /({SSS}|{S})/,
+} as const;
+
+const defaultFormatterSeed: {[key in PrimaryTimeUnit]: string} = {
     year: '{yyyy}',
     month: '{MMM}',
     day: '{d}',
@@ -38,33 +56,182 @@ export const defaultLeveledFormatter = {
     minute: '{HH}:{mm}',
     second: '{HH}:{mm}:{ss}',
     millisecond: '{HH}:{mm}:{ss} {SSS}',
-    none: '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss} {SSS}'
-};
+} as const;
 
+const defaultFullFormatter = '{yyyy}-{MM}-{dd} {HH}:{mm}:{ss} {SSS}';
 const fullDayFormatter = '{yyyy}-{MM}-{dd}';
 
 export const fullLeveledFormatter = {
     year: '{yyyy}',
     month: '{yyyy}-{MM}',
     day: fullDayFormatter,
-    hour: fullDayFormatter + ' ' + defaultLeveledFormatter.hour,
-    minute: fullDayFormatter + ' ' + defaultLeveledFormatter.minute,
-    second: fullDayFormatter + ' ' + defaultLeveledFormatter.second,
-    millisecond: defaultLeveledFormatter.none
+    hour: fullDayFormatter + ' ' + defaultFormatterSeed.hour,
+    minute: fullDayFormatter + ' ' + defaultFormatterSeed.minute,
+    second: fullDayFormatter + ' ' + defaultFormatterSeed.second,
+    millisecond: defaultFullFormatter
 };
 
-export type PrimaryTimeUnit = 'millisecond' | 'second' | 'minute' | 'hour'
-    | 'day' | 'month' | 'year';
-export type TimeUnit = PrimaryTimeUnit | 'half-year' | 'quarter' | 'week'
-    | 'half-week' | 'half-day' | 'quarter-day';
+export type JSDateGetterNames =
+    'getUTCFullYear' | 'getFullYear'
+    | 'getUTCMonth' | 'getMonth'
+    | 'getUTCDate' | 'getDate'
+    | 'getUTCHours' | 'getHours'
+    | 'getUTCMinutes' | 'getMinutes'
+    | 'getUTCSeconds' | 'getSeconds'
+    | 'getUTCMilliseconds' | 'getMilliseconds'
+;
+export type JSDateSetterNames =
+    'setUTCFullYear' | 'setFullYear'
+    | 'setUTCMonth' | 'setMonth'
+    | 'setUTCDate' | 'setDate'
+    | 'setUTCHours' | 'setHours'
+    | 'setUTCMinutes' | 'setMinutes'
+    | 'setUTCSeconds' | 'setSeconds'
+    | 'setUTCMilliseconds' | 'setMilliseconds'
+;
 
-export const primaryTimeUnits: PrimaryTimeUnit[] = [
+export type PrimaryTimeUnit = (typeof primaryTimeUnits)[number];
+
+export type TimeUnit = (typeof timeUnits)[number];
+
+// Order must be ensured from big to small.
+export const primaryTimeUnits = [
     'year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond'
-];
-export const timeUnits: TimeUnit[] = [
+] as const;
+export const timeUnits = [
     'year', 'half-year', 'quarter', 'month', 'week', 'half-week', 'day',
     'half-day', 'quarter-day', 'hour', 'minute', 'second', 'millisecond'
-];
+] as const;
+
+
+export function parseTimeAxisLabelFormatter(
+    formatter: TimeAxisLabelFormatterOption
+): TimeAxisLabelFormatterParsed {
+    // Keep the logic the same with function `leveledFormat`.
+    return (!zrUtil.isString(formatter) && !zrUtil.isFunction(formatter))
+        ? parseTimeAxisLabelFormatterDictionary(formatter)
+        : formatter;
+}
+
+/**
+ * The final generated dictionary is like:
+ *  generated_dict = {
+ *      year: {
+ *          year: ['{yyyy}', ...<higher_levels_if_any>]
+ *      },
+ *      month: {
+ *          year: ['{yyyy} {MMM}', ...<higher_levels_if_any>],
+ *          month: ['{MMM}', ...<higher_levels_if_any>]
+ *      },
+ *      day: {
+ *          year: ['{yyyy} {MMM} {d}', ...<higher_levels_if_any>],
+ *          month: ['{MMM} {d}', ...<higher_levels_if_any>],
+ *          day: ['{d}', ...<higher_levels_if_any>]
+ *      },
+ *      ...
+ *  }
+ *
+ * In echarts option, users can specify the entire dictionary or typically just:
+ *  {formatter: {
+ *      year: '{yyyy}', // Or an array of leveled templates: `['{yyyy}', '{bold1|{yyyy}}', ...]`,
+ *                      // corresponding to `[level0, level1, level2, ...]`.
+ *      month: '{MMM}',
+ *      day: '{d}',
+ *      hour: '{HH}:{mm}',
+ *      second: '{HH}:{mm}',
+ *      ...
+ *  }}
+ *  If any time unit is not specified in echarts option, the default template is used,
+ *  such as `['{yyyy}', {primary|{yyyy}']`.
+ *
+ * The `tick.level` is only used to read string from each array, meaning the style type.
+ *
+ * Let `lowerUnit = getUnitFromValue(tick.value)`.
+ * The non-break axis ticks only use `generated_dict[lowerUnit][lowerUnit][level]`.
+ * The break axis ticks may use `generated_dict[lowerUnit][upperUnit][level]`, because:
+ *  Consider the case: the non-break ticks are `16th, 23th, Feb, 7th, ...`, where `Feb` is in the break
+ *  range and pruned by breaks, and the break ends might be in lower time unit than day. e.g., break start
+ *  is `Jan 25th 18:00`(in unit `hour`) and break end is `Feb 6th 18:30` (in unit `minute`). Thus the break
+ *  label prefers `Jan 25th 18:00` and `Feb 6th 18:30` rather than only `18:00` and `18:30`, otherwise it
+ *  causes misleading.
+ *  In this case, the tick of the break start and end will both be:
+ *      `{level: 1, lowerTimeUnit: 'minute', upperTimeUnit: 'month'}`
+ *  And get the final template by `generated_dict[lowerTimeUnit][upperTimeUnit][level]`.
+ *  Note that the time unit can not be calculated directly by a single tick value, since the two breaks have
+ *  to be at the same time unit to avoid awkward appearance. i.e., `Jan 25th 18:00` is in the time unit "hour"
+ *  but we need it to be "minute", following `Feb 6th 18:30`.
+ */
+function parseTimeAxisLabelFormatterDictionary(
+    dictOption: TimeAxisLabelFormatterDictionaryOption | NullUndefined
+): TimeAxisLabelFormatterDictionary {
+    dictOption = dictOption || {};
+    const dict = {} as TimeAxisLabelFormatterDictionary;
+
+    // Currently if any template is specified by user, it may contain rich text tag,
+    // such as `'{my_bold|{YYYY}}'`, thus we do add highlight style to it.
+    // (Note that nested tag (`'{some|{some2|xxx}}'`) in rich text is not supported yet.)
+    let canAddHighlight = true;
+    zrUtil.each(primaryTimeUnits, lowestUnit => {
+        canAddHighlight &&= dictOption[lowestUnit] == null;
+    });
+
+    zrUtil.each(primaryTimeUnits, (lowestUnit, lowestUnitIdx) => {
+        const upperDictOption = dictOption[lowestUnit];
+        dict[lowestUnit] = {} as TimeAxisLabelFormatterUpperDictionary;
+
+        let lowerTpl: string | null = null;
+        for (let upperUnitIdx = lowestUnitIdx; upperUnitIdx >= 0; upperUnitIdx--) {
+            const upperUnit = primaryTimeUnits[upperUnitIdx];
+            const upperDictItemOption: TimeAxisLabelLeveledFormatterOption =
+                (zrUtil.isObject(upperDictOption) && !zrUtil.isArray(upperDictOption))
+                    ? upperDictOption[upperUnit]
+                    : upperDictOption;
+
+            let tplArr: string[];
+            if (zrUtil.isArray(upperDictItemOption)) {
+                tplArr = upperDictItemOption.slice();
+                lowerTpl = tplArr[0] || '';
+            }
+            else if (zrUtil.isString(upperDictItemOption)) {
+                lowerTpl = upperDictItemOption;
+                tplArr = [lowerTpl];
+            }
+            else {
+                if (lowerTpl == null) {
+                    lowerTpl = defaultFormatterSeed[lowestUnit];
+                }
+                // Generate the dict by the rule as follows:
+                // If the user specify (or by default):
+                //  {formatter: {
+                //      year: '{yyyy}',
+                //      month: '{MMM}',
+                //      day: '{d}',
+                //      ...
+                //  }}
+                // Concat them to make the final dictionary:
+                //  {formatter: {
+                //      year: {year: ['{yyyy}']},
+                //      month: {year: ['{yyyy} {MMM}'], month: ['{MMM}']},
+                //      day: {year: ['{yyyy} {MMM} {d}'], month: ['{MMM} {d}'], day: ['{d}']}
+                //      ...
+                //  }}
+                // And then add `{primary|...}` to each array if from default template.
+                // This strategy is convinient for user configurating and works for most cases.
+                // If bad cases encountered, users can specify the entire dictionary themselves
+                // instead of going through this logic.
+                else if (!primaryTimeUnitFormatterMatchers[upperUnit].test(lowerTpl)) {
+                    lowerTpl = `${dict[upperUnit][upperUnit][0]} ${lowerTpl}`;
+                }
+                tplArr = [lowerTpl];
+                if (canAddHighlight) {
+                    tplArr[1] = `{primary|${lowerTpl}}`;
+                }
+            }
+            dict[lowestUnit][upperUnit] = tplArr;
+        }
+    });
+    return dict;
+}
 
 export function pad(str: string | number, len: number): string {
     str += '';
@@ -160,9 +327,9 @@ export function format(
 }
 
 export function leveledFormat(
-    tick: TimeScaleTick,
+    tick: ScaleTick,
     idx: number,
-    formatter: TimeAxisLabelFormatterOption,
+    formatter: TimeAxisLabelFormatterParsed,
     lang: string | Model<LocaleOption>,
     isUTC: boolean
 ) {
@@ -174,48 +341,25 @@ export function leveledFormat(
     else if (zrUtil.isFunction(formatter)) {
         // Callback formatter
         template = formatter(tick.value, idx, {
-            level: tick.level,
-            breakStart: tick.breakStart,
-            breakEnd: tick.breakEnd
+            time: tick.time,
+            level: tick.time.level,
+            break: tick.break ? {
+                type: tick.break.type,
+                start: tick.break.parsedBreak.vmin,
+                end: tick.break.parsedBreak.vmax,
+            } : undefined
         });
     }
     else {
-        const defaults = zrUtil.extend({}, defaultLeveledFormatter);
-        if (tick.level > 0) {
-            for (let i = 0; i < primaryTimeUnits.length; ++i) {
-                defaults[primaryTimeUnits[i]] = `{primary|${defaults[primaryTimeUnits[i]]}}`;
-            }
+        const tickTime = tick.time;
+        if (tickTime) {
+            const leveledTplArr = formatter[tickTime.lowerTimeUnit][tickTime.upperTimeUnit];
+            template = leveledTplArr[Math.min(tickTime.level, leveledTplArr.length - 1)] || '';
         }
-
-        const mergedFormatter = (formatter
-            ? (formatter.inherit === false
-                ? formatter // Use formatter with bigger units
-                : zrUtil.defaults(formatter, defaults)
-            )
-            : defaults) as any;
-
-        const unit = getUnitFromValue(tick.value, isUTC);
-        if (mergedFormatter[unit]) {
-            template = mergedFormatter[unit];
-        }
-        else if (mergedFormatter.inherit) {
-            // Unit formatter is not defined and should inherit from bigger units
-            const targetId = timeUnits.indexOf(unit);
-            for (let i = targetId - 1; i >= 0; --i) {
-                if (mergedFormatter[unit]) {
-                    template = mergedFormatter[unit];
-                    break;
-                }
-            }
-            template = template || defaults.none;
-        }
-
-        if (zrUtil.isArray(template)) {
-            let levelId = tick.level == null
-                ? 0
-                : (tick.level >= 0 ? tick.level : template.length + tick.level);
-            levelId = Math.min(levelId, template.length - 1);
-            template = template[levelId];
+        else {
+            // tick may be from customTicks or timeline therefore no tick.time.
+            const unit = getUnitFromValue(tick.value, isUTC);
+            template = formatter[unit][unit][0];
         }
     }
 
@@ -264,38 +408,63 @@ export function getUnitFromValue(
     }
 }
 
-export function getUnitValue(
-    value: number | Date,
-    unit: TimeUnit,
-    isUTC: boolean
-) : number {
-    const date = zrUtil.isNumber(value)
-        ? numberUtil.parseDate(value)
-        : value;
-    unit = unit || getUnitFromValue(value, isUTC);
+// export function getUnitValue(
+//     value: number | Date,
+//     unit: TimeUnit,
+//     isUTC: boolean
+// ) : number {
+//     const date = zrUtil.isNumber(value)
+//         ? numberUtil.parseDate(value)
+//         : value;
+//     unit = unit || getUnitFromValue(value, isUTC);
 
-    switch (unit) {
+//     switch (unit) {
+//         case 'year':
+//             return date[fullYearGetterName(isUTC)]();
+//         case 'half-year':
+//             return date[monthGetterName(isUTC)]() >= 6 ? 1 : 0;
+//         case 'quarter':
+//             return Math.floor((date[monthGetterName(isUTC)]() + 1) / 4);
+//         case 'month':
+//             return date[monthGetterName(isUTC)]();
+//         case 'day':
+//             return date[dateGetterName(isUTC)]();
+//         case 'half-day':
+//             return date[hoursGetterName(isUTC)]() / 24;
+//         case 'hour':
+//             return date[hoursGetterName(isUTC)]();
+//         case 'minute':
+//             return date[minutesGetterName(isUTC)]();
+//         case 'second':
+//             return date[secondsGetterName(isUTC)]();
+//         case 'millisecond':
+//             return date[millisecondsGetterName(isUTC)]();
+//     }
+// }
+
+/**
+ * e.g.,
+ * If timeUnit is 'year', return the Jan 1st 00:00:00 000 of that year.
+ * If timeUnit is 'day', return the 00:00:00 000 of that day.
+ *
+ * @return The input date.
+ */
+export function roundTime(date: Date, timeUnit: PrimaryTimeUnit, isUTC: boolean): Date {
+    switch (timeUnit) {
         case 'year':
-            return date[fullYearGetterName(isUTC)]();
-        case 'half-year':
-            return date[monthGetterName(isUTC)]() >= 6 ? 1 : 0;
-        case 'quarter':
-            return Math.floor((date[monthGetterName(isUTC)]() + 1) / 4);
+            date[monthSetterName(isUTC)](0);
         case 'month':
-            return date[monthGetterName(isUTC)]();
+            date[dateSetterName(isUTC)](1);
         case 'day':
-            return date[dateGetterName(isUTC)]();
-        case 'half-day':
-            return date[hoursGetterName(isUTC)]() / 24;
+            date[hoursSetterName(isUTC)](0);
         case 'hour':
-            return date[hoursGetterName(isUTC)]();
+            date[minutesSetterName(isUTC)](0);
         case 'minute':
-            return date[minutesGetterName(isUTC)]();
+            date[secondsSetterName(isUTC)](0);
         case 'second':
-            return date[secondsGetterName(isUTC)]();
-        case 'millisecond':
-            return date[millisecondsGetterName(isUTC)]();
+            date[millisecondsSetterName(isUTC)](0);
     }
+    return date;
 }
 
 export function fullYearGetterName(isUTC: boolean) {

@@ -24,24 +24,51 @@ import SeriesData from '../data/SeriesData';
 import {
     DimensionName,
     ScaleDataValue,
-    OptionDataValue,
     DimensionLoose,
     ScaleTick,
-    ScaleBreak
+    ScaleBreakOption,
+    NullUndefined,
 } from '../util/types';
-import { getExtentSpanWithoutBreaks } from './helper';
+import {
+    ScaleCalculator
+} from './helper';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
+import { bind } from 'zrender/src/core/util';
+import { ScaleBreakContext, ScaleBreakParsingResult, parseAxisBreakOption } from './break';
 
+export type ScaleGetTicksOpt = {
+    // Whether expand the ticks to niced extent.
+    expandToNicedExtent?: boolean;
+    // Whether not to remove any normal ticks that are too close to axis breaks.
+    notPruneByBreak?: boolean;
+    // - not specified or undefined(default): insert the breaks as items into the tick array.
+    // - 'only-break': return break ticks only without any normal ticks.
+    // - 'none': return only normal ticks without any break ticks. Useful when creating split
+    //      line / split area, where break area is rendered using zigzag line.
+    // NOTE: The returned break ticks do not outside axis extent. And if a break only intersects
+    //  with axis extent at start or end, it does not count as a tick.
+    breakTicks?: 'only_break' | 'none' | NullUndefined;
+};
 
-abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> {
+export type ScaleSettingDefault = Dictionary<unknown>;
+
+abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> {
 
     type: string;
 
     private _setting: SETTING;
 
+    // [CAVEAT]: Should update only by `_innerSetExtent`!
     protected _extent: [number, number];
 
-    protected _breaks: ScaleBreak[];
+    // FIXME: Effectively, both logorithmic scale and break scale are numeric axis transformation
+    //  mechanisms. However, for historical reason, logorithmic scale is implemented as a subclass,
+    //  while break scale is implemented inside the base class `Scale`. If more transformations
+    //  need to be introduced in futher, we should probably refactor them for better orthogonal
+    //  composition. (e.g. use decorator-like patterns rather than the current class inheritance?)
+    protected _brkCtx: ScaleBreakContext;
+
+    protected _calculator: ScaleCalculator = new ScaleCalculator();
 
     private _isBlank: boolean;
 
@@ -51,7 +78,8 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     constructor(setting?: SETTING) {
         this._setting = setting || {} as SETTING;
         this._extent = [Infinity, -Infinity];
-        this._breaks = this._setting.breaks as ScaleBreak[] || [];
+        this._brkCtx = new ScaleBreakContext();
+        this._brkCtx.update(this._extent);
     }
 
     getSetting<KEY extends keyof SETTING>(name: KEY): SETTING[KEY] {
@@ -65,17 +93,17 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
      * before extent set (like in dataZoom), it would be wrong.
      * Nevertheless, parse does not depend on extent generally.
      */
-    abstract parse(val: OptionDataValue): number;
+    abstract parse(val: ScaleDataValue): number;
 
     /**
      * Whether contain the given value.
      */
-    abstract contain(val: ScaleDataValue): boolean;
+    abstract contain(val: number): boolean;
 
     /**
      * Normalize value to linear [0, 1], return 0.5 if extent span is 0.
      */
-    abstract normalize(val: ScaleDataValue): number;
+    abstract normalize(val: number): number;
 
     /**
      * Scale normalized value to extent.
@@ -83,36 +111,40 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
     abstract scale(val: number): number;
 
     /**
-     * Set extent from data
+     * [CAVEAT]: It should not be overridden!
      */
-    unionExtent(other: [number, number]): void {
+    _innerUnionExtent(other: [number, number]): void {
         const extent = this._extent;
-        other[0] < extent[0] && (extent[0] = other[0]);
-        other[1] > extent[1] && (extent[1] = other[1]);
-        // not setExtent because in log axis it may transformed to power
-        // this.setExtent(extent[0], extent[1]);
+        // Considered that number could be NaN and should not write into the extent.
+        this._innerSetExtent(
+            other[0] < extent[0] ? other[0] : extent[0],
+            other[1] > extent[1] ? other[1] : extent[1]
+        );
     }
 
     /**
      * Set extent from data
      */
     unionExtentFromData(data: SeriesData, dim: DimensionName | DimensionLoose): void {
-        this.unionExtent(data.getApproximateExtent(dim));
+        this._innerUnionExtent(data.getApproximateExtent(dim));
     }
 
     /**
-     * Get extent
-     *
+     * Get a new slice of extent.
      * Extent is always in increase order.
      */
     getExtent(): [number, number] {
         return this._extent.slice() as [number, number];
     }
 
-    /**
-     * Set extent
-     */
     setExtent(start: number, end: number): void {
+        this._innerSetExtent(start, end);
+    }
+
+    /**
+     * [CAVEAT]: It should not be overridden!
+     */
+    protected _innerSetExtent(start: number, end: number): void {
         const thisExtent = this._extent;
         if (!isNaN(start)) {
             thisExtent[0] = start;
@@ -120,65 +152,46 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
         if (!isNaN(end)) {
             thisExtent[1] = end;
         }
-    }
-
-    getBreaks() {
-        return this.type === 'ordinal'
-            ? []
-            : this._breaks;
-    }
-
-    expandBreak(breakStart: number, breakEnd: number) {
-        this.expandBreaks([{ start: breakStart, end: breakEnd, gap: 0 }]);
-    }
-
-    expandBreaks(breaks: ScaleBreak[]): void {
-        for (let j = 0; j < breaks.length; j++) {
-            const expandBrk = breaks[j];
-            for (let i = 0; i < this._breaks.length; i++) {
-                const brk = this._breaks[i];
-                if (expandBrk.start === brk.start && expandBrk.end === brk.end) {
-                    brk.isExpanded = true;
-                    break;
-                }
-            }
-        }
+        this._brkCtx.update(thisExtent);
     }
 
     /**
-     * Revert all breaks to their initial state
+     * Prerequisite: Scale#parse is ready.
      */
-    revertBreaks(): void {
-        for (let i = 0; i < this._breaks.length; i++) {
-            const brk = this._breaks[i];
-            brk.isExpanded = false;
-        }
-    }
-
-    getExtentSpanWithoutBreaks() {
-        return getExtentSpanWithoutBreaks(this._extent, this._breaks);
-    }
-
-    getBrokenExtentRatio(): number {
-        const realSpan = getExtentSpanWithoutBreaks(this._extent, this._breaks);
-        const totalSpan = this._extent[1] - this._extent[0];
-        return totalSpan === 0 ? 1 : realSpan / totalSpan;
+    setBreaksFromOption(
+        breakOptionList: ScaleBreakOption[],
+    ): void {
+        this._innerSetBreak(parseAxisBreakOption(breakOptionList, bind(this.parse, this)));
     }
 
     /**
-     * Whether a value is in broken range (not including either ends)
-     * @return break index if in any of the broken range, otherwise return -1
+     * [CAVEAT]: It should not be overridden!
      */
-    getBreakIndex(val: number, includeEnd = false): number {
-        for (let i = 0; i < this._breaks.length; i++) {
-            const brk = this._breaks[i];
-            if (!brk.isExpanded && brk.start <= val
-                && (brk.end > val || brk.end === val && includeEnd)
-            ) {
-                return i;
-            }
-        }
-        return -1;
+    _innerSetBreak(parsed: ScaleBreakParsingResult) {
+        this._brkCtx.setBreaks(parsed);
+        this._calculator.updateMethods(this._brkCtx);
+
+        this._brkCtx.update(this._extent);
+    }
+
+    /**
+     * [CAVEAT]: It should not be overridden!
+     */
+    _innerGetBreaks() {
+        return this._brkCtx.breaks;
+    }
+
+    /**
+     * Do not expose the internal `_breaks` unless necessary.
+     */
+    hasBreaks(): boolean {
+        return this._brkCtx.hasBreaks();
+    }
+
+    protected _getExtentSpanWithBreaks() {
+        return this._brkCtx.hasBreaks()
+            ? this._brkCtx.getExtentSpan()
+            : this._extent[1] - this._extent[0];
     }
 
     /**
@@ -235,7 +248,7 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
      */
     abstract getLabel(tick: ScaleTick): string;
 
-    abstract getTicks(): ScaleTick[];
+    abstract getTicks(opt?: ScaleGetTicksOpt): ScaleTick[];
 
     abstract getMinorTicks(splitNumber: number): number[][];
 

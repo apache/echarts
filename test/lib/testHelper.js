@@ -47,8 +47,7 @@
             var myRandom = new seedrandom('echarts-random');
             // Fixed random generator
             Math.random = function () {
-                const val = myRandom();
-                return val;
+                return myRandom();
             };
         });
     }
@@ -62,6 +61,7 @@
      *        Can use '**abc**', means <strong>abc</strong>.
      * @param {Option} opt.option
      * @param {Object} [opt.info] info object to display.
+     *        info can be updated by `chart.__testHelper.updateInfo(someInfoObj, 'some_info_key');`
      * @param {string} [opt.infoKey='option']
      * @param {Object|Array} [opt.dataTable]
      * @param {Array.<Object|Array>} [opt.dataTables] Multiple dataTables.
@@ -72,8 +72,50 @@
      * @param {boolean} [opt.lazyUpdate]
      * @param {boolean} [opt.notMerge]
      * @param {boolean} [opt.autoResize=true]
-     * @param {Array.<Object>|Object} [opt.button] {text: ..., onClick: ...}, or an array of them.
-     * @param {Array.<Object>|Object} [opt.buttons] {text: ..., onClick: ...}, or an array of them.
+     * @param {Array.<Object>|Object|Function} [opt.buttons] They are the same: `opt.button`, `opt.inputs`, `opt.input`
+     *  It can be a function that return buttons configuration, like:
+     *      buttons: chart => { return [{text: 'xxx', onclick: fn}, ...]; }
+     *  Item can be these types:
+     *  [{
+     *      // A button(default).
+     *      text: 'xxx',
+     *      // They are the same: `onclick`, `click` (capital insensitive)
+     *      onclick: fn
+     *  }, {
+     *      // A range slider (HTML <input type="range">). Can also be `type: 'slider'`.
+     *      type: 'range',
+     *      text: 'xxx', // Optional
+     *      min: 0, // Optional
+     *      max: 100, // Optional
+     *      value: 30, // Optional. Must be a number.
+     *      step: 1, // Optional
+     *      // They are the same: `oninput` `input`
+     *      //                    `onchange` `change`
+     *      //                    `onselect` `select` (capital insensitive)
+     *      onchange: function () { console.log(this.value); }
+     *  }, {
+     *      // A select (HTML <select>...</select>).
+     *      type: 'select', // Or `selection`
+     *      options: ['a', 'b', 'c'], // Or [{text: 'a', value: 123}, ...].
+     *                                // Can be any type, like `true`, `123`, etc.
+     *                                // They are the same: `options: []`, `values: []`, `items: []`.
+     *      valueIndex: 0, // Optional. The initial value index. By default, the first option.
+     *      value: 'c', // Optional. The initial value. By default, the first option.
+     *                  // Can be any type, like `true`, `123`, etc.
+     *                  // But can only be JS primitive type, as `===` is used internally.
+     *      text: 'xxx', // Optional.
+     *      // They are the same: `oninput` `input`
+     *      //                    `onchange` `change`
+     *      //                    `onselect` `select` (capital insensitive)
+     *      onchange: function () { console.log(this.value); }
+     *  }, {
+     *      // A line break.
+     *      // They are the same: `br` `lineBreak` `break` `wrap` `newLine` `endOfLine` `carriageReturn`
+     *      //                    `lineFeed` `lineSeparator` `nextLine` (capital insensitive)
+     *      type: 'br',
+     *  },
+     *  // ...
+     *  ]
      * @param {boolean} [opt.recordCanvas] 'test/lib/canteen.js' is required.
      * @param {boolean} [opt.recordVideo]
      * @param {string} [opt.renderer] 'canvas' or 'svg'
@@ -84,6 +126,8 @@
         if (!dom) {
             return;
         }
+
+        var errMsgPrefix = '[testHelper dom: ' + domOrId + ']';
 
         var title = document.createElement('div');
         var left = document.createElement('div');
@@ -134,7 +178,7 @@
                 + '</div>';
         }
 
-        chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts);
+        chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts, errMsgPrefix);
 
         var dataTables = opt.dataTables;
         if (!dataTables && opt.dataTable) {
@@ -148,21 +192,7 @@
             dataTableContainer.innerHTML = tableHTML.join('');
         }
 
-        var buttons = opt.buttons || opt.button;
-        if (!(buttons instanceof Array)) {
-            buttons = buttons ? [buttons] : [];
-        }
-        if (buttons.length) {
-            for (var i = 0; i < buttons.length; i++) {
-                var btnDefine = buttons[i];
-                if (btnDefine) {
-                    var btn = document.createElement('button');
-                    btn.innerHTML = testHelper.encodeHTML(btnDefine.name || btnDefine.text || 'button');
-                    btn.addEventListener('click', btnDefine.onClick || btnDefine.onclick);
-                    buttonsContainer.appendChild(btn);
-                }
-            }
-        }
+        chart && initButtons(chart, opt, buttonsContainer, errMsgPrefix)
 
         if (opt.info) {
             updateInfo(opt.info, opt.infoKey);
@@ -184,6 +214,197 @@
 
         return chart;
     };
+
+    function initButtons(chart, opt, buttonsContainer, errMsgPrefix) {
+        var NAMES_ON_INPUT_CHANGE = makeFlexibleNames([
+            'input', 'on-input', 'on-change', 'select', 'on-select'
+        ]);
+        var NAMES_ON_CLICK = makeFlexibleNames([
+            'on-click', 'click'
+        ]);
+        var NAMES_TYPE_BUTTON = makeFlexibleNames(['button', 'btn']);
+        var NAMES_TYPE_RANGE = makeFlexibleNames(['range', 'slider']);
+        var NAMES_TYPE_SELECT = makeFlexibleNames(['select', 'selection']);
+        var NAMES_TYPE_BR = makeFlexibleNames([
+            'br', 'line-break', 'break', 'wrap', 'new-line', 'end-of-line',
+            'carriage-return', 'line-feed', 'line-separator', 'next-line'
+        ]);
+
+        var buttons = testHelper.retrieveValue(opt.buttons, opt.button, opt.input, opt.inputs);
+        if (typeof buttons === 'function') {
+            buttons = buttons(chart);
+        }
+        if (!(buttons instanceof Array)) {
+            buttons = buttons ? [buttons] : [];
+        }
+        if (!buttons.length) {
+            return;
+        }
+
+        for (var i = 0; i < buttons.length; i++) {
+            processBtnDefine(buttons[i]);
+        }
+
+        function getBtnTextHTML(btnDefine, defaultText) {
+            return testHelper.encodeHTML(testHelper.retrieveValue(btnDefine.name, btnDefine.text, defaultText));
+        }
+        function getBtnDefineAttr(btnDefine, attr, defaultValue) {
+            return btnDefine[attr] != null ? btnDefine[attr] : defaultValue;
+        }
+        function getBtnEventListener(btnDefine, names) {
+            for (var idx = 0; idx < names.length; idx++) {
+                if (btnDefine[names[idx]]) {
+                    return btnDefine[names[idx]];
+                }
+            }
+        }
+
+        function processBtnDefine(btnDefine) {
+            if (!btnDefine) {
+                return;
+            }
+            var inputType = btnDefine.hasOwnProperty('type') ? btnDefine.type : 'button';
+
+            if (arrayIndexOf(NAMES_TYPE_RANGE, inputType) >= 0) {
+                createRangeInput(btnDefine, buttonsContainer);
+            }
+            else if (arrayIndexOf(NAMES_TYPE_SELECT, inputType) >= 0) {
+                createSelectInput(btnDefine, buttonsContainer);
+            }
+            else if (arrayIndexOf(NAMES_TYPE_BR, inputType) >= 0) {
+                createBr(btnDefine, buttonsContainer);
+            }
+            else if (arrayIndexOf(NAMES_TYPE_BUTTON, inputType) >= 0) {
+                createButtonInput(btnDefine, buttonsContainer);
+            }
+            else {
+                throw new Error(errMsgPrefix + 'Unsupported button type: ' + inputType);
+            }
+        }
+
+        function createRangeInput(btnDefine, buttonsContainer) {
+            var sliderWrapperEl = document.createElement('span');
+            sliderWrapperEl.className = 'test-buttons-slider';
+            buttonsContainer.appendChild(sliderWrapperEl);
+
+            var sliderTextEl = document.createElement('span');
+            sliderTextEl.className = 'test-buttons-slider-text';
+            sliderTextEl.innerHTML = getBtnTextHTML(btnDefine, '');
+            sliderWrapperEl.appendChild(sliderTextEl);
+
+            var sliderInputEl = document.createElement('input');
+            sliderInputEl.className = 'test-buttons-slider-input';
+            sliderInputEl.setAttribute('type', 'range');
+            var sliderListener = getBtnEventListener(btnDefine, NAMES_ON_INPUT_CHANGE);
+            if (!sliderListener) {
+                throw new Error(errMsgPrefix + 'No listener (either ' + NAMES_ON_INPUT_CHANGE.join(', ') + ') specified for slider.');
+            }
+            sliderInputEl.addEventListener('input', function () {
+                updateSliderValueEl();
+                var target = {value: this.value};
+                sliderListener.call(target, {target: target});
+            });
+            sliderInputEl.setAttribute('min', getBtnDefineAttr(btnDefine, 'min', 0));
+            sliderInputEl.setAttribute('max', getBtnDefineAttr(btnDefine, 'max', 100));
+            sliderInputEl.setAttribute('value', getBtnDefineAttr(btnDefine, 'value', 30));
+            sliderInputEl.setAttribute('step', getBtnDefineAttr(btnDefine, 'step', 1));
+            sliderWrapperEl.appendChild(sliderInputEl);
+
+            var sliderValueEl = document.createElement('span');
+            sliderValueEl.className = 'test-buttons-slider-value';
+            function updateSliderValueEl() {
+                var val = sliderInputEl.value;
+                sliderValueEl.innerHTML = testHelper.encodeHTML(val);
+            }
+            updateSliderValueEl();
+            sliderWrapperEl.appendChild(sliderValueEl);
+        }
+
+        function createSelectInput(btnDefine, buttonsContainer) {
+            var selectWrapperEl = document.createElement('span');
+            selectWrapperEl.className = 'test-buttons-select';
+            buttonsContainer.appendChild(selectWrapperEl);
+
+            var textEl = document.createElement('span');
+            textEl.className = 'test-buttons-select-text';
+            textEl.innerHTML = getBtnTextHTML(btnDefine, '');
+            selectWrapperEl.appendChild(textEl);
+
+            var selectEl = document.createElement('select');
+            selectEl.className = 'test-buttons-select-input';
+            selectWrapperEl.appendChild(selectEl);
+
+            var optionDefList = testHelper.retrieveValue(btnDefine.options, btnDefine.values, btnDefine.items, []);
+            optionDefList = optionDefList.slice();
+            if (!optionDefList.length) {
+                throw new Error(errMsgPrefix + 'No options specified for select.');
+            }
+            for (var idx = 0; idx < optionDefList.length; idx++) {
+                var optionDef = optionDefList[idx];
+                // optionDef can be {text, value} or just value
+                //  (value can be null/undefined/array/object/... everything).
+                // Convinient but might cause ambiguity when a value happens to be {text, value}, but rarely happen.
+                if (isObject(optionDef) && optionDef.hasOwnProperty('text') && optionDef.hasOwnProperty('value')) {
+                    optionDef = {text: optionDef.text, value: optionDef.value};
+                }
+                else {
+                    optionDef = {
+                        text: printObject(optionDef, {
+                            arrayLineBreak: false, objectLineBreak: false, indent: 0, lineBreak: ''
+                        }),
+                        value: optionDef
+                    };
+                }
+                optionDefList[idx] = optionDef;
+                var optionEl = document.createElement('option');
+                optionEl.innerHTML = testHelper.encodeHTML(optionDef.text);
+                // HTML select.value is always string. But it would be more convenient to
+                // convert it to user's raw input value type.
+                optionEl.value = idx;
+                selectEl.appendChild(optionEl);
+            }
+            if (btnDefine.hasOwnProperty('valueIndex')) {
+                var valueIndex = btnDefine.valueIndex;
+                if (valueIndex < 0 || valueIndex >= optionDefList.length) {
+                    throw new Error(errMsgPrefix + 'Invalid valueIndex: ' + valueIndex);
+                }
+                selectEl.value = optionDefList[valueIndex].value;
+            }
+            else if (btnDefine.hasOwnProperty('value')) {
+                var found = false;
+                for (var idx = 0; idx < optionDefList.length; idx++) {
+                    if (optionDefList[idx].value === btnDefine.value) {
+                        selectEl.value = idx;
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    throw new Error(errMsgPrefix + 'Value not found in select options: ' + btnDefine.value);
+                }
+            }
+            var selectListener = getBtnEventListener(btnDefine, NAMES_ON_INPUT_CHANGE);
+            if (!selectListener) {
+                throw new Error(errMsgPrefix + 'No listener (either ' + NAMES_ON_INPUT_CHANGE.join(', ') + ') specified for select.');
+            }
+            selectEl.addEventListener('change', function () {
+                var idx = this.value;
+                var target = {value: optionDefList[idx].value};
+                selectListener.call(target, {target: target});
+            });
+        }
+
+        function createBr(btnDefine, buttonsContainer) {
+            var brEl = document.createElement('br');
+            buttonsContainer.appendChild(brEl);
+        }
+
+        function createButtonInput(btnDefine, buttonsContainer) {
+            var btn = document.createElement('button');
+            btn.innerHTML = getBtnTextHTML(btnDefine, 'button');
+            btn.addEventListener('click', getBtnEventListener(btnDefine, NAMES_ON_CLICK));
+            buttonsContainer.appendChild(btn);
+        }
+    }
 
     function initRecordCanvas(opt, chart, recordCanvasContainer) {
         if (!opt.recordCanvas) {
@@ -250,7 +471,7 @@
 
         button.onclick = function () {
             isRecording ? recorder.stop() : recorder.start();
-            button.innerHTML = `${isRecording ? 'Start' : 'Stop'} Recording`;
+            button.innerHTML = (isRecording ? 'Start' : 'Stop') + ' Recording';
 
             isRecording = !isRecording;
         }
@@ -269,8 +490,9 @@
      * @param {number} opt.height
      * @param {boolean} opt.draggable
      * @param {string} opt.renderer 'canvas' or 'svg'
+     * @param {string} errMsgPrefix
      */
-    testHelper.createChart = function (echarts, domOrId, option, opt) {
+    testHelper.createChart = function (echarts, domOrId, option, opt, errMsgPrefix) {
         if (typeof opt === 'number') {
             opt = {height: opt};
         }
@@ -297,7 +519,7 @@
             if (opt.draggable) {
                 if (!window.draggable) {
                     throw new Error(
-                        'Pleasse add the script in HTML: \n'
+                        errMsgPrefix + 'Pleasse add the script in HTML: \n'
                         + '<script src="lib/draggable.js"></script>'
                     );
                 }
@@ -562,6 +784,20 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    };
+
+    /**
+     * @usage
+     * var result = retrieveValue(val, defaultVal);
+     * var result = retrieveValue(val1, val2, defaultVal);
+     */
+    testHelper.retrieveValue = function() {
+        for (var i = 0, len = arguments.length; i < len; i++) {
+            var val = arguments[i];
+            if (val != null) {
+                return val;
+            }
+        }
     };
 
     /**
@@ -1049,6 +1285,44 @@
         // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
         var type = typeof value;
         return type === 'function' || (!!value && type === 'object');
+    }
+
+    function arrayIndexOf(arr, value) {
+        if (arr.indexOf) {
+            return arr.indexOf(value);
+        }
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i] === value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function makeFlexibleNames(dashedNames) {
+        var nameMap = {};
+        for (var i = 0; i < dashedNames.length; i++) {
+            var name = dashedNames[i];
+            var tmpNames = [];
+            tmpNames.push(name);
+            tmpNames.push(name.replace(/-/g, ''));
+            tmpNames.push(name.replace(/-/g, '_'));
+            tmpNames.push(name.replace(/-([a-zA-Z0-9])/g, function (_, wf) {
+                return wf.toUpperCase();
+            }));
+            for (var j = 0; j < tmpNames.length; j++) {
+                nameMap[tmpNames[j]] = 1;
+                nameMap[tmpNames[j].toUpperCase()] = 1;
+                nameMap[tmpNames[j].toLowerCase()] = 1;
+            }
+        }
+        var names = [];
+        for (var name in nameMap) {
+            if (nameMap.hasOwnProperty(name)) {
+                names.push(name);
+            }
+        }
+        return names;
     }
 
     function VideoRecorder(chart) {
