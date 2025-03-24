@@ -277,44 +277,17 @@ class TreeView extends ChartView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        const controller = this._controller;
-        const controllerHost = this._controllerHost;
-        const group = this.group;
-        controller.setPointerChecker(function (e, x, y) {
-            const rect = group.getBoundingRect();
-            rect.applyTransform(group.transform);
-            return rect.contain(x, y)
-                && !onIrrelevantElement(e, api, seriesModel);
-        });
+        roamHelper.updateController(
+            seriesModel,
+            api,
+            this.group,
+            this._controller,
+            this._controllerHost
+        );
 
-        controller.enable(seriesModel.get('roam'));
-        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-        controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
-
-        controller
-            .off('pan')
-            .off('zoom')
-            .on('pan', (e) => {
-                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'treeRoam',
-                    dx: e.dx,
-                    dy: e.dy
-                });
-            })
+        this._controller
             .on('zoom', (e) => {
-                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'treeRoam',
-                    zoom: e.scale,
-                    originX: e.originX,
-                    originY: e.originY
-                });
                 this._updateNodeAndLinkScale(seriesModel);
-                // Only update label layout on zoom
-                api.updateLabelLayout();
             });
     }
 

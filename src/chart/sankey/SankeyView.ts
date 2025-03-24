@@ -146,7 +146,7 @@ class SankeyView extends ChartView {
         group.removeAll();
 
         this._updateViewCoordSys(seriesModel, api);
-        this._updateController(seriesModel, ecModel, api);
+        roamHelper.updateController(seriesModel, api, group, this._controller, this._controllerHost);
 
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
@@ -365,51 +365,6 @@ class SankeyView extends ChartView {
     dispose() {
         this._controller && this._controller.dispose();
         this._controllerHost = null;
-    }
-
-    private _updateController(
-        seriesModel: SankeySeriesModel,
-        ecModel: GlobalModel,
-        api: ExtensionAPI
-    ) {
-        const controller = this._controller;
-        const controllerHost = this._controllerHost;
-        const group = this.group;
-        controller.setPointerChecker(function (e, x, y) {
-            const rect = group.getBoundingRect();
-            rect.applyTransform(group.transform);
-            return rect.contain(x, y)
-                && !onIrrelevantElement(e, api, seriesModel);
-        });
-
-        controller.enable(seriesModel.get('roam'));
-        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-        controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
-
-        controller
-            .off('pan')
-            .off('zoom')
-            .on('pan', (e) => {
-                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'sankeyRoam',
-                    dx: e.dx,
-                    dy: e.dy
-                });
-            })
-            .on('zoom', (e) => {
-                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'sankeyRoam',
-                    zoom: e.scale,
-                    originX: e.originX,
-                    originY: e.originY
-                });
-                // Only update label layout on zoom
-                api.updateLabelLayout();
-            });
     }
 
     private _updateViewCoordSys(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
