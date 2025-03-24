@@ -26,7 +26,6 @@ import * as bbox from 'zrender/src/core/bbox';
 import View from '../../coord/View';
 import * as roamHelper from '../../component/helper/roamHelper';
 import RoamController from '../../component/helper/RoamController';
-import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';

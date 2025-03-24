@@ -22,13 +22,10 @@ import { SeriesModel } from '../../echarts.all';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Group from 'zrender/src/graphic/Group';
 import RoamController from './RoamController';
+import type { SeriesOption } from '../../export/option';
+import type View from '../../coord/View';
+import type { RoamOptionMixin } from '../../util/types';
 import { onIrrelevantElement } from './cursorHelper';
-import { SeriesOption } from '../../export/option';
-import { CoordinateSystem } from '../../coord/CoordinateSystem';
-import View from '../../coord/View';
-import TreeSeriesModel from '../../chart/tree/TreeSeries';
-import SankeySeriesModel from '../../chart/sankey/SankeySeries';
-import { RoamOptionMixin } from '../../util/types';
 
 export interface RoamControllerHost {
     target: Element;
