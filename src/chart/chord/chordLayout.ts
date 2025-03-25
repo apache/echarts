@@ -99,8 +99,8 @@ function chordLayout(seriesModel: ChordSeriesModel, api: ExtensionAPI) {
         return;
     }
     if (padAngle * renderedNodeCount >= Math.abs(totalAngle)) {
-        // Not enough angle to render the pad, so ignore the padAngle
-        padAngle = 0;
+        // Not enough angle to render the pad, minAngle has higher priority, and padAngle takes the rest
+        padAngle = Math.max(0, (Math.abs(totalAngle) - minAngle * renderedNodeCount) / renderedNodeCount);
     }
     if ((padAngle + minAngle) * renderedNodeCount >= Math.abs(totalAngle)) {
         // Not enough angle to render the minAngle, so ignore the minAngle
