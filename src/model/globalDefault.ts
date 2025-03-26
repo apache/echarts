@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import tokens from '../visual/tokens';
 
 let platform = '';
 // Navigator not exists in node
@@ -34,17 +35,7 @@ export default {
 
     colorBy: 'series',
 
-    color: [
-        '#5470c6',
-        '#91cc75',
-        '#fac858',
-        '#ee6666',
-        '#73c0de',
-        '#3ba272',
-        '#fc8452',
-        '#9a60b4',
-        '#ea7ccc'
-    ],
+    color: tokens.color.theme,
 
     gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
 
