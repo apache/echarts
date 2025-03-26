@@ -30,11 +30,10 @@ import {
 } from '../util/types';
 import { AxisBaseOption, AXIS_TYPES, CategoryAxisBaseOption } from './axisCommonTypes';
 import GlobalModel from '../model/Global';
-import { each, find, merge } from 'zrender/src/core/util';
+import { each, merge } from 'zrender/src/core/util';
 import { EChartsExtensionInstallRegisters } from '../extension';
 import { AxisBreakPayloadBreak } from '../component/axis/axisAction';
-import { warn } from '../util/log';
-import { identifyAxisBreak } from '../scale/break';
+import { getAxisBreakHelper } from '../component/axis/axisBreakHelper';
 
 
 type Constructor<T> = new (...args: any[]) => T;
@@ -120,22 +119,10 @@ export default function axisModelCreator<
             }
 
             updateAxisBreaks(inputBreaks: AxisBreakPayloadBreak[]): void {
-                each(inputBreaks, inputBrk => {
-                    if (!inputBrk) {
-                        return;
-                    }
-                    const breakOption = find(
-                        this.get('breaks', true),
-                        brkOption => identifyAxisBreak(brkOption, inputBrk)
-                    );
-                    if (!breakOption) {
-                        if (__DEV__) {
-                            warn(`Can not find axis break by start: ${inputBrk.start}, end: ${inputBrk.end}`);
-                        }
-                        return;
-                    }
-                    breakOption.isExpanded = !!inputBrk.isExpanded;
-                });
+                const axisBreakHelper = getAxisBreakHelper();
+                if (axisBreakHelper) {
+                    axisBreakHelper.updateModelAxisBreak(this, inputBreaks);
+                }
             }
 
         }

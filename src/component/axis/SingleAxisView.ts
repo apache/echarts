@@ -27,7 +27,7 @@ import SingleAxisModel from '../../coord/single/AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
-import { rectCoordBuildBreakAxis } from './axisBreakHelper';
+import { getAxisBreakHelper } from './axisBreakHelper';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -164,9 +164,12 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
     },
 
     breakArea(axisView, group, axisGroup, axisModel, api) {
+        const axisBreakHelper = getAxisBreakHelper();
         const scale = axisModel.axis.scale;
-        if (scale.type !== 'ordinal') {
-            rectCoordBuildBreakAxis(group, axisView, axisModel, axisModel.coordinateSystem.getRect(), api);
+        if (axisBreakHelper && scale.type !== 'ordinal') {
+            axisBreakHelper.rectCoordBuildBreakAxis(
+                group, axisView, axisModel, axisModel.coordinateSystem.getRect(), api
+            );
         }
     },
 

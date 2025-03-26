@@ -42,9 +42,9 @@ import { prepareLayoutList, hideOverlap, detectAxisLabelPairIntersection } from 
 import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import { makeInner } from '../../util/model';
-import { adjustBreakLabelPair, buildAxisBreakLine } from './axisBreakHelper';
+import { getAxisBreakHelper } from './axisBreakHelper';
 import { AxisBreakPayload } from './axisAction';
-import { retrieveAxisBreakPairs } from '../../scale/break';
+import { getScaleBreakHelper } from '../../scale/break';
 
 const PI = Math.PI;
 
@@ -302,7 +302,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         };
 
         if (axisModel.get(['axisLine', 'breakLine']) && axisModel.axis.scale.hasBreaks()) {
-            buildAxisBreakLine(axisModel, group, transformGroup, pathBaseProp);
+            getAxisBreakHelper()!.buildAxisBreakLine(axisModel, group, transformGroup, pathBaseProp);
         }
         else {
             const line = new graphic.Line(extend({
@@ -937,8 +937,14 @@ function adjustBreakLabels(
     axisRotation: AxisBuilderCfg['rotation'],
     labelEls: graphic.Text[]
 ): void {
-    const breakLabelPairs = retrieveAxisBreakPairs(labelEls, el => getLabelInner(el).break);
-    each(breakLabelPairs, pair => adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, pair));
+    const scaleBreakHelper = getScaleBreakHelper();
+    if (!scaleBreakHelper) {
+        return;
+    }
+    const breakLabelPairs = scaleBreakHelper.retrieveAxisBreakPairs(labelEls, el => getLabelInner(el).break);
+    each(breakLabelPairs, pair =>
+        getAxisBreakHelper()!.adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, pair)
+    );
 }
 
 export default AxisBuilder;

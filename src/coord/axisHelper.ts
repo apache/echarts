@@ -48,6 +48,8 @@ import { Dictionary, DimensionName, ScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
 import Axis2D from './cartesian/Axis2D';
 import { parseTimeAxisLabelFormatter } from '../util/time';
+import { getScaleBreakHelper } from '../scale/break';
+import { error } from '../util/log';
 
 
 type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
@@ -558,9 +560,24 @@ export function computeReservedSpace(
 }
 
 export function retrieveAxisBreaksOption(model: AxisBaseModel): AxisBaseOptionCommon['breaks'] {
-    return isSupportAxisBreak(model.axis)
-        ? model.get('breaks', true)
-        : null;
+    const option = model.get('breaks', true);
+    if (option != null) {
+        if (!getScaleBreakHelper()) {
+            if (__DEV__) {
+                error(
+                    'Must `import {AxisBreak} from "echarts/features"; use(AxisBreak);` first if using breaks option.'
+                );
+            }
+            return undefined;
+        }
+        if (!isSupportAxisBreak(model.axis)) {
+            if (__DEV__) {
+                error(`Axis '${model.axis.dim}'-'${model.axis.type}' does not support break.`);
+            }
+            return undefined;
+        }
+        return option;
+    }
 }
 
 function isSupportAxisBreak(axis: Axis): boolean {

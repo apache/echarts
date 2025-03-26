@@ -17,8 +17,14 @@
 * under the License.
 */
 
-// Module that exports complex but fancy features.
+import type { EChartsExtensionInstallRegisters } from '../../extension';
+import { installScaleBreakHelper } from '../../scale/breakImpl';
+import { registerAction } from './axisAction';
+import { installAxisBreakHelper } from './axisBreakHelperImpl';
 
-export {installUniversalTransition as UniversalTransition} from '../animation/universalTransition';
-export {installLabelLayout as LabelLayout} from '../label/installLabelLayout';
-export {installAxisBreak as AxisBreak} from '../component/axis/installBreak';
+export function installAxisBreak(registers: EChartsExtensionInstallRegisters) {
+    registerAction(registers);
+
+    installScaleBreakHelper();
+    installAxisBreakHelper();
+}

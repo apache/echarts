@@ -24,12 +24,12 @@ import * as numberUtil from '../util/number';
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
 import {
-    DimensionLoose, DimensionName, ParsedScaleBreakList, ScaleBreakOption,
+    DimensionLoose, DimensionName, NullUndefined, ParsedScaleBreakList, ScaleBreakOption,
     ScaleTick, VisualScaleBreak
 } from '../util/types';
 import { logTransform } from './helper';
 import SeriesData from '../data/SeriesData';
-import { identifyAxisBreak, parseAxisBreakOption } from './break';
+import { getScaleBreakHelper } from './break';
 
 const fixRound = numberUtil.round;
 const mathFloor = Math.floor;
@@ -60,6 +60,7 @@ class LogScale extends IntervalScale {
         const ticks = super.getTicks(opt);
         const base = this.base;
         const originalBreaks = this._originalScale._innerGetBreaks();
+        const scaleBreakHelper = getScaleBreakHelper();
 
         return zrUtil.map(ticks, function (tick) {
             const val = tick.value;
@@ -74,32 +75,17 @@ class LogScale extends IntervalScale {
                 roundingCriterion = originalExtent[1];
             }
 
-            let vBreak: VisualScaleBreak | undefined;
-            if (tick.break) {
-                const brk = tick.break.parsedBreak;
-                const originalBreak = zrUtil.find(originalBreaks, brk => identifyAxisBreak(
-                    brk.breakOption, tick.break.parsedBreak.breakOption
-                ));
-                const vmin = fixRoundingError(mathPow(base, brk.vmin), originalBreak.vmin);
-                const vmax = fixRoundingError(mathPow(base, brk.vmax), originalBreak.vmax);
-                const gapParsed = {
-                    type: brk.gapParsed.type,
-                    val: brk.gapParsed.type === 'tpAbs'
-                        ? fixRound(mathPow(base, brk.vmin + brk.gapParsed.val)) - vmin
-                        : brk.gapParsed.val,
-                };
-                vBreak = {
-                    type: tick.break.type,
-                    parsedBreak: {
-                        breakOption: brk.breakOption,
-                        vmin,
-                        vmax,
-                        gapParsed,
-                        gapReal: brk.gapReal,
-                    }
-                };
+            let vBreak;
+            if (scaleBreakHelper) {
+                const transformed = scaleBreakHelper.getTicksLogTransformBreak(
+                    tick,
+                    base,
+                    originalBreaks,
+                    fixRoundingError
+                );
+                vBreak = transformed.vBreak;
                 if (roundingCriterion == null) {
-                    roundingCriterion = originalBreak[`v${tick.break.type}`];
+                    roundingCriterion = transformed.brkRoundingCriterion;
                 }
             }
 
@@ -212,31 +198,16 @@ class LogScale extends IntervalScale {
     setBreaksFromOption(
         breakOptionList: ScaleBreakOption[],
     ): void {
-        const parseFn = zrUtil.bind(this.parse, this);
-        const opt = {noNegative: true};
-
-        const parsedOriginal = parseAxisBreakOption(breakOptionList, parseFn, opt);
+        const scaleBreakHelper = getScaleBreakHelper();
+        if (!scaleBreakHelper) {
+            return;
+        }
+        const {parsedOriginal, parsedLogged} = scaleBreakHelper.logarithmicParseBreaksFromOption(
+            breakOptionList,
+            this.base,
+            zrUtil.bind(this.parse, this)
+        );
         this._originalScale._innerSetBreak(parsedOriginal);
-
-        const parsedLogged = parseAxisBreakOption(breakOptionList, parseFn, opt);
-        const loggedBase = mathLog(this.base);
-        parsedLogged.breaks = zrUtil.map(parsedLogged.breaks, brk => {
-            const vmin = mathLog(brk.vmin) / loggedBase;
-            const vmax = mathLog(brk.vmax) / loggedBase;
-            const gapParsed = {
-                type: brk.gapParsed.type,
-                val: brk.gapParsed.type === 'tpAbs'
-                    ? (mathLog(brk.vmin + brk.gapParsed.val) / loggedBase) - vmin
-                    : brk.gapParsed.val,
-            };
-            return {
-                vmin,
-                vmax,
-                gapParsed,
-                gapReal: brk.gapReal,
-                breakOption: brk.breakOption
-            };
-        });
         this._innerSetBreak(parsedLogged);
     }
 

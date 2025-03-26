@@ -28,13 +28,14 @@ import {
     ScaleTick,
     ScaleBreakOption,
     NullUndefined,
+    ParsedScaleBreakList,
 } from '../util/types';
 import {
     ScaleCalculator
 } from './helper';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 import { bind } from 'zrender/src/core/util';
-import { ScaleBreakContext, ScaleBreakParsingResult, parseAxisBreakOption } from './break';
+import { ScaleBreakContext, ScaleBreakParsingResult, getScaleBreakHelper } from './break';
 
 export type ScaleGetTicksOpt = {
     // Whether expand the ticks to niced extent.
@@ -66,7 +67,7 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     //  while break scale is implemented inside the base class `Scale`. If more transformations
     //  need to be introduced in futher, we should probably refactor them for better orthogonal
     //  composition. (e.g. use decorator-like patterns rather than the current class inheritance?)
-    protected _brkCtx: ScaleBreakContext;
+    protected _brkCtx: ScaleBreakContext | NullUndefined;
 
     protected _calculator: ScaleCalculator = new ScaleCalculator();
 
@@ -78,8 +79,11 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     constructor(setting?: SETTING) {
         this._setting = setting || {} as SETTING;
         this._extent = [Infinity, -Infinity];
-        this._brkCtx = new ScaleBreakContext();
-        this._brkCtx.update(this._extent);
+        const scaleBreakHelper = getScaleBreakHelper();
+        if (scaleBreakHelper) {
+            this._brkCtx = scaleBreakHelper.createScaleBreakContext();
+            this._brkCtx!.update(this._extent);
+        }
     }
 
     getSetting<KEY extends keyof SETTING>(name: KEY): SETTING[KEY] {
@@ -152,7 +156,7 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
         if (!isNaN(end)) {
             thisExtent[1] = end;
         }
-        this._brkCtx.update(thisExtent);
+        this._brkCtx && this._brkCtx.update(thisExtent);
     }
 
     /**
@@ -161,35 +165,41 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     setBreaksFromOption(
         breakOptionList: ScaleBreakOption[],
     ): void {
-        this._innerSetBreak(parseAxisBreakOption(breakOptionList, bind(this.parse, this)));
+        const scaleBreakHelper = getScaleBreakHelper();
+        if (scaleBreakHelper) {
+            this._innerSetBreak(
+                scaleBreakHelper.parseAxisBreakOption(breakOptionList, bind(this.parse, this))
+            );
+        }
     }
 
     /**
      * [CAVEAT]: It should not be overridden!
      */
     _innerSetBreak(parsed: ScaleBreakParsingResult) {
-        this._brkCtx.setBreaks(parsed);
-        this._calculator.updateMethods(this._brkCtx);
-
-        this._brkCtx.update(this._extent);
+        if (this._brkCtx) {
+            this._brkCtx.setBreaks(parsed);
+            this._calculator.updateMethods(this._brkCtx);
+            this._brkCtx.update(this._extent);
+        }
     }
 
     /**
      * [CAVEAT]: It should not be overridden!
      */
-    _innerGetBreaks() {
-        return this._brkCtx.breaks;
+    _innerGetBreaks(): ParsedScaleBreakList {
+        return this._brkCtx ? this._brkCtx.breaks : [];
     }
 
     /**
      * Do not expose the internal `_breaks` unless necessary.
      */
     hasBreaks(): boolean {
-        return this._brkCtx.hasBreaks();
+        return this._brkCtx ? this._brkCtx.hasBreaks() : false;
     }
 
     protected _getExtentSpanWithBreaks() {
-        return this._brkCtx.hasBreaks()
+        return (this._brkCtx && this._brkCtx.hasBreaks())
             ? this._brkCtx.getExtentSpan()
             : this._extent[1] - this._extent[0];
     }

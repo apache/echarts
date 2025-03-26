@@ -23,7 +23,7 @@ import * as formatUtil from '../util/format';
 import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
 import * as helper from './helper';
 import {ScaleTick, ParsedScaleBreakList, ScaleDataValue} from '../util/types';
-import { addBreaksToTicks, pruneTicksByBreak } from './break';
+import { getScaleBreakHelper } from './break';
 
 const roundNumber = numberUtil.round;
 
@@ -99,6 +99,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         const extent = this._extent;
         const niceTickExtent = this._niceExtent;
         const intervalPrecision = this._intervalPrecision;
+        const scaleBreakHelper = getScaleBreakHelper();
 
         const ticks = [] as ScaleTick[];
         // If interval is 0, return [];
@@ -106,8 +107,8 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             return ticks;
         }
 
-        if (opt.breakTicks === 'only_break') {
-            addBreaksToTicks(ticks, this._brkCtx.breaks, this._extent);
+        if (opt.breakTicks === 'only_break' && scaleBreakHelper) {
+            scaleBreakHelper.addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent);
             return ticks;
         }
 
@@ -139,9 +140,11 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
 
             // Avoid rounding error
             tick = roundNumber(tick + interval, intervalPrecision);
-            const moreMultiple = this._brkCtx.calcNiceTickMultiple(tick, estimateNiceMultiple);
-            if (moreMultiple >= 0) {
-                tick = roundNumber(tick + moreMultiple * interval, intervalPrecision);
+            if (this._brkCtx) {
+                const moreMultiple = this._brkCtx.calcNiceTickMultiple(tick, estimateNiceMultiple);
+                if (moreMultiple >= 0) {
+                    tick = roundNumber(tick + moreMultiple * interval, intervalPrecision);
+                }
             }
 
             if (ticks.length > 0 && tick === ticks[ticks.length - 1].value) {
@@ -169,17 +172,17 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             }
         }
 
-        if (!opt.notPruneByBreak) {
-            pruneTicksByBreak(
+        if (!opt.notPruneByBreak && scaleBreakHelper) {
+            scaleBreakHelper.pruneTicksByBreak(
                 ticks,
-                this._brkCtx.breaks,
+                this._brkCtx!.breaks,
                 item => item.value,
                 this._interval,
                 this._extent
             );
         }
-        if (opt.breakTicks !== 'none') {
-            addBreaksToTicks(ticks, this._brkCtx.breaks, this._extent);
+        if (opt.breakTicks !== 'none' && scaleBreakHelper) {
+            scaleBreakHelper.addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent);
         }
 
         return ticks;
@@ -220,7 +223,8 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
                 count++;
             }
 
-            pruneTicksByBreak(
+            const scaleBreakHelper = getScaleBreakHelper();
+            scaleBreakHelper && scaleBreakHelper.pruneTicksByBreak(
                 minorTicksGroup,
                 this._getNonTransBreaks(),
                 value => value,
@@ -234,7 +238,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
     }
 
     protected _getNonTransBreaks(): ParsedScaleBreakList {
-        return this._brkCtx.breaks;
+        return this._brkCtx ? this._brkCtx.breaks : [];
     }
 
     /**
