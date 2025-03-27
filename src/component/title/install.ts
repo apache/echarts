@@ -37,6 +37,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {windowOpen} from '../../util/format';
 import { EChartsExtensionInstallRegisters } from '../../extension';
+import tokens from '../../visual/tokens';
 
 
 export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
@@ -121,11 +122,11 @@ class TitleModel extends ComponentModel<TitleOption> {
         textStyle: {
             fontSize: 18,
             fontWeight: 'bold',
-            color: '#464646'
+            color: tokens.color.foreground.primary
         },
         subtextStyle: {
             fontSize: 12,
-            color: '#6E7079'
+            color: tokens.color.foreground.quaternary
         }
     };
 }
