@@ -27,10 +27,6 @@ import IntervalScale from './Interval';
 import SeriesData from '../data/SeriesData';
 import { DimensionName, ScaleTick } from '../util/types';
 
-const scaleProto = Scale.prototype;
-// FIXME:TS refactor: not good to call it directly with `this`?
-const intervalScaleProto = IntervalScale.prototype;
-
 const roundingErrorFix = numberUtil.round;
 
 const mathFloor = Math.floor;
@@ -39,6 +35,9 @@ const mathPow = Math.pow;
 const mathMax = Math.max;
 const mathRound = Math.round;
 
+// LogScale does not have any specific settings
+type LogScaleSetting = {};
+
 /**
  * LogScale is a scale that maps values to a logarithmic range.
  *
@@ -46,7 +45,7 @@ const mathRound = Math.round;
  * Then in tick generation, the tick values are multiplied by -1 back to the original values and the normalize function
  * uses a reverse extent to get the correct negative values in plot with smaller values at the top of Y axis.
  */
-class LogScale extends Scale {
+class LogScale extends IntervalScale<LogScaleSetting> {
     static type = 'log';
     readonly type = 'log';
 
@@ -65,12 +64,6 @@ class LogScale extends Scale {
     private _fixMin: boolean;
     private _fixMax: boolean;
 
-    // FIXME:TS actually used by `IntervalScale`
-    private _interval: number = 0;
-    // FIXME:TS actually used by `IntervalScale`
-    private _niceExtent: [number, number];
-
-
     /**
      * @param Whether expand the ticks to niced extent.
      */
@@ -80,7 +73,7 @@ class LogScale extends Scale {
         const originalExtent = originalScale.getExtent();
         const negativeMultiplier = this._isNegative ? -1 : 1;
 
-        const ticks = intervalScaleProto.getTicks.call(this, expandToNicedExtent);
+        const ticks = super.getTicks(expandToNicedExtent);
 
         return zrUtil.map(ticks, function (tick) {
             const val = tick.value;
@@ -110,14 +103,11 @@ class LogScale extends Scale {
             end = scaleHelper.absMathLog(end, this.base);
         }
 
-        intervalScaleProto.setExtent.call(this, start, end);
+        super.setExtent(start, end);
     }
 
-    /**
-     * @return {number} end
-     */
-    getExtent() {
-        const extent = scaleProto.getExtent.call(this);
+    getExtent(): [number, number] {
+        const extent = super.getExtent();
         extent[0] = mathPow(this.base, extent[0]);
         extent[1] = mathPow(this.base, extent[1]);
 
@@ -144,7 +134,8 @@ class LogScale extends Scale {
         extent[0] = logStart;
         extent[1] = logEnd;
 
-        scaleProto.unionExtent.call(this, extent);
+        extent[0] < this._extent[0] && (this._extent[0] = extent[0]);
+        extent[1] > this._extent[1] && (this._extent[1] = extent[1]);
     }
 
     unionExtentFromData(data: SeriesData, dim: DimensionName): void {
@@ -199,7 +190,7 @@ class LogScale extends Scale {
         minInterval?: number,
         maxInterval?: number
     }): void {
-        intervalScaleProto.calcNiceExtent.call(this, opt);
+        super.calcNiceExtent(opt);
 
         this._fixMin = opt.fixMin;
         this._fixMax = opt.fixMax;
@@ -230,9 +221,6 @@ class LogScale extends Scale {
         return mathPow(this.base, val);
     }
 
-    getMinorTicks: IntervalScale['getMinorTicks'];
-    getLabel: IntervalScale['getLabel'];
-
     /**
      * Get the extent of the log scale.
      * @param start - The start value of the extent.
@@ -253,10 +241,6 @@ class LogScale extends Scale {
         }
     }
 }
-
-const proto = LogScale.prototype;
-proto.getMinorTicks = intervalScaleProto.getMinorTicks;
-proto.getLabel = intervalScaleProto.getLabel;
 
 function fixRoundingError(val: number, originalVal: number): number {
     return roundingErrorFix(val, numberUtil.getPrecision(originalVal));
