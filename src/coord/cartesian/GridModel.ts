@@ -22,6 +22,7 @@ import ComponentModel from '../../model/Component';
 import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin } from '../../util/types';
 import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
+import tokens from '../../visual/tokens';
 
 export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
     mainType?: 'grid';
@@ -60,7 +61,7 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         containLabel: false,
         // width: {totalWidth} - left - right,
         // height: {totalHeight} - top - bottom,
-        backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: tokens.color.transparent,
         borderWidth: 1,
         borderColor: '#ccc'
     };

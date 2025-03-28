@@ -39,6 +39,7 @@ import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
 import SeriesData from '../../data/SeriesData';
+import tokens from '../../visual/tokens';
 
 const mapVisual = VisualMapping.mapVisual;
 const eachVisual = VisualMapping.eachVisual;
@@ -620,7 +621,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         inverse: false,
         orient: 'vertical',        // 'horizontal' ¦ 'vertical'
 
-        backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: tokens.color.transparent,
         borderColor: '#ccc',       // 值域边框颜色
         contentColor: '#5793f3',
         inactiveColor: '#aaa',

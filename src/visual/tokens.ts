@@ -5,7 +5,7 @@ const tokens = {
             '#b6d634',
             '#505372',
             '#ff994d',
-            '#52d098',
+            '#5acb92',
             '#ffd82c',
             '#e76991',
             '#6854aa',
@@ -31,24 +31,52 @@ const tokens = {
         neutral80: '#3a3b3f',
         neutral85: '#2e2f33',
         neutral90: '#232327',
-        neutral95: '#232327',
-        neutral100: '#000',
+        neutral95: '#17171b',
+        neutral99: '#000',
 
-        // Dynamic colors
-        foreground: {
-            primary: '',
-            secondary: '',
-            tertiary: '',
-            quaternary: ''
+        transparent: 'rgba(0,0,0,0)',
+
+        primary: '@neutral80',
+        secondary: '@neutral70',
+        tertiary: '@neutral60',
+        quaternary: '@neutral50',
+        disabled: '@neutral20',
+
+        border: '@neutral30',
+        borderTint: '@neutral20',
+        borderShade: '@neutral40',
+
+        background: '@neutral05',
+        backgroundTint: 'rgba(234,237,245,0.5)',
+        backgroundShade: '@neutral10',
+
+        shadow: 'rgba(0,0,0,0.2)',
+        shadowTint: 'rgba(129,130,136,0.2)',
+
+        axisLine: '@neutral70',
+        axisTick: '@axisLine',
+        axisTickMinor: '@neutral60',
+        axisLabel: '@axisLine'
+    }
+} as const;
+
+function decodeTokens() {
+    const color = tokens.color as {
+        [key: string]: string | readonly string[]
+    };
+    for (const key in color) {
+        if (Object.prototype.hasOwnProperty.call(color, key)) {
+            const value = color[key];
+            if (typeof value === 'string' && value.startsWith('@')) {
+                const refKey = value.slice(1);
+                if (refKey in color) {
+                    color[key] = color[refKey];
+                }
+            }
         }
     }
-};
+}
 
-tokens.color.foreground = {
-    primary: tokens.color.neutral80,
-    secondary: tokens.color.neutral70,
-    tertiary: tokens.color.neutral60,
-    quaternary: tokens.color.neutral50
-};
+decodeTokens();
 
 export default tokens;

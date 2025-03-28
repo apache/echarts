@@ -110,7 +110,7 @@ class TitleModel extends ComponentModel<TitleOption> {
         left: 0,
         top: 0,
 
-        backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: tokens.color.transparent,
 
         borderColor: '#ccc',
 
@@ -122,11 +122,11 @@ class TitleModel extends ComponentModel<TitleOption> {
         textStyle: {
             fontSize: 18,
             fontWeight: 'bold',
-            color: tokens.color.foreground.primary
+            color: tokens.color.primary
         },
         subtextStyle: {
             fontSize: 12,
-            color: tokens.color.foreground.quaternary
+            color: tokens.color.quaternary
         }
     };
 }

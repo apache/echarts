@@ -29,8 +29,9 @@ import {
     BrushAreaRange, BrushTypeUncertain, BrushType
 } from '../helper/BrushController';
 import { ModelFinderObject } from '../../util/model';
+import tokens from '../../visual/tokens';
 
-const DEFAULT_OUT_OF_BRUSH_COLOR = '#ddd';
+const DEFAULT_OUT_OF_BRUSH_COLOR = tokens.color.disabled;
 
 /**
  * The input to define brush areas.
@@ -136,8 +137,8 @@ class BrushModel extends ComponentModel<BrushOption> {
         transformable: true,
         brushStyle: {
             borderWidth: 1,
-            color: 'rgba(210,219,238,0.3)',
-            borderColor: '#D2DBEE'
+            color: tokens.color.backgroundTint,
+            borderColor: tokens.color.borderTint
         },
         throttleType: 'fixRate',
         throttleDelay: 0,

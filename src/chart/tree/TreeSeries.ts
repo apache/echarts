@@ -39,6 +39,7 @@ import { LayoutRect } from '../../util/layout';
 import Model from '../../model/Model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { wrapTreePathInfo } from '../helper/treeHelper';
+import tokens from '../../visual/tokens';
 
 interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
@@ -287,13 +288,13 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         initialTreeDepth: 2,
 
         lineStyle: {
-            color: '#ccc',
+            color: tokens.color.borderTint,
             width: 1.5,
             curveness: 0.5
         },
 
         itemStyle: {
-            color: 'lightsteelblue',
+            // color: 'lightsteelblue',
             // borderColor: '#c23531',
             borderWidth: 1.5
         },

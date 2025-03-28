@@ -23,6 +23,7 @@ import * as numberUtil from '../../util/number';
 import { VisualMappingOption } from '../../visual/VisualMapping';
 import { inheritDefaultOption } from '../../util/component';
 import { ItemStyleOption } from '../../util/types';
+import tokens from '../../visual/tokens';
 
 // Constant
 const DEFAULT_BAR_BOUND = [20, 140];
@@ -296,14 +297,14 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
             shadowBlur: 2,
             shadowOffsetX: 1,
             shadowOffsetY: 1,
-            shadowColor: 'rgba(0,0,0,0.2)'
+            shadowColor: tokens.color.shadow
         }
         // emphasis: {
         //     handleStyle: {
         //         shadowBlur: 3,
         //         shadowOffsetX: 1,
         //         shadowOffsetY: 1,
-        //         shadowColor: 'rgba(0,0,0,0.2)'
+        //         shadowColor: tokens.color.shadow
         //     }
         // }
     }) as ContinousVisualMapOption;

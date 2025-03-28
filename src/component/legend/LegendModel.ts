@@ -37,6 +37,7 @@ import GlobalModel from '../../model/Global';
 import { ItemStyleProps } from '../../model/mixin/itemStyle';
 import { LineStyleProps } from './../../model/mixin/lineStyle';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
+import tokens from '../../visual/tokens';
 
 type LegendDefaultSelectorOptionsProps = {
     type: string;
@@ -457,7 +458,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
 
         align: 'auto',
 
-        backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: tokens.color.transparent,
         borderColor: '#ccc',
         borderRadius: 0,
         borderWidth: 0,
