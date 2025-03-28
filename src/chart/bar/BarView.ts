@@ -783,17 +783,18 @@ const elementCreator: {
         rect.name = 'item';
 
         if (animationModel) {
-            const isStacked = seriesModel.get('stack') !== undefined;
+            const isStacked = seriesModel.get('stack') != null;
             const rectShape = rect.shape;
             const animateProperty = isHorizontal ? 'height' : 'width' as 'width' | 'height';
             rectShape[animateProperty] = 0;
             if (isStacked) {
                 // if it's stacked, the bar will be animated from the
-                // 'bottom' of the value axis, irregardless of 'inverse'
+                // 'bottom' of the value axis, regardless of 'inverse'
                 const stackAnimateProperty = isHorizontal ? 'y' : 'x' as 'y' | 'x';
-                const coordSys = (seriesModel.coordinateSystem as Cartesian2D);
-                const extent = coordSys.getOtherAxis(coordSys.getBaseAxis()).getGlobalExtent()[0];
-                rectShape[stackAnimateProperty] = extent;
+                const itemLayout = data.getItemLayout(newIndex);
+                // valueAxisStart is unset only when `large` is true,
+                // in which case this branch is not taken
+                rectShape[stackAnimateProperty] = itemLayout.valueAxisStart;
             }
         }
         return rect;
