@@ -60,9 +60,15 @@ body > .main {
     margin: 10px 5px;
     font-size: 14px;
 }
+.test-buttons-slider-sub {
+    margin-left: -10px;
+}
 .test-buttons-slider span {
     vertical-align: middle;
     margin: 0 3px;
+}
+.test-buttons-slider-disabled span {
+    color: #aaa;
 }
 .test-buttons-slider input {
     vertical-align: middle;
