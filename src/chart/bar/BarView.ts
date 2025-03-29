@@ -794,7 +794,16 @@ const elementCreator: {
                 const itemLayout = data.getItemLayout(newIndex);
                 // valueAxisStart is unset only when `large` is true,
                 // in which case this branch is not taken
-                rectShape[stackAnimateProperty] = itemLayout.valueAxisStart;
+                const valueAxisStart = itemLayout.valueAxisStart;
+
+                // make sure we don't go beyond the grid
+                const coordSys = (seriesModel.coordinateSystem as Cartesian2D);
+                const valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+                const extentStart = valueAxis.getGlobalExtent()[0];
+                // compare with extentStart in the same direction as the stackAnimateProperty
+                const cmpFn = (valueAxis.inverse === isHorizontal) ? mathMax : mathMin;
+
+                rectShape[stackAnimateProperty] = cmpFn(valueAxisStart, extentStart);
             }
         }
         return rect;
