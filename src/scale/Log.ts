@@ -24,8 +24,8 @@ import * as numberUtil from '../util/number';
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
 import {
-    DimensionLoose, DimensionName, NullUndefined, ParsedScaleBreakList, ScaleBreakOption,
-    ScaleTick, VisualScaleBreak
+    DimensionLoose, DimensionName, ParsedScaleBreakList, ScaleBreakOption,
+    ScaleTick
 } from '../util/types';
 import { logTransform } from './helper';
 import SeriesData from '../data/SeriesData';

@@ -870,7 +870,7 @@ under the License.
                 }, {
                     text: 'containLabel:',
                     type: 'select',
-                    values: [
+                    options: [
                         {text: 'false', value: false},
                         {text: 'true(should in green rect)', value: true}
                     ],
@@ -1260,7 +1260,7 @@ under the License.
                     }, {
                         text: 'axis formatter:',
                         type: 'select',
-                        values: [
+                        options: [
                             {text: 'none', value: undefined},
                             {text: 'one line', value: FORMATTER_ONE_LINE},
                             {text: 'two line', value: FORMATTER_TWO_LINE}
@@ -1320,7 +1320,7 @@ under the License.
                     }, {
                         text: 'showMinLabel',
                         type: 'select',
-                        values: [{text: 'undefined', value: undefined}, false, true],
+                        values: [undefined, false, true],
                         onchange: function () {
                             var value = this.value;
                             var list = [];
@@ -1334,7 +1334,7 @@ under the License.
                     }, {
                         text: 'showMaxLabel',
                         type: 'select',
-                        values: [{text: 'undefined', value: undefined}, false, true],
+                        values: [undefined, false, true],
                         onchange: function () {
                             var value = this.value;
                             var list = [];
