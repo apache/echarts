@@ -34,12 +34,14 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     DefaultEmphasisFocus,
-    CallbackDataParams
+    CallbackDataParams,
+    RoamOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import type View from '../../coord/View';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
@@ -95,7 +97,8 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
 export interface SankeySeriesOption
     extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
     SankeyBothStateOption<CallbackDataParams>,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin,
+    RoamOptionMixin {
     type?: 'sankey'
 
     /**
@@ -147,6 +150,8 @@ export interface SankeySeriesOption
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     static readonly type = 'series.sankey';
     readonly type = SankeySeriesModel.type;
+
+    coordinateSystem: View;
 
     levelModels: Model<SankeyLevelOption>[];
 
@@ -211,6 +216,14 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         const dataItem = nodes[dataIndex];
         dataItem.localX = localPosition[0];
         dataItem.localY = localPosition[1];
+    }
+
+    setCenter(center: number[]) {
+        this.option.center = center;
+    }
+
+    setZoom(zoom: number) {
+        this.option.zoom = zoom;
     }
 
     /**
@@ -296,6 +309,11 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         draggable: true,
 
         layoutIterations: 32,
+
+        // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        roam: false,
+        center: null,
+        zoom: 1,
 
         label: {
             show: true,
