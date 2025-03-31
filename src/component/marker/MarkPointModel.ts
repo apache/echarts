@@ -43,6 +43,7 @@ export interface MarkPointDataItemOption extends
     SymbolOptionMixin<CallbackDataParams>,
     MarkerPositionOption {
     name: string
+    relativeTo: 'container' | 'coordinate'
 }
 
 export interface MarkPointOption extends MarkerOption,
