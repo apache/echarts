@@ -413,7 +413,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedSource, expectedVe
     }
     else {
         // Only run once
-        await runTestPage(browser, testOpt, 'local', runtimeCode, true);
+        await runTestPage(browser, testOpt, expectedSource, 'local', runtimeCode, true);
     }
 }
 
