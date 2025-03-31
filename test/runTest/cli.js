@@ -39,7 +39,9 @@ program
     .option('--no-headless', 'Not headless')
     .option('-s, --speed <speed>', 'Playback speed')
     .option('--expected <expected>', 'Expected version')
+    .option('--expected-source <expectedSource>', 'Expected source')
     .option('--actual <actual>', 'Actual version')
+    .option('--actual-source <actualSource>', 'Actual source')
     .option('--renderer <renderer>', 'svg/canvas renderer')
     .option('--use-coarse-pointer <useCoarsePointer>', '"auto" (by default) or "true" or "false"')
     .option('--threads <threads>', 'How many threads to run concurrently')
@@ -78,12 +80,12 @@ function getClientRelativePath(absPath) {
     return path.join('../', path.relative(__dirname, absPath));
 }
 
-function replaceEChartsVersion(interceptedRequest, version) {
+function replaceEChartsVersion(interceptedRequest, source, version) {
     // TODO Extensions and maps
     if (interceptedRequest.url().endsWith('dist/echarts.js')) {
-        console.log('Use echarts version: ' + version);
+        console.log('Use echarts version: ' + source + ' ' + version);
         interceptedRequest.continue({
-            url: `${origin}/test/runTest/${getVersionDir(version)}/${getEChartsTestFileName()}`
+            url: `${origin}/test/runTest/${getVersionDir(source, version)}/${getEChartsTestFileName()}`
         });
     }
     else {
@@ -167,7 +169,7 @@ async function waitForNetworkIdle(page) {
 /**
  * @param {puppeteer.Browser} browser
  */
-async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
+async function runTestPage(browser, testOpt, source, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
@@ -175,7 +177,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
 
     const page = await browser.newPage();
     page.setRequestInterception(true);
-    page.on('request', request => replaceEChartsVersion(request, version));
+    page.on('request', request => replaceEChartsVersion(request, source, version));
 
     async function pageScreenshot() {
         if (!program.save) {
@@ -338,12 +340,12 @@ function writePNG(diffPNG, diffPath) {
 /**
  * @param {puppeteer.Browser} browser
  */
-async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
+async function runTest(browser, testOpt, runtimeCode, expectedSource, expectedVersion, actualSource, actualVersion) {
     if (program.save) {
         testOpt.status === 'running';
 
-        const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
-        const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
+        const expectedResult = await runTestPage(browser, testOpt, expectedSource, expectedVersion, runtimeCode, true);
+        const actualResult = await runTestPage(browser, testOpt, actualSource, actualVersion, runtimeCode, false);
 
         // sortScreenshots(expectedResult.screenshots);
         // sortScreenshots(actualResult.screenshots);
@@ -432,7 +434,7 @@ async function runTests(pendingTests) {
     async function eachTask(testOpt) {
         console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}, useCoarsePointer: ${program.useCoarsePointer}`);
         try {
-            await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
+            await runTest(browser, testOpt, runtimeCode, program.expectedSource, program.expected, program.actualSource, program.actual);
         }
         catch (e) {
             // Restore status

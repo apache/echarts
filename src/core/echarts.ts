@@ -235,6 +235,10 @@ export interface ResizeOpts {
     silent?: boolean // by default false.
 };
 
+export interface SetThemeOpts {
+    silent?: boolean;
+}
+
 interface PostIniter {
     (chart: EChartsType): void
 }
@@ -407,11 +411,6 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         opts = opts || {};
 
-        // Get theme by name
-        if (isString(theme)) {
-            theme = themeStorage[theme] as object;
-        }
-
         this._dom = dom;
 
         let defaultRenderer = 'canvas';
@@ -462,10 +461,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         // Expect 60 fps.
         this._throttledZrFlush = throttle(bind(zr.flush, zr), 17);
 
-        theme = clone(theme);
-        theme && backwardCompat(theme as ECUnitOption, true);
-
-        this._theme = theme;
+        this._updateTheme(theme);
 
         this._locale = createLocaleObject(opts.locale || SYSTEM_LANG);
 
@@ -696,10 +692,69 @@ class ECharts extends Eventful<ECEventDefinition> {
     }
 
     /**
-     * @deprecated
+     * Update theme with name or theme option and repaint the chart.
+     * @param theme Theme name or theme option.
+     * @param opts Optional settings
      */
-    private setTheme(): void {
-        deprecateLog('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
+    setTheme(theme: string | ThemeOption, opts?: SetThemeOpts): void {
+        if (this[IN_MAIN_PROCESS_KEY]) {
+            if (__DEV__) {
+                error('`setTheme` should not be called during main process.');
+            }
+            return;
+        }
+
+        if (this._disposed) {
+            disposedWarning(this.id);
+            return;
+        }
+
+        const ecModel = this._model;
+        if (!ecModel) {
+            return;
+        }
+
+        let silent = opts && opts.silent;
+        let updateParams = null as UpdateLifecycleParams;
+
+        if (this[PENDING_UPDATE]) {
+            if (silent == null) {
+                silent = (this[PENDING_UPDATE] as any).silent;
+            }
+            updateParams = (this[PENDING_UPDATE] as any).updateParams;
+            this[PENDING_UPDATE] = null;
+        }
+
+        this[IN_MAIN_PROCESS_KEY] = true;
+
+        try {
+            this._updateTheme(theme);
+            ecModel.setTheme(this._theme);
+
+            prepare(this);
+            updateMethods.update.call(this, {type: 'setTheme'}, updateParams);
+        }
+        catch (e) {
+            this[IN_MAIN_PROCESS_KEY] = false;
+            throw e;
+        }
+
+        this[IN_MAIN_PROCESS_KEY] = false;
+
+        flushPendingActions.call(this, silent);
+        triggerUpdatedEvent.call(this, silent);
+    }
+
+    private _updateTheme(theme: string | ThemeOption): void {
+        if (isString(theme)) {
+            theme = themeStorage[theme] as object;
+        }
+
+        if (theme) {
+            theme = clone(theme);
+            theme && backwardCompat(theme as ECUnitOption, true);
+            this._theme = theme;
+        }
     }
 
     // We don't want developers to use getModel directly.
@@ -1663,7 +1718,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             prepareAndUpdate(this: ECharts, payload: Payload): void {
                 prepare(this);
-                updateMethods.update.call(this, payload, {
+                updateMethods.update.call(this, payload, payload && {
                     // Needs to mark option changed if newOption is given.
                     // It's from MagicType.
                     // TODO If use a separate flag optionChanged in payload?
