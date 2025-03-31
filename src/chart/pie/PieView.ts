@@ -25,7 +25,8 @@ import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { Payload, ColorString } from '../../util/types';
+import { Payload, ColorString, CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
+import SeriesModel from '../../model/Series';
 import SeriesData from '../../data/SeriesData';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
@@ -33,7 +34,8 @@ import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGu
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 import { saveOldStyle } from '../../animation/basicTransition';
-import { getBasicPieLayout, getSeriesLayoutData } from './pieLayout';
+import { getSeriesLayoutData } from './pieLayout';
+import { getCircleLayout } from '../../util/layout';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -262,7 +264,12 @@ class PieView extends ChartView {
         if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
             const layoutData = getSeriesLayoutData(seriesModel);
             const sector = new graphic.Sector({
-                shape: extend(getBasicPieLayout(seriesModel, api), layoutData)
+                shape: extend(
+                    getCircleLayout(
+                        seriesModel as unknown as SeriesModel<CircleLayoutOptionMixin & SeriesOption<unknown>>, api
+                    ),
+                    layoutData
+                )
             });
             sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
             this._emptyCircleSector = sector;
