@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import { AxisBaseOption } from './axisCommonTypes';
 
-
 const defaultOption: AxisBaseOption = {
     show: true,
     // zlevel: 0,
@@ -106,6 +105,22 @@ const defaultOption: AxisBaseOption = {
         areaStyle: {
             color: ['rgba(250,250,250,0.2)', 'rgba(210,219,238,0.2)']
         }
+    },
+    breakArea: {
+        show: true,
+        itemStyle: {
+            color: '#fff',
+            // Break border color should be darker than the splitLine
+            // because it has opacity and should be more prominent
+            borderColor: '#C2CADA',
+            borderWidth: 1,
+            borderType: [3, 3],
+            opacity: 0.6
+        },
+        zigzagAmplitude: 4,
+        zigzagMinSpan: 4,
+        zigzagMaxSpan: 20,
+        expandOnClick: true
     }
 };
 

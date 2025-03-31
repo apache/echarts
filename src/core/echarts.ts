@@ -133,7 +133,10 @@ import lifecycle, {
 import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
 import { getImpl } from './impl';
 import type geoSourceManager from '../coord/geo/geoSourceManager';
-import {registerCustomSeries as registerCustom} from '../chart/custom/customSeriesRegister';
+import { ExtendedElement } from './ExtendedElement';
+import {
+    registerCustomSeries as registerCustom
+} from '../chart/custom/customSeriesRegister';
 
 declare let global: any;
 
@@ -2418,13 +2421,19 @@ class ECharts extends Eventful<ECEventDefinition> {
             const zlevel = model.get('zlevel') || 0;
             // Set z and zlevel
             view.eachRendered((el) => {
-                doUpdateZ(el, z, zlevel, -Infinity);
+                doUpdateZ(el, z, zlevel, -Infinity, false);
                 // Don't traverse the children because it has been traversed in _updateZ.
                 return true;
             });
         };
 
-        function doUpdateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
+        function doUpdateZ(
+            el: Element,
+            z: number,
+            zlevel: number,
+            maxZ2: number,
+            ignoreModelZ: boolean
+        ): number {
             // Group may also have textContent
             const label = el.getTextContent();
             const labelLine = el.getTextGuideLine();
@@ -2434,10 +2443,25 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // set z & zlevel of children elements of Group
                 const children = (el as graphic.Group).childrenRef();
                 for (let i = 0; i < children.length; i++) {
-                    maxZ2 = Math.max(doUpdateZ(children[i], z, zlevel, maxZ2), maxZ2);
+                    ignoreModelZ = ignoreModelZ || (el as ExtendedElement).ignoreModelZ;
+                    maxZ2 = Math.max(
+                        doUpdateZ(
+                            children[i],
+                            z,
+                            zlevel,
+                            maxZ2,
+                            ignoreModelZ || (el as ExtendedElement).ignoreModelZ
+                        ),
+                        maxZ2
+                    );
                 }
             }
             else {
+                if (ignoreModelZ || (el as ExtendedElement).ignoreModelZ) {
+                    // This child element will not be set z and zlevel of the group
+                    return maxZ2;
+                }
+
                 // not Group
                 (el as Displayable).z = z;
                 (el as Displayable).zlevel = zlevel;
