@@ -54,6 +54,41 @@ body > .main {
 .test-buttons button {
     margin: 10px 5px;
 }
+.test-buttons-slider {
+    white-space: nowrap;
+    display: inline-block;
+    margin: 10px 5px;
+    font-size: 14px;
+}
+.test-buttons-slider-sub {
+    margin-left: -10px;
+}
+.test-buttons-slider span {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-buttons-slider-disabled span {
+    color: #aaa;
+}
+.test-buttons-slider input {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-buttons-select {
+    white-space: nowrap;
+    display: inline-block;
+    font-size: 14px;
+    margin: 10px 5px;
+    margin-right: 10px;
+}
+.test-buttons-select span {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-buttons-select input {
+    vertical-align: middle;
+    margin: 0 3px;
+}
 .test-chart-block {
     position: relative;
 }
