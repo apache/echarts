@@ -112,7 +112,7 @@ class TitleModel extends ComponentModel<TitleOption> {
 
         backgroundColor: tokens.color.transparent,
 
-        borderColor: '#ccc',
+        borderColor: tokens.color.primary,
 
         borderWidth: 0,
 

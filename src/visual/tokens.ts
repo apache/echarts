@@ -34,6 +34,16 @@ const tokens = {
         neutral95: '#17171b',
         neutral99: '#000',
 
+        accent10: '#dee4f9',
+        accent20: '#bdc9f4',
+        accent30: '#9baeee',
+        accent40: '#7a93e9',
+        accent50: '#5978e3',
+        accent60: '#4c65bb',
+        accent70: '#3f5193',
+        accent80: '#313e6b',
+        accent90: '#242a43',
+
         transparent: 'rgba(0,0,0,0)',
 
         primary: '@neutral80',

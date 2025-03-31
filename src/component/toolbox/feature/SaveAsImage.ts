@@ -24,6 +24,7 @@ import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
 import { ZRColor } from '../../../util/types';
 import GlobalModel from '../../../model/Global';
 import ExtensionAPI from '../../../core/ExtensionAPI';
+import tokens from '../../../visual/tokens';
 
 export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     icon?: string
@@ -132,7 +133,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
             type: 'png',
             // Default use option.backgroundColor
             // backgroundColor: '#fff',
-            connectedBackgroundColor: '#fff',
+            connectedBackgroundColor: tokens.color.neutral00,
             name: '',
             excludeComponents: ['toolbox'],
             // use current pixel ratio of device by default

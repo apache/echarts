@@ -656,7 +656,7 @@ class SliderZoomView extends DataZoomView {
             const moveHandleIcon = displayables.moveHandleIcon = createSymbol(
                 dataZoomModel.get('moveHandleIcon'),
                 -iconSize / 2, -iconSize / 2, iconSize, iconSize,
-                '#fff',
+                tokens.color.neutral00,
                 true
             );
             moveHandleIcon.silent = true;
