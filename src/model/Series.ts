@@ -30,7 +30,8 @@ import {
     SeriesEncodeOptionMixin,
     OptionEncodeValue,
     ColorBy,
-    StatesOptionMixin
+    StatesOptionMixin,
+    DimensionLoose
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -447,7 +448,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      * @return If and only if multiple indices has
      *         the same value, they are put to the result.
      */
-    indicesOfNearest(axisDim: string, dim: string, value: number, maxDistance?: number): number[] {
+    indicesOfNearest(axisDim: DimensionName, dim: DimensionLoose, value: number, maxDistance?: number): number[] {
         const data = this.getData();
         const coordSys = this.coordinateSystem;
         const axis = coordSys && coordSys.getAxis(axisDim);

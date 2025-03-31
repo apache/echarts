@@ -49,6 +49,7 @@ import { Source } from '../data/Source';
 import Model from '../model/Model';
 import { DataStoreDimensionType } from '../data/DataStore';
 import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
+import { PrimaryTimeUnit } from './time';
 
 
 
@@ -371,7 +372,7 @@ export type OrdinalSortInfo = {
  * `OptionDataValue` are parsed (see `src/data/helper/dataValueHelper.parseDataValue`)
  * into `ParsedValue` and stored into `data/SeriesData` storage.
  * Note:
- * (1) The term "parse" does not mean `src/scale/Scale['parse']`.
+ * (1) The term "parse" does not mean `src/scale/Scale['parse']`(@see `ScaleDataValue`).
  * (2) If a category dimension is not mapped to any axis, its raw value will NOT be
  * parsed to `OrdinalNumber` but keep the original `OrdinalRawValue` in `src/data/SeriesData` storage.
  */
@@ -379,38 +380,103 @@ export type ParsedValue = ParsedValueNumeric | OrdinalRawValue;
 export type ParsedValueNumeric = number | OrdinalNumber;
 
 /**
- * `ScaleDataValue` means that the user input primitive value to `src/scale/Scale`.
- * (For example, used in `axis.min`, `axis.max`, `convertToPixel`).
- * Note:
- * `ScaleDataValue` is a little different from `OptionDataValue`, because it will not go through
- * `src/data/helper/dataValueHelper.parseDataValue`, but go through `src/scale/Scale['parse']`.
+ * `ScaleDataValue` represents the user input axis value in echarts API.
+ * (For example, used `axis.min`/`axis.max` in echarts option, `convertToPixel`).
+ * NOTICE:
+ *  `ScaleDataValue` is slightly different from `OptionDataValue` for historical reason.
+ *  `ScaleDataValue` should be parsed by `src/scale/Scale['parse']`.
+ *  `OptionDataValue` should be parsed by `src/data/helper/dataValueHelper.parseDataValue`.
+ * FIXME:
+ *  Make `ScaleDataValue` `OptionDataValue` consistent? Since numeric string (like `'123'`) is accepted
+ *  in `series.data` and is effectively accepted in some axis relevant option (e.g., `axis.min/max`),
+ *  `type ScaleDataValue` should also include it for consistency. But it might bring some breaking in
+ *  TS interface (user callback) and need comprehensive checks for all of the parsing of `ScaleDataValue`.
  */
 export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
 
-export type ScaleBreak = {
-    start: number,
-    end: number,
-    gap: number,
-    isExpanded?: boolean // undefined means false
+export type ScaleBreakOption = {
+    start: ScaleDataValue,
+    end: ScaleDataValue,
+    // - `number`: The unit is the same as data value, the same as `start`/`end`, not pixel.
+    // - `string`:
+    //     - Like '35%'. A percent over the axis extent. Useful for keeping the pixel size of break areas
+    //       consistent despite variations in `series.data`, which cannot be achieved by `number`.
+    //     - Also support numeric string like `'123'`, means `123`, following convention.
+    // - If ommitted, means 0.
+    gap?: number | string,
+    // undefined means false
+    isExpanded?: boolean
+};
+export type ScaleBreakOptionIdentifier = Pick<ScaleBreakOption, 'start' | 'end'>;
+
+// - Parsed from the breaks in axis model.
+// - Never be null/undefined.
+// - Contain only unexpanded breaks.
+export type ParsedScaleBreakList = ParsedScaleBreak[];
+export type ParsedScaleBreak = {
+    // Keep breakOption.start/breakOption.end to identify the target break item in echarts action.
+    breakOption: ScaleBreakOption,
+    // - Parsed start/end value. e.g. The user input start/end may be a data string
+    //  '2021-12-12', and the parsed start/end are timestamp number.
+    // - `vmin <= vmax` is ensured in parsing.
+    vmin: number,
+    vmax: number,
+    // Parsed from `ScaleBreakOption['gap']`. Need to save this intermediate value
+    // because LogScale need to logarithmically transform to them.
+    gapParsed: {
+        type: 'tpAbs' | 'tpPrct'
+        // If 'tpPrct', means percent, val is in 0~1.
+        // If 'tpAbs', means absolute value, val is numeric gap value from option.
+        val: number,
+    },
+    // Final calculated gap.
+    gapReal: number | NullUndefined,
+};
+export type VisualScaleBreak = {
+    type: 'min' | 'max',
+    parsedBreak: ParsedScaleBreak,
+};
+export type ScaleBreakEventParamPart = {
+    break?: {
+        // start/end or min/max
+        type: VisualScaleBreak['type'],
+        start: ParsedScaleBreak['vmin'],
+        end: ParsedScaleBreak['vmax'],
+        // After parsing, the start and end may be reversed and thus `start`
+        // actually maps to `rawEnd`. It may causing confusion. And the param
+        // `value` in the label formatter is also parsed value (except category
+        // axis). So we only provide parsed break start/end to users.
+    }
 };
 
 export interface ScaleTick {
-    level?: number,
-    breakStart?: number,
-    breakEnd?: number,
-    breakGap?: number,
-    value: number
+    value: number,
+    break?: VisualScaleBreak,
+    time?: TimeScaleTick['time'],
 };
 export interface TimeScaleTick extends ScaleTick {
-    /**
-     * Level information is used for label formatting.
-     * For example, a time axis may contain labels like: Jan, 8th, 16th, 23th,
-     * Feb, and etc. In this case, month labels like Jan and Feb should be
-     * displayed in a more significant way than days.
-     * `level` is set to be 0 when it's the most significant level, like month
-     * labels in the above case.
-     */
-    level?: number
+    time: {
+        /**
+         * Level information is used for label formatting.
+         * `level` is 0 or undefined by default, with higher value indicating greater significant.
+         * For example, a time axis may contain labels like: Jan, 8th, 16th, 23th, Feb, and etc.
+         * In this case, month labels like Jan and Feb should be displayed in a more significant
+         * way than days. The tick labels are:
+         *      labels: `Jan  8th  16th  23th  Feb`
+         *      levels: `1    0    0     0     1  `
+         * The label formatter can be configured as `{[timeUnit]: string | string[]}`, where the
+         * timeUnit is determined by the tick value itself by `time.ts#getUnitFromValue`, while
+         * the `level` is the index under that time unit. (i.e., `formatter[timeUnit][level]`).
+         */
+        level: number,
+        /**
+         * An upper and lower time unit that is suggested to be displayed.
+         * Terms upper/lower means, such as 'year' is "upper" and 'month' is "lower".
+         * This is just suggestion. Time units that are out of this range can also be displayed.
+         */
+        upperTimeUnit: PrimaryTimeUnit,
+        lowerTimeUnit: PrimaryTimeUnit,
+    }
 };
 export interface OrdinalScaleTick extends ScaleTick {
     /**
