@@ -18,7 +18,7 @@
 */
 
 import { ModelFinderIdQuery, ModelFinderIndexQuery, ModelFinderNameQuery, parseFinder } from '../../util/model';
-import { Payload, ScaleBreakOption, ScaleBreakOptionIdentifier } from '../../util/types';
+import { Payload, AxisBreakOption, AxisBreakOptionIdentifier } from '../../util/types';
 import { each } from 'zrender/src/core/util';
 import type { AxisBaseModel } from '../../coord/AxisBaseModel';
 import type { EChartsExtensionInstallRegisters } from '../../extension';
@@ -36,7 +36,7 @@ export interface AxisBreakPayload extends Payload {
 
     breaks: AxisBreakPayloadBreak[];
 }
-export type AxisBreakPayloadBreak = ScaleBreakOptionIdentifier & Pick<ScaleBreakOption, 'isExpanded'>;
+export type AxisBreakPayloadBreak = AxisBreakOptionIdentifier & Pick<AxisBreakOption, 'isExpanded'>;
 
 export const axisBreakUpdateActionInfo = {
     type: 'updateAxisBreak',

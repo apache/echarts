@@ -394,7 +394,7 @@ export type ParsedValueNumeric = number | OrdinalNumber;
  */
 export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
 
-export type ScaleBreakOption = {
+export type AxisBreakOption = {
     start: ScaleDataValue,
     end: ScaleDataValue,
     // - `number`: The unit is the same as data value, the same as `start`/`end`, not pixel.
@@ -407,21 +407,21 @@ export type ScaleBreakOption = {
     // undefined means false
     isExpanded?: boolean
 };
-export type ScaleBreakOptionIdentifier = Pick<ScaleBreakOption, 'start' | 'end'>;
+export type AxisBreakOptionIdentifier = Pick<AxisBreakOption, 'start' | 'end'>;
 
 // - Parsed from the breaks in axis model.
 // - Never be null/undefined.
 // - Contain only unexpanded breaks.
-export type ParsedScaleBreakList = ParsedScaleBreak[];
-export type ParsedScaleBreak = {
+export type ParsedAxisBreakList = ParsedAxisBreak[];
+export type ParsedAxisBreak = {
     // Keep breakOption.start/breakOption.end to identify the target break item in echarts action.
-    breakOption: ScaleBreakOption,
+    breakOption: AxisBreakOption,
     // - Parsed start/end value. e.g. The user input start/end may be a data string
     //  '2021-12-12', and the parsed start/end are timestamp number.
     // - `vmin <= vmax` is ensured in parsing.
     vmin: number,
     vmax: number,
-    // Parsed from `ScaleBreakOption['gap']`. Need to save this intermediate value
+    // Parsed from `AxisBreakOption['gap']`. Need to save this intermediate value
     // because LogScale need to logarithmically transform to them.
     gapParsed: {
         type: 'tpAbs' | 'tpPrct'
@@ -432,16 +432,16 @@ export type ParsedScaleBreak = {
     // Final calculated gap.
     gapReal: number | NullUndefined,
 };
-export type VisualScaleBreak = {
+export type VisualAxisBreak = {
     type: 'min' | 'max',
-    parsedBreak: ParsedScaleBreak,
+    parsedBreak: ParsedAxisBreak,
 };
-export type ScaleBreakEventParamPart = {
+export type AxisBreakEventParamPart = {
     break?: {
         // start/end or min/max
-        type: VisualScaleBreak['type'],
-        start: ParsedScaleBreak['vmin'],
-        end: ParsedScaleBreak['vmax'],
+        type: VisualAxisBreak['type'],
+        start: ParsedAxisBreak['vmin'],
+        end: ParsedAxisBreak['vmax'],
         // After parsing, the start and end may be reversed and thus `start`
         // actually maps to `rawEnd`. It may causing confusion. And the param
         // `value` in the label formatter is also parsed value (except category
@@ -451,7 +451,7 @@ export type ScaleBreakEventParamPart = {
 
 export interface ScaleTick {
     value: number,
-    break?: VisualScaleBreak,
+    break?: VisualAxisBreak,
     time?: TimeScaleTick['time'],
 };
 export interface TimeScaleTick extends ScaleTick {

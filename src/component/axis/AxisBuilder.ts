@@ -32,7 +32,7 @@ import {isNameLocationCenter, shouldShowAllLabels} from '../../coord/axisHelper'
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import {
     ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString,
-    VisualScaleBreak, ScaleBreakEventParamPart,
+    VisualAxisBreak, AxisBreakEventParamPart,
 } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
@@ -59,7 +59,7 @@ type AxisEventData = {
     value?: string | number
     dataIndex?: number
     tickIndex?: number
-} & ScaleBreakEventParamPart & {
+} & AxisBreakEventParamPart & {
     [key in AxisIndexKey]?: number
 };
 
@@ -69,7 +69,7 @@ type AxisLabelText = graphic.Text & {
 } & ECElement;
 
 const getLabelInner = makeInner<{
-    break: VisualScaleBreak;
+    break: VisualAxisBreak;
 }, graphic.Text>();
 
 
@@ -916,7 +916,7 @@ function addBreakEventHandler(
     axisModel: AxisBaseModel,
     api: ExtensionAPI,
     textEl: graphic.Text,
-    visualBreak: VisualScaleBreak
+    visualBreak: VisualAxisBreak
 ): void {
     textEl.on('click', params => {
         const payload: AxisBreakPayload = {

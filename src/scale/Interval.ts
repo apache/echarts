@@ -22,7 +22,7 @@ import * as numberUtil from '../util/number';
 import * as formatUtil from '../util/format';
 import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
 import * as helper from './helper';
-import {ScaleTick, ParsedScaleBreakList, ScaleDataValue} from '../util/types';
+import {ScaleTick, ParsedAxisBreakList, ScaleDataValue} from '../util/types';
 import { getScaleBreakHelper } from './break';
 
 const roundNumber = numberUtil.round;
@@ -237,7 +237,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         return minorTicks;
     }
 
-    protected _getNonTransBreaks(): ParsedScaleBreakList {
+    protected _getNonTransBreaks(): ParsedAxisBreakList {
         return this._brkCtx ? this._brkCtx.breaks : [];
     }
 

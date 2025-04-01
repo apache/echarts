@@ -24,7 +24,7 @@ import * as numberUtil from '../util/number';
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
 import {
-    DimensionLoose, DimensionName, ParsedScaleBreakList, ScaleBreakOption,
+    DimensionLoose, DimensionName, ParsedAxisBreakList, AxisBreakOption,
     ScaleTick
 } from '../util/types';
 import { logTransform } from './helper';
@@ -100,7 +100,7 @@ class LogScale extends IntervalScale {
         }, this);
     }
 
-    protected _getNonTransBreaks(): ParsedScaleBreakList {
+    protected _getNonTransBreaks(): ParsedAxisBreakList {
         return this._originalScale._innerGetBreaks();
     }
 
@@ -196,7 +196,7 @@ class LogScale extends IntervalScale {
     }
 
     setBreaksFromOption(
-        breakOptionList: ScaleBreakOption[],
+        breakOptionList: AxisBreakOption[],
     ): void {
         const scaleBreakHelper = getScaleBreakHelper();
         if (!scaleBreakHelper) {

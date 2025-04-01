@@ -21,9 +21,9 @@ import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, ScaleBreakOption, ItemStyleOption,
+    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, AxisBreakOption, ItemStyleOption,
     NullUndefined,
-    ScaleBreakEventParamPart,
+    AxisBreakEventParamPart,
     TimeScaleTick,
 } from '../util/types';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
@@ -86,7 +86,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
     startValue?: number;
 
-    breaks?: ScaleBreakOption[];
+    breaks?: AxisBreakOption[];
     breakArea?: {
         show?: boolean;
         itemStyle?: ItemStyleOption;
@@ -217,7 +217,7 @@ type AxisLabelCategoryFormatter = (
     extra: NullUndefined,
 ) => string;
 
-type AxisLabelFormatterExtraParams = {/* others if any */} & ScaleBreakEventParamPart;
+type AxisLabelFormatterExtraParams = {/* others if any */} & AxisBreakEventParamPart;
 type TimeAxisLabelFormatterExtraParams = {
     time: TimeScaleTick['time'],
     /**

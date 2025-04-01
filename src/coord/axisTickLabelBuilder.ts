@@ -31,7 +31,7 @@ import { AxisBaseOption } from './axisCommonTypes';
 import OrdinalScale from '../scale/Ordinal';
 import { AxisBaseModel } from './AxisBaseModel';
 import type Axis2D from './cartesian/Axis2D';
-import { NullUndefined, ScaleTick, VisualScaleBreak } from '../util/types';
+import { NullUndefined, ScaleTick, VisualAxisBreak } from '../util/types';
 import { ScaleGetTicksOpt } from '../scale/Scale';
 
 type CacheKey = string | number;
@@ -80,7 +80,7 @@ export function createAxisLabels(axis: Axis): {
         rawLabel: string,
         tickValue: number,
         time: ScaleTick['time'] | NullUndefined,
-        break: VisualScaleBreak | NullUndefined,
+        break: VisualAxisBreak | NullUndefined,
     }[],
     labelCategoryInterval?: number
 } {

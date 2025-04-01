@@ -19,12 +19,12 @@
 
 import { assert, clone, each, find, isString, map, trim } from 'zrender/src/core/util';
 import {
-    NullUndefined, ParsedScaleBreak, ParsedScaleBreakList, ScaleBreakOption,
-    ScaleBreakOptionIdentifier, ScaleTick, VisualScaleBreak
+    NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
+    AxisBreakOptionIdentifier, ScaleTick, VisualAxisBreak
 } from '../util/types';
 import { error } from '../util/log';
 import type Scale from './Scale';
-import { ScaleBreakContext, ScaleBreakParsingResult, registerScaleBreakHelperImpl } from './break';
+import { ScaleBreakContext, AxisBreakParsingResult, registerScaleBreakHelperImpl } from './break';
 import { round as fixRound } from '../util/number';
 
 /**
@@ -35,14 +35,14 @@ import { round as fixRound } from '../util/number';
 class ScaleBreakContextImpl implements ScaleBreakContext {
 
     // [CAVEAT]: Should set only by `ScaleBreakContext#setBreaks`!
-    readonly breaks: ParsedScaleBreakList = [];
+    readonly breaks: ParsedAxisBreakList = [];
 
     // [CAVEAT]: Should update only by `ScaleBreakContext#update`!
     // They are the values that scaleExtent[0] and scaleExtent[1] are mapped to a numeric axis
     // that breaks are applied, primarily for optimization of `Scale#normalize`.
     private _elapsedExtent: [number, number] = [Infinity, -Infinity];
 
-    setBreaks(parsed: ScaleBreakParsingResult): void {
+    setBreaks(parsed: AxisBreakParsingResult): void {
         // @ts-ignore
         this.breaks = parsed.breaks;
     }
@@ -222,7 +222,7 @@ function updateAxisBreakGapReal(
     // How to calculate `prctBrksGapRealSum`:
     //  Based on the formula:
     //      xxx.span = brk.vmax - brk.vmin
-    //      xxx.tpPrct.val / xxx.tpAbs.val means ParsedScaleBreak['gapParsed']['val']
+    //      xxx.tpPrct.val / xxx.tpAbs.val means ParsedAxisBreak['gapParsed']['val']
     //      .S/.E means a break that is semi in scaleExtent[0] or scaleExtent[1]
     //      valP = (
     //          + (fullyInExtBrksSum.tpAbs.gapReal - fullyInExtBrksSum.tpAbs.span)
@@ -332,7 +332,7 @@ function updateAxisBreakGapReal(
 
 function pruneTicksByBreak<TItem extends ScaleTick | number>(
     ticks: TItem[],
-    breaks: ParsedScaleBreakList,
+    breaks: ParsedAxisBreakList,
     getValue: (item: TItem) => number,
     interval: number,
     scaleExtent: [number, number]
@@ -373,10 +373,10 @@ function pruneTicksByBreak<TItem extends ScaleTick | number>(
 function addBreaksToTicks(
     // The input ticks should be in accending order.
     ticks: ScaleTick[],
-    breaks: ParsedScaleBreakList,
+    breaks: ParsedAxisBreakList,
     scaleExtent: [number, number],
     // Keep the break ends at the same level to avoid an awkward appearance.
-    getTimeProps?: (clampedBrk: ParsedScaleBreak) => ScaleTick['time'],
+    getTimeProps?: (clampedBrk: ParsedAxisBreak) => ScaleTick['time'],
 ): void {
     each(breaks, brk => {
         const clampedBrk = clampBreakByExtent(brk, scaleExtent);
@@ -420,9 +420,9 @@ function addBreaksToTicks(
  * If the intersection is only a point at scaleExtent[0] or scaleExtent[1], return null/undefined.
  */
 function clampBreakByExtent(
-    brk: ParsedScaleBreak,
+    brk: ParsedAxisBreak,
     scaleExtent: [number, number]
-): NullUndefined | ParsedScaleBreak {
+): NullUndefined | ParsedAxisBreak {
     const vmin = Math.max(brk.vmin, scaleExtent[0]);
     const vmax = Math.min(brk.vmax, scaleExtent[1]);
     return (
@@ -441,13 +441,13 @@ function clampBreakByExtent(
 
 function parseAxisBreakOption(
     // raw user input breaks, retrieved from axis model.
-    breakOptionList: ScaleBreakOption[] | NullUndefined,
+    breakOptionList: AxisBreakOption[] | NullUndefined,
     parse: Scale['parse'],
     opt?: {
         noNegative: boolean;
     }
-): ScaleBreakParsingResult {
-    const parsedBreaks: ParsedScaleBreakList = [];
+): AxisBreakParsingResult {
+    const parsedBreaks: ParsedAxisBreakList = [];
 
     if (!breakOptionList) {
         return {breaks: parsedBreaks};
@@ -474,7 +474,7 @@ function parseAxisBreakOption(
             return;
         }
 
-        const parsedBrk: ParsedScaleBreak = {
+        const parsedBrk: ParsedAxisBreak = {
             breakOption: clone(brkOption),
             vmin: parse(brkOption.start),
             vmax: parse(brkOption.end),
@@ -555,13 +555,13 @@ function parseAxisBreakOption(
 }
 
 function identifyAxisBreak(
-    brk: ScaleBreakOption,
-    identifier: ScaleBreakOptionIdentifier
+    brk: AxisBreakOption,
+    identifier: AxisBreakOptionIdentifier
 ): boolean {
     return serializeAxisBreakIdentifier(identifier) === serializeAxisBreakIdentifier(brk);
 }
 
-function serializeAxisBreakIdentifier(identifier: ScaleBreakOptionIdentifier): string {
+function serializeAxisBreakIdentifier(identifier: AxisBreakOptionIdentifier): string {
     // We use user input start/end to identify break. Considered cases like `start: new Date(xxx)`,
     // Theoretically `Scale#parse` should be used here, but not used currently to reduce dependencies,
     // since simply converting to string happens to be correct.
@@ -574,23 +574,23 @@ function serializeAxisBreakIdentifier(identifier: ScaleBreakOptionIdentifier): s
  */
 function retrieveAxisBreakPairs<TItem>(
     itemList: TItem[],
-    getVisualScaleBreak: (item: TItem) => VisualScaleBreak
+    getVisualAxisBreak: (item: TItem) => VisualAxisBreak
 ): TItem[][] {
     const breakLabelPairs: TItem[][] = [];
     each(itemList, el => {
-        const vBreak = getVisualScaleBreak(el);
+        const vBreak = getVisualAxisBreak(el);
         if (vBreak && vBreak.type === 'min') {
             breakLabelPairs.push([el]);
         }
     });
     each(itemList, el => {
-        const vBreak = getVisualScaleBreak(el);
+        const vBreak = getVisualAxisBreak(el);
         if (vBreak && vBreak.type === 'max') {
             const pair = find(
                 breakLabelPairs,
                 // parsedBreak may be changed, can only use breakOption to match them.
                 pr => identifyAxisBreak(
-                    getVisualScaleBreak(pr[0]).parsedBreak.breakOption,
+                    getVisualAxisBreak(pr[0]).parsedBreak.breakOption,
                     vBreak.parsedBreak.breakOption
                 )
             );
@@ -603,13 +603,13 @@ function retrieveAxisBreakPairs<TItem>(
 function getTicksLogTransformBreak(
     tick: ScaleTick,
     logBase: number,
-    logOriginalBreaks: ParsedScaleBreakList,
+    logOriginalBreaks: ParsedAxisBreakList,
     fixRoundingError: (val: number, originalVal: number) => number
 ): {
     brkRoundingCriterion: number;
-    vBreak: VisualScaleBreak | NullUndefined;
+    vBreak: VisualAxisBreak | NullUndefined;
 } {
-    let vBreak: VisualScaleBreak | NullUndefined;
+    let vBreak: VisualAxisBreak | NullUndefined;
     let brkRoundingCriterion: number;
 
     if (tick.break) {
@@ -645,12 +645,12 @@ function getTicksLogTransformBreak(
 }
 
 function logarithmicParseBreaksFromOption(
-    breakOptionList: ScaleBreakOption[],
+    breakOptionList: AxisBreakOption[],
     logBase: number,
     parse: Scale['parse'],
 ): {
-    parsedOriginal: ScaleBreakParsingResult;
-    parsedLogged: ScaleBreakParsingResult;
+    parsedOriginal: AxisBreakParsingResult;
+    parsedLogged: AxisBreakParsingResult;
 } {
     const opt = {noNegative: true};
     const parsedOriginal = parseAxisBreakOption(breakOptionList, parse, opt);

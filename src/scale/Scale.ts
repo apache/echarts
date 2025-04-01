@@ -26,16 +26,16 @@ import {
     ScaleDataValue,
     DimensionLoose,
     ScaleTick,
-    ScaleBreakOption,
+    AxisBreakOption,
     NullUndefined,
-    ParsedScaleBreakList,
+    ParsedAxisBreakList,
 } from '../util/types';
 import {
     ScaleCalculator
 } from './helper';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 import { bind } from 'zrender/src/core/util';
-import { ScaleBreakContext, ScaleBreakParsingResult, getScaleBreakHelper } from './break';
+import { ScaleBreakContext, AxisBreakParsingResult, getScaleBreakHelper } from './break';
 
 export type ScaleGetTicksOpt = {
     // Whether expand the ticks to niced extent.
@@ -163,7 +163,7 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
      * Prerequisite: Scale#parse is ready.
      */
     setBreaksFromOption(
-        breakOptionList: ScaleBreakOption[],
+        breakOptionList: AxisBreakOption[],
     ): void {
         const scaleBreakHelper = getScaleBreakHelper();
         if (scaleBreakHelper) {
@@ -176,7 +176,7 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     /**
      * [CAVEAT]: It should not be overridden!
      */
-    _innerSetBreak(parsed: ScaleBreakParsingResult) {
+    _innerSetBreak(parsed: AxisBreakParsingResult) {
         if (this._brkCtx) {
             this._brkCtx.setBreaks(parsed);
             this._calculator.updateMethods(this._brkCtx);
@@ -187,7 +187,7 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     /**
      * [CAVEAT]: It should not be overridden!
      */
-    _innerGetBreaks(): ParsedScaleBreakList {
+    _innerGetBreaks(): ParsedAxisBreakList {
         return this._brkCtx ? this._brkCtx.breaks : [];
     }
 

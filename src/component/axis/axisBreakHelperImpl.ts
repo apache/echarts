@@ -25,7 +25,7 @@ import type ExtensionAPI from '../../core/ExtensionAPI';
 import type { ExtendedElementProps } from '../../core/ExtendedElement';
 import type CartesianAxisView from './CartesianAxisView';
 import { makeInner } from '../../util/model';
-import type { NullUndefined, ParsedScaleBreak } from '../../util/types';
+import type { NullUndefined, ParsedAxisBreak } from '../../util/types';
 import { assert, each, extend, find, map } from 'zrender/src/core/util';
 import { getScaleBreakHelper } from '../../scale/break';
 import type { PathProps } from 'zrender/src/graphic/Path';
@@ -55,14 +55,14 @@ const viewCache = makeInner<{
     visualList: CacheBreakVisual[];
 }, CartesianAxisView | SingleAxisView>();
 type CacheBreakVisual = {
-    parsedBreak: ParsedScaleBreak;
+    parsedBreak: ParsedAxisBreak;
     zigzagRandomList: number[];
     shouldRemove: boolean;
 };
 
 function ensureVisualInCache(
     visualList: CacheBreakVisual[],
-    targetBreak: ParsedScaleBreak
+    targetBreak: ParsedAxisBreak
 ): CacheBreakVisual {
     let visual = find(
         visualList,
@@ -190,7 +190,7 @@ function rectCoordBuildBreakAxis(
         startCoord: number,
         endCoord: number,
         isAxisHorizontal: boolean,
-        trimmedBreak: ParsedScaleBreak
+        trimmedBreak: ParsedAxisBreak
     ) {
         const polylineStyle = {
             stroke: borderColor,

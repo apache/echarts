@@ -18,8 +18,8 @@
 */
 
 import type {
-    NullUndefined, ParsedScaleBreak, ParsedScaleBreakList, ScaleBreakOption,
-    ScaleBreakOptionIdentifier, ScaleTick, VisualScaleBreak
+    NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
+    AxisBreakOptionIdentifier, ScaleTick, VisualAxisBreak
 } from '../util/types';
 import type Scale from './Scale';
 
@@ -34,9 +34,9 @@ import type Scale from './Scale';
 
 export interface ScaleBreakContext {
 
-    readonly breaks: ParsedScaleBreakList;
+    readonly breaks: ParsedAxisBreakList;
 
-    setBreaks(parsed: ScaleBreakParsingResult): void;
+    setBreaks(parsed: AxisBreakParsingResult): void;
 
     update(scaleExtent: [number, number]): void;
 
@@ -59,59 +59,59 @@ export interface ScaleBreakContext {
 
 };
 
-export type ScaleBreakParsingResult = {
-    breaks: ParsedScaleBreakList;
+export type AxisBreakParsingResult = {
+    breaks: ParsedAxisBreakList;
 };
 
 export type ScaleBreakHelper = {
     createScaleBreakContext(): ScaleBreakContext;
     pruneTicksByBreak<TItem extends ScaleTick | number>(
         ticks: TItem[],
-        breaks: ParsedScaleBreakList,
+        breaks: ParsedAxisBreakList,
         getValue: (item: TItem) => number,
         interval: number,
         scaleExtent: [number, number]
     ): void;
     addBreaksToTicks(
         ticks: ScaleTick[],
-        breaks: ParsedScaleBreakList,
+        breaks: ParsedAxisBreakList,
         scaleExtent: [number, number],
-        getTimeProps?: (clampedBrk: ParsedScaleBreak) => ScaleTick['time'],
+        getTimeProps?: (clampedBrk: ParsedAxisBreak) => ScaleTick['time'],
     ): void;
     parseAxisBreakOption(
-        breakOptionList: ScaleBreakOption[] | NullUndefined,
+        breakOptionList: AxisBreakOption[] | NullUndefined,
         parse: Scale['parse'],
         opt?: {
             noNegative: boolean;
         }
-    ): ScaleBreakParsingResult;
+    ): AxisBreakParsingResult;
     identifyAxisBreak(
-        brk: ScaleBreakOption,
-        identifier: ScaleBreakOptionIdentifier
+        brk: AxisBreakOption,
+        identifier: AxisBreakOptionIdentifier
     ): boolean;
     serializeAxisBreakIdentifier(
-        identifier: ScaleBreakOptionIdentifier
+        identifier: AxisBreakOptionIdentifier
     ): string;
     retrieveAxisBreakPairs<TItem>(
         itemList: TItem[],
-        getVisualScaleBreak: (item: TItem) => VisualScaleBreak
+        getVisualAxisBreak: (item: TItem) => VisualAxisBreak
     ): TItem[][];
     getTicksLogTransformBreak(
         tick: ScaleTick,
         logBase: number,
-        logOriginalBreaks: ParsedScaleBreakList,
+        logOriginalBreaks: ParsedAxisBreakList,
         fixRoundingError: (val: number, originalVal: number) => number
     ): {
         brkRoundingCriterion: number | NullUndefined;
-        vBreak: VisualScaleBreak | NullUndefined;
+        vBreak: VisualAxisBreak | NullUndefined;
     };
     logarithmicParseBreaksFromOption(
-        breakOptionList: ScaleBreakOption[],
+        breakOptionList: AxisBreakOption[],
         logBase: number,
         parse: Scale['parse'],
     ): {
-        parsedOriginal: ScaleBreakParsingResult;
-        parsedLogged: ScaleBreakParsingResult;
+        parsedOriginal: AxisBreakParsingResult;
+        parsedLogged: AxisBreakParsingResult;
     };
 };
 
