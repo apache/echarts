@@ -285,14 +285,14 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
         handleSize: '120%',
 
         handleStyle: {
-            borderColor: '#fff',
+            borderColor: tokens.color.neutral00,
             borderWidth: 1
         },
 
         indicatorIcon: 'circle',
         indicatorSize: '50%',
         indicatorStyle: {
-            borderColor: '#fff',
+            borderColor: tokens.color.neutral00,
             borderWidth: 2,
             shadowBlur: 2,
             shadowOffsetX: 1,

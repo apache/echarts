@@ -63,7 +63,7 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         // height: {totalHeight} - top - bottom,
         backgroundColor: tokens.color.transparent,
         borderWidth: 1,
-        borderColor: '#ccc'
+        borderColor: tokens.color.neutral30
     };
 }
 

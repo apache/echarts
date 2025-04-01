@@ -41,6 +41,7 @@ import {
 import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import geoSourceManager from './geoSourceManager';
+import tokens from '../../visual/tokens';
 
 
 export interface GeoItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
@@ -188,12 +189,12 @@ class GeoModel extends ComponentModel<GeoOption> {
 
         label: {
             show: false,
-            color: '#000'
+            color: tokens.color.secondary
         },
 
         itemStyle: {
             borderWidth: 0.5,
-            borderColor: '#444'
+            borderColor: tokens.color.borderShade,
             // Default color:
             // + geoJSON: #eee
             // + geoSVG: null (use SVG original `fill`)
@@ -203,20 +204,20 @@ class GeoModel extends ComponentModel<GeoOption> {
         emphasis: {
             label: {
                 show: true,
-                color: 'rgb(100,0,0)'
+                color: tokens.color.primary
             },
             itemStyle: {
-                color: 'rgba(255,215,0,0.8)'
+                areaColor: tokens.color.background
             }
         },
 
         select: {
             label: {
                 show: true,
-                color: 'rgb(100,0,0)'
+                color: tokens.color.primary
             },
             itemStyle: {
-                color: 'rgba(255,215,0,0.8)'
+                color: tokens.color.backgroundShade
             }
         },
 
@@ -232,7 +233,7 @@ class GeoModel extends ComponentModel<GeoOption> {
         if (source && source.type === 'geoJSON') {
             const itemStyle = option.itemStyle = option.itemStyle || {};
             if (!('color' in itemStyle)) {
-                itemStyle.color = '#eee';
+                itemStyle.color = tokens.color.backgroundTint;
             }
         }
 

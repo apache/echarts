@@ -13,24 +13,24 @@ const tokens = {
         ],
 
         neutral00: '#fff',
-        neutral05: '#eaedf5',
-        neutral10: '#dee1e9',
-        neutral15: '#d3d5dd',
-        neutral20: '#c7c9d1',
-        neutral25: '#bbbdc5',
-        neutral30: '#afb2b8',
-        neutral35: '#a4a6ac',
-        neutral40: '#989aa0',
-        neutral45: '#8c8e94',
-        neutral50: '#818288',
-        neutral55: '#75767c',
-        neutral60: '#696a70',
-        neutral65: '#5d5e64',
-        neutral70: '#525258',
-        neutral75: '#46474b',
-        neutral80: '#3a3b3f',
-        neutral85: '#2e2f33',
-        neutral90: '#232327',
+        neutral05: '#f4f7fd',
+        neutral10: '#e8ebf0',
+        neutral15: '#dbdee4',
+        neutral20: '#cfd2d7',
+        neutral25: '#c3c5cb',
+        neutral30: '#b7b9be',
+        neutral35: '#aaacb2',
+        neutral40: '#9ea0a5',
+        neutral45: '#929399',
+        neutral50: '#86878c',
+        neutral55: '#797b7f',
+        neutral60: '#6d6e73',
+        neutral65: '#616266',
+        neutral70: '#54555a',
+        neutral75: '#48494d',
+        neutral80: '#3c3c41',
+        neutral85: '#303034',
+        neutral90: '#232328',
         neutral95: '#17171b',
         neutral99: '#000',
 
@@ -43,6 +43,8 @@ const tokens = {
         accent70: '#3f5193',
         accent80: '#313e6b',
         accent90: '#242a43',
+
+        visualGradient: ['#f05252', '#ffbc85', '#fff5c5'],
 
         transparent: 'rgba(0,0,0,0)',
 
@@ -58,15 +60,19 @@ const tokens = {
 
         background: '@neutral05',
         backgroundTint: 'rgba(234,237,245,0.5)',
+        backgroundTransparent: 'rgba(255,255,255,0)',
         backgroundShade: '@neutral10',
 
         shadow: 'rgba(0,0,0,0.2)',
         shadowTint: 'rgba(129,130,136,0.2)',
 
         axisLine: '@neutral70',
+        axisLineTint: '@neutral40',
         axisTick: '@axisLine',
         axisTickMinor: '@neutral60',
-        axisLabel: '@axisLine'
+        axisLabel: '@axisLine',
+        axisSplitLine: '@neutral15',
+        axisMinorSplitLine: '@neutral05'
     }
 } as const;
 

@@ -45,7 +45,7 @@ const defaultOption: {[key: string]: {
 }} = {
 
     color: {
-        active: ['#006edd', '#e0ffff'],
+        active: [tokens.color.accent70, tokens.color.accent20],
         inactive: [tokens.color.transparent]
     },
 

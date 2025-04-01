@@ -52,7 +52,7 @@ class SaveAsImage extends ToolboxFeature<ToolboxSaveAsImageFeatureOption> {
         const url = api.getConnectedDataURL({
             type: type,
             backgroundColor: model.get('backgroundColor', true)
-                || ecModel.get('backgroundColor') || '#fff',
+                || ecModel.get('backgroundColor') || tokens.color.neutral00,
             connectedBackgroundColor: model.get('connectedBackgroundColor'),
             excludeComponents: model.get('excludeComponents'),
             pixelRatio: model.get('pixelRatio')

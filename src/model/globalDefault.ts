@@ -37,7 +37,7 @@ export default {
 
     color: tokens.color.theme,
 
-    gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
+    gradientColor: tokens.color.visualGradient,
 
     aria: {
         decal: {

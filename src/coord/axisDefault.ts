@@ -18,6 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import tokens from '../visual/tokens';
 import { AxisBaseOption } from './axisCommonTypes';
 
 
@@ -60,7 +61,7 @@ const defaultOption: AxisBaseOption = {
         onZero: true,
         onZeroAxisIndex: null,
         lineStyle: {
-            color: '#6E7079',
+            color: tokens.color.axisLine,
             width: 1,
             type: 'solid'
         },
@@ -89,14 +90,15 @@ const defaultOption: AxisBaseOption = {
         showMaxLabel: null,
         margin: 8,
         // formatter: null,
-        fontSize: 12
+        fontSize: 12,
+        color: tokens.color.axisLabel
     },
     splitLine: {
         show: true,
         showMinLine: true,
         showMaxLine: true,
         lineStyle: {
-            color: ['#E0E6F1'],
+            color: tokens.color.axisSplitLine,
             width: 1,
             type: 'solid'
         }
@@ -104,7 +106,10 @@ const defaultOption: AxisBaseOption = {
     splitArea: {
         show: false,
         areaStyle: {
-            color: ['rgba(250,250,250,0.2)', 'rgba(210,219,238,0.2)']
+            color: [
+                tokens.color.backgroundTint,
+                tokens.color.backgroundTransparent
+            ]
         }
     }
 };
@@ -166,7 +171,7 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
         show: false,
 
         lineStyle: {
-            color: '#F4F7FD',
+            color: tokens.color.axisMinorSplitLine,
             width: 1
         }
     }

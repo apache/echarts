@@ -622,9 +622,9 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         orient: 'vertical',        // 'horizontal' ¦ 'vertical'
 
         backgroundColor: tokens.color.transparent,
-        borderColor: '#ccc',       // 值域边框颜色
-        contentColor: '#5793f3',
-        inactiveColor: '#aaa',
+        borderColor: tokens.color.borderTint,       // 值域边框颜色
+        contentColor: tokens.color.theme[0],
+        inactiveColor: tokens.color.disabled,
         borderWidth: 0,
         padding: 5,
                                     // 接受数组分别设定上右下左边距，同css
@@ -632,7 +632,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         precision: 0,              // 小数精度，默认为0，无小数点
 
         textStyle: {
-            color: '#333'          // 值域文字颜色
+            color: tokens.color.secondary          // 值域文字颜色
         }
     };
 }
