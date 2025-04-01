@@ -26,6 +26,7 @@ import { calculateTextPosition } from 'zrender/src/contain/text';
 import { Dictionary } from 'zrender/src/core/types';
 import { SymbolOptionMixin, ZRColor } from './types';
 import { parsePercent } from './number';
+import tokens from '../visual/tokens';
 
 export type ECSymbol = graphic.Path & {
     __isEmptyBrush?: boolean
@@ -312,7 +313,7 @@ function symbolPathSetColor(this: ECSymbol, color: ZRColor, innerColor?: ZRColor
         const symbolStyle = this.style;
         if (this.__isEmptyBrush) {
             symbolStyle.stroke = color;
-            symbolStyle.fill = innerColor || '#fff';
+            symbolStyle.fill = innerColor || tokens.color.neutral00;
             // TODO Same width with lineStyle in LineView
             symbolStyle.lineWidth = 2;
         }

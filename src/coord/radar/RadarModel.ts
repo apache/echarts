@@ -32,6 +32,7 @@ import { AxisBaseOption, CategoryAxisBaseOption, ValueAxisBaseOption } from '../
 import { AxisBaseModel } from '../AxisBaseModel';
 import Radar from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
+import tokens from '../../visual/tokens';
 
 const valueAxisDefault = axisDefault.value;
 
@@ -206,7 +207,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
         axisLine: zrUtil.merge(
             {
                 lineStyle: {
-                    color: '#bbb'
+                    color: tokens.color.axisSplitLine
                 }
             },
             valueAxisDefault.axisLine

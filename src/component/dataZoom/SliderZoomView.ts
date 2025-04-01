@@ -43,6 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import tokens from '../../visual/tokens';
 
 const Rect = graphic.Rect;
 
@@ -565,7 +566,7 @@ class SliderZoomView extends DataZoomView {
                 stroke: dataZoomModel.get('dataBackgroundColor' as any)
                     || dataZoomModel.get('borderColor'),
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
-                fill: 'rgba(0,0,0,0)'
+                fill: tokens.color.transparent
             }
         }));
 
@@ -655,7 +656,7 @@ class SliderZoomView extends DataZoomView {
             const moveHandleIcon = displayables.moveHandleIcon = createSymbol(
                 dataZoomModel.get('moveHandleIcon'),
                 -iconSize / 2, -iconSize / 2, iconSize, iconSize,
-                '#fff',
+                tokens.color.neutral00,
                 true
             );
             moveHandleIcon.silent = true;

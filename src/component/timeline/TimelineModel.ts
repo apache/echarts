@@ -38,6 +38,7 @@ import Model from '../../model/Model';
 import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
 import { each, isObject, clone } from 'zrender/src/core/util';
 import { convertOptionIdName, getDataItemValue } from '../../util/model';
+import tokens from '../../visual/tokens';
 
 
 export interface TimelineControlStyle extends ItemStyleOption {
@@ -327,7 +328,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
 
         itemStyle: {},
         label: {
-            color: '#000'
+            color: tokens.color.secondary
         },
 
         data: []

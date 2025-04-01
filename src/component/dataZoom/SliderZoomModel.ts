@@ -27,6 +27,7 @@ import {
     LabelOption
 } from '../../util/types';
 import { inheritDefaultOption } from '../../util/component';
+import tokens from '../../visual/tokens';
 
 interface SliderHandleLabelOption {
     show?: boolean
@@ -147,30 +148,30 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         left: null,   // Default align to grid rect.
         bottom: null, // Default align to grid rect.
 
-        borderColor: '#d2dbee',
-        borderRadius: 3,
+        borderColor: tokens.color.borderTint,
+        borderRadius: 0,
 
-        backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
+        backgroundColor: tokens.color.transparent, // Background of slider zoom component.
 
         // dataBackgroundColor: '#ddd',
         dataBackground: {
             lineStyle: {
-                color: '#d2dbee',
+                color: tokens.color.border,
                 width: 0.5
             },
             areaStyle: {
-                color: '#d2dbee',
+                color: tokens.color.neutral30,
                 opacity: 0.2
             }
         },
 
         selectedDataBackground: {
             lineStyle: {
-                color: '#8fb0f7',
+                color: tokens.color.border,
                 width: 0.5
             },
             areaStyle: {
-                color: '#8fb0f7',
+                color: tokens.color.neutral30,
                 opacity: 0.2
             }
         },
@@ -182,15 +183,15 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         handleSize: '100%',
 
         handleStyle: {
-            color: '#fff',
-            borderColor: '#ACB8D1'
+            color: tokens.color.neutral00,
+            borderColor: tokens.color.border
         },
 
         moveHandleSize: 7,
         moveHandleIcon: 'path://M-320.9-50L-320.9-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-348-41-339-50-320.9-50z M-212.3-50L-212.3-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-239.4-41-230.4-50-212.3-50z M-103.7-50L-103.7-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-130.9-41-121.8-50-103.7-50z',
         moveHandleStyle: {
-            color: '#D2DBEE',
-            opacity: 0.7
+            color: tokens.color.quaternary,
+            opacity: 0.3
         },
 
         showDetail: true,
@@ -199,12 +200,12 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         zoomLock: false,                        // Whether disable zoom.
 
         textStyle: {
-            color: '#6E7079'
+            color: tokens.color.quaternary
         },
 
         brushSelect: true,
         brushStyle: {
-            color: 'rgba(135,175,274,0.15)'
+            color: tokens.color.backgroundTint
         },
 
         emphasis: {
@@ -212,10 +213,10 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
                 show: true
             },
             handleStyle: {
-                borderColor: '#8FB0F7'
+                borderColor: tokens.color.neutral30
             },
             moveHandleStyle: {
-                color: '#8FB0F7'
+                opacity: 0.8
             }
         }
     } as SliderDataZoomOption);

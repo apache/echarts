@@ -31,6 +31,7 @@ import {
     CommonTooltipOption,
     Dictionary
 } from '../../util/types';
+import tokens from '../../visual/tokens';
 
 
 export interface ToolboxTooltipFormatterParams {
@@ -120,7 +121,7 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
 
         backgroundColor: 'transparent',
 
-        borderColor: '#ccc',
+        borderColor: tokens.color.border,
 
         borderRadius: 0,
 
@@ -135,12 +136,12 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         showTitle: true,
 
         iconStyle: {
-            borderColor: '#666',
+            borderColor: tokens.color.accent50,
             color: 'none'
         },
         emphasis: {
             iconStyle: {
-                borderColor: '#3E98C5'
+                borderColor: tokens.color.accent40
             }
         },
         // textStyle: {},
