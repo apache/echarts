@@ -1733,7 +1733,8 @@ export interface AriaLabelOption {
         separator?: {
             middle?: string;
             end?: string;
-        }
+        },
+        excludeDimensionId?: number[]
     }
 }
 

@@ -32,7 +32,7 @@ import {shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
-import Element from 'zrender/src/Element';
+import type Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
 import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
@@ -836,6 +836,16 @@ function buildAxisLabel(
         });
         textEl.anid = 'label_' + tickValue;
 
+        graphic.setTooltipConfig({
+            el: textEl,
+            componentModel: axisModel,
+            itemName: formattedLabel,
+            formatterParamsExtra: {
+                isTruncated: () => textEl.isTruncated,
+                value: rawLabel,
+                tickIndex: index
+            }
+        });
 
         // Pack data for mouse event
         if (triggerEvent) {

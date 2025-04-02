@@ -877,6 +877,9 @@ function renderNode(
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
 
+        const cursorStyle = nodeModel.getShallow('cursor');
+        cursorStyle && content.attr('cursor', cursorStyle);
+
         enableHoverFocus(group, focusOrIndices, blurScope);
     }
 

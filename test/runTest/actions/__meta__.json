@@ -178,6 +178,7 @@
   "scatter-random-stream-fix-axis": 1,
   "scatter-single-axis": 2,
   "scatterMatrix": 3,
+  "series-omitUnusedDimensions": 1,
   "setOption": 2,
   "splitLine": 1,
   "stackBar-dataZoom": 7,
@@ -221,5 +222,6 @@
   "universalTransition2": 3,
   "universalTransition3": 2,
   "visualMap-categories": 1,
-  "visualMap-multi-continuous": 1
+  "visualMap-multi-continuous": 1,
+  "visualMap-selectMode": 2
 }
