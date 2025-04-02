@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -99,10 +98,13 @@ under the License.
                     startAngle: 90,
                     endAngle: -270,
                     clockwise: true,
-                    testNext: () => {
+                    testNext: function() {
                         config.startAngle = 90;
                         config.endAngle = -90;
                         update();
+                        gui.__controllers.forEach(function(controller) {
+                            controller.updateDisplay();
+                        });
                     }
                 };
 
