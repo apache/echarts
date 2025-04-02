@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html,
+            body,
+            .test-container {
+                width: 100%;
+                height: 100%;
+            }
+            .test-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .chart {
+                width: 80vw;
+                height: 40vw;
+                border: 1px solid #000;
+            }
+
+            .test-title {
+                background: #146402;
+                color: #fff;
+            }
+        </style>
+        <div class="test-container">
+            <div id="main0" class="chart"></div>
+            <div id="main1" class="chart"></div>
+            <div id="main2" class="chart"></div>
+        </div>
+
+        <script>
+            require(["echarts"], function (echarts) {
+                const dataAll = {
+                    year: ["2015", "2016", "2017", "2018", "2019"],
+                    data: [100, 400, 200, 800, 600],
+                };
+
+                const commonGrid = {
+                    top: 60,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                };
+
+                // 测试 containLabel = true 的情况
+                const chart0 = echarts.init(document.getElementById("main0"));
+                chart0.setOption({
+                    title: {
+                        text: "containLabel: true",
+                        left: "center",
+                    },
+                    tooltip: {
+                        trigger: "axis",
+                    },
+                    grid: {
+                        ...commonGrid,
+                        containLabel: true,
+                    },
+                    xAxis: {
+                        type: "category",
+                        data: dataAll.year,
+                        axisLabel: {
+                            fontSize: 16,
+                            rotate: 45,
+                        },
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: {
+                            fontSize: 16,
+                            formatter: "{value} 万",
+                        },
+                    },
+                    series: [
+                        {
+                            data: dataAll.data,
+                            type: "line",
+                        },
+                    ],
+                });
+
+                // 测试 containLabel = 'horizontal' 的情况
+                const chart1 = echarts.init(document.getElementById("main1"));
+                chart1.setOption({
+                    title: {
+                        text: 'containLabel: "horizontal"',
+                        left: "center",
+                    },
+                    tooltip: {
+                        trigger: "axis",
+                    },
+                    grid: {
+                        ...commonGrid,
+                        containLabel: "horizontal",
+                    },
+                    xAxis: {
+                        type: "category",
+                        data: dataAll.year,
+                        axisLabel: {
+                            fontSize: 16,
+                            rotate: 45,
+                        },
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: {
+                            fontSize: 16,
+                            formatter: "{value} 万",
+                        },
+                    },
+                    series: [
+                        {
+                            data: dataAll.data,
+                            type: "line",
+                        },
+                    ],
+                });
+
+                // 测试 containLabel = 'vertical' 的情况
+                const chart2 = echarts.init(document.getElementById("main2"));
+                chart2.setOption({
+                    title: {
+                        text: 'containLabel: "vertical"',
+                        left: "center",
+                    },
+                    tooltip: {
+                        trigger: "axis",
+                    },
+                    grid: {
+                        ...commonGrid,
+                        containLabel: "vertical",
+                    },
+                    xAxis: {
+                        type: "category",
+                        data: dataAll.year,
+                        axisLabel: {
+                            fontSize: 16,
+                            rotate: 45,
+                        },
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: {
+                            fontSize: 16,
+                            formatter: "{value} 万",
+                        },
+                    },
+                    series: [
+                        {
+                            data: dataAll.data,
+                            type: "line",
+                        },
+                    ],
+                });
+
+                window.onresize = function () {
+                    chart0.resize();
+                    chart1.resize();
+                    chart2.resize();
+                };
+            });
+        </script>
+    </body>
+</html>
