@@ -32,7 +32,8 @@ import {isNameLocationCenter, shouldShowAllLabels} from '../../coord/axisHelper'
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import {
     ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString,
-    VisualAxisBreak, AxisBreakEventParamPart,
+    VisualAxisBreak,
+    ParsedAxisBreak,
 } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
@@ -59,7 +60,12 @@ type AxisEventData = {
     value?: string | number
     dataIndex?: number
     tickIndex?: number
-} & AxisBreakEventParamPart & {
+} & {
+    break?: {
+        start: ParsedAxisBreak['vmin'],
+        end: ParsedAxisBreak['vmax'],
+    }
+} & {
     [key in AxisIndexKey]?: number
 };
 
@@ -882,7 +888,7 @@ function buildAxisLabel(
             eventData.tickIndex = index;
             if (labelItem.break) {
                 eventData.break = {
-                    type: labelItem.break.type,
+                    // type: labelItem.break.type,
                     start: labelItem.break.parsedBreak.vmin,
                     end: labelItem.break.parsedBreak.vmax,
                 };
@@ -942,9 +948,12 @@ function adjustBreakLabels(
         return;
     }
     const breakLabelPairs = scaleBreakHelper.retrieveAxisBreakPairs(labelEls, el => getLabelInner(el).break);
-    each(breakLabelPairs, pair =>
-        getAxisBreakHelper()!.adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, pair)
-    );
+    const moveOverlap = axisModel.get(['breakLabelLayout', 'moveOverlap'], true);
+    if (moveOverlap === true || moveOverlap === 'auto') {
+        each(breakLabelPairs, pair =>
+            getAxisBreakHelper()!.adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, pair)
+        );
+    }
 }
 
 export default AxisBuilder;

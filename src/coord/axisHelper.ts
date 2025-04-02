@@ -38,8 +38,10 @@ import {
     CategoryAxisBaseOption,
     LogAxisBaseOption,
     TimeAxisLabelFormatterOption,
-    ValueAxisBaseOption,
-    AxisBaseOptionCommon
+    AxisBaseOptionCommon,
+    AxisLabelCategoryFormatter,
+    AxisLabelValueFormatter,
+    AxisLabelFormatterExtraParams,
 } from './axisCommonTypes';
 import CartesianAxisModel, { CartesianAxisPosition, inverseCartesianAxisPositionMap } from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
@@ -237,32 +239,25 @@ export function ifAxisCrossZero(axis: Axis) {
  *         return: {string} label string.
  */
 export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) => string {
-    const labelFormatter = (axis.getLabelModel() as Model<ValueAxisBaseOption['axisLabel']>)
-        .get('formatter');
-    const categoryTickStart = axis.type === 'category' ? axis.scale.getExtent()[0] : null;
+    const labelFormatter = axis.getLabelModel().get('formatter');
 
-    if (axis.scale.type === 'time') {
-        return (function (tpl) {
-            const parsed = parseTimeAxisLabelFormatter(tpl);
-            return function (tick: ScaleTick, idx: number) {
-                return (axis.scale as TimeScale).getFormattedLabel(tick, idx, parsed);
-            };
-        })(labelFormatter as TimeAxisLabelFormatterOption);
+    if (axis.type === 'time') {
+        const parsed = parseTimeAxisLabelFormatter(labelFormatter as TimeAxisLabelFormatterOption);
+        return function (tick: ScaleTick, idx: number) {
+            return (axis.scale as TimeScale).getFormattedLabel(tick, idx, parsed);
+        };
     }
     else if (zrUtil.isString(labelFormatter)) {
-        return (function (tpl) {
-            return function (tick: ScaleTick) {
-                // For category axis, get raw value; for numeric axis,
-                // get formatted label like '1,333,444'.
-                const label = axis.scale.getLabel(tick);
-                const text = tpl.replace('{value}', label != null ? label : '');
-
-                return text;
-            };
-        })(labelFormatter);
+        return function (tick: ScaleTick) {
+            // For category axis, get raw value; for numeric axis,
+            // get formatted label like '1,333,444'.
+            const label = axis.scale.getLabel(tick);
+            const text = labelFormatter.replace('{value}', label != null ? label : '');
+            return text;
+        };
     }
     else if (zrUtil.isFunction(labelFormatter)) {
-        return (function (cb) {
+        if (axis.type === 'category') {
             return function (tick: ScaleTick, idx: number) {
                 // The original intention of `idx` is "the index of the tick in all ticks".
                 // But the previous implementation of category axis do not consider the
@@ -270,22 +265,23 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
                 // `1`, then the ticks "name5", "name7", "name9" are displayed, where the
                 // corresponding `idx` are `0`, `2`, `4`, but not `0`, `1`, `2`. So we keep
                 // the definition here for back compatibility.
-                if (categoryTickStart != null) {
-                    idx = tick.value - categoryTickStart;
-                }
-                return cb(
-                    getAxisRawValue(axis, tick) as number,
-                    idx,
-                    {
-                        break: tick.break ? {
-                            type: tick.break.type,
-                            start: tick.break.parsedBreak.vmin,
-                            end: tick.break.parsedBreak.vmax,
-                        } : undefined
-                    }
+                return (labelFormatter as AxisLabelCategoryFormatter)(
+                    getAxisRawValue<true>(axis, tick),
+                    tick.value - axis.scale.getExtent()[0],
+                    undefined
                 );
             };
-        })(labelFormatter as (...args: any[]) => string);
+        }
+        const scaleBreakHelper = getScaleBreakHelper();
+        return function (tick: ScaleTick, idx: number) {
+            const extra: AxisLabelFormatterExtraParams = {};
+            if (scaleBreakHelper) {
+                scaleBreakHelper.makeAxisLabelFormatterParamBreak(extra, tick.break);
+            }
+            return (labelFormatter as AxisLabelValueFormatter)(
+                getAxisRawValue<false>(axis, tick), idx, extra
+            );
+        };
     }
     else {
         return function (tick: ScaleTick) {
@@ -294,11 +290,12 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
     }
 }
 
-export function getAxisRawValue(axis: Axis, tick: ScaleTick): number | string {
+export function getAxisRawValue<TIsCategory extends boolean>(axis: Axis, tick: ScaleTick):
+    TIsCategory extends true ? string : number {
     // In category axis with data zoom, tick is not the original
     // index of axis.data. So tick should not be exposed to user
     // in category axis.
-    return axis.type === 'category' ? axis.scale.getLabel(tick) : tick.value;
+    return axis.type === 'category' ? axis.scale.getLabel(tick) : tick.value as any;
 }
 
 /**

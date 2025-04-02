@@ -20,12 +20,13 @@
 import { assert, clone, each, find, isString, map, trim } from 'zrender/src/core/util';
 import {
     NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
-    AxisBreakOptionIdentifier, ScaleTick, VisualAxisBreak
+    AxisBreakOptionIdentifier, ScaleTick, VisualAxisBreak,
 } from '../util/types';
 import { error } from '../util/log';
 import type Scale from './Scale';
 import { ScaleBreakContext, AxisBreakParsingResult, registerScaleBreakHelperImpl } from './break';
 import { round as fixRound } from '../util/number';
+import { AxisLabelFormatterExtraParams } from '../coord/axisCommonTypes';
 
 /**
  * @caution
@@ -392,7 +393,7 @@ function addBreaksToTicks(
         ticks.push({
             value: clampedBrk.vmin,
             break: {
-                type: 'min',
+                type: 'vmin',
                 parsedBreak: clampedBrk,
             },
             time: getTimeProps ? getTimeProps(clampedBrk) : undefined,
@@ -404,7 +405,7 @@ function addBreaksToTicks(
         ticks.push({
             value: clampedBrk.vmax,
             break: {
-                type: 'max',
+                type: 'vmax',
                 parsedBreak: clampedBrk,
             },
             time: getTimeProps ? getTimeProps(clampedBrk) : undefined,
@@ -579,13 +580,13 @@ function retrieveAxisBreakPairs<TItem>(
     const breakLabelPairs: TItem[][] = [];
     each(itemList, el => {
         const vBreak = getVisualAxisBreak(el);
-        if (vBreak && vBreak.type === 'min') {
+        if (vBreak && vBreak.type === 'vmin') {
             breakLabelPairs.push([el]);
         }
     });
     each(itemList, el => {
         const vBreak = getVisualAxisBreak(el);
-        if (vBreak && vBreak.type === 'max') {
+        if (vBreak && vBreak.type === 'vmax') {
             const pair = find(
                 breakLabelPairs,
                 // parsedBreak may be changed, can only use breakOption to match them.
@@ -635,7 +636,7 @@ function getTicksLogTransformBreak(
                 gapReal: brk.gapReal,
             }
         };
-        brkRoundingCriterion = originalBreak[`v${tick.break.type}`];
+        brkRoundingCriterion = originalBreak[tick.break.type];
     }
 
     return {
@@ -678,6 +679,19 @@ function logarithmicParseBreaksFromOption(
     return {parsedOriginal, parsedLogged};
 }
 
+const BREAK_MIN_MAX_TO_PARAM = {vmin: 'start', vmax: 'end'} as const;
+function makeAxisLabelFormatterParamBreak<T extends AxisLabelFormatterExtraParams>(
+    extraParam: T,
+    vBreak: VisualAxisBreak | NullUndefined
+): T {
+    extraParam.break = vBreak ? {
+        type: BREAK_MIN_MAX_TO_PARAM[vBreak.type],
+        start: vBreak.parsedBreak.vmin,
+        end: vBreak.parsedBreak.vmax,
+    } : undefined;
+    return extraParam;
+}
+
 export function installScaleBreakHelper(): void {
     registerScaleBreakHelperImpl({
         createScaleBreakContext,
@@ -689,5 +703,6 @@ export function installScaleBreakHelper(): void {
         retrieveAxisBreakPairs,
         getTicksLogTransformBreak,
         logarithmicParseBreaksFromOption,
+        makeAxisLabelFormatterParamBreak,
     });
 }

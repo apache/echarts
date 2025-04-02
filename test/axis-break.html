@@ -380,8 +380,15 @@ under the License.
                         axisLabel: {
                             showMinLabel: true,
                             showMaxLabel: true,
-                            formatter: (value, index) => {
-                                return `${echarts.time.format(value, '{HH}:{mm}')}`;
+                            formatter: (value, index, extra) => {
+                                var format = echarts.time.format;
+                                if (!extra || !extra.break) {
+                                    return `${format(value, '{HH}:{mm}')}`;
+                                }
+                                if (extra.break.type === 'start') {
+                                    return `${format(extra.break.start, '{HH}:{mm}')}/${format(extra.break.end, '{HH}:{mm}')}`;
+                                }
+                                return '';
                             },
                         },
                         breaks: [{
@@ -391,7 +398,10 @@ under the License.
                         }],
                         breakArea: {
                             zigzagAmplitude: 0
-                        }
+                        },
+                        breakLabelLayout: {
+                            moveOverlap: false
+                        },
                     }],
                     yAxis: {
                         type: 'value',

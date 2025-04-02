@@ -23,7 +23,7 @@ import {
     AreaStyleOption, ComponentOption, ColorString,
     AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, AxisBreakOption, ItemStyleOption,
     NullUndefined,
-    AxisBreakEventParamPart,
+    AxisLabelFormatterExtraBreakPart,
     TimeScaleTick,
 } from '../util/types';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
@@ -96,6 +96,9 @@ export interface AxisBaseOptionCommon extends ComponentOption,
         zigzagZ: number;
         expandOnClick?: boolean;
     };
+    breakLabelLayout?: {
+        moveOverlap?: 'auto' | boolean;
+    }
 }
 
 export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
@@ -135,9 +138,7 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
 export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
     type?: 'category';
     boundaryGap?: boolean
-    axisLabel?: AxisLabelOption<'category'> & {
-        interval?: 'auto' | number | ((index: number, value: string) => boolean)
-    };
+    axisLabel?: AxisLabelOption<'category'>;
     data?: (OrdinalRawValue | {
         value: OrdinalRawValue;
         textStyle?: TextCommonOption;
@@ -206,19 +207,24 @@ interface AxisTickOption {
     customValues?: (number | string | Date)[]
 }
 
-type AxisLabelValueFormatter = (
+export type AxisLabelValueFormatter = (
     value: number,
     index: number,
     extra: AxisLabelFormatterExtraParams | NullUndefined,
 ) => string;
-type AxisLabelCategoryFormatter = (
+export type AxisLabelCategoryFormatter = (
     value: string,
     index: number,
     extra: NullUndefined,
 ) => string;
+export type AxisLabelTimeFormatter = (
+    value: number,
+    index: number,
+    extra: TimeAxisLabelFormatterExtraParams,
+) => string;
 
-type AxisLabelFormatterExtraParams = {/* others if any */} & AxisBreakEventParamPart;
-type TimeAxisLabelFormatterExtraParams = {
+export type AxisLabelFormatterExtraParams = {/* others if any */} & AxisLabelFormatterExtraBreakPart;
+export type TimeAxisLabelFormatterExtraParams = {
     time: TimeScaleTick['time'],
     /**
      * @deprecated Refactored to `time.level`, and keep it for backward compat,
@@ -237,11 +243,11 @@ export type TimeAxisLabelFormatterDictionaryOption =
     {[key in PrimaryTimeUnit]?: TimeAxisLabelLeveledFormatterOption | TimeAxisLabelFormatterUpperDictionaryOption};
 
 export type TimeAxisLabelFormatterOption = string
-    | ((value: number, index: number, extra: TimeAxisLabelFormatterExtraParams) => string)
+    | AxisLabelTimeFormatter
     | TimeAxisLabelFormatterDictionaryOption;
 
 export type TimeAxisLabelFormatterParsed = string
-    | ((value: number, index: number, extra: TimeAxisLabelFormatterExtraParams) => string)
+    | AxisLabelTimeFormatter
     | TimeAxisLabelFormatterDictionary;
 
 // This is the parsed result from TimeAxisLabelFormatterDictionaryOption.
@@ -285,6 +291,9 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
 }
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]
+    interval?: TType extends 'category'
+        ? ('auto' | number | ((index: number, value: string) => boolean))
+        : unknown // Reserved but not used.
 }
 
 interface MinorTickOption {
@@ -318,4 +327,4 @@ interface SplitAreaOption {
 }
 
 export type AxisBaseOption = ValueAxisBaseOption | LogAxisBaseOption
-    | CategoryAxisBaseOption | TimeAxisBaseOption | AxisBaseOptionCommon;
+    | CategoryAxisBaseOption | TimeAxisBaseOption;

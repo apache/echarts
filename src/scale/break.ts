@@ -17,9 +17,10 @@
 * under the License.
 */
 
+import { AxisLabelFormatterExtraParams } from '../coord/axisCommonTypes';
 import type {
     NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
-    AxisBreakOptionIdentifier, ScaleTick, VisualAxisBreak
+    AxisBreakOptionIdentifier, ScaleTick, VisualAxisBreak,
 } from '../util/types';
 import type Scale from './Scale';
 
@@ -113,6 +114,10 @@ export type ScaleBreakHelper = {
         parsedOriginal: AxisBreakParsingResult;
         parsedLogged: AxisBreakParsingResult;
     };
+    makeAxisLabelFormatterParamBreak<T extends AxisLabelFormatterExtraParams>(
+        extraParam: T,
+        vBreak: VisualAxisBreak | NullUndefined
+    ): T;
 };
 
 let _impl: ScaleBreakHelper = null;

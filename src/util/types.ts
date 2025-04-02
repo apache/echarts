@@ -433,13 +433,12 @@ export type ParsedAxisBreak = {
     gapReal: number | NullUndefined,
 };
 export type VisualAxisBreak = {
-    type: 'min' | 'max',
+    type: 'vmin' | 'vmax',
     parsedBreak: ParsedAxisBreak,
 };
-export type AxisBreakEventParamPart = {
+export type AxisLabelFormatterExtraBreakPart = {
     break?: {
-        // start/end or min/max
-        type: VisualAxisBreak['type'],
+        type: 'start' | 'end',
         start: ParsedAxisBreak['vmin'],
         end: ParsedAxisBreak['vmax'],
         // After parsing, the start and end may be reversed and thus `start`

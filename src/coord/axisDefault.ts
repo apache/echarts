@@ -123,6 +123,9 @@ const defaultOption: AxisBaseOption = {
         zigzagMaxSpan: 20,
         zigzagZ: 100,
         expandOnClick: true,
+    },
+    breakLabelLayout: {
+        moveOverlap: 'auto',
     }
 };
 

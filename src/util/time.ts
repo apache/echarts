@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import {
     TimeAxisLabelFormatterDictionary,
     TimeAxisLabelFormatterDictionaryOption,
+    TimeAxisLabelFormatterExtraParams,
     TimeAxisLabelFormatterOption,
     TimeAxisLabelFormatterParsed,
     TimeAxisLabelFormatterUpperDictionary,
@@ -30,6 +31,7 @@ import * as numberUtil from './number';
 import {NullUndefined, ScaleTick} from './types';
 import { getDefaultLocaleModel, getLocaleModel, SYSTEM_LANG, LocaleOption } from '../core/locale';
 import Model from '../model/Model';
+import { getScaleBreakHelper } from '../scale/break';
 
 export const ONE_SECOND = 1000;
 export const ONE_MINUTE = ONE_SECOND * 60;
@@ -339,16 +341,15 @@ export function leveledFormat(
         template = formatter;
     }
     else if (zrUtil.isFunction(formatter)) {
-        // Callback formatter
-        template = formatter(tick.value, idx, {
+        const extra: TimeAxisLabelFormatterExtraParams = {
             time: tick.time,
             level: tick.time.level,
-            break: tick.break ? {
-                type: tick.break.type,
-                start: tick.break.parsedBreak.vmin,
-                end: tick.break.parsedBreak.vmax,
-            } : undefined
-        });
+        };
+        const scaleBreakHelper = getScaleBreakHelper();
+        if (scaleBreakHelper) {
+            scaleBreakHelper.makeAxisLabelFormatterParamBreak(extra, tick.break);
+        }
+        template = formatter(tick.value, idx, extra);
     }
     else {
         const tickTime = tick.time;
