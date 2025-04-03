@@ -144,6 +144,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
                 showName: showName,
                 nameLocation: 'end',
                 nameGap: nameGap,
+                nameTruncate: iNameTextStyle,
                 // min: 0,
                 nameTextStyle: iNameTextStyle,
                 triggerEvent: triggerEvent
