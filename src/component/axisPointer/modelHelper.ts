@@ -50,6 +50,7 @@ interface AxisInfo {
     axisPointerModel: Model<CommonAxisPointerOption>
     triggerTooltip: boolean
     triggerEmphasis: boolean
+    triggerOnNull: boolean
     involveSeries: boolean
     snap: boolean
     useHandle: boolean
@@ -89,6 +90,7 @@ export function collect(ecModel: GlobalModel, api: ExtensionAPI) {
          *      axisPointerModel,
          *      triggerTooltip,
          *      triggerEmphasis,
+         *      triggerOnNull,
          *      involveSeries,
          *      snap,
          *      seriesModels,
@@ -197,6 +199,7 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
 
             const snap = axisPointerModel.get('snap');
             const triggerEmphasis = axisPointerModel.get('triggerEmphasis');
+            const triggerOnNull = axisPointerModel.get('triggerOnNull');
             const axisKey = makeKey(axis.model);
             const involveSeries = triggerTooltip || snap || axis.type === 'category';
 
@@ -208,6 +211,7 @@ function collectAxesInfo(result: CollectionResult, ecModel: GlobalModel, api: Ex
                 axisPointerModel: axisPointerModel,
                 triggerTooltip: triggerTooltip,
                 triggerEmphasis: triggerEmphasis,
+                triggerOnNull: triggerOnNull,
                 involveSeries: involveSeries,
                 snap: snap,
                 useHandle: isHandleTrigger(axisPointerModel),
