@@ -21,8 +21,7 @@ import * as vec2 from 'zrender/src/core/vector';
 import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption } from './GraphSeries';
 import Graph from '../../data/Graph';
 import * as zrUtil from 'zrender/src/core/util';
-import {getCurvenessForEdge} from '../helper/multipleGraphEdgeHelper';
-
+import {getCurvenessForEdge, getOffsetForEdge} from '../helper/multipleGraphEdgeHelper';
 
 export function simpleLayout(seriesModel: GraphSeriesModel) {
     const coordSys = seriesModel.coordinateSystem;
@@ -46,9 +45,23 @@ export function simpleLayoutEdge(graph: Graph, seriesModel: GraphSeriesModel) {
             -getCurvenessForEdge(edge, seriesModel, index, true),
             0
         );
+        const offset = zrUtil.retrieve3(
+            edge.getModel<GraphEdgeItemOption>().get(['lineStyle', 'offset']),
+            getOffsetForEdge(edge, seriesModel, index),
+            0
+        );
         const p1 = vec2.clone(edge.node1.getLayout());
         const p2 = vec2.clone(edge.node2.getLayout());
         const points = [p1, p2];
+        if (+offset) {
+            const direction: number[] = [];
+            vec2.sub(direction, p2, p1);
+            const normalVector = [-direction[1], direction[0]];
+            vec2.normalize(normalVector, normalVector);
+            const offsetVector = [normalVector[0] * offset, normalVector[1] * offset];
+            vec2.add(points[0], p1, offsetVector);
+            vec2.add(points[1], p2, offsetVector);
+        }
         if (+curveness) {
             points.push([
                 (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness,
