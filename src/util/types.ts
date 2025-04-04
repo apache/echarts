@@ -182,7 +182,6 @@ export interface PayloadAnimationPart {
 
 export interface SelectChangedPayload extends Payload {
     type: 'selectchanged'
-    escapeConnect: boolean
     isFromClick: boolean
     fromAction: 'select' | 'unselect' | 'toggleSelected'
     fromActionPayload: Payload
@@ -219,7 +218,7 @@ export interface ECActionEvent extends ECEventData {
     componentIndex?: number;
     seriesIndex?: number;
     escapeConnect?: boolean;
-    batch?: ECEventData;
+    batch?: ECEventData[];
 }
 export interface ECEventData {
     // TODO use unknown
@@ -236,16 +235,48 @@ export interface NormalizedEventQuery {
     otherQuery: EventQueryItem;
 }
 
+/**
+ * The rule of creating "public event" and "event for connect":
+ *  - If `refineEvent` provided,
+ *      `refineEvent` creates the "public event",
+ *      and "event for connect" is created internally by replicating the payload.
+ *      This is because `makeActionFromEvent` requires the content of event to be
+ *      the same as the original payload, while `refineEvent` creates a user-friend
+ *      event that differs from the original payload.
+ *  - Else if `ActionHandler` returns an object,
+ *      it is both the "public event" and the "event for connect".
+ *      (@deprecated, but keep this mechanism for backward compatibility).
+ *  - Else,
+ *      replicate the payload as both the "public event" and "event for connect".
+ */
 export interface ActionInfo {
     // action type
     type: string;
     // If not provided, use the same string of `type`.
     event?: string;
-    // update method
+    // update method.
     update?: string;
+    // `ActionHandler` is designed to do nothing other than modify models.
+    action?: ActionHandler;
+    // - `refineEvent` is intented to create a user-friend event that differs from the original payload,
+    //  while enabling feature `connect`, and being called at the last step of the "update" procedure
+    //  to ensure the complete update of all models.
+    // - If mutiple actions need to share one event name, `refineEvent` must be used.
+    //  e.g., actions 'doxxx' 'undoxxx' 'togglexxx' share one event name 'xxxchanged'.
+    refineEvent?: ActionRefineEvent;
+    // When `refineEvent` is provided, still publish the auto generated "event for connect" to users.
+    // Only for backward compatibility, do not use it in future actions and events.
+    publishNonRefinedEvent?: boolean;
 }
 export interface ActionHandler {
     (payload: Payload, ecModel: GlobalModel, api: ExtensionAPI): void | ECEventData;
+}
+export interface ActionRefineEvent {
+    // `actionResult` is the return of the `ActionHandler` call, where some data can be carried.
+    // `actionResultBatch` corresponds to both batch payload and non-batch payload.
+    (actionResultBatch: ECEventData[], payload: Payload, ecModel: GlobalModel, api: ExtensionAPI): {
+        eventContent: Omit<ECActionEvent, 'type'>;
+    }
 }
 
 export interface OptionPreprocessor {
@@ -605,6 +636,7 @@ export type ECUnitOption = {
     darkMode?: boolean | 'auto'
     textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
     useUTC?: boolean
+    hoverLayerThreshold?: number
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
