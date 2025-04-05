@@ -73,6 +73,21 @@ under the License.
                 var chart = echarts.init(document.getElementById('main'));
 
                 option = {
+                    title: [{
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 60,
+                        textStyle: {
+                            color: '#888',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     "tooltip": {
                         "trigger": "item",
                         "formatter":function(params,ticket,cb){ //自定义显示框
@@ -114,7 +129,7 @@ under the License.
                             }
                         },
                         "data": [{
-                            "name": "浙江",
+                            "name": "浙江省",
                             "value": "96.89"
                         }, {
                             "name": "unknown",
@@ -122,7 +137,9 @@ under the License.
                         }, {
                             "name": "其它",
                             "value": "0.44"
-                        }]
+                        }],
+                        center: [104.2, 36],
+                        zoom: 1.4
                     }]
                 }
 
