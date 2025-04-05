@@ -20,7 +20,7 @@
 import { AxisLabelFormatterExtraParams } from '../coord/axisCommonTypes';
 import type {
     NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
-    AxisBreakOptionIdentifier, ScaleTick, VisualAxisBreak,
+    AxisBreakOptionIdentifierInAxis, ScaleTick, VisualAxisBreak,
 } from '../util/types';
 import type Scale from './Scale';
 
@@ -88,10 +88,10 @@ export type ScaleBreakHelper = {
     ): AxisBreakParsingResult;
     identifyAxisBreak(
         brk: AxisBreakOption,
-        identifier: AxisBreakOptionIdentifier
+        identifier: AxisBreakOptionIdentifierInAxis
     ): boolean;
     serializeAxisBreakIdentifier(
-        identifier: AxisBreakOptionIdentifier
+        identifier: AxisBreakOptionIdentifierInAxis
     ): string;
     retrieveAxisBreakPairs<TItem>(
         itemList: TItem[],

@@ -32,11 +32,16 @@ import type { PathProps } from 'zrender/src/graphic/Path';
 import { subPixelOptimizeLine } from 'zrender/src/graphic/helper/subPixelOptimize';
 import { applyTransform } from 'zrender/src/core/vector';
 import * as matrixUtil from 'zrender/src/core/matrix';
-import type { AxisBreakPayload, AxisBreakPayloadBreak } from './axisAction';
+import {
+    AXIS_BREAK_COLLAPSE_ACTION_TYPE,
+    AXIS_BREAK_EXPAND_ACTION_TYPE,
+    AXIS_BREAK_TOGGLE_ACTION_TYPE,
+    BaseAxisBreakPayload
+} from './axisAction';
 import { detectAxisLabelPairIntersection } from '../../label/labelLayoutHelper';
 import type SingleAxisView from './SingleAxisView';
 import type { AxisBuilderCfg } from './AxisBuilder';
-import { registerAxisBreakHelperImpl } from './axisBreakHelper';
+import { AxisBreakUpdateResult, registerAxisBreakHelperImpl } from './axisBreakHelper';
 import { warn } from '../../util/log';
 import ComponentModel from '../../model/Component';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
@@ -164,12 +169,11 @@ function rectCoordBuildBreakAxis(
 
         if (expandOnClick) {
             breakGroup.on('click', () => {
-                const payload: AxisBreakPayload = {
-                    type: 'updateAxisBreak',
+                const payload: BaseAxisBreakPayload = {
+                    type: AXIS_BREAK_EXPAND_ACTION_TYPE,
                     breaks: [{
                         start: parsedBreak.breakOption.start,
                         end: parsedBreak.breakOption.end,
-                        isExpanded: true,
                     }]
                 };
                 payload[`${axis.dim}AxisIndex`] = axisModel.componentIndex;
@@ -506,9 +510,11 @@ function adjustBreakLabelPair(
 
 function updateModelAxisBreak(
     model: ComponentModel<AxisBaseOption>,
-    inputBreaks: AxisBreakPayloadBreak[]
-): void {
-    each(inputBreaks, inputBrk => {
+    payload: BaseAxisBreakPayload
+): AxisBreakUpdateResult {
+    const result: AxisBreakUpdateResult = {breaks: []};
+
+    each(payload.breaks, inputBrk => {
         if (!inputBrk) {
             return;
         }
@@ -522,8 +528,24 @@ function updateModelAxisBreak(
             }
             return;
         }
-        breakOption.isExpanded = !!inputBrk.isExpanded;
+        const actionType = payload.type;
+        const old = {
+            isExpanded: !!breakOption.isExpanded
+        };
+        breakOption.isExpanded =
+            actionType === AXIS_BREAK_EXPAND_ACTION_TYPE ? true
+            : actionType === AXIS_BREAK_COLLAPSE_ACTION_TYPE ? false
+            : actionType === AXIS_BREAK_TOGGLE_ACTION_TYPE ? !breakOption.isExpanded
+            : breakOption.isExpanded;
+        result.breaks.push({
+            start: breakOption.start,
+            end: breakOption.end,
+            isExpanded: !!breakOption.isExpanded,
+            old,
+        });
     });
+
+    return result;
 }
 
 

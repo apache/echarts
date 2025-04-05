@@ -18,37 +18,130 @@
 */
 
 import { ModelFinderIdQuery, ModelFinderIndexQuery, ModelFinderNameQuery, parseFinder } from '../../util/model';
-import { Payload, AxisBreakOption, AxisBreakOptionIdentifier } from '../../util/types';
-import { each } from 'zrender/src/core/util';
+import {
+    Payload, AxisBreakOptionIdentifierInAxis,
+    ECActionRefinedEvent, ECActionRefinedEventContent
+} from '../../util/types';
+import { defaults, each } from 'zrender/src/core/util';
 import type { AxisBaseModel } from '../../coord/AxisBaseModel';
 import type { EChartsExtensionInstallRegisters } from '../../extension';
+import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
-export interface AxisBreakPayload extends Payload {
-    xAxisIndex?: ModelFinderIndexQuery,
-    xAxisId?: ModelFinderIdQuery,
-    xAxisName?: ModelFinderNameQuery
-    yAxisIndex?: ModelFinderIndexQuery,
-    yAxisId?: ModelFinderIdQuery,
-    yAxisName?: ModelFinderNameQuery,
-    singleAxisIndex?: ModelFinderIndexQuery,
-    singleAxisId?: ModelFinderIdQuery,
-    singleAxisName?: ModelFinderNameQuery,
+export interface BaseAxisBreakPayload extends Payload {
+    xAxisIndex?: ModelFinderIndexQuery;
+    xAxisId?: ModelFinderIdQuery;
+    xAxisName?: ModelFinderNameQuery;
+    yAxisIndex?: ModelFinderIndexQuery;
+    yAxisId?: ModelFinderIdQuery;
+    yAxisName?: ModelFinderNameQuery;
+    singleAxisIndex?: ModelFinderIndexQuery;
+    singleAxisId?: ModelFinderIdQuery;
+    singleAxisName?: ModelFinderNameQuery;
 
-    breaks: AxisBreakPayloadBreak[];
+    breaks: AxisBreakOptionIdentifierInAxis[];
 }
-export type AxisBreakPayloadBreak = AxisBreakOptionIdentifier & Pick<AxisBreakOption, 'isExpanded'>;
+interface ExpandAxisBreakPayload extends BaseAxisBreakPayload {
+    type: typeof AXIS_BREAK_EXPAND_ACTION_TYPE;
+}
+interface CollapseAxisBreakPayload extends BaseAxisBreakPayload {
+    type: typeof AXIS_BREAK_COLLAPSE_ACTION_TYPE;
+}
+interface ToggleAxisBreakPayload extends BaseAxisBreakPayload {
+    type: typeof AXIS_BREAK_TOGGLE_ACTION_TYPE;
+}
 
-export const axisBreakUpdateActionInfo = {
-    type: 'updateAxisBreak',
-    event: 'axisBreakUpdated',
-    update: 'update'
+export type AxisBreakChangedEventBreak =
+    AxisBreakOptionIdentifierInAxis
+    & {
+        xAxisIndex?: ModelFinderIndexQuery;
+        yAxisIndex?: ModelFinderIndexQuery;
+        singleAxisIndex?: ModelFinderIndexQuery;
+
+        isExpanded: boolean;
+        old: {
+            isExpanded: boolean;
+        }
+    };
+
+export interface AxisBreakChangedEvent extends ECActionRefinedEvent {
+    type: typeof AXIS_BREAK_CHANGED_EVENT_TYPE;
+    fromAction: typeof AXIS_BREAK_EXPAND_ACTION_TYPE
+        | typeof AXIS_BREAK_COLLAPSE_ACTION_TYPE
+        | typeof AXIS_BREAK_TOGGLE_ACTION_TYPE;
+    fromActionPayload: ExpandAxisBreakPayload
+        | CollapseAxisBreakPayload
+        | ToggleAxisBreakPayload;
+    // Only include specified breaks.
+    breaks: AxisBreakChangedEventBreak[];
+}
+
+export const AXIS_BREAK_EXPAND_ACTION_TYPE = 'expandAxisBreak' as const;
+export const AXIS_BREAK_COLLAPSE_ACTION_TYPE = 'collapseAxisBreak' as const;
+export const AXIS_BREAK_TOGGLE_ACTION_TYPE = 'toggleAxisBreak' as const;
+
+const AXIS_BREAK_CHANGED_EVENT_TYPE = 'axisbreakchanged' as const;
+
+const expandAxisBreakActionInfo = {
+    type: AXIS_BREAK_EXPAND_ACTION_TYPE,
+    event: AXIS_BREAK_CHANGED_EVENT_TYPE,
+    update: 'update',
+    refineEvent: refineAxisBreakChangeEvent,
+};
+const collapseAxisBreakActionInfo = {
+    type: AXIS_BREAK_COLLAPSE_ACTION_TYPE,
+    event: AXIS_BREAK_CHANGED_EVENT_TYPE,
+    update: 'update',
+    refineEvent: refineAxisBreakChangeEvent,
+};
+const toggleAxisBreakActionInfo = {
+    type: AXIS_BREAK_TOGGLE_ACTION_TYPE,
+    event: AXIS_BREAK_CHANGED_EVENT_TYPE,
+    update: 'update',
+    refineEvent: refineAxisBreakChangeEvent,
 };
 
-export function registerAction(registers: EChartsExtensionInstallRegisters) {
-    registers.registerAction(axisBreakUpdateActionInfo, function (payload: AxisBreakPayload, ecModel) {
-        const finderResult = parseFinder(ecModel, payload);
-        each(finderResult.xAxisModels, (axisModel: AxisBaseModel) => axisModel.updateAxisBreaks(payload.breaks));
-        each(finderResult.yAxisModels, (axisModel: AxisBaseModel) => axisModel.updateAxisBreaks(payload.breaks));
-        each(finderResult.singleAxisModels, (axisModel: AxisBaseModel) => axisModel.updateAxisBreaks(payload.breaks));
+function refineAxisBreakChangeEvent(
+    actionResultBatch: {eventBreaks: AxisBreakChangedEventBreak[]}[],
+    payload: BaseAxisBreakPayload,
+    ecModel: GlobalModel,
+    api: ExtensionAPI
+): {
+    eventContent: ECActionRefinedEventContent<AxisBreakChangedEvent>;
+} {
+    let breaks: AxisBreakChangedEventBreak[] = [];
+    each(actionResultBatch, actionResult => {
+        breaks = breaks.concat(actionResult.eventBreaks);
     });
+    return {
+        eventContent: {breaks}
+    };
+}
+
+export function registerAction(registers: EChartsExtensionInstallRegisters) {
+    registers.registerAction(expandAxisBreakActionInfo, actionHandler);
+    registers.registerAction(collapseAxisBreakActionInfo, actionHandler);
+    registers.registerAction(toggleAxisBreakActionInfo, actionHandler);
+
+    function actionHandler(payload: BaseAxisBreakPayload, ecModel: GlobalModel) {
+        const eventBreaks: AxisBreakChangedEventBreak[] = [];
+        const finderResult = parseFinder(ecModel, payload);
+
+        function dealUpdate(modelProp: string, indexProp: string) {
+            each(finderResult[modelProp], (axisModel: AxisBaseModel) => {
+                const result = axisModel.updateAxisBreaks(payload);
+                each(result.breaks, item => {
+                    eventBreaks.push(
+                        defaults({[indexProp]: axisModel.componentIndex}, item)
+                    );
+                });
+            });
+        }
+
+        dealUpdate('xAxisModels', 'xAxisIndex');
+        dealUpdate('yAxisModels', 'yAxisIndex');
+        dealUpdate('singleAxisModels', 'singleAxisIndex');
+
+        return {eventBreaks};
+    }
 }

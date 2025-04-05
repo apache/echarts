@@ -36,7 +36,8 @@ export {
     ECElementEvent,
     HighlightPayload,
     DownplayPayload,
-    SelectChangedPayload
+    SelectChangedPayload,
+    SelectChangedEvent,
 } from '../util/types';
 export { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 export { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';

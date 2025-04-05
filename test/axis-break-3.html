@@ -118,7 +118,7 @@ under the License.
                     text: 'set all isExpanded: false',
                     onclick: function () {
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'collapseAxisBreak',
                             xAxisIndex: 'all',
                             yAxisIndex: 'all',
                             breaks: makeBreaks(false, false),
@@ -132,7 +132,7 @@ under the License.
                         var isExpanded1 = option.yAxis[0].breaks[1].isExpanded;
 
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'toggleAxisBreak',
                             xAxisIndex: 'all',
                             yAxisIndex: 'all',
                             breaks: makeBreaks(!isExpanded0, isExpanded1),
@@ -146,7 +146,7 @@ under the License.
                         var isExpanded1 = option.yAxis[0].breaks[1].isExpanded;
 
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'toggleAxisBreak',
                             xAxisIndex: 'all',
                             yAxisIndex: 'all',
                             breaks: makeBreaks(isExpanded0, !isExpanded1),
@@ -520,7 +520,7 @@ under the License.
                     text: 'Reset Break Axis',
                     onclick: function (event) {
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'collapseAxisBreak',
                             yAxisIndex: 'all',
                             breaks: initialAxisBreaks
                         });
@@ -529,7 +529,7 @@ under the License.
                     text: 'Expand Break Axis ' + initialAxisBreaks[0].start + '~' + initialAxisBreaks[0].end,
                     onclick: function (event) {
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'collapseAxisBreak',
                             yAxisIndex: 'all',
                             breaks: [{
                                 start: initialAxisBreaks[0].start,

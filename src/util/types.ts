@@ -180,6 +180,20 @@ export interface PayloadAnimationPart {
     delay?: number
 }
 
+export interface SelectChangedEvent extends ECActionRefinedEvent {
+    type: 'selectchanged'
+    isFromClick: boolean
+    fromAction: 'select' | 'unselect' | 'toggleSelected'
+    fromActionPayload: Payload
+    selected: {
+        seriesIndex: number
+        dataType?: SeriesDataType
+        dataIndex: number[]
+    }[]
+}
+/**
+ * @deprecated Backward compat.
+ */
 export interface SelectChangedPayload extends Payload {
     type: 'selectchanged'
     isFromClick: boolean
@@ -220,6 +234,21 @@ export interface ECActionEvent extends ECEventData {
     escapeConnect?: boolean;
     batch?: ECEventData[];
 }
+/**
+ * TODO: not applicable in `ECEventProcessor` yet.
+ */
+export interface ECActionRefinedEvent extends ECActionEvent {
+    // event type
+    type: string;
+    // action types.
+    fromAction: string;
+    fromActionPayload: Payload;
+}
+export type ECActionRefinedEventContent<TRefinedEvent extends ECActionRefinedEvent> = Omit<
+    TRefinedEvent,
+    'type' | 'fromAction' | 'fromActionPayload'
+>;
+
 export interface ECEventData {
     // TODO use unknown
     [key: string]: any;
@@ -263,6 +292,7 @@ export interface ActionInfo {
     //  to ensure the complete update of all models.
     // - If mutiple actions need to share one event name, `refineEvent` must be used.
     //  e.g., actions 'doxxx' 'undoxxx' 'togglexxx' share one event name 'xxxchanged'.
+    // - The design of refiend event should not impose different handling for batch and non-batch on users.
     refineEvent?: ActionRefineEvent;
     // When `refineEvent` is provided, still publish the auto generated "event for connect" to users.
     // Only for backward compatibility, do not use it in future actions and events.
@@ -275,7 +305,7 @@ export interface ActionRefineEvent {
     // `actionResult` is the return of the `ActionHandler` call, where some data can be carried.
     // `actionResultBatch` corresponds to both batch payload and non-batch payload.
     (actionResultBatch: ECEventData[], payload: Payload, ecModel: GlobalModel, api: ExtensionAPI): {
-        eventContent: Omit<ECActionEvent, 'type'>;
+        eventContent: ECActionRefinedEventContent<ECActionRefinedEvent>
     }
 }
 
@@ -438,7 +468,8 @@ export type AxisBreakOption = {
     // undefined means false
     isExpanded?: boolean
 };
-export type AxisBreakOptionIdentifier = Pick<AxisBreakOption, 'start' | 'end'>;
+// Within an axis, this is the identifier among multiple breaks.
+export type AxisBreakOptionIdentifierInAxis = Pick<AxisBreakOption, 'start' | 'end'>;
 
 // - Parsed from the breaks in axis model.
 // - Never be null/undefined.

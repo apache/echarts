@@ -20,7 +20,7 @@
 import { assert, clone, each, find, isString, map, trim } from 'zrender/src/core/util';
 import {
     NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
-    AxisBreakOptionIdentifier, ScaleTick, VisualAxisBreak,
+    AxisBreakOptionIdentifierInAxis, ScaleTick, VisualAxisBreak,
 } from '../util/types';
 import { error } from '../util/log';
 import type Scale from './Scale';
@@ -557,12 +557,12 @@ function parseAxisBreakOption(
 
 function identifyAxisBreak(
     brk: AxisBreakOption,
-    identifier: AxisBreakOptionIdentifier
+    identifier: AxisBreakOptionIdentifierInAxis
 ): boolean {
     return serializeAxisBreakIdentifier(identifier) === serializeAxisBreakIdentifier(brk);
 }
 
-function serializeAxisBreakIdentifier(identifier: AxisBreakOptionIdentifier): string {
+function serializeAxisBreakIdentifier(identifier: AxisBreakOptionIdentifierInAxis): string {
     // We use user input start/end to identify break. Considered cases like `start: new Date(xxx)`,
     // Theoretically `Scale#parse` should be used here, but not used currently to reduce dependencies,
     // since simply converting to string happens to be correct.

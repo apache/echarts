@@ -806,7 +806,7 @@ under the License.
                     text: 'reset X breaks',
                     onclick: function () {
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'collapseAxisBreak',
                             xAxisIndex: 0,
                             breaks: makeXBreaks(false)
                         });
@@ -815,7 +815,7 @@ under the License.
                     text: 'reset Y breaks',
                     onclick: function () {
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'collapseAxisBreak',
                             yAxisIndex: 0,
                             breaks: makeYBreaks(false)
                         });
@@ -913,8 +913,8 @@ under the License.
                 chart.on('resize', function () {
                     updateContainLabelCriterion(chart);
                 });
-                chart.on('axisBreakUpdated', function (params) {
-                    console.log('axisBreakUpdated', params);
+                chart.on('axisbreakchanged', function (params) {
+                    console.log('axisbreakchanged', params);
                 });
             }
         });
@@ -1228,7 +1228,7 @@ under the License.
                         text: 'reset breaks expand',
                         onclick: function () {
                             chart.dispatchAction({
-                                type: 'updateAxisBreak',
+                                type: 'collapseAxisBreak',
                                 batch: [{
                                     xAxisId: 'x_time_breaks',
                                     breaks: xMakeBreaksAndData().breaks,

@@ -52,6 +52,8 @@ under the License.
         <div id="main_break_style_2"></div>
         <div id="main_break_style_3"></div>
 
+        <div id="main_event_check"></div>
+
 
         <script>
         require([
@@ -124,7 +126,7 @@ under the License.
                     text: 'Revert Break Axis',
                     onclick: function (event) {
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'collapseAxisBreak',
                             yAxisIndex: 'all',
                             breaks: initialAxisBreaks
                         });
@@ -133,44 +135,28 @@ under the License.
                     text: 'Expand Break Axis ' + initialAxisBreaks[0].start + '~' + initialAxisBreaks[0].end,
                     onclick: function (event) {
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'expandAxisBreak',
                             yAxisIndex: 'all',
                             breaks: [{
                                 start: initialAxisBreaks[0].start,
                                 end: initialAxisBreaks[0].end,
-                                isExpanded: true,
+                            }]
+                        });
+                    }
+                }, {
+                    text: 'Toggle Break Axis ' + initialAxisBreaks[0].start + '~' + initialAxisBreaks[0].end,
+                    onclick: function (event) {
+                        chart.dispatchAction({
+                            type: 'toggleAxisBreak',
+                            yAxisIndex: 'all',
+                            breaks: [{
+                                start: initialAxisBreaks[0].start,
+                                end: initialAxisBreaks[0].end,
                             }]
                         });
                     }
                 }]
             });
-
-            if (chart) {
-                chart.on('axisBreakUpdated', function (params) {
-                    console.log('axisBreakUpdated', params);
-                    if (!params.breaks || params.breaks.length !== 1) {
-                        throw new Error('test failed');
-                    }
-                    if (
-                        !(params.breaks[0].start === initialAxisBreaks[0].start
-                            && params.breaks[0].end === initialAxisBreaks[0].end
-                        )
-                        && !(params.breaks[0].start === initialAxisBreaks[1].start
-                            && params.breaks[0].end === initialAxisBreaks[1].end
-                        )
-                    ) {
-                        throw new Error('test failed');
-                    }
-                    if (params.breaks[0].isExpanded !== true
-                        && params.breaks[0].isExpanded !== false
-                    ) {
-                        throw new Error('test failed');
-                    }
-                    if (params.yAxisIndex !== 0) {
-                        throw new Error('test failed');
-                    }
-                });
-            }
         });
         </script>
 
@@ -426,7 +412,7 @@ under the License.
                         text: 'reset breaks',
                         onclick: function () {
                             chart.dispatchAction({
-                                type: 'updateAxisBreak',
+                                type: 'collapseAxisBreak',
                                 xAxisIndex: 'all',
                                 breaks: [{
                                     start: breakStart,
@@ -805,6 +791,220 @@ under the License.
         </script>
 
 
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+            var initBrks = {
+                x: [{
+                    start: 2000,
+                    end: 3098,
+                    gap: '10%'
+                }, {
+                    start: 5678,
+                    end: 7400,
+                    gap: '10%'
+                }],
+                y: [{
+                    start: 123,
+                    end: 2012,
+                    gap: '10%'
+                }, {
+                    start: 2305,
+                    end: 7400,
+                    gap: '10%'
+                }]
+            };
+
+            option = {
+                xAxis: {
+                    triggerEvent: true,
+                    breaks: initBrks.x
+                },
+                yAxis: {
+                    triggerEvent: true,
+                    breaks: initBrks.y
+                },
+                tooltip: {
+                },
+                series: [{
+                    type: 'scatter',
+                    name: 's2',
+                    data: [
+                        [9, 12], [3333, 88], [6666, 7650]
+                    ],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
+                }]
+            };
+
+            function breakText(brkOption) {
+                return brkOption.start + '~' + brkOption.end;
+            }
+
+            var chart = testHelper.create(echarts, 'main_event_check', {
+                title: [
+                    'event check: click buttons and break areas.'
+                ],
+                option: option,
+                height: 300,
+                inputs: [{
+                    text: 'collpase all X Y',
+                    onclick: function (event) {
+                        chart.dispatchAction({
+                            type: 'collapseAxisBreak',
+                            xAxisIndex: 'all',
+                            yAxisIndex: 'all',
+                            breaks: [].concat(initBrks.x).concat(initBrks.y),
+                            __test_info_from_btn: [
+                                {dim: 'x', brkIdx: 0},
+                                {dim: 'x', brkIdx: 1},
+                                {dim: 'y', brkIdx: 0},
+                                {dim: 'y', brkIdx: 1},
+                            ],
+                        });
+                    }
+                },
+                ...(function () {
+                    return ['collapseAxisBreak', 'expandAxisBreak', 'toggleAxisBreak'].map(axisType => ({
+                        text: `${axisType} x:${breakText(initBrks.x[0])}, y:${breakText(initBrks.y[0])}`,
+                        onclick: function (event) {
+                            chart.dispatchAction({
+                                type: axisType,
+                                xAxisIndex: 'all',
+                                yAxisIndex: 'all',
+                                breaks: [initBrks.x[0], initBrks.y[0]],
+                                __test_info_from_btn: [
+                                    {dim: 'x', brkIdx: 0},
+                                    {dim: 'y', brkIdx: 0},
+                                ],
+                            });
+                        }
+                    }));
+                })()]
+            });
+
+            if (chart) {
+                let _currentBrkState = {
+                    x: [{isExpanded: false}, {isExpanded: false}],
+                    y: [{isExpanded: false}, {isExpanded: false}],
+                };
+
+                chart.on('axisbreakchanged', function (event) {
+                    console.log('axisbreakchanged', event);
+
+                    testHelper.printAssert(chart, function (assert) {
+
+                        function checkBrk(brk, testInfoBrkList) {
+                            const actualDimIdx = getAndCheckDimentionIdx(brk);
+
+                            checkBrkDimIdentifier(brk, actualDimIdx);
+                            const actualBrkIdx = getAndCheckBrkInAxisBrkIdentifier(brk, actualDimIdx, testInfoBrkList);
+
+                            assert(brk.old.isExpanded === !!_currentBrkState[XY[actualDimIdx]][actualBrkIdx].isExpanded);
+                            if (event.fromAction === 'expandAxisBreak') {
+                                assert(brk.isExpanded === true);
+                            }
+                            else if (event.fromAction === 'collapseAxisBreak') {
+                                assert(brk.isExpanded === false);
+                            }
+                            else if (event.fromAction === 'toggleAxisBreak') {
+                                assert(brk.isExpanded === !_currentBrkState[XY[actualDimIdx]][actualBrkIdx].isExpanded);
+                            }
+                            else {
+                                assert(false);
+                            }
+
+                            return {actualDimIdx, actualBrkIdx};
+                        }
+                        function getAndCheckDimentionIdx(brk) {
+                            if (brk.xAxisIndex != null) {
+                                return 0;
+                            }
+                            else if (brk.yAxisIndex != null) {
+                                return 1;
+                            }
+                            else {
+                                assert(false);
+                            }
+                        }
+                        function checkBrkDimIdentifier(brk, actualDimIdx) {
+                            const dim = XY[actualDimIdx];
+                            const otherDim = XY[1 - actualDimIdx];
+                            assert(brk[`${dim}AxisIndex`] === 0);
+                            assert(!(`${otherDim}AxisIndex` in brk));
+                        }
+                        function getAndCheckBrkInAxisBrkIdentifier(brk, actualDimIdx, testInfoBrkList) {
+                            let found = false;
+                            let brkIdx;
+                            assert(testInfoBrkList.length);
+                            for (let idx = testInfoBrkList.length - 1; idx >= 0; idx--) {
+                                const testInfoBrk = testInfoBrkList[idx];
+                                const actualDim = XY[actualDimIdx];
+                                if (actualDim === testInfoBrk.dim
+                                    && brk.start === initBrks[actualDim][testInfoBrk.brkIdx].start
+                                    && brk.end === initBrks[actualDim][testInfoBrk.brkIdx].end
+                                ) {
+                                    found = true;
+                                    brkIdx = testInfoBrk.brkIdx;
+                                    testInfoBrkList.splice(idx, 1);
+                                }
+                            }
+                            assert(found);
+                            return brkIdx;
+                        }
+
+                        const XY = ['x', 'y'];
+
+                        assert(event.fromActionPayload);
+                        const __test_info_from_btn = event.fromActionPayload.__test_info_from_btn;
+                        let testInfoBrkList;
+                        let afterCheckTestInfoBrkListLength;
+
+                        if (__test_info_from_btn) {
+                            assert(event.breaks && event.breaks.length === __test_info_from_btn.length);
+                            testInfoBrkList = __test_info_from_btn.slice();
+                            afterCheckTestInfoBrkListLength = 0;
+                        }
+                        else {
+                            assert(event.breaks && event.breaks.length === 1);
+                            // When click on zigzag rather than external button.
+                            testInfoBrkList = [
+                                {dim: 'x', brkIdx: 0},
+                                {dim: 'x', brkIdx: 1},
+                                {dim: 'y', brkIdx: 0},
+                                {dim: 'y', brkIdx: 1},
+                            ];
+                            afterCheckTestInfoBrkListLength = testInfoBrkList.length - 1;
+                        }
+
+                        echarts.util.each(event.breaks, brk => {
+                            const {actualDimIdx, actualBrkIdx} = checkBrk(brk, testInfoBrkList);
+
+                            _currentBrkState[XY[actualDimIdx]][actualBrkIdx].isExpanded = brk.isExpanded;
+                        });
+                        assert(testInfoBrkList.length === afterCheckTestInfoBrkListLength);
+
+                    });
+                });
+                chart.on('expandaxisbreak', function (params) {
+                    assert(false); // It is not expected to exposed users.
+                });
+                chart.on('collpaseaxisbreak', function (params) {
+                    assert(false); // It is not expected to exposed users.
+                });
+                chart.on('toggleaxisbreak', function (params) {
+                    assert(false); // It is not expected to exposed users.
+                });
+            }
+        });
+        </script>
 
 
 

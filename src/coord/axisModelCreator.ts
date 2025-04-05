@@ -32,8 +32,8 @@ import { AxisBaseOption, AXIS_TYPES, CategoryAxisBaseOption } from './axisCommon
 import GlobalModel from '../model/Global';
 import { each, merge } from 'zrender/src/core/util';
 import { EChartsExtensionInstallRegisters } from '../extension';
-import { AxisBreakPayloadBreak } from '../component/axis/axisAction';
-import { getAxisBreakHelper } from '../component/axis/axisBreakHelper';
+import { BaseAxisBreakPayload } from '../component/axis/axisAction';
+import { AxisBreakUpdateResult, getAxisBreakHelper } from '../component/axis/axisBreakHelper';
 
 
 type Constructor<T> = new (...args: any[]) => T;
@@ -41,7 +41,7 @@ type Constructor<T> = new (...args: any[]) => T;
 export interface AxisModelExtendedInCreator {
     getCategories(rawData?: boolean): OrdinalRawValue[] | CategoryAxisBaseOption['data']
     getOrdinalMeta(): OrdinalMeta
-    updateAxisBreaks(inpuBreaks: AxisBreakPayloadBreak[]): void;
+    updateAxisBreaks(payload: BaseAxisBreakPayload): AxisBreakUpdateResult;
 }
 
 /**
@@ -118,11 +118,11 @@ export default function axisModelCreator<
                 return this.__ordinalMeta;
             }
 
-            updateAxisBreaks(inputBreaks: AxisBreakPayloadBreak[]): void {
+            updateAxisBreaks(payload: BaseAxisBreakPayload): AxisBreakUpdateResult {
                 const axisBreakHelper = getAxisBreakHelper();
-                if (axisBreakHelper) {
-                    axisBreakHelper.updateModelAxisBreak(this, inputBreaks);
-                }
+                return axisBreakHelper
+                    ? axisBreakHelper.updateModelAxisBreak(this, payload)
+                    : {breaks: []};
             }
 
         }

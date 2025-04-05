@@ -105,7 +105,7 @@ import {
     ComponentMainType,
     ComponentSubType,
     ColorString,
-    SelectChangedPayload,
+    SelectChangedEvent,
     ScaleDataValue,
     ZRElementEventName,
     ECElementEvent,
@@ -3221,7 +3221,7 @@ registerAction({
 
 function makeSelectChangedEvent(
     actionResultBatch: ECEventData[], payload: Payload, ecModel: GlobalModel, api: ExtensionAPI
-): {eventContent: Omit<SelectChangedPayload, 'type'>} {
+): {eventContent: Omit<SelectChangedEvent, 'type'>} {
     return {
         eventContent: {
             selected: getAllSelectedIndices(ecModel),

@@ -44,7 +44,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import { makeInner } from '../../util/model';
 import { getAxisBreakHelper } from './axisBreakHelper';
-import { AxisBreakPayload } from './axisAction';
+import { AXIS_BREAK_EXPAND_ACTION_TYPE, BaseAxisBreakPayload } from './axisAction';
 import { getScaleBreakHelper } from '../../scale/break';
 
 const PI = Math.PI;
@@ -925,12 +925,11 @@ function addBreakEventHandler(
     visualBreak: VisualAxisBreak
 ): void {
     textEl.on('click', params => {
-        const payload: AxisBreakPayload = {
-            type: 'updateAxisBreak',
+        const payload: BaseAxisBreakPayload = {
+            type: AXIS_BREAK_EXPAND_ACTION_TYPE,
             breaks: [{
                 start: visualBreak.parsedBreak.breakOption.start,
                 end: visualBreak.parsedBreak.breakOption.end,
-                isExpanded: true,
             }]
         };
         payload[`${axisModel.axis.dim}AxisIndex`] = axisModel.componentIndex;

@@ -26,10 +26,10 @@ import type CartesianAxisView from './CartesianAxisView';
 import type { PathProps } from 'zrender/src/graphic/Path';
 import type SingleAxisView from './SingleAxisView';
 import type { AxisBuilderCfg } from './AxisBuilder';
-import type { AxisBreakPayloadBreak } from './axisAction';
+import type { BaseAxisBreakPayload } from './axisAction';
 import type { ComponentModel } from '../../echarts.all';
 import type { AxisBaseOption } from '../../coord/axisCommonTypes';
-import type { NullUndefined } from '../../util/types';
+import type { AxisBreakOptionIdentifierInAxis, NullUndefined } from '../../util/types';
 
 /**
  * @file The fasade of axis break view and mode.
@@ -61,9 +61,21 @@ export type AxisBreakHelper = {
     ): void;
     updateModelAxisBreak(
         model: ComponentModel<AxisBaseOption>,
-        inputBreaks: AxisBreakPayloadBreak[]
-    ): void;
+        payload: BaseAxisBreakPayload
+    ): AxisBreakUpdateResult;
 };
+
+export type AxisBreakUpdateResult = {
+    breaks: (
+        AxisBreakOptionIdentifierInAxis & {
+            isExpanded: boolean;
+            old: { // The old state in breaks.
+                isExpanded: boolean;
+            }
+        }
+    )[];
+};
+
 
 let _impl: AxisBreakHelper = null;
 

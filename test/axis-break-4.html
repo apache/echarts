@@ -139,8 +139,8 @@ under the License.
             var _brushShape = null;
 
             if (chart) {
-                chart.on('axisBreakUpdated', function (params) {
-                    console.log('axisBreakUpdated', params);
+                chart.on('axisbreakchanged', function (params) {
+                    console.log('axisbreakchanged', params);
                 });
                 chart.getZr().on('mousedown', function (params) {
                     _brushingEl = new echarts.graphic.Rect({
@@ -330,8 +330,8 @@ under the License.
             var _brushShape = null;
 
             if (chart) {
-                chart.on('axisBreakUpdated', function (params) {
-                    console.log('axisBreakUpdated', params);
+                chart.on('axisbreakchanged', function (params) {
+                    console.log('axisbreakchanged', params);
                 });
                 chart.getZr().on('mousedown', function (params) {
                     _brushingEl = new echarts.graphic.Rect({
@@ -666,7 +666,7 @@ under the License.
                     text: 'reset breaks',
                     onclick: function () {
                         chart.dispatchAction({
-                            type: 'updateAxisBreak',
+                            type: 'collapseAxisBreak',
                             singleAxisIndex: 0,
                             breaks: makeBreaks(false)
                         });
