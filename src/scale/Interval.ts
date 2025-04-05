@@ -172,8 +172,9 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             }
         }
 
-        if (!opt.notPruneByBreak && scaleBreakHelper) {
+        if (scaleBreakHelper) {
             scaleBreakHelper.pruneTicksByBreak(
+                opt.pruneByBreak,
                 ticks,
                 this._brkCtx!.breaks,
                 item => item.value,
@@ -225,6 +226,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
 
             const scaleBreakHelper = getScaleBreakHelper();
             scaleBreakHelper && scaleBreakHelper.pruneTicksByBreak(
+                'auto',
                 minorTicksGroup,
                 this._getNonTransBreaks(),
                 value => value,

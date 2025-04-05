@@ -64,9 +64,23 @@ export type AxisBreakParsingResult = {
     breaks: ParsedAxisBreakList;
 };
 
+/**
+ * Whether to remove any normal ticks that are too close to axis breaks.
+ *  - 'auto': Default. Remove any normal ticks that are too close to axis breaks.
+ *  - 'no': Do nothing pruning.
+ *  - 'exclude_scale_bound': Prune but keep scale extent boundary.
+ * For example:
+ *  - For splitLine, if remove the tick on extent, split line on the bounary of cartesian
+ *   will not be displayed, causing werid effect.
+ *  - For labels, scale extent boundary should be pruned if in break, otherwise duplicated
+ *   labels will displayed.
+ */
+export type ParamPruneByBreak = 'auto' | 'no' | 'preserve_extent_bound' | NullUndefined;
+
 export type ScaleBreakHelper = {
     createScaleBreakContext(): ScaleBreakContext;
     pruneTicksByBreak<TItem extends ScaleTick | number>(
+        pruneByBreak: ParamPruneByBreak,
         ticks: TItem[],
         breaks: ParsedAxisBreakList,
         getValue: (item: TItem) => number,

@@ -210,8 +210,9 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             maxLevel = Math.max(maxLevel, tick.time.level);
         });
 
-        if (scaleBreakHelper && !opt.notPruneByBreak) {
+        if (scaleBreakHelper) {
             getScaleBreakHelper().pruneTicksByBreak(
+                opt.pruneByBreak,
                 ticks,
                 this._brkCtx!.breaks,
                 item => item.value,

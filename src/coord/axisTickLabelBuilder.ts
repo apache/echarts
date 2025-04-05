@@ -117,7 +117,11 @@ export function createAxisLabels(axis: Axis): {
  *     tickCategoryInterval: number
  * }
  */
-export function createAxisTicks(axis: Axis, tickModel: AxisBaseModel, opt?: Pick<ScaleGetTicksOpt, 'breakTicks'>): {
+export function createAxisTicks(
+    axis: Axis,
+    tickModel: AxisBaseModel,
+    opt?: Pick<ScaleGetTicksOpt, 'breakTicks' | 'pruneByBreak'>
+): {
     ticks: number[],
     tickCategoryInterval?: number
 } {

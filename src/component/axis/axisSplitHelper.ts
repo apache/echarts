@@ -55,6 +55,7 @@ export function rectCoordAxisBuildSplitArea(
         tickModel: splitAreaModel,
         clamp: true,
         breakTicks: 'none',
+        pruneByBreak: 'preserve_extent_bound',
     });
 
     if (!ticksCoords.length) {

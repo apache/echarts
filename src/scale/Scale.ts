@@ -35,13 +35,12 @@ import {
 } from './helper';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 import { bind } from 'zrender/src/core/util';
-import { ScaleBreakContext, AxisBreakParsingResult, getScaleBreakHelper } from './break';
+import { ScaleBreakContext, AxisBreakParsingResult, getScaleBreakHelper, ParamPruneByBreak } from './break';
 
 export type ScaleGetTicksOpt = {
     // Whether expand the ticks to niced extent.
     expandToNicedExtent?: boolean;
-    // Whether not to remove any normal ticks that are too close to axis breaks.
-    notPruneByBreak?: boolean;
+    pruneByBreak?: ParamPruneByBreak;
     // - not specified or undefined(default): insert the breaks as items into the tick array.
     // - 'only-break': return break ticks only without any normal ticks.
     // - 'none': return only normal ticks without any break ticks. Useful when creating split

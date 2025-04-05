@@ -24,7 +24,7 @@ import {
 } from '../util/types';
 import { error } from '../util/log';
 import type Scale from './Scale';
-import { ScaleBreakContext, AxisBreakParsingResult, registerScaleBreakHelperImpl } from './break';
+import { ScaleBreakContext, AxisBreakParsingResult, registerScaleBreakHelperImpl, ParamPruneByBreak } from './break';
 import { round as fixRound } from '../util/number';
 import { AxisLabelFormatterExtraParams } from '../coord/axisCommonTypes';
 
@@ -332,12 +332,16 @@ function updateAxisBreakGapReal(
 }
 
 function pruneTicksByBreak<TItem extends ScaleTick | number>(
+    pruneByBreak: ParamPruneByBreak,
     ticks: TItem[],
     breaks: ParsedAxisBreakList,
     getValue: (item: TItem) => number,
     interval: number,
-    scaleExtent: [number, number]
+    scaleExtent: [number, number],
 ): void {
+    if (pruneByBreak === 'no') {
+        return;
+    }
     each(breaks, brk => {
         // break.vmin/vmax that out of extent must not impact the visible of
         // normal ticks and labels.
@@ -360,10 +364,12 @@ function pruneTicksByBreak<TItem extends ScaleTick | number>(
             const gap = interval * 3 / 4;
             if (val > clampedBrk.vmin - gap
                 && val < clampedBrk.vmax + gap
-                // If remove the tick on extent, split line on the bounary of cartesian
-                // will not be displayed, causing werid effect.
-                && val !== scaleExtent[0]
-                && val !== scaleExtent[1]
+                && (
+                    pruneByBreak !== 'preserve_extent_bound'
+                    || (
+                        val !== scaleExtent[0] && val !== scaleExtent[1]
+                    )
+                )
             ) {
                 ticks.splice(j, 1);
             }

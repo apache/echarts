@@ -170,11 +170,15 @@ class Axis {
         tickModel?: Model,
         clamp?: boolean,
         breakTicks?: ScaleGetTicksOpt['breakTicks'],
+        pruneByBreak?: ScaleGetTicksOpt['pruneByBreak']
     }): TickCoord[] {
         opt = opt || {};
 
         const tickModel = opt.tickModel || this.getTickModel();
-        const result = createAxisTicks(this, tickModel as AxisBaseModel, {breakTicks: opt.breakTicks});
+        const result = createAxisTicks(this, tickModel as AxisBaseModel, {
+            breakTicks: opt.breakTicks,
+            pruneByBreak: opt.pruneByBreak,
+        });
         const ticks = result.ticks;
 
         const ticksCoords = map(ticks, function (tickVal) {

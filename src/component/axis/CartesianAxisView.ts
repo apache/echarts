@@ -143,6 +143,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const ticksCoords = axis.getTicksCoords({
             tickModel: splitLineModel,
             breakTicks: 'none',
+            pruneByBreak: 'preserve_extent_bound',
         });
 
         const p1 = [];
