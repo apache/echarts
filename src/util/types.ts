@@ -1193,6 +1193,7 @@ export interface LabelOption extends TextCommonOption {
 
     /**
      * Min margin between labels. Used when label has layout.
+     * PENDING: @see {LabelMarginType}
      */
     // It's minMargin instead of margin is for not breaking the previous code using margin.
     minMargin?: number
@@ -1208,6 +1209,19 @@ export interface LabelOption extends TextCommonOption {
     // formatter?: string | ((params: CallbackDataParams) => string)
 
     rich?: Dictionary<TextCommonOption>
+}
+
+/**
+ * PENDING: Temporary impl. unify them?
+ * @see {AxisLabelBaseOption['textMargin']}
+ * @see {LabelOption['minMargin']}
+ */
+export const LabelMarginType = {
+    minMargin: 0,
+    textMargin: 1,
+} as const;
+export interface LabelExtendedText extends ZRText {
+    __marginType?: (typeof LabelMarginType)[keyof typeof LabelMarginType]
 }
 
 export interface SeriesLabelOption<T extends CallbackDataParams = CallbackDataParams> extends LabelOption {

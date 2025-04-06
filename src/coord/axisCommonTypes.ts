@@ -278,7 +278,20 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     verticalAlignMinLabel?: TextVerticalAlign,
     // 'top' | 'middle' | 'bottom' | null/undefined (auto)
     verticalAlignMaxLabel?: TextVerticalAlign,
+    // The space between the axis and `[label.x, label.y]`.
     margin?: number,
+    /**
+     * The space around the axis label to escape from overlapping.
+     * Applied on the label local rect (rather than rotated enlarged rect)
+     * Follow the format defined by `format.ts#normalizeCssArray`.
+     * Introduce the name `textMargin` rather than reuse the existing names to avoid breaking change:
+     *  - `axisLabel.margin` historically has been used to indicate the gap between the axis and label.x/.y.
+     *  - `label.minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
+     *      it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
+     *      and is applied on the rotated bounding rect rather than the original local rect.
+     * @see {LabelMarginType}
+     */
+    textMargin?: number | number[],
     rich?: Dictionary<TextCommonOption>
     /**
      * If hide overlapping labels.

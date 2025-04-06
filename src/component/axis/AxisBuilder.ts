@@ -34,12 +34,16 @@ import {
     ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString,
     VisualAxisBreak,
     ParsedAxisBreak,
+    LabelMarginType,
+    LabelExtendedText,
 } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
-import { prepareLayoutList, hideOverlap, detectAxisLabelPairIntersection } from '../../label/labelLayoutHelper';
+import {
+    prepareLayoutList, hideOverlap, detectAxisLabelPairIntersection,
+} from '../../label/labelLayoutHelper';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import { makeInner } from '../../util/model';
@@ -409,7 +413,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                     priority,
                     defaultAttr: {
                         ignore: label.ignore
-                    }
+                    },
                 };
             }));
 
@@ -605,7 +609,7 @@ function fixMinMaxLabelShow(
         ignoreEl(firstLabel);
         ignoreEl(firstTick);
     }
-    else if (detectAxisLabelPairIntersection(opt.rotation, [firstLabel, nextLabel], touchThreshold, false)) {
+    else if (detectAxisLabelPairIntersection(opt.rotation, [firstLabel, nextLabel], touchThreshold)) {
         if (showMinLabel) {
             ignoreEl(nextLabel);
             ignoreEl(nextTick);
@@ -620,7 +624,7 @@ function fixMinMaxLabelShow(
         ignoreEl(lastLabel);
         ignoreEl(lastTick);
     }
-    else if (detectAxisLabelPairIntersection(opt.rotation, [prevLabel, lastLabel], touchThreshold, false)) {
+    else if (detectAxisLabelPairIntersection(opt.rotation, [prevLabel, lastLabel], touchThreshold)) {
         if (showMaxLabel) {
             ignoreEl(prevLabel);
             ignoreEl(prevTick);
@@ -862,9 +866,12 @@ function buildAxisLabel(
                             : tickValue,
                         index
                     )
-                    : textColor as string
+                    : textColor as string,
+                margin: itemLabelModel.get('textMargin', true),
             })
         });
+        (textEl as LabelExtendedText).__marginType = LabelMarginType.textMargin;
+
         textEl.anid = 'label_' + tickValue;
 
         getLabelInner(textEl).break = labelItem.break;

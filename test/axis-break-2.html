@@ -802,7 +802,8 @@ under the License.
                 width: 700,
                 height: 400,
                 draggable: true,
-                buttons: [{
+                inputsHeight: 119.5,
+                inputs: [{
                     text: 'reset X breaks',
                     onclick: function () {
                         chart.dispatchAction({
@@ -849,19 +850,31 @@ under the License.
                     type: 'br'
                 }, {
                     text: 'xAxis.axisLabel.rotate',
-                    type: 'range',
-                    value: 0,
-                    min: -100,
-                    max: 100,
+                    type: 'select',
+                    options: [
+                        {value: undefined},
+                        {text: 'range', input: {
+                            type: 'range',
+                            value: 0,
+                            min: -100,
+                            max: 100,
+                        }}
+                    ],
                     onchange: function () {
                         chart.setOption({xAxis: {axisLabel: {rotate: this.value}}});
                     }
                 }, {
                     text: 'yAxis.axisLabel.rotate',
-                    type: 'range',
-                    value: 0,
-                    min: -100,
-                    max: 100,
+                    type: 'select',
+                    options: [
+                        {value: undefined},
+                        {text: 'range', input: {
+                            type: 'range',
+                            value: 0,
+                            min: -100,
+                            max: 100,
+                        }}
+                    ],
                     onchange: function () {
                         chart.setOption({yAxis: {axisLabel: {rotate: this.value}}});
                     }
@@ -891,6 +904,16 @@ under the License.
 
                         chart.setOption({
                             grid: {containLabel: this.value},
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'label margin:',
+                    values: [undefined, 30, [2, 20]],
+                    onchange: function () {
+                        chart.setOption({
+                            xAxis: {axisLabel: {textMargin: this.value}},
+                            yAxis: {axisLabel: {textMargin: this.value}},
                         });
                     }
                 }]

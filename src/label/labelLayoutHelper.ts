@@ -18,12 +18,13 @@
 */
 
 import ZRText from 'zrender/src/graphic/Text';
-import { LabelLayoutOption, NullUndefined } from '../util/types';
+import { LabelExtendedText, LabelLayoutOption, LabelMarginType, NullUndefined } from '../util/types';
 import { BoundingRect, OrientedBoundingRect, Polyline } from '../util/graphic';
 import type Element from 'zrender/src/Element';
 import { PointLike } from 'zrender/src/core/Point';
-import { map } from 'zrender/src/core/util';
+import { map, retrieve2 } from 'zrender/src/core/util';
 import type { AxisBuilderCfg } from '../component/axis/AxisBuilder';
+import { normalizeCssArray } from '../util/format';
 
 interface LabelLayoutListPrepareInput {
     label: ZRText
@@ -58,20 +59,6 @@ export function prepareLayoutList(
     input: LabelLayoutListPrepareInput[],
     opt?: {
         alwaysOBB?: boolean,
-        /**
-         * In scenarios like axis labels, when labels text's progression direction matches the label
-         * layout direction (e.g., when all letters are in a single line), extra start/end margin is
-         * needed to prevent the text from appearing visually joined. In the other case, when lables
-         * are stacked (e.g., having rotation or horizontal labels on yAxis), the layout needs to be
-         * compact, so NO extra top/bottom margin should be applied.
-         *
-         * FIXME: not prepared to expose to users to customize this gap value.
-         *  Currently `minMargin` is not supported in `axisLabel`, but supported in series label, and
-         *  `axisLabel.margin` exists for long time but only refers to the gap between axis label and
-         *  axis line. Should be support `axisLabel.minMargin` and allow array `[top, right, bottom, left]`
-         *  to enable customization for this purpose?
-         */
-        antiTextJoin?: boolean,
     }
 ): LabelLayoutInfo[] {
     const list: LabelLayoutInfo[] = [];
@@ -88,23 +75,32 @@ export function prepareLayoutList(
         let localRect = label.getBoundingRect();
         const isAxisAligned = !transform || (Math.abs(transform[1]) < 1e-5 && Math.abs(transform[2]) < 1e-5);
 
-        if (opt && opt.antiTextJoin) {
-            const joinMargin = 4; // Empirical value.
+        const marginType = (label as LabelExtendedText).__marginType;
+        if (marginType === LabelMarginType.textMargin) {
+            // In scenarios like axis labels, when labels text's progression direction matches the label
+            // layout direction (e.g., when all letters are in a single line), extra start/end margin is
+            // needed to prevent the text from appearing visually joined. In the other case, when lables
+            // are stacked (e.g., having rotation or horizontal labels on yAxis), the layout needs to be
+            // compact, so NO extra top/bottom margin should be applied.
+            const textMargin = normalizeCssArray(retrieve2(label.style.margin, [0, 4])); // Empirical default value.
             localRect = localRect.clone();
-            localRect.x -= joinMargin;
-            localRect.width += joinMargin * 2;
+            localRect.x -= textMargin[3];
+            localRect.y -= textMargin[0];
+            localRect.width += textMargin[1] + textMargin[3];
+            localRect.height += textMargin[0] + textMargin[2];
         }
 
-        const minMargin = label.style.margin || 0;
         const globalRect = localRect.clone();
         globalRect.applyTransform(transform);
-        globalRect.x -= minMargin / 2;
-        globalRect.y -= minMargin / 2;
-        globalRect.width += minMargin;
-        globalRect.height += minMargin;
 
-        // FIXME: Should `minMargin` aslo be applied on `localRect`? Otherwise, when both `label.minMargin`
-        // and `label.ratate` specified, would `minMargin` not work when performing `hideOverlap`?
+        if (marginType == null || marginType === LabelMarginType.minMargin) {
+            // `minMargin` only support number value.
+            const minMargin = (label.style.margin as number) || 0;
+            globalRect.x -= minMargin / 2;
+            globalRect.y -= minMargin / 2;
+            globalRect.width += minMargin;
+            globalRect.height += minMargin;
+        }
 
         const obb = (!isAxisAligned || (opt && opt.alwaysOBB))
             ? new OrientedBoundingRect(localRect, transform)
@@ -417,7 +413,6 @@ export function detectAxisLabelPairIntersection(
     axisRotation: AxisBuilderCfg['rotation'],
     labelPair: ZRText[], // [label0, label1]
     touchThreshold: number,
-    antiTextJoin: boolean,
 ): NullUndefined | {
     mtv: PointLike;
     layoutPair: LabelLayoutInfo[]
@@ -435,7 +430,6 @@ export function detectAxisLabelPairIntersection(
         };
     }), {
         alwaysOBB: true,
-        antiTextJoin: antiTextJoin,
     });
 
     if (!layoutPair[0] || !layoutPair[1]) { // If either label is ignored

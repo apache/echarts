@@ -430,7 +430,6 @@ function adjustBreakLabelPair(
         axisInverse ? axisRotation + Math.PI : axisRotation,
         labelPair,
         0,
-        true
     );
     if (!intersection) {
         return;
