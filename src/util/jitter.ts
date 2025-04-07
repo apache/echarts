@@ -21,10 +21,12 @@ export function needFixJitter(seriesModel: SeriesModel, axis: Axis): boolean {
 export type JitterData = {
     fixedCoord: number,
     floatCoord: number,
-    r: number
+    r: number,
+    next: JitterData | null,
+    prev: JitterData | null
 };
 
-const inner = makeInner<{ items: JitterData[] }, Axis2D | SingleAxis>();
+const inner = makeInner<{ items: JitterData }, Axis2D | SingleAxis>();
 
 /**
  * Fix jitter for overlapping data points.
@@ -91,13 +93,23 @@ function fixJitterAvoidOverlaps(
 ): number {
     const store = inner(fixedAxis);
     if (!store.items) {
-        store.items = [];
+        store.items = {
+            fixedCoord: -1,
+            floatCoord: -1,
+            r: -1,
+            next: null,
+            prev: null
+        };
+        store.items.next = store.items;
+        store.items.prev = store.items;
     }
     const items = store.items;
 
-    const floatA = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, 1);
-    const floatB = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, -1);
-    let minFloat = Math.abs(floatA - floatCoord) < Math.abs(floatB - floatCoord) ? floatA : floatB;
+    const overlapA = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, 1);
+    const overlapB = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, -1);
+    const overlapResult = Math.abs(overlapA.resultCoord - floatCoord) < Math.abs(overlapB.resultCoord - floatCoord)
+        ? overlapA : overlapB;
+    let minFloat = overlapResult.resultCoord;
     // Clamp only category axis
     const bandWidth = fixedAxis.scale.type === 'ordinal'
         ? fixedAxis.getBandWidth()
@@ -111,41 +123,64 @@ function fixJitterAvoidOverlaps(
         minFloat = fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
     }
 
-    items.push({ fixedCoord, floatCoord: minFloat, r: radius });
+    // Insert to store
+    const insertBy = overlapResult.insertBy;
+    const resultDirection = overlapResult.direction;
+    const pointer1 = resultDirection > 0 ? 'next' : 'prev';
+    const pointer2 = resultDirection > 0 ? 'prev' : 'next';
+    const newItem: JitterData = {
+        fixedCoord: fixedCoord,
+        floatCoord: overlapResult.resultCoord,
+        r: radius,
+        next: null,
+        prev: null
+    };
+    newItem[pointer1] = insertBy[pointer1];
+    newItem[pointer2] = insertBy;
+    insertBy[pointer1][pointer2] = newItem;
+    insertBy[pointer1] = newItem;
+
     return minFloat;
 }
 
 function placeJitterOnDirection(
-    items: JitterData[],
+    items: JitterData,
     fixedCoord: number,
     floatCoord: number,
     radius: number,
     jitter: number,
     margin: number,
     direction: 1 | -1
-) {
+): {
+    resultCoord: number;
+    insertBy: JitterData;
+    direction: 1 | -1;
+} {
     // Check for overlap with previous items.
     let y = floatCoord;
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
+    const pointer1 = direction > 0 ? 'next' : 'prev';
+    let insertBy = items;
+    let item = items[pointer1];
+
+    while (item !== items) {
         const dx = fixedCoord - item.fixedCoord;
         const dy = y - item.floatCoord;
         const d2 = dx * dx + dy * dy;
         const r = radius + item.r + margin;
         if (d2 < r * r) {
             // Overlap. Try to move the new item along otherCoord direction.
-            const newY = item.floatCoord + Math.sqrt(r * r - dx * dx) * direction;
-            if (direction > 0 && newY > y || direction < 0 && newY < y) {
-                y = newY;
-                i = 0; // Back to check from the first item.
-            }
+            y = item.floatCoord + Math.sqrt(r * r - dx * dx) * direction;
+            insertBy = item;
 
-            if (Math.abs(newY - floatCoord) > jitter / 2) {
+            if (Math.abs(y - floatCoord) > jitter / 2) {
                 // If the new item is moved too far, then give up.
                 // Fall back to random jitter.
-                return Number.MAX_VALUE;
+                return {resultCoord: Number.MAX_VALUE, insertBy, direction};
             }
         }
+
+        item = item[pointer1];
     }
-    return y;
+
+    return {resultCoord: y, insertBy, direction};
 }
