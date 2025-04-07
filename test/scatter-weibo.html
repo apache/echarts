@@ -69,7 +69,7 @@ under the License.
                 });
                 var option = {
                     backgroundColor: '#404a59',
-                    title : {
+                    title : [{
                         text: '微博签到数据点亮中国',
                         subtext: 'From ThinkGIS',
                         sublink: 'http://www.thinkgis.cn/public/sina',
@@ -78,7 +78,21 @@ under the License.
                         textStyle: {
                             color: '#fff'
                         }
-                    },
+                    }, {
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 15,
+                        textStyle: {
+                            color: '#ccc',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     tooltip: {},
                     legend: {
                         left: 'left',
@@ -103,7 +117,15 @@ under the License.
                             emphasis: {
                                 areaColor: '#2a333d'
                             }
-                        }
+                        },
+                        regions: [{
+                            name: '新疆维吾尔自治区附近境界线',
+                            itemStyle: {
+                                borderColor: '#404a59'
+                            }
+                        }],
+                        center: [104.2, 36],
+                        zoom: 1.4
                     },
                     series: [{
                         name: '弱',

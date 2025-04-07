@@ -93,6 +93,8 @@ const defaultOption: AxisBaseOption = {
     },
     splitLine: {
         show: true,
+        showMinLine: true,
+        showMaxLine: true,
         lineStyle: {
             color: ['#E0E6F1'],
             width: 1,

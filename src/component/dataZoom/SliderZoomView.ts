@@ -619,11 +619,13 @@ class SliderZoomView extends DataZoomView {
             sliderGroup.add(handles[handleIndex] = path);
 
             const textStyleModel = dataZoomModel.getModel('textStyle');
+            const handleLabel = dataZoomModel.get('handleLabel') || {};
+            const handleLabelShow = handleLabel.show || false;
 
             thisGroup.add(
                 handleLabels[handleIndex] = new graphic.Text({
                 silent: true,
-                invisible: true,
+                invisible: !handleLabelShow,
                 style: createTextStyle(textStyleModel, {
                     x: 0, y: 0, text: '',
                     verticalAlign: 'middle',
@@ -686,7 +688,7 @@ class SliderZoomView extends DataZoomView {
 
         actualMoveZone.attr({
             draggable: true,
-            cursor: getCursor(this._orient),
+            cursor: 'default',
             drift: bind(this._onDragMove, this, 'all'),
             ondragstart: bind(this._showDataInfo, this, true),
             ondragend: bind(this._onDragEnd, this),
@@ -885,19 +887,25 @@ class SliderZoomView extends DataZoomView {
     }
 
     /**
-     * @param showOrHide true: show, false: hide
+     * @param isEmphasis true: show, false: hide
      */
-    private _showDataInfo(showOrHide?: boolean) {
-        // Always show when drgging.
-        showOrHide = this._dragging || showOrHide;
+    private _showDataInfo(isEmphasis?: boolean) {
+        const handleLabel = this.dataZoomModel.get('handleLabel') || {};
+        const normalShow = handleLabel.show || false;
+        const emphasisHandleLabel = this.dataZoomModel.getModel(['emphasis', 'handleLabel']);
+        const emphasisShow = emphasisHandleLabel.get('show') || false;
+        // Dragging is considered as emphasis, unless emphasisShow is false
+        const toShow = (isEmphasis || this._dragging)
+            ? emphasisShow
+            : normalShow;
         const displayables = this._displayables;
         const handleLabels = displayables.handleLabels;
-        handleLabels[0].attr('invisible', !showOrHide);
-        handleLabels[1].attr('invisible', !showOrHide);
+        handleLabels[0].attr('invisible', !toShow);
+        handleLabels[1].attr('invisible', !toShow);
 
         // Highlight move handle
         displayables.moveHandle
-            && this.api[showOrHide ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
+            && this.api[toShow ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
     }
 
     private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {

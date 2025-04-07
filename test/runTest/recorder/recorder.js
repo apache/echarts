@@ -40,7 +40,7 @@ function getUniqueSelector(el) {
     let selector = '';
     if (el.id) {
         // id has highest priority.
-        return el.id;
+        return '#' + el.id;
     }
     else {
         selector = el.tagName.toLowerCase();

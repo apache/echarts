@@ -44,7 +44,7 @@ under the License.
         <div class="chart" id="main2"></div>
         <div class="chart" id="main3"></div>
         <div class="chart" id="main4"></div>
-
+        <div class="chart" id="main5"></div>
 
 
         <script>
@@ -267,7 +267,7 @@ under the License.
                 option = {
                     backgroundColor: '#eee',
                     title: {
-                        text: 'axisLable.formatter: {value} should be correct'
+                        text: 'axisLabel.formatter: {value} should be correct'
                     },
                     grid: {
                         containLabel: true,
@@ -375,6 +375,63 @@ under the License.
 
         </script>
 
+        <script>
 
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    backgroundColor: '#eee',
+                    tooltip: {},
+                    xAxis: {
+                        type: 'category',
+                        data: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                        axisLabel: {
+                            width: 60,
+                            overflow: 'truncate',
+                            interval: 0
+                        },
+                        // triggerEvent: true,
+                        tooltip: {
+                            show: true,
+                            position: 'top',
+                            trigger: 'item',
+                            formatter(p) {
+                                if (p.isTruncated()) {
+                                    return p.name;
+                                }
+                                if (p.tickIndex > 3) {
+                                    return `Oh, it is happy ${p.name}! 😀`;
+                                }
+                            }
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            width: 20,
+                            overflow: 'truncate'
+                        },
+                        // triggerEvent: true,
+                        tooltip: {
+                            show: true,
+                            position: 'left',
+                            trigger: 'item'
+                        }
+                    },
+                    series: [
+                        {
+                            data: [150, 230, 224, 218, 135, 147, 260],
+                            type: 'line'
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main5', {
+                    title: 'Should show tooltip for axis label',
+                    option: option
+                });
+            });
+
+        </script>
     </body>
 </html>

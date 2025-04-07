@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -144,27 +143,58 @@ under the License.
                         <div class="run-config-item">
                             <span class="label">
                                 Expected
-                                <el-tooltip content="Use Nightly Build">
-                                    <el-checkbox :disabled="running" v-model="runConfig.isExpectedNightly" size="mini"></el-checkbox>
-                                </el-tooltip>
                             </span>
-                            <el-select :disabled="running" size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
-                                :style="`width: ${runConfig.isExpectedNightly ? 160 : 80}px;`"
+                            <el-select :disabled="running" size="mini" v-model="runConfig.expectedSource" style="width: 90px;">
+                                <el-option value="release" label="Release"></el-option>
+                                <el-option value="nightly" label="Nightly"></el-option>
+                                <el-option value="PR" label="PR"></el-option>
+                                <el-option value="local" label="Local"></el-option>
+                            </el-select>
+                            <el-select
+                                v-if="runConfig.expectedSource !== 'local' && runConfig.expectedSource !== 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.expectedVersion"
+                                placeholder="Select Version"
+                                :style="`width: ${runConfig.expectedSource === 'nightly' ? 160 : 80}px;`"
                             >
                                 <el-option v-for="version in expectedVersionsList" :key="version" :label="version" :value="version"></el-option>
                             </el-select>
-                            <!-- <i class="el-icon-link"></i> -->
+                            <el-input
+                                v-if="runConfig.expectedSource === 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.expectedVersion"
+                                placeholder="#123"
+                                style="width: 120px;"
+                            ></el-input>
                             <span class="label">
                                 Actual
-                                <el-tooltip content="Use Nightly Build">
-                                    <el-checkbox :disabled="running" v-model="runConfig.isActualNightly" size="mini"></el-checkbox>
-                                </el-tooltip>
                             </span>
-                            <el-select :disabled="running" size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
-                                :style="`width: ${runConfig.isActualNightly ? 160 : 80}px;`"
+                            <el-select :disabled="running" size="mini" v-model="runConfig.actualSource" style="width: 90px;">
+                                <el-option value="release" label="Release"></el-option>
+                                <el-option value="nightly" label="Nightly"></el-option>
+                                <el-option value="PR" label="PR"></el-option>
+                                <el-option value="local" label="Local"></el-option>
+                            </el-select>
+                            <el-select
+                                v-if="runConfig.actualSource !== 'local' && runConfig.actualSource !== 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.actualVersion"
+                                placeholder="Select Version"
+                                :style="`width: ${runConfig.actualSource === 'nightly' ? 160 : 80}px;`"
                             >
                                 <el-option v-for="version in actualVersionsList" :key="version" :label="version" :value="version"></el-option>
                             </el-select>
+                            <el-input
+                                v-if="runConfig.actualSource === 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.actualVersion"
+                                placeholder="#123"
+                                style="width: 120px;"
+                            ></el-input>
                         </div>
                         <div class="run-config-item">
                             <span class="label">Renderer</span>

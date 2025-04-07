@@ -28,14 +28,15 @@ import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {shouldShowAllLabels} from '../../coord/axisHelper';
+import {isNameLocationCenter, shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
-import Element from 'zrender/src/Element';
+import type Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
 import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
+import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 
 const PI = Math.PI;
 
@@ -376,7 +377,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const nameLocation = axisModel.get('nameLocation');
         const nameDirection = opt.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
-        const gap = axisModel.get('nameGap') || 0;
+        const axisToNameGapStartGap = axisModel instanceof CartesianAxisModel ? axisModel.axisToNameGapStartGap : 0;
+        const gap = (axisModel.get('nameGap') || 0) + axisToNameGapStartGap;
 
         const extent = axisModel.axis.getExtent();
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
@@ -599,10 +601,6 @@ function isTwoLabelOverlapped(
     nextRect.applyTransform(matrixUtil.mul([], mRotationBack, next.getLocalTransform()));
 
     return firstRect.intersect(nextRect);
-}
-
-function isNameLocationCenter(nameLocation: string) {
-    return nameLocation === 'middle' || nameLocation === 'center';
 }
 
 
@@ -836,6 +834,16 @@ function buildAxisLabel(
         });
         textEl.anid = 'label_' + tickValue;
 
+        graphic.setTooltipConfig({
+            el: textEl,
+            componentModel: axisModel,
+            itemName: formattedLabel,
+            formatterParamsExtra: {
+                isTruncated: () => textEl.isTruncated,
+                value: rawLabel,
+                tickIndex: index
+            }
+        });
 
         // Pack data for mouse event
         if (triggerEvent) {

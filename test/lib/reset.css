@@ -51,9 +51,69 @@ body > .main {
     padding-left: 2px;
     padding-right: 2px;
 }
-.test-buttons button {
+
+.test-inputs button {
     margin: 10px 5px;
 }
+.test-inputs-style-compact button {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.test-inputs-slider {
+    white-space: nowrap;
+    display: inline-block;
+    margin: 10px 5px;
+    font-size: 14px;
+    padding: 0;
+}
+.test-inputs-style-compact .test-inputs-slider {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.test-inputs-slider-input {
+    width: 129px;
+    height: 16px;
+}
+.test-inputs-style-compact .test-inputs-slider-input {
+    width: 90px;
+}
+.test-inputs-slider-sub {
+    margin-left: -10px;
+}
+.test-inputs-slider span {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-inputs-slider-disabled span {
+    color: #aaa;
+}
+.test-inputs-slider input {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-inputs-select {
+    white-space: nowrap;
+    display: inline-block;
+    font-size: 14px;
+    margin: 10px 5px;
+    margin-right: 10px;
+}
+.test-inputs-style-compact .test-inputs-select {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.test-inputs-select span {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-inputs-select select {
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    font-size: 13.3333px;
+    height: 19px;
+}
+
 .test-chart-block {
     position: relative;
 }

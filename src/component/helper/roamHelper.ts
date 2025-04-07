@@ -18,17 +18,25 @@
 */
 
 import Element from 'zrender/src/Element';
+import { SeriesModel } from '../../echarts.all';
+import ExtensionAPI from '../../core/ExtensionAPI';
+import Group from 'zrender/src/graphic/Group';
+import RoamController from './RoamController';
+import type { SeriesOption } from '../../export/option';
+import type View from '../../coord/View';
+import type { RoamOptionMixin } from '../../util/types';
+import { onIrrelevantElement } from './cursorHelper';
 
-interface ControllerHost {
-    target: Element,
-    zoom?: number
-    zoomLimit?: {min?: number, max?: number}
+export interface RoamControllerHost {
+    target: Element;
+    zoom?: number;
+    zoomLimit?: {min?: number, max?: number};
 }
 
 /**
  * For geo and graph.
  */
-export function updateViewOnPan(controllerHost: ControllerHost, dx: number, dy: number) {
+export function updateViewOnPan(controllerHost: RoamControllerHost, dx: number, dy: number) {
     const target = controllerHost.target;
     target.x += dx;
     target.y += dy;
@@ -38,7 +46,7 @@ export function updateViewOnPan(controllerHost: ControllerHost, dx: number, dy: 
 /**
  * For geo and graph.
  */
-export function updateViewOnZoom(controllerHost: ControllerHost, zoomDelta: number, zoomX: number, zoomY: number) {
+export function updateViewOnZoom(controllerHost: RoamControllerHost, zoomDelta: number, zoomX: number, zoomY: number) {
     const target = controllerHost.target;
     const zoomLimit = controllerHost.zoomLimit;
 
@@ -61,4 +69,50 @@ export function updateViewOnZoom(controllerHost: ControllerHost, zoomDelta: numb
     target.scaleY *= zoomScale;
 
     target.dirty();
+}
+
+export function updateController(
+    seriesModel: SeriesModel<SeriesOption & RoamOptionMixin>,
+    api: ExtensionAPI,
+    group: Group,
+    controller: RoamController,
+    controllerHost: RoamControllerHost,
+) {
+    controller.setPointerChecker(function (e, x, y) {
+        const rect = group.getBoundingRect();
+        rect.applyTransform(group.transform);
+        return rect.contain(x, y)
+            && !onIrrelevantElement(e, api, seriesModel);
+    });
+
+    controller.enable(seriesModel.get('roam'));
+    controllerHost.zoomLimit = seriesModel.get('scaleLimit');
+    const coordinate = seriesModel.coordinateSystem;
+    controllerHost.zoom = coordinate ? (coordinate as View).getZoom() : 1;
+    const type = seriesModel.type + 'Roam';
+
+    controller
+        .off('pan')
+        .off('zoom')
+        .on('pan', (e) => {
+            updateViewOnPan(controllerHost, e.dx, e.dy);
+            api.dispatchAction({
+                seriesId: seriesModel.id,
+                type,
+                dx: e.dx,
+                dy: e.dy
+            });
+        })
+        .on('zoom', (e) => {
+            updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
+            api.dispatchAction({
+                seriesId: seriesModel.id,
+                type,
+                zoom: e.scale,
+                originX: e.originX,
+                originY: e.originY
+            });
+            // Only update label layout on zoom
+            api.updateLabelLayout();
+        });
 }
