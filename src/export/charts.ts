@@ -34,6 +34,7 @@ export {install as MapChart} from '../chart/map/install';
 export {install as TreeChart} from '../chart/tree/install';
 export {install as TreemapChart} from '../chart/treemap/install';
 export {install as GraphChart} from '../chart/graph/install';
+export {install as ChordChart} from '../chart/chord/install';
 export {install as GaugeChart} from '../chart/gauge/install';
 export {install as FunnelChart} from '../chart/funnel/install';
 export {install as ParallelChart} from '../chart/parallel/install';
@@ -83,6 +84,7 @@ export {
     TreeSeriesOption,
     TreemapSeriesOption,
     GraphSeriesOption,
+    ChordSeriesOption,
     GaugeSeriesOption,
     FunnelSeriesOption,
     ParallelSeriesOption,
