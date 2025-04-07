@@ -51,9 +51,13 @@ export function fixJitter(
     const jitter = axisModel.get('jitter');
     const jitterOverlap = axisModel.get('jitterOverlap');
     const jitterMargin = axisModel.get('jitterMargin') || 0;
+    // Get band width to limit jitter range
+    const bandWidth = fixedAxis.scale.type === 'ordinal'
+        ? fixedAxis.getBandWidth()
+        : null;
     if (jitter > 0) {
         if (jitterOverlap) {
-            return fixJitterIgnoreOverlaps(floatCoord, jitter);
+            return fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
         }
         else {
             return fixJitterAvoidOverlaps(fixedAxis, fixedCoord, floatCoord, radius, jitter, jitterMargin);
@@ -62,8 +66,19 @@ export function fixJitter(
     return floatCoord;
 }
 
-function fixJitterIgnoreOverlaps(floatCoord: number, jitter: number): number {
-    return floatCoord + (Math.random() - 0.5) * jitter;
+function fixJitterIgnoreOverlaps(
+    floatCoord: number,
+    jitter: number,
+    bandWidth: number | null,
+    radius: number
+): number {
+    // Don't clamp single axis
+    if (bandWidth === null) {
+        return floatCoord + (Math.random() - 0.5) * jitter;
+    }
+    const maxJitter = bandWidth - radius * 2;
+    const actualJitter = Math.min(Math.max(0, jitter), maxJitter);
+    return floatCoord + (Math.random() - 0.5) * actualJitter;
 }
 
 function fixJitterAvoidOverlaps(
@@ -83,10 +98,17 @@ function fixJitterAvoidOverlaps(
     const floatA = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, 1);
     const floatB = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, -1);
     let minFloat = Math.abs(floatA - floatCoord) < Math.abs(floatB - floatCoord) ? floatA : floatB;
-    if (Math.abs(minFloat - floatCoord) > jitter / 2) {
+    // Clamp only category axis
+    const bandWidth = fixedAxis.scale.type === 'ordinal'
+        ? fixedAxis.getBandWidth()
+        : null;
+    const distance = Math.abs(minFloat - floatCoord);
+    if (distance > jitter / 2
+        || (bandWidth && distance > bandWidth / 2 - radius)
+    ) {
         // If the new item is moved too far, then give up.
         // Fall back to random jitter.
-        minFloat = fixJitterIgnoreOverlaps(floatCoord, jitter);
+        minFloat = fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
     }
 
     items.push({ fixedCoord, floatCoord: minFloat, r: radius });

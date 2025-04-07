@@ -52,6 +52,9 @@ under the License.
 
         <div id="main3"></div>
         <div id="main3-no-overlap"></div>
+        <div id="main3-boundary-test"></div>
+        <div id="main3-boundary-test-no-overlap"></div>
+
 
 
         <script>
@@ -241,7 +244,6 @@ under the License.
             });
         </script>
 
-
         <script>
 
             require([
@@ -296,7 +298,6 @@ under the License.
             });
 
         </script>
-
 
         <script>
 
@@ -446,7 +447,7 @@ under the License.
                     },
                     singleAxis: {
                         bottom: '15%',
-                        jitter: 150,
+                        jitter: 500,
                         jitterOverlap: true,
                         type: 'category',
                         data: ['a1', 'a2', 'a3', 'a4'],
@@ -456,8 +457,14 @@ under the License.
                         name: 'scatter',
                         type: 'scatter',
                         coordinateSystem: 'singleAxis',
-                        // symbolSize: 20,
-                        data: data1
+                        symbolSize: 30,
+                        data: data1,
+                        itemStyle: {
+                            color: params => {
+                                const x = parseInt(params.value[0].slice(1));
+                                return 'rgba(' + (x * 255 / 4) + ', 100, 255, ' + (x / 4 * 0.9 + 0.1) + ')';
+                            }
+                        }
                     }]
                 };
 
@@ -527,6 +534,100 @@ under the License.
             });
 
         </script>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+
+                const data = [];
+                for (let i = 0; i < 300; ++i) {
+                    data.push([
+                        'a' + (Math.floor(Math.random() * 4) + 1),
+                        Math.random() * 100,
+                    ])
+                }
+
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['a1', 'a2', 'a3', 'a4'],
+                        jitter: 500,
+                        jitterOverlap: true
+                    },
+                    yAxis: {},
+                    series: {
+                        type: 'scatter',
+                        data,
+                        symbolSize: 30,
+                        itemStyle: {
+                            color: params => {
+                                const x = parseInt(params.value[0].slice(1));
+                                return 'rgba(' + (x * 255 / 4) + ', 100, 255, ' + (x / 4 * 0.9 + 0.1) + ')';
+                            }
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main3-boundary-test', {
+                    title: [
+                        'Jittering should be clamped to category bounds',
+                        '**jitterOverlap: true**'
+                    ],
+                    option: option
+                });
+            });
+            </script>
+
+            <script>
+                require([
+                    'echarts',
+                    // 'map/js/china',
+                    // './data/nutrients.json'
+                ], function (echarts) {
+                    var option;
+
+                    const data = [];
+                    for (let i = 0; i < 300; ++i) {
+                        data.push([
+                            'a' + (Math.floor(Math.random() * 4) + 1),
+                            Math.random() * 100,
+                        ])
+                    }
+
+                    option = {
+                        xAxis: {
+                            type: 'category',
+                            data: ['a1', 'a2', 'a3', 'a4'],
+                            jitter: 500,
+                            jitterOverlap: false
+                        },
+                        yAxis: {},
+                        series: {
+                            type: 'scatter',
+                            data,
+                            symbolSize: 30,
+                            itemStyle: {
+                                color: params => {
+                                    const x = parseInt(params.value[0].slice(1));
+                                    return 'rgba(' + (x * 255 / 4) + ', 100, 255, ' + (x / 4 * 0.9 + 0.1) + ')';
+                                }
+                            }
+                        }
+                    };
+
+                    var chart = testHelper.create(echarts, 'main3-boundary-test-no-overlap', {
+                        title: [
+                            'Jittering should be clamped to category bounds',
+                            '**jitterOverlap: false**'
+                        ],
+                        option: option
+                    });
+                });
+                </script>
     </body>
 </html>
 
