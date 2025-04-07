@@ -187,6 +187,12 @@ export class ActionPlayback {
                 break;
             case 'valuechange':
                 const selector = document.querySelector(op.selector);
+                if (!selector) {
+                    throw new Error(
+                        '[Test Case Error] Selector not found: ' + op.selector
+                        + '. It may be caused by test case change.'
+                    );
+                }
                 selector.value = op.value;
                 // changing value via js won't trigger `change` event, so trigger it manually
                 selector.dispatchEvent(new Event('change'));
