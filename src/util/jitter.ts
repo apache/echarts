@@ -29,6 +29,17 @@ export type JitterData = {
 const inner = makeInner<{ items: JitterData }, Axis2D | SingleAxis>();
 
 /**
+ * JitterStorable is a mixin for Axis2D and SingleAxis with jitterOverlap being
+ * `true`. It stores the jitter data for each axis so that the jittered data
+ * points can avoid overlapping. If jitterOverlap is `false`, the jitter data
+ * is not stored.
+ * It's created in layout stage when data update.
+ */
+export interface JitterStorable {
+    jitterStore: JitterData[]
+}
+
+/**
  * Fix jitter for overlapping data points.
  *
  * @param fixedAxis The axis whose coord doesn't change with jitter.
