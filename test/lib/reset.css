@@ -55,6 +55,11 @@ body > .main {
 .test-inputs button {
     margin: 10px 5px;
 }
+.test-inputs-fix-height {
+    position: relative;
+    overflow: scroll;
+    box-shadow: inset -3px -3px 3px rgba(0, 0, 0, 0.3);
+}
 .test-inputs-style-compact button {
     margin-top: 2px;
     margin-bottom: 2px;
