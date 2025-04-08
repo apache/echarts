@@ -24,6 +24,7 @@ import { ZRenderType } from 'zrender/src/zrender';
 import { ZRElementEvent, RoamOptionMixin } from '../../util/types';
 import { Bind3, isString, bind, defaults, clone } from 'zrender/src/core/util';
 import Group from 'zrender/src/graphic/Group';
+import { NatureMoveOnMouseWheelOpt } from '../dataZoom/InsideZoomModel';
 
 // Can be null/undefined or true/false
 // or 'pan/move' or 'zoom'/'scale'
@@ -37,6 +38,12 @@ interface RoamOption {
      * If fixed the page when pan
      */
     preventDefaultMouseMove?: boolean
+
+    /**
+     * Whether enable touchpad, if open this,
+     * other options such as `zoomOnMouseWheel` `moveOnMouseMove` will be ignored.
+     */
+    natureMoveOnMouseWheel?: boolean | NatureMoveOnMouseWheelOpt
 }
 
 type RoamEventType = keyof RoamEventParams;
@@ -63,6 +70,8 @@ export interface RoamEventParams {
         dy: number
         oldX: number
         oldY: number
+        originX?: number
+        originY?: number
         newX: number
         newY: number
 
@@ -120,7 +129,6 @@ class RoamController extends Eventful<{
          * default mousewheel behaviour (scroll page) will be disabled.
          */
         this.enable = function (controlType, opt) {
-
             // Disable previous first
             this.disable();
 
@@ -129,7 +137,8 @@ class RoamController extends Eventful<{
                 moveOnMouseMove: true,
                 // By default, wheel do not trigger move.
                 moveOnMouseWheel: false,
-                preventDefaultMouseMove: true
+                preventDefaultMouseMove: true,
+                natureMoveOnMouseWheel: false
             });
 
             if (controlType == null) {
@@ -235,6 +244,7 @@ class RoamController extends Eventful<{
     private _mousewheelHandler(e: ZRElementEvent) {
         const shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
         const shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
+        const natureMoveOnMouseWheel = this._opt.natureMoveOnMouseWheel;
         const wheelDelta = e.wheelDelta;
         const absWheelDeltaDelta = Math.abs(wheelDelta);
         const originX = e.offsetX;
@@ -248,7 +258,49 @@ class RoamController extends Eventful<{
         // If both `shouldZoom` and `shouldMove` is true, trigger
         // their event both, and the final behavior is determined
         // by event listener themselves.
+        if (natureMoveOnMouseWheel) {
+          let windowScrollSpeedFactor = 1;
+          let zoomFactor = 1.2;
+          let wheelZoomSpeed = 2 / 23;
+            if (typeof natureMoveOnMouseWheel === 'object') {
+              windowScrollSpeedFactor = natureMoveOnMouseWheel.windowScrollSpeedFactor || windowScrollSpeedFactor;
+              zoomFactor = natureMoveOnMouseWheel.zoomFactor || zoomFactor;
+              wheelZoomSpeed = natureMoveOnMouseWheel.wheelZoomSpeed || wheelZoomSpeed;
 
+            }
+            // FIXME zrender type error
+            const wheelEvent = e.event as unknown as WheelEvent;
+            if (wheelEvent.ctrlKey) {
+                shouldZoom && checkPointerAndTrigger(this, 'zoom', 'zoomOnMouseWheel', e, {
+                scale: 1 / Math.pow(zoomFactor, wheelEvent.deltaY * wheelZoomSpeed),
+                originX,
+                originY,
+                isAvailableBehavior: null
+                });
+            }
+            else {
+                let offsetY = 0;
+                let offsetX = 0;
+                if (wheelEvent.deltaY) {
+                offsetY = Math.round(wheelEvent.deltaY * windowScrollSpeedFactor);
+                }
+                if (wheelEvent.deltaX) {
+                offsetX = Math.round(wheelEvent.deltaX * windowScrollSpeedFactor);
+                }
+                shouldMove && checkPointerAndTrigger(this, 'pan', 'moveOnMouseMove', e, {
+                originX,
+                originY,
+                oldX: originX,
+                oldY: originY,
+                dx: -offsetX,
+                dy: -offsetY,
+                newX: originX - offsetX,
+                newY: originY - offsetY,
+                isAvailableBehavior: null
+                } as RoamEventParams['pan']);
+            }
+            return;
+        }
         if (shouldZoom) {
             // Convenience:
             // Mac and VM Windows on Mac: scroll up: zoom out.
@@ -289,7 +341,7 @@ class RoamController extends Eventful<{
 }
 
 
-function checkPointerAndTrigger<T extends 'scrollMove' | 'zoom'>(
+function checkPointerAndTrigger<T extends 'scrollMove' | 'zoom' | 'pan'>(
     controller: RoamController,
     eventName: T,
     behaviorToCheck: RoamBehavior,
