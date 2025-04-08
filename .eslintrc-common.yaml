@@ -27,6 +27,24 @@
 # "eslint.workingDirectories": [{"mode": "auto"}]
 # ```
 # Note that it should be "workingDirectories" rather than "WorkingDirectories".
+globals:
+    CanvasRenderingContext2D: "readonly"
+    CanvasLineJoin: "readonly"
+    CanvasLineCap: "readonly"
+    HTMLElement: "readonly"
+    HTMLDivElement: "readonly"
+    SVGElement: "readonly"
+    Document: "readonly"
+    Blob: "readonly"
+    Event: "readonly"
+
+
+env:
+  browser: true
+  node: true
+  es2021: true
+
+
 
 root: true
 rules:
