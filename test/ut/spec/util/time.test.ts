@@ -19,7 +19,6 @@
 */
 
 import {
-    PrimaryTimeUnit,
     format, roundTime
 } from '@/src/util/time';
 
@@ -158,8 +157,9 @@ describe('util/time', function () {
         });
 
         it('roundTime_locale', function () {
-            const time1 = 3600 * 1000 * 24 * 6122 + 12345678; // '1986-10-06T11:25:45.678+08:00'
-            const timezoneStr = getISOTimezone(new Date(time1));
+            const timezoneStr = getISOTimezone();
+            const time1 = new Date(`1986-10-06T11:25:45.678${timezoneStr}`);
+
             expect(roundTime(new Date(time1), 'year', false).getTime())
                 .toEqual(new Date(`1986-01-01T00:00:00.000${timezoneStr}`).getTime());
             expect(roundTime(new Date(time1), 'month', false).getTime())
@@ -179,12 +179,12 @@ describe('util/time', function () {
 });
 
 // return timezone format like `'-06:00'` or `'+05:45'`
-function getISOTimezone(date: Date): string {
-    const offsetMinutes = date.getTimezoneOffset();
+function getISOTimezone(): string {
+    const offsetMinutes = (new Date(0)).getTimezoneOffset();
     // Invert sign because getTimezoneOffset() returns minutes behind UTC
-    let sign = offsetMinutes > 0 ? '-' : '+';
-    let absMinutes = Math.abs(offsetMinutes);
-    let hours = Math.floor(absMinutes / 60);
-    let minutes = absMinutes % 60;
+    const sign = offsetMinutes > 0 ? '-' : '+';
+    const absMinutes = Math.abs(offsetMinutes);
+    const hours = Math.floor(absMinutes / 60);
+    const minutes = absMinutes % 60;
     return `${sign}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
