@@ -515,6 +515,29 @@ export function blurSeries(
     });
 }
 
+export function blurCategory(
+    dataIndex: number,
+    api: ExtensionAPI
+) {
+    if (dataIndex == null) {
+        return;
+    }
+
+    const ecModel = api.getModel();
+
+    ecModel.eachSeries(function (seriesModel) {
+        getComponentStates(seriesModel).isBlured = true;
+        const view = api.getViewOfSeriesModel(seriesModel);
+        view.group.traverse(function (child) {
+            if (child.name === 'item') {
+                if ((child as any).__dataIndex !== dataIndex) {
+                    singleEnterBlur(child);
+                }
+            }
+        });
+    });
+}
+
 export function blurComponent(
     componentMainType: ComponentMainType,
     componentIndex: number,
@@ -659,7 +682,11 @@ export function handleGlobalMouseOverForHighDown(
     else {
         // Try blur all in the related series. Then emphasis the hoverred.
         // TODO. progressive mode.
-        blurSeries(ecData.seriesIndex, ecData.focus, ecData.blurScope, api);
+        if (ecData.focus === 'category') {
+            blurCategory(ecData.dataIndex, api);
+        }
+        else {
+            blurSeries(ecData.seriesIndex, ecData.focus, ecData.blurScope, api);
         if (ecData.focus === 'self') {
             blurComponent(ecData.componentMainType, ecData.componentIndex, api);
         }
@@ -667,6 +694,7 @@ export function handleGlobalMouseOverForHighDown(
         // also use it. But in this case, highlight/downplay are only supported in
         // mouse hover but not in dispatchAction.
         enterEmphasisWhenMouseOver(dispatcher, e);
+        }
     }
 }
 
