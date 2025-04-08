@@ -157,9 +157,9 @@ const app = new Vue({
         runConfig: Object.assign({
             sortBy: 'name',
             actualVersion: 'local',
+            actualSource: 'local',
             expectedVersion: null,
             expectedSource: 'release',
-            actualSource: 'release',
             renderer: 'canvas',
             useCoarsePointer: 'auto',
             threads: 4
