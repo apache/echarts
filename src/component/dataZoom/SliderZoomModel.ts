@@ -24,7 +24,8 @@ import {
     LineStyleOption,
     AreaStyleOption,
     ItemStyleOption,
-    LabelOption
+    LabelOption,
+    SeriesSamplingOptionMixin
 } from '../../util/types';
 import { inheritDefaultOption } from '../../util/component';
 
@@ -32,7 +33,10 @@ interface SliderHandleLabelOption {
     show?: boolean
 }
 
-export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
+export interface SliderDataZoomOption extends
+    DataZoomOption,
+    BoxLayoutOptionMixin,
+    SeriesSamplingOptionMixin {
 
     show?: boolean
     /**
@@ -217,7 +221,9 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             moveHandleStyle: {
                 color: '#8FB0F7'
             }
-        }
+        },
+
+        sampling: 'none'
     } as SliderDataZoomOption);
 }
 
