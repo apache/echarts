@@ -34,8 +34,9 @@ under the License.
     <body>
         <style>
             html {
-                /* Fix the line-height to avoid it varying across clients and causing visual test failures. */
-                line-height: 1
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
             }
         </style>
 
