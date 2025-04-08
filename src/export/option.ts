@@ -72,6 +72,7 @@ import type {MapSeriesOption as MapSeriesOptionInner} from '../chart/map/MapSeri
 import type {TreeSeriesOption as TreeSeriesOptionInner} from '../chart/tree/TreeSeries';
 import type {TreemapSeriesOption as TreemapSeriesOptionInner} from '../chart/treemap/TreemapSeries';
 import type {GraphSeriesOption as GraphSeriesOptionInner} from '../chart/graph/GraphSeries';
+import type {ChordSeriesOption as ChordSeriesOptionInner} from '../chart/chord/ChordSeries';
 import type {GaugeSeriesOption as GaugeSeriesOptionInner} from '../chart/gauge/GaugeSeries';
 import type {FunnelSeriesOption as FunnelSeriesOptionInner} from '../chart/funnel/FunnelSeries';
 import type {ParallelSeriesOption as ParallelSeriesOptionInner} from '../chart/parallel/ParallelSeries';
@@ -187,6 +188,7 @@ export type MapSeriesOption = MapSeriesOptionInner & SeriesInjectedOption;
 export type TreeSeriesOption = TreeSeriesOptionInner & SeriesInjectedOption;
 export type TreemapSeriesOption = TreemapSeriesOptionInner & SeriesInjectedOption;
 export type GraphSeriesOption = GraphSeriesOptionInner & SeriesInjectedOption;
+export type ChordSeriesOption = ChordSeriesOptionInner & SeriesInjectedOption;
 export type GaugeSeriesOption = GaugeSeriesOptionInner & SeriesInjectedOption;
 export type FunnelSeriesOption = FunnelSeriesOptionInner & SeriesInjectedOption;
 export type ParallelSeriesOption = ParallelSeriesOptionInner & SeriesInjectedOption;
@@ -225,6 +227,7 @@ export interface RegisteredSeriesOption {
     tree: TreeSeriesOption
     treemap: TreemapSeriesOption
     graph: GraphSeriesOption
+    chord: ChordSeriesOption
     gauge: GaugeSeriesOption
     funnel: FunnelSeriesOption
     parallel: ParallelSeriesOption

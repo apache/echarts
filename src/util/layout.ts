@@ -23,10 +23,13 @@ import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
-import { BoxLayoutOptionMixin, ComponentLayoutMode } from './types';
+import { BoxLayoutOptionMixin, CircleLayoutOptionMixin, ComponentLayoutMode, SeriesOption } from './types';
 import Group from 'zrender/src/graphic/Group';
+import { SectorShape } from 'zrender/src/graphic/shape/Sector';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
+import SeriesModel from '../model/Series';
+import ExtensionAPI from '../core/ExtensionAPI';
 
 const each = zrUtil.each;
 
@@ -186,6 +189,60 @@ export function getAvailableSize(
     return {
         width: Math.max(x2 - x - margin[1] - margin[3], 0),
         height: Math.max(y2 - y - margin[0] - margin[2], 0)
+    };
+}
+
+export function getViewRect(seriesModel: SeriesModel, api: ExtensionAPI) {
+    return getLayoutRect(
+        seriesModel.getBoxLayoutParams(), {
+            width: api.getWidth(),
+            height: api.getHeight()
+        }
+    );
+}
+
+export function getCircleLayout<T extends CircleLayoutOptionMixin & SeriesOption>(
+    seriesModel: SeriesModel<T>,
+    api: ExtensionAPI
+):
+    Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> {
+    const viewRect = getViewRect(seriesModel, api);
+
+    // center can be string or number when coordinateSystem is specified
+    let center = seriesModel.get('center');
+    let radius = seriesModel.get('radius');
+
+    if (!zrUtil.isArray(radius)) {
+        radius = [0, radius];
+    }
+    const width = parsePercent(viewRect.width, api.getWidth());
+    const height = parsePercent(viewRect.height, api.getHeight());
+    const size = Math.min(width, height);
+    const r0 = parsePercent(radius[0], size / 2);
+    const r = parsePercent(radius[1], size / 2);
+
+    let cx: number;
+    let cy: number;
+    const coordSys = seriesModel.coordinateSystem;
+    if (coordSys) {
+        // percentage is not allowed when coordinate system is specified
+        const point = coordSys.dataToPoint(center);
+        cx = point[0] || 0;
+        cy = point[1] || 0;
+    }
+    else {
+        if (!zrUtil.isArray(center)) {
+            center = [center, center];
+        }
+        cx = parsePercent(center[0], width) + viewRect.x;
+        cy = parsePercent(center[1], height) + viewRect.y;
+    }
+
+    return {
+        cx,
+        cy,
+        r0,
+        r
     };
 }
 
