@@ -52,6 +52,12 @@ body > .main {
     padding-right: 2px;
 }
 
+/*
+ * [ CAUTION ]
+ *  The existing CSS class names below MUST NOT be modified;
+ *  otherwise, some recorded visual test cases may fail.
+ */
+
 .test-inputs button {
     margin: 10px 5px;
 }

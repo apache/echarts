@@ -191,6 +191,7 @@
 
         inputsContainer.className = [
             'test-inputs',
+            'test-buttons', // deprecated but backward compat.
             'test-inputs-style-' + (opt.inputsStyle || opt.buttonsStyle || 'normal'),
             (inputsHeight != null ? 'test-inputs-fix-height' : '')
         ].join(' ');
