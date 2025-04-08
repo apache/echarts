@@ -686,15 +686,18 @@ function logarithmicParseBreaksFromOption(
 }
 
 const BREAK_MIN_MAX_TO_PARAM = {vmin: 'start', vmax: 'end'} as const;
-function makeAxisLabelFormatterParamBreak<T extends AxisLabelFormatterExtraParams>(
-    extraParam: T,
+function makeAxisLabelFormatterParamBreak(
+    extraParam: AxisLabelFormatterExtraParams | NullUndefined,
     vBreak: VisualAxisBreak | NullUndefined
-): T {
-    extraParam.break = vBreak ? {
-        type: BREAK_MIN_MAX_TO_PARAM[vBreak.type],
-        start: vBreak.parsedBreak.vmin,
-        end: vBreak.parsedBreak.vmax,
-    } : undefined;
+): AxisLabelFormatterExtraParams | NullUndefined {
+    if (vBreak) {
+        extraParam = extraParam || ({} as AxisLabelFormatterExtraParams);
+        extraParam.break = {
+            type: BREAK_MIN_MAX_TO_PARAM[vBreak.type],
+            start: vBreak.parsedBreak.vmin,
+            end: vBreak.parsedBreak.vmax,
+        };
+    }
     return extraParam;
 }
 

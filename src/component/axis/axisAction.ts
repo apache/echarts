@@ -41,13 +41,13 @@ export interface BaseAxisBreakPayload extends Payload {
 
     breaks: AxisBreakOptionIdentifierInAxis[];
 }
-interface ExpandAxisBreakPayload extends BaseAxisBreakPayload {
+export interface ExpandAxisBreakPayload extends BaseAxisBreakPayload {
     type: typeof AXIS_BREAK_EXPAND_ACTION_TYPE;
 }
-interface CollapseAxisBreakPayload extends BaseAxisBreakPayload {
+export interface CollapseAxisBreakPayload extends BaseAxisBreakPayload {
     type: typeof AXIS_BREAK_COLLAPSE_ACTION_TYPE;
 }
-interface ToggleAxisBreakPayload extends BaseAxisBreakPayload {
+export interface ToggleAxisBreakPayload extends BaseAxisBreakPayload {
     type: typeof AXIS_BREAK_TOGGLE_ACTION_TYPE;
 }
 

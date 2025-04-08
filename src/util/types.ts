@@ -287,12 +287,12 @@ export interface ActionInfo {
     update?: string;
     // `ActionHandler` is designed to do nothing other than modify models.
     action?: ActionHandler;
-    // - `refineEvent` is intented to create a user-friend event that differs from the original payload,
+    // - `refineEvent` is intended to create a user-friend event that differs from the original payload,
     //  while enabling feature `connect`, and being called at the last step of the "update" procedure
     //  to ensure the complete update of all models.
-    // - If mutiple actions need to share one event name, `refineEvent` must be used.
+    // - If multiple actions need to share one event name, `refineEvent` must be used.
     //  e.g., actions 'doxxx' 'undoxxx' 'togglexxx' share one event name 'xxxchanged'.
-    // - The design of refiend event should not impose different handling for batch and non-batch on users.
+    // - The design of refined event should not impose different handling for batch and non-batch on users.
     refineEvent?: ActionRefineEvent;
     // When `refineEvent` is provided, still publish the auto generated "event for connect" to users.
     // Only for backward compatibility, do not use it in future actions and events.

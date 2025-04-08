@@ -391,13 +391,15 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 
         adjustBreakLabels(axisModel, opt.rotation, labelEls);
 
-        fixMinMaxLabelShow(opt, axisModel, labelEls, ticksEls);
+        const shouldHideOverlap = axisModel.get(['axisLabel', 'hideOverlap']);
+
+        fixMinMaxLabelShow(opt, axisModel, labelEls, ticksEls, shouldHideOverlap);
 
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
 
         // This bit fixes the label overlap issue for the time chart.
         // See https://github.com/apache/echarts/issues/14266 for more.
-        if (axisModel.get(['axisLabel', 'hideOverlap'])) {
+        if (shouldHideOverlap) {
             let priorityBoundary = 0;
             each(labelEls, label => {
                 label.z2 > priorityBoundary && (priorityBoundary = label.z2);
@@ -572,7 +574,8 @@ function fixMinMaxLabelShow(
     opt: AxisBuilderCfg,
     axisModel: AxisBaseModel,
     labelEls: graphic.Text[],
-    tickEls: graphic.Line[]
+    tickEls: graphic.Line[],
+    shouldHideOverlap: boolean
 ) {
     if (shouldShowAllLabels(axisModel.axis)) {
         return;
@@ -604,12 +607,18 @@ function fixMinMaxLabelShow(
     // This is needed to avoid too aggressive to hide two elements that meet at the edge
     // due to compact layout by the same bounding rect or OBB.
     const touchThreshold = 0.05;
+    // `!hideOverlap` means the visual touch between adjacent labels are accepted,
+    // thus the "hide min/max label" should be conservative, since the space is sufficient
+    // in this case. And this strategy is also for backward compatibility.
+    const ignoreTextMargin = !shouldHideOverlap;
 
     if (showMinLabel === false) {
         ignoreEl(firstLabel);
         ignoreEl(firstTick);
     }
-    else if (detectAxisLabelPairIntersection(opt.rotation, [firstLabel, nextLabel], touchThreshold)) {
+    else if (detectAxisLabelPairIntersection(
+        opt.rotation, [firstLabel, nextLabel], touchThreshold, ignoreTextMargin
+    )) {
         if (showMinLabel) {
             ignoreEl(nextLabel);
             ignoreEl(nextTick);
@@ -624,7 +633,9 @@ function fixMinMaxLabelShow(
         ignoreEl(lastLabel);
         ignoreEl(lastTick);
     }
-    else if (detectAxisLabelPairIntersection(opt.rotation, [prevLabel, lastLabel], touchThreshold)) {
+    else if (detectAxisLabelPairIntersection(
+        opt.rotation, [prevLabel, lastLabel], touchThreshold, ignoreTextMargin
+    )) {
         if (showMaxLabel) {
             ignoreEl(prevLabel);
             ignoreEl(prevTick);

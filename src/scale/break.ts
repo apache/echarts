@@ -128,10 +128,10 @@ export type ScaleBreakHelper = {
         parsedOriginal: AxisBreakParsingResult;
         parsedLogged: AxisBreakParsingResult;
     };
-    makeAxisLabelFormatterParamBreak<T extends AxisLabelFormatterExtraParams>(
-        extraParam: T,
+    makeAxisLabelFormatterParamBreak(
+        extraParam: AxisLabelFormatterExtraParams | NullUndefined,
         vBreak: VisualAxisBreak | NullUndefined
-    ): T;
+    ): AxisLabelFormatterExtraParams | NullUndefined;
 };
 
 let _impl: ScaleBreakHelper = null;

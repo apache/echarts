@@ -89,7 +89,13 @@ const defaultOption: AxisBaseOption = {
         showMaxLabel: null,
         margin: 8,
         // formatter: null,
-        fontSize: 12
+        fontSize: 12,
+        // In scenarios like axis labels, when labels text's progression direction matches the label
+        // layout direction (e.g., when all letters are in a single line), extra start/end margin is
+        // needed to prevent the text from appearing visually joined. In the other case, when lables
+        // are stacked (e.g., having rotation or horizontal labels on yAxis), the layout needs to be
+        // compact, so NO extra top/bottom margin should be applied.
+        textMargin: [0, 3], // Empirical default value.
     },
     splitLine: {
         show: true,

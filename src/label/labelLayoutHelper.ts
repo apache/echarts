@@ -59,6 +59,7 @@ export function prepareLayoutList(
     input: LabelLayoutListPrepareInput[],
     opt?: {
         alwaysOBB?: boolean,
+        ignoreTextMargin?: boolean,
     }
 ): LabelLayoutInfo[] {
     const list: LabelLayoutInfo[] = [];
@@ -76,13 +77,8 @@ export function prepareLayoutList(
         const isAxisAligned = !transform || (Math.abs(transform[1]) < 1e-5 && Math.abs(transform[2]) < 1e-5);
 
         const marginType = (label as LabelExtendedText).__marginType;
-        if (marginType === LabelMarginType.textMargin) {
-            // In scenarios like axis labels, when labels text's progression direction matches the label
-            // layout direction (e.g., when all letters are in a single line), extra start/end margin is
-            // needed to prevent the text from appearing visually joined. In the other case, when lables
-            // are stacked (e.g., having rotation or horizontal labels on yAxis), the layout needs to be
-            // compact, so NO extra top/bottom margin should be applied.
-            const textMargin = normalizeCssArray(retrieve2(label.style.margin, [0, 4])); // Empirical default value.
+        if (opt && !opt.ignoreTextMargin && marginType === LabelMarginType.textMargin) {
+            const textMargin = normalizeCssArray(retrieve2(label.style.margin, [0, 0]));
             localRect = localRect.clone();
             localRect.x -= textMargin[3];
             localRect.y -= textMargin[0];
@@ -413,6 +409,7 @@ export function detectAxisLabelPairIntersection(
     axisRotation: AxisBuilderCfg['rotation'],
     labelPair: ZRText[], // [label0, label1]
     touchThreshold: number,
+    ignoreTextMargin: boolean
 ): NullUndefined | {
     mtv: PointLike;
     layoutPair: LabelLayoutInfo[]
@@ -430,6 +427,7 @@ export function detectAxisLabelPairIntersection(
         };
     }), {
         alwaysOBB: true,
+        ignoreTextMargin,
     });
 
     if (!layoutPair[0] || !layoutPair[1]) { // If either label is ignored

@@ -268,18 +268,23 @@ export function makeLabelFormatter(axis: Axis): (tick: ScaleTick, idx?: number) 
                 return (labelFormatter as AxisLabelCategoryFormatter)(
                     getAxisRawValue<true>(axis, tick),
                     tick.value - axis.scale.getExtent()[0],
-                    undefined
+                    null // Using `null` just for backward compat.
                 );
             };
         }
         const scaleBreakHelper = getScaleBreakHelper();
         return function (tick: ScaleTick, idx: number) {
-            const extra: AxisLabelFormatterExtraParams = {};
+            // Using `null` just for backward compat. It's been found that in the `test/axis-customTicks.html`,
+            // there is a formatter `function (value, index, revers = true) { ... }`. Although the third param
+            // `revers` is incorrect and always `null`, changing it might introduce a breaking change.
+            let extra: AxisLabelFormatterExtraParams | null = null;
             if (scaleBreakHelper) {
-                scaleBreakHelper.makeAxisLabelFormatterParamBreak(extra, tick.break);
+                extra = scaleBreakHelper.makeAxisLabelFormatterParamBreak(extra, tick.break);
             }
             return (labelFormatter as AxisLabelValueFormatter)(
-                getAxisRawValue<false>(axis, tick), idx, extra
+                getAxisRawValue<false>(axis, tick),
+                idx,
+                extra
             );
         };
     }
