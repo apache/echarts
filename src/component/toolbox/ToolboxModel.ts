@@ -136,12 +136,12 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         showTitle: true,
 
         iconStyle: {
-            borderColor: tokens.color.accent50,
+            borderColor: tokens.color.neutral50,
             color: 'none'
         },
         emphasis: {
             iconStyle: {
-                borderColor: tokens.color.accent40
+                borderColor: tokens.color.neutral40
             }
         },
         // textStyle: {},

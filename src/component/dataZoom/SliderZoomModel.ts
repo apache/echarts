@@ -148,7 +148,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         left: null,   // Default align to grid rect.
         bottom: null, // Default align to grid rect.
 
-        borderColor: tokens.color.borderTint,
+        borderColor: tokens.color.accent10,
         borderRadius: 0,
 
         backgroundColor: tokens.color.transparent, // Background of slider zoom component.
@@ -156,22 +156,22 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         // dataBackgroundColor: '#ddd',
         dataBackground: {
             lineStyle: {
-                color: tokens.color.border,
+                color: tokens.color.accent30,
                 width: 0.5
             },
             areaStyle: {
-                color: tokens.color.neutral30,
+                color: tokens.color.accent20,
                 opacity: 0.2
             }
         },
 
         selectedDataBackground: {
             lineStyle: {
-                color: tokens.color.border,
+                color: tokens.color.accent50,
                 width: 0.5
             },
             areaStyle: {
-                color: tokens.color.neutral30,
+                color: tokens.color.accent30,
                 opacity: 0.2
             }
         },
@@ -184,14 +184,14 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
 
         handleStyle: {
             color: tokens.color.neutral00,
-            borderColor: tokens.color.border
+            borderColor: tokens.color.accent20
         },
 
         moveHandleSize: 7,
         moveHandleIcon: 'path://M-320.9-50L-320.9-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-348-41-339-50-320.9-50z M-212.3-50L-212.3-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-239.4-41-230.4-50-212.3-50z M-103.7-50L-103.7-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-130.9-41-121.8-50-103.7-50z',
         moveHandleStyle: {
-            color: tokens.color.quaternary,
-            opacity: 0.3
+            color: tokens.color.accent30,
+            opacity: 0.5
         },
 
         showDetail: true,
@@ -213,7 +213,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
                 show: true
             },
             handleStyle: {
-                borderColor: tokens.color.neutral30
+                borderColor: tokens.color.accent30
             },
             moveHandleStyle: {
                 opacity: 0.8
