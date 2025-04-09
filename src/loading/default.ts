@@ -21,6 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../util/graphic';
 import { LoadingEffect } from '../util/types';
 import ExtensionAPI from '../core/ExtensionAPI';
+import tokens from '../visual/tokens';
 
 const PI = Math.PI;
 
@@ -52,14 +53,14 @@ export default function defaultLoading(
     opts = opts || {};
     zrUtil.defaults(opts, {
         text: 'loading',
-        textColor: '#000',
+        textColor: tokens.color.primary,
         fontSize: 12,
         fontWeight: 'normal',
         fontStyle: 'normal',
         fontFamily: 'sans-serif',
-        maskColor: 'rgba(255, 255, 255, 0.8)',
+        maskColor: tokens.color.backgroundTint,
         showSpinner: true,
-        color: '#5470c6',
+        color: tokens.color.theme[0],
         spinnerRadius: 10,
         lineWidth: 5,
         zlevel: 0

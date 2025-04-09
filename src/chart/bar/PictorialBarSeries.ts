@@ -31,6 +31,7 @@ import {
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
+import tokens from '../../visual/tokens';
 
 export interface PictorialBarStateOption {
     itemStyle?: ItemStyleOption
@@ -169,7 +170,7 @@ class PictorialBarSeriesModel extends BaseBarSeriesModel<PictorialBarSeriesOptio
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         }
     });
