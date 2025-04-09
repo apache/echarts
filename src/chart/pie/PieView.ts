@@ -205,7 +205,7 @@ class PiePiece extends graphic.Sector {
             z2: 10
         });
 
-        const labelPosition = seriesModel.get(['label', 'position']);
+        const labelPosition = itemModel.get(['label', 'position']);
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
             sector.removeTextGuideLine();
         }
