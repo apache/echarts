@@ -236,11 +236,11 @@ class LegendView extends ComponentView {
                         ecData.ssrType = 'legend';
                     });
                 }
-                itemGroup.eachChild(child => {
-                    if (triggerEvent) {
+                if (triggerEvent) {
+                    itemGroup.eachChild(child => {
                         this.packEventData(child, legendModel, seriesModel, dataIndex, name);
-                    }
-                });
+                    });
+                }
 
                 legendDrawnMap.set(name, true);
             }
@@ -294,11 +294,11 @@ class LegendView extends ComponentView {
                                 ecData.ssrType = 'legend';
                             });
                         }
-                        itemGroup.eachChild(child => {
-                            if (triggerEvent) {
+                        if (triggerEvent) {
+                            itemGroup.eachChild(child => {
                                 this.packEventData(child, legendModel, seriesModel, dataIndex, name);
-                            }
-                        });
+                            });
+                        }
                         legendDrawnMap.set(name, true);
                     }
 
