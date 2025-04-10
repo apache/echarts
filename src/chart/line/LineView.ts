@@ -29,7 +29,7 @@ import { ECPolyline, ECPolygon } from './poly';
 import ChartView from '../../view/Chart';
 import { prepareDataCoordInfo, getStackedOnPoint } from './helper';
 import { createGridClipPath, createPolarClipPath } from '../helper/createClipPathFromCoordSys';
-import LineSeriesModel, { LineSeriesOption } from './LineSeries';
+import LineSeriesModel, { LineSeriesOption, LinePiece } from './LineSeries';
 import type GlobalModel from '../../model/Global';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 // TODO
@@ -616,6 +616,7 @@ class LineView extends ChartView {
     _symbolDraw: SymbolDraw;
 
     _lineGroup: graphic.Group;
+    _compoundLinesGroup: graphic.Group;
     _coordSys: Cartesian2D | Polar;
 
     _endLabel: graphic.Text;
@@ -642,6 +643,9 @@ class LineView extends ChartView {
         this._symbolDraw = symbolDraw;
         this._lineGroup = lineGroup;
 
+        this._compoundLinesGroup = new graphic.Group();
+        this.group.add(this._compoundLinesGroup);
+
         this._changePolyState = zrUtil.bind(this._changePolyState, this);
     }
 
@@ -660,6 +664,9 @@ class LineView extends ChartView {
         const symbolDraw = this._symbolDraw;
         let polyline = this._polyline;
         let polygon = this._polygon;
+
+        const linePieces = seriesModel.get('linePieces');
+        const useCompoundPaths = linePieces && linePieces.length;
 
         const lineGroup = this._lineGroup;
 
@@ -693,6 +700,11 @@ class LineView extends ChartView {
             symbolDraw.remove();
         }
 
+        const hadCompoundLines = this._compoundLinesGroup.childCount() > 0;
+        if (hadCompoundLines) {
+            this._compoundLinesGroup.removeAll();
+        }
+
         group.add(lineGroup);
 
         // FIXME step not support polar
@@ -718,7 +730,10 @@ class LineView extends ChartView {
             || data.getVisual('style')[data.getVisual('drawType')];
         // Initialization animation or coordinate system changed
         if (
-            !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
+            !((polyline || hadCompoundLines)
+                && prevCoordSys.type === coordSys.type
+                && step === this._step
+            )
         ) {
             showSymbol && symbolDraw.updateData(data, {
                 isIgnore: isIgnoreFunc,
@@ -743,15 +758,31 @@ class LineView extends ChartView {
                 points = turnPointsIntoStep(points, null, coordSys, step, connectNulls);
             }
 
-            polyline = this._newPolyline(points);
-            if (isAreaChart) {
-                polygon = this._newPolygon(
-                    points, stackedOnPoints
+            if (useCompoundPaths) {
+                this._newCompoundLines(
+                    seriesModel,
+                    linePieces,
+                    coordSys,
+                    api,
+                    hasAnimation,
+                    points,
+                    valueOrigin
                 );
-            }// If areaStyle is removed
-            else if (polygon) {
-                lineGroup.remove(polygon);
-                polygon = this._polygon = null;
+
+                // TODO: should not return
+                return;
+            }
+            else {
+                polyline = this._newPolyline(points);
+                if (isAreaChart) {
+                    polygon = this._newPolygon(
+                        points, stackedOnPoints
+                    );
+                }// If areaStyle is removed
+                else if (polygon) {
+                    lineGroup.remove(polygon);
+                    polygon = this._polygon = null;
+                }
             }
 
             // NOTE: Must update _endLabel before setClipPath.
@@ -1076,6 +1107,65 @@ class LineView extends ChartView {
 
         this._polygon = polygon;
         return polygon;
+    }
+
+    _newCompoundLines(
+        seriesModel: LineSeriesModel,
+        linePieces: LinePiece[],
+        coordSys: Cartesian2D | Polar,
+        api: ExtensionAPI,
+        hasAnimation: boolean,
+        points: ArrayLike<number>,
+        valueOrigin: LineSeriesOption['areaStyle']['origin']
+    ) {
+        const dataCount = seriesModel.getData().count();
+        // The segments that are not in pieces takes the last piece index
+        const NOT_IN_PIECES_INDEX = linePieces.length;
+        const paths: number[][][] = [];
+        for (let i = 0; i < dataCount - 1; ++i) {
+            let pieceId = NOT_IN_PIECES_INDEX;
+            for (let j = 0; j < linePieces.length; ++j) {
+                if (linePieces[j].startDataIndices.indexOf(i) >= 0) {
+                    pieceId = j;
+                    break;
+                }
+            }
+            if (paths[pieceId] == null) {
+                paths[pieceId] = [];
+            }
+            paths[pieceId].push([
+                points[i * 2],
+                points[i * 2 + 1],
+                points[i * 2 + 2],
+                points[i * 2 + 3]
+            ]);
+        }
+
+        const excludeLast = true; // TODO: only for debug
+        for (let i = 0; i < paths.length - (excludeLast ? 1 : 0); ++i) {
+            if (paths[i]) {
+                const lineStyle = i === NOT_IN_PIECES_INDEX
+                    ? seriesModel.getLineStyle()
+                    : new Model(linePieces[i].lineStyle).getLineStyle();
+                // console.log(lineStyle)
+                const path = new graphic.CompoundPath({
+                    shape: {
+                        paths: zrUtil.map(paths[i], p => new graphic.Line({
+                            shape: {
+                                x1: p[0],
+                                y1: p[1],
+                                x2: p[2],
+                                y2: p[3]
+                            }
+                        }))
+                    },
+                    style: lineStyle, // TODO: only for debug
+                    segmentIgnoreThreshold: 2,
+                    z2: 10
+                });
+                this._compoundLinesGroup.add(path);
+            }
+        }
     }
 
     _initSymbolLabelAnimation(
