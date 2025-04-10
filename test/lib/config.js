@@ -53,6 +53,8 @@
     var ecDistPath;
     if (params.__ECDIST__ && !params.__CASE_FRAME__) {
         ecDistPath = ({
+            'dist': '../dist/echarts',
+            'dist/echarts.simple': '../dist/echarts.simple',
             'webpack-req-ec': '../../echarts-boilerplate/echarts-webpack/dist/webpack-req-ec',
             'webpack-req-eclibec': '../../echarts-boilerplate/echarts-webpack/dist/webpack-req-eclibec',
             'webpackold-req-ec': '../../echarts-boilerplate/echarts-webpackold/dist/webpackold-req-ec',

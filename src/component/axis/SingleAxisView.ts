@@ -27,12 +27,13 @@ import SingleAxisModel from '../../coord/single/AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
+import { getAxisBreakHelper } from './axisBreakHelper';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ] as const;
 
-const selfBuilderAttrs = ['splitArea', 'splitLine'] as const;
+const selfBuilderAttrs = ['splitArea', 'splitLine', 'breakArea'] as const;
 
 class SingleAxisView extends AxisView {
 
@@ -63,7 +64,7 @@ class SingleAxisView extends AxisView {
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get([name, 'show'])) {
-                axisElementBuilders[name](this, this.group, this._axisGroup, axisModel);
+                axisElementBuilders[name](this, this.group, this._axisGroup, axisModel, api);
             }
         }, this);
 
@@ -78,12 +79,18 @@ class SingleAxisView extends AxisView {
 }
 
 interface AxisElementBuilder {
-    (axisView: SingleAxisView, group: graphic.Group, axisGroup: graphic.Group, axisModel: SingleAxisModel): void
+    (
+        axisView: SingleAxisView,
+        group: graphic.Group,
+        axisGroup: graphic.Group,
+        axisModel: SingleAxisModel,
+        api: ExtensionAPI
+    ): void
 }
 
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
 
-    splitLine(axisView, group, axisGroup, axisModel) {
+    splitLine(axisView, group, axisGroup, axisModel, api) {
         const axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
@@ -103,7 +110,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         let lineCount = 0;
 
         const ticksCoords = axis.getTicksCoords({
-            tickModel: splitLineModel
+            tickModel: splitLineModel,
+            breakTicks: 'none',
+            pruneByBreak: 'preserve_extent_bound',
         });
 
         const p1 = [];
@@ -144,16 +153,27 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         for (let i = 0; i < splitLines.length; ++i) {
             group.add(graphic.mergePath(splitLines[i], {
                 style: zrUtil.defaults({
-                    stroke: lineColors[i % lineColors.length]
+                    stroke: lineColors[i % lineColors.length],
                 }, lineStyle),
                 silent: true
             }));
         }
     },
 
-    splitArea(axisView, group, axisGroup, axisModel) {
+    splitArea(axisView, group, axisGroup, axisModel, api) {
         rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, axisModel);
-    }
+    },
+
+    breakArea(axisView, group, axisGroup, axisModel, api) {
+        const axisBreakHelper = getAxisBreakHelper();
+        const scale = axisModel.axis.scale;
+        if (axisBreakHelper && scale.type !== 'ordinal') {
+            axisBreakHelper.rectCoordBuildBreakAxis(
+                group, axisView, axisModel, axisModel.coordinateSystem.getRect(), api
+            );
+        }
+    },
+
 };
 
 export default SingleAxisView;

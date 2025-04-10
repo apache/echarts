@@ -21,9 +21,13 @@ import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, ScaleBreak, ItemStyleOption
+    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, AxisBreakOption, ItemStyleOption,
+    NullUndefined,
+    AxisLabelFormatterExtraBreakPart,
+    TimeScaleTick,
 } from '../util/types';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
+import type { PrimaryTimeUnit } from '../util/time';
 
 
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
@@ -82,14 +86,18 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
     startValue?: number;
 
-    breaks?: ScaleBreak[];
+    breaks?: AxisBreakOption[];
     breakArea?: {
-        show?: boolean,
-        itemStyle?: ItemStyleOption,
-        zigzagAmplitude?: number,
-        zigzagMinSpan?: number,
-        zigzagMaxSpan?: number,
-        expandOnClick?: boolean
+        show?: boolean;
+        itemStyle?: ItemStyleOption;
+        zigzagAmplitude?: number;
+        zigzagMinSpan?: number;
+        zigzagMaxSpan?: number;
+        zigzagZ: number;
+        expandOnClick?: boolean;
+    };
+    breakLabelLayout?: {
+        moveOverlap?: 'auto' | boolean;
     }
 }
 
@@ -130,9 +138,7 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
 export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
     type?: 'category';
     boundaryGap?: boolean
-    axisLabel?: AxisLabelOption<'category'> & {
-        interval?: 'auto' | number | ((index: number, value: string) => boolean)
-    };
+    axisLabel?: AxisLabelOption<'category'>;
     data?: (OrdinalRawValue | {
         value: OrdinalRawValue;
         textStyle?: TextCommonOption;
@@ -187,6 +193,8 @@ interface AxisLineOption {
     symbolSize?: number[],
     symbolOffset?: string | number | (string | number)[],
     lineStyle?: LineStyleOption,
+    // Display line break effect when axis.breaks is specified.
+    breakLine?: boolean,
 }
 
 interface AxisTickOption {
@@ -199,25 +207,52 @@ interface AxisTickOption {
     customValues?: (number | string | Date)[]
 }
 
-type AxisLabelValueFormatter = (value: number, index: number) => string;
-type AxisLabelCategoryFormatter = (value: string, index: number) => string;
+export type AxisLabelValueFormatter = (
+    value: number,
+    index: number,
+    extra: AxisLabelFormatterExtraParams | NullUndefined,
+) => string;
+export type AxisLabelCategoryFormatter = (
+    value: string,
+    index: number,
+    extra: NullUndefined,
+) => string;
+export type AxisLabelTimeFormatter = (
+    value: number,
+    index: number,
+    extra: TimeAxisLabelFormatterExtraParams,
+) => string;
 
-// export type AxisLabelFormatterOption = string | ((value: OrdinalRawValue | number, index: number) => string);
-type TimeAxisLabelUnitFormatter = AxisLabelValueFormatter | string[] | string;
+export type AxisLabelFormatterExtraParams = {/* others if any */} & AxisLabelFormatterExtraBreakPart;
+export type TimeAxisLabelFormatterExtraParams = {
+    time: TimeScaleTick['time'],
+    /**
+     * @deprecated Refactored to `time.level`, and keep it for backward compat,
+     *  although `level` is never published in doc since it is introduced.
+     */
+    level: number,
+} & AxisLabelFormatterExtraParams;
+
+export type TimeAxisLabelLeveledFormatterOption = string[] | string;
+export type TimeAxisLabelFormatterUpperDictionaryOption =
+    {[key in PrimaryTimeUnit]?: TimeAxisLabelLeveledFormatterOption};
+/**
+ * @see {parseTimeAxisLabelFormatterDictionary}
+ */
+export type TimeAxisLabelFormatterDictionaryOption =
+    {[key in PrimaryTimeUnit]?: TimeAxisLabelLeveledFormatterOption | TimeAxisLabelFormatterUpperDictionaryOption};
 
 export type TimeAxisLabelFormatterOption = string
-    | ((value: number, index: number, extra: {level: number, breakStart: number, breakEnd: number}) => string)
-    | {
-        year?: TimeAxisLabelUnitFormatter,
-        month?: TimeAxisLabelUnitFormatter,
-        week?: TimeAxisLabelUnitFormatter,
-        day?: TimeAxisLabelUnitFormatter,
-        hour?: TimeAxisLabelUnitFormatter,
-        minute?: TimeAxisLabelUnitFormatter,
-        second?: TimeAxisLabelUnitFormatter,
-        millisecond?: TimeAxisLabelUnitFormatter,
-        inherit?: boolean
-    };
+    | AxisLabelTimeFormatter
+    | TimeAxisLabelFormatterDictionaryOption;
+
+export type TimeAxisLabelFormatterParsed = string
+    | AxisLabelTimeFormatter
+    | TimeAxisLabelFormatterDictionary;
+
+// This is the parsed result from TimeAxisLabelFormatterDictionaryOption.
+export type TimeAxisLabelFormatterDictionary = {[key in PrimaryTimeUnit]: TimeAxisLabelFormatterUpperDictionary};
+export type TimeAxisLabelFormatterUpperDictionary = {[key in PrimaryTimeUnit]: string[]};
 
 type LabelFormatters = {
     value: AxisLabelValueFormatter | string
@@ -226,20 +261,11 @@ type LabelFormatters = {
     time: TimeAxisLabelFormatterOption
 };
 
-export type AxisLabelBreakFormatter = (
-    value: number | string,
-    index: number,
-    breakStart: number,
-    breakEnd: number,
-    breakGap: number
-) => string;
-
 interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     show?: boolean,
     // Whether axisLabel is inside the grid or outside the grid.
     inside?: boolean,
     rotate?: number,
-    breakFormatter?: AxisLabelBreakFormatter,
     // true | false | null/undefined (auto)
     showMinLabel?: boolean,
     // true | false | null/undefined (auto)
@@ -252,7 +278,20 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     verticalAlignMinLabel?: TextVerticalAlign,
     // 'top' | 'middle' | 'bottom' | null/undefined (auto)
     verticalAlignMaxLabel?: TextVerticalAlign,
+    // The space between the axis and `[label.x, label.y]`.
     margin?: number,
+    /**
+     * The space around the axis label to escape from overlapping.
+     * Applied on the label local rect (rather than rotated enlarged rect)
+     * Follow the format defined by `format.ts#normalizeCssArray`.
+     * Introduce the name `textMargin` rather than reuse the existing names to avoid breaking change:
+     *  - `axisLabel.margin` historically has been used to indicate the gap between the axis and label.x/.y.
+     *  - `label.minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
+     *      it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
+     *      and is applied on the rotated bounding rect rather than the original local rect.
+     * @see {LabelMarginType}
+     */
+    textMargin?: number | number[],
     rich?: Dictionary<TextCommonOption>
     /**
      * If hide overlapping labels.
@@ -265,6 +304,9 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
 }
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]
+    interval?: TType extends 'category'
+        ? ('auto' | number | ((index: number, value: string) => boolean))
+        : unknown // Reserved but not used.
 }
 
 interface MinorTickOption {
@@ -298,4 +340,4 @@ interface SplitAreaOption {
 }
 
 export type AxisBaseOption = ValueAxisBaseOption | LogAxisBaseOption
-    | CategoryAxisBaseOption | TimeAxisBaseOption | AxisBaseOptionCommon;
+    | CategoryAxisBaseOption | TimeAxisBaseOption;

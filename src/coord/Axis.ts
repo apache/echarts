@@ -17,20 +17,19 @@
 * under the License.
 */
 
-import {each, map, filter, find} from 'zrender/src/core/util';
+import {each, map} from 'zrender/src/core/util';
 import {linearMap, getPixelPrecision, round} from '../util/number';
 import {
     createAxisTicks,
     createAxisLabels,
     calculateCategoryInterval
 } from './axisTickLabelBuilder';
-import Scale from '../scale/Scale';
-import { DimensionName, ScaleBreak, ScaleDataValue, ScaleTick } from '../util/types';
+import Scale, { ScaleGetTicksOpt } from '../scale/Scale';
+import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
-import { getExtentSpanWithoutBreaks } from '../scale/helper';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -88,7 +87,7 @@ class Axis {
      * If axis extent contain given data
      */
     containData(data: ScaleDataValue): boolean {
-        return this.scale.contain(data);
+        return this.scale.contain(this.scale.parse(data));
     }
 
     /**
@@ -121,16 +120,9 @@ class Axis {
      * Convert data to coord. Data is the rank if it has an ordinal scale
      */
     dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
-        return this.dataToCoordWithBreaks(data, clamp);
-    }
-
-    dataToCoordWithBreaks(
-        data: ScaleDataValue,
-        clamp?: boolean
-    ): number {
         let extent = this._extent;
         const scale = this.scale;
-        data = scale.normalize(data);
+        data = scale.normalize(scale.parse(data));
 
         if (this.onBand && scale.type === 'ordinal') {
             extent = extent.slice() as [number, number];
@@ -176,16 +168,20 @@ class Axis {
      */
     getTicksCoords(opt?: {
         tickModel?: Model,
-        clamp?: boolean
+        clamp?: boolean,
+        breakTicks?: ScaleGetTicksOpt['breakTicks'],
+        pruneByBreak?: ScaleGetTicksOpt['pruneByBreak']
     }): TickCoord[] {
         opt = opt || {};
 
         const tickModel = opt.tickModel || this.getTickModel();
-        const result = createAxisTicks(this, tickModel as AxisBaseModel);
+        const result = createAxisTicks(this, tickModel as AxisBaseModel, {
+            breakTicks: opt.breakTicks,
+            pruneByBreak: opt.pruneByBreak,
+        });
         const ticks = result.ticks;
-        const breaks = this.scale.getBreaks();
 
-        const ticksCoords = filter(map(ticks, function (tickVal) {
+        const ticksCoords = map(ticks, function (tickVal) {
             return {
                 coord: this.dataToCoord(
                     this.scale.type === 'ordinal'
@@ -194,14 +190,12 @@ class Axis {
                 ),
                 tickValue: tickVal
             };
-        }, this), coords => {
-            return !find(breaks, brk => brk.start === coords.tickValue - 1);
-        });
+        }, this);
 
         const alignWithLabel = tickModel.get('alignWithLabel');
 
         fixOnBandTicksCoords(
-            this, ticksCoords, breaks, alignWithLabel, opt.clamp
+            this, ticksCoords, alignWithLabel, opt.clamp
         );
 
         return ticksCoords;
@@ -257,8 +251,7 @@ class Axis {
         const axisExtent = this._extent;
         const dataExtent = this.scale.getExtent();
 
-        let len = getExtentSpanWithoutBreaks(dataExtent, this.scale.getBreaks())
-            + (this.onBand ? 1 : 0);
+        let len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
         // Fix #2728, avoid NaN when only one data.
         len === 0 && (len = 1);
 
@@ -285,8 +278,8 @@ class Axis {
 
 function fixExtentWithBands(extent: [number, number], nTick: number): void {
     const size = extent[1] - extent[0];
-    const len = getExtentSpanWithoutBreaks([0, nTick - 1], []) + 1;
-    const margin = size / Math.max(len, 1) / 2;
+    const len = nTick;
+    const margin = size / len / 2;
     extent[0] += margin;
     extent[1] -= margin;
 }
@@ -303,7 +296,6 @@ function fixExtentWithBands(extent: [number, number], nTick: number): void {
 function fixOnBandTicksCoords(
     axis: Axis,
     ticksCoords: TickCoord[],
-    breaks: ScaleBreak[],
     alignWithLabel: boolean,
     clamp: boolean
 ) {

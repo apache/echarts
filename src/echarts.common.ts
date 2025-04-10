@@ -29,7 +29,6 @@ import {install as BarChart} from './chart/bar/install';
 import {install as PieChart} from './chart/pie/install';
 import {install as ScatterChart} from './chart/scatter/install';
 
-
 import {install as GridComponent} from './component/grid/install';
 import {install as GraphicComponent} from './component/graphic/install';
 import {install as ToolboxComponent} from './component/toolbox/install';
@@ -43,6 +42,8 @@ import {install as LegendComponent} from './component/legend/install';
 import {install as DataZoomComponent} from './component/dataZoom/install';
 import {install as AriaComponent} from './component/aria/install';
 import {install as DatasetComponent} from './component/dataset/install';
+
+import {installAxisBreak as AxisBreak} from './component/axis/installBreak';
 
 
 use([CanvasRenderer]);
@@ -68,5 +69,10 @@ use([
     DataZoomComponent,
     ToolboxComponent,
     AriaComponent,
-    DatasetComponent
+    DatasetComponent,
+]);
+
+// Features
+use([
+    AxisBreak
 ]);

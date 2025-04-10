@@ -29,7 +29,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
 import { isIntervalOrLogScale } from '../../scale/helper';
-import { rectCoordBuildBreakAxis } from './axisBreakHelper';
+import { getAxisBreakHelper } from './axisBreakHelper';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -120,7 +120,7 @@ interface AxisElementBuilder {
 
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
 
-    splitLine(axisView, axisGroup, axisModel, gridModel) {
+    splitLine(axisView, axisGroup, axisModel, gridModel, api) {
         const axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
@@ -141,7 +141,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         let lineCount = 0;
 
         const ticksCoords = axis.getTicksCoords({
-            tickModel: splitLineModel
+            tickModel: splitLineModel,
+            breakTicks: 'none',
+            pruneByBreak: 'preserve_extent_bound',
         });
 
         const p1 = [];
@@ -190,7 +192,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         }
     },
 
-    minorSplitLine(axisView, axisGroup, axisModel, gridModel) {
+    minorSplitLine(axisView, axisGroup, axisModel, gridModel, api) {
         const axis = axisModel.axis;
 
         const minorSplitLineModel = axisModel.getModel('minorSplitLine');
@@ -243,15 +245,17 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         }
     },
 
-    splitArea(axisView, axisGroup, axisModel, gridModel) {
+    splitArea(axisView, axisGroup, axisModel, gridModel, api) {
         rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, gridModel);
     },
 
-    // @ts-ignore
     breakArea(axisView, axisGroup, axisModel, gridModel, api) {
+        const axisBreakHelper = getAxisBreakHelper();
         const scale = axisModel.axis.scale;
-        if (scale.type !== 'ordinal') {
-            rectCoordBuildBreakAxis(axisGroup, axisModel, gridModel, api);
+        if (axisBreakHelper && scale.type !== 'ordinal') {
+            axisBreakHelper.rectCoordBuildBreakAxis(
+                axisGroup, axisView, axisModel, gridModel.coordinateSystem.getRect(), api
+            );
         }
     }
 };
