@@ -27,6 +27,7 @@ import Group from 'zrender/src/graphic/Group';
 import AxisBuilder, { AxisBuilderAxisPartMap, AxisBuilderCfg } from '../../component/axis/AxisBuilder';
 import { isIntervalOrLogScale } from '../../scale/helper';
 import type Cartesian2D from './Cartesian2D';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 interface CartesianAxisLayout {
     position: [number, number];
@@ -138,11 +139,12 @@ export function buildCartesianAxisViewCommonPart(
     axisBuilderAxisPartMap: AxisBuilderAxisPartMap,
     gridRect: LayoutRect,
     cartesians: Cartesian2D[],
-    axisModel: CartesianAxisModel
+    axisModel: CartesianAxisModel,
+    api: ExtensionAPI
 ): Group {
     const layoutResult = layout(gridRect, axisModel);
 
-    const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
+    const axisBuilder = new AxisBuilder(axisModel, api, zrUtil.extend({
         handleAutoShown(elementType) {
             for (let i = 0; i < cartesians.length; i++) {
                 if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {

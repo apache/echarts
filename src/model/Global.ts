@@ -120,6 +120,7 @@ const BUILTIN_CHARTS_MAP = {
     tree: 'TreeChart',
     treemap: 'TreemapChart',
     graph: 'GraphChart',
+    chord: 'ChordChart',
     gauge: 'GaugeChart',
     funnel: 'FunnelChart',
     parallel: 'ParallelChart',

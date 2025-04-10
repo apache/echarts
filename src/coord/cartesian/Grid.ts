@@ -203,7 +203,7 @@ class Grid implements CoordinateSystemMaster {
         if (!beforeDataProcessing
             && (optionLayoutContain.axisLabel || optionLayoutContain.axisName)
         ) {
-            layOutGridByContained(optionLayoutContain, gridRect, this._coordsList, this._axesMap);
+            layOutGridByContained(optionLayoutContain, gridRect, this._coordsList, this._axesMap, api);
         }
         else if (!beforeDataProcessing && optionContainLabel) {
             legacyLayOutGridByContained(axesMap, this._axesList, gridRect);
@@ -701,6 +701,7 @@ function layOutGridByContained(
     gridRect: LayoutRect,
     cartesians: Cartesian2D[],
     axesMap: AxesMap,
+    api: ExtensionAPI
 ): void {
     const axisBuilderAxisPartMap = {
         axisLine: true,
@@ -725,7 +726,7 @@ function layOutGridByContained(
         const unionRect = BoundingRect.create(gridRect);
         each(axesMap[XY[xyIdx]], axis => {
             const axisGroup = buildCartesianAxisViewCommonPart(
-                axisBuilderAxisPartMap, gridRect, cartesians, axis.model
+                axisBuilderAxisPartMap, gridRect, cartesians, axis.model, api
             );
             unionRect.union(axisGroup.getBoundingRect());
         });

@@ -18,7 +18,7 @@
 */
 
 import {
-    retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction, retrieve2
+    retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction, retrieve2,
 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
@@ -30,13 +30,25 @@ import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {isNameLocationCenter, shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
+import {
+    ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString,
+    VisualAxisBreak,
+    ParsedAxisBreak,
+    LabelMarginType,
+    LabelExtendedText,
+} from '../../util/types';
 import { AxisBaseOption, AxisBaseOptionCommon } from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
+import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
-import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
-
+import {
+    prepareLayoutList, hideOverlap, detectAxisLabelPairIntersection,
+} from '../../label/labelLayoutHelper';
+import ExtensionAPI from '../../core/ExtensionAPI';
+import { makeInner } from '../../util/model';
+import { getAxisBreakHelper } from './axisBreakHelper';
+import { AXIS_BREAK_EXPAND_ACTION_TYPE, BaseAxisBreakPayload } from './axisAction';
+import { getScaleBreakHelper } from '../../scale/break';
 
 const PI = Math.PI;
 
@@ -52,6 +64,11 @@ type AxisEventData = {
     dataIndex?: number
     tickIndex?: number
 } & {
+    break?: {
+        start: ParsedAxisBreak['vmin'],
+        end: ParsedAxisBreak['vmax'],
+    }
+} & {
     [key in AxisIndexKey]?: number
 };
 
@@ -60,9 +77,18 @@ type AxisLabelText = graphic.Text & {
     __truncatedText: string
 } & ECElement;
 
+const getLabelInner = makeInner<{
+    break: VisualAxisBreak;
+}, graphic.Text>();
+
 
 export interface AxisBuilderCfg {
     position?: number[]
+    /**
+     * In radian. This is to be applied to axis transitionGroup directly.
+     * rotation 0 means an axis towards screen-right.
+     * rotation Math.PI/4 means an axis towards screen-top-right.
+     */
     rotation?: number
     /**
      * Used when nameLocation is 'middle' or 'center'.
@@ -137,12 +163,17 @@ class AxisBuilder {
     readonly group = new graphic.Group();
 
     private _transformGroup: graphic.Group;
+    private _api: ExtensionAPI;
 
     /**
      * [CAUTION]: axisModel.axis.extent/scale must be ready to use.
      */
-    constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg) {
-
+    constructor(
+        axisModel: AxisBaseModel,
+        api: ExtensionAPI,
+        opt?: AxisBuilderCfg
+    ) {
+        this._api = api;
         this.opt = opt;
 
         this.axisModel = axisModel;
@@ -180,7 +211,7 @@ class AxisBuilder {
         // axisName layout depends on axisTickLabel layout result to resolve overlap.
         each(['axisLine', 'axisTickLabel', 'axisName'] as const, partName => {
             if (axisPartNameMap[partName]) {
-                builders[partName](this.opt, this.axisModel, this.group, this._transformGroup);
+                builders[partName](this.opt, this.axisModel, this.group, this._transformGroup, this._api);
             }
         });
     }
@@ -244,7 +275,8 @@ interface AxisElementsBuilder {
         opt: AxisBuilderCfg,
         axisModel: AxisBaseModel,
         group: graphic.Group,
-        transformGroup: graphic.Group
+        transformGroup: graphic.Group,
+        api: ExtensionAPI
     ):void
 }
 
@@ -253,7 +285,7 @@ export type AxisBuilderAxisPartMap = {[axisPartName in AxisBuilderAxisPartName]?
 
 const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
 
-    axisLine(opt, axisModel, group, transformGroup) {
+    axisLine(opt, axisModel, group, transformGroup, api) {
 
         let shown = axisModel.get(['axisLine', 'show']);
         if (shown === 'auto' && opt.handleAutoShown) {
@@ -280,22 +312,29 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
             },
             axisModel.getModel(['axisLine', 'lineStyle']).getLineStyle()
         );
-
-        const line = new graphic.Line({
-            shape: {
-                x1: pt1[0],
-                y1: pt1[1],
-                x2: pt2[0],
-                y2: pt2[1]
-            },
-            style: lineStyle,
+        const pathBaseProp: PathProps = {
             strokeContainThreshold: opt.strokeContainThreshold || 5,
             silent: true,
-            z2: 1
-        });
-        graphic.subPixelOptimizeLine(line.shape, line.style.lineWidth);
-        line.anid = 'line';
-        group.add(line);
+            z2: 1,
+            style: lineStyle,
+        };
+
+        if (axisModel.get(['axisLine', 'breakLine']) && axisModel.axis.scale.hasBreaks()) {
+            getAxisBreakHelper()!.buildAxisBreakLine(axisModel, group, transformGroup, pathBaseProp);
+        }
+        else {
+            const line = new graphic.Line(extend({
+                shape: {
+                    x1: pt1[0],
+                    y1: pt1[1],
+                    x2: pt2[0],
+                    y2: pt2[1]
+                },
+            }, pathBaseProp));
+            graphic.subPixelOptimizeLine(line.shape, line.style.lineWidth);
+            line.anid = 'line';
+            group.add(line);
+        }
 
         let arrows = axisModel.get(['axisLine', 'symbol']);
 
@@ -354,30 +393,45 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         }
     },
 
-    axisTickLabel(opt, axisModel, group, transformGroup) {
+    axisTickLabel(opt, axisModel, group, transformGroup, api) {
         const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt);
-        const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt);
+        const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt, api);
 
-        fixMinMaxLabelShow(axisModel, labelEls, ticksEls);
+        adjustBreakLabels(axisModel, opt.rotation, labelEls);
+
+        const shouldHideOverlap = axisModel.get(['axisLabel', 'hideOverlap']);
+
+        fixMinMaxLabelShow(opt, axisModel, labelEls, ticksEls, shouldHideOverlap);
 
         buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
 
         // This bit fixes the label overlap issue for the time chart.
         // See https://github.com/apache/echarts/issues/14266 for more.
-        if (axisModel.get(['axisLabel', 'hideOverlap'])) {
-            const labelList = prepareLayoutList(map(labelEls, label => ({
-                label,
-                priority: label.z2,
-                defaultAttr: {
-                    ignore: label.ignore
+        if (shouldHideOverlap) {
+            let priorityBoundary = 0;
+            each(labelEls, label => {
+                label.z2 > priorityBoundary && (priorityBoundary = label.z2);
+            });
+            const labelList = prepareLayoutList(map(labelEls, label => {
+                let priority = label.z2;
+                if (getLabelInner(label).break) {
+                    // Make break labels be highest priority.
+                    priority += priorityBoundary;
                 }
-            })));
+                return {
+                    label,
+                    priority,
+                    defaultAttr: {
+                        ignore: label.ignore
+                    },
+                };
+            }));
 
             hideOverlap(labelList);
         }
     },
 
-    axisName(opt, axisModel, group, transformGroup) {
+    axisName(opt, axisModel, group, transformGroup, api) {
         const name = retrieve(opt.axisName, axisModel.get('name'));
 
         if (!name) {
@@ -524,9 +578,11 @@ function endTextLayout(
 }
 
 function fixMinMaxLabelShow(
+    opt: AxisBuilderCfg,
     axisModel: AxisBaseModel,
     labelEls: graphic.Text[],
-    tickEls: graphic.Line[]
+    tickEls: graphic.Line[],
+    shouldHideOverlap: boolean
 ) {
     if (shouldShowAllLabels(axisModel.axis)) {
         return;
@@ -554,11 +610,22 @@ function fixMinMaxLabelShow(
     const lastTick = tickEls[tickEls.length - 1];
     const prevTick = tickEls[tickEls.length - 2];
 
+    // In most fonts the glyph does not reach the boundary of the bouding rect.
+    // This is needed to avoid too aggressive to hide two elements that meet at the edge
+    // due to compact layout by the same bounding rect or OBB.
+    const touchThreshold = 0.05;
+    // `!hideOverlap` means the visual touch between adjacent labels are accepted,
+    // thus the "hide min/max label" should be conservative, since the space is sufficient
+    // in this case. And this strategy is also for backward compatibility.
+    const ignoreTextMargin = !shouldHideOverlap;
+
     if (showMinLabel === false) {
         ignoreEl(firstLabel);
         ignoreEl(firstTick);
     }
-    else if (isTwoLabelOverlapped(firstLabel, nextLabel)) {
+    else if (detectAxisLabelPairIntersection(
+        opt.rotation, [firstLabel, nextLabel], touchThreshold, ignoreTextMargin
+    )) {
         if (showMinLabel) {
             ignoreEl(nextLabel);
             ignoreEl(nextTick);
@@ -573,7 +640,9 @@ function fixMinMaxLabelShow(
         ignoreEl(lastLabel);
         ignoreEl(lastTick);
     }
-    else if (isTwoLabelOverlapped(prevLabel, lastLabel)) {
+    else if (detectAxisLabelPairIntersection(
+        opt.rotation, [prevLabel, lastLabel], touchThreshold, ignoreTextMargin
+    )) {
         if (showMaxLabel) {
             ignoreEl(prevLabel);
             ignoreEl(prevTick);
@@ -588,30 +657,6 @@ function fixMinMaxLabelShow(
 function ignoreEl(el: Element) {
     el && (el.ignore = true);
 }
-
-function isTwoLabelOverlapped(
-    current: graphic.Text,
-    next: graphic.Text
-) {
-    // current and next has the same rotation.
-    const firstRect = current && current.getBoundingRect().clone();
-    const nextRect = next && next.getBoundingRect().clone();
-
-    if (!firstRect || !nextRect) {
-        return;
-    }
-
-    // When checking intersect of two rotated labels, we use mRotationBack
-    // to avoid that boundingRect is enlarge when using `boundingRect.applyTransform`.
-    const mRotationBack = matrixUtil.identity([]);
-    matrixUtil.rotate(mRotationBack, mRotationBack, -current.rotation);
-
-    firstRect.applyTransform(matrixUtil.mul([], mRotationBack, current.getLocalTransform()));
-    nextRect.applyTransform(matrixUtil.mul([], mRotationBack, next.getLocalTransform()));
-
-    return firstRect.intersect(nextRect);
-}
-
 
 function createTicks(
     ticksCoords: TickCoord[],
@@ -738,13 +783,14 @@ function buildAxisLabel(
     group: graphic.Group,
     transformGroup: graphic.Group,
     axisModel: AxisBaseModel,
-    opt: AxisBuilderCfg
-) {
+    opt: AxisBuilderCfg,
+    api: ExtensionAPI
+): graphic.Text[] {
     const axis = axisModel.axis;
     const show = retrieve(opt.axisLabelShow, axisModel.get(['axisLabel', 'show']));
 
     if (!show || axis.scale.isBlank()) {
-        return;
+        return [];
     }
 
     const labelModel = axisModel.getModel('axisLabel');
@@ -813,7 +859,7 @@ function buildAxisLabel(
             y: opt.labelOffset + opt.labelDirection * labelMargin,
             rotation: labelLayout.rotation,
             silent: silent,
-            z2: 10 + (labelItem.level || 0),
+            z2: 10 + (labelItem.time?.level || 0),
             style: createTextStyle(itemLabelModel, {
                 text: formattedLabel,
                 align: index === 0
@@ -838,10 +884,15 @@ function buildAxisLabel(
                             : tickValue,
                         index
                     )
-                    : textColor as string
+                    : textColor as string,
+                margin: itemLabelModel.get('textMargin', true),
             })
         });
+        (textEl as LabelExtendedText).__marginType = LabelMarginType.textMargin;
+
         textEl.anid = 'label_' + tickValue;
+
+        getLabelInner(textEl).break = labelItem.break;
 
         graphic.setTooltipConfig({
             el: textEl,
@@ -860,11 +911,22 @@ function buildAxisLabel(
             eventData.targetType = 'axisLabel';
             eventData.value = rawLabel;
             eventData.tickIndex = index;
+            if (labelItem.break) {
+                eventData.break = {
+                    // type: labelItem.break.type,
+                    start: labelItem.break.parsedBreak.vmin,
+                    end: labelItem.break.parsedBreak.vmax,
+                };
+            }
             if (axis.type === 'category') {
                 eventData.dataIndex = tickValue;
             }
 
             getECData(textEl).eventData = eventData;
+
+            if (labelItem.break) {
+                addBreakEventHandler(axisModel, api, textEl, labelItem.break);
+            }
         }
 
         // FIXME
@@ -881,5 +943,41 @@ function buildAxisLabel(
     return labelEls;
 }
 
+function addBreakEventHandler(
+    axisModel: AxisBaseModel,
+    api: ExtensionAPI,
+    textEl: graphic.Text,
+    visualBreak: VisualAxisBreak
+): void {
+    textEl.on('click', params => {
+        const payload: BaseAxisBreakPayload = {
+            type: AXIS_BREAK_EXPAND_ACTION_TYPE,
+            breaks: [{
+                start: visualBreak.parsedBreak.breakOption.start,
+                end: visualBreak.parsedBreak.breakOption.end,
+            }]
+        };
+        payload[`${axisModel.axis.dim}AxisIndex`] = axisModel.componentIndex;
+        api.dispatchAction(payload);
+    });
+}
+
+function adjustBreakLabels(
+    axisModel: AxisBaseModel,
+    axisRotation: AxisBuilderCfg['rotation'],
+    labelEls: graphic.Text[]
+): void {
+    const scaleBreakHelper = getScaleBreakHelper();
+    if (!scaleBreakHelper) {
+        return;
+    }
+    const breakLabelPairs = scaleBreakHelper.retrieveAxisBreakPairs(labelEls, el => getLabelInner(el).break);
+    const moveOverlap = axisModel.get(['breakLabelLayout', 'moveOverlap'], true);
+    if (moveOverlap === true || moveOverlap === 'auto') {
+        each(breakLabelPairs, pair =>
+            getAxisBreakHelper()!.adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, pair)
+        );
+    }
+}
 
 export default AxisBuilder;

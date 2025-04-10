@@ -27,6 +27,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
+import { getAxisBreakHelper } from './axisBreakHelper';
 
 const axisBuilderAttrs = {
     axisLine: true,
@@ -34,7 +35,7 @@ const axisBuilderAttrs = {
     axisName: true,
 } as const;
 const selfBuilderAttrs = [
-    'splitArea', 'splitLine', 'minorSplitLine'
+    'splitArea', 'splitLine', 'minorSplitLine', 'breakArea'
 ] as const;
 
 class CartesianAxisView extends AxisView {
@@ -69,12 +70,13 @@ class CartesianAxisView extends AxisView {
             axisBuilderAttrs,
             grid.getRect(),
             grid.getCartesians(),
-            axisModel
+            axisModel,
+            api
         ));
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get([name, 'show'])) {
-                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel);
+                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel, api);
             }
         }, this);
 
@@ -96,12 +98,18 @@ class CartesianAxisView extends AxisView {
 }
 
 interface AxisElementBuilder {
-    (axisView: CartesianAxisView, axisGroup: graphic.Group, axisModel: CartesianAxisModel, gridModel: GridModel): void
+    (
+        axisView: CartesianAxisView,
+        axisGroup: graphic.Group,
+        axisModel: CartesianAxisModel,
+        gridModel: GridModel,
+        api: ExtensionAPI
+    ): void
 }
 
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
 
-    splitLine(axisView, axisGroup, axisModel, gridModel) {
+    splitLine(axisView, axisGroup, axisModel, gridModel, api) {
         const axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
@@ -122,7 +130,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         let lineCount = 0;
 
         const ticksCoords = axis.getTicksCoords({
-            tickModel: splitLineModel
+            tickModel: splitLineModel,
+            breakTicks: 'none',
+            pruneByBreak: 'preserve_extent_bound',
         });
 
         const p1 = [];
@@ -171,7 +181,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         }
     },
 
-    minorSplitLine(axisView, axisGroup, axisModel, gridModel) {
+    minorSplitLine(axisView, axisGroup, axisModel, gridModel, api) {
         const axis = axisModel.axis;
 
         const minorSplitLineModel = axisModel.getModel('minorSplitLine');
@@ -224,8 +234,18 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         }
     },
 
-    splitArea(axisView, axisGroup, axisModel, gridModel) {
+    splitArea(axisView, axisGroup, axisModel, gridModel, api) {
         rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, gridModel);
+    },
+
+    breakArea(axisView, axisGroup, axisModel, gridModel, api) {
+        const axisBreakHelper = getAxisBreakHelper();
+        const scale = axisModel.axis.scale;
+        if (axisBreakHelper && scale.type !== 'ordinal') {
+            axisBreakHelper.rectCoordBuildBreakAxis(
+                axisGroup, axisView, axisModel, gridModel.coordinateSystem.getRect(), api
+            );
+        }
     }
 };
 

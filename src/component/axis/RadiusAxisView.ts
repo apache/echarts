@@ -25,6 +25,7 @@ import { RadiusAxisModel } from '../../coord/polar/AxisModel';
 import Polar from '../../coord/polar/Polar';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
 import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
 const axisBuilderAttrs = {
     axisLine: true, axisTickLabel: true, axisName: true
@@ -44,7 +45,7 @@ class RadiusAxisView extends AxisView {
 
     private _axisGroup: graphic.Group;
 
-    render(radiusAxisModel: RadiusAxisModel, ecModel: GlobalModel) {
+    render(radiusAxisModel: RadiusAxisModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this.group.removeAll();
         if (!radiusAxisModel.get('show')) {
             return;
@@ -63,7 +64,7 @@ class RadiusAxisView extends AxisView {
         const radiusExtent = radiusAxis.getExtent();
 
         const layout = layoutAxis(polar, radiusAxisModel, axisAngle);
-        const axisBuilder = new AxisBuilder(radiusAxisModel, layout);
+        const axisBuilder = new AxisBuilder(radiusAxisModel, api, layout);
         axisBuilder.build(axisBuilderAttrs);
         newAxisGroup.add(axisBuilder.getGroup());
 

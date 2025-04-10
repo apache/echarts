@@ -92,7 +92,7 @@ class ParallelAxisView extends ComponentView {
             axisLayout
         );
 
-        const axisBuilder = new AxisBuilder(axisModel, builderOpt);
+        const axisBuilder = new AxisBuilder(axisModel, api, builderOpt);
 
         axisBuilder.build(axisBuilderAxisPartMap);
 

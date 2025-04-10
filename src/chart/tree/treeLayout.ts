@@ -27,12 +27,12 @@ import {
     secondWalk,
     separation as sep,
     radialCoordinate,
-    getViewRect,
     TreeLayoutNode
 } from './layoutHelper';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import TreeSeriesModel from './TreeSeries';
+import { getViewRect } from '../../util/layout';
 
 export default function treeLayout(ecModel: GlobalModel, api: ExtensionAPI) {
     ecModel.eachSeriesByType('tree', function (seriesModel: TreeSeriesModel) {
