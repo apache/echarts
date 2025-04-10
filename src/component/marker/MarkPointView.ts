@@ -46,18 +46,18 @@ function updateMarkerLayout(
     const coordRect = coordSys.getArea && coordSys.getArea();
     mpData.each(function (idx: number) {
         const itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
-        const relativeTo = itemModel.get('relativeTo');
-        const width = relativeTo === 'coordinate'
-            ? coordRect ? coordRect.width : 0
+        const isRelativeToCoordinate = itemModel.get('relativeTo') === 'coordinate';
+        const width = isRelativeToCoordinate
+            ? (coordRect ? coordRect.width : 0)
             : apiWidth;
-        const height = relativeTo === 'coordinate'
-            ? coordRect ? coordRect.height : 0
+        const height = isRelativeToCoordinate
+            ? (coordRect ? coordRect.height : 0)
             : apiHeight;
-        const left = relativeTo === 'coordinate'
-            ? coordRect ? coordRect.x : 0
+        const left = isRelativeToCoordinate && coordRect
+            ? coordRect.x
             : 0;
-        const top = relativeTo === 'coordinate'
-            ? coordRect ? coordRect.y : 0
+        const top = isRelativeToCoordinate && coordRect
+            ? coordRect.y
             : 0;
 
         let point;
