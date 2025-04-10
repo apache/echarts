@@ -28,8 +28,18 @@ export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, Shado
 
     show?: boolean;
 
-    // Whether grid size contain label.
+    /**
+     * @deprecated Use `layoutContain` instead.
+     * Whether grid size contains axis labels. This approach estimates the size by sample labels.
+     * It works for most case but it does not strictly contain all labels in some cases.
+     */
     containLabel?: boolean;
+    layoutContain?: {
+        // Whether grid size contains axis labels.
+        axisLabel?: boolean;
+        // Whether grid size contains axis names.
+        axisName?: boolean;
+    };
 
     backgroundColor?: ZRColor;
     borderWidth?: number;

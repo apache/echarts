@@ -59,7 +59,7 @@ class CartesianAxisPointer extends BaseAxisPointer {
             elOption.pointer = pointerOption;
         }
 
-        const layoutInfo = cartesianAxisHelper.layout(grid.model, axisModel);
+        const layoutInfo = cartesianAxisHelper.layout(grid.getRect(), axisModel);
         viewHelper.buildCartesianSingleLabelElOption(
             // @ts-ignore
             value, elOption, layoutInfo, axisModel, axisPointerModel, api
@@ -74,7 +74,7 @@ class CartesianAxisPointer extends BaseAxisPointer {
         axisModel: CartesianAxisModel,
         axisPointerModel: AxisPointerModel
     ) {
-        const layoutInfo = cartesianAxisHelper.layout(axisModel.axis.grid.model, axisModel, {
+        const layoutInfo = cartesianAxisHelper.layout(axisModel.axis.grid.getRect(), axisModel, {
             labelInside: false
         });
         // @ts-ignore

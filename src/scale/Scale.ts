@@ -37,6 +37,7 @@ abstract class Scale<SETTING extends Dictionary<unknown> = Dictionary<unknown>> 
 
     private _setting: SETTING;
 
+    // Make sure that extent[0] always <= extent[1].
     protected _extent: [number, number];
 
     private _isBlank: boolean;

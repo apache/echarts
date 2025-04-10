@@ -59,6 +59,9 @@ class Axis {
     // Axis scale
     scale: Scale;
 
+    // Make sure that `extent[0] > extent[1]` if and only if `inverse: true`.
+    // The unit is pixel, but not necessarily the global pixel,
+    //  probably need to transform (usually rotate) to global pixel.
     private _extent: [number, number];
 
     // Injected outside

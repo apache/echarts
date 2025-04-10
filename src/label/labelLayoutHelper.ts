@@ -64,7 +64,7 @@ export function prepareLayoutList(input: LabelLayoutListPrepareInput[]): LabelLa
         const localRect = label.getBoundingRect();
         const isAxisAligned = !transform || (transform[1] < 1e-5 && transform[2] < 1e-5);
 
-        const minMargin = label.style.margin || 0;
+        const minMargin = (label.style.margin as number) || 0;
         const globalRect = localRect.clone();
         globalRect.applyTransform(transform);
         globalRect.x -= minMargin / 2;

@@ -28,9 +28,9 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
 
-const axisBuilderAttrs = [
-    'axisLine', 'axisTickLabel', 'axisName'
-] as const;
+const axisBuilderAttrs = {
+    axisLine: true, axisTickLabel: true, axisName: true
+ } as const;
 
 const selfBuilderAttrs = ['splitArea', 'splitLine'] as const;
 
@@ -56,7 +56,7 @@ class SingleAxisView extends AxisView {
 
         const axisBuilder = new AxisBuilder(axisModel, layout);
 
-        zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
+        axisBuilder.build(axisBuilderAttrs);
 
         group.add(this._axisGroup);
         group.add(axisBuilder.getGroup());

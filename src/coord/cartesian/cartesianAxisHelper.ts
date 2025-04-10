@@ -19,10 +19,14 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import GridModel from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SINGLE_REFERRING } from '../../util/model';
+import { LayoutRect } from '../../util/layout';
+import Group from 'zrender/src/graphic/Group';
+import AxisBuilder, { AxisBuilderAxisPartMap, AxisBuilderCfg } from '../../component/axis/AxisBuilder';
+import { isIntervalOrLogScale } from '../../scale/helper';
+import type Cartesian2D from './Cartesian2D';
 
 interface CartesianAxisLayout {
     position: [number, number];
@@ -40,10 +44,9 @@ interface CartesianAxisLayout {
  * (Can be called before coordinate system update stage).
  */
 export function layout(
-    gridModel: GridModel, axisModel: CartesianAxisModel, opt?: {labelInside?: boolean}
+    rect: LayoutRect, axisModel: CartesianAxisModel, opt?: {labelInside?: boolean}
 ): CartesianAxisLayout {
     opt = opt || {};
-    const grid = gridModel.coordinateSystem;
     const axis = axisModel.axis;
     const layout = {} as CartesianAxisLayout;
     const otherAxisOnZeroOf = axis.getAxesOnZeroOf()[0];
@@ -52,7 +55,6 @@ export function layout(
     const axisPosition: 'onZero' | typeof axis.position = otherAxisOnZeroOf ? 'onZero' : rawAxisPosition;
     const axisDim = axis.dim;
 
-    const rect = grid.getRect();
     const rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
     const idx = {left: 0, right: 1, top: 0, bottom: 1, onZero: 2};
     const axisOffset = axisModel.get('offset') || 0;
@@ -132,3 +134,28 @@ export function findAxisModels(seriesModel: SeriesModel): {
     return axisModelMap;
 }
 
+export function buildCartesianAxisViewCommonPart(
+    axisBuilderAxisPartMap: AxisBuilderAxisPartMap,
+    gridRect: LayoutRect,
+    cartesians: Cartesian2D[],
+    axisModel: CartesianAxisModel
+): Group {
+    const layoutResult = layout(gridRect, axisModel);
+
+    const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
+        handleAutoShown(elementType) {
+            for (let i = 0; i < cartesians.length; i++) {
+                if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {
+                    // Still show axis tick or axisLine if other axis is value / log
+                    return true;
+                }
+            }
+            // Not show axisTick or axisLine if other axis is category / time
+            return false;
+        }
+    } as AxisBuilderCfg, layoutResult));
+
+    axisBuilder.build(axisBuilderAxisPartMap);
+
+    return axisBuilder.group;
+}

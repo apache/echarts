@@ -39,20 +39,22 @@ under the License.
         </style>
 
 
-        <div id="main0" style="width: 800px;height:600px;"></div>
+        <div id="main_compat_padding"></div>
+
+        <div id="main_all"></div>
 
 
         <script>
 
-            var chart;
-            var myChart;
-            var option;
-
             require([
-                'echarts'/*, 'map/js/china' */
+                'echarts'
             ], function (echarts) {
+                const _yAxisLabelPaddingValues = [
+                    [0, 10],
+                    0
+                ];
 
-                option = {
+                var option = {
                     backgroundColor: '#ddd',
                     xAxis: [{
                     }],
@@ -60,8 +62,7 @@ under the License.
                         type: 'category',
                         axisLabel: {
                             color: '#333',
-                            padding: [0, 10],
-                            // padding: [0, 0, 10, 10],
+                            padding: _yAxisLabelPaddingValues[0],
                             rich: {
                                 spStyle: {
                                     fontWeight: 'bold'
@@ -87,16 +88,584 @@ under the License.
                     }]
                 };
 
-                chart = myChart = testHelper.create(echarts, 'main0', {
+                var chart = testHelper.create(echarts, 'main_compat_padding', {
                     title: [
+                        'Backward compatibility:',
                         'Line chart should be render normally when ',
                         '**grid.containLabel: true** and **axisLabel.padding: [0, 20]** (**in shorthand form**)',
                         'text bounding rect should be calculated based on normalized style props'
                     ],
-                    option: option
+                    option: option,
+                    width: 700,
+                    height: 400,
+                    buttons: [{
+                        type: 'select',
+                        text: 'yAxis.axisLabel.padding',
+                        values: _yAxisLabelPaddingValues,
+                        onchange() {
+                            chart.setOption({
+                                yAxis: {
+                                    axisLabel: {
+                                        padding: this.value
+                                    }
+                                }
+                            });
+                        }
+                    }]
                 });
             });
 
         </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                const _values = {
+                    allAxis: {
+                        nameTextStyle: {
+                            fontSize: [undefined, 30]
+                        },
+                        axisLabel: {
+                            padding: [undefined, [0, 10], 0],
+                            margin: [undefined, 60, -60],
+                            fontSize: [undefined, 35],
+                        },
+                        nameLocation: ['end', 'start', 'center'],
+                    },
+                    xAxis: {
+                        position: ['bottom', 'top'],
+                        nameRotate: 0,
+                        axisLabel: {
+                        },
+                    },
+                    yAxis: {
+                        position: ['left', 'right'],
+                        nameRotate: 0,
+                        axisLabel: {
+                        },
+                    },
+                    grid: {
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                    }
+                };
+
+                function makeAxisName({xy, idx, richTag}) {
+                    const txt = `${xy}Axis_${idx} long name`;
+                    return richTag
+                        ? `{name_big_1|${txt}}`
+                        : txt;
+                }
+
+                function createOption({xyAxisCount}) {
+                    const axisCountArr = (new Array(xyAxisCount)).fill(1);
+                    const nameRichStyle = {
+                        name_big_1: {
+                            borderWidth: 15,
+                            borderColor: 'rgba(150,0,0,0.5)',
+                            backgroundColor: 'rgba(0,150,0,0.5)',
+                            padding: 10,
+                            color: '#000',
+                            fontSize: 30,
+                        }
+                    };
+                    const labelRichStyle = {
+                        label_big_1: {
+                            borderWidth: 15,
+                            borderColor: 'rgba(0,0,150,0.5)',
+                            backgroundColor: 'rgba(0,150,0,0.5)',
+                            padding: 10,
+                            color: '#000',
+                            fontSize: 20,
+                        }
+                    };
+
+                    return {
+                        backgroundColor: 'rgba(0,0,0,0.1)',
+                        xAxis: axisCountArr.map((_, idx) => ({
+                            id: idx,
+                            name: makeAxisName({xy: 'x', idx}),
+                            nameTextStyle: {
+                                fontSize: _values.allAxis.nameTextStyle.fontSize[0],
+                                rich: nameRichStyle,
+                            },
+                            nameLocation: _values.allAxis.nameLocation[0],
+                            axisLabel: {
+                                padding: _values.allAxis.axisLabel.padding[0],
+                                fontSize: _values.allAxis.axisLabel.fontSize[0],
+                                textStyle: {
+                                    rich: labelRichStyle
+                                }
+                            },
+                            axisLine: {
+                                show: true,
+                            },
+                            axisLine: {
+                                onZero: false,
+                            },
+                            position: _values.xAxis.position,
+                        })),
+                        yAxis: axisCountArr.map((_, idx) => ({
+                            id: idx,
+                            name: makeAxisName({xy: 'x', idx}),
+                            type: 'log',
+                            // type: 'category',
+                            nameTextStyle: {
+                                fontSize: _values.allAxis.nameTextStyle.fontSize[0],
+                                rich: nameRichStyle,
+                            },
+                            nameLocation: _values.allAxis.nameLocation[0],
+                            axisLabel: {
+                                padding: _values.allAxis.axisLabel.padding[0],
+                                fontSize: _values.allAxis.axisLabel.fontSize[0],
+                                fontWeight: 'bold',
+                                textStyle: {
+                                    rich: labelRichStyle
+                                }
+                            },
+                            axisLine: {
+                                onZero: false,
+                            },
+                            position: _values.yAxis.position,
+                        })),
+                        grid: [{
+                            left: _values.grid.left,
+                            right: _values.grid.right,
+                            top: _values.grid.top,
+                            bottom: _values.grid.bottom,
+                            containLabel: undefined,
+                            layoutContain: {
+                                axisLabel: true,
+                                axisName: true,
+                            },
+                            show: true,
+                            backgroundColor: 'rgba(150,0,0,0.2)',
+                        }],
+                        series: axisCountArr.map((_, idx) => ({
+                            xAxisIndex: idx,
+                            yAxisIndex: idx,
+                            name: '指标1',
+                            data: [
+                                [1000000, 123232],
+                                [3333333, 32323233232],
+                                [5555555, 31133232233]
+                            ],
+                            type: 'line'
+                        }))
+                    };
+                }
+
+                let _controllingAxisIndex = 0;
+                let _controlledAxisIndexState = [
+                    null,
+                    null,
+                ];
+                let _controllingAxisIndices = [0, 1, 2];
+
+                const chart = testHelper.create(echarts, 'main_all', {
+                    title: [
+                        'layout contain all tests',
+                    ],
+                    option: createOption({xyAxisCount: 1}),
+                    width: 750,
+                    height: 350,
+                    inputsStyle: 'compact',
+                    inputs: [
+                        ...(['top', 'right', 'bottom', 'left'].map(prop => ({
+                            type: 'range',
+                            text: `grid.${prop}`,
+                            value: _values.grid[prop],
+                            onchange() {
+                                chart.setOption({grid: {[prop]: this.value}});
+                            }
+                        }))),
+                        {type: 'br'},
+                        {
+                            type: 'select',
+                            text: 'containLabel:',
+                            values: [undefined, true, false],
+                            onchange() {
+                                chart.setOption({
+                                    grid: {containLabel: this.value}
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'layoutContain.axisLabel:',
+                            values: [true, false, undefined],
+                            onchange() {
+                                chart.setOption({
+                                    grid: {layoutContain: {axisLabel: this.value}}
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'layoutContain.axisName:',
+                            values: [true, false, undefined],
+                            onchange() {
+                                chart.setOption({
+                                    grid: {layoutContain: {axisName: this.value}}
+                                });
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'select',
+                            text: 'xyAxis count',
+                            values: [1, 2, 3],
+                            onchange() {
+                                const option = createOption({
+                                    xyAxisCount: this.value,
+                                });
+                                chart.setOption(option, true);
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'inputs below control xy axis index:',
+                            values: _controllingAxisIndices,
+                            onchange() {
+                                saveState(_controllingAxisIndex);
+                                _controllingAxisIndex = this.value;
+                                restoreState(_controllingAxisIndex);
+                            },
+                        },
+                        {
+                            type: 'br',
+                        },
+                        ...(['xAxis', 'yAxis'].map(prop => ({
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: `${prop} .rotate`,
+                            options: [
+                                {value: undefined},
+                                {input: {
+                                    type: 'range',
+                                    value: 0,
+                                    min: -100,
+                                    max: 100,
+                                }}
+                            ],
+                            onchange() {
+                                chart.setOption({[prop]: {
+                                    axisLabel: {rotate: this.value},
+                                    id: _controllingAxisIndex,
+                                },});
+                            }
+                        }))),
+                        {type: 'br'},
+                        ...(['xAxis', 'yAxis'].map(prop => ({
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: `${prop}.nameRotate`,
+                            options: [
+                                {value: undefined},
+                                {input: {
+                                    type: 'range',
+                                    value: 0,
+                                    min: -100,
+                                    max: 100,
+                                }},
+                            ],
+                            onchange() {
+                                chart.setOption({
+                                    [prop]: {
+                                        nameRotate: this.value,
+                                        id: _controllingAxisIndex,
+                                    }
+                                });
+                            }
+                        }))),
+                        {type: 'br'},
+                        ...(['xAxis', 'yAxis'].map(prop => ({
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: `${prop}.nameGap`,
+                            options: [
+                                {value: undefined},
+                                {input: {
+                                    type: 'range',
+                                    value: 15,
+                                    min: -100,
+                                    max: 100,
+                                }}
+                            ],
+                            onchange() {
+                                chart.setOption({[prop]: {
+                                    nameGap: this.value,
+                                    id: _controllingAxisIndex,
+                                }});
+                            }
+                        }))),
+                        {type: 'br'},
+                        ...(['xAxis', 'yAxis'].map(prop => ({
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: `${prop}.offset`,
+                            options: [
+                                {value: undefined},
+                                {input: {
+                                    type: 'range',
+                                    value: 0,
+                                    min: -100,
+                                    max: 100,
+                                }}
+                            ],
+                            onchange() {
+                                chart.setOption({[prop]: {
+                                    offset: this.value,
+                                    id: _controllingAxisIndex,
+                                }});
+                            }
+                        }))),
+                        {type: 'br'},
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'axisLabel.padding',
+                            values: _values.allAxis.axisLabel.padding,
+                            onchange() {
+                                chart.setOption({
+                                    xAxis: {
+                                        axisLabel: {padding: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        axisLabel: {padding: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'axisLabel.margin',
+                            values: _values.allAxis.axisLabel.margin,
+                            onchange() {
+                                chart.setOption({
+                                    xAxis: {
+                                        axisLabel: {margin: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        axisLabel: {margin: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: `axisLabel.fontSize`,
+                            values: _values.allAxis.axisLabel.fontSize,
+                            onchange() {
+                                chart.setOption({
+                                    xAxis: {
+                                        axisLabel: {fontSize: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        axisLabel: {fontSize: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'xAxis.position',
+                            values: _values.xAxis.position,
+                            onchange() {
+                                chart.setOption({xAxis: {
+                                    position: this.value,
+                                    id: _controllingAxisIndex,
+                                }});
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'yAxis.position',
+                            values: _values.yAxis.position,
+                            onchange() {
+                                chart.setOption({yAxis: {
+                                    position: this.value,
+                                    id: _controllingAxisIndex,
+                                }});
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'axis.name fontSize',
+                            values: _values.allAxis.nameTextStyle.fontSize,
+                            onchange() {
+                                chart.setOption({
+                                    xAxis: {
+                                        nameTextStyle: {fontSize: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        nameTextStyle: {fontSize: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'nameLocation',
+                            values: _values.allAxis.nameLocation,
+                            onchange() {
+                                chart.setOption({
+                                    xAxis: {
+                                        nameLocation: this.value,
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        nameLocation: this.value,
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'nameTrancate:',
+                            values: [undefined, 20],
+                            onchange() {
+                                chart.setOption({
+                                    xAxis: {
+                                        nameTruncate: {maxWidth: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        nameTruncate: {maxWidth: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'inverse:',
+                            values: [false, true],
+                            onchange() {
+                                chart.setOption({
+                                    xAxis: {
+                                        inverse: this.value,
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        inverse: this.value,
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'axisLable.inside:',
+                            values: [false, true],
+                            onchange() {
+                                chart.setOption({
+                                    xAxis: {
+                                        axisLabel: {inside: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        axisLabel: {inside: this.value},
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'name rich text:',
+                            values: [false, true],
+                            onchange() {
+                                const richTag = this.value ? 'name_big_1' : undefined;
+                                chart.setOption({
+                                    xAxis: {
+                                        name: makeAxisName(
+                                            {xy: 'x', idx: _controllingAxisIndex, richTag}
+                                        ),
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        name: makeAxisName(
+                                            {xy: 'y', idx: _controllingAxisIndex, richTag}
+                                        ),
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            stateGroup: 'controlling_axis',
+                            type: 'select',
+                            text: 'label rich text:',
+                            values: [false, true],
+                            onchange() {
+                                const formatter = this.value
+                                    ? `{label_big_1|{value}}`
+                                    : null;
+                                chart.setOption({
+                                    xAxis: {
+                                        axisLabel: {formatter},
+                                        id: _controllingAxisIndex,
+                                    },
+                                    yAxis: {
+                                        axisLabel: {formatter},
+                                        id: _controllingAxisIndex,
+                                    },
+                                });
+                            }
+                        },
+                    ]
+                });
+
+                _controllingAxisIndices.forEach(idx => saveState(idx));
+
+                function saveState(controllingAxisIndex) {
+                    if (chart) {
+                        _controlledAxisIndexState[controllingAxisIndex] =
+                            chart.__testHelper.getState('controlling_axis');
+                    }
+                }
+                function restoreState(controllingAxisIndex) {
+                    if (chart) {
+                        const savedState = _controlledAxisIndexState[controllingAxisIndex];
+                        if (savedState) {
+                            chart.__testHelper.setState(savedState, 'controlling_axis');
+                        }
+                    }
+                }
+            });
+
+        </script>
+
+
     </body>
 </html>

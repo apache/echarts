@@ -19,7 +19,6 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import AxisBuilder, {AxisBuilderCfg} from './AxisBuilder';
 import AxisView from './AxisView';
 import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
@@ -28,11 +27,12 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
-import { isIntervalOrLogScale } from '../../scale/helper';
 
-const axisBuilderAttrs = [
-    'axisLine', 'axisTickLabel', 'axisName'
-] as const;
+const axisBuilderAttrs = {
+    axisLine: true,
+    axisTickLabel: true,
+    axisName: true,
+} as const;
 const selfBuilderAttrs = [
     'splitArea', 'splitLine', 'minorSplitLine'
 ] as const;
@@ -64,25 +64,13 @@ class CartesianAxisView extends AxisView {
 
         const gridModel = axisModel.getCoordSysModel();
 
-        const layout = cartesianAxisHelper.layout(gridModel, axisModel);
-
-        const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
-            handleAutoShown(elementType) {
-                const cartesians = gridModel.coordinateSystem.getCartesians();
-                for (let i = 0; i < cartesians.length; i++) {
-                    if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {
-                        // Still show axis tick or axisLine if other axis is value / log
-                        return true;
-                    }
-                }
-                // Not show axisTick or axisLine if other axis is category / time
-                return false;
-            }
-        } as AxisBuilderCfg, layout));
-
-        zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
-
-        this._axisGroup.add(axisBuilder.getGroup());
+        const grid = gridModel.coordinateSystem;
+        this._axisGroup.add(cartesianAxisHelper.buildCartesianAxisViewCommonPart(
+            axisBuilderAttrs,
+            grid.getRect(),
+            grid.getCartesians(),
+            axisModel
+        ));
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get([name, 'show'])) {

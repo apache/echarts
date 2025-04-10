@@ -26,7 +26,6 @@ import {
     makeColumnLayout,
     retrieveColumnLayout
 } from '../layout/barGrid';
-import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 
 import TimeScale from '../scale/Time';
 import Model from '../model/Model';
@@ -35,17 +34,18 @@ import LogScale from '../scale/Log';
 import Axis from './Axis';
 import {
     AxisBaseOption,
+    AxisBaseOptionCommon,
     CategoryAxisBaseOption,
     LogAxisBaseOption,
     TimeAxisLabelFormatterOption,
     ValueAxisBaseOption
 } from './axisCommonTypes';
-import CartesianAxisModel, { CartesianAxisPosition, inverseCartesianAxisPositionMap } from './cartesian/AxisModel';
+import CartesianAxisModel from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
 import { Dictionary, DimensionName, ScaleTick, TimeScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
-import Axis2D from './cartesian/Axis2D';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 
 
 type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
@@ -292,10 +292,10 @@ export function getAxisRawValue(axis: Axis, tick: ScaleTick): number | string {
 }
 
 /**
- * @param axis
+ * @deprecated
  * @return Be null/undefined if no labels.
  */
-export function estimateLabelUnionRect(axis: Axis) {
+export function legacyEstimateLabelUnionRect(axis: Axis) {
     const axisModel = axis.model;
     const scale = axis.scale;
 
@@ -321,7 +321,7 @@ export function estimateLabelUnionRect(axis: Axis) {
 
     let rect;
     let step = 1;
-    // Simple optimization for large amount of labels
+    // Simple optimization for large amount of category labels
     if (tickCount > 40) {
         step = Math.ceil(tickCount / 40);
     }
@@ -339,38 +339,21 @@ export function estimateLabelUnionRect(axis: Axis) {
     }
 
     return rect;
-}
 
-/**
- * @param axis
- * @return Be null/undefined if no name.
- */
-export function computeNameBoundingRect(axis: Axis2D): BoundingRect {
-    const axisModel = axis.model;
-    if (!axisModel.get('name')) {
-        return;
+    function rotateTextRect(textRect: BoundingRect, rotate: number) {
+        const rotateRadians = rotate * Math.PI / 180;
+        const beforeWidth = textRect.width;
+        const beforeHeight = textRect.height;
+        const afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians))
+            + Math.abs(beforeHeight * Math.sin(rotateRadians));
+        const afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians))
+            + Math.abs(beforeHeight * Math.cos(rotateRadians));
+        const rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
+
+        return rotatedRect;
     }
-    const axisLabelModel = axisModel.getModel('nameTextStyle');
-    const unRotatedNameBoundingRect = axisLabelModel.getTextRect(axisModel.get('name'));
-    const defaultRotation = axis.isHorizontal() || !isNameLocationCenter(axisModel.get('nameLocation')) ? 0 : -90;
-    const rotatedNameBoundingRect = rotateTextRect(
-        unRotatedNameBoundingRect, axisModel.get('nameRotate') ?? defaultRotation
-    );
-    return rotatedNameBoundingRect;
 }
 
-function rotateTextRect(textRect: RectLike, rotate: number) {
-    const rotateRadians = rotate * Math.PI / 180;
-    const beforeWidth = textRect.width;
-    const beforeHeight = textRect.height;
-    const afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians))
-        + Math.abs(beforeHeight * Math.sin(rotateRadians));
-    const afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians))
-        + Math.abs(beforeHeight * Math.cos(rotateRadians));
-    const rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
-
-    return rotatedRect;
-}
 
 /**
  * @param model axisLabelModel or axisTickModel
@@ -419,132 +402,6 @@ export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, 
     }
 }
 
-export function isNameLocationCenter(nameLocation: string) {
+export function isNameLocationCenter(nameLocation: AxisBaseOptionCommon['nameLocation']) {
     return nameLocation === 'middle' || nameLocation === 'center';
-}
-
-function isNameLocationStart(nameLocation: string) {
-    return nameLocation === 'start';
-}
-
-function isNameLocationEnd(nameLocation: string) {
-    return nameLocation === 'end';
-}
-
-
-export type CartesianAxisPositionMargins = {[K in CartesianAxisPosition]: number};
-
-export type ReservedSpace = {
-    labels: CartesianAxisPositionMargins,
-    name: CartesianAxisPositionMargins,
-    nameGap: CartesianAxisPositionMargins,
-    namePositionCurrAxis: CartesianAxisPosition
-};
-
-/*
- * Compute the reserved space (determined by axis labels and axis names) in each direction
- */
-export function computeReservedSpace(
-    axis: Axis2D, labelUnionRect: BoundingRect, nameBoundingRect: BoundingRect
-): ReservedSpace {
-    const reservedSpace: ReservedSpace = {
-        labels: {left: 0, top: 0, right: 0, bottom: 0},
-        nameGap: {left: 0, top: 0, right: 0, bottom: 0},
-        name: {left: 0, top: 0, right: 0, bottom: 0},
-        namePositionCurrAxis: null
-    };
-
-    const boundingRectDim = axis.isHorizontal() ? 'height' : 'width';
-
-    if (labelUnionRect) {
-        const margin = axis.model.get(['axisLabel', 'margin']);
-        reservedSpace.labels[axis.position] = labelUnionRect[boundingRectDim] + margin;
-    }
-
-    if (nameBoundingRect) {
-        let nameLocation = axis.model.get('nameLocation');
-        const onZeroOfAxis = axis.getAxesOnZeroOf()?.[0];
-        let namePositionOrthogonalAxis: CartesianAxisPosition = axis.position;
-        if (onZeroOfAxis && ['start', 'end'].includes(nameLocation)) {
-            const defaultZero = onZeroOfAxis.isHorizontal() ? 'left' : 'bottom';
-            namePositionOrthogonalAxis = onZeroOfAxis.inverse
-                ? inverseCartesianAxisPositionMap[defaultZero]
-                : defaultZero;
-        }
-
-        const nameGap = axis.model.get('nameGap');
-        const nameRotate = axis.model.get('nameRotate');
-
-        if (axis.inverse) {
-            if (nameLocation === 'start') {
-                nameLocation = 'end';
-            }
-            else if (nameLocation === 'end') {
-                nameLocation = 'start';
-            }
-        }
-
-        const nameBoundingRectSize = nameBoundingRect[boundingRectDim];
-
-        if (isNameLocationCenter(nameLocation)) {
-            reservedSpace.namePositionCurrAxis = axis.position;
-            reservedSpace.nameGap[axis.position] = nameGap;
-            reservedSpace.name[axis.position] = nameBoundingRectSize;
-        }
-        else {
-            const inverseBoundingRectDim = boundingRectDim === 'height' ? 'width' : 'height';
-            const nameBoundingRectSizeInverseDim = nameBoundingRect?.[inverseBoundingRectDim] || 0;
-
-            const rotationInRadians = nameRotate * (Math.PI / 180);
-            const sin = Math.sin(rotationInRadians);
-            const cos = Math.cos(rotationInRadians);
-
-            const nameRotationIsFirstOrThirdQuadrant = sin > 0 && cos > 0 || sin < 0 && cos < 0;
-            const nameRotationIsSecondOrFourthQuadrant = sin > 0 && cos < 0 || sin < 0 && cos > 0;
-            const nameRotationIsMultipleOf180degrees = sin === 0 || cos === 1 || cos === -1;
-            const nameRotationIsMultipleOf90degrees =
-                nameRotationIsMultipleOf180degrees || sin === 1 || sin === -1 || cos === 0;
-
-            const nameLocationIsStart = isNameLocationStart(nameLocation);
-            const nameLocationIsEnd = isNameLocationEnd(nameLocation);
-
-            const reservedSpacePosition = axis.isHorizontal()
-                ? (nameLocationIsStart ? 'left' : 'right')
-                : (nameLocationIsStart ? 'bottom' : 'top');
-
-            reservedSpace.namePositionCurrAxis = reservedSpacePosition;
-            reservedSpace.nameGap[reservedSpacePosition] = nameGap;
-            reservedSpace.name[reservedSpacePosition] = nameBoundingRectSizeInverseDim;
-
-            const reservedLabelSpace = reservedSpace.labels[namePositionOrthogonalAxis];
-            const reservedNameSpace = nameBoundingRectSize - reservedLabelSpace;
-
-            const orthogonalAxisPositionIsTop = namePositionOrthogonalAxis === 'top';
-            const orthogonalAxisPositionIsBottom = namePositionOrthogonalAxis === 'bottom';
-            const orthogonalAxisPositionIsLeft = namePositionOrthogonalAxis === 'left';
-            const orthogonalAxisPositionIsRight = namePositionOrthogonalAxis === 'right';
-
-            if (axis.isHorizontal() && nameRotationIsMultipleOf90degrees
-                || !axis.isHorizontal() && nameRotationIsMultipleOf180degrees) {
-                    reservedSpace.name[namePositionOrthogonalAxis] = nameBoundingRectSize / 2 - reservedLabelSpace;
-            }
-            else if (
-                axis.isHorizontal() && (
-                    nameLocationIsStart && orthogonalAxisPositionIsTop && nameRotationIsSecondOrFourthQuadrant
-                        || nameLocationIsStart && orthogonalAxisPositionIsBottom && nameRotationIsFirstOrThirdQuadrant
-                        || nameLocationIsEnd && orthogonalAxisPositionIsTop && nameRotationIsFirstOrThirdQuadrant
-                        || nameLocationIsEnd && orthogonalAxisPositionIsBottom && nameRotationIsSecondOrFourthQuadrant
-                )
-                || !axis.isHorizontal() && (
-                    nameLocationIsStart && orthogonalAxisPositionIsLeft && nameRotationIsFirstOrThirdQuadrant
-                        || nameLocationIsStart && orthogonalAxisPositionIsRight && nameRotationIsSecondOrFourthQuadrant
-                        || nameLocationIsEnd && orthogonalAxisPositionIsLeft && nameRotationIsSecondOrFourthQuadrant
-                        || nameLocationIsEnd && orthogonalAxisPositionIsRight && nameRotationIsFirstOrThirdQuadrant
-                )
-            ) {
-                reservedSpace.name[namePositionOrthogonalAxis] = reservedNameSpace;
-            }
-        }
-    }
-    return reservedSpace;
 }

@@ -37,7 +37,13 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     inverse?: boolean;
     // Axis name displayed.
     name?: string;
-    nameLocation?: 'start' | 'middle' | 'end';
+    /**
+     * - 'start': place name based on axis.extent[0].
+     * - 'end': place name based on axis.extent[1].
+     * - 'middle': place name based on the center of the axis.
+     * - 'center' has been deprecated, ='middle'.
+     */
+    nameLocation?: 'start' | 'middle' | 'center' | 'end';
     // By degree.
     nameRotate?: number;
     nameTruncate?: {
@@ -46,8 +52,22 @@ export interface AxisBaseOptionCommon extends ComponentOption,
         placeholder?: string;
     };
     nameTextStyle?: AxisNameTextStyleOption;
-    // The gap between axisName and axisLine.
+    /**
+     * This is the offset of axis name from:
+     * - If `nameMoveOverlap: false`: offset from axisLine.
+     * - If `nameMoveOverlap: true`: offset from axisLine+axisLabels.
+     *
+     * PENDING: should it named as "nameOffset" or support `[offsetX, offsetY]`?
+     */
     nameGap?: number;
+    /**
+     * Whether to auto move axis name to avoid overlap with axis labels.
+     * The procedure of axis name layout:
+     * 1. Firstly apply `nameRotate`, `nameTruncate`, `nameLocation`.
+     * 2. If `nameMoveOverlap: true`, move the name util it does not overlap with axis lables.
+     * 3. Then apply `nameGap`.
+     */
+    nameMoveOverlap?: boolean;
 
     silent?: boolean;
     triggerEvent?: boolean;

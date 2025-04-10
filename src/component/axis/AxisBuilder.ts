@@ -31,12 +31,12 @@ import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
 import {isNameLocationCenter, shouldShowAllLabels} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString } from '../../util/types';
-import { AxisBaseOption } from '../../coord/axisCommonTypes';
+import { AxisBaseOption, AxisBaseOptionCommon } from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
 import { prepareLayoutList, hideOverlap } from '../../label/labelLayoutHelper';
-import CartesianAxisModel from '../../coord/cartesian/AxisModel';
+
 
 const PI = Math.PI;
 
@@ -59,6 +59,7 @@ type AxisLabelText = graphic.Text & {
     __fullText: string
     __truncatedText: string
 } & ECElement;
+
 
 export interface AxisBuilderCfg {
     position?: number[]
@@ -104,6 +105,8 @@ interface TickCoord {
 }
 
 /**
+ * A builder for a straight-line axis.
+ *
  * A final axis is translated and rotated from a "standard axis".
  * So opt.position and opt.rotation is required.
  *
@@ -135,6 +138,9 @@ class AxisBuilder {
 
     private _transformGroup: graphic.Group;
 
+    /**
+     * [CAUTION]: axisModel.axis.extent/scale must be ready to use.
+     */
     constructor(axisModel: AxisBaseModel, opt?: AxisBuilderCfg) {
 
         this.opt = opt;
@@ -170,12 +176,13 @@ class AxisBuilder {
         this._transformGroup = transformGroup;
     }
 
-    hasBuilder(name: keyof typeof builders) {
-        return !!builders[name];
-    }
-
-    add(name: keyof typeof builders) {
-        builders[name](this.opt, this.axisModel, this.group, this._transformGroup);
+    build(axisPartNameMap: AxisBuilderAxisPartMap) {
+        // axisName layout depends on axisTickLabel layout result to resolve overlap.
+        each(['axisLine', 'axisTickLabel', 'axisName'] as const, partName => {
+            if (axisPartNameMap[partName]) {
+                builders[partName](this.opt, this.axisModel, this.group, this._transformGroup);
+            }
+        });
     }
 
     getGroup() {
@@ -241,7 +248,10 @@ interface AxisElementsBuilder {
     ):void
 }
 
-const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBuilder> = {
+export type AxisBuilderAxisPartName = 'axisLine' | 'axisTickLabel' | 'axisName';
+export type AxisBuilderAxisPartMap = {[axisPartName in AxisBuilderAxisPartName]?: boolean};
+
+const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
 
     axisLine(opt, axisModel, group, transformGroup) {
 
@@ -377,8 +387,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const nameLocation = axisModel.get('nameLocation');
         const nameDirection = opt.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
-        const axisToNameGapStartGap = axisModel instanceof CartesianAxisModel ? axisModel.axisToNameGapStartGap : 0;
-        const gap = (axisModel.get('nameGap') || 0) + axisToNameGapStartGap;
+        const gap = (axisModel.get('nameGap') || 0);
 
         const extent = axisModel.axis.getExtent();
         const gapSignal = extent[0] > extent[1] ? -1 : 1;
@@ -480,7 +489,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
 };
 
 function endTextLayout(
-    rotation: number, textPosition: 'start' | 'middle' | 'end', textRotate: number, extent: number[]
+    rotation: number, textPosition: AxisBaseOptionCommon['nameLocation'], textRotate: number, extent: number[]
 ) {
     const rotationDiff = remRadian(textRotate - rotation);
     let textAlign: ZRTextAlign;
