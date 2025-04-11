@@ -33,5 +33,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(ScatterView);
 
     registers.registerLayout(layoutPoints('scatter'));
+}
+
+export function installScatterJitter(registers: EChartsExtensionInstallRegisters) {
     registers.registerLayout(registers.PRIORITY.VISUAL.POST_CHART_LAYOUT, jitterLayout);
 }

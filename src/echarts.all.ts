@@ -91,7 +91,8 @@ import {
 import {
     UniversalTransition,
     LabelLayout,
-    AxisBreak
+    AxisBreak,
+    ScatterJitter
 } from './export/features';
 
 
@@ -357,3 +358,5 @@ use(UniversalTransition);
 use(LabelLayout);
 
 use(AxisBreak);
+
+use(ScatterJitter);
