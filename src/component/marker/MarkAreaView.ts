@@ -42,6 +42,7 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { parseDataValue } from '../../data/helper/dataValueHelper';
+import { addEditorInfo } from '../../util/editorInfo';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -327,6 +328,13 @@ class MarkAreaView extends MarkerView {
                             points: layout.points
                         }
                     });
+                    if (__EDITOR__) {
+                        addEditorInfo(polygon, {
+                            component: 'markArea',
+                            element: 'polygon',
+                            componentIndex: seriesModel.componentIndex
+                        });
+                    }
                     areaData.setItemGraphicEl(idx, polygon);
                     polygonGroup.group.add(polygon);
                 }
@@ -348,6 +356,13 @@ class MarkAreaView extends MarkerView {
                                 points: layout.points
                             }
                         });
+                        if (__EDITOR__) {
+                            addEditorInfo(polygon, {
+                                component: 'markArea',
+                                element: 'polygon',
+                                componentIndex: seriesModel.componentIndex
+                            });
+                        }
                     }
                     areaData.setItemGraphicEl(newIdx, polygon);
                     polygonGroup.group.add(polygon);
@@ -375,6 +390,12 @@ class MarkAreaView extends MarkerView {
                     defaultText: areaData.getName(idx) || '',
                     inheritColor: isString(style.fill)
                         ? colorUtil.modifyAlpha(style.fill, 1) : '#000'
+                }, undefined,
+                {
+                    component: 'markArea',
+                    componentIndex: seriesModel.componentIndex,
+                    element: 'label',
+                    dataIndex: idx
                 }
             );
 

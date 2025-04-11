@@ -27,6 +27,7 @@ import ChordPiece from './ChordPiece';
 import { ChordEdge } from './ChordEdge';
 import { parsePercent } from '../../util/number';
 import { getECData } from '../../util/innerStore';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const RADIAN = Math.PI / 180;
 
@@ -62,6 +63,16 @@ class ChordView extends ChartView {
                 if (layout) {
                     const el = new ChordPiece(data, newIdx, startAngle);
                     getECData(el).dataIndex = newIdx;
+                    if (__EDITOR__) {
+                        addEditorInfo(el, {
+                            component: 'series',
+                            subType: 'chord',
+                            element: 'piece',
+                            componentIndex: seriesModel.componentIndex,
+                            dataIndex: newIdx,
+
+                        });
+                    }
                     group.add(el);
                 }
             })
@@ -87,6 +98,15 @@ class ChordView extends ChartView {
                 }
                 else {
                     el.updateData(data, newIdx, startAngle);
+                }
+                if (__EDITOR__) {
+                    addEditorInfo(el, {
+                        component: 'series',
+                        subType: 'chord',
+                        element: 'piece',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIdx
+                    });
                 }
                 group.add(el);
             })
@@ -125,12 +145,30 @@ class ChordView extends ChartView {
             .add(function (newIdx) {
                 const el = new ChordEdge(nodeData, edgeData, newIdx, startAngle);
                 getECData(el).dataIndex = newIdx;
+                if (__EDITOR__) {
+                    addEditorInfo(el, {
+                        component: 'series',
+                        subType: 'chord',
+                        element: 'edge',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIdx
+                    });
+                }
                 group.add(el);
             })
 
             .update(function (newIdx, oldIdx) {
                 const el = oldData.getItemGraphicEl(oldIdx) as ChordEdge;
                 el.updateData(nodeData, edgeData, newIdx, startAngle);
+                if (__EDITOR__) {
+                    addEditorInfo(el, {
+                        component: 'series',
+                        subType: 'chord',
+                        element: 'edge',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIdx
+                    });
+                }
                 group.add(el);
             })
 

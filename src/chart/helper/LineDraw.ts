@@ -31,12 +31,14 @@ import {
     DisplayState,
     LabelOption,
     DefaultEmphasisFocus,
-    BlurScope
+    BlurScope,
+    EditorInfo
 } from '../../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Model from '../../model/Model';
 import { getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
+import { addEditorInfo } from '../../util/editorInfo';
 
 interface LineLike extends graphic.Group {
     updateData(data: SeriesData, idx: number, scope?: LineDrawSeriesScope): void
@@ -45,7 +47,9 @@ interface LineLike extends graphic.Group {
 }
 
 interface LineLikeCtor {
-    new(data: SeriesData, idx: number, scope?: LineDrawSeriesScope): LineLike
+    new(
+        data: SeriesData, idx: number, scope?: LineDrawSeriesScope, editorInfo?: EditorInfo
+    ): LineLike
 }
 
 interface LineDrawStateOption {
@@ -111,11 +115,14 @@ class LineDraw {
 
     private _progressiveEls: LineLike[];
 
-    constructor(LineCtor?: LineLikeCtor) {
+    private _editorInfo: EditorInfo;
+
+    constructor(LineCtor?: LineLikeCtor, editorInfo?: EditorInfo) {
         this._LineCtor = LineCtor || LineGroup;
+        this._editorInfo = editorInfo;
     }
 
-    updateData(lineData: ListForLineDraw) {
+    updateData(lineData: ListForLineDraw, componentIndex?: number) {
         // Remove progressive els.
         this._progressiveEls = null;
 
@@ -135,10 +142,10 @@ class LineDraw {
 
         lineData.diff(oldLineData)
             .add((idx) => {
-                this._doAdd(lineData, idx, seriesScope);
+                this._doAdd(lineData, idx, seriesScope, componentIndex);
             })
             .update((newIdx, oldIdx) => {
-                this._doUpdate(oldLineData, lineData, oldIdx, newIdx, seriesScope);
+                this._doUpdate(oldLineData, lineData, oldIdx, newIdx, seriesScope, componentIndex);
             })
             .remove((idx) => {
                 group.remove(oldLineData.getItemGraphicEl(idx));
@@ -165,7 +172,7 @@ class LineDraw {
         this.group.removeAll();
     };
 
-    incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: ListForLineDraw) {
+    incrementalUpdate(taskParams: StageHandlerProgressParams, lineData: ListForLineDraw, componentIndex?: number) {
 
         this._progressiveEls = [];
 
@@ -180,7 +187,23 @@ class LineDraw {
             const itemLayout = lineData.getItemLayout(idx);
 
             if (lineNeedsDraw(itemLayout)) {
-                const el = new this._LineCtor(lineData, idx, this._seriesScope);
+                const el = new this._LineCtor(
+                    lineData,
+                    idx,
+                    this._seriesScope,
+                    {
+                        ...this._editorInfo,
+                        componentIndex,
+                        dataIndex: idx
+                    }
+                );
+                if (__EDITOR__) {
+                    addEditorInfo(el, {
+                        ...this._editorInfo,
+                        componentIndex,
+                        dataIndex: idx
+                    });
+                }
                 el.traverse(updateIncrementalAndHover);
 
                 this.group.add(el);
@@ -202,7 +225,8 @@ class LineDraw {
     private _doAdd(
         lineData: ListForLineDraw,
         idx: number,
-        seriesScope: LineDrawSeriesScope
+        seriesScope: LineDrawSeriesScope,
+        componentIndex?: number
     ) {
         const itemLayout = lineData.getItemLayout(idx);
 
@@ -210,7 +234,22 @@ class LineDraw {
             return;
         }
 
-        const el = new this._LineCtor(lineData, idx, seriesScope);
+        const el = new this._LineCtor(
+            lineData,
+            idx,
+            seriesScope, {
+                ...this._editorInfo,
+                componentIndex,
+                dataIndex: idx
+            }
+        );
+        if (__EDITOR__) {
+            addEditorInfo(el, {
+                ...this._editorInfo,
+                componentIndex,
+                dataIndex: idx
+            });
+        }
         lineData.setItemGraphicEl(idx, el);
         this.group.add(el);
     }
@@ -219,7 +258,8 @@ class LineDraw {
         newLineData: ListForLineDraw,
         oldIdx: number,
         newIdx: number,
-        seriesScope: LineDrawSeriesScope
+        seriesScope: LineDrawSeriesScope,
+        componentIndex?: number
     ) {
         let itemEl = oldLineData.getItemGraphicEl(oldIdx) as LineLike;
 
@@ -229,7 +269,22 @@ class LineDraw {
         }
 
         if (!itemEl) {
-            itemEl = new this._LineCtor(newLineData, newIdx, seriesScope);
+            itemEl = new this._LineCtor(
+                newLineData,
+                newIdx,
+                seriesScope, {
+                    ...this._editorInfo,
+                    componentIndex,
+                    dataIndex: newIdx
+                }
+            );
+            if (__EDITOR__) {
+                addEditorInfo(itemEl, {
+                    ...this._editorInfo,
+                    componentIndex,
+                    dataIndex: newIdx
+                });
+            }
         }
         else {
             itemEl.updateData(newLineData, newIdx, seriesScope);

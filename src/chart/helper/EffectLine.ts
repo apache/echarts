@@ -31,6 +31,7 @@ import type SeriesData from '../../data/SeriesData';
 import { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import Model from '../../model/Model';
 import { ColorString } from '../../util/types';
+import { addEditorInfo } from '../../util/editorInfo';
 
 export type ECSymbolOnEffectLine = ReturnType<typeof createSymbol> & {
     __t: number
@@ -59,7 +60,12 @@ class EffectLine extends graphic.Group {
     }
 
     createLine(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope): graphic.Group {
-        return new Line(lineData, idx, seriesScope);
+        return new Line(lineData, idx, seriesScope, {
+            component: 'marker',
+            element: 'line',
+            dataIndex: idx,
+            componentIndex: lineData.getRawIndex(idx),
+        });
     }
 
     private _updateEffectSymbol(lineData: SeriesData, idx: number) {
@@ -85,6 +91,14 @@ class EffectLine extends graphic.Group {
             symbol.z2 = 100;
             symbol.culling = true;
 
+            if (__EDITOR__) {
+                addEditorInfo(symbol, {
+                    component: 'marker',
+                    element: 'line',
+                    dataIndex: idx,
+                    componentIndex: lineData.getRawIndex(idx),
+                });
+            }
             this.add(symbol);
         }
 
