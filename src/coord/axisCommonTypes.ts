@@ -41,6 +41,8 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     // By degree.
     nameRotate?: number;
     nameTruncate?: {
+        overflow?: TextStyleProps['overflow'];
+        width?: number;
         maxWidth?: number;
         ellipsis?: string;
         placeholder?: string;
