@@ -39,6 +39,7 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
 import { createClipPath } from '../helper/createClipPathFromCoordSys';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
@@ -171,6 +172,15 @@ class PictorialBarView extends ChartView {
                 const bar = createBar(data, opt, symbolMeta);
 
                 data.setItemGraphicEl(dataIndex, bar);
+                if (__EDITOR__) {
+                    addEditorInfo(bar, {
+                        component: 'series',
+                        subType: 'pictorialBar',
+                        element: 'symbolPath',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex
+                    });
+                }
                 group.add(bar);
 
                 updateCommon(bar, opt, symbolMeta);
@@ -203,6 +213,15 @@ class PictorialBarView extends ChartView {
                 data.setItemGraphicEl(newIndex, bar);
                 bar.__pictorialSymbolMeta = symbolMeta;
                 // Add back
+                if (__EDITOR__) {
+                    addEditorInfo(bar, {
+                        component: 'series',
+                        subType: 'pictorialBar',
+                        element: 'symbolPath',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIndex
+                    });
+                }
                 group.add(bar);
 
                 updateCommon(bar, opt, symbolMeta);
@@ -942,6 +961,14 @@ function updateCommon(
             inheritColor: symbolMeta.style.fill as ColorString,
             defaultOpacity: symbolMeta.style.opacity,
             defaultOutsidePosition: barPositionOutside
+        },
+        undefined,
+        {
+            component: 'series',
+            element: 'label',
+            subType: 'pictorialBar',
+            componentIndex: opt.seriesModel.componentIndex,
+            dataIndex
         }
     );
 

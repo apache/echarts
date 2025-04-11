@@ -28,6 +28,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import SeriesData from '../../data/SeriesData';
 import { BoxplotItemLayout } from './boxplotLayout';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { addEditorInfo } from '../../util/editorInfo';
 
 class BoxplotView extends ChartView {
     static type = 'boxplot';
@@ -54,6 +55,15 @@ class BoxplotView extends ChartView {
                     const itemLayout = data.getItemLayout(newIdx) as BoxplotItemLayout;
                     const symbolEl = createNormalBox(itemLayout, data, newIdx, constDim, true);
                     data.setItemGraphicEl(newIdx, symbolEl);
+                    if (__EDITOR__) {
+                        addEditorInfo(symbolEl, {
+                            component: 'series',
+                            subType: 'boxplot',
+                            element: 'symbol',
+                            componentIndex: seriesModel.componentIndex,
+                            dataIndex: newIdx
+                        });
+                    }
                     group.add(symbolEl);
                 }
             })
@@ -75,6 +85,15 @@ class BoxplotView extends ChartView {
                     updateNormalBoxData(itemLayout, symbolEl, data, newIdx);
                 }
 
+                if (__EDITOR__) {
+                    addEditorInfo(symbolEl, {
+                        component: 'series',
+                        subType: 'boxplot',
+                        element: 'symbol',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIdx
+                    });
+                }
                 group.add(symbolEl);
 
                 data.setItemGraphicEl(newIdx, symbolEl);

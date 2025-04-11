@@ -43,6 +43,7 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import {createTextStyle} from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const Rect = graphic.Rect;
 
@@ -307,7 +308,7 @@ class SliderZoomView extends DataZoomView {
         const barGroup = this._displayables.sliderGroup;
         const brushSelect = dataZoomModel.get('brushSelect');
 
-        barGroup.add(new Rect({
+        const backgroundRect = new Rect({
             silent: true,
             shape: {
                 x: 0, y: 0, width: size[0], height: size[1]
@@ -316,7 +317,14 @@ class SliderZoomView extends DataZoomView {
                 fill: dataZoomModel.get('backgroundColor')
             },
             z2: -40
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(backgroundRect, {
+                component: 'dataZoom',
+                element: 'backgroundRect'
+            });
+        }
+        barGroup.add(backgroundRect);
 
         // Click panel, over shadow, below handles.
         const clickPanel = new Rect({
@@ -330,6 +338,12 @@ class SliderZoomView extends DataZoomView {
             onclick: bind(this._onClickPanel, this)
         });
 
+        if (__EDITOR__) {
+            addEditorInfo(clickPanel, {
+                component: 'dataZoom',
+                element: 'clickPanel'
+            });
+        }
         const zr = this.api.getZr();
         if (brushSelect) {
             clickPanel.on('mousedown', this._onBrushStart, this);
@@ -453,6 +467,16 @@ class SliderZoomView extends DataZoomView {
                 silent: true,
                 z2: -19
             });
+            if (__EDITOR__) {
+                addEditorInfo(polygon, {
+                    component: 'dataZoom',
+                    element: 'polygon'
+                });
+                addEditorInfo(polyline, {
+                    component: 'dataZoom',
+                    element: 'polyline'
+                });
+            }
             group.add(polygon);
             group.add(polyline);
             return group;
@@ -547,10 +571,16 @@ class SliderZoomView extends DataZoomView {
             }
         });
 
+        if (__EDITOR__) {
+            addEditorInfo(filler, {
+                component: 'dataZoom',
+                element: 'filler'
+            });
+        }
         sliderGroup.add(filler);
 
         // Frame border.
-        sliderGroup.add(new Rect({
+        const frameBorder = new Rect({
             silent: true,
             subPixelOptimize: true,
             shape: {
@@ -567,7 +597,14 @@ class SliderZoomView extends DataZoomView {
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
                 fill: 'rgba(0,0,0,0)'
             }
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(frameBorder, {
+                component: 'dataZoom',
+                element: 'fillerBackground'
+            });
+        }
+        sliderGroup.add(frameBorder);
 
         // Left and right handle to resize
         each([0, 1] as const, function (handleIndex) {
@@ -587,6 +624,12 @@ class SliderZoomView extends DataZoomView {
                 iconStr,
                 -1, 0, 2, 2, null, true
             ) as graphic.Path;
+            if (__EDITOR__) {
+                addEditorInfo(path, {
+                    component: 'dataZoom',
+                    element: 'handle'
+                });
+            }
             path.attr({
                 cursor: getCursor(this._orient),
                 draggable: true,
@@ -622,8 +665,7 @@ class SliderZoomView extends DataZoomView {
             const handleLabel = dataZoomModel.get('handleLabel') || {};
             const handleLabelShow = handleLabel.show || false;
 
-            thisGroup.add(
-                handleLabels[handleIndex] = new graphic.Text({
+            handleLabels[handleIndex] = new graphic.Text({
                 silent: true,
                 invisible: !handleLabelShow,
                 style: createTextStyle(textStyleModel, {
@@ -634,7 +676,14 @@ class SliderZoomView extends DataZoomView {
                     font: textStyleModel.getFont()
                 }),
                 z2: 10
-            }));
+            });
+            if (__EDITOR__) {
+                addEditorInfo(handleLabels[handleIndex], {
+                    component: 'dataZoom',
+                    element: 'handleLabel'
+                });
+            }
+            thisGroup.add(handleLabels[handleIndex]);
 
         }, this);
 
@@ -681,6 +730,20 @@ class SliderZoomView extends DataZoomView {
                     api.leaveEmphasis(moveHandle);
                 });
 
+            if (__EDITOR__) {
+                addEditorInfo(moveHandle, {
+                    component: 'dataZoom',
+                    element: 'moveHandle'
+                });
+                addEditorInfo(moveHandleIcon, {
+                    component: 'dataZoom',
+                    element: 'moveHandleIcon'
+                });
+                addEditorInfo(actualMoveZone, {
+                    component: 'dataZoom',
+                    element: 'actualMoveZone'
+                });
+            }
             sliderGroup.add(moveHandle);
             sliderGroup.add(moveHandleIcon);
             sliderGroup.add(actualMoveZone);
@@ -1024,6 +1087,12 @@ class SliderZoomView extends DataZoomView {
                 silent: true,
                 style: dataZoomModel.getModel('brushStyle').getItemStyle()
             });
+            if (__EDITOR__) {
+                addEditorInfo(brushRect, {
+                    component: 'dataZoom',
+                    element: 'brushRect'
+                });
+            }
             displayables.sliderGroup.add(brushRect);
         }
 

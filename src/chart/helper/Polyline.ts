@@ -22,6 +22,7 @@ import { toggleHoverEmphasis } from '../../util/states';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import type SeriesData from '../../data/SeriesData';
 import { BlurScope, DefaultEmphasisFocus } from '../../util/types';
+import { addEditorInfo } from '../../util/editorInfo';
 
 class Polyline extends graphic.Group {
     constructor(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
@@ -39,6 +40,13 @@ class Polyline extends graphic.Group {
             }
         });
 
+        if (__EDITOR__) {
+            addEditorInfo(line, {
+                component: 'series',
+                subType: 'line',
+                element: 'polyline'
+            });
+        }
         this.add(line);
 
         this._updateCommonStl(lineData, idx, seriesScope);

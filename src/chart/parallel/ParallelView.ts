@@ -31,6 +31,7 @@ import { numericToNumber } from '../../util/number';
 import { eqNaN } from 'zrender/src/core/util';
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const DEFAULT_SMOOTH = 0.3;
 
@@ -81,12 +82,30 @@ class ParallelView extends ChartView {
 
         function add(newDataIndex: number) {
             const line = addEl(data, dataGroup, newDataIndex, dimensions, coordSys);
+            if (__EDITOR__) {
+                addEditorInfo(line, {
+                    component: 'series',
+                    subType: 'parallel',
+                    element: 'line',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex: newDataIndex
+                });
+            }
             updateElCommon(line, data, newDataIndex, seriesScope);
         }
 
         function update(newDataIndex: number, oldDataIndex: number) {
             const line = oldData.getItemGraphicEl(oldDataIndex) as graphic.Polyline;
 
+            if (__EDITOR__) {
+                addEditorInfo(line, {
+                    component: 'series',
+                    subType: 'parallel',
+                    element: 'line',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex: newDataIndex
+                });
+            }
             const points = createLinePoints(data, newDataIndex, dimensions, coordSys);
             data.setItemGraphicEl(newDataIndex, line);
 
@@ -134,6 +153,15 @@ class ParallelView extends ChartView {
 
         for (let dataIndex = taskParams.start; dataIndex < taskParams.end; dataIndex++) {
             const line = addEl(data, this._dataGroup, dataIndex, dimensions, coordSys);
+            if (__EDITOR__) {
+                addEditorInfo(line, {
+                    component: 'series',
+                    subType: 'parallel',
+                    element: 'line',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex: dataIndex
+                });
+            }
             line.incremental = true;
             updateElCommon(line, data, dataIndex, seriesScope);
             progressiveEls.push(line);

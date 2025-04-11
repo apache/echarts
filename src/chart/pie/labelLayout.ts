@@ -28,6 +28,7 @@ import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import { each, isNumber } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
 import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const RADIAN = Math.PI / 180;
 
@@ -377,6 +378,22 @@ export default function pieLabelLayout(
         const label = sector.getTextContent();
         const labelLine = sector.getTextGuideLine();
 
+        if (__EDITOR__) {
+            addEditorInfo(label, {
+                component: 'series',
+                subType: 'pie',
+                element: 'label',
+                dataIndex: idx,
+                componentIndex: seriesModel.componentIndex
+            });
+            addEditorInfo(labelLine, {
+                component: 'series',
+                subType: 'pie',
+                element: 'labelLine',
+                dataIndex: idx,
+                componentIndex: seriesModel.componentIndex
+            });
+        }
         const itemModel = data.getItemModel<PieDataItemOption>(idx);
         const labelModel = itemModel.getModel('label');
         // Use position in normal or emphasis
