@@ -36,6 +36,7 @@ import {
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
 import { error, makePrintable } from '../../util/log';
+import { round } from '../../util/number';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
@@ -102,8 +103,8 @@ export class DataFormatMixin {
             const stackTop = data.get(stackResultDim, dataIndex) as number;
             const stackBottom = data.get(stackedOverDim, dataIndex) as number;
             if (!isNaN(stackTop) && !isNaN(stackBottom)) {
-                const fullPercentValue = stackTop - stackBottom;
-                params.percent = Math.round(fullPercentValue * 100) / 100;
+                const normalizedValue = stackTop - stackBottom;
+                params.percent = round(normalizedValue, 2);
             }
         }
         return params;
