@@ -76,7 +76,8 @@ export function defaultSeriesFormatTooltip(opt: {
             // this series gives its individual contribution.
             if (!isNaN(stackTop) && !isNaN(stackBottom)) {
                 const percentValue = stackTop - stackBottom;
-                inlineValue = `${inlineValue} (${percentValue.toFixed(1)}%)`;
+                const formattedPercentValue = `${Number.parseFloat(percentValue.toFixed(2))}%`;
+                inlineValue = `${inlineValue} (${formattedPercentValue})`;
             }
         }
     }

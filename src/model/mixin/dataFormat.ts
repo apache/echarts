@@ -72,7 +72,7 @@ export class DataFormatMixin {
         const isSeries = mainType === 'series';
         const userOutput = data.userOutput && data.userOutput.get();
 
-        return {
+        const params: CallbackDataParams = {
             componentType: mainType,
             componentSubType: this.subType,
             componentIndex: this.componentIndex,
@@ -93,6 +93,20 @@ export class DataFormatMixin {
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
             $vars: ['seriesName', 'name', 'value']
         };
+
+        const isPercentStackEnabled = data.getCalculationInfo('isPercentStackEnabled');
+        if (isPercentStackEnabled) {
+            // Include the normalized value when stackPercent is true.
+            const stackResultDim = data.getCalculationInfo('stackResultDimension');
+            const stackedOverDim = data.getCalculationInfo('stackedOverDimension');
+            const stackTop = data.get(stackResultDim, dataIndex) as number;
+            const stackBottom = data.get(stackedOverDim, dataIndex) as number;
+            if (!isNaN(stackTop) && !isNaN(stackBottom)) {
+                const fullPercentValue = stackTop - stackBottom;
+                params.percent = Math.round(fullPercentValue * 100) / 100;
+            }
+        }
+        return params;
     }
 
     /**

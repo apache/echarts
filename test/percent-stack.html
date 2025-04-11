@@ -53,7 +53,11 @@ under the License.
                         type: "category",
                         data: ["a", "b", "c", "d", "e"],
                     },
-                    yAxis: { type: "value", max: 100 },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: { formatter: "{value}%" },
+                        max: 100,
+                    },
                     series: [
                         {
                             name: "Grapes",
@@ -102,7 +106,11 @@ under the License.
                         type: "category",
                         data: ["a", "b", "c", "d", "e"],
                     },
-                    yAxis: { type: "value", max: 100 },
+                    yAxis: {
+                        type: "value",
+                        max: 100,
+                        axisLabel: { formatter: "{value}%" },
+                    },
                     series: [
                         {
                             name: "Grapes",
@@ -161,15 +169,24 @@ under the License.
                     stack: "total",
                     stackPercent: true,
                     data: rawData[sid],
-                    label: { show: true },
+                    label: {
+                        show: true,
+                        formatter: (params) => {
+                            return `${params.percent}%`;
+                        },
+                    },
                 }));
                 const option = {
                     legend: {},
                     tooltip: {
                         trigger: "axis",
                         axisPointer: { type: "shadow" },
+                        order: "seriesDesc",
                     },
-                    yAxis: { type: "value" },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: { formatter: "{value}%" },
+                    },
                     xAxis: { type: "category", data: days },
                     series,
                 };
@@ -306,7 +323,10 @@ under the License.
                     },
                     legend: {},
                     xAxis: { type: "category", data: ["A", "B", "C", "D"] },
-                    yAxis: { type: "value" },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: { formatter: "{value}%" },
+                    },
                     series: [
                         {
                             name: "Alpha",

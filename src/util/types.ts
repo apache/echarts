@@ -702,7 +702,7 @@ export interface CallbackDataParams {
     marker?: TooltipMarker;
     status?: DisplayState;
     dimensionIndex?: number;
-    percent?: number; // Only for chart like 'pie'
+    percent?: number; // Only for chart like 'pie' or when 'stackPercent' is used.
 
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
