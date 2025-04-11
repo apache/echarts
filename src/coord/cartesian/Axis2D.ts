@@ -24,7 +24,6 @@ import CartesianAxisModel, { CartesianAxisPosition } from './AxisModel';
 import Grid from './Grid';
 import { OptionAxisType } from '../axisCommonTypes';
 import OrdinalScale from '../../scale/Ordinal';
-import { JitterStorable, JitterData } from '../../util/jitter';
 
 
 interface Axis2D {
@@ -40,7 +39,7 @@ interface Axis2D {
      */
     toGlobalCoord(coord: number): number;
 }
-class Axis2D extends Axis implements JitterStorable {
+class Axis2D extends Axis {
 
     /**
      * Axis position
@@ -66,11 +65,6 @@ class Axis2D extends Axis implements JitterStorable {
      * Injected outside.
      */
     grid: Grid;
-
-    /**
-     * See the comment of `JitterStorable`.
-     */
-    jitterStore: JitterData[] = [];
 
 
     constructor(

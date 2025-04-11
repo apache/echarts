@@ -6,12 +6,11 @@ import type SeriesModel from '../model/Series';
 import { makeInner } from './model';
 
 export function needFixJitter(seriesModel: SeriesModel, axis: Axis): boolean {
-    const { coordinateSystem } = seriesModel;
-    const { type: coordType } = coordinateSystem;
-    const baseAxis = coordinateSystem.getBaseAxis();
-    const { type: scaleType } = baseAxis.scale;
-    const seriesValid = coordType === 'cartesian2d'
-        && (scaleType === 'category' || scaleType === 'ordinal')
+    const coordinateSystem = seriesModel.coordinateSystem;
+    const coordType = coordinateSystem && coordinateSystem.type;
+    const baseAxis = coordinateSystem && coordinateSystem.getBaseAxis && coordinateSystem.getBaseAxis();
+    const scaleType = baseAxis && baseAxis.scale && baseAxis.scale.type;
+    const seriesValid = coordType === 'cartesian2d' && scaleType === 'ordinal'
         || coordType === 'single';
 
     const axisValid = (axis.model as AxisBaseModel).get('jitter') > 0;
@@ -27,17 +26,6 @@ export type JitterData = {
 };
 
 const inner = makeInner<{ items: JitterData }, Axis2D | SingleAxis>();
-
-/**
- * JitterStorable is a mixin for Axis2D and SingleAxis with jitterOverlap being
- * `true`. It stores the jitter data for each axis so that the jittered data
- * points can avoid overlapping. If jitterOverlap is `false`, the jitter data
- * is not stored.
- * It's created in layout stage when data update.
- */
-export interface JitterStorable {
-    jitterStore: JitterData[]
-}
 
 /**
  * Fix jitter for overlapping data points.
