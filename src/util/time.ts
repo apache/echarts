@@ -164,9 +164,11 @@ export function leveledFormat(
     idx: number,
     formatter: TimeAxisLabelFormatterOption,
     lang: string | Model<LocaleOption>,
-    isUTC: boolean
+    isUTC: boolean,
+    formatterMinUnit: PrimaryTimeUnit
 ) {
     let template = null;
+    const level = tick.level;
     if (zrUtil.isString(formatter)) {
         // Single formatter for all units at all levels
         template = formatter;
@@ -174,12 +176,14 @@ export function leveledFormat(
     else if (zrUtil.isFunction(formatter)) {
         // Callback formatter
         template = formatter(tick.value, idx, {
-            level: tick.level
+            level
         });
     }
     else {
         const defaults = zrUtil.extend({}, defaultLeveledFormatter);
-        if (tick.level > 0) {
+        if (level > 0) {
+            // When there are multiple levels and this is the more significant
+            // one, emphasis this level
             for (let i = 0; i < primaryTimeUnits.length; ++i) {
                 defaults[primaryTimeUnits[i]] = `{primary|${defaults[primaryTimeUnits[i]]}}`;
             }
@@ -192,13 +196,29 @@ export function leveledFormat(
             )
             : defaults) as any;
 
-        const unit = getUnitFromValue(tick.value, isUTC);
+        let unit = getUnitFromValue(tick.value, isUTC);
+        if (formatterMinUnit) {
+            // When formatterMinUnit is defined and larger than unit,
+            // use formatterMinUnit instead
+            // For example, when formatterMinUnit is 'day', and unit is 'hour',
+            // use 'day' instead of 'hour'
+            const formatterMinUnitIdx = zrUtil.indexOf(primaryTimeUnits, formatterMinUnit);
+            if (formatterMinUnitIdx >= 0) {
+                unit = primaryTimeUnits[
+                    Math.min(
+                        zrUtil.indexOf(primaryTimeUnits, unit),
+                        formatterMinUnitIdx
+                    )
+                ];
+            }
+        }
+
         if (mergedFormatter[unit]) {
             template = mergedFormatter[unit];
         }
         else if (mergedFormatter.inherit) {
             // Unit formatter is not defined and should inherit from bigger units
-            const targetId = timeUnits.indexOf(unit);
+            const targetId = zrUtil.indexOf(timeUnits, unit);
             for (let i = targetId - 1; i >= 0; --i) {
                 if (mergedFormatter[unit]) {
                     template = mergedFormatter[unit];
@@ -209,9 +229,9 @@ export function leveledFormat(
         }
 
         if (zrUtil.isArray(template)) {
-            let levelId = tick.level == null
+            let levelId = level == null
                 ? 0
-                : (tick.level >= 0 ? tick.level : template.length + tick.level);
+                : (level >= 0 ? level : template.length + level);
             levelId = Math.min(levelId, template.length - 1);
             template = template[levelId];
         }
