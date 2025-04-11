@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import { AxisBaseOption } from './axisCommonTypes';
 
-
 const defaultOption: AxisBaseOption = {
     show: true,
     // zlevel: 0,
@@ -66,7 +65,8 @@ const defaultOption: AxisBaseOption = {
         },
         // The arrow at both ends the the axis.
         symbol: ['none', 'none'],
-        symbolSize: [10, 15]
+        symbolSize: [10, 15],
+        breakLine: true,
     },
     axisTick: {
         show: true,
@@ -89,7 +89,13 @@ const defaultOption: AxisBaseOption = {
         showMaxLabel: null,
         margin: 8,
         // formatter: null,
-        fontSize: 12
+        fontSize: 12,
+        // In scenarios like axis labels, when labels text's progression direction matches the label
+        // layout direction (e.g., when all letters are in a single line), extra start/end margin is
+        // needed to prevent the text from appearing visually joined. In the other case, when lables
+        // are stacked (e.g., having rotation or horizontal labels on yAxis), the layout needs to be
+        // compact, so NO extra top/bottom margin should be applied.
+        textMargin: [0, 3], // Empirical default value.
     },
     splitLine: {
         show: true,
@@ -106,6 +112,26 @@ const defaultOption: AxisBaseOption = {
         areaStyle: {
             color: ['rgba(250,250,250,0.2)', 'rgba(210,219,238,0.2)']
         }
+    },
+    breakArea: {
+        show: true,
+        itemStyle: {
+            color: '#fff',
+            // Break border color should be darker than the splitLine
+            // because it has opacity and should be more prominent
+            borderColor: '#C2CADA',
+            borderWidth: 1,
+            borderType: [3, 3],
+            opacity: 0.6
+        },
+        zigzagAmplitude: 4,
+        zigzagMinSpan: 4,
+        zigzagMaxSpan: 20,
+        zigzagZ: 100,
+        expandOnClick: true,
+    },
+    breakLabelLayout: {
+        moveOverlap: 'auto',
     }
 };
 

@@ -93,7 +93,7 @@ class AngleAxisView extends AxisView {
         const polar = angleAxis.polar;
         const radiusExtent = polar.getRadiusAxis().getExtent();
 
-        const ticksAngles = angleAxis.getTicksCoords();
+        const ticksAngles = angleAxis.getTicksCoords({breakTicks: 'none'});
         const minorTickAngles = angleAxis.getMinorTicksCoords();
 
         const labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem: TickLabel) {

@@ -173,7 +173,7 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
-    const errors = [];
+    const errors = []; // string[]
 
     const page = await browser.newPage();
     page.setRequestInterception(true);
@@ -207,14 +207,36 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
     await page.exposeFunction('__VRT_MOUSE_MOVE__', async (x, y) =>  {
         await page.mouse.move(x, y);
     });
-    await page.exposeFunction('__VRT_MOUSE_DOWN__', async () =>  {
-        await page.mouse.down();
+    await page.exposeFunction('__VRT_MOUSE_DOWN__', async (errMsgPart) =>  {
+        try {
+            await page.mouse.down();
+        }
+        catch (err) {
+            // e.g., if double mousedown without a mouseup, error "'left' is already pressed." will be thrown.
+            // Report to users to re-record the test case.
+            if (errMsgPart) {
+                if ((err.message + '').indexOf('already pressed') >= 0) {
+                    errMsgPart += ' May be caused by duplicated mousedowns without a mouseup.'
+                        + ' Please re-record the test case.';
+                }
+                err.message = err.message + ' ' + errMsgPart;
+            }
+            throw err;
+        }
     });
-    await page.exposeFunction('__VRT_MOUSE_UP__', async () =>  {
-        await page.mouse.up();
+    await page.exposeFunction('__VRT_MOUSE_UP__', async (errMsgPart) =>  {
+        try {
+            await page.mouse.up();
+        }
+        catch (err) {
+            if (errMsgPart) {
+                err.message = err.message + ' ' + errMsgPart;
+            }
+            throw err;
+        }
     });
-    await page.exposeFunction('__VRT_LOAD_ERROR__', async (err) =>  {
-        errors.push(err);
+    await page.exposeFunction('__VRT_LOAD_ERROR__', async (errStr) =>  {
+        errors.push(errStr);
     });
     // await page.exposeFunction('__VRT_WAIT_FOR_NETWORK_IDLE__', async () =>  {
     //     await waitForNetworkIdle();
@@ -234,8 +256,8 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
         });
     });
 
-    page.exposeFunction('__VRT_LOG_ERRORS__', (err) =>  {
-        errors.push(err);
+    page.exposeFunction('__VRT_LOG_ERRORS__', (errStr) =>  {
+        errors.push(errStr);
     });
 
     let actionScreenshotCount = {};
@@ -276,7 +298,7 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
     try {
         await page.setViewport({
             width: 800,
-            height: 600
+            height: 600,
         });
         await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`, {
             waitUntil: 'networkidle2',

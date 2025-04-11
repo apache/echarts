@@ -90,7 +90,8 @@ import {
 
 import {
     UniversalTransition,
-    LabelLayout
+    LabelLayout,
+    AxisBreak
 } from './export/features';
 
 
@@ -147,8 +148,6 @@ use([
 // -------------------
 // Coordinate systems
 // -------------------
-
-
 
 // All of the axis modules have been included in the
 // coordinate system module below, do not need to
@@ -356,3 +355,5 @@ use(UniversalTransition);
 //     }
 // })
 use(LabelLayout);
+
+use(AxisBreak);
