@@ -432,6 +432,112 @@ class GraphNode {
             node: connectedNodesMap.keys()
         };
     }
+
+    /**
+     * Get all nodes and edges that are part of any path identified by the pathId(s) of this node's connected edges.
+     */
+    getElementsByPathId(): {node: number[], edge: number[]} {
+        const result: { node: number[], edge: number[] } = { node: [], edge: [] };
+        if (this.dataIndex < 0) {
+            return result;
+        }
+
+        const hostGraph = this.hostGraph;
+        // Use plain object instead of Set for node indices
+        const nodeIndicesObject: { [key: number]: boolean } = {};
+        // Use plain object for connectedPathIds too
+        const connectedPathIdsObject: { [key: string | number]: boolean } = {};
+
+        // 1. Collect all pathIds from edges connected to this node
+        for (let i = 0; i < this.edges.length; i++) {
+            const edge = this.edges[i];
+            // Fixed brace style and max statements per line
+            if (edge.dataIndex < 0) {
+                 continue;
+            }
+            const edgeModel = hostGraph.edgeData.getItemModel(edge.dataIndex);
+            const edgePathIds = _getPathIds(edgeModel);
+            for (let j = 0; j < edgePathIds.length; j++) {
+                // Add to object
+                connectedPathIdsObject[edgePathIds[j]] = true;
+            }
+        }
+
+        const targetPathIdsArray = Object.keys(connectedPathIdsObject);
+        // Check if any pathIds were collected
+        if (targetPathIdsArray.length === 0) {
+            // If no connected edges have pathIds, nothing to highlight
+            return result;
+        }
+
+        // 2. Find all edges (and their connected nodes) matching these pathIds
+        hostGraph.eachEdge((otherEdge) => {
+            if (otherEdge.dataIndex < 0) {
+                return;
+            }
+            const otherEdgeModel = hostGraph.edgeData.getItemModel(otherEdge.dataIndex);
+            const otherEdgePathIds = _getPathIds(otherEdgeModel);
+            if (_doPathIdsOverlap(targetPathIdsArray, otherEdgePathIds)) {
+                result.edge.push(otherEdge.dataIndex);
+                // Add source and target nodes of the matching edge to the object
+                if (otherEdge.node1.dataIndex >= 0) {
+                     nodeIndicesObject[otherEdge.node1.dataIndex] = true;
+                }
+                if (otherEdge.node2.dataIndex >= 0) {
+                     nodeIndicesObject[otherEdge.node2.dataIndex] = true;
+                }
+            }
+        });
+
+        // Convert object keys back to numbers
+        result.node = Object.keys(nodeIndicesObject).map(Number);
+        return result;
+    }
+
+    getPathDataIndices(): {node: number[], edge: number[]} {
+        const connectedEdgesMap = zrUtil.createHashMap<boolean, number>();
+        const connectedNodesMap = zrUtil.createHashMap<boolean, number>();
+
+        for (let i = 0; i < this.edges.length; i++) {
+            const adjacentEdge = this.edges[i];
+            if (adjacentEdge.dataIndex < 0) {
+                continue;
+            }
+
+            connectedEdgesMap.set(adjacentEdge.dataIndex, true);
+
+            const sourceNodesQueue = [adjacentEdge.node1];
+            const targetNodesQueue = [adjacentEdge.node2];
+
+            let nodeIteratorIndex = 0;
+            while (nodeIteratorIndex < sourceNodesQueue.length) {
+                const sourceNode = sourceNodesQueue[nodeIteratorIndex];
+                nodeIteratorIndex++;
+                connectedNodesMap.set(sourceNode.dataIndex, true);
+
+                for (let j = 0; j < sourceNode.inEdges.length; j++) {
+                    connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
+                    sourceNodesQueue.push(sourceNode.inEdges[j].node1);
+                }
+            }
+
+            nodeIteratorIndex = 0;
+            while (nodeIteratorIndex < targetNodesQueue.length) {
+                const targetNode = targetNodesQueue[nodeIteratorIndex];
+                nodeIteratorIndex++;
+                connectedNodesMap.set(targetNode.dataIndex, true);
+                for (let j = 0; j < targetNode.outEdges.length; j++) {
+                    connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
+                    targetNodesQueue.push(targetNode.outEdges[j].node2);
+                }
+            }
+        }
+
+        return {
+            edge: connectedEdgesMap.keys(),
+            node: connectedNodesMap.keys()
+        };
+    }
 }
 
 
@@ -515,6 +621,49 @@ class GraphEdge {
             node: connectedNodesMap.keys()
         };
     }
+
+    /**
+     * Get all nodes and edges that share any pathId with this edge.
+     * Nodes are included if they are connected to any matching edge.
+     */
+    getElementsByPathId(): {node: number[], edge: number[]} {
+        const result: { node: number[], edge: number[] } = { node: [], edge: [] };
+        if (this.dataIndex < 0) {
+            return result;
+        }
+
+        const hostGraph = this.hostGraph;
+        const edgeModel = hostGraph.edgeData.getItemModel(this.dataIndex);
+        const currentEdgePathIds = _getPathIds(edgeModel);
+        const nodeIndicesObject: { [key: number]: boolean } = {};
+
+        if (!currentEdgePathIds.length) {
+            return result;
+        }
+
+        // Find all edges sharing the pathId
+        hostGraph.eachEdge((otherEdge) => {
+            if (otherEdge.dataIndex < 0) {
+                return;
+            }
+            const otherModel = hostGraph.edgeData.getItemModel(otherEdge.dataIndex);
+            const otherPathIds = _getPathIds(otherModel);
+            if (_doPathIdsOverlap(currentEdgePathIds, otherPathIds)) {
+                result.edge.push(otherEdge.dataIndex);
+                 // Add source and target nodes of the matching edge to the object
+                if (otherEdge.node1.dataIndex >= 0) {
+                    nodeIndicesObject[otherEdge.node1.dataIndex] = true;
+                }
+                if (otherEdge.node2.dataIndex >= 0) {
+                    nodeIndicesObject[otherEdge.node2.dataIndex] = true;
+                }
+            }
+        });
+
+        // Convert object keys back to numbers
+        result.node = Object.keys(nodeIndicesObject).map(Number);
+        return result;
+    }
 }
 
 type GetDataName<Host> = Host extends GraphEdge ? 'edgeData' : 'data';
@@ -586,3 +735,26 @@ zrUtil.mixin(GraphEdge, createGraphDataProxyMixin('hostGraph', 'edgeData'));
 export default Graph;
 
 export {GraphNode, GraphEdge};
+
+// Internal helper to get pathId(s) as an array
+function _getPathIds(itemModel: Model): (string | number)[] {
+    const pathId = itemModel.get('pathId');
+    if (pathId == null) {
+        return [];
+    }
+    return zrUtil.isArray(pathId) ? pathId : [pathId];
+}
+
+function _doPathIdsOverlap(ids1: (string | number)[], ids2: (string | number)[]): boolean {
+    if (!ids1.length || !ids2.length) {
+        return false;
+    }
+    for (let i = 0; i < ids1.length; i++) {
+        for (let j = 0; j < ids2.length; j++) {
+            if (ids1[i] === ids2[j]) {
+                return true;
+            }
+        }
+    }
+    return false;
+}

@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -39,6 +38,7 @@ under the License.
         <div id="main1"></div>
         <div id="main2"></div>
         <div id="main3"></div>
+        <div id="main4"></div>
 
 
 
@@ -217,6 +217,44 @@ under the License.
                 };
                 resizeChart();
                 window.addEventListener('resize', resizeChart);
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                './data/energy_with_paths.json'
+            ], function (echarts, data) {
+
+                var option = {
+                    series: [
+                        {
+                            type: 'sankey',
+                            nodes: data.nodes,
+                            links: data.links,
+                            lineStyle: {
+                                color: 'gradient',
+                                curveness: 0.5
+                            },
+                            emphasis: {
+                                focus: 'pathId'
+                            }
+                        }
+                    ]
+                }
+
+                var chart = testHelper.create(echarts, 'main4', {
+                    title: 'emphasis pathId',
+                    option: option
+                });
+
+                if (chart) {
+                    window.addEventListener('resize', chart.resize);
+
+                    chart.on('click', function (params) {
+                    console.log(params, params.data);
+                    });
+                }
             });
         </script>
 
