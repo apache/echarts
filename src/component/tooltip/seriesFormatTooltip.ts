@@ -65,6 +65,21 @@ export function defaultSeriesFormatTooltip(opt: {
         const dimInfo = data.getDimensionInfo(tooltipDims[0]);
         sortParam = inlineValue = retrieveRawValue(data, dataIndex, tooltipDims[0]);
         inlineValueType = dimInfo.type;
+        const isPercentStackEnabled = data.getCalculationInfo('isPercentStackEnabled');
+        if (isPercentStackEnabled) {
+            // Append the normalized value (as a percent of the total stack) when stackPercent is true.
+            const stackResultDim = data.getCalculationInfo('stackResultDimension');
+            const stackedOverDim = data.getCalculationInfo('stackedOverDimension');
+            const stackTop = data.get(stackResultDim, dataIndex) as number;
+            const stackBottom = data.get(stackedOverDim, dataIndex) as number;
+            // Difference between the cumulative sum including this series and the cumulative sum before
+            // this series gives its individual contribution.
+            if (!isNaN(stackTop) && !isNaN(stackBottom)) {
+                const percentValue = stackTop - stackBottom;
+                const formattedPercentValue = `${Number.parseFloat(percentValue.toFixed(2))}%`;
+                inlineValue = `${inlineValue} (${formattedPercentValue})`;
+            }
+        }
     }
     else {
         sortParam = inlineValue = isValueArr ? value[0] : value;
