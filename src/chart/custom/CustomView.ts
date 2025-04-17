@@ -1041,6 +1041,9 @@ function doCreateOrUpdateEl(
     else if ((el as ECElement).disableMorphing) {
         (el as ECElement).disableMorphing = false;
     }
+    if (elOption.tooltipDisabled) {
+        (el as ECElement).tooltipDisabled = true;
+    }
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
         attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt =

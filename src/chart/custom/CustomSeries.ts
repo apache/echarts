@@ -117,6 +117,8 @@ export interface CustomBaseElementOption extends Partial<Pick<
     textContent?: CustomTextOption | false;
     // `false` means remove the clipPath
     clipPath?: CustomBaseZRPathOption | false;
+    // `false` means not show tooltip
+    tooltipDisabled?: boolean;
     // `extra` can be set in any el option for custom prop for annimation duration.
     extra?: Dictionary<unknown> & TransitionOptionMixin;
     // updateDuringAnimation
