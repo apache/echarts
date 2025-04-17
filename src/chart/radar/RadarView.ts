@@ -31,6 +31,7 @@ import { VectorArray } from 'zrender/src/core/vector';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { getECData } from '../../util/innerStore';
 
 type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
     __dimIdx: number
@@ -241,9 +242,10 @@ class RadarView extends ChartView {
                     symbolPath.style.strokeNoScale = true;
                 }
 
+                const dimensionIndex = data.getDimensionIndex(symbolPath.__dimIdx);
                 const pathEmphasisState = symbolPath.ensureState('emphasis');
                 pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
-                let defaultText = data.getStore().get(data.getDimensionIndex(symbolPath.__dimIdx), idx);
+                let defaultText = data.getStore().get(dimensionIndex, idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
                 setLabelStyle(
@@ -257,6 +259,11 @@ class RadarView extends ChartView {
                         defaultOpacity: itemStyle.opacity
                     }
                 );
+
+                // bind additional data to eventData
+                getECData(symbolPath).eventData = {
+                    dimensionIndex,
+                };
             });
 
             toggleHoverEmphasis(
