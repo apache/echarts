@@ -449,8 +449,7 @@ class TooltipView extends ComponentView {
     ) {
         const el = e.target;
         const tooltipModel = this._tooltipModel;
-
-        if (!tooltipModel || el && el.disableTooltip) {
+        if (!tooltipModel) {
             return;
         }
 
@@ -472,7 +471,21 @@ class TooltipView extends ComponentView {
 
             let seriesDispatcher: Element;
             let cmptDispatcher: Element;
-            findEventDispatcher(el, (target) => {
+            findEventDispatcher(el, function(target) {
+                // Check if el has any ancestor that has tooltipDisabled: true.
+                let tooltipDisabled = false;
+                let parent = el;
+                while (parent) {
+                    if (parent.tooltipDisabled) {
+                        tooltipDisabled = true;
+                        break;
+                    }
+                    parent = parent.parent;
+                }
+                if (tooltipDisabled) {
+                    return false;
+                }
+
                 // Always show item tooltip if mouse is on the element with dataIndex
                 if (getECData(target).dataIndex != null) {
                     seriesDispatcher = target;

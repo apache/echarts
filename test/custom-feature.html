@@ -39,7 +39,8 @@ under the License.
         <div id="main-clip-by-system"></div>
         <div id="main-clip-by-self"></div>
         <div id="main-SVG-Path"></div>
-
+        <div id="main-tooltip-trigger-axis"></div>
+        <div id="main-tooltip-trigger-item"></div>
 
         <script>
 
@@ -409,9 +410,183 @@ under the License.
 
 
 
+        <script>
+            require(['echarts'], function (echarts) {
+                var chart = testHelper.create(echarts, 'main-tooltip-trigger-axis', {
+                    title: [
+                        'Test tooltip trigger: axis',
+                        'It should bahave as if tooltipDisabled is not set',
+                    ],
+                    option: {
+                        legend: {
+                            show: true
+                        },
+                        tooltip: {
+                            trigger: 'axis'
+                        },
+                        xAxis: {
+                            type: 'value'
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+                        series: [{
+                            type: 'custom',
+                            name: 'Custom series',
+                            data: [[100, 23], [25, 41], [52, 12]],
+                            renderItem: function (params, api) {
+                                const coord = api.coord([api.value(0), api.value(1)]);
+                                const size = 50;
+                                return {
+                                    type: 'rect',
+                                    tooltipDisabled: true,
+                                    shape: {
+                                        x: coord[0] - size / 2,
+                                        y: coord[1] - size / 2,
+                                        width: size,
+                                        height: size
+                                    },
+                                    style: api.style()
+                                }
+                            }
+                        }, {
+                            type: 'custom',
+                            name: 'Custom series with group',
+                            data: [[80, 20]],
+                            renderItem: function (params, api) {
+                                const coord = api.coord([api.value(0), api.value(1)]);
+                                const size = 50;
+                                return {
+                                    type: 'group',
+                                    children: [{
+                                        type: 'rect',
+                                        shape: {
+                                            x: coord[0] - size / 2,
+                                            y: coord[1] - size / 2,
+                                            width: size,
+                                            height: size
+                                        },
+                                        style: api.style()
+                                    }, {
+                                        type: 'group',
+                                        tooltipDisabled: true,
+                                        children: [{
+                                            type: 'rect',
+                                            shape: {
+                                                x: coord[0] - size / 2 - 20,
+                                                y: coord[1] + 20,
+                                                width: size + 40,
+                                                height: 40
+                                            },
+                                            style: {
+                                                fill: '#888'
+                                            }
+                                        }]
+                                    }]
+                                };
+                            }
+                        }, {
+                            type: 'scatter',
+                            name: 'Scatter series',
+                            data: [[83, 43], [19, 32], [74, 41]],
+                            symbolSize: 50,
+                        }]
+                    }
+                });
+            });
+        </script>
 
 
 
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var chart = testHelper.create(echarts, 'main-tooltip-trigger-item', {
+                    title: [
+                        'Test tooltip trigger: item',
+                        'Hovering on blue/gray rects should not trigger tooltip but should have emphasis style.',
+                        'Hovering on the green rect should not trigger tooltip.'
+                    ],
+                    option: {
+                        legend: {
+                            show: true
+                        },
+                        tooltip: {
+                            trigger: 'item'
+                        },
+                        xAxis: {
+                            type: 'value'
+                        },
+                        yAxis: {
+                            type: 'value'
+                        },
+                        series: [{
+                            type: 'custom',
+                            name: 'Custom series',
+                            data: [[100, 23], [25, 41], [52, 12]],
+                            renderItem: function (params, api) {
+                                const coord = api.coord([api.value(0), api.value(1)]);
+                                const size = 50;
+                                return {
+                                    type: 'rect',
+                                    tooltipDisabled: true,
+                                    shape: {
+                                        x: coord[0] - size / 2,
+                                        y: coord[1] - size / 2,
+                                        width: size,
+                                        height: size
+                                    },
+                                    style: api.style()
+                                }
+                            }
+                        }, {
+                            type: 'custom',
+                            name: 'Custom series with group',
+                            data: [[80, 20]],
+                            renderItem: function (params, api) {
+                                const coord = api.coord([api.value(0), api.value(1)]);
+                                const size = 50;
+                                return {
+                                    type: 'group',
+                                    children: [{
+                                        type: 'rect',
+                                        shape: {
+                                            x: coord[0] - size / 2,
+                                            y: coord[1] - size / 2,
+                                            width: size,
+                                            height: size
+                                        },
+                                        style: api.style()
+                                    }, {
+                                        type: 'group',
+                                        tooltipDisabled: true,
+                                        children: [{
+                                            type: 'rect',
+                                            shape: {
+                                                x: coord[0] - size / 2 - 20,
+                                                y: coord[1] + 20,
+                                                width: size + 40,
+                                                height: 40
+                                            },
+                                            style: {
+                                                fill: '#888'
+                                            }
+                                        }]
+                                    }]
+                                };
+                            }
+                        }, {
+                            type: 'scatter',
+                            name: 'Scatter series',
+                            data: [[83, 43], [19, 32], [74, 41]],
+                            symbolSize: 50,
+                        }]
+                    }
+                });
+            });
+        </script>
 
     </body>
 </html>

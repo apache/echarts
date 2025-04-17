@@ -141,7 +141,7 @@ export interface ECElement extends Element {
     /**
      * Force disable triggering tooltip
      */
-    disableTooltip?: boolean
+    tooltipDisabled?: boolean
 }
 
 export interface DataHost {
