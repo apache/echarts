@@ -22,9 +22,95 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('echarts')) :
     typeof define === 'function' && define.amd ? define(['exports', 'echarts'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.dataTool = {}, global.echarts));
-}(this, (function (exports, echarts) { 'use strict';
+})(this, (function (exports, echarts) { 'use strict';
 
-    var BUILTIN_OBJECT = reduce([
+    function _interopNamespace(e) {
+        if (e && e.__esModule) return e;
+        var n = Object.create(null);
+        if (e) {
+            Object.keys(e).forEach(function (k) {
+                if (k !== 'default') {
+                    var d = Object.getOwnPropertyDescriptor(e, k);
+                    Object.defineProperty(n, k, d.get ? d : {
+                        enumerable: true,
+                        get: function () { return e[k]; }
+                    });
+                }
+            });
+        }
+        n["default"] = e;
+        return Object.freeze(n);
+    }
+
+    var echarts__namespace = /*#__PURE__*/_interopNamespace(echarts);
+
+    var DEFAULT_FONT_SIZE = 12;
+    var DEFAULT_FONT_FAMILY = 'sans-serif';
+    var DEFAULT_FONT = DEFAULT_FONT_SIZE + "px " + DEFAULT_FONT_FAMILY;
+    var OFFSET = 20;
+    var SCALE = 100;
+    var defaultWidthMapStr = "007LLmW'55;N0500LLLLLLLLLL00NNNLzWW\\\\WQb\\0FWLg\\bWb\\WQ\\WrWWQ000CL5LLFLL0LL**F*gLLLL5F0LF\\FFF5.5N";
+    function getTextWidthMap(mapStr) {
+        var map = {};
+        if (typeof JSON === 'undefined') {
+            return map;
+        }
+        for (var i = 0; i < mapStr.length; i++) {
+            var char = String.fromCharCode(i + 32);
+            var size = (mapStr.charCodeAt(i) - OFFSET) / SCALE;
+            map[char] = size;
+        }
+        return map;
+    }
+    var DEFAULT_TEXT_WIDTH_MAP = getTextWidthMap(defaultWidthMapStr);
+    var platformApi = {
+        createCanvas: function () {
+            return typeof document !== 'undefined'
+                && document.createElement('canvas');
+        },
+        measureText: (function () {
+            var _ctx;
+            var _cachedFont;
+            return function (text, font) {
+                if (!_ctx) {
+                    var canvas = platformApi.createCanvas();
+                    _ctx = canvas && canvas.getContext('2d');
+                }
+                if (_ctx) {
+                    if (_cachedFont !== font) {
+                        _cachedFont = _ctx.font = font || DEFAULT_FONT;
+                    }
+                    return _ctx.measureText(text);
+                }
+                else {
+                    text = text || '';
+                    font = font || DEFAULT_FONT;
+                    var res = /((?:\d+)?\.?\d*)px/.exec(font);
+                    var fontSize = res && +res[1] || DEFAULT_FONT_SIZE;
+                    var width = 0;
+                    if (font.indexOf('mono') >= 0) {
+                        width = fontSize * text.length;
+                    }
+                    else {
+                        for (var i = 0; i < text.length; i++) {
+                            var preCalcWidth = DEFAULT_TEXT_WIDTH_MAP[text[i]];
+                            width += preCalcWidth == null ? fontSize : (preCalcWidth * fontSize);
+                        }
+                    }
+                    return { width: width };
+                }
+            };
+        })(),
+        loadImage: function (src, onload, onerror) {
+            var image = new Image();
+            image.onload = onload;
+            image.onerror = onerror;
+            image.src = src;
+            return image;
+        }
+    };
+
+    reduce([
         'Function',
         'RegExp',
         'Date',
@@ -37,7 +123,7 @@
         obj['[object ' + val + ']'] = true;
         return obj;
     }, {});
-    var TYPED_ARRAY = reduce([
+    reduce([
         'Int8',
         'Uint8',
         'Uint8Clamped',
@@ -56,6 +142,7 @@
     var nativeMap = arrayProto.map;
     var ctorFunction = function () { }.constructor;
     var protoFunction = ctorFunction ? ctorFunction.prototype : null;
+    platformApi.createCanvas;
     function map(arr, cb, context) {
         if (!arr) {
             return [];
@@ -92,7 +179,7 @@
             return func.apply(context, args.concat(nativeSlice.call(arguments)));
         };
     }
-    var bind = (protoFunction && isFunction(protoFunction.bind))
+    (protoFunction && isFunction(protoFunction.bind))
         ? protoFunction.call.bind(protoFunction.bind)
         : bindPolyfill;
     function isFunction(value) {
@@ -385,10 +472,10 @@
     // be mounted on `echarts` is the extension `dataTool` is imported.
     // But the old version of echarts do not have `dataTool` namespace,
     // so check it before mounting.
-    if (echarts.dataTool) {
-      echarts.dataTool.version = version;
-      echarts.dataTool.gexf = gexf;
-      echarts.dataTool.prepareBoxplotData = prepareBoxplotData;
+    if (echarts__namespace.dataTool) {
+      echarts__namespace.dataTool.version = version;
+      echarts__namespace.dataTool.gexf = gexf;
+      echarts__namespace.dataTool.prepareBoxplotData = prepareBoxplotData;
       // echarts.dataTool.boxplotTransform = boxplotTransform;
     }
 
@@ -398,5 +485,5 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));
 //# sourceMappingURL=dataTool.js.map
