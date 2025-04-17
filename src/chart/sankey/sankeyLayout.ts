@@ -33,7 +33,7 @@ export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         const nodeWidth = seriesModel.get('nodeWidth');
         const nodeGap = seriesModel.get('nodeGap');
 
-        const layoutInfo = getViewRect(seriesModel, api);
+        const layoutInfo = layout.getViewRect(seriesModel, api);
 
         seriesModel.layoutInfo = layoutInfo;
 
@@ -59,18 +59,6 @@ export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
         layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign);
     });
-}
-
-/**
- * Get the layout position of the whole view
- */
-function getViewRect(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
-    return layout.getLayoutRect(
-        seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
-    );
 }
 
 function layoutSankey(

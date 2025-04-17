@@ -39,7 +39,9 @@ program
     .option('--no-headless', 'Not headless')
     .option('-s, --speed <speed>', 'Playback speed')
     .option('--expected <expected>', 'Expected version')
+    .option('--expected-source <expectedSource>', 'Expected source')
     .option('--actual <actual>', 'Actual version')
+    .option('--actual-source <actualSource>', 'Actual source')
     .option('--renderer <renderer>', 'svg/canvas renderer')
     .option('--use-coarse-pointer <useCoarsePointer>', '"auto" (by default) or "true" or "false"')
     .option('--threads <threads>', 'How many threads to run concurrently')
@@ -78,12 +80,12 @@ function getClientRelativePath(absPath) {
     return path.join('../', path.relative(__dirname, absPath));
 }
 
-function replaceEChartsVersion(interceptedRequest, version) {
+function replaceEChartsVersion(interceptedRequest, source, version) {
     // TODO Extensions and maps
     if (interceptedRequest.url().endsWith('dist/echarts.js')) {
-        console.log('Use echarts version: ' + version);
+        console.log('Use echarts version: ' + source + ' ' + version);
         interceptedRequest.continue({
-            url: `${origin}/test/runTest/${getVersionDir(version)}/${getEChartsTestFileName()}`
+            url: `${origin}/test/runTest/${getVersionDir(source, version)}/${getEChartsTestFileName()}`
         });
     }
     else {
@@ -117,9 +119,9 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     if (minor) {
         screenshotName += '-' + minor;
     }
-    let screenshotPrefix = isExpected ? 'expected' : 'actual';
+    const screenshotPrefix = isExpected ? 'expected' : 'actual';
     fse.ensureDirSync(getScreenshotDir());
-    let screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
+    const screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
     await page.screenshot({
         path: screenshotPath,
         // https://github.com/puppeteer/puppeteer/issues/7043
@@ -128,11 +130,18 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
         fullPage
     });
 
-    const webpScreenshotPath = await convertToWebP(screenshotPath);
+    let webpScreenshotPath;
+    try {
+        webpScreenshotPath = await convertToWebP(screenshotPath);
+    } catch (e) {
+        console.error('Failed to convert screenshot to webp', e);
+    }
+
+    console.log('Screenshot: ', webpScreenshotPath || screenshotPath);
 
     return {
         screenshotName,
-        screenshotPath: webpScreenshotPath,
+        screenshotPath: webpScreenshotPath || screenshotPath,
         rawScreenshotPath: screenshotPath
     };
 }
@@ -155,18 +164,20 @@ async function waitForNetworkIdle(page) {
         page.off('requestfailed', ended);
         page.off('requestfinished', ended);
     };
-  }
+}
 
-
-async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
+/**
+ * @param {puppeteer.Browser} browser
+ */
+async function runTestPage(browser, testOpt, source, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
-    const errors = [];
+    const errors = []; // string[]
 
     const page = await browser.newPage();
     page.setRequestInterception(true);
-    page.on('request', request => replaceEChartsVersion(request, version));
+    page.on('request', request => replaceEChartsVersion(request, source, version));
 
     async function pageScreenshot() {
         if (!program.save) {
@@ -196,14 +207,36 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     await page.exposeFunction('__VRT_MOUSE_MOVE__', async (x, y) =>  {
         await page.mouse.move(x, y);
     });
-    await page.exposeFunction('__VRT_MOUSE_DOWN__', async () =>  {
-        await page.mouse.down();
+    await page.exposeFunction('__VRT_MOUSE_DOWN__', async (errMsgPart) =>  {
+        try {
+            await page.mouse.down();
+        }
+        catch (err) {
+            // e.g., if double mousedown without a mouseup, error "'left' is already pressed." will be thrown.
+            // Report to users to re-record the test case.
+            if (errMsgPart) {
+                if ((err.message + '').indexOf('already pressed') >= 0) {
+                    errMsgPart += ' May be caused by duplicated mousedowns without a mouseup.'
+                        + ' Please re-record the test case.';
+                }
+                err.message = err.message + ' ' + errMsgPart;
+            }
+            throw err;
+        }
     });
-    await page.exposeFunction('__VRT_MOUSE_UP__', async () =>  {
-        await page.mouse.up();
+    await page.exposeFunction('__VRT_MOUSE_UP__', async (errMsgPart) =>  {
+        try {
+            await page.mouse.up();
+        }
+        catch (err) {
+            if (errMsgPart) {
+                err.message = err.message + ' ' + errMsgPart;
+            }
+            throw err;
+        }
     });
-    await page.exposeFunction('__VRT_LOAD_ERROR__', async (err) =>  {
-        errors.push(err);
+    await page.exposeFunction('__VRT_LOAD_ERROR__', async (errStr) =>  {
+        errors.push(errStr);
     });
     // await page.exposeFunction('__VRT_WAIT_FOR_NETWORK_IDLE__', async () =>  {
     //     await waitForNetworkIdle();
@@ -223,8 +256,8 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
         });
     });
 
-    page.exposeFunction('__VRT_LOG_ERRORS__', (err) =>  {
-        errors.push(err);
+    page.exposeFunction('__VRT_LOG_ERRORS__', (errStr) =>  {
+        errors.push(errStr);
     });
 
     let actionScreenshotCount = {};
@@ -265,11 +298,12 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     try {
         await page.setViewport({
             width: 800,
-            height: 600
+            height: 600,
         });
         await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`, {
             waitUntil: 'networkidle2',
-            timeout: 10000
+            timeout: 10000,
+            // timeout: 0
         });
 
         if (!vstInited) {    // Not using simpleRequire in the test
@@ -316,20 +350,24 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     };
 }
 
-async function writePNG(diffPNG, diffPath) {
-    return new Promise(resolve => {
-        let writer = fs.createWriteStream(diffPath);
+function writePNG(diffPNG, diffPath) {
+    return new Promise((resolve, reject) => {
+        const writer = fs.createWriteStream(diffPath);
         diffPNG.pack().pipe(writer);
-        writer.on('finish', () => {resolve();});
+        writer.on('finish', resolve);
+        writer.on('error', reject);
     });
 };
 
-async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
+/**
+ * @param {puppeteer.Browser} browser
+ */
+async function runTest(browser, testOpt, runtimeCode, expectedSource, expectedVersion, actualSource, actualVersion) {
     if (program.save) {
         testOpt.status === 'running';
 
-        const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
-        const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
+        const expectedResult = await runTestPage(browser, testOpt, expectedSource, expectedVersion, runtimeCode, true);
+        const actualResult = await runTestPage(browser, testOpt, actualSource, actualVersion, runtimeCode, false);
 
         // sortScreenshots(expectedResult.screenshots);
         // sortScreenshots(actualResult.screenshots);
@@ -353,9 +391,15 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
 
                 const diffPath = `${getScreenshotDir()}/${shot.screenshotName}-diff.png`;
                 await writePNG(diffPNG, diffPath);
-                const diffWebpPath = await convertToWebP(diffPath);
 
-                result.diff = getClientRelativePath(diffWebpPath);
+                let diffWebpPath;
+                try {
+                    diffWebpPath = await convertToWebP(diffPath);
+                } catch (e) {
+                    console.error('Failed to convert diff png to webp', e);
+                }
+
+                result.diff = getClientRelativePath(diffWebpPath || diffPath);
                 result.diffRatio = diffRatio;
 
                 // Remove png files
@@ -363,7 +407,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
                     await Promise.all([
                         fse.unlink(actual.rawScreenshotPath),
                         fse.unlink(expected.rawScreenshotPath),
-                        fse.unlink(diffPath)
+                        diffWebpPath && fse.unlink(diffPath)
                     ]);
                 }
                 catch (e) {}
@@ -391,7 +435,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
     }
     else {
         // Only run once
-        await runTestPage(browser, testOpt, 'local', runtimeCode, true);
+        await runTestPage(browser, testOpt, expectedSource, 'local', runtimeCode, true);
     }
 }
 
@@ -412,7 +456,7 @@ async function runTests(pendingTests) {
     async function eachTask(testOpt) {
         console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}, useCoarsePointer: ${program.useCoarsePointer}`);
         try {
-            await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
+            await runTest(browser, testOpt, runtimeCode, program.expectedSource, program.expected, program.actualSource, program.actual);
         }
         catch (e) {
             // Restore status
@@ -437,7 +481,7 @@ async function runTests(pendingTests) {
         }
     }
     catch(e) {
-        console.log(e);
+        console.error(e);
     }
 
 
@@ -456,3 +500,4 @@ runTests(program.tests.split(',').map(testName => {
         status: 'pending'
     };
 }));
+

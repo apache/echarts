@@ -22,7 +22,7 @@ const pixelmatch = require('pixelmatch');
 const fs = require('fs');
 
 function readPNG(path) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         fs.createReadStream(path)
             .pipe(new PNG())
             .on('parsed', function () {
@@ -31,7 +31,8 @@ function readPNG(path) {
                     width: this.width,
                     height: this.height
                 });
-            });
+            })
+            .on('error', (err) => reject(`failed to read PNG from '${path}'\n` + err));
     });
 }
 
@@ -46,7 +47,11 @@ module.exports = function (expectedShotPath, actualShotPath, threshold = 0.01) {
             (width !== actualImg.width)
           || (height !== actualImg.height)
         ) {
-            throw new Error('Image size not match');
+            throw new Error(
+                'Image size not match. '
+                + ' expect: ' + width + 'x' + height
+                + ' actual: ' + actualImg.width + 'x' + actualImg.height
+            );
         }
         const diffPNG = new PNG({width, height});
         let diffPixelsCount = pixelmatch(expectedImg.data, actualImg.data, diffPNG.data, width, height, {threshold});

@@ -254,10 +254,10 @@ class SeriesData<
 
     // Methods that create a new list based on this list should be listed here.
     // Notice that those method should `RETURN` the new list.
-    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'lttbDownSample', 'map'] as const;
+    TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'minmaxDownSample', 'lttbDownSample', 'map'] as const;
     // Methods that change indices of this list should be listed here.
     CHANGABLE_METHODS = ['filterSelf', 'selectRange'] as const;
-    DOWNSAMPLE_METHODS = ['downSample', 'lttbDownSample'] as const;
+    DOWNSAMPLE_METHODS = ['downSample', 'minmaxDownSample', 'lttbDownSample'] as const;
 
     /**
      * @param dimensionsInput.dimensions
@@ -583,7 +583,7 @@ class SeriesData<
      *        Each item is exactly corresponding to a dimension.
      */
     appendValues(values: any[][], names?: string[]): void {
-        const {start, end} = this._store.appendValues(values, names.length);
+        const {start, end} = this._store.appendValues(values, names && names.length);
         const shouldMakeIdFromName = this._shouldMakeIdFromName();
 
         this._updateOrdinalMeta();
@@ -866,27 +866,13 @@ class SeriesData<
                 throw new Error('Do not supported yet');
             }
         }
-        const rawIndex = invertedIndices[value];
+        const rawIndex = invertedIndices && invertedIndices[value];
         if (rawIndex == null || isNaN(rawIndex)) {
             return INDEX_NOT_FOUND;
         }
         return rawIndex;
     }
 
-    /**
-     * Retrieve the index of nearest value
-     * @param dim
-     * @param value
-     * @param [maxDistance=Infinity]
-     * @return If and only if multiple indices has
-     *         the same value, they are put to the result.
-     */
-    indicesOfNearest(dim: DimensionLoose, value: number, maxDistance?: number): number[] {
-        return this._store.indicesOfNearest(
-            this._getStoreDimIndex(dim),
-            value, maxDistance
-        );
-    }
     /**
      * Data iteration
      * @param ctx default this
@@ -1094,6 +1080,23 @@ class SeriesData<
             rate,
             sampleValue,
             sampleIndex
+        );
+        return list as SeriesData<HostModel>;
+    }
+
+    /**
+     * Large data down sampling using min-max
+     * @param {string} valueDimension
+     * @param {number} rate
+     */
+    minmaxDownSample(
+        valueDimension: DimensionLoose,
+        rate: number
+    ): SeriesData<HostModel> {
+        const list = cloneListForMapAndSample(this);
+        list._store = this._store.minmaxDownSample(
+            this._getStoreDimIndex(valueDimension),
+            rate
         );
         return list as SeriesData<HostModel>;
     }
