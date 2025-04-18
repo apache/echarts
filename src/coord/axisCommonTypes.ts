@@ -46,8 +46,9 @@ export interface AxisBaseOptionCommon extends ComponentOption,
         placeholder?: string;
     };
     nameTextStyle?: AxisNameTextStyleOption;
-    // The gap between axisName and axisLine.
+    // The gap between axisName and axisLine/labels
     nameGap?: number;
+    nameLayout?: 'auto';
 
     silent?: boolean;
     triggerEvent?: boolean;
@@ -222,6 +223,8 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     // Whether axisLabel is inside the grid or outside the grid.
     inside?: boolean,
     rotate?: number,
+    autoRotate?: boolean | [number, ...number[]],
+    minDistance?: number,
     // true | false | null/undefined (auto)
     showMinLabel?: boolean,
     // true | false | null/undefined (auto)
@@ -244,7 +247,11 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     // Color can be callback
     color?: ColorString | ((value?: string | number, index?: number) => ColorString),
     overflow?: TextStyleProps['overflow']
+    // approximate auto-layout computations (autoRotate, hideOverlap) if the total number of axis labels is over
+    // the trheshold; defaults to 40
+    layoutApproximationThreshold?: number
 }
+
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]
 }
