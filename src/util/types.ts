@@ -52,7 +52,6 @@ import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 import { PrimaryTimeUnit } from './time';
 
 
-
 // ---------------------------
 // Common types and constants
 // ---------------------------
@@ -665,7 +664,7 @@ export type ECUnitOption = {
     timeline?: ComponentOption | ComponentOption[]
     backgroundColor?: ZRColor
     darkMode?: boolean | 'auto'
-    textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+    textStyle?: GlobalTextStyleOption
     useUTC?: boolean
     hoverLayerThreshold?: number
 
@@ -1133,8 +1132,14 @@ export type VisualOptionCategory = Arrayable<VisualOptionUnit> | Dictionaryable<
  */
 export type BuiltinVisualProperty = keyof VisualOptionUnit;
 
-export interface TextCommonOption extends ShadowOptionMixin {
-    color?: string
+export type TextCommonOptionNuanceBase = Record<string, unknown>;
+export type TextCommonOptionNuanceDefault = {};
+// 'auto' has been deprecated.
+type LabelStyleColorString = ColorString | 'inherit' | 'auto'; // Nominal as a comment.
+export interface TextCommonOption<
+    TNuance extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+> extends ShadowOptionMixin {
+    color?: 'color' extends keyof TNuance ? (TNuance['color'] | LabelStyleColorString) : LabelStyleColorString
     fontStyle?: ZRFontStyle
     fontWeight?: ZRFontWeight
     fontFamily?: string
@@ -1156,6 +1161,10 @@ export interface TextCommonOption extends ShadowOptionMixin {
     borderDashOffset?: number
     borderRadius?: number | number[]
     padding?: number | number[]
+    /**
+     * Currently margin related options are not declared here. They are not supported in rich text.
+     * @see {MarginOption}
+     */
 
     width?: number | string// Percent
     height?: number
@@ -1172,6 +1181,17 @@ export interface TextCommonOption extends ShadowOptionMixin {
     tag?: string
 }
 
+export type GlobalTextStyleOption = Pick<
+    TextCommonOption,
+    'color' | 'opacity'
+    | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'
+    | 'textShadowColor' | 'textShadowBlur' | 'textShadowOffsetX' | 'textShadowOffsetY'
+    | 'textBorderColor' | 'textBorderWidth' | 'textBorderType' | 'textBorderDashOffset'
+>;
+
+export interface RichTextOption extends Dictionary<TextCommonOption> {
+}
+
 export interface LabelFormatterCallback<T = CallbackDataParams> {
     (params: T): string
 }
@@ -1179,7 +1199,7 @@ export interface LabelFormatterCallback<T = CallbackDataParams> {
  * LabelOption is an option set to control the style of labels.
  * Include color, background, shadow, truncate, rotation, distance, etc..
  */
-export interface LabelOption extends TextCommonOption {
+export interface LabelOption extends LabelCommonOption {
     /**
      * If show label
      */
@@ -1191,24 +1211,42 @@ export interface LabelOption extends TextCommonOption {
     rotate?: number
     offset?: number[]
 
-    /**
-     * Min margin between labels. Used when label has layout.
-     * PENDING: @see {LabelMarginType}
-     */
-    // It's minMargin instead of margin is for not breaking the previous code using margin.
-    minMargin?: number
-
-    overflow?: TextStyleProps['overflow']
-    ellipsis?: TextStyleProps['ellipsis']
-
     silent?: boolean
     precision?: number | 'auto'
     valueAnimation?: boolean
 
     // TODO: TYPE not all label support formatter
     // formatter?: string | ((params: CallbackDataParams) => string)
+}
 
-    rich?: Dictionary<TextCommonOption>
+/**
+ * Common options for both `axisLabel` and other `label`.
+ * Historically, they have had some nuances in options.
+ */
+export interface LabelCommonOption<
+    TNuanceOption extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+> extends TextCommonOption<TNuanceOption> {
+    /**
+     * Min margin between labels. Used when label has layout.
+     * PENDING: @see {LabelMarginType}
+     */
+    // It's minMargin instead of margin is for not breaking the previous code using margin.
+    minMargin?: number
+    /**
+     * The space around the axis label to escape from overlapping.
+     * Applied on the label local rect (rather than rotated enlarged rect)
+     * Follow the format defined by `format.ts#normalizeCssArray`.
+     * Introduce the name `textMargin` rather than reuse the existing names to avoid breaking change:
+     *  - `axisLabel.margin` historically has been used to indicate the gap between the axis and label.x/.y.
+     *  - `label.minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
+     *      it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
+     *      and is applied on the rotated bounding rect rather than the original local rect.
+     * @see {LabelMarginType}
+     */
+    textMargin?: number | number[],
+    overflow?: TextStyleProps['overflow']
+    ellipsis?: TextStyleProps['ellipsis']
+    rich?: RichTextOption
 }
 
 /**
@@ -1222,6 +1260,20 @@ export const LabelMarginType = {
 } as const;
 export interface LabelExtendedText extends ZRText {
     __marginType?: (typeof LabelMarginType)[keyof typeof LabelMarginType]
+}
+export interface MarginOption {
+    /**
+     * The space around the axis label to escape from overlapping.
+     * Applied on the label local rect (rather than rotated enlarged rect)
+     * Follow the format defined by `format.ts#normalizeCssArray`.
+     * Introduce the name `textMargin` rather than reuse the existing names to avoid breaking change:
+     *  - `axisLabel.margin` historically has been used to indicate the gap between the axis and label.x/.y.
+     *  - `label.minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
+     *      it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
+     *      and is applied on the rotated bounding rect rather than the original local rect.
+     * @see {LabelMarginType}
+     */
+    textMargin?: number | number[],
 }
 
 export interface SeriesLabelOption<T extends CallbackDataParams = CallbackDataParams> extends LabelOption {

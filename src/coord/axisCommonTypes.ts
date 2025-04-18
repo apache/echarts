@@ -21,12 +21,13 @@ import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, AxisBreakOption, ItemStyleOption,
+    AnimationOptionMixin, ScaleDataValue, CommonAxisPointerOption, AxisBreakOption, ItemStyleOption,
     NullUndefined,
     AxisLabelFormatterExtraBreakPart,
     TimeScaleTick,
+    RichTextOption,
+    LabelCommonOption,
 } from '../util/types';
-import { TextStyleProps } from 'zrender/src/graphic/Text';
 import type { PrimaryTimeUnit } from '../util/time';
 
 
@@ -67,9 +68,10 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     /**
      * Whether to auto move axis name to avoid overlap with axis labels.
      * The procedure of axis name layout:
-     * 1. Firstly apply `nameRotate`, `nameTruncate`, `nameLocation`.
+     * 1. Firstly apply `nameRotate`, `nameTruncate`, `nameLocation`, `nameGap`.
+     *  Note that if `nameGap` is applied after the overlap handling, it may still cause overlap.
      * 2. If `nameMoveOverlap: true`, move the name util it does not overlap with axis lables.
-     * 3. Then apply `nameGap`.
+     *  `nameTextStyle.textMargin` can be used to adjust its gap from others in this case.
      */
     nameMoveOverlap?: boolean;
 
@@ -201,7 +203,7 @@ export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
     axisLabel?: AxisLabelOption<'time'>;
 }
 interface AxisNameTextStyleOption extends TextCommonOption {
-    rich?: Dictionary<TextCommonOption>
+    rich?: RichTextOption
 }
 
 interface AxisLineOption {
@@ -281,7 +283,11 @@ type LabelFormatters = {
     time: TimeAxisLabelFormatterOption
 };
 
-interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
+export type AxisLabelBaseOptionNuance = {
+    // Color can be callback
+    color?: ColorString | ((value?: string | number, index?: number) => ColorString),
+};
+interface AxisLabelBaseOption extends LabelCommonOption<AxisLabelBaseOptionNuance> {
     show?: boolean,
     // Whether axisLabel is inside the grid or outside the grid.
     inside?: boolean,
@@ -301,27 +307,12 @@ interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
     // The space between the axis and `[label.x, label.y]`.
     margin?: number,
     /**
-     * The space around the axis label to escape from overlapping.
-     * Applied on the label local rect (rather than rotated enlarged rect)
-     * Follow the format defined by `format.ts#normalizeCssArray`.
-     * Introduce the name `textMargin` rather than reuse the existing names to avoid breaking change:
-     *  - `axisLabel.margin` historically has been used to indicate the gap between the axis and label.x/.y.
-     *  - `label.minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
-     *      it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
-     *      and is applied on the rotated bounding rect rather than the original local rect.
-     * @see {LabelMarginType}
-     */
-    textMargin?: number | number[],
-    rich?: Dictionary<TextCommonOption>
-    /**
      * If hide overlapping labels.
      */
     hideOverlap?: boolean,
     customValues?: (number | string | Date)[],
-    // Color can be callback
-    color?: ColorString | ((value?: string | number, index?: number) => ColorString),
-    overflow?: TextStyleProps['overflow']
 }
+
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]
     interval?: TType extends 'category'

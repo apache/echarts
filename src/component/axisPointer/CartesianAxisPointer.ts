@@ -61,7 +61,6 @@ class CartesianAxisPointer extends BaseAxisPointer {
 
         const layoutInfo = cartesianAxisHelper.layout(grid.getRect(), axisModel);
         viewHelper.buildCartesianSingleLabelElOption(
-            // @ts-ignore
             value, elOption, layoutInfo, axisModel, axisPointerModel, api
         );
     }
@@ -74,10 +73,9 @@ class CartesianAxisPointer extends BaseAxisPointer {
         axisModel: CartesianAxisModel,
         axisPointerModel: AxisPointerModel
     ) {
-        const layoutInfo = cartesianAxisHelper.layout(axisModel.axis.grid.getRect(), axisModel, {
-            labelInside: false
-        });
-        // @ts-ignore
+        const layoutInfo: viewHelper.AxisTransformedPositionLayoutInfo = cartesianAxisHelper.layout(
+            axisModel.axis.grid.getRect(), axisModel, {labelInside: false}
+        );
         layoutInfo.labelMargin = axisPointerModel.get(['handle', 'margin']);
         const pos = viewHelper.getTransformedPosition(axisModel.axis, value, layoutInfo);
         return {

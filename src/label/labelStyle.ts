@@ -30,7 +30,11 @@ import {
     ColorString,
     ZRStyleProps,
     AnimationOptionMixin,
-    InterpolatableValue
+    InterpolatableValue,
+    GlobalTextStyleOption,
+    LabelCommonOption,
+    TextCommonOptionNuanceBase,
+    TextCommonOptionNuanceDefault
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
@@ -111,6 +115,10 @@ type LabelModelForText = Model<Omit<
     }>;
 
 type LabelStatesModels<LabelModel> = Partial<Record<DisplayStateNonNormal, LabelModel>> & {normal: LabelModel};
+
+type LabelCommonModel<
+    TNuance extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+> = Model<LabelCommonOption<TNuance>>;
 
 export function setLabelText(label: ZRText, labelTexts: Record<DisplayState, string>) {
     for (let i = 0; i < SPECIAL_STATES.length; i++) {
@@ -309,13 +317,15 @@ export function getLabelStatesModels<LabelName extends string = 'label'>(
 /**
  * Set basic textStyle properties.
  */
-export function createTextStyle(
-    textStyleModel: Model,
+export function createTextStyle<
+    TNuance extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+>(
+    textStyleModel: LabelCommonModel<TNuance>,
     specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
     opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
-) {
+): TextStyleProps {
     const textStyle: TextStyleProps = {};
     setTextStyleCommon(textStyle, textStyleModel, opt, isNotNormal, isAttached);
     specifiedTextStyle && extend(textStyle, specifiedTextStyle);
@@ -366,9 +376,11 @@ export function createTextConfig(
  * default value can be adopted, merge would make the logic too complicated
  * to manage.)
  */
-function setTextStyleCommon(
+function setTextStyleCommon<
+    TNuance extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+>(
     textStyle: TextStyleProps,
-    textStyleModel: Model,
+    textStyleModel: LabelCommonModel<TNuance>,
     opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean
@@ -391,7 +403,7 @@ function setTextStyleCommon(
     //         a: { ... }
     //     }
     // }
-    const richItemNames = getRichItemNames(textStyleModel);
+    const richItemNames = getRichItemNames<TNuance>(textStyleModel);
     let richResult: TextStyleProps['rich'];
     if (richItemNames) {
         richResult = {};
@@ -421,7 +433,7 @@ function setTextStyleCommon(
     if (margin != null) {
         textStyle.margin = margin;
     }
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
+    setTokenTextStyle<TNuance>(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
 }
 // Consider case:
 // {
@@ -438,7 +450,9 @@ function setTextStyleCommon(
 //     }
 // }
 // TODO TextStyleModel
-function getRichItemNames(textStyleModel: Model<LabelOption>) {
+function getRichItemNames<
+    TNuance extends TextCommonOptionNuanceBase
+>(textStyleModel: Model<LabelCommonOption<TNuance>>) {
     // Use object to remove duplicated names.
     let richItemNameMap: Dictionary<number>;
     while (textStyleModel && textStyleModel !== textStyleModel.ecModel) {
@@ -468,10 +482,11 @@ const TEXT_PROPS_BOX = [
     'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
 ] as const;
 
-function setTokenTextStyle(
+function setTokenTextStyle<TNuance extends TextCommonOptionNuanceBase>(
     textStyle: TextStyleProps['rich'][string],
-    textStyleModel: Model<LabelOption>,
-    globalTextStyle: LabelOption,
+    // FIXME: check/refactor for ellipsis handling of rich text.
+    textStyleModel: Model<TextCommonOption<TNuance> & Pick<LabelCommonOption, 'ellipsis'>>,
+    globalTextStyle: GlobalTextStyleOption,
     opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean,
@@ -517,7 +532,9 @@ function setTokenTextStyle(
         strokeColor = strokeColor || globalTextStyle.textBorderColor;
     }
     if (fillColor != null) {
-        textStyle.fill = fillColor;
+        // Might not be a string, e.g, it's a function in axisLabel case; but assume that it will
+        // be erased by a correct value outside.
+        textStyle.fill = fillColor as string;
     }
     if (strokeColor != null) {
         textStyle.stroke = strokeColor;
