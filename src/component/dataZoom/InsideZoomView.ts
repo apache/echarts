@@ -113,12 +113,19 @@ const getRangeHandlers: {
                 : (directionInfo.pixel - directionInfo.pixelStart)
             ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
-        const scale = Math.max(1 / e.scale, 0);
-        range[0] = (range[0] - percentPoint) * scale + percentPoint;
-        range[1] = (range[1] - percentPoint) * scale + percentPoint;
+        let scale = Math.max(1 / e.scale, 0);
 
         // Restrict range.
         const minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+
+        if ((range[1] <= minMaxSpan.minSpan + range[0] && scale < 1)
+           || (range[1] >= minMaxSpan.maxSpan + range[0] && scale > 1)
+        ) {
+            scale = 1;
+        }
+
+        range[0] = (range[0] - percentPoint) * scale + percentPoint;
+        range[1] = (range[1] - percentPoint) * scale + percentPoint;
 
         sliderMove(0, range, [0, 100], 0, minMaxSpan.minSpan, minMaxSpan.maxSpan);
 
