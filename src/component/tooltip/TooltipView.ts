@@ -471,30 +471,21 @@ class TooltipView extends ComponentView {
 
             let seriesDispatcher: Element;
             let cmptDispatcher: Element;
-            findEventDispatcher(el, function(target) {
-                // Check if el has any ancestor that has tooltipDisabled: true.
-                let tooltipDisabled = false;
-                let parent = el;
-                while (parent) {
-                    if (parent.tooltipDisabled) {
-                        tooltipDisabled = true;
-                        break;
-                    }
-                    parent = parent.parent;
+            findEventDispatcher(el, function (target) {
+                if ((target as ECElement).tooltipDisabled) {
+                    seriesDispatcher = cmptDispatcher = null;
+                    return true;
                 }
-                if (tooltipDisabled) {
-                    return false;
+                if (seriesDispatcher || cmptDispatcher) {
+                    return;
                 }
-
                 // Always show item tooltip if mouse is on the element with dataIndex
                 if (getECData(target).dataIndex != null) {
                     seriesDispatcher = target;
-                    return true;
                 }
                 // Tooltip provided directly. Like legend.
-                if (getECData(target).tooltipConfig != null) {
+                else if (getECData(target).tooltipConfig != null) {
                     cmptDispatcher = target;
-                    return true;
                 }
             }, true);
 
