@@ -73,6 +73,12 @@
      * @param {boolean} [opt.notMerge]
      * @param {boolean} [opt.autoResize=true]
      * @param {string} [opt.inputsStyle='normal'] Optional, can be 'normal', 'compact'.
+     *  Can be either `inputsStyle` or `buttonsStyle`.
+     * @param {number} [opt.inputsHeight] Default not fix height. If specified, a scroll
+     *  bar will be displayed if overflow the height. In visual test, once a height changed
+     *  by adding something, the subsequent position will be changed, leading to test failures.
+     *  Fixing the height helps avoid this.
+     *  Can be either `inputsHeight` or `buttonsHeight`.
      * @param {Array.<Object>|Object|Function} [opt.inputs]
      *  They are the same: `opt.buttons` `opt.button`, `opt.inputs`, `opt.input`
      *  It can be a function that return buttons configuration, like:
@@ -169,15 +175,31 @@
 
         title.setAttribute('title', dom.getAttribute('id'));
 
+        var inputsHeight = testHelper.retrieveValue(opt.inputsHeight, opt.buttonsHeight, null);
+        if (inputsHeight != null) {
+            inputsHeight = parseFloat(inputsHeight);
+        }
+
         title.className = 'test-title';
         dom.className = 'test-chart-block';
         left.className = 'test-chart-block-left';
         chartContainer.className = 'test-chart';
-        inputsContainer.className = 'test-inputs test-inputs-style-' + (opt.inputsStyle || 'normal');
         dataTableContainer.className = 'test-data-table';
         infoContainer.className = 'test-info';
         recordCanvasContainer.className = 'record-canvas';
         recordVideoContainer.className = 'record-video';
+
+        inputsContainer.className = [
+            'test-inputs',
+            'test-buttons', // deprecated but backward compat.
+            'test-inputs-style-' + (opt.inputsStyle || opt.buttonsStyle || 'normal'),
+            (inputsHeight != null ? 'test-inputs-fix-height' : '')
+        ].join(' ');
+        if (inputsHeight != null) {
+            inputsContainer.style.cssText = [
+                'height:' + inputsHeight + 'px',
+            ].join(';') + ';';
+        }
 
         if (opt.info) {
             dom.className += ' test-chart-block-has-right';
@@ -332,9 +354,6 @@
             }
             if (!(defineList instanceof Array)) {
                 defineList = defineList ? [defineList] : [];
-            }
-            if (!defineList.length) {
-                return;
             }
             return defineList;
         }

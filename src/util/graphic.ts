@@ -63,7 +63,8 @@ import {
     keys,
     each,
     hasOwn,
-    isArray
+    isArray,
+    clone,
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import ComponentModel from '../model/Component';
@@ -410,7 +411,7 @@ export function groupTransition(
             rotation: el.rotation
         };
         if (isPath(el)) {
-            obj.shape = extend({}, el.shape);
+            obj.shape = clone(el.shape);
         }
         return obj;
     }

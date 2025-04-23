@@ -156,10 +156,10 @@ const app = new Vue({
 
         runConfig: Object.assign({
             sortBy: 'name',
-            actualVersion: 'local',
-            actualSource: 'local',
+            actualVersion: null,
             expectedVersion: null,
             expectedSource: 'release',
+            actualSource: 'local',
             renderer: 'canvas',
             useCoarsePointer: 'auto',
             threads: 4

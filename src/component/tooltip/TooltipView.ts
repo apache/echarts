@@ -546,6 +546,9 @@ class TooltipView extends ComponentView {
                 if (!axisModel || axisValue == null) {
                     return;
                 }
+                // FIXME: when using `tooltip.trigger: 'axis'`, the precision of the axis value displayed in tooltip
+                //  should match the original series values rather than using the default stretegy in Interval.ts
+                //  (getPrecision(interval) + 2); otherwise it may cuase confusion.
                 const axisValueLabel = axisPointerViewHelper.getValueLabel(
                     axisValue, axisModel.axis, ecModel,
                     axisItem.seriesDataIndices,

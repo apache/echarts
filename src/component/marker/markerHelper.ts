@@ -54,6 +54,7 @@ function hasXAndY(item: MarkerPositionOption) {
 function markerTypeCalculatorWithExtent(
     markerType: MarkerStatisticType,
     data: SeriesData,
+    axisDim: string,
     otherDataDim: string,
     targetDataDim: string,
     otherCoordIndex: number,
@@ -68,7 +69,13 @@ function markerTypeCalculatorWithExtent(
 
     const value = numCalculate(data, calcDataDim, markerType);
 
-    const dataIndex = data.indicesOfNearest(calcDataDim, value)[0];
+    const seriesModel = data.hostModel as SeriesModel;
+    const dataIndex = seriesModel.indicesOfNearest(
+        axisDim,
+        calcDataDim,
+        value
+    )[0];
+
     coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex);
     coordArr[targetCoordIndex] = data.get(calcDataDim, dataIndex);
     const coordArrValue = data.get(targetDataDim, dataIndex);
@@ -127,7 +134,7 @@ export function dataTransform(
             const targetCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
 
             const coordInfo = markerTypeCalculator[item.type](
-                data, axisInfo.baseDataDim, axisInfo.valueDataDim,
+                data, axisInfo.valueAxis.dim, axisInfo.baseDataDim, axisInfo.valueDataDim,
                 otherCoordIndex, targetCoordIndex
             );
             item.coord = coordInfo[0];
@@ -146,6 +153,9 @@ export function dataTransform(
     // x y is provided
     if (item.coord == null || !isArray(dims)) {
         item.coord = [];
+        const baseAxis = seriesModel.getBaseAxis();
+        const otherAxis = coordSys.getOtherAxis(baseAxis);
+        item.value = numCalculate(data, data.mapDimension(otherAxis.dim), item.type);
     }
     else {
         // Each coord support max, min, average
