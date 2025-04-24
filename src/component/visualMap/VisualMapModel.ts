@@ -626,7 +626,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         contentColor: tokens.color.theme[0],
         inactiveColor: tokens.color.disabled,
         borderWidth: 0,
-        padding: 5,
+        padding: tokens.size.m,
                                     // 接受数组分别设定上右下左边距，同css
         textGap: 10,               //
         precision: 0,              // 小数精度，默认为0，无小数点

@@ -127,21 +127,21 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
 
         borderWidth: 0,
 
-        padding: 5,
+        padding: tokens.size.m,
 
         itemSize: 15,
 
-        itemGap: 8,
+        itemGap: tokens.size.s,
 
         showTitle: true,
 
         iconStyle: {
-            borderColor: tokens.color.neutral50,
+            borderColor: tokens.color.accent30,
             color: 'none'
         },
         emphasis: {
             iconStyle: {
-                borderColor: tokens.color.neutral40
+                borderColor: tokens.color.accent50
             }
         },
         // textStyle: {},

@@ -199,7 +199,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
         splitLine: {
             show: true,
             lineStyle: {
-                color: tokens.color.axisLineTint,
+                color: tokens.color.neutral60,
                 width: 1,
                 type: 'solid'
             }
@@ -220,7 +220,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
 
             // start end
             position: 'start',
-            margin: '50%', // 50% of cellSize
+            margin: tokens.size.s,
             color: tokens.color.tertiary
         },
 
@@ -230,7 +230,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
 
             // start end
             position: 'start',
-            margin: 5,
+            margin: tokens.size.s,
 
             // center or left
             align: 'center',
@@ -245,9 +245,9 @@ class CalendarModel extends ComponentModel<CalendarOption> {
 
             // top bottom left right
             position: null,
-            margin: 30,
+            margin: tokens.size.xl,
             formatter: null,
-            color: tokens.color.neutral40,
+            color: tokens.color.secondary,
             fontFamily: 'sans-serif',
             fontWeight: 'bolder',
             fontSize: 20

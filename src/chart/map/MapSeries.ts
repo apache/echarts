@@ -329,7 +329,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         itemStyle: {
             borderWidth: 0.5,
             borderColor: tokens.color.border,
-            areaColor: tokens.color.backgroundTint
+            areaColor: tokens.color.background
         },
 
         emphasis: {
@@ -338,7 +338,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
                 color: tokens.color.primary
             },
             itemStyle: {
-                areaColor: tokens.color.background
+                areaColor: tokens.color.backgroundShade
             }
         },
 

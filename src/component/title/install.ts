@@ -107,8 +107,8 @@ class TitleModel extends ComponentModel<TitleOption> {
 
         subtarget: 'blank',
 
-        left: 0,
-        top: 0,
+        left: 'center',
+        top: tokens.size.m,
 
         backgroundColor: tokens.color.transparent,
 

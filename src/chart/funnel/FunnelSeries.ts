@@ -155,7 +155,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         left: 80,
         top: 60,
         right: 80,
-        bottom: 60,
+        bottom: 65,
         // width: {totalWidth} - left - right,
         // height: {totalHeight} - top - bottom,
 

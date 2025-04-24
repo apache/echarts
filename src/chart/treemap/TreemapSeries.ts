@@ -245,10 +245,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         // Disable progressive rendering
         progressive: 0,
         // size: ['80%', '80%'],            // deprecated, compatible with ec2.
-        left: 'center',
-        top: 'middle',
-        width: '80%',
-        height: '80%',
+        left: tokens.size.l,
+        top: tokens.size.xxxl,
+        right: tokens.size.l,
+        bottom: tokens.size.xxxl,
         sort: true,
 
         clipWindow: 'origin',
@@ -271,7 +271,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             show: true,
             height: 22,
             left: 'center',
-            top: 'bottom',
+            bottom: tokens.size.m,
             // right
             // bottom
             emptyItemWidth: 25,             // Width of empty node.

@@ -316,7 +316,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
         bottom: 0,
         width: null,
         height: 40,
-        padding: 5,
+        padding: tokens.size.m,
 
         controlPosition: 'left',           // 'left' 'right' 'top' 'bottom' 'none'
         autoPlay: false,

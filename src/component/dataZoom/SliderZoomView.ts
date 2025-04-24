@@ -48,7 +48,7 @@ import tokens from '../../visual/tokens';
 const Rect = graphic.Rect;
 
 // Constants
-const DEFAULT_LOCATION_EDGE_GAP = 7;
+const DEFAULT_LOCATION_EDGE_GAP = 15;
 const DEFAULT_FRAME_BORDER_WIDTH = 1;
 const DEFAULT_FILLER_SIZE = 30;
 const DEFAULT_MOVE_HANDLE_SIZE = 7;

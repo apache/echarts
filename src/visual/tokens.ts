@@ -5,11 +5,11 @@ const tokens = {
             '#b6d634',
             '#505372',
             '#ff994d',
-            '#5acb92',
-            '#ffd82c',
-            '#e76991',
-            '#6854aa',
-            '#52c4d0'
+            '#4dbbe1',
+            '#ffd10a',
+            '#fb628b',
+            '#785db0',
+            '#3fbe95'
         ],
 
         neutral00: '#fff',
@@ -54,8 +54,6 @@ const tokens = {
         accent90: '#12182d',
         accent95: '#090c17',
 
-        visualGradient: ['#f05252', '#ffbc85', '#fff5c5'],
-
         transparent: 'rgba(0,0,0,0)',
 
         primary: '@neutral80',
@@ -83,6 +81,16 @@ const tokens = {
         axisLabel: '@axisLine',
         axisSplitLine: '@neutral15',
         axisMinorSplitLine: '@neutral05'
+    },
+    size: {
+        xxs: 2,
+        xs: 5,
+        s: 10,
+        m: 15,
+        l: 20,
+        xl: 30,
+        xxl: 40,
+        xxxl: 50
     }
 } as const;
 

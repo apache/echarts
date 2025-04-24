@@ -172,7 +172,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             },
             areaStyle: {
                 color: tokens.color.accent30,
-                opacity: 0.2
+                opacity: 0.5
             }
         },
 
@@ -190,7 +190,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         moveHandleSize: 7,
         moveHandleIcon: 'path://M-320.9-50L-320.9-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-348-41-339-50-320.9-50z M-212.3-50L-212.3-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-239.4-41-230.4-50-212.3-50z M-103.7-50L-103.7-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-130.9-41-121.8-50-103.7-50z',
         moveHandleStyle: {
-            color: tokens.color.accent30,
+            color: tokens.color.accent40,
             opacity: 0.5
         },
 
@@ -200,7 +200,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         zoomLock: false,                        // Whether disable zoom.
 
         textStyle: {
-            color: tokens.color.quaternary
+            color: tokens.color.tertiary
         },
 
         brushSelect: true,
@@ -213,7 +213,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
                 show: true
             },
             handleStyle: {
-                borderColor: tokens.color.accent30
+                borderColor: tokens.color.accent50
             },
             moveHandleStyle: {
                 opacity: 0.8

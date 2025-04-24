@@ -70,7 +70,7 @@ const defaultOption: AxisBaseOption = {
         breakLine: true,
     },
     axisTick: {
-        show: true,
+        show: false,
         // Whether axisTick is inside the grid or outside the grid.
         inside: false,
         // The length of axisTick.
@@ -121,10 +121,10 @@ const defaultOption: AxisBaseOption = {
     breakArea: {
         show: true,
         itemStyle: {
-            color: '#fff',
+            color: tokens.color.neutral00,
             // Break border color should be darker than the splitLine
             // because it has opacity and should be more prominent
-            borderColor: '#C2CADA',
+            borderColor: tokens.color.border,
             borderWidth: 1,
             borderType: [3, 3],
             opacity: 0.6

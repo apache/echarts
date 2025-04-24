@@ -37,7 +37,7 @@ export default {
 
     color: tokens.color.theme,
 
-    gradientColor: tokens.color.visualGradient,
+    gradientColor: [tokens.color.accent50, tokens.color.accent10],
 
     aria: {
         decal: {
