@@ -199,7 +199,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
         splitLine: {
             show: true,
             lineStyle: {
-                color: tokens.color.neutral60,
+                color: tokens.color.axisLine,
                 width: 1,
                 type: 'solid'
             }

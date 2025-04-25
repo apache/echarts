@@ -260,7 +260,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
         zoomToNodeRatio: 0.32 * 0.32,
 
-        scaleLimit: null,
+        scaleLimit: {
+            max: 5,
+            min: 0.2
+        },
 
         roam: true,
         nodeClick: 'zoomToNode',

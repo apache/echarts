@@ -5,7 +5,7 @@ const tokens = {
             '#b6d634',
             '#505372',
             '#ff994d',
-            '#4dbbe1',
+            '#0ca8df',
             '#ffd10a',
             '#fb628b',
             '#785db0',
