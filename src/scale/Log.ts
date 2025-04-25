@@ -75,6 +75,15 @@ class LogScale extends IntervalScale<LogScaleSetting> {
 
         const ticks = super.getTicks(expandToNicedExtent);
 
+
+        // Ticks are created using the nice extent, but that can cause the first and last tick to be well outside the extent
+        if (ticks[0].value < this._extent[0]) {
+            ticks[0].value = this._extent[0];
+        }
+        if (ticks[ticks.length - 1].value > this._extent[1]) {
+            ticks[ticks.length - 1].value = this._extent[1];
+        }
+
         return zrUtil.map(ticks, function (tick) {
             const val = tick.value;
             let powVal = mathPow(this.base, val);
@@ -91,6 +100,62 @@ class LogScale extends IntervalScale<LogScaleSetting> {
                 value: powVal * negativeMultiplier
             };
         }, this);
+    }
+
+    /**
+     * Get minor ticks for log scale. Ticks are generated based on a decade so that 5 splits
+     * between 1 and 10 would be 2, 4, 6, 8 and
+     * between 5 and 10 would be 6, 8.
+     * @param splitNumber Get minor ticks number.
+     * @returns Minor ticks.
+     */
+    getMinorTicks(splitNumber: number): number[][] {
+        const ticks = this.getTicks(true);
+        const minorTicks = [];
+        const negativeMultiplier = this._isNegative ? -1 : 1;
+
+        for (let i = 1; i < ticks.length; i++) {
+            const nextTick = ticks[i];
+            const prevTick = ticks[i - 1];
+            const logNextTick = Math.ceil(scaleHelper.absMathLog(nextTick.value, this.base));
+            const logPrevTick = Math.round(scaleHelper.absMathLog(prevTick.value, this.base));
+
+            const minorTicksGroup: number[] = [];
+            const tickDiff = logNextTick - logPrevTick;
+            const overDecade = tickDiff > 1;
+
+            if (overDecade) {
+                // For spans over a decade, generate evenly spaced ticks in log space
+                // For example, between 1 and 100, generate a tick at 10
+                const step = Math.ceil(tickDiff / splitNumber);
+
+                let minorTickValue = Math.pow(this.base, logPrevTick + step);
+                let j = 1;
+                while (minorTickValue < nextTick.value) {
+                    minorTicksGroup.push(minorTickValue);
+
+                    j++;
+                    minorTickValue = Math.pow(this.base, logPrevTick + j * step) * negativeMultiplier;
+                }
+            }
+            else {
+                // For spans within a decade, generate linear subdivisions
+                // For example, between 1 and 10 with splitNumber=5, generate ticks at 2, 4, 6, 8
+                const maxValue = Math.pow(this.base, logNextTick);
+
+                // Divide the space linearly between min and max
+                const step = maxValue / splitNumber;
+                let minorTickValue = step;
+                while (minorTickValue < nextTick.value) {
+                    minorTicksGroup.push(minorTickValue * negativeMultiplier);
+                    minorTickValue += step;
+                }
+            }
+
+            minorTicks.push(minorTicksGroup);
+        }
+
+        return minorTicks;
     }
 
     setExtent(start: number, end: number): void {
