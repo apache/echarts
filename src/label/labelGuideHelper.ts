@@ -337,7 +337,8 @@ const dir2 = new Point();
  */
 export function updateLabelLinePoints(
     target: Element,
-    labelLineModel: Model<LabelLineOption>
+    labelLineModel: Model<LabelLineOption>,
+    points?: number[][]
 ) {
     if (!target) {
         return;
@@ -352,46 +353,47 @@ export function updateLabelLinePoints(
 
     const labelGuideConfig = target.textGuideLineConfig || {};
 
-    const points = [[0, 0], [0, 0], [0, 0]];
+    if (!points) {
+        points = [[0, 0], [0, 0], [0, 0]];
+        const searchSpace = labelGuideConfig.candidates || DEFAULT_SEARCH_SPACE;
+        const labelRect = label.getBoundingRect().clone();
+        labelRect.applyTransform(label.getComputedTransform());
 
-    const searchSpace = labelGuideConfig.candidates || DEFAULT_SEARCH_SPACE;
-    const labelRect = label.getBoundingRect().clone();
-    labelRect.applyTransform(label.getComputedTransform());
+        let minDist = Infinity;
+        const anchorPoint = labelGuideConfig.anchor;
+        const targetTransform = target.getComputedTransform();
+        const targetInversedTransform = targetTransform && invert([], targetTransform);
+        const len = labelLineModel.get('length2') || 0;
 
-    let minDist = Infinity;
-    const anchorPoint = labelGuideConfig.anchor;
-    const targetTransform = target.getComputedTransform();
-    const targetInversedTransform = targetTransform && invert([], targetTransform);
-    const len = labelLineModel.get('length2') || 0;
+        if (anchorPoint) {
+            pt2.copy(anchorPoint);
+        }
+        for (let i = 0; i < searchSpace.length; i++) {
+            const candidate = searchSpace[i];
+            getCandidateAnchor(candidate, 0, labelRect, pt0, dir);
+            Point.scaleAndAdd(pt1, pt0, dir, len);
 
-    if (anchorPoint) {
-        pt2.copy(anchorPoint);
-    }
-    for (let i = 0; i < searchSpace.length; i++) {
-        const candidate = searchSpace[i];
-        getCandidateAnchor(candidate, 0, labelRect, pt0, dir);
-        Point.scaleAndAdd(pt1, pt0, dir, len);
+            // Transform to target coord space.
+            pt1.transform(targetInversedTransform);
 
-        // Transform to target coord space.
-        pt1.transform(targetInversedTransform);
+            // Note: getBoundingRect will ensure the `path` being created.
+            const boundingRect = target.getBoundingRect();
+            const dist = anchorPoint ? anchorPoint.distance(pt1)
+                : (target instanceof Path
+                    ? nearestPointOnPath(pt1, target.path, pt2)
+                    : nearestPointOnRect(pt1, boundingRect, pt2));
 
-        // Note: getBoundingRect will ensure the `path` being created.
-        const boundingRect = target.getBoundingRect();
-        const dist = anchorPoint ? anchorPoint.distance(pt1)
-            : (target instanceof Path
-                ? nearestPointOnPath(pt1, target.path, pt2)
-                : nearestPointOnRect(pt1, boundingRect, pt2));
+            // TODO pt2 is in the path
+            if (dist < minDist) {
+                minDist = dist;
+                // Transform back to global space.
+                pt1.transform(targetTransform);
+                pt2.transform(targetTransform);
 
-        // TODO pt2 is in the path
-        if (dist < minDist) {
-            minDist = dist;
-            // Transform back to global space.
-            pt1.transform(targetTransform);
-            pt2.transform(targetTransform);
-
-            pt2.toArray(points[0]);
-            pt1.toArray(points[1]);
-            pt0.toArray(points[2]);
+                pt2.toArray(points[0]);
+                pt1.toArray(points[1]);
+                pt0.toArray(points[2]);
+            }
         }
     }
 
