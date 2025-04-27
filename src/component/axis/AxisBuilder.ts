@@ -50,6 +50,7 @@ import { makeInner } from '../../util/model';
 import { getAxisBreakHelper } from './axisBreakHelper';
 import { AXIS_BREAK_EXPAND_ACTION_TYPE, BaseAxisBreakPayload } from './axisAction';
 import { getScaleBreakHelper } from '../../scale/break';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const PI = Math.PI;
 
@@ -323,6 +324,14 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                     y2: pt2[1]
                 },
             }, pathBaseProp));
+            if (__EDITOR__) {
+                addEditorInfo(line, {
+                    component: axisModel.mainType,
+                    componentIndex: axisModel.componentIndex,
+                    subType: axisModel.subType,
+                    element: 'axisLine'
+                });
+            }
             graphic.subPixelOptimizeLine(line.shape, line.style.lineWidth);
             line.anid = 'line';
             group.add(line);
@@ -379,6 +388,14 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                         silent: true,
                         z2: 11
                     });
+                    if (__EDITOR__) {
+                        addEditorInfo(symbol, {
+                            component: axisModel.mainType,
+                            componentIndex: axisModel.componentIndex,
+                            subType: axisModel.subType,
+                            element: 'axisLineSymbol'
+                        });
+                    }
                     group.add(symbol);
                 }
             });
@@ -507,6 +524,14 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             z2: 1
         }) as AxisLabelText;
 
+        if (__EDITOR__) {
+            addEditorInfo(textEl, {
+                component: axisModel.mainType,
+                element: 'axisName',
+                componentIndex: axisModel.componentIndex,
+                subType: axisModel.subType
+            });
+        }
         graphic.setTooltipConfig({
             el: textEl,
             componentModel: axisModel,
@@ -724,6 +749,14 @@ function buildAxisMajorTicks(
     ), 'ticks');
 
     for (let i = 0; i < ticksEls.length; i++) {
+        if (__EDITOR__) {
+            addEditorInfo(ticksEls[i], {
+                component: axisModel.mainType,
+                componentIndex: axisModel.componentIndex,
+                subType: axisModel.subType,
+                element: 'majorTicks'
+            });
+        }
         group.add(ticksEls[i]);
     }
 
@@ -767,6 +800,14 @@ function buildAxisMinorTicks(
             minorTicksCoords[i], transformGroup.transform, tickEndCoord, minorTickLineStyle, 'minorticks_' + i
         );
         for (let k = 0; k < minorTicksEls.length; k++) {
+            if (__EDITOR__) {
+                addEditorInfo(minorTicksEls[k], {
+                    component: axisModel.mainType,
+                    element: 'minorTicks',
+                    componentIndex: axisModel.componentIndex,
+                    subType: axisModel.subType
+                });
+            }
             group.add(minorTicksEls[k]);
         }
     }
@@ -883,6 +924,14 @@ function buildAxisLabel(
         });
         (textEl as LabelExtendedText).__marginType = LabelMarginType.textMargin;
 
+        if (__EDITOR__) {
+            addEditorInfo(textEl, {
+                element: 'axisLabel',
+                component: axisModel.mainType,
+                componentIndex: axisModel.componentIndex,
+                subType: axisModel.subType
+            });
+        }
         textEl.anid = 'label_' + tickValue;
 
         getLabelInner(textEl).break = labelItem.break;

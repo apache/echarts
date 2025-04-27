@@ -28,6 +28,7 @@ import { StageHandlerProgressParams, LineStyleOption, ColorString } from '../../
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
 import Element from 'zrender/src/Element';
+import { addEditorInfo } from '../../util/editorInfo';
 
 class LargeLinesPathShape {
     polyline = false;
@@ -297,6 +298,13 @@ class LargeLineDraw {
             ignoreCoarsePointer: true
         });
         this._newAdded.push(lineEl);
+        if (__EDITOR__) {
+            addEditorInfo(lineEl, {
+                component: 'series',
+                subType: 'line',
+                element: 'line'
+            });
+        }
         this.group.add(lineEl);
         return lineEl;
     }

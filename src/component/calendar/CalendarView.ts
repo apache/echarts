@@ -32,6 +32,7 @@ import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { TextStyleProps, TextProps } from 'zrender/src/graphic/Text';
 import { LocaleOption, getLocaleModel } from '../../core/locale';
 import type Model from '../../model/Model';
+import { addEditorInfo } from '../../util/editorInfo';
 
 class CalendarView extends ComponentView {
 
@@ -111,6 +112,12 @@ class CalendarView extends ComponentView {
                 style: itemRectStyleModel
             });
 
+            if (__EDITOR__) {
+                addEditorInfo(rect, {
+                    component: 'calendar',
+                    element: 'dayRect'
+                });
+            }
             group.add(rect);
         }
 
@@ -200,6 +207,12 @@ class CalendarView extends ComponentView {
             style: lineStyle
         });
 
+        if (__EDITOR__) {
+            addEditorInfo(poyline, {
+                component: 'calendar',
+                element: 'splitLine'
+            });
+        }
         group.add(poyline);
     }
 
@@ -342,6 +355,12 @@ class CalendarView extends ComponentView {
         });
         yearText.attr(this._yearTextPositionControl(yearText, posPoints[pos], orient, pos, margin));
 
+        if (__EDITOR__) {
+            addEditorInfo(yearText, {
+                component: 'calendar',
+                element: 'yearText'
+            });
+        }
         group.add(yearText);
     }
 
@@ -456,6 +475,12 @@ class CalendarView extends ComponentView {
                 silent: labelSilent
             });
 
+            if (__EDITOR__) {
+                addEditorInfo(monthText, {
+                    component: 'calendar',
+                    element: 'monthText'
+                });
+            }
             group.add(monthText);
         }
     }
@@ -554,6 +579,12 @@ class CalendarView extends ComponentView {
                 silent: labelSilent
             });
 
+            if (__EDITOR__) {
+                addEditorInfo(weekText, {
+                    component: 'calendar',
+                    element: 'weekText'
+                });
+            }
             group.add(weekText);
         }
     }
