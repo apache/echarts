@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <style>
+    </style>
+
+
+    <div id="main0"></div>
+
+
+
+
+
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {
+                    type: "category",
+                    axisLabel: { hideOverlap: false, fontSize: 12 },
+                    data: [
+                        "2022-01-01",
+                        "2022-01-02",
+                        "2022-01-03",
+                        "2022-01-04",
+                        "2022-01-05",
+                        "2022-01-06",
+                        "2022-01-07",
+                        "2022-01-08",
+                        "2022-01-09",
+                        "2022-01-10",
+                    ]
+                },
+                yAxis: {},
+                dataZoom: {
+                    type: "slider",
+                    show: true,
+                    textStyle: { color: "rgba(255, 255, 255, 0)" },
+                },
+                series: {
+                    connectNulls: true,
+                    symbol: "none",
+                    title: "3%",
+                    type: "line",
+                    name: "3%",
+                    data: [
+                        ["2022-01-01", 0.00008218502588808185, "true"],
+                        ["2022-01-02", 0.0001643700517766078, "true"],
+                        ["2022-01-03", 0.0002465550776649117, "true"],
+                        ["2022-01-04", null, "true"],
+                        ["2022-01-05", 0.0004109251294415195, "true"],
+                        ["2022-01-06", 0.0004931101553298234, "true"],
+                        ["2022-01-07", 0.0005752951812179052, "true"],
+                        ["2022-01-08", null, "true"],
+                        ["2022-01-09", 0.000739665232994513, "true"],
+                        ["2022-01-10", 0.0008218502588828169, "true"],
+                    ],
+                },
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Data Zoom supports series with {"connectNulls": true}',
+                    'https://github.com/apache/echarts/issues/15694'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>
