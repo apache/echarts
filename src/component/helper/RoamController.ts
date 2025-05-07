@@ -173,10 +173,17 @@ class RoamController extends Eventful<{
     }
 
     private _mousedownHandler(e: ZRElementEvent) {
-        if (eventTool.isMiddleOrRightButtonOnMouseUpDown(e)
-            || (e.target && e.target.draggable)
-        ) {
+        if (eventTool.isMiddleOrRightButtonOnMouseUpDown(e)) {
             return;
+        }
+
+        let el = e.target;
+        while (el) {
+            if (el.draggable) {
+                return;
+            }
+            // check if host is draggable
+            el = el.__hostTarget || el.parent;
         }
 
         const x = e.offsetX;

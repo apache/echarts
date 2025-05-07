@@ -27,10 +27,10 @@ import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin 
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
-import { extend, isNumber } from 'zrender/src/core/util';
+import { extend, retrieve2 } from 'zrender/src/core/util';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 import Model from '../../model/Model';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
@@ -64,6 +64,7 @@ class Symbol extends graphic.Group {
         data: SeriesData,
         idx: number,
         symbolSize: number[],
+        z2: number,
         keepAspect: boolean
     ) {
         // Remove paths created before
@@ -80,7 +81,7 @@ class Symbol extends graphic.Group {
         );
 
         symbolPath.attr({
-            z2: 100,
+            z2: retrieve2(z2, 100),
             culling: true,
             scaleX: symbolSize[0] / 2,
             scaleY: symbolSize[1] / 2
@@ -156,12 +157,13 @@ class Symbol extends graphic.Group {
         const symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         const seriesModel = data.hostModel as SeriesModel;
         const symbolSize = Symbol.getSymbolSize(data, idx);
+        const z2 = Symbol.getSymbolZ2(data, idx);
         const isInit = symbolType !== this._symbolType;
         const disableAnimation = opts && opts.disableAnimation;
 
         if (isInit) {
             const keepAspect = data.getItemVisual(idx, 'symbolKeepAspect');
-            this._createSymbol(symbolType as string, data, idx, symbolSize, keepAspect);
+            this._createSymbol(symbolType as string, data, idx, symbolSize, z2, keepAspect);
         }
         else {
             const symbolPath = this.childAt(0) as ECSymbol;
@@ -336,11 +338,19 @@ class Symbol extends graphic.Group {
         symbolPath.ensureState('select').style = selectItemStyle;
         symbolPath.ensureState('blur').style = blurItemStyle;
 
-        if (hoverScale) {
-            const scaleRatio = Math.max(isNumber(hoverScale) ? hoverScale : 1.1, 3 / this._sizeY);
-            emphasisState.scaleX = this._sizeX * scaleRatio;
-            emphasisState.scaleY = this._sizeY * scaleRatio;
-        }
+        // null / undefined / true means to use default strategy.
+        // 0 / false / negative number / NaN / Infinity means no scale.
+        const scaleRatio =
+            hoverScale == null || hoverScale === true
+                ? Math.max(1.1, 3 / this._sizeY)
+                // PENDING: restrict hoverScale > 1? It seems unreasonable to scale down
+                : isFinite(hoverScale as number) && hoverScale > 0
+                    ? +hoverScale
+                    : 1;
+        // always set scale to allow resetting
+        emphasisState.scaleX = this._sizeX * scaleRatio;
+        emphasisState.scaleY = this._sizeY * scaleRatio;
+
         this.setSymbolScale(1);
 
         toggleHoverEmphasis(this, focus, blurScope, emphasisDisabled);
@@ -396,6 +406,9 @@ class Symbol extends graphic.Group {
 
     static getSymbolSize(data: SeriesData, idx: number) {
         return normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+    }
+    static getSymbolZ2(data: SeriesData, idx: number) {
+        return data.getItemVisual(idx, 'z2');
     }
 }
 

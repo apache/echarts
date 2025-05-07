@@ -99,6 +99,9 @@ export default function dataSample(seriesType: string): StageHandler {
                     if (sampling === 'lttb') {
                         seriesModel.setData(data.lttbDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
                     }
+                    else if (sampling === 'minmax') {
+                        seriesModel.setData(data.minmaxDownSample(data.mapDimension(valueAxis.dim), 1 / rate));
+                    }
                     let sampler;
                     if (isString(sampling)) {
                         sampler = samplers[sampling];

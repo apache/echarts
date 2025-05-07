@@ -42,10 +42,15 @@ module.exports.fileNameFromTest = function (testName) {
     return testName + '.html';
 };
 
-function getVersionDir(version) {
+function getVersionDir(source, version) {
     version = version || 'local';
+    if (source === 'PR') {
+        // For PR preview artifacts
+        const prNumber = version.replace(/^#/, '');
+        return `tmp/__version__/pr-${prNumber}`;
+    }
     return `tmp/__version__/${version}`;
-};
+}
 module.exports.getVersionDir = getVersionDir;
 
 module.exports.getActionsFullPath = function (testName) {
@@ -56,57 +61,97 @@ module.exports.getEChartsTestFileName = function () {
     return `echarts.test-${config.testVersion}.js`;
 };
 
-module.exports.prepareEChartsLib = function (version) {
+// Clean PR directories at the start of initing because PR code may change
+module.exports.cleanPRDirectories = function () {
+    const baseDir = path.join(__dirname, 'tmp/__version__');
+    if (fs.existsSync(baseDir)) {
+        const dirs = fs.readdirSync(baseDir);
+        dirs.forEach(dir => {
+            if (dir.startsWith('pr-')) {
+                fse.removeSync(path.join(baseDir, dir));
+            }
+        });
+    }
+}
 
-    const versionFolder = path.join(__dirname, getVersionDir(version));
+module.exports.prepareEChartsLib = function (source, version, useCNMirror) {
+    console.log(`Preparing ECharts lib: ${source} ${version}`);
+
+    const versionFolder = path.join(__dirname, getVersionDir(source, version));
     const ecDownloadPath = `${versionFolder}/echarts.js`;
+    const testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
+
     fse.ensureDirSync(versionFolder);
+
     if (!version || version === 'local') {
         // Developing version, make sure it's new build
-        fse.copySync(path.join(__dirname, '../../dist/echarts.js'), `${versionFolder}/echarts.js`);
+        fse.copySync(path.join(__dirname, '../../dist/echarts.js'), ecDownloadPath);
         let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
-        fs.writeFileSync(`${versionFolder}/${module.exports.getEChartsTestFileName()}`, code, 'utf-8');
-
+        fs.writeFileSync(testLibPath, code, 'utf-8');
         return Promise.resolve();
     }
-    return new Promise(resolve => {
-        const testLibPath = `${versionFolder}/${module.exports.getEChartsTestFileName()}`;
-        if (!fs.existsSync(ecDownloadPath)) {
-            const file = fs.createWriteStream(ecDownloadPath);
-            const isNightly = version.includes('-dev');
-            const packageName = isNightly ? 'echarts-nightly' : 'echarts'
+    else if (fs.existsSync(ecDownloadPath) && fs.existsSync(testLibPath) &&
+        fs.statSync(ecDownloadPath).size > 0 && fs.statSync(testLibPath).size > 0) {
+        return Promise.resolve();
+    }
 
-            console.log(`Downloading ${packageName}@${version} from `, `https://cdn.jsdelivr.net/npm/${packageName}@${version}/dist/echarts.js`);
-            https.get(`https://cdn.jsdelivr.net/npm/${packageName}@${version}/dist/echarts.js`, response => {
-                response.pipe(file);
+    return new Promise((resolve, reject) => {
+        let url;
 
-                file.on('finish', () => {
-                    let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
-                    fs.writeFileSync(testLibPath, code, 'utf-8');
-                    resolve();
-                });
-            });
+        if (source === 'PR') {
+            const prNumber = version.replace(/^#/, '');
+            if (!/^\d+$/.test(prNumber)) {
+                reject('Invalid PR number format. Should be #123');
+                return;
+            }
+            url = `https://echarts-pr-${prNumber}.surge.sh/dist/echarts.js`;
         }
         else {
-            // Always do code modifaction.
-            // In case we need to do replacement on old downloads.
-            let code = modifyEChartsCode(fs.readFileSync(ecDownloadPath, 'utf-8'));
-            fs.writeFileSync(testLibPath, code, 'utf-8');
-            resolve();
+            const isNightly = source === 'nightly';
+            const packageName = isNightly ? 'echarts-nightly' : 'echarts';
+            url = useCNMirror
+                ? `https://registry.npmmirror.com/${packageName}/${version}/files/dist/echarts.js`
+                : `https://unpkg.com/${packageName}@${version}/dist/echarts.js`;
         }
+
+        console.log(`Downloading ECharts from ${url}`);
+        https.get(url, response => {
+            if (response.statusCode === 404) {
+                reject(`PR artifact doesn't exist at ${url}. Make sure the PR build is complete.`);
+                return;
+            }
+
+            let data = '';
+            response.on('data', chunk => {
+                data += chunk;
+            });
+
+            response.on('end', () => {
+                if (!data) {
+                    reject(`Downloaded file is empty from ${url}`);
+                    return;
+                }
+                fs.writeFileSync(ecDownloadPath, data, 'utf-8');
+                const code = modifyEChartsCode(data);
+                fs.writeFileSync(testLibPath, code, 'utf-8');
+                resolve();
+            });
+        }).on('error', (e) => {
+            reject(`Failed to download from ${url}: ${e}`);
+        });
     });
 };
 
-module.exports.fetchVersions = function (isNighlty) {
+module.exports.fetchVersions = function (isNightly, useCNMirror) {
     return new Promise((resolve, reject) => {
-        https.get(
-            isNighlty
-                ? `https://registry.npmjs.org/echarts-nightly`
-                : `https://registry.npmjs.org/echarts`
-        , res => {
+        const npmRegistry = useCNMirror
+            ? 'https://registry.npmmirror.com'
+            : 'https://registry.npmjs.org';
+        const endpoint = `${npmRegistry}/echarts${isNightly ? '-nightly' : ''}`;
+        https.get(endpoint, res => {
             if (res.statusCode !== 200) {
                 res.destroy();
-                reject('Failed fetch versions from https://registry.npmjs.org/echarts');
+                reject('status code: ' + res.statusCode);
                 return;
             }
             var buffers = [];
@@ -117,10 +162,11 @@ module.exports.fetchVersions = function (isNighlty) {
                     resolve(Object.keys(JSON.parse(data).versions).reverse());
                 }
                 catch (e) {
-                    reject(e.toString());
+                    reject(e);
                 }
             });
-        });
+        })
+        .on('error', reject);
     });
 };
 

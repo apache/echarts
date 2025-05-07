@@ -37,6 +37,8 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
 
 
 
@@ -78,9 +80,8 @@ under the License.
                 });
 
                 if (chart) {
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                    window.addEventListener('resize', chart.resize);
+
                     chart.on('click', function (params) {
                         console.log(params, params.data);
                     });
@@ -130,9 +131,8 @@ under the License.
 
 
                 if (chart) {
-                    window.onresize = function () {
-                        chart.resize();
-                    };
+                    window.addEventListener('resize', chart.resize);
+
                     chart.on('click', function (params) {
                         console.log(params, params.data);
                     });
@@ -140,7 +140,85 @@ under the License.
             });
         </script>
 
+        <script>
+            require([
+                'echarts',
+                './data/energy.json'
+            ], function (echarts, data) {
 
+                var option = {
+                    series: [
+                        {
+                            type: 'sankey',
+                            nodes: data.nodes,
+                            links: data.links,
+                            lineStyle: {
+                                color: 'gradient',
+                                curveness: 0.5
+                            },
+                            emphasis: {
+                                focus: 'trajectory'
+                            }
+                        }
+                    ]
+                }
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: 'emphasis trajectory',
+                    option: option
+                });
+
+                if (chart) {
+                    window.addEventListener('resize', chart.resize);
+
+                    chart.on('click', function (params) {
+                       console.log(params, params.data);
+                    });
+                }
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var title = 'The sankey chart should be rendered without any error in console when `**nodes**` or `**links**` is set as `**undefined**`';
+                var option = {
+                    title: {
+                        text: title,
+                        top: 'center',
+                        left: 'center',
+                        textStyle: {
+                            overflow: 'break'
+                        }
+                    },
+                    series: [{
+                        type: 'sankey',
+                        layout: 'none',
+                        data: undefined,
+                        links: undefined,
+                        levels: undefined
+                    }]
+                }
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title,
+                    option
+                });
+                var resizeChart = function () {
+                    chart.resize();
+                    chart.setOption({
+                        title: {
+                            textStyle: {
+                                width: chart.getWidth() * 0.8
+                            }
+                        }
+                    });
+                };
+                resizeChart();
+                window.addEventListener('resize', resizeChart);
+            });
+        </script>
 
     </body>
 </html>

@@ -76,7 +76,7 @@ type GeoJSONGeometry =
 type GeoJSONGeometryCompressed =
     // GeoJSONGeometryPoint
     // | GeoJSONGeometryMultiPoint
-    // Currenly only Polygon and MultiPolygon can be parsed from compression.
+    // Currently only Polygon and MultiPolygon can be parsed from compression.
     | GeoJSONGeometryPolygonCompressed
     | GeoJSONGeometryMultiPolygonCompressed
     | GeoJSONGeometryLineStringCompressed

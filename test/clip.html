@@ -103,8 +103,6 @@ under the License.
             })
         </script>
 
-
-
         <div class="chart" id="scatter-clip-polar"></div>
         <script>
             require([
@@ -118,13 +116,13 @@ under the License.
 
                 data1.push({
                     value: [5, 82],
-                    name: 'This point shouldn\'t be clipped',
+                    name: 'Shrink the page, this poi👆nt shouldn\'t be clipped',
                     itemStyle: {
                         color: 'red'
                     },
                     label: {
                         show: true,
-                        formatter: '👆{b}👆',
+                        formatter: '{b}',
                         position: 'bottom'
                     }
                 });
@@ -150,7 +148,7 @@ under the License.
                     }]
                 };
                 var chart = testHelper.create(echarts, 'scatter-clip-polar', {
-                    title: ['Scatter Clip on Polar', 'Shrink the page, this red point shouldn\'t be clipped'],
+                    title: 'Scatter Clip on Polar',
                     option: option,
                     height: 400,
                     buttons: makeToggleChartButtons(function (clip) {
@@ -1430,6 +1428,45 @@ under the License.
                 var chart = testHelper.create(echarts, 'line-clip', {
                     title: [
                         'The line chart should be rendered without any error in console when `**clip**` is set as `**false**`'
+                    ],
+                    option: option,
+                    height: 400
+                });
+            });
+        </script>
+
+        <div class="chart" id="polar-clip"></div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    polar: {
+                        center: ['50%', '54%']
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: ['a', 'b', 'c'],
+                        boundaryGap: false,
+                    },
+                    radiusAxis: {
+                        min: 0
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        symbolSize: 20,
+                        name: 'line',
+                        type: 'scatter',
+                        showSymbol: true,
+                        data: [
+                            [0, 0],
+                            [10, 2]
+                        ]
+                    }]
+                };
+                var chart = testHelper.create(echarts, 'polar-clip', {
+                    title: [
+                        'The polar coord clip should include center point in scatter'
                     ],
                     option: option,
                     height: 400

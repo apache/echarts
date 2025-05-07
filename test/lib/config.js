@@ -30,6 +30,21 @@
     if (params.__RENDERER__) {
         window.__ECHARTS__DEFAULT__RENDERER__ = params.__RENDERER__;
     }
+    if (params.__COARSE__POINTER__) {
+        switch (params.__COARSE__POINTER__) {
+            case 'true':
+                window.__ECHARTS__COARSE__POINTER__ = true;
+                break;
+
+            case 'false':
+                window.__ECHARTS__COARSE__POINTER__ = false;
+                break;
+
+            default:
+                window.__ECHARTS__COARSE__POINTER__ = 'auto';
+                break;
+        }
+    }
     if (params.__USE_DIRTY_RECT__) {
         window.__ECHARTS__DEFAULT__USE_DIRTY_RECT__ = params.__USE_DIRTY_RECT__ === 'true';
     }
@@ -67,6 +82,7 @@
                 'map': 'data/map',
                 'i18n': '../i18n',
                 'extension': '../dist/extension',
+                'ssrClient': '../ssr/client/dist/index.js'
             }
         });
     }

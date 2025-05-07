@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var vaData = [[0, 2.57], [1, 6.49], [2, 8.42], [3, 8.72], [4, 1.97], [5, 8.83], [6, 0.94], [7, 0.14], [8, 5.55], [9, 4.54]];
+
+
+            var option = {
+                xAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        customValues: [0, 4, 7, 8, 9]
+                    },
+                    axisTick: {
+                        alignWithLabel: true,
+                        customValues: [0, 0.5, 1, 1.5, 2, 8, 9]
+                    },
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    type: 'line',
+                    data: vaData,
+                    smooth: true
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Value axis custom tick/label positions',
+                    'Ticks on 0, 0.5, 1, 1.5, 2, 8, 9',
+                    'Labels on 0, 4, 7, 8, 9'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'/*, 'map/js/china' */], function (echarts) {
+            var caData = [7.66, 7.70, 2.11, 7.62, 5.56, 5.09, 3.26, 0.24, -0.46, 8.11];
+
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['1', '2', '3', 'four', 'five', '6', '7', '8', '9', '10'],
+                    axisLabel: {
+                        customValues: ["1", "four", 4, "10"]
+                    },
+                    axisTick: {
+                        alignWithLabel: true,
+                        customValues: ["1", 3, "five", 6, "10"]
+                    },
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    type: 'line',
+                    data: caData,
+                    smooth: true
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Category axis custom tick/label positions',
+                    'Ticks on 1, four, five, 7, 10',
+                    'Labels on 1, four, five, 10'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var vals = [1.64, -0.84, -0.96, 8.03, 7.53, 4.14, 3.91, 8.39, 7.02, 2.28];
+            var taData = [];
+            for (var i = 0; i < 10; i++) {
+                taData.push([new Date(2020, 1, i+1), vals[i]]);
+            }
+
+            var option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        customValues: [
+                            new Date(2020, 1, 1),
+                            new Date(2020, 1, 4),
+                            new Date(2020, 1, 5),
+                            new Date(2020, 1, 10)
+                        ]
+                    },
+                    axisTick: {
+                        alignWithLabel: true,
+                        customValues: [
+                            new Date(2020, 1, 1),
+                            new Date(2020, 1, 4),
+                            new Date(2020, 1, 10)
+                        ]
+                    },
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    type: 'line',
+                    data: taData,
+                    smooth: true
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Time axis custom tick/label positions',
+                    'Ticks on 1st, 4th, 10th',
+                    'Labels on 1, 4th, 5th, 10th'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var laData = [[1, 3.47], [2, 7.84], [3, 2.01], [4, 4.20], [5, 3.87], [6, 1.50], [7, 2.56], [8, 6.40], [9, 1.74], [10, 2.96]];
+
+            var option = {
+                xAxis: {
+                    type: 'log',
+                    axisLabel: {
+                        customValues: [1, 4, 7, 8, 10]
+                    },
+                    axisTick: {
+                        alignWithLabel: true,
+                        customValues: [1, 0.5, 1, 1.5, 2, 8, 10]
+                    },
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    type: 'line',
+                    data: laData
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'Log axis custom tick/label positions',
+                    'Ticks on 1, 1.5, 2, 8, 10',
+                    'Labels on 1, 4, 7, 8, 10'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var option = {
+                    grid: {
+                        left: 300
+                    },
+                    dataZoom: [
+                        {
+                            show: true,
+                            realtime: true,
+                            start: 20,
+                            end: 100
+                        },
+                        {
+                            type: 'inside',
+                            realtime: true,
+                            start: 20,
+                            end: 100
+                        }
+                    ],
+                    xAxis: {
+                        axisTick: {
+                        alignWithLabel: false,
+                        customValues: ['a', 'c', 'd']
+                        },
+                        axisLabel: {
+                        customValues: ['a', 'c', 'd']
+                        },
+                        type: 'category',
+                        data: ['a', 'b', 'c', 'd']
+                    },
+                    yAxis: {},
+                    series: [
+                        {
+                        symbolSize: 8,
+                        data: [
+                            ['a', 34],
+                            ['b', 20],
+                            ['c', 23]
+                        ],
+                        type: 'scatter'
+                        }
+                    ]
+                };
+
+
+                var chart = testHelper.create(echarts, 'main4', {
+                title: [
+                    'customValues should not overflow the grid (category axis)',
+                    '`a` in the axis label should not be displayed'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var laData = [[1, 3.47], [2, 7.84], [3, 2.01], [4, 4.20], [5, 3.87], [6, 1.50], [7, 2.56], [8, 6.40], [9, 1.74], [10, 2.96]];
+
+            var option = {
+                grid: {},
+                dataZoom: [
+                    {
+                        show: true,
+                        realtime: true,
+                        start: 10,
+                        end: 100
+                    },
+                    {
+                        type: 'inside',
+                        realtime: true,
+                        start: 10,
+                        end: 100
+                    }
+                ],
+                xAxis: {
+                    // inverse: true,
+                    min: 0.8232487,
+                    max: 15.913814,
+                    axisTick: {
+                        alignWithLabel: false,
+                        customValues: [
+                            0.8232487, 1.0162385, 1.1550374, 1.2683247, 1.3663184, 1.4539799,
+                            1.5341381, 1.6085765, 1.678501, 1.7447696, 2.0390995, 2.2967868,
+                            2.5353202, 2.763711, 2.9876446, 3.2113228, 3.4383155, 3.6720607,
+                            3.9162545, 4.1752627, 4.4546794, 4.7622291, 5.1094275, 5.5150457,
+                            6.0135369, 6.6807831, 6.8487278, 7.0341985, 7.2417842, 7.4781695,
+                            7.7536565, 8.0853878, 8.5052466, 8.7672731, 9.0841154, 9.4869366,
+                            10.0451175, 10.1885089, 10.3480597, 10.5280286, 10.7346329, 10.9774775,
+                            11.2725888, 11.6498673, 11.8872372, 12.1760407, 12.5457607, 13.0622408,
+                            13.1956236, 13.3443503, 13.5124879, 13.7059808, 13.9340232, 14.2119776,
+                            14.5685523, 14.7935524, 15.0679412, 15.4201567, 15.913814
+                        ]
+                    },
+                    axisLabel: {
+                        customValues: [
+                            0.8232487, 1.7447696, 2.5353202, 3.6720607, 5.1094275, 6.6807831,
+                            7.7536565, 10.0451175, 10.9774775, 13.0622408, 13.9340232, 15.913814
+                        ],
+                        formatter: function (value, index, revers = true) {
+                            switch (value) {
+                            case 0.8232487:
+                                return revers ? '1 %' : '99%';
+                            case 1.7447696:
+                                return revers ? '10 %' : '90%';
+                            case 2.5353202:
+                                return revers ? '25 %' : '75%';
+                            case 3.6720607:
+                                return revers ? '50 %' : '50%';
+                            case 5.1094275:
+                                return revers ? '75 %' : '25%';
+                            case 6.6807831:
+                                return revers ? '90 %' : '10%';
+                            case 7.7536565:
+                                return revers ? '95 %' : '5%';
+                            case 10.0451175:
+                                return revers ? '99 %' : '1%';
+                            case 10.9774775:
+                                return revers ? '99,5 %' : '0,5%';
+                            case 13.0622408:
+                                return revers ? '99,9 %' : '0,1%';
+                            case 13.9340232:
+                                return revers ? '99,9 %' : '0,05%';
+                            case 15.913814:
+                                return revers ? '99,9 %' : '0,01%';
+                            default:
+                                return '- %';
+                            }
+                        }
+                    }
+                },
+                yAxis: {},
+                series: [
+                    {
+                        symbolSize: 8,
+                        data: [
+                            [5.890028, 627],
+                            [2.264864, 191],
+                            [3.908172, 364],
+                            [8.400104, 1040],
+                            [3.298611, 301],
+                            [1.921706, 164],
+                            [3.445732, 318],
+                            [4.426555, 440],
+                            [1.490985, 145],
+                            [1.72375, 160],
+                            [5.050093, 498],
+                            [2.099646, 176],
+                            [4.245153, 422],
+                            [7.3673, 686],
+                            [3.15342, 254],
+                            [1.182348, 118],
+                            [2.720003, 244],
+                            [3.595705, 320],
+                            [2.421612, 199],
+                            [3.009242, 251],
+                            [3.749499, 325],
+                            [4.072923, 393],
+                            [4.619232, 484],
+                            [5.573134, 573],
+                            [4.825884, 494],
+                            [2.86512, 246],
+                            [6.26557, 652],
+                            [5.296798, 530],
+                            [2.572668, 241],
+                            [6.733265, 659]
+                        ],
+                        type: 'scatter'
+                    }
+                ]
+            };
+
+
+            var chart = testHelper.create(echarts, 'main5', {
+                title: [
+                    'customValues should not overflow the grid (time axis)'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+    </body>
+</html>

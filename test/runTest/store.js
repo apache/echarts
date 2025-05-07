@@ -77,10 +77,21 @@ class Test {
  * It depends on two versions and rendering mode.
  */
 function getRunHash(params) {
+    // Replace # with PR- in the hash to avoid URL issues
+    const expectedVersion = params.expectedSource === 'PR'
+        ? params.expectedVersion.replace('#', 'PR-')
+        : params.expectedVersion;
+    const actualVersion = params.actualSource === 'PR'
+        ? params.actualVersion.replace('#', 'PR-')
+        : params.actualVersion;
+
     return [
-        params.expectedVersion,
-        params.actualVersion,
-        params.renderer
+        params.expectedSource,
+        expectedVersion,
+        params.actualSource,
+        actualVersion,
+        params.renderer,
+        params.useCoarsePointer
     ].join(TEST_HASH_SPLITTER);
 }
 
@@ -89,15 +100,42 @@ function getRunHash(params) {
  */
 function parseRunHash(str) {
     const parts = str.split(TEST_HASH_SPLITTER);
+    // Convert back PR-123 to #123 for PR versions
+    const expectedVersion = parts[0] === 'PR'
+        ? parts[1].replace('PR-', '#')
+        : parts[1];
+    const actualVersion = parts[2] === 'PR'
+        ? parts[3].replace('PR-', '#')
+        : parts[3];
+
     return {
-        expectedVersion: parts[0],
-        actualVersion: parts[1],
-        renderer: parts[2]
+        expectedSource: parts[0],
+        expectedVersion: expectedVersion,
+        actualSource: parts[2],
+        actualVersion: actualVersion,
+        renderer: parts[4],
+        useCoarsePointer: parts[5]
     };
 }
 
 function getResultBaseDir() {
     return path.join(RESULTS_ROOT_DIR, _runHash);
+}
+
+module.exports.clearStaledResults = async function () {
+    // If split by __ and there is no 6 parts, it is staled.
+    try {
+        const dirs = await globby('*', { cwd: RESULTS_ROOT_DIR, onlyDirectories: true });
+        for (let dir of dirs) {
+            const parts = dir.split(TEST_HASH_SPLITTER);
+            if (parts.length !== 6) {
+                await module.exports.delTestsRun(dir);
+            }
+        }
+    }
+    catch(e) {
+        console.error('Failed to clear staled results', e);
+    }
 }
 
 module.exports.getResultBaseDir = getResultBaseDir;
@@ -109,9 +147,12 @@ module.exports.getRunHash = getRunHash;
 module.exports.checkStoreVersion = function (runParams) {
     const storeParams = parseRunHash(_runHash);
     console.log('Store ', _runHash);
-    return storeParams.expectedVersion === runParams.expectedVersion
+    return storeParams.expectedSource === runParams.expectedSource
+        && storeParams.expectedVersion === runParams.expectedVersion
+        && storeParams.actualSource === runParams.actualSource
         && storeParams.actualVersion === runParams.actualVersion
-        && storeParams.renderer === runParams.renderer;
+        && storeParams.renderer === runParams.renderer
+        && storeParams.useCoarsePointer === runParams.useCoarsePointer;
 }
 
 function getResultFilePath() {
@@ -298,14 +339,22 @@ module.exports.getAllTestsRuns = async function () {
             continue;
         }
 
-        params.lastRunTime = lastRunTime > 0 ? formatDate(lastRunTime) : 'N/A';
-        params.total = total;
-        params.passed = passedCount;
-        params.finished = finishedCount;
-        params.id = dir;
-        params.diskSize = convertBytes(await getFolderSize(path.join(RESULTS_ROOT_DIR, dir)));
+        const runData = {
+            expectedSource: params.expectedSource,
+            expectedVersion: params.expectedVersion,
+            actualSource: params.actualSource,
+            actualVersion: params.actualVersion,
+            renderer: params.renderer,
+            useCoarsePointer: params.useCoarsePointer,
+            lastRunTime: lastRunTime > 0 ? formatDate(lastRunTime) : 'N/A',
+            total: total,
+            passed: passedCount,
+            finished: finishedCount,
+            id: dir,
+            diskSize: convertBytes(await getFolderSize(path.join(RESULTS_ROOT_DIR, dir)))
+        };
 
-        results.push(params);
+        results.push(runData);
     };
     return results;
 }

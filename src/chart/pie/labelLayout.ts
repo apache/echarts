@@ -89,7 +89,7 @@ function adjustSingleSide(
             const rA = r + item.len;
             const rA2 = rA * rA;
             // Use ellipse implicit function to calculate x
-            const dx = Math.sqrt((1 - Math.abs(dy * dy / rB2)) * rA2);
+            const dx = Math.sqrt(Math.abs((1 - dy * dy / rB2) * rA2));
             const newX = cx + (dx + item.len2) * dir;
             const deltaX = newX - item.label.x;
             const newTargetWidth = item.targetTextWidth - deltaX * dir;
@@ -288,12 +288,12 @@ function constrainTextWidth(
         const oldHeight = textRect.height;
         if (overflow && overflow.match('break')) {
             // Temporarily set background to be null to calculate
-            // the bounding box without backgroud.
+            // the bounding box without background.
             label.setStyle('backgroundColor', null);
             // Set constraining width
             label.setStyle('width', availableWidth - paddingH);
 
-            // This is the real bounding box of the text without padding
+            // This is the real bounding box of the text without padding.
             const innerRect = label.getBoundingRect();
 
             label.setStyle('width', Math.ceil(innerRect.width));
@@ -395,6 +395,10 @@ export default function pieLabelLayout(
         if (Math.abs(sectorShape.endAngle - sectorShape.startAngle) < minShowLabelRadian) {
             each(label.states, setNotShow);
             label.ignore = true;
+            if (labelLine) {
+                each(labelLine.states, setNotShow);
+                labelLine.ignore = true;
+            }
             return;
         }
 

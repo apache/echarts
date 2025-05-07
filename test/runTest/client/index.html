@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -101,83 +100,125 @@ under the License.
             </el-aside>
             <el-main>
                 <div class="test-run-controls">
-                    <div class="run-config-item">
-                        <el-tooltip content="Show All Tests Runs">
-                            <div style="cursor: pointer;"  @click="showAllTestsRuns">
-                                <i style="font-size:20px;vertical-align:middle;display:inline-block;" class="el-icon-files"></i>
-                                <span style="vertical-align:middle;display:inline-block;">ALL RUNS</span>
-                            </div>
-                        </el-tooltip>
-                    </div>
-
-                    <div class="run-config-item">
-                        <el-dropdown v-if="!running" split-button size="mini" title="Run"
-                            @click="run('selected')"
-                            @command="run"
-                        >
-                            <i class="el-icon-caret-right"></i> RUN ({{selectedTests.length}})
-                            <el-dropdown-menu slot="dropdown" >
-                                <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
-                                <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
-                                <el-dropdown-item command="all">Run all ({{fullTests.length}})</el-dropdown-item>
-                            </el-dropdown-menu>
-                        </el-dropdown>
-
-                        <el-button-group v-else>
-                            <el-button size="mini" :loading="true">Stop</el-button>
-                            <el-button title="Run" @click="stopTests" size="mini" icon="el-icon-close" style="padding-left: 3px;padding-right:3px;"></el-button>
-                        </el-button-group>
-
-                        <el-tooltip :content="'Finished ' + finishedPercentage + '%'">
-                            <el-progress
-                                type="circle"
-                                :percentage="finishedPercentage"
-                                :width="20"
-                                :stroke-width="4"
-                                :show-text="false"
-                            ></el-progress>
-                        </el-tooltip>
-                    </div>
-
-                    <div class="run-config-item">
-                        <span class="label">
-                            Expected
-                            <el-tooltip content="Use Nightly Build">
-                                <el-checkbox :disabled="running" v-model="runConfig.isExpectedNightly" size="mini"></el-checkbox>
+                    <div class="test-run-row">
+                        <div class="run-config-item">
+                            <el-tooltip content="Show Result of All Test Runnings">
+                                <div style="cursor: pointer;"  @click="showAllTestsRuns">
+                                    <i style="font-size:20px;vertical-align:middle;display:inline-block;" class="el-icon-files"></i>
+                                    <span style="vertical-align:middle;display:inline-block;">LIST OF RUNNING RESULTS</span>
+                                </div>
                             </el-tooltip>
-                        </span>
-                        <el-select :disabled="running" size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
-                            :style="`width: ${runConfig.isExpectedNightly ? 160 : 80}px;`"
-                        >
-                            <el-option v-for="version in expectedVersionsList" :key="version" :label="version" :value="version"></el-option>
-                        </el-select>
-                        <!-- <i class="el-icon-link"></i> -->
-                        <span class="label">
-                            Actual
-                            <el-tooltip content="Use Nightly Build">
-                                <el-checkbox :disabled="running" v-model="runConfig.isActualNightly" size="mini"></el-checkbox>
-                            </el-tooltip>
-                        </span>
-                        <el-select :disabled="running" size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
-                            :style="`width: ${runConfig.isActualNightly ? 160 : 80}px;`"
-                        >
-                            <el-option v-for="version in actualVersionsList" :key="version" :label="version" :value="version"></el-option>
-                        </el-select>
-                    </div>
-                    <div class="run-config-item">
-                        <span class="label">Renderer</span>
-                        <el-select :disabled="running" size="mini" style="width: 100px;" v-model="runConfig.renderer" placeholder="Select Renderer">
-                            <el-option key="canvas" label="canvas" value="canvas"></el-option>
-                            <el-option key="svg" label="svg" value="svg"></el-option>
-                        </el-select>
-                    </div>
-                    <div class="run-config-item">
-                        <span class="label">Threads</span>
+                        </div>
 
-                        <el-select :disabled="running" size="mini" v-model="runConfig.threads" style="width: 58px">
-                            <el-option v-for="t in [1, 2, 4, 6, 8]" :key="t" :label="t" :value="t"></el-option>
-                        </el-select>
-                        <!-- <el-slider style="width: 100px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider> -->
+                        <div class="run-config-item">
+                            <el-dropdown v-if="!running" split-button size="mini" title="Run"
+                                @click="run('selected')"
+                                @command="run"
+                            >
+                                <i class="el-icon-caret-right"></i> RUN ({{selectedTests.length}})
+                                <el-dropdown-menu slot="dropdown" >
+                                    <el-dropdown-item command="unfinished">Run unfinished ({{unfinishedTests.length}})</el-dropdown-item>
+                                    <el-dropdown-item command="failed">Run failed ({{failedTests.length}})</el-dropdown-item>
+                                    <el-dropdown-item command="all">Run all ({{fullTests.length}})</el-dropdown-item>
+                                </el-dropdown-menu>
+                            </el-dropdown>
+
+                            <el-button-group v-else>
+                                <el-button size="mini" :loading="true">Stop</el-button>
+                                <el-button title="Run" @click="stopTests" size="mini" icon="el-icon-close" style="padding-left: 3px;padding-right:3px;"></el-button>
+                            </el-button-group>
+
+                            <el-tooltip :content="'Finished ' + finishedPercentage + '%'">
+                                <el-progress
+                                    type="circle"
+                                    :percentage="finishedPercentage"
+                                    :width="20"
+                                    :stroke-width="4"
+                                    :show-text="false"
+                                ></el-progress>
+                            </el-tooltip>
+                        </div>
+                    </div>
+                    <div class="test-run-row">
+                        <div class="run-config-item">
+                            <span class="label">
+                                Expected
+                            </span>
+                            <el-select :disabled="running" size="mini" v-model="runConfig.expectedSource" style="width: 90px;">
+                                <el-option value="release" label="Release"></el-option>
+                                <el-option value="nightly" label="Nightly"></el-option>
+                                <el-option value="PR" label="PR"></el-option>
+                                <el-option value="local" label="Local"></el-option>
+                            </el-select>
+                            <el-select
+                                v-if="runConfig.expectedSource !== 'local' && runConfig.expectedSource !== 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.expectedVersion"
+                                placeholder="Select Version"
+                                :style="`width: ${runConfig.expectedSource === 'nightly' ? 160 : 80}px;`"
+                            >
+                                <el-option v-for="version in expectedVersionsList" :key="version" :label="version" :value="version"></el-option>
+                            </el-select>
+                            <el-input
+                                v-if="runConfig.expectedSource === 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.expectedVersion"
+                                placeholder="#123"
+                                style="width: 120px;"
+                            ></el-input>
+                            <span class="label">
+                                Actual
+                            </span>
+                            <el-select :disabled="running" size="mini" v-model="runConfig.actualSource" style="width: 90px;">
+                                <el-option value="release" label="Release"></el-option>
+                                <el-option value="nightly" label="Nightly"></el-option>
+                                <el-option value="PR" label="PR"></el-option>
+                                <el-option value="local" label="Local"></el-option>
+                            </el-select>
+                            <el-select
+                                v-if="runConfig.actualSource !== 'local' && runConfig.actualSource !== 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.actualVersion"
+                                placeholder="Select Version"
+                                :style="`width: ${runConfig.actualSource === 'nightly' ? 160 : 80}px;`"
+                            >
+                                <el-option v-for="version in actualVersionsList" :key="version" :label="version" :value="version"></el-option>
+                            </el-select>
+                            <el-input
+                                v-if="runConfig.actualSource === 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.actualVersion"
+                                placeholder="#123"
+                                style="width: 120px;"
+                            ></el-input>
+                        </div>
+                        <div class="run-config-item">
+                            <span class="label">Renderer</span>
+                            <el-select :disabled="running" size="mini" style="width: 100px;" v-model="runConfig.renderer" placeholder="Select Renderer">
+                                <el-option key="canvas" label="canvas" value="canvas"></el-option>
+                                <el-option key="svg" label="svg" value="svg"></el-option>
+                            </el-select>
+                        </div>
+                        <div class="run-config-item">
+                            <span class="label">Coarse Pointer</span>
+                            <el-select :disabled="running" size="mini" style="width: 100px;" v-model="runConfig.useCoarsePointer" placeholder="auto">
+                                <el-option key="auto" label="auto" value="auto"></el-option>
+                                <el-option key="true" label="true" value="true"></el-option>
+                                <el-option key="false" label="false" value="false"></el-option>
+                            </el-select>
+                        </div>
+                        <div class="run-config-item">
+                            <span class="label">Threads</span>
+
+                            <el-select :disabled="running" size="mini" v-model="runConfig.threads" style="width: 58px">
+                                <el-option v-for="t in [1, 2, 4, 6, 8]" :key="t" :label="t" :value="t"></el-option>
+                            </el-select>
+                            <!-- <el-slider style="width: 100px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider> -->
+                        </div>
                     </div>
                 </div>
 
@@ -321,12 +362,12 @@ under the License.
 
 </div>
 
-<script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+<script src="../node_modules/socket.io-client/dist/socket.io.js"></script>
+<script src="https://unpkg.com/vue@2.6.10/dist/vue.js"></script>
 
 <!-- Element UI -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.1/lib/theme-chalk/index.css">
-<script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.1/lib/index.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.1/lib/theme-chalk/index.css">
+<script src="https://unpkg.com/element-ui@2.15.1/lib/index.js"></script>
 
 <script src="client.js"></script>
 

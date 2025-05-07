@@ -61,7 +61,7 @@ interface SankeyEdgeStyleOption extends LineStyleOption {
 
 interface ExtraStateOption {
     emphasis?: {
-        focus?: DefaultEmphasisFocus | 'adjacency'
+        focus?: DefaultEmphasisFocus | 'adjacency' | 'trajectory'
     }
 }
 
@@ -85,6 +85,7 @@ export interface SankeyEdgeItemOption extends
         StatesOptionMixin<SankeyEdgeStateOption, ExtraStateOption>,
         GraphEdgeItemObject<OptionDataValueNumeric> {
     focusNodeAdjacency?: FocusNodeAdjacency
+    edgeLabel?: SeriesLabelOption
 }
 
 export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStateOption {
@@ -137,6 +138,10 @@ export interface SankeySeriesOption
     links?: SankeyEdgeItemOption[]
 
     levels?: SankeyLevelOption[]
+
+    edgeLabel?: SeriesLabelOption & {
+        position?: 'inside'
+    }
 }
 
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
@@ -151,9 +156,9 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
      * Init a graph data structure from data in option series
      */
     getInitialData(option: SankeySeriesOption, ecModel: GlobalModel) {
-        const links = option.edges || option.links;
-        const nodes = option.data || option.nodes;
-        const levels = option.levels;
+        const links = option.edges || option.links || [];
+        const nodes = option.data || option.nodes || [];
+        const levels = option.levels || [];
         this.levelModels = [];
         const levelModels = this.levelModels;
 
@@ -167,10 +172,10 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
                 }
             }
         }
-        if (nodes && links) {
-            const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
-            return graph.data;
-        }
+
+        const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
+        return graph.data;
+
         function beforeLink(nodeData: SeriesData, edgeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
                 const seriesModel = model.parentModel as SankeySeriesModel;
@@ -295,6 +300,11 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         label: {
             show: true,
             position: 'right',
+            fontSize: 12
+        },
+
+        edgeLabel: {
+            show: false,
             fontSize: 12
         },
 

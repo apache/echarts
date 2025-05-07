@@ -39,8 +39,11 @@ program
     .option('--no-headless', 'Not headless')
     .option('-s, --speed <speed>', 'Playback speed')
     .option('--expected <expected>', 'Expected version')
+    .option('--expected-source <expectedSource>', 'Expected source')
     .option('--actual <actual>', 'Actual version')
+    .option('--actual-source <actualSource>', 'Actual source')
     .option('--renderer <renderer>', 'svg/canvas renderer')
+    .option('--use-coarse-pointer <useCoarsePointer>', '"auto" (by default) or "true" or "false"')
     .option('--threads <threads>', 'How many threads to run concurrently')
     .option('--no-save', 'Don\'t save result')
     .option('--dir <dir>', 'Out dir');
@@ -51,6 +54,7 @@ program.speed = +program.speed || 1;
 program.actual = program.actual || 'local';
 program.threads = +program.threads || 1;
 program.renderer = (program.renderer || 'canvas').toLowerCase();
+program.useCoarsePointer = (program.useCoarsePointer || 'auto').toLowerCase();
 program.dir = program.dir || (__dirname + '/tmp');
 
 if (!program.tests) {
@@ -76,12 +80,12 @@ function getClientRelativePath(absPath) {
     return path.join('../', path.relative(__dirname, absPath));
 }
 
-function replaceEChartsVersion(interceptedRequest, version) {
+function replaceEChartsVersion(interceptedRequest, source, version) {
     // TODO Extensions and maps
     if (interceptedRequest.url().endsWith('dist/echarts.js')) {
-        console.log('Use echarts version: ' + version);
+        console.log('Use echarts version: ' + source + ' ' + version);
         interceptedRequest.continue({
-            url: `${origin}/test/runTest/${getVersionDir(version)}/${getEChartsTestFileName()}`
+            url: `${origin}/test/runTest/${getVersionDir(source, version)}/${getEChartsTestFileName()}`
         });
     }
     else {
@@ -115,9 +119,9 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
     if (minor) {
         screenshotName += '-' + minor;
     }
-    let screenshotPrefix = isExpected ? 'expected' : 'actual';
+    const screenshotPrefix = isExpected ? 'expected' : 'actual';
     fse.ensureDirSync(getScreenshotDir());
-    let screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
+    const screenshotPath = path.join(getScreenshotDir(), `${screenshotName}-${screenshotPrefix}.png`);
     await page.screenshot({
         path: screenshotPath,
         // https://github.com/puppeteer/puppeteer/issues/7043
@@ -126,11 +130,18 @@ async function takeScreenshot(page, fullPage, fileUrl, desc, isExpected, minor) 
         fullPage
     });
 
-    const webpScreenshotPath = await convertToWebP(screenshotPath);
+    let webpScreenshotPath;
+    try {
+        webpScreenshotPath = await convertToWebP(screenshotPath);
+    } catch (e) {
+        console.error('Failed to convert screenshot to webp', e);
+    }
+
+    console.log('Screenshot: ', webpScreenshotPath || screenshotPath);
 
     return {
         screenshotName,
-        screenshotPath: webpScreenshotPath,
+        screenshotPath: webpScreenshotPath || screenshotPath,
         rawScreenshotPath: screenshotPath
     };
 }
@@ -153,10 +164,12 @@ async function waitForNetworkIdle(page) {
         page.off('requestfailed', ended);
         page.off('requestfinished', ended);
     };
-  }
+}
 
-
-async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
+/**
+ * @param {puppeteer.Browser} browser
+ */
+async function runTestPage(browser, testOpt, source, version, runtimeCode, isExpected) {
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
@@ -164,7 +177,7 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
 
     const page = await browser.newPage();
     page.setRequestInterception(true);
-    page.on('request', request => replaceEChartsVersion(request, version));
+    page.on('request', request => replaceEChartsVersion(request, source, version));
 
     async function pageScreenshot() {
         if (!program.save) {
@@ -265,9 +278,10 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
             width: 800,
             height: 600
         });
-        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}`, {
+        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`, {
             waitUntil: 'networkidle2',
-            timeout: 10000
+            timeout: 10000,
+            // timeout: 0
         });
 
         if (!vstInited) {    // Not using simpleRequire in the test
@@ -314,20 +328,24 @@ async function runTestPage(browser, testOpt, version, runtimeCode, isExpected) {
     };
 }
 
-async function writePNG(diffPNG, diffPath) {
-    return new Promise(resolve => {
-        let writer = fs.createWriteStream(diffPath);
+function writePNG(diffPNG, diffPath) {
+    return new Promise((resolve, reject) => {
+        const writer = fs.createWriteStream(diffPath);
         diffPNG.pack().pipe(writer);
-        writer.on('finish', () => {resolve();});
+        writer.on('finish', resolve);
+        writer.on('error', reject);
     });
 };
 
-async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVersion) {
+/**
+ * @param {puppeteer.Browser} browser
+ */
+async function runTest(browser, testOpt, runtimeCode, expectedSource, expectedVersion, actualSource, actualVersion) {
     if (program.save) {
         testOpt.status === 'running';
 
-        const expectedResult = await runTestPage(browser, testOpt, expectedVersion, runtimeCode, true);
-        const actualResult = await runTestPage(browser, testOpt, actualVersion, runtimeCode, false);
+        const expectedResult = await runTestPage(browser, testOpt, expectedSource, expectedVersion, runtimeCode, true);
+        const actualResult = await runTestPage(browser, testOpt, actualSource, actualVersion, runtimeCode, false);
 
         // sortScreenshots(expectedResult.screenshots);
         // sortScreenshots(actualResult.screenshots);
@@ -351,9 +369,15 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
 
                 const diffPath = `${getScreenshotDir()}/${shot.screenshotName}-diff.png`;
                 await writePNG(diffPNG, diffPath);
-                const diffWebpPath = await convertToWebP(diffPath);
 
-                result.diff = getClientRelativePath(diffWebpPath);
+                let diffWebpPath;
+                try {
+                    diffWebpPath = await convertToWebP(diffPath);
+                } catch (e) {
+                    console.error('Failed to convert diff png to webp', e);
+                }
+
+                result.diff = getClientRelativePath(diffWebpPath || diffPath);
                 result.diffRatio = diffRatio;
 
                 // Remove png files
@@ -361,7 +385,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
                     await Promise.all([
                         fse.unlink(actual.rawScreenshotPath),
                         fse.unlink(expected.rawScreenshotPath),
-                        fse.unlink(diffPath)
+                        diffWebpPath && fse.unlink(diffPath)
                     ]);
                 }
                 catch (e) {}
@@ -384,6 +408,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedVersion, actualVer
         testOpt.actualVersion = actualVersion;
         testOpt.expectedVersion = expectedVersion;
         testOpt.useSVG = program.renderer === 'svg';
+        testOpt.useCoarsePointer = program.useCoarsePointer;
         testOpt.lastRun = Date.now();
     }
     else {
@@ -407,9 +432,9 @@ async function runTests(pendingTests) {
     });
 
     async function eachTask(testOpt) {
-        console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}`);
+        console.log(`Running test: ${testOpt.name}, renderer: ${program.renderer}, useCoarsePointer: ${program.useCoarsePointer}`);
         try {
-            await runTest(browser, testOpt, runtimeCode, program.expected, program.actual);
+            await runTest(browser, testOpt, runtimeCode, program.expectedSource, program.expected, program.actualSource, program.actual);
         }
         catch (e) {
             // Restore status
@@ -434,7 +459,7 @@ async function runTests(pendingTests) {
         }
     }
     catch(e) {
-        console.log(e);
+        console.error(e);
     }
 
 
@@ -453,3 +478,4 @@ runTests(program.tests.split(',').map(testName => {
         status: 'pending'
     };
 }));
+

@@ -30,7 +30,7 @@ import {
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
-import RoamController, { RoamEventParams } from '../../component/helper/RoamController';
+import RoamController, { RoamEventParams, RoamControllerHost } from '../../component/helper/RoamController';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as animationUtil from '../../util/animation';
@@ -153,6 +153,7 @@ class TreemapView extends ChartView {
     private _containerGroup: graphic.Group;
     private _breadcrumb: Breadcrumb;
     private _controller: RoamController;
+    private _controllerHost: RoamControllerHost;
 
     private _oldTree: Tree;
 
@@ -254,9 +255,9 @@ class TreemapView extends ChartView {
             );
         }
 
-        // Notice: when thisTree and oldTree are the same tree (see list.cloneShallow),
-        // the oldTree is actually losted, so we can not find all of the old graphic
-        // elements from tree. So we use this stragegy: make element storage, move
+        // Notice: When thisTree and oldTree are the same tree (see list.cloneShallow),
+        // the oldTree is actually losted, so we cannot find all of the old graphic
+        // elements from tree. So we use this strategy: make element storage, move
         // from old storage to new storage, clear old storage.
 
         dualTravel(
@@ -272,6 +273,14 @@ class TreemapView extends ChartView {
 
         this._oldTree = thisTree;
         this._storage = thisStorage;
+
+        if (this._controllerHost) {
+            const _oldRootLayout = this.seriesModel.layoutInfo;
+            const rootLayout = thisTree.root.getLayout();
+            if (rootLayout.width === _oldRootLayout.width && rootLayout.height === _oldRootLayout.height) {
+                this._controllerHost.zoom = 1;
+            }
+        }
 
         return {
             lastsForAnimation,
@@ -471,11 +480,21 @@ class TreemapView extends ChartView {
 
     private _resetController(api: ExtensionAPI) {
         let controller = this._controller;
+        let controllerHost = this._controllerHost;
+
+        if (!controllerHost) {
+            this._controllerHost = {
+                target: this.group
+            } as RoamControllerHost;
+            controllerHost = this._controllerHost;
+        }
 
         // Init controller.
         if (!controller) {
             controller = this._controller = new RoamController(api.getZr());
             controller.enable(this.seriesModel.get('roam'));
+            controllerHost.zoomLimit = this.seriesModel.get('scaleLimit');
+            controllerHost.zoom = this.seriesModel.get('zoom');
             controller.on('pan', bind(this._onPan, this));
             controller.on('zoom', bind(this._onZoom, this));
         }
@@ -488,6 +507,7 @@ class TreemapView extends ChartView {
 
     private _clearController() {
         let controller = this._controller;
+        this._controllerHost = null;
         if (controller) {
             controller.dispose();
             controller = null;
@@ -526,6 +546,7 @@ class TreemapView extends ChartView {
     private _onZoom(e: RoamEventParams['zoom']) {
         let mouseX = e.originX;
         let mouseY = e.originY;
+        const zoomDelta = e.scale;
 
         if (this._state !== 'animating') {
             // These param must not be cached.
@@ -544,6 +565,24 @@ class TreemapView extends ChartView {
             const rect = new BoundingRect(
                 rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height
             );
+
+            // scaleLimit
+            let zoomLimit = null;
+            const _controllerHost = this._controllerHost;
+            zoomLimit = _controllerHost.zoomLimit;
+
+            let newZoom = _controllerHost.zoom = _controllerHost.zoom || 1;
+            newZoom *= zoomDelta;
+            if (zoomLimit) {
+                const zoomMin = zoomLimit.min || 0;
+                const zoomMax = zoomLimit.max || Infinity;
+                newZoom = Math.max(
+                    Math.min(zoomMax, newZoom),
+                    zoomMin
+                );
+            }
+            const zoomScale = newZoom / _controllerHost.zoom;
+            _controllerHost.zoom = newZoom;
             const layoutInfo = this.seriesModel.layoutInfo;
 
             // Transform mouse coord from global to containerGroup.
@@ -553,7 +592,7 @@ class TreemapView extends ChartView {
             // Scale root bounding rect.
             const m = matrix.create();
             matrix.translate(m, m, [-mouseX, -mouseY]);
-            matrix.scale(m, m, [e.scale, e.scale]);
+            matrix.scale(m, m, [zoomScale, zoomScale]);
             matrix.translate(m, m, [mouseX, mouseY]);
 
             rect.applyTransform(m);
@@ -684,7 +723,7 @@ class TreemapView extends ChartView {
                 const point = bgEl.transformCoordToLocal(x, y);
                 const shape = bgEl.shape;
 
-                // For performance consideration, dont use 'getBoundingRect'.
+                // For performance consideration, don't use 'getBoundingRect'.
                 if (shape.x <= point[0]
                     && point[0] <= shape.x + shape.width
                     && shape.y <= point[1]
@@ -837,6 +876,9 @@ function renderNode(
         setAsHighDownDispatcher(group, !isDisabled);
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
+
+        const cursorStyle = nodeModel.getShallow('cursor');
+        cursorStyle && content.attr('cursor', cursorStyle);
 
         enableHoverFocus(group, focusOrIndices, blurScope);
     }
@@ -1098,9 +1140,9 @@ function renderNode(
 
 }
 
-// We can not set all backgroud with the same z, Because the behaviour of
+// We cannot set all background with the same z, because the behaviour of
 // drill down and roll up differ background creation sequence from tree
-// hierarchy sequence, which cause that lowser background element overlap
+// hierarchy sequence, which cause lower background elements to overlap
 // upper ones. So we calculate z based on depth.
 // Moreover, we try to shrink down z interval to [0, 1] to avoid that
 // treemap with large z overlaps other components.

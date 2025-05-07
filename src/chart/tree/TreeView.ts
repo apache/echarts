@@ -485,9 +485,11 @@ function updateNode(
 
     // Handle status
     const focus = itemModel.get(['emphasis', 'focus']);
-    const focusDataIndices: number[] = focus === 'ancestor'
-        ? node.getAncestorsIndices()
-        : focus === 'descendant' ? node.getDescendantIndices() : null;
+    const focusDataIndices: number[] = focus === 'relative'
+        ? zrUtil.concatArray(node.getAncestorsIndices(), node.getDescendantIndices()) as number[]
+        : focus === 'ancestor'
+            ? node.getAncestorsIndices()
+            : focus === 'descendant' ? node.getDescendantIndices() : null;
 
     if (focusDataIndices) {
         // Modify the focus to data indices.
@@ -533,6 +535,8 @@ function drawEdge(
     const edgeForkPosition = seriesModel.get('edgeForkPosition');
     const lineStyle = itemModel.getModel('lineStyle').getLineStyle();
     let edge = symbolEl.__edge;
+    // curve edge from node -> parent
+    // polyline edge from node -> children
     if (edgeShape === 'curve') {
         if (node.parentNode && node.parentNode !== virtualRoot) {
             if (!edge) {
@@ -581,7 +585,8 @@ function drawEdge(
         }
     }
 
-    if (edge) {
+    // show all edge when edgeShape is 'curve', filter node `isExpand` is false when edgeShape is 'polyline'
+    if (edge && !(edgeShape === 'polyline' && !node.isExpand)) {
         edge.useStyle(zrUtil.defaults({
             strokeNoScale: true, fill: null
         }, lineStyle));

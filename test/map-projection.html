@@ -23,8 +23,8 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
-        <script src="https://cdn.jsdelivr.net/npm/d3-geo@3/dist/d3-geo.js"></script>
+        <script src="https://unpkg.com/d3-array@3"></script>
+        <script src="https://unpkg.com/d3-geo@3/dist/d3-geo.js"></script>
 
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
@@ -48,11 +48,24 @@ under the License.
         <script>
             require([
                 'echarts',
-                'map/json/china-new.json'
-            ], function (echarts, chinaJson) {
-                echarts.registerMap('china', chinaJson)
-
+                'map/js/china.js'
+            ], function (echarts) {
                 option = {
+                    title: [{
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 15,
+                        textStyle: {
+                            color: '#888',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     series: {
                         type: 'map',
                         map: 'china',
@@ -63,7 +76,13 @@ under the License.
                         projection: {
                             project: (point) => [point[0] / 180 * Math.PI, -Math.log(Math.tan((Math.PI / 2 + point[1] / 180 * Math.PI) / 2))],
                             unproject: (point) => [point[0] * 180 / Math.PI, 2 * 180 / Math.PI * Math.atan(Math.exp(point[1])) - 90]
-                        }
+                        },
+                        regions: [{
+                            name: '新疆维吾尔自治区附近境界线',
+                            itemStyle: {
+                                borderColor: '#404a59'
+                            }
+                        }]
                     }
                 };
 
@@ -781,4 +800,3 @@ under the License.
         </script>
     </body>
 </html>
-

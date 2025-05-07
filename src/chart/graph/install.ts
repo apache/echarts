@@ -29,7 +29,7 @@ import createView from './createView';
 import View from '../../coord/View';
 import GraphView from './GraphView';
 import GraphSeriesModel from './GraphSeries';
-import { RoamPaylod, updateCenterAndZoom } from '../../action/roamHelper';
+import { RoamPayload, updateCenterAndZoom } from '../../action/roamHelper';
 import GlobalModel from '../../model/Global';
 import { noop } from 'zrender/src/core/util';
 import type ExtensionAPI from '../../core/ExtensionAPI';
@@ -73,7 +73,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     }, noop);
 
     // Register roam action.
-    registers.registerAction(actionInfo, function (payload: RoamPaylod, ecModel: GlobalModel, api: ExtensionAPI) {
+    registers.registerAction(actionInfo, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachComponent({
             mainType: 'series', query: payload
         }, function (seriesModel: GraphSeriesModel) {

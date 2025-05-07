@@ -71,7 +71,6 @@
 }
 
 .nav-toolbar, .test-run-controls {
-    padding: 10px 10px;
     background: #fff;
     position: fixed;
     width: 330px;
@@ -84,17 +83,14 @@
     z-index: 1;
     position: sticky;
     width: 100%;
-    padding: 5px 40px;
     top: 0px;
-
     background: #896bda;
     box-shadow: 0 0 20px rgb(0 0 0 / 20%);
     border-bottom: none;
 }
 
-.test-run-controls>* {
-    display: inline-block;
-    vertical-align: middle;
+.test-run-row {
+    padding: 5px 20px;
 }
 
 .nav-toolbar .el-button {
@@ -106,6 +102,8 @@
     margin: 0 5px;
     color: #fff;
     font-size: 12px;
+    display: inline-block;
+    vertical-align: middle;
 }
 .run-config-item>* {
     display: inline-block;
@@ -279,6 +277,7 @@
 .test-errors, .test-logs {
     margin-top: 20px;
     padding: 0 20px;
+    word-wrap: break-word;
 }
 
 .test-logs .log-item {

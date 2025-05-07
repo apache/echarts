@@ -31,7 +31,7 @@ import SeriesData from '../../data/SeriesData';
 import Sausage from '../../util/shape/sausage';
 import {createSymbol} from '../../util/symbol';
 import ZRImage from 'zrender/src/graphic/Image';
-import {extend, isFunction, isString} from 'zrender/src/core/util';
+import { extend, isFunction, isString, isNumber, each } from 'zrender/src/core/util';
 import {setCommonECData} from '../../util/innerStore';
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 
@@ -127,6 +127,7 @@ class GaugeView extends ChartView {
 
         let prevEndAngle = startAngle;
 
+        const sectors: (Sausage | graphic.Sector)[] = [];
         for (let i = 0; showAxis && i < colorList.length; i++) {
             // Clamp
             const percent = Math.min(Math.max(colorList[i][0], 0), 1);
@@ -154,10 +155,13 @@ class GaugeView extends ChartView {
                 ['color', 'width']
             ));
 
-            group.add(sector);
+            sectors.push(sector);
 
             prevEndAngle = endAngle;
         }
+
+        sectors.reverse();
+        each(sectors, sector => group.add(sector));
 
         const getColor = function (percent: number) {
             // Less than 0
@@ -272,19 +276,55 @@ class GaugeView extends ChartView {
                     labelModel.get('formatter')
                 );
                 const autoColor = getColor(i / splitNumber);
+                const textStyleX = unitX * (r - splitLineLen - distance) + cx;
+                const textStyleY = unitY * (r - splitLineLen - distance) + cy;
 
-                group.add(new graphic.Text({
-                    style: createTextStyle(labelModel, {
-                        text: label,
-                        x: unitX * (r - splitLineLen - distance) + cx,
-                        y: unitY * (r - splitLineLen - distance) + cy,
-                        verticalAlign: unitY < -0.8 ? 'top' : (unitY > 0.8 ? 'bottom' : 'middle'),
-                        align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
-                    }, {
-                        inheritColor: autoColor
-                    }),
-                    silent: true
-                }));
+                const rotateType = labelModel.get('rotate');
+                let rotate = 0;
+                if (rotateType === 'radial') {
+                    rotate = -angle + 2 * Math.PI;
+                    if (rotate > Math.PI / 2) {
+                        rotate += Math.PI;
+                    }
+                }
+                else if (rotateType === 'tangential') {
+                    rotate = -angle - Math.PI / 2;
+                }
+                else if (isNumber(rotateType)) {
+                    rotate = rotateType * Math.PI / 180;
+                }
+
+                if (rotate === 0) {
+                    group.add(new graphic.Text({
+                        style: createTextStyle(labelModel, {
+                            text: label,
+                            x: textStyleX,
+                            y: textStyleY,
+                            verticalAlign: unitY < -0.8 ? 'top' : (unitY > 0.8 ? 'bottom' : 'middle'),
+                            align: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
+                        }, {
+                            inheritColor: autoColor
+                        }),
+                        silent: true
+                    }));
+                }
+                else {
+                    group.add(new graphic.Text({
+                        style: createTextStyle(labelModel, {
+                            text: label,
+                            x: textStyleX,
+                            y: textStyleY,
+                            verticalAlign: 'middle',
+                            align: 'center'
+                        }, {
+                            inheritColor: autoColor
+                        }),
+                        silent: true,
+                        originX: textStyleX,
+                        originY: textStyleY,
+                        rotation: rotate
+                    }));
+                }
             }
 
             // Axis tick
@@ -411,7 +451,7 @@ class GaugeView extends ChartView {
                     r: r
                 }
             });
-            isOverlap && (progress.z2 = maxVal - (data.get(valueDim, idx) as number) % maxVal);
+            isOverlap && (progress.z2 = linearMap(data.get(valueDim, idx) as number, [minVal, maxVal], [100, 0], true));
             return progress;
         }
 

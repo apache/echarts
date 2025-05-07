@@ -44,7 +44,7 @@ type NormalizedValue = number;
 
 type MappingMethod = 'linear' | 'piecewise' | 'category' | 'fixed';
 
-// May include liftZ. wich is not provided to developers.
+// May include liftZ. which is not provided to developers.
 
 interface Normalizer {
     (this: VisualMapping, value?: RawValue): NormalizedValue
@@ -361,7 +361,7 @@ class VisualMapping {
     }
 
     /**
-     * Convinent method.
+     * Convenient method.
      * Visual can be Object or Array or primary type.
      */
     static eachVisual<Ctx, T>(
@@ -377,13 +377,13 @@ class VisualMapping {
         }
     }
 
-    static mapVisual<Ctx, T>(visual: T, callback: (visual: T, key?: string | number) => T, context?: Ctx): T
-    static mapVisual<Ctx, T>(visual: T[], callback: (visual: T, key?: string | number) => T[], context?: Ctx): T[]
+    static mapVisual<Ctx, T>(visual: T, callback: (visual: T, key?: string | number) => T, context?: Ctx): T;
+    static mapVisual<Ctx, T>(visual: T[], callback: (visual: T, key?: string | number) => T[], context?: Ctx): T[];
     static mapVisual<Ctx, T>(
         visual: Dictionary<T>,
         callback: (visual: T, key?: string | number) => Dictionary<T>,
         context?: Ctx
-    ): Dictionary<T>
+    ): Dictionary<T>;
     static mapVisual<Ctx, T>(
         visual: T | T[] | Dictionary<T>,
         callback: (visual: T, key?: string | number) => T | T[] | Dictionary<T>,

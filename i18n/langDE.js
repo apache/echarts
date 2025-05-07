@@ -51,7 +51,7 @@ var localeObj = {
             'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
         ],
         monthAbbr: [
-            'Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
+            'Jan', 'Feb', 'Mrz', 'Apr', 'Mai', 'Jun',
             'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
         ],
         dayOfWeek: [
@@ -127,7 +127,9 @@ var localeObj = {
             gauge: 'Meßanzeige',
             pictorialBar: 'Bildlicher Balken',
             themeRiver: 'Thematische Flusskarte',
-            sunburst: 'Sonnenausbruch'
+            sunburst: 'Sonnenausbruch',
+            custom: 'Graficu persunalizatu',
+            chart: 'Diagramm'
         }
     },
     aria: {
@@ -163,6 +165,7 @@ var localeObj = {
         }
     }
 };
+
     echarts.registerLocale('DE', localeObj);
         
 });

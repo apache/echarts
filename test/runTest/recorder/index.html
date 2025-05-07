@@ -61,7 +61,7 @@ under the License.
             <div v-for="action in actions" :class="{'action-item': true, 'active': action.name === currentAction.name}" @click.self="select(action.name)">
                 {{action.name}}
                 <div style="float:right" class="operations">
-                    <el-popover>
+                    <el-popover popper-class="action-popover">
                         <div style="text-align: center">{ scrollX: {{action.scrollX}}, scrollY: {{action.scrollY}} }</div>
                         <div v-for="op in action.ops" style="text-align: center">{{op}}</div>
                         <div slot="reference">
@@ -93,13 +93,13 @@ under the License.
     <el-button icon="el-icon-menu" type="info" plain id="open-nav" @click="drawerVisible=true"></el-button>
 </div>
 
-<script src="../../../node_modules/socket.io-client/dist/socket.io.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+<script src="../node_modules/socket.io-client/dist/socket.io.js"></script>
+<script src="https://unpkg.com/vue@2.6.10/dist/vue.js"></script>
 
 <!-- Element UI -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/theme-chalk/index.css">
-<script src="https://cdn.jsdelivr.net/npm/element-ui@2.11.1/lib/index.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/element-ui@2.11.1/lib/theme-chalk/index.css">
+<script src="https://unpkg.com/element-ui@2.11.1/lib/index.js"></script>
+<script src="https://unpkg.com/lodash@4.17.15/lodash.js"></script>
 
 <script src="recorder.js"></script>
 

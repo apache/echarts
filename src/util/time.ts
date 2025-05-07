@@ -113,7 +113,7 @@ export function format(
     const date = numberUtil.parseDate(time);
     const y = date[fullYearGetterName(isUTC)]();
     const M = date[monthGetterName(isUTC)]() + 1;
-    const q = Math.floor((M - 1) / 4) + 1;
+    const q = Math.floor((M - 1) / 3) + 1;
     const d = date[dateGetterName(isUTC)]();
     const e = date['get' + (isUTC ? 'UTC' : '') + 'Day' as 'getDay' | 'getUTCDay']();
     const H = date[hoursGetterName(isUTC)]();
@@ -121,7 +121,8 @@ export function format(
     const m = date[minutesGetterName(isUTC)]();
     const s = date[secondsGetterName(isUTC)]();
     const S = date[millisecondsGetterName(isUTC)]();
-
+    const a = H >= 12 ? 'pm' : 'am';
+    const A = a.toUpperCase();
 
     const localeModel = lang instanceof Model ? lang
         : getLocaleModel(lang || SYSTEM_LANG) || getDefaultLocaleModel();
@@ -132,8 +133,10 @@ export function format(
     const dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
 
     return (template || '')
+        .replace(/{a}/g, a + '')
+        .replace(/{A}/g, A + '')
         .replace(/{yyyy}/g, y + '')
-        .replace(/{yy}/g, y % 100 + '')
+        .replace(/{yy}/g, pad(y % 100 + '', 2))
         .replace(/{Q}/g, q + '')
         .replace(/{MMMM}/g, month[M - 1])
         .replace(/{MMM}/g, monthAbbr[M - 1])

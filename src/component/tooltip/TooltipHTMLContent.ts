@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isString, indexOf, each, bind, isArray, isDom } from 'zrender/src/core/util';
+import { isString, indexOf, each, bind, isFunction, isArray, isDom, retrieve2 } from 'zrender/src/core/util';
 import { normalizeEvent } from 'zrender/src/core/event';
 import { transformLocalCoord } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
@@ -93,7 +93,7 @@ function assembleArrow(
 
     const borderStyle = `${borderColor} solid ${borderWidth}px;`;
     const styleCss = [
-        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;`,
+        `position:absolute;width:${arrowSize}px;height:${arrowSize}px;z-index:-1;`,
         `${positionStyle};${transformStyle};`,
         `border-bottom:${borderStyle}`,
         `border-right:${borderStyle}`,
@@ -151,9 +151,11 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
 
     cssText.push('font:' + textStyleModel.getFont());
 
+    // @ts-ignore, leave it to the tooltip refactor.
+    const lineHeight = retrieve2(textStyleModel.get('lineHeight'), Math.round(fontSize * 3 / 2));
+
     fontSize
-        // @ts-ignore, leave it to the tooltip refactor.
-        && cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
+        && cssText.push('line-height:' + lineHeight + 'px');
 
     const shadowColor = textStyleModel.get('textShadowColor');
     const shadowBlur = textStyleModel.get('textShadowBlur') || 0;
@@ -212,14 +214,20 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
 }
 
 // If not able to make, do not modify the input `out`.
-function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, zrX: number, zrY: number) {
+function makeStyleCoord(
+    out: number[],
+    zr: ZRenderType,
+    container: HTMLElement | null | undefined,
+    zrX: number,
+    zrY: number
+) {
     const zrPainter = zr && zr.painter;
 
-    if (appendToBody) {
+    if (container) {
         const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
-            transformLocalCoord(out, zrViewportRoot, document.body, zrX, zrY);
+            transformLocalCoord(out, zrViewportRoot, container, zrX, zrY);
         }
     }
     else {
@@ -241,27 +249,27 @@ function makeStyleCoord(out: number[], zr: ZRenderType, appendToBody: boolean, z
 
 interface TooltipContentOption {
     /**
-     * `false`: the DOM element will be inside the container. Default value.
-     * `true`: the DOM element will be appended to HTML body, which avoid
-     *  some overflow clip but intrude outside of the container.
+     * Specify target container of the tooltip element.
+     * Can either be an HTMLElement, CSS selector string, or a function that returns an HTMLElement.
      */
-    appendToBody: boolean
+    appendTo: ((chartContainer: HTMLElement) => HTMLElement | undefined | null) | HTMLElement | string
 }
 
 class TooltipHTMLContent {
 
     el: HTMLDivElement;
 
-    private _container: HTMLElement;
+    private _api: ExtensionAPI;
+    private _container: HTMLElement | undefined | null;
 
     private _show: boolean = false;
 
     private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
-    private _appendToBody: boolean;
 
     private _enterable = true;
     private _zr: ZRenderType;
 
+    private _alwaysShowContent: boolean = false;
     private _hideTimeout: number;
     /**
      * Hide delay time
@@ -277,7 +285,6 @@ class TooltipHTMLContent {
     private _longHideTimeout: number;
 
     constructor(
-        container: HTMLElement,
         api: ExtensionAPI,
         opt: TooltipContentOption
     ) {
@@ -290,17 +297,21 @@ class TooltipHTMLContent {
         (el as any).domBelongToZr = true;
         this.el = el;
         const zr = this._zr = api.getZr();
-        const appendToBody = this._appendToBody = opt && opt.appendToBody;
 
-        makeStyleCoord(this._styleCoord, zr, appendToBody, api.getWidth() / 2, api.getHeight() / 2);
+        const appendTo = opt.appendTo;
+        const container: HTMLElement | null | undefined = appendTo && (
+            isString(appendTo)
+                ? document.querySelector(appendTo)
+                : isDom(appendTo)
+                    ? appendTo
+                    : isFunction(appendTo) && appendTo(api.getDom())
+        );
 
-        if (appendToBody) {
-            document.body.appendChild(el);
-        }
-        else {
-            container.appendChild(el);
-        }
+        makeStyleCoord(this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2);
 
+        (container || api.getDom()).appendChild(el);
+
+        this._api = api;
         this._container = container;
 
         // FIXME
@@ -349,16 +360,21 @@ class TooltipHTMLContent {
     update(tooltipModel: Model<TooltipOption>) {
         // FIXME
         // Move this logic to ec main?
-        const container = this._container;
-        const position = getComputedStyle(container, 'position');
-        const domStyle = container.style;
-        if (domStyle.position !== 'absolute' && position !== 'absolute') {
-            domStyle.position = 'relative';
+        if (!this._container) {
+            const container = this._api.getDom();
+            const position = getComputedStyle(container, 'position');
+            const domStyle = container.style;
+            if (domStyle.position !== 'absolute' && position !== 'absolute') {
+                domStyle.position = 'relative';
+            }
         }
 
         // move tooltip if chart resized
         const alwaysShowContent = tooltipModel.get('alwaysShowContent');
         alwaysShowContent && this._moveIfResized();
+
+        // update alwaysShowContent
+        this._alwaysShowContent = alwaysShowContent;
 
         // update className
         this.el.className = tooltipModel.get('className') || '';
@@ -447,12 +463,15 @@ class TooltipHTMLContent {
 
     getSize() {
         const el = this.el;
-        return [el.offsetWidth, el.offsetHeight];
+        return el ? [el.offsetWidth, el.offsetHeight] : [0, 0];
     }
 
     moveTo(zrX: number, zrY: number) {
+        if (!this.el) {
+            return;
+        }
         const styleCoord = this._styleCoord;
-        makeStyleCoord(styleCoord, this._zr, this._appendToBody, zrX, zrY);
+        makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
             const style = this.el.style;
@@ -488,7 +507,7 @@ class TooltipHTMLContent {
     }
 
     hideLater(time?: number) {
-        if (this._show && !(this._inContent && this._enterable)) {
+        if (this._show && !(this._inContent && this._enterable) && !this._alwaysShowContent) {
             if (time) {
                 this._hideDelay = time;
                 // Set show false to avoid invoke hideLater multiple times
@@ -506,7 +525,12 @@ class TooltipHTMLContent {
     }
 
     dispose() {
-        this.el.parentNode.removeChild(this.el);
+        clearTimeout(this._hideTimeout);
+        clearTimeout(this._longHideTimeout);
+
+        const parentNode = this.el.parentNode;
+        parentNode && parentNode.removeChild(this.el);
+        this.el = this._container = null;
     }
 
 }

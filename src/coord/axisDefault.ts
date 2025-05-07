@@ -93,6 +93,8 @@ const defaultOption: AxisBaseOption = {
     },
     splitLine: {
         show: true,
+        showMinLine: true,
+        showMaxLine: true,
         lineStyle: {
             color: ['#E0E6F1'],
             width: 1,
@@ -151,7 +153,7 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
         show: false,
         // Split number of minor ticks. The value should be in range of (0, 100)
         splitNumber: 5,
-        // Lenght of minor tick
+        // Length of minor tick
         length: 3,
 
         // Line style

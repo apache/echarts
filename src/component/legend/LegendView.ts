@@ -50,6 +50,8 @@ import {LineStyleProps} from '../../model/mixin/lineStyle';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
+import { getECData } from '../../util/innerStore';
+import Element from 'zrender/src/Element';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -69,7 +71,7 @@ class LegendView extends ComponentView {
 
     /**
      * If first rendering, `contentGroup.position` is [0, 0], which
-     * does not make sense and may cause unexepcted animation if adopted.
+     * does not make sense and may cause unexpected animation if adopted.
      */
     private _isFirstRender: boolean;
 
@@ -176,6 +178,7 @@ class LegendView extends ComponentView {
         const contentGroup = this.getContentGroup();
         const legendDrawnMap = zrUtil.createHashMap();
         const selectMode = legendModel.get('selectedMode');
+        const triggerEvent = legendModel.get('triggerEvent');
 
         const excludeSeriesId: string[] = [];
         ecModel.eachRawSeries(function (seriesModel) {
@@ -199,7 +202,7 @@ class LegendView extends ComponentView {
                 SeriesModel<SeriesOption & SymbolOptionMixin>;
 
             if (legendDrawnMap.get(name)) {
-                // Have been drawed
+                // Have been drawn
                 return;
             }
 
@@ -224,6 +227,20 @@ class LegendView extends ComponentView {
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
                     .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, null, api, excludeSeriesId))
                     .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, null, api, excludeSeriesId));
+
+                if (ecModel.ssr) {
+                    itemGroup.eachChild(child => {
+                        const ecData = getECData(child);
+                        ecData.seriesIndex = seriesModel.seriesIndex;
+                        ecData.dataIndex = dataIndex;
+                        ecData.ssrType = 'legend';
+                    });
+                }
+                if (triggerEvent) {
+                    itemGroup.eachChild(child => {
+                        this.packEventData(child, legendModel, seriesModel, dataIndex, name);
+                    });
+                }
 
                 legendDrawnMap.set(name, true);
             }
@@ -269,6 +286,19 @@ class LegendView extends ComponentView {
                             .on('mouseover', curry(dispatchHighlightAction, null, name, api, excludeSeriesId))
                             .on('mouseout', curry(dispatchDownplayAction, null, name, api, excludeSeriesId));
 
+                        if (ecModel.ssr) {
+                            itemGroup.eachChild(child => {
+                                const ecData = getECData(child);
+                                ecData.seriesIndex = seriesModel.seriesIndex;
+                                ecData.dataIndex = dataIndex;
+                                ecData.ssrType = 'legend';
+                            });
+                        }
+                        if (triggerEvent) {
+                            itemGroup.eachChild(child => {
+                                this.packEventData(child, legendModel, seriesModel, dataIndex, name);
+                            });
+                        }
                         legendDrawnMap.set(name, true);
                     }
 
@@ -288,7 +318,22 @@ class LegendView extends ComponentView {
             this._createSelector(selector, legendModel, api, orient, selectorPosition);
         }
     }
-
+    private packEventData(
+        el: Element,
+        legendModel: LegendModel,
+        seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin>,
+        dataIndex: number,
+        name: string
+    ) {
+        const eventData = {
+            componentType: 'legend',
+            componentIndex: legendModel.componentIndex,
+            dataIndex,
+            value: name,
+            seriesIndex: seriesModel.seriesIndex,
+        };
+        getECData(el).eventData = eventData;
+    };
     private _createSelector(
         selector: LegendSelectorButtonOption[],
         legendModel: LegendModel,
@@ -310,7 +355,8 @@ class LegendView extends ComponentView {
                 },
                 onclick() {
                     api.dispatchAction({
-                        type: type === 'all' ? 'legendAllSelect' : 'legendInverseSelect'
+                        type: type === 'all' ? 'legendAllSelect' : 'legendInverseSelect',
+                        legendId: legendModel.id
                     });
                 }
             });
@@ -413,22 +459,27 @@ class LegendView extends ComponentView {
             content = formatter(name);
         }
 
-        const inactiveColor = legendItemModel.get('inactiveColor');
+        const textColor = isSelected
+            ? textStyleModel.getTextColor() : legendItemModel.get('inactiveColor');
+
         itemGroup.add(new graphic.Text({
             style: createTextStyle(textStyleModel, {
                 text: content,
                 x: textX,
                 y: itemHeight / 2,
-                fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
+                fill: textColor,
                 align: textAlign,
                 verticalAlign: 'middle'
-            })
+            }, {inheritColor: textColor})
         }));
 
         // Add a invisible rect to increase the area of mouse hover
         const hitRect = new graphic.Rect({
             shape: itemGroup.getBoundingRect(),
-            invisible: true
+            style: {
+                // Cannot use 'invisible' because SVG SSR will miss the node
+                fill: 'transparent'
+            }
         });
 
         const tooltipModel =
@@ -510,7 +561,7 @@ class LegendView extends ComponentView {
                 contentPos[orientIdx] += selectorRect[wh] + selectorButtonGap;
             }
 
-            //Always align selector to content as 'middle'
+            // Always align selector to content as 'middle'
             selectorPos[1 - orientIdx] += contentRect[hw] / 2 - selectorRect[hw] / 2;
             selectorGroup.x = selectorPos[0];
             selectorGroup.y = selectorPos[1];
@@ -663,7 +714,7 @@ function dispatchSelectAction(
         name: seriesName != null ? seriesName : dataName
     });
     // highlight after select
-    // TODO higlight immediately may cause animation loss.
+    // TODO highlight immediately may cause animation loss.
     dispatchHighlightAction(seriesName, dataName, api, excludeSeriesId);
 }
 

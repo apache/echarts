@@ -40,13 +40,10 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
-
-
-
-
-
-
-
+        <div id="stack-default"></div>
+        <div id="stack-all"></div>
+        <div id="stack-positive"></div>
+        <div id="stack-negative"></div>
 
         <script>
 
@@ -431,7 +428,6 @@ under the License.
         <script>
 
             var chart;
-            var myChart;
             var option;
 
             require(['echarts'], function (echarts) {
@@ -576,9 +572,186 @@ under the License.
 
         </script>
 
+        <script>
 
+            var chart;
+            var option;
 
+            require(['echarts'], function (echarts) {
 
+                var option = {
+                    xAxis: [
+                        {
+                            type: 'category',
+                            data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'stack',
+                            type: 'line',
+                            stack: 'stack',
+                            data: [3, 1, 2, -1, -3, 1, 3, -3, -1, -2, 1, 3, -1, -3]
+                        },
+                        {
+                            name: 'stack',
+                            type: 'line',
+                            stack: 'stack',
+                            areaStyle: {},
+                            data: [1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1]
+                        }
+                    ]
+                };
 
+                testHelper.create(echarts, 'stack-default', {
+                    title: 'Stacking with positive and negative values (default: samesign)',
+                    option: option
+                });
+            });
+
+        </script>
+
+        <script>
+
+            var chart;
+            var option;
+
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    xAxis: [
+                        {
+                            type: 'category',
+                            data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'stack',
+                            type: 'line',
+                            stack: 'stack',
+                            stackStrategy: 'all',
+                            data: [3, 1, 2, -1, -3, 1, 3, -3, -1, -2, 1, 3, -1, -3]
+                        },
+                        {
+                            name: 'stack',
+                            type: 'line',
+                            stack: 'stack',
+                            stackStrategy: 'all',
+                            areaStyle: {},
+                            data: [1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1]
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'stack-all', {
+                    title: 'Stacking with positive and negative values (stackStrategy: all)',
+                    option: option
+                });
+            });
+
+        </script>
+
+        <script>
+
+            var chart;
+            var option;
+
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    xAxis: [
+                        {
+                            type: 'category',
+                            data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'stack',
+                            type: 'line',
+                            stack: 'stack',
+                            stackStrategy: 'positive',
+                            data: [3, 1, 2, -1, -3, 1, 3, -3, -1, -2, 1, 3, -1, -3]
+                        },
+                        {
+                            name: 'stack',
+                            type: 'line',
+                            stack: 'stack',
+                            stackStrategy: 'positive',
+                            areaStyle: {},
+                            data: [1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1]
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'stack-positive', {
+                    title: 'Stacking with positive and negative values (stackStrategy: positive)',
+                    option: option
+                });
+            });
+
+        </script>
+
+        <script>
+
+            var chart;
+            var option;
+
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    xAxis: [
+                        {
+                            type: 'category',
+                            data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'value'
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'stack',
+                            type: 'line',
+                            stack: 'stack',
+                            stackStrategy: 'negative',
+                            data: [3, 1, 2, -1, -3, 1, 3, -3, -1, -2, 1, 3, -1, -3]
+                        },
+                        {
+                            name: 'stack',
+                            type: 'line',
+                            stack: 'stack',
+                            stackStrategy: 'negative',
+                            areaStyle: {},
+                            data: [1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1]
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'stack-negative', {
+                    title: 'Stacking with positive and negative values (stackStrategy: negative)',
+                    option: option
+                });
+            });
+
+        </script>
     </body>
 </html>

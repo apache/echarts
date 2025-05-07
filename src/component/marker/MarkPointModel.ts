@@ -36,6 +36,7 @@ import {
 interface MarkPointStateOption {
     itemStyle?: ItemStyleOption
     label?: SeriesLabelOption
+    z2?: number
 }
 export interface MarkPointDataItemOption extends
     MarkPointStateOption, StatesOptionMixin<MarkPointStateOption, StatesMixinBase>,
@@ -73,8 +74,8 @@ class MarkPointModel extends MarkerModel<MarkPointOption> {
         z: 5,
         symbol: 'pin',
         symbolSize: 50,
-        //symbolRotate: 0,
-        //symbolOffset: [0, 0]
+        // symbolRotate: 0,
+        // symbolOffset: [0, 0]
         tooltip: {
             trigger: 'item'
         },

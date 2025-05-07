@@ -347,7 +347,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
                 if (maxWidth && maxWidth < finalWidth) {
                     finalWidth = Math.min(maxWidth, remainedWidth);
                 }
-                // `minWidth` has higher priority. `minWidth` decide that wheter the
+                // `minWidth` has higher priority. `minWidth` decide that whether the
                 // bar is able to be visible. So `minWidth` should not be restricted
                 // by `maxWidth` or `remainedWidth` (which is from `bandWidth`). In
                 // the extreme cases for `value` axis, bars are allowed to overlap
@@ -363,7 +363,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             }
             else {
                 // `barMinWidth/barMaxWidth` has higher priority than `barWidth`, as
-                // CSS does. Becuase barWidth can be a percent value, where
+                // CSS does. Because barWidth can be a percent value, where
                 // `barMaxWidth` can be used to restrict the final width.
                 let finalWidth = column.width;
                 if (maxWidth) {
@@ -512,14 +512,13 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                     while ((dataIndex = params.next()) != null) {
                         const value = store.get(stacked ? stackedDimIdx : valueDimIdx, dataIndex);
                         const baseValue = store.get(baseDimIdx, dataIndex) as number;
-
                         let baseCoord = valueAxisStart;
-                        let startValue;
+                        let stackStartValue;
 
                         // Because of the barMinHeight, we can not use the value in
                         // stackResultDimension directly.
                         if (stacked) {
-                            startValue = +value - (store.get(valueDimIdx, dataIndex) as number);
+                            stackStartValue = +value - (store.get(valueDimIdx, dataIndex) as number);
                         }
 
                         let x;
@@ -530,7 +529,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         if (isValueAxisH) {
                             const coord = cartesian.dataToPoint([value, baseValue]);
                             if (stacked) {
-                                const startCoord = cartesian.dataToPoint([startValue, baseValue]);
+                                const startCoord = cartesian.dataToPoint([stackStartValue, baseValue]);
                                 baseCoord = startCoord[0];
                             }
                             x = baseCoord;
@@ -545,7 +544,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         else {
                             const coord = cartesian.dataToPoint([baseValue, value]);
                             if (stacked) {
-                                const startCoord = cartesian.dataToPoint([baseValue, startValue]);
+                                const startCoord = cartesian.dataToPoint([baseValue, stackStartValue]);
                                 baseCoord = startCoord[1];
                             }
                             x = coord[0] + columnOffset;
@@ -603,5 +602,13 @@ function isInLargeMode(seriesModel: BarSeriesModel) {
 
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D) {
-    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
+    let startValue = valueAxis.model.get('startValue');
+    if (!startValue) {
+        startValue = 0;
+    }
+    return valueAxis.toGlobalCoord(
+        valueAxis.dataToCoord(
+            valueAxis.type === 'log'
+            ? (startValue > 0 ? startValue : 1)
+            : startValue));
 }

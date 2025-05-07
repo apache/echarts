@@ -42,6 +42,17 @@ type TextStyle = string | RichTextStyle;
 
 const TOOLTIP_LINE_HEIGHT_CSS = 'line-height:1';
 
+function getTooltipLineHeight(
+    textStyle: TooltipOption['textStyle']
+) {
+    const lineHeight = textStyle.lineHeight;
+    if (lineHeight == null) {
+        return TOOLTIP_LINE_HEIGHT_CSS;
+    }
+    else {
+        return `line-height:${encodeHTML(lineHeight + '')}px`;
+    }
+}
 // TODO: more textStyle option
 function getTooltipTextStyle(
     textStyle: TooltipOption['textStyle'],
@@ -162,6 +173,7 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     // null/undefined/NaN/''... (displayed as '-').
     noName?: boolean;
     noValue?: boolean;
+    dataIndex?: number;
 
     valueFormatter?: CommonTooltipOption<unknown>['valueFormatter']
 }
@@ -271,6 +283,7 @@ function buildSection(
     const subMarkupText = ctx.renderMode === 'richText'
         ? subMarkupTextList.join(gaps.richText)
         : wrapBlockHTML(
+            toolTipTextStyle,
             subMarkupTextList.join(''),
             noHeader ? topMarginForOuterGap : gaps.html
         );
@@ -281,13 +294,15 @@ function buildSection(
 
     const displayableHeader = makeValueReadable(fragment.header, 'ordinal', ctx.useUTC);
     const {nameStyle} = getTooltipTextStyle(toolTipTextStyle, ctx.renderMode);
+    const tooltipLineHeight = getTooltipLineHeight(toolTipTextStyle);
     if (ctx.renderMode === 'richText') {
         return wrapInlineNameRichText(ctx, displayableHeader, nameStyle as RichTextStyle) + gaps.richText
             + subMarkupText;
     }
     else {
         return wrapBlockHTML(
-            `<div style="${nameStyle};${TOOLTIP_LINE_HEIGHT_CSS};">`
+            toolTipTextStyle,
+            `<div style="${nameStyle};${tooltipLineHeight};">`
                 + encodeHTML(displayableHeader)
                 + '</div>'
                 + subMarkupText,
@@ -330,7 +345,9 @@ function buildNameValue(
         ? ''
         : makeValueReadable(name, 'ordinal', useUTC);
     const valueTypeOption = fragment.valueType;
-    const readableValueList = noValue ? [] : valueFormatter(fragment.value as OptionDataValue);
+    const readableValueList = noValue
+        ? []
+        : valueFormatter(fragment.value as OptionDataValue, fragment.dataIndex);
     const valueAlignRight = !noMarker || !noName;
     // It little weird if only value next to marker but far from marker.
     const valueCloseToMarker = !noMarker && noName;
@@ -347,6 +364,7 @@ function buildNameValue(
             ))
         )
         : wrapBlockHTML(
+            toolTipTextStyle,
             (noMarker ? '' : markerStr)
             + (noName ? '' : wrapInlineNameHTML(readableName, !noMarker, nameStyle as string))
             + (noValue ? '' : wrapInlineValueHTML(
@@ -403,12 +421,14 @@ function getGap(gapLevel: number): {
 }
 
 function wrapBlockHTML(
+    textStyle: TooltipOption['textStyle'],
     encodedContent: string,
     topGap: number
 ): string {
     const clearfix = '<div style="clear:both"></div>';
     const marginCSS = `margin: ${topGap}px 0 0`;
-    return `<div style="${marginCSS};${TOOLTIP_LINE_HEIGHT_CSS};">`
+    const tooltipLineHeight = getTooltipLineHeight(textStyle);
+    return `<div style="${marginCSS};${tooltipLineHeight};">`
         + encodedContent + clearfix
         + '</div>';
 }
@@ -494,8 +514,8 @@ export function getPaddingFromTooltipModel(
 export class TooltipMarkupStyleCreator {
     readonly richTextStyles: Dictionary<Dictionary<unknown>> = {};
 
-    // Notice that "generate a style name" usuall happens repeatly when mouse moving and
-    // displaying a tooltip. So we put the `_nextStyleNameId` as a member of each creator
+    // Notice that "generate a style name" usually happens repeatedly when mouse is moving and
+    // a tooltip is displayed. So we put the `_nextStyleNameId` as a member of each creator
     // rather than static shared by all creators (which will cause it increase to fast).
     private _nextStyleNameId: number = getRandomIdBase();
 

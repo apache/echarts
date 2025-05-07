@@ -373,7 +373,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
      * PENDING:
      * delete this method if no outer usage.
      *
-     * Return  Concrete dimention. If return null/undefined, no dimension used.
+     * Return  Concrete dimension. If null/undefined is returned, no dimension is used.
      */
     // getDataDimension(data: SeriesData) {
     //     const optDim = this.option.dimension;
@@ -449,7 +449,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                 base.inRange = {color: thisOption.color.slice().reverse()};
             }
 
-            // Compatible with previous logic, always give a defautl color, otherwise
+            // Compatible with previous logic, always give a default color, otherwise
             // simple config with no inRange and outOfRange will not work.
             // Originally we use visualMap.color as the default color, but setOption at
             // the second time the default color will be erased. So we change to use

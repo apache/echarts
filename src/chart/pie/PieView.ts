@@ -31,9 +31,9 @@ import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
-import { getSectorCornerRadius } from '../helper/pieHelper';
-import { saveOldStyle } from '../../animation/basicTrasition';
-import { getBasicPieLayout } from './pieLayout';
+import { getSectorCornerRadius } from '../helper/sectorHelper';
+import { saveOldStyle } from '../../animation/basicTransition';
+import { getBasicPieLayout, getSeriesLayoutData } from './pieLayout';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -205,7 +205,7 @@ class PiePiece extends graphic.Sector {
             z2: 10
         });
 
-        const labelPosition = seriesModel.get(['label', 'position']);
+        const labelPosition = itemModel.get(['label', 'position']);
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
             sector.removeTextGuideLine();
         }
@@ -260,8 +260,9 @@ class PieView extends ChartView {
         }
         // when all data are filtered, show lightgray empty circle
         if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
+            const layoutData = getSeriesLayoutData(seriesModel);
             const sector = new graphic.Sector({
-                shape: getBasicPieLayout(seriesModel, api)
+                shape: extend(getBasicPieLayout(seriesModel, api), layoutData)
             });
             sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
             this._emptyCircleSector = sector;

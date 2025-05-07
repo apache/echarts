@@ -17,10 +17,23 @@
 * under the License.
 */
 
+const chalk = require('chalk');
+
+process.on('uncaughtException', (err) => {
+    if (err.message.includes('Cannot find module')) {
+        console.error(chalk.red(err.message.split('\n')[0]));
+        console.log();
+        console.error(`Please run \`${chalk.yellow('npm install')}\` in \`${chalk.green('test/runTest')}\` folder first!`);
+        console.log();
+    } else {
+        console.error('Uncaught err:', err);
+    }
+    process.exit(1);
+});
+
 const handler = require('serve-handler');
 const http = require('http');
 const path = require('path');
-// const open = require('open');
 const {fork} = require('child_process');
 const semver = require('semver');
 const {port, origin} = require('./config');
@@ -35,17 +48,23 @@ const {
     getAllTestsRuns,
     delTestsRun,
     RESULTS_ROOT_DIR,
-    checkStoreVersion
+    checkStoreVersion,
+    clearStaledResults
 } = require('./store');
-const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
+const {prepareEChartsLib, getActionsFullPath, fetchVersions, cleanBranchDirectory, fetchRecentPRs} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
 const genReport = require('./genReport');
+const useCNMirror = process.argv.includes('--useCNMirror') || !!process.env.USE_CN_MIRROR;
+
+console.info(chalk.green('useCNMirror:'), useCNMirror);
 
 const CLI_FIXED_THREADS_COUNT = 1;
 
 function serve() {
+    clearStaledResults();
+
     const server = http.createServer((request, response) => {
         return handler(request, response, {
             cleanUrls: false,
@@ -128,9 +147,12 @@ function startTests(testsNameList, socket, {
     noHeadless,
     threadsCount,
     replaySpeed,
+    actualSource,
     actualVersion,
+    expectedSource,
     expectedVersion,
     renderer,
+    useCoarsePointer,
     noSave
 }) {
     console.log('Received: ', testsNameList.join(','));
@@ -189,7 +211,10 @@ function startTests(testsNameList, socket, {
                 '--speed', replaySpeed || 5,
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
+                '--actual-source', actualSource,
+                '--expected-source', expectedSource,
                 '--renderer', renderer || '',
+                '--use-coarse-pointer', useCoarsePointer,
                 '--threads', Math.min(threadsCount, CLI_FIXED_THREADS_COUNT),
                 '--dir', getResultBaseDir(),
                 ...(noHeadless ? ['--no-headless'] : []),
@@ -212,12 +237,25 @@ function checkPuppeteer() {
 
 
 async function start() {
+    // Clean PR directories before starting
+    const {cleanPRDirectories} = require('./util');
+    cleanPRDirectories();
+
     if (!checkPuppeteer()) {
-        // TODO Check version.
         console.error(`Can't find puppeteer >= 9.0.0, run 'npm install' to update in the 'test/runTest' folder`);
         return;
     }
 
+    let stableVersions;
+    let nightlyVersions;
+    try {
+        stableVersions = await fetchVersions(false, useCNMirror);
+        nightlyVersions = (await fetchVersions(true, useCNMirror)).slice(0, 100);
+    } catch (e) {
+        console.error('Failed to fetch version list:', e);
+        console.log(`Try again later or try the CN mirror with: ${chalk.yellow('npm run test:visual -- -- --useCNMirror')}`)
+        return;
+    }
 
     let _currentTestHash;
     let _currentRunConfig;
@@ -227,11 +265,6 @@ async function start() {
 
     // Start a static server for puppeteer open the html test cases.
     let {io} = serve();
-
-    const stableVersions = await fetchVersions(false);
-    const nightlyVersions = (await fetchVersions(true)).slice(0, 100);
-    stableVersions.unshift('local');
-    nightlyVersions.unshift('local');
 
     io.of('/client').on('connect', async socket => {
 
@@ -258,20 +291,10 @@ async function start() {
                 return;
             }
 
-            const expectedVersionsList = _currentRunConfig.isExpectedNightly ? nightlyVersions : stableVersions;
-            const actualVersionsList = _currentRunConfig.isActualNightly ? nightlyVersions : stableVersions;
-            if (!expectedVersionsList.includes(_currentRunConfig.expectedVersion)) {
-                // Pick first version not local
-                _currentRunConfig.expectedVersion = expectedVersionsList[1];
-            }
-            if (!actualVersionsList.includes(_currentRunConfig.actualVersion)) {
-                _currentRunConfig.actualVersion = 'local';
-            }
-
             socket.emit('syncRunConfig_return', {
                 runConfig: _currentRunConfig,
-                expectedVersionsList,
-                actualVersionsList
+                versions: stableVersions,
+                nightlyVersions: nightlyVersions
             });
 
             if (_currentTestHash !== getRunHash(_currentRunConfig)) {
@@ -295,6 +318,7 @@ async function start() {
         });
 
         socket.on('genTestsRunReport', async (params) => {
+            console.log('genTestsRunReport', params);
             const absPath = await genReport(
                 path.join(RESULTS_ROOT_DIR, getRunHash(params))
             );
@@ -315,8 +339,18 @@ async function start() {
 
             let startTime = Date.now();
 
-            await prepareEChartsLib(data.expectedVersion); // Expected version.
-            await prepareEChartsLib(data.actualVersion); // Version to test
+            try {
+                await prepareEChartsLib(data.expectedSource, data.expectedVersion, useCNMirror);
+                await prepareEChartsLib(data.actualSource, data.actualVersion, useCNMirror);
+            }
+            catch (e) {
+                console.error(e);
+                // Send error to client
+                socket.emit('run_error', {
+                    message: e.toString()
+                });
+                return;
+            }
 
             // If aborted in the time downloading lib.
             if (isAborted) {
@@ -324,28 +358,26 @@ async function start() {
             }
 
             // TODO Should broadcast to all sockets.
-            try {
-                if (!checkStoreVersion(data)) {
-                    throw new Error('Unmatched store version and run version.');
-                }
+            if (!checkStoreVersion(data)) {
+                throw new Error('Unmatched store version and run version.');
+            }
 
-                await startTests(
-                    data.tests,
-                    io.of('/client'),
-                    {
-                        noHeadless: data.noHeadless,
-                        threadsCount: data.threads,
-                        replaySpeed: data.replaySpeed,
-                        actualVersion: data.actualVersion,
-                        expectedVersion: data.expectedVersion,
-                        renderer: data.renderer,
-                        noSave: false
-                    }
-                );
-            }
-            catch (e) {
-                console.error(e);
-            }
+            await startTests(
+                data.tests,
+                io.of('/client'),
+                {
+                    noHeadless: data.noHeadless,
+                    threadsCount: data.threads,
+                    replaySpeed: data.replaySpeed,
+                    actualSource: data.actualSource,
+                    actualVersion: data.actualVersion,
+                    expectedSource: data.expectedSource,
+                    expectedVersion: data.expectedVersion,
+                    renderer: data.renderer,
+                    useCoarsePointer: data.useCoarsePointer,
+                    noSave: false
+                }
+            );
 
             if (!isAborted) {
                 const deltaTime = Date.now() - startTime;
@@ -399,6 +431,7 @@ async function start() {
                     actualVersion: data.actualVersion,
                     expectedVersion: data.expectedVersion,
                     renderer: data.renderer || '',
+                    useCoarsePointer: data.useCoarsePointer,
                     noSave: true
                 });
             }

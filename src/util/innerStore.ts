@@ -23,6 +23,9 @@ import {
     ComponentMainType, ComponentItemTooltipOption
 } from './types';
 import { makeInner } from './model';
+
+export type SSRItemType = 'chart' | 'legend';
+
 /**
  * ECData stored on graphic element
  */
@@ -34,6 +37,7 @@ export interface ECData {
     dataType?: SeriesDataType;
     focus?: InnerFocus;
     blurScope?: BlurScope;
+    ssrType?: SSRItemType;
 
     // Required by `tooltipConfig` and `focus`.
     componentMainType?: ComponentMainType;
@@ -62,6 +66,7 @@ export const setCommonECData = (seriesIndex: number, dataType: SeriesDataType, d
         ecData.dataIndex = dataIdx;
         ecData.dataType = dataType;
         ecData.seriesIndex = seriesIndex;
+        ecData.ssrType = 'chart';
 
         // TODO: not store dataIndex on children.
         if (el.type === 'group') {
@@ -70,6 +75,7 @@ export const setCommonECData = (seriesIndex: number, dataType: SeriesDataType, d
                 childECData.seriesIndex = seriesIndex;
                 childECData.dataIndex = dataIdx;
                 childECData.dataType = dataType;
+                childECData.ssrType = 'chart';
             });
         }
     }

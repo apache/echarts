@@ -64,7 +64,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
         const useDecal = decalModel.get('show');
         if (useDecal) {
             // Each type of series use one scope.
-            // Pie and funnel are using diferrent scopes
+            // Pie and funnel are using different scopes.
             const paletteScopeGroupByType = zrUtil.createHashMap<object>();
             ecModel.eachSeries((seriesModel: SeriesModel) => {
                 if (seriesModel.isColorBySeries()) {
@@ -139,6 +139,12 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function setLabel() {
+        const dom = api.getZr().dom;
+        // TODO: support for SSR
+        if (!dom) {
+            return;
+        }
+
         const labelLocale = ecModel.getLocaleModel().get('aria');
         const labelModel = ariaModel.getModel('label');
         labelModel.option = zrUtil.defaults(labelModel.option, labelLocale);
@@ -147,7 +153,8 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
             return;
         }
 
-        const dom = api.getZr().dom;
+        dom.setAttribute('role', 'img');
+
         if (labelModel.get('description')) {
             dom.setAttribute('aria-label', labelModel.get('description'));
             return;
@@ -211,11 +218,14 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
 
                     const middleSeparator = labelModel.get(['data', 'separator', 'middle']);
                     const endSeparator = labelModel.get(['data', 'separator', 'end']);
+                    const excludeDimensionId = labelModel.get(['data', 'excludeDimensionId']);
                     const dataLabels = [];
                     for (let i = 0; i < data.count(); i++) {
                         if (i < maxDataCnt) {
                             const name = data.getName(i);
-                            const value = data.getValues(i);
+                            const value = !excludeDimensionId ? data.getValues(i)
+                                : zrUtil.filter(data.getValues(i), (v, j) =>
+                                    zrUtil.indexOf(excludeDimensionId, j) === -1);
                             const dataLabel = labelModel.get(['data', name ? 'withName' : 'withoutName']);
                             dataLabels.push(
                                 replace(dataLabel, {
@@ -264,6 +274,7 @@ export default function ariaVisual(ecModel: GlobalModel, api: ExtensionAPI) {
     }
 
     function getSeriesTypeName(type: SeriesTypes) {
-        return ecModel.getLocaleModel().get(['series', 'typeNames'])[type] || '自定义图';
+        const typeNames = ecModel.getLocaleModel().get(['series', 'typeNames']);
+        return typeNames[type] || typeNames.chart;
     }
 }

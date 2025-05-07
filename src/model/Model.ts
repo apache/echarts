@@ -47,7 +47,7 @@ interface Model<Opt = ModelOption>
     extends LineStyleMixin, ItemStyleMixin, TextStyleMixin, AreaStyleMixin {}
 class Model<Opt = ModelOption> {    // TODO: TYPE use unknown instead of any?
 
-    // [Caution]: Becuase this class or desecendants can be used as `XXX.extend(subProto)`,
+    // [Caution]: Because this class or desecendants can be used as `XXX.extend(subProto)`,
     // the class members must not be initialized in constructor or declaration place.
     // Otherwise there is bad case:
     //   class A {xxx = 1;}
@@ -103,7 +103,7 @@ class Model<Opt = ModelOption> {    // TODO: TYPE use unknown instead of any?
     get<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
         path: readonly [R, S, T], ignoreParent?: boolean
     ): Opt[R][S][T];
-    // `path` can be 'xxx.yyy.zzz', so the return value type have to be `ModelOption`
+    // `path` can be 'a.b.c', so the return value type have to be `ModelOption`
     // TODO: TYPE strict key check?
     // get(path: string | string[], ignoreParent?: boolean): ModelOption;
     get(path: string | readonly string[], ignoreParent?: boolean): ModelOption {
@@ -149,9 +149,9 @@ class Model<Opt = ModelOption> {    // TODO: TYPE use unknown instead of any?
     getModel<R extends keyof Opt, S extends keyof Opt[R], T extends keyof Opt[R][S]>(
         path: readonly [R, S, T], parentModel?: Model
     ): Model<Opt[R][S][T]>;
-    // `path` can be 'xxx.yyy.zzz', so the return value type have to be `Model<ModelOption>`
+    // `path` can be 'a.b.c', so the return value type have to be `Model<ModelOption>`
     // getModel(path: string | string[], parentModel?: Model): Model;
-    // TODO 'xxx.yyy.zzz' is deprecated
+    // TODO 'a.b.c' is deprecated
     getModel(path: string | readonly string[], parentModel?: Model): Model<any> {
         const hasPath = path != null;
         const pathFinal = hasPath ? this.parsePath(path) : null;

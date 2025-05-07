@@ -21,6 +21,8 @@ import Path, {PathProps} from 'zrender/src/graphic/Path';
 import Group from 'zrender/src/graphic/Group';
 import {extend, each, map} from 'zrender/src/core/util';
 import {BuiltinTextPosition} from 'zrender/src/core/types';
+import {SectorProps} from 'zrender/src/graphic/shape/Sector';
+import {RectProps} from 'zrender/src/graphic/shape/Rect';
 import {
     Rect,
     Sector,
@@ -64,8 +66,9 @@ import {LayoutRect} from '../../util/layout';
 import {EventCallback} from 'zrender/src/core/Eventful';
 import { warn } from '../../util/log';
 import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRotation} from '../../label/sectorLabel';
-import { saveOldStyle } from '../../animation/basicTrasition';
+import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
+import { getSectorCornerRadius } from '../helper/sectorHelper';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
@@ -243,6 +246,9 @@ class BarView extends ChartView {
             if (coord.type === 'cartesian2d') {
                 (bgEl as Rect).setShape('r', barBorderRadius);
             }
+            else {
+                (bgEl as Sector).setShape('cornerRadius', barBorderRadius);
+            }
             bgEls[dataIndex] = bgEl;
             return bgEl;
         };
@@ -334,11 +340,14 @@ class BarView extends ChartView {
                         if (coord.type === 'cartesian2d') {
                             (bgEl as Rect).setShape('r', barBorderRadius);
                         }
+                        else {
+                            (bgEl as Sector).setShape('cornerRadius', barBorderRadius);
+                        }
                         bgEls[newIndex] = bgEl;
                     }
                     const bgLayout = getLayout[coord.type](data, newIndex);
                     const shape = createBackgroundShape(isHorizontalOrRadial, bgLayout, coord);
-                    updateProps(bgEl, { shape }, animationModel, newIndex);
+                    updateProps<RectProps | SectorProps>(bgEl, { shape }, animationModel, newIndex);
                 }
 
                 let el = oldData.getItemGraphicEl(oldIndex) as BarPossiblePath;
@@ -355,6 +364,14 @@ class BarView extends ChartView {
                     }
                 }
 
+                const roundCapChanged = el && (el.type === 'sector' && roundCap || el.type === 'sausage' && !roundCap);
+                if (roundCapChanged) {
+                    // roundCap changed, there is no way to use animation from a `sector` to a `sausage` shape,
+                    // so remove the old one and create a new shape
+                    el && removeElementWithFadeOut(el, seriesModel, oldIndex);
+                    el = null;
+                }
+
                 if (!el) {
                     el = elementCreator[coord.type](
                         seriesModel,
@@ -364,7 +381,7 @@ class BarView extends ChartView {
                         isHorizontalOrRadial,
                         animationModel,
                         baseAxis.model,
-                        !!el,
+                        true,
                         roundCap
                     );
                 }
@@ -698,7 +715,7 @@ const clip: {
 
         // When xClipped or yClipped, the element will be marked as `ignore`.
         // But we should also place the element at the edge of the coord sys bounding rect.
-        // Beause if data changed and the bar show again, its transition animaiton
+        // Because if data changed and the bar shows again, its transition animation
         // will begin at this place.
         layout.x = (xClipped && x > coordSysX2) ? x2 : x;
         layout.y = (yClipped && y > coordSysY2) ? y2 : y;
@@ -803,7 +820,7 @@ const elementCreator: {
             const sectorShape = sector.shape;
             const animateProperty = isRadial ? 'r' : 'endAngle' as 'r' | 'endAngle';
             const animateTarget = {} as SectorShape;
-            sectorShape[animateProperty] = isRadial ? 0 : layout.startAngle;
+            sectorShape[animateProperty] = isRadial ? layout.r0 : layout.startAngle;
             animateTarget[animateProperty] = layout[animateProperty];
             (isUpdate ? updateProps : initProps)(sector, {
                 shape: animateTarget
@@ -971,7 +988,8 @@ function createPolarPositionMapping(isRadial: boolean)
 
 function updateStyle(
     el: BarPossiblePath,
-    data: SeriesData, dataIndex: number,
+    data: SeriesData,
+    dataIndex: number,
     itemModel: Model<BarDataItemOption>,
     layout: RectLayout | SectorLayout,
     seriesModel: BarSeriesModel,
@@ -981,7 +999,19 @@ function updateStyle(
     const style = data.getItemVisual(dataIndex, 'style');
 
     if (!isPolar) {
-        (el as Rect).setShape('r', itemModel.get(['itemStyle', 'borderRadius']) || 0);
+        const borderRadius = itemModel
+            .get(['itemStyle', 'borderRadius']) as number | number[] || 0;
+        (el as Rect).setShape('r', borderRadius);
+    }
+    else if (!seriesModel.get('roundCap')) {
+        const sectorShape = (el as Sector).shape;
+        const cornerRadius = getSectorCornerRadius(
+            itemModel.getModel('itemStyle'),
+            sectorShape,
+            true
+        );
+        extend(sectorShape, cornerRadius);
+        (el as Sector).setShape(sectorShape);
     }
 
     el.useStyle(style);
@@ -1146,6 +1176,7 @@ function createLarge(
     const el = new LargePath({
         shape: {points: data.getLayout('largePoints')},
         incremental: !!incremental,
+        ignoreCoarsePointer: true,
         z2: 1
     });
     el.baseDimIdx = baseDimIdx;
@@ -1153,7 +1184,8 @@ function createLarge(
     el.barWidth = barWidth;
     group.add(el);
     el.useStyle(data.getVisual('style'));
-
+    // Stroke is rendered first to avoid overlapping with fill
+    el.style.stroke = null;
     // Enable tooltip and user mouse/touch event handlers.
     getECData(el).seriesIndex = seriesModel.seriesIndex;
 

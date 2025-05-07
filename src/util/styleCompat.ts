@@ -43,7 +43,7 @@ export function isEC4CompatibleStyle(
     // So we provide:
     // `legacy: true` force make compat.
     // `legacy: false`, force do not compat.
-    // `legacy` not set: auto detect wheter legacy.
+    // `legacy` not set: auto detect whether legacy.
     //     But in this case we do not compat (difficult to detect and rare case):
     //     Becuse custom series and graphic component support "merge", users may firstly
     //     only set `textStrokeWidth` style or secondly only set `text`.
@@ -63,7 +63,7 @@ export function isEC4CompatibleStyle(
 /**
  * `EC4CompatibleStyle` is style that might be in echarts4 format or echarts5 format.
  * @param hostStyle The properties might be modified.
- * @return If be text el, `textContentStyle` and `textConfig` will not be retured.
+ * @return If be text el, `textContentStyle` and `textConfig` will not be returned.
  *         Otherwise a `textContentStyle` and `textConfig` will be created, whose props area
  *         retried from the `hostStyle`.
  */
@@ -93,11 +93,11 @@ export function convertFromEC4CompatibleStyle(hostStyle: ZRStyleProps, elType: s
         textContent = {
             type: 'text',
             style: textContentStyle,
-            // ec4 do not support rectText trigger.
-            // And when text postion is different in normal and emphasis
+            // ec4 does not support rectText trigger.
+            // And when text position is different in normal and emphasis
             // => hover text trigger emphasis;
             // => text position changed, leave mouse pointer immediately;
-            // That might cause state incorrect.
+            // That might cause incorrect state.
             silent: true
         };
         textConfig = {};
@@ -138,7 +138,7 @@ function convertEC4CompatibleRichItem(out: TextStylePropsPart, richItem: Diction
     // on a rect means `borderColor: 4` on the rect and `borderColor: 10` on an attached
     // richText in ec5.
     // (2) `out === richItem` if and only if `out` is text el or rich item.
-    // So we can overwite existing props in `out` since textXXX has higher priority.
+    // So we can overwrite existing props in `out` since textXXX has higher priority.
     richItem.font = richItem.textFont || richItem.font;
     hasOwn(richItem, 'textStrokeWidth') && (out.lineWidth = richItem.textStrokeWidth);
     hasOwn(richItem, 'textAlign') && (out.align = richItem.textAlign);

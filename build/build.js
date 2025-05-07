@@ -97,6 +97,12 @@ async function run() {
         ];
         await build(cfgs);
     }
+    else if (buildType === 'ssr') {
+        const cfgs = [
+            config.createSSRClient(opt)
+        ];
+        await build(cfgs);
+    }
     else if (buildType === 'myTransform') {
         const cfgs = [
             config.createMyTransform(opt)
@@ -105,13 +111,32 @@ async function run() {
     }
     else {
         const types = buildType.split(',').map(a => a.trim());
-        const cfgs = types.map(type =>
-            config.createECharts({
-                ...opt,
-                type
-            })
-        );
-        await build(cfgs);
+
+
+        // Since 5.5.0, echarts/package.json added `{"type": "module"}`, and added
+        // echarts/dist/package.json with `{"type": "commonjs"}`, both of which makes
+        // echarts/dist/echarts.esm.js can not be recognized as esm any more (at least
+        // in webpack5 and nodejs) any more. So we provides echarts/dist/echarts.esm.mjs.
+        // But for backward compat, we still provide provides echarts/dist/echarts.esm.js.
+        const isBuildingDistESM = (opt.format || '').toLowerCase() === 'esm';
+        if (isBuildingDistESM) {
+            await makeConfigAndBuild(opt, '.js');
+            await makeConfigAndBuild(opt, '.mjs');
+        }
+        else {
+            await makeConfigAndBuild(opt);
+        }
+
+        async function makeConfigAndBuild(opt, fileExtension) {
+            const cfgs = types.map(type =>
+                config.createECharts({
+                    ...opt,
+                    type,
+                    fileExtension
+                })
+            );
+            await build(cfgs);
+        }
     }
 }
 
@@ -149,11 +174,11 @@ function validateIO(input, output) {
  */
 async function build(configs) {
     console.log(chalk.yellow(`
-    NOTICE: If you are using 'npm run build'. Run 'npm run prepublish' before build !!!
+    NOTICE: If you are using 'npm run build'. Run 'npm run prepare' before build !!!
 `));
 
     console.log(chalk.yellow(`
-    NOTICE: If you are using syslink on zrender. Run 'npm run prepublish' in zrender first !!
+    NOTICE: If you are using syslink on zrender. Run 'npm run prepare' in zrender first !!
 `));
 
     for (let singleConfig of configs) {

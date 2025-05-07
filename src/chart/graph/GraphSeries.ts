@@ -80,7 +80,7 @@ interface GraphEdgeStatesMixin {
 }
 
 export interface GraphNodeItemOption extends SymbolOptionMixin, GraphNodeStateOption,
-    GraphNodeStateOption, StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
+    StatesOptionMixin<GraphNodeStateOption, GraphNodeStatesMixin> {
 
     id?: string
     name?: string
@@ -184,7 +184,7 @@ export interface GraphSeriesOption
 
     emphasis?: {
         focus?: Exclude<GraphNodeItemOption['emphasis'], undefined>['focus']
-        scale?: boolean
+        scale?: boolean | number
         label?: SeriesLabelOption
         edgeLabel?: SeriesLabelOption
         itemStyle?: ItemStyleOption

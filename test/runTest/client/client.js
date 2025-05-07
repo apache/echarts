@@ -21,6 +21,8 @@ const socket = io('/client');
 
 // const LOCAL_SAVE_KEY = 'visual-regression-testing-config';
 
+let handlingSourceChange = false;
+
 function getChangedObject(target, source) {
     let changedObject = {};
     Object.keys(source).forEach(key => {
@@ -83,9 +85,15 @@ function processTestsData(tests, oldTestsData) {
         // Keep select status not change.
         if (oldTestsData && oldTestsData[idx]) {
             test.selected = oldTestsData[idx].selected;
+            // Keep source information
+            test.expectedSource = oldTestsData[idx].expectedSource;
+            test.actualSource = oldTestsData[idx].actualSource;
         }
         else {
             test.selected = false;
+            // Initialize source information
+            test.expectedSource = app.runConfig.expectedSource;
+            test.actualSource = app.runConfig.actualSource;
         }
     });
     return tests;
@@ -101,6 +109,22 @@ try {
 }
 catch (e) {}
 
+function getVersionFromSource(source, versions, nightlyVersions) {
+    if (source === 'PR') {
+        // Default PR version can be empty since it needs to be manually selected
+        return '#';
+    }
+    else if (source === 'nightly') {
+        return nightlyVersions.length ? nightlyVersions[0] : null;
+    }
+    else if (source === 'local') {
+        return 'local';
+    }
+    else {
+        return versions.length ? versions[0] : null;
+    }
+}
+
 const app = new Vue({
     el: '#app',
     data: {
@@ -111,9 +135,6 @@ const app = new Vue({
 
         allSelected: false,
         lastSelectedIndex: -1,
-
-        expectedVersionsList: [],
-        actualVersionsList: [],
 
         loadingVersion: false,
 
@@ -128,20 +149,27 @@ const app = new Vue({
 
         pageInvisible: false,
 
+        versions: [],
+        nightlyVersions: [],
+        prVersions: [],
+        branchVersions: [],
+
         runConfig: Object.assign({
             sortBy: 'name',
-
-            isActualNightly: false,
-            isExpectedNightly: false,
             actualVersion: 'local',
             expectedVersion: null,
-
+            expectedSource: 'release',
+            actualSource: 'release',
             renderer: 'canvas',
+            useCoarsePointer: 'auto',
             threads: 4
         }, urlRunConfig)
     },
 
-    mounted() {
+    async mounted() {
+        // Add call to fetch branches
+        await this.fetchBranchVersions();
+
         // Sync config from server when first time open
         // or switching back
         socket.emit('syncRunConfig', {
@@ -150,12 +178,38 @@ const app = new Vue({
             forceSet: Object.keys(urlRunConfig).length > 0
         });
         socket.on('syncRunConfig_return', res => {
-            this.expectedVersionsList = res.expectedVersionsList;
-            this.actualVersionsList = res.actualVersionsList;
-            // Only assign on changed object to avoid unnecessary vue change.
-            Object.assign(this.runConfig, getChangedObject(this.runConfig, res.runConfig));
+            this.versions = res.versions || [];
+            this.nightlyVersions = res.nightlyVersions || [];
+            this.prVersions = res.prVersions || [];
 
-            updateUrl();
+            // Only set versions if they haven't been manually set
+            handlingSourceChange = true;
+            this.$nextTick(() => {
+                if (!this.runConfig.expectedVersion) {
+                    this.runConfig.expectedVersion = getVersionFromSource(
+                        this.runConfig.expectedSource,
+                        this.versions,
+                        this.nightlyVersions
+                    );
+                }
+
+                if (!this.runConfig.actualVersion) {
+                    this.runConfig.actualVersion = getVersionFromSource(
+                        this.runConfig.actualSource,
+                        this.versions,
+                        this.nightlyVersions
+                    );
+                }
+
+                // Only apply other config changes from server
+                const configWithoutVersions = { ...res.runConfig };
+                delete configWithoutVersions.expectedVersion;
+                delete configWithoutVersions.actualVersion;
+                Object.assign(this.runConfig, getChangedObject(this.runConfig, configWithoutVersions));
+
+                handlingSourceChange = false;
+                updateUrl();
+            });
         });
 
         setTimeout(() => {
@@ -170,6 +224,16 @@ const app = new Vue({
             else {
                 this.pageInvisible = true;
             }
+        });
+
+        socket.on('run_error', err => {
+            app.$notify({
+                title: 'Error',
+                message: err.message,
+                type: 'error',
+                duration: 5000
+            });
+            app.running = false;
         });
     },
 
@@ -253,6 +317,36 @@ const app = new Vue({
                 });
             },
             set() {}
+        },
+
+        expectedVersionsList() {
+            switch (this.runConfig.expectedSource) {
+                case 'release':
+                    return this.versions;
+                case 'nightly':
+                    return this.nightlyVersions;
+                case 'PR':
+                    return this.prVersions;
+                case 'local':
+                    return ['local'];
+                default:
+                    return [];
+            }
+        },
+
+        actualVersionsList() {
+            switch (this.runConfig.actualSource) {
+                case 'release':
+                    return this.versions;
+                case 'nightly':
+                    return this.nightlyVersions;
+                case 'PR':
+                    return this.prVersions;
+                case 'local':
+                    return ['local'];
+                default:
+                    return [];
+            }
         }
     },
 
@@ -265,6 +359,44 @@ const app = new Vue({
 
         'currentTestName'(newVal, oldVal) {
             updateUrl();
+        },
+
+        'runConfig.expectedSource': {
+            handler(newVal, oldVal) {
+                if (newVal === oldVal) {
+                    return;
+                }
+
+                handlingSourceChange = true;
+                this.$nextTick(() => {
+                    this.runConfig.expectedVersion = getVersionFromSource(
+                        newVal,
+                        this.versions,
+                        this.nightlyVersions
+                    );
+                    handlingSourceChange = false;
+                });
+            },
+            deep: false
+        },
+
+        'runConfig.actualSource': {
+            handler(newVal, oldVal) {
+                if (newVal === oldVal) {
+                    return;
+                }
+
+                handlingSourceChange = true;
+                this.$nextTick(() => {
+                    this.runConfig.actualVersion = getVersionFromSource(
+                        newVal,
+                        this.versions,
+                        this.nightlyVersions
+                    );
+                    handlingSourceChange = false;
+                });
+            },
+            deep: false
         }
     },
 
@@ -338,11 +470,18 @@ const app = new Vue({
             let searches = [];
 
             let ecVersion = test[version + 'Version'];
+            let ecSource = test[version + 'Source'];
             if (ecVersion !== 'local') {
-                searches.push('__ECDIST__=' + ecVersion);
+                let distPath = ecSource === 'PR'
+                    ? 'pr-' + ecVersion.replace(/^#/, '')
+                    : ecVersion;
+                searches.push('__ECDIST__=' + distPath);
             }
             if (test.useSVG) {
                 searches.push('__RENDERER__=svg');
+            }
+            if (test.useCoarsePointer) {
+                searches.push('__COARSE__POINTER__=true');
             }
             let src = test.fileUrl;
             if (searches.length) {
@@ -363,9 +502,8 @@ const app = new Vue({
             this.runConfig.expectedVersion = runResult.expectedVersion;
             this.runConfig.actualVersion = runResult.actualVersion;
             // TODO
-            this.runConfig.isExpectedNightly = runResult.expectedVersion.includes('-dev.');
-            this.runConfig.isActualNightly = runResult.actualVersion.includes('-dev.');
             this.runConfig.renderer = runResult.renderer;
+            this.runConfig.useCoarsePointer = runResult.useCoarsePointer;
 
             this.showRunsDialog = false;
         },
@@ -392,6 +530,17 @@ const app = new Vue({
 
         open(url, target) {
             window.open(url, target);
+        },
+
+        async fetchBranchVersions() {
+            try {
+                const response = await fetch('https://api.github.com/repos/apache/echarts/branches?per_page=100');
+                const branches = await response.json();
+                this.branchVersions = branches.map(branch => branch.name);
+            } catch (error) {
+                console.error('Failed to fetch branches:', error);
+                this.branchVersions = [];
+            }
         }
     }
 });
@@ -414,10 +563,13 @@ function runTests(tests, noHeadless) {
     app.running = true;
     socket.emit('run', {
         tests,
+        expectedSource: app.runConfig.expectedSource,
         expectedVersion: app.runConfig.expectedVersion,
+        actualSource: app.runConfig.actualSource,
         actualVersion: app.runConfig.actualVersion,
         threads: app.runConfig.threads,
         renderer: app.runConfig.renderer,
+        useCoarsePointer: app.runConfig.useCoarsePointer,
         noHeadless,
         replaySpeed: noHeadless ? 5 : 5
     });
@@ -492,11 +644,19 @@ function updateUrl() {
 
 // Only update url when version is changed.
 app.$watch('runConfig', (newVal, oldVal) => {
-    if (!app.pageInvisible) {
+    if (!app.pageInvisible && !handlingSourceChange) {
         socket.emit('syncRunConfig', {
             runConfig: app.runConfig,
-            // Override server config from URL.
             forceSet: true
+        }, err => {
+            if (err) {
+                app.$notify({
+                    title: 'Error',
+                    message: err,
+                    type: 'error',
+                    duration: 5000
+                });
+            }
         });
     }
 }, { deep: true });

@@ -59,11 +59,17 @@ interface GeoLabelFormatterDataParams {
     status: DisplayState;
 }
 
-export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption, StatesMixinBase> {
+export interface RegionOption extends GeoStateOption, StatesOptionMixin<GeoStateOption, StatesMixinBase> {
     name?: string
     selected?: boolean
     tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
+    silent?: boolean
 }
+
+/**
+ * @deprecated Use `RegionOption` instead.
+ */
+export interface RegoinOption extends RegionOption {}
 
 export interface GeoTooltipFormatterParams {
     componentType: 'geo'
@@ -81,9 +87,9 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     // This parameter is used for scale this aspect
     aspectScale?: number;
 
-    ///// Layout with center and size
-    // If you wan't to put map in a fixed size box with right aspect ratio
-    // This two properties may more conveninet
+    // Layout with center and size
+    // If you want to put map in a fixed size box with right aspect ratio
+    // This two properties may be more convenient
     // Like: `40` or `'50%'`.
     layoutCenter?: (number | string)[];
     // Like: `40` or `'50%'`.
@@ -118,7 +124,7 @@ export interface GeoOption extends
     show?: boolean;
     silent?: boolean;
 
-    regions?: RegoinOption[];
+    regions?: RegionOption[];
 
     stateAnimation?: AnimationOptionMixin
 
@@ -137,7 +143,7 @@ class GeoModel extends ComponentModel<GeoOption> {
 
     static layoutMode = 'box' as const;
 
-    private _optionModelMap: zrUtil.HashMap<Model<RegoinOption>>;
+    private _optionModelMap: zrUtil.HashMap<Model<RegionOption>>;
 
     static defaultOption: GeoOption = {
 
@@ -156,9 +162,9 @@ class GeoModel extends ComponentModel<GeoOption> {
         // for geoJSON source: 0.75.
         aspectScale: null,
 
-        ///// Layout with center and size
-        // If you wan't to put map in a fixed size box with right aspect ratio
-        // This two properties may more conveninet
+        // /// Layout with center and size
+        // If you want to put map in a fixed size box with right aspect ratio
+        // This two properties may be more convenient
         // layoutCenter: [50%, 50%]
         // layoutSize: 100
 
@@ -263,7 +269,7 @@ class GeoModel extends ComponentModel<GeoOption> {
     /**
      * Get model of region.
      */
-    getRegionModel(name: string): Model<RegoinOption> {
+    getRegionModel(name: string): Model<RegionOption> {
         return this._optionModelMap.get(name) || new Model(null, this, this.ecModel);
     }
 

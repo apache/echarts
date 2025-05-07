@@ -27,6 +27,7 @@ import RadiusAxis from '../coord/polar/RadiusAxis';
 import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import { Dictionary } from '../util/types';
+import { PolarAxisModel } from '../coord/polar/AxisModel';
 
 type PolarAxis = AngleAxis | RadiusAxis;
 
@@ -100,11 +101,14 @@ function barLayoutPolar(seriesType: string, ecModel: GlobalModel, api: Extension
 
         const valueDim = data.mapDimension(valueAxis.dim);
         const baseDim = data.mapDimension(baseAxis.dim);
-        const stacked = isDimensionStacked(data, valueDim /*, baseDim*/);
+        const stacked = isDimensionStacked(data, valueDim /* , baseDim */);
         const clampLayout = baseAxis.dim !== 'radius'
             || !seriesModel.get('roundCap', true);
 
-        const valueAxisStart = valueAxis.dataToCoord(0);
+        const valueAxisModel = valueAxis.model as PolarAxisModel;
+        const startValue = valueAxisModel.get('startValue');
+        const valueAxisStart = valueAxis.dataToCoord(startValue || 0);
+
         for (let idx = 0, len = data.count(); idx < len; idx++) {
             const value = data.get(valueDim, idx) as number;
             const baseValue = data.get(baseDim, idx) as number;

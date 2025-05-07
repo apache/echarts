@@ -7,16 +7,17 @@ on:
 jobs:
   materials:
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'apache' }}
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [18.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -25,7 +26,7 @@ jobs:
           echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Cache node modules
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         env:
           cache-name: cache-node-modules
         with:
@@ -33,7 +34,7 @@ jobs:
           path: ~/.npm
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
 
-      - name: Prepare releaes materials
+      - name: Prepare release materials
         run: |
           npm i
           node build/source-release/prepareReleaseMaterials.js \
@@ -43,7 +44,7 @@ jobs:
             --out tmp/materials
 
       - name: Archive materials
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
           path: |
@@ -55,13 +56,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [18.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -71,7 +72,7 @@ jobs:
 
       # Get RELEASE_NOTE.txt and pack it into zip.
       - name: Download materials
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-release-materials
 
@@ -79,13 +80,14 @@ jobs:
 
       # Archive before run others to avoid packing unknown files.
       - name: Archive source release
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-src
           path: |
             index.d.ts
             src/
             extension-src/
+            ssr/client/src/
             licenses/
             theme/
             build/
@@ -108,11 +110,11 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [18.x]
 
     steps:
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -121,7 +123,7 @@ jobs:
           echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Download source release
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-src
           path: tmp/echarts

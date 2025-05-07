@@ -25,8 +25,24 @@ import { extend } from 'zrender/src/core/util';
 
 const positiveBorderColorQuery = ['itemStyle', 'borderColor'] as const;
 const negativeBorderColorQuery = ['itemStyle', 'borderColor0'] as const;
+const dojiBorderColorQuery = ['itemStyle', 'borderColorDoji'] as const;
 const positiveColorQuery = ['itemStyle', 'color'] as const;
 const negativeColorQuery = ['itemStyle', 'color0'] as const;
+
+export function getColor(sign: number, model: Model<Pick<CandlestickDataItemOption, 'itemStyle'>>) {
+    return model.get(
+        sign > 0 ? positiveColorQuery : negativeColorQuery
+    );
+}
+
+export function getBorderColor(sign: number, model: Model<Pick<CandlestickDataItemOption, 'itemStyle'>>) {
+    return model.get(
+        sign === 0 ? dojiBorderColorQuery
+            : sign > 0
+                ? positiveBorderColorQuery
+                : negativeBorderColorQuery
+    );
+}
 
 const candlestickVisual: StageHandler = {
 
@@ -38,19 +54,6 @@ const candlestickVisual: StageHandler = {
     performRawSeries: true,
 
     reset: function (seriesModel: CandlestickSeriesModel, ecModel) {
-
-        function getColor(sign: number, model: Model<Pick<CandlestickDataItemOption, 'itemStyle'>>) {
-            return model.get(
-                sign > 0 ? positiveColorQuery : negativeColorQuery
-            );
-        }
-
-        function getBorderColor(sign: number, model: Model<Pick<CandlestickDataItemOption, 'itemStyle'>>) {
-            return model.get(
-                sign > 0 ? positiveBorderColorQuery : negativeBorderColorQuery
-            );
-        }
-
         // Only visible series has each data be visual encoded
         if (ecModel.isSeriesFiltered(seriesModel)) {
             return;

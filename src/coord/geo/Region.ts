@@ -23,8 +23,9 @@ import * as vec2 from 'zrender/src/core/vector';
 import * as polygonContain from 'zrender/src/contain/polygon';
 import { GeoJSON, GeoProjection, GeoSVGGraphicRoot } from './geoTypes';
 import * as matrix from 'zrender/src/core/matrix';
-import Element from 'zrender/src/Element';
+import type Element from 'zrender/src/Element';
 import { each } from 'zrender/src/core/util';
+import type { RegionOption } from './GeoModel';
 
 const TMP_TRANSFORM = [] as number[];
 
@@ -135,7 +136,9 @@ export class GeoJSONRegion extends Region {
     readonly geometries: (GeoJSONPolygonGeometry | GeoJSONLineStringGeometry)[];
 
     // Injected outside.
-    properties: GeoJSON['features'][0]['properties'];
+    properties: GeoJSON['features'][0]['properties'] & {
+        echartsStyle?: Omit<RegionOption, 'name'>
+    };
 
     constructor(
         name: string,
@@ -295,7 +298,7 @@ export class GeoSVGRegion extends Region {
     readonly type = 'geoSVG';
 
     // Can only be used to calculate, but not be modified.
-    // Becuase this el may not belongs to this view,
+    // Because this el may not belong to this view,
     // but been displaying on some other view.
     private _elOnlyForCalculate: Element;
 

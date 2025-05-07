@@ -77,7 +77,7 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
     // (4) Consider other chart types using `barGrid`?
     // See #6728, #4862, `test/bar-overflow-time-plot.html`
     const ecModel = model.ecModel;
-    if (ecModel && (scaleType === 'time' /*|| scaleType === 'interval' */)) {
+    if (ecModel && (scaleType === 'time' /* || scaleType === 'interval' */)) {
         const barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
         let isBaseAxisAndHasBarSeries = false;
 
@@ -115,7 +115,7 @@ function adjustScaleForOverflow(
 
     // Get Axis Length
     const axisExtent = model.axis.getExtent();
-    const axisLength = axisExtent[1] - axisExtent[0];
+    const axisLength = Math.abs(axisExtent[1] - axisExtent[0]);
 
     // Get bars on current base axis and calculate min and max overflow
     const barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
@@ -147,7 +147,7 @@ function adjustScaleForOverflow(
 }
 
 // Precondition of calling this method:
-// The scale extent has been initailized using series data extent via
+// The scale extent has been initialized using series data extent via
 // `scale.setExtent` or `scale.unionExtentFromData`;
 export function niceScaleExtent(
     scale: Scale,
@@ -364,7 +364,7 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
 
 /**
  * Set `categoryInterval` as 0 implicitly indicates that
- * show all labels reguardless of overlap.
+ * show all labels regardless of overlap.
  * @param {Object} axis axisModel.axis
  */
 export function shouldShowAllLabels(axis: Axis): boolean {

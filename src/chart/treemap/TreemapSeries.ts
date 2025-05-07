@@ -36,7 +36,8 @@ import {
     DecalObject,
     SeriesLabelOption,
     DefaultEmphasisFocus,
-    AriaOptionMixin
+    AriaOptionMixin,
+    BlurScope
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -45,7 +46,7 @@ import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
 
-// Only support numberic value.
+// Only support numeric value.
 type TreemapSeriesDataValue = number | number[];
 
 interface BreadcrumbItemStyleOption extends ItemStyleOption {
@@ -112,7 +113,7 @@ export interface TreemapSeriesVisualOption {
     colorAlpha?: number[] | 'none'
     colorSaturation?: number[] | 'none'
     // A color list for a level. Each node in the level will obtain a color from the color list.
-    // Only suuport ColorString for interpolation
+    // Only support ColorString for interpolation.
     // color?: ColorString[]
 
     /**
@@ -143,7 +144,9 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 
     color?: ColorString[] | 'none'
 
-    decal?: DecalObject[] | 'none'
+    decal?: DecalObject[] | 'none',
+
+    cursor?: string
 }
 
 export interface TreemapSeriesOption
@@ -190,9 +193,9 @@ export interface TreemapSeriesOption
      * Leaf node click behaviour: 'zoomToNode', 'link', false.
      * If leafDepth is set and clicking a node which has children but
      * be on left depth, the behaviour would be changing root. Otherwise
-     * use behavious defined above.
+     * use behaviour defined above.
      */
-    nodeClick?: 'zoomToNode' | 'link'
+    nodeClick?: 'zoomToNode' | 'link' | false
 
     breadcrumb?: BoxLayoutOptionMixin & {
         show?: boolean
@@ -202,6 +205,9 @@ export interface TreemapSeriesOption
         itemStyle?: BreadcrumbItemStyleOption
 
         emphasis?: {
+            disabled?: boolean
+            focus?: DefaultEmphasisFocus
+            blurScope?: BlurScope
             itemStyle?: BreadcrumbItemStyleOption
         }
     }
@@ -228,6 +234,12 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
     private _idIndexMap: zrUtil.HashMap<number>;
     private _idIndexMapCount: number;
 
+    zoom: number;
+    zoomLimit: {
+        max?: number;
+        min?: number;
+    };
+
     static defaultOption: TreemapSeriesOption = {
         // Disable progressive rendering
         progressive: 0,
@@ -247,6 +259,8 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
         zoomToNodeRatio: 0.32 * 0.32,
 
+        scaleLimit: null,
+
         roam: true,
         nodeClick: 'zoomToNode',
         animation: true,
@@ -261,9 +275,14 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             // bottom
             emptyItemWidth: 25,             // Width of empty node.
             itemStyle: {
-                color: 'rgba(0,0,0,0.7)', //'#5793f3',
+                color: 'rgba(0,0,0,0.7)', // '#5793f3',
                 textStyle: {
                     color: '#fff'
+                }
+            },
+            emphasis: {
+                itemStyle: {
+                    color: 'rgba(0,0,0,0.9)' // '#5793f3',
                 }
             }
         },
@@ -272,7 +291,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             // Do not use textDistance, for ellipsis rect just the same as treemap node rect.
             distance: 0,
             padding: 5,
-            position: 'inside', // Can be [5, '5%'] or position stirng like 'insideTopLeft', ...
+            position: 'inside', // Can be [5, '5%'] or position string like 'insideTopLeft', ...
             // formatter: null,
             color: '#fff',
             overflow: 'truncate'
@@ -336,12 +355,6 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         levels: []                  // Each item: {
                                     //     visibleMin, itemStyle, visualDimension, label
                                     // }
-        // data: {
-        //      value: [],
-        //      children: [],
-        //      link: 'http://xxx.xxx.xxx',
-        //      target: 'blank' or 'self'
-        // }
     };
 
     /**

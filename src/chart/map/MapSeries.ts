@@ -45,6 +45,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
+import { GeoJSONRegion } from '../../coord/geo/Region';
 
 export interface MapStateOption<TCbParams = never> {
     itemStyle?: GeoItemStyleOption<TCbParams>
@@ -54,6 +55,7 @@ export interface MapDataItemOption extends MapStateOption,
     StatesOptionMixin<MapStateOption, StatesMixinBase>,
     OptionDataItemObject<OptionDataValueNumeric> {
     cursor?: string
+    silent?: boolean
 }
 
 export type MapValueCalculationType = 'sum' | 'average' | 'min' | 'max';
@@ -117,26 +119,36 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
             coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
-        const dataNameMap = zrUtil.createHashMap();
-        const toAppendNames = [] as string[];
+        const dataNameIndexMap = zrUtil.createHashMap<number>();
+        const toAppendItems: MapDataItemOption[] = [];
 
         for (let i = 0, len = data.count(); i < len; i++) {
             const name = data.getName(i);
-            dataNameMap.set(name, true);
+            dataNameIndexMap.set(name, i);
         }
 
         const geoSource = geoSourceManager.load(this.getMapType(), this.option.nameMap, this.option.nameProperty);
         zrUtil.each(geoSource.regions, function (region) {
             const name = region.name;
-            if (!dataNameMap.get(name)) {
-                toAppendNames.push(name);
+            const dataNameIdx = dataNameIndexMap.get(name);
+            // apply specified echarts style in GeoJSON data
+            const specifiedGeoJSONRegionStyle = (region as GeoJSONRegion).properties
+                && (region as GeoJSONRegion).properties.echartsStyle;
+            let dataItem: MapDataItemOption;
+            if (dataNameIdx == null) {
+                dataItem = { name: name };
+                toAppendItems.push(dataItem);
             }
+            else {
+                dataItem = data.getRawDataItem(dataNameIdx) as MapDataItemOption;
+            }
+            specifiedGeoJSONRegionStyle && zrUtil.merge(dataItem, specifiedGeoJSONRegionStyle);
         });
 
         // Complete data with missing regions. The consequent processes (like visual
         // map and render) can not be performed without a "full data". For example,
         // find `dataIndex` by name.
-        data.appendValues([], toAppendNames);
+        data.appendData(toAppendItems);
 
         return data;
     }
@@ -286,9 +298,9 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
         // for geoJSON source: 0.75.
         aspectScale: null,
 
-        ///// Layout with center and size
-        // If you wan't to put map in a fixed size box with right aspect ratio
-        // This two properties may more conveninet
+        // Layout with center and size
+        // If you want to put map in a fixed size box with right aspect ratio
+        // This two properties may be more convenient.
         // layoutCenter: [50%, 50%]
         // layoutSize: 100
 

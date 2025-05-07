@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isArray, each } from 'zrender/src/core/util';
+import { isArray, each, retrieve2 } from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
@@ -63,6 +63,22 @@ interface InnerLineLabel extends LineLabel {
 
 function makeSymbolTypeKey(symbolCategory: 'fromSymbol' | 'toSymbol') {
     return '_' + symbolCategory + 'Type' as '_fromSymbolType' | '_toSymbolType';
+}
+function makeSymbolTypeValue(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: number) {
+    const symbolType = lineData.getItemVisual(idx, name);
+    if (!symbolType || symbolType === 'none') {
+        return symbolType;
+    }
+    const symbolSize = lineData.getItemVisual(idx, name + 'Size' as 'fromSymbolSize' | 'toSymbolSize');
+    const symbolRotate = lineData.getItemVisual(idx, name + 'Rotate' as 'fromSymbolRotate' | 'toSymbolRotate');
+    const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset');
+    const symbolKeepAspect = lineData.getItemVisual(idx,
+        name + 'KeepAspect' as 'fromSymbolKeepAspect' | 'toSymbolKeepAspect');
+    const symbolSizeArr = symbolUtil.normalizeSymbolSize(symbolSize);
+
+    const symbolOffsetArr = symbolUtil.normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
+
+    return symbolType + symbolSizeArr + symbolOffsetArr + (symbolRotate || '') + (symbolKeepAspect || '');
 }
 
 /**
@@ -148,9 +164,11 @@ class Line extends graphic.Group {
     _createLine(lineData: LineList, idx: number, seriesScope?: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
         const linePoints = lineData.getItemLayout(idx);
+        const z2 = lineData.getItemVisual(idx, 'z2');
         const line = createLine(linePoints);
         line.shape.percent = 0;
         graphic.initProps(line, {
+            z2: retrieve2(z2, 0),
             shape: {
                 percent: 1
             }
@@ -164,7 +182,7 @@ class Line extends graphic.Group {
             // it will be updated after line#update.
             // Or symbol position and rotation update in line#beforeUpdate will be one frame slow
             this.add(symbol);
-            this[makeSymbolTypeKey(symbolCategory)] = lineData.getItemVisual(idx, symbolCategory);
+            this[makeSymbolTypeKey(symbolCategory)] = makeSymbolTypeValue(symbolCategory, lineData, idx);
         }, this);
 
         this._updateCommonStl(lineData, idx, seriesScope);
@@ -184,7 +202,7 @@ class Line extends graphic.Group {
         graphic.updateProps(line, target, seriesModel, idx);
 
         each(SYMBOL_CATEGORIES, function (symbolCategory) {
-            const symbolType = (lineData as LineList).getItemVisual(idx, symbolCategory);
+            const symbolType = makeSymbolTypeValue(symbolCategory, lineData as LineList, idx);
             const key = makeSymbolTypeKey(symbolCategory);
             // Symbol changed
             if (this[key] !== symbolType) {

@@ -1,21 +1,21 @@
 /*
-* Licensed to the Apache Software Foundation (ASF) under one
-* or more contributor license agreements.  See the NOTICE file
-* distributed with this work for additional information
-* regarding copyright ownership.  The ASF licenses this file
-* to you under the Apache License, Version 2.0 (the
-* "License"); you may not use this file except in compliance
-* with the License.  You may obtain a copy of the License at
-*
-*   http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
 /**
  * Language: Portuguese (Brazil).
@@ -42,7 +42,7 @@ export default {
     legend: {
         selector: {
             all: 'Todas',
-            inverse: 'Inv'
+            inverse: 'Inverter'
         }
     },
     toolbox: {
@@ -75,7 +75,7 @@ export default {
             }
         },
         restore: {
-            title: 'Restore'
+            title: 'Restaurar'
         },
         saveAsImage: {
             title: 'Salvar como imagem',
@@ -90,22 +90,24 @@ export default {
             scatter: 'Gráfico de dispersão',
             effectScatter: 'Gráfico de dispersão ondulado',
             radar: 'Gráfico radar',
-            tree: 'Árvore',
-            treemap: 'Treemap',
-            boxplot: 'Boxplot',
-            candlestick: 'Candlestick',
-            k: 'Gráfico K line',
+            tree: 'Gráfico de árvore',
+            treemap: 'Mapa de árvore',
+            boxplot: 'Gráfico de caixa',
+            candlestick: 'Gráfico de vela',
+            k: 'Gráfico de linha K',
             heatmap: 'Mapa de calor',
             map: 'Mapa',
             parallel: 'Coordenadas paralelas',
             lines: 'Gráfico de linhas',
-            graph: 'Relationship graph',
+            graph: 'Grafo',
             sankey: 'Gráfico Sankey',
             funnel: 'Gráfico de funil',
-            gauge: 'Gauge',
-            pictorialBar: 'Pictorial bar',
-            themeRiver: 'Theme River Map',
-            sunburst: 'Sunburst'
+            gauge: 'Gráfico de medidor',
+            pictorialBar: 'Barra pictórica',
+            themeRiver: 'Gráfico de rio de tema',
+            sunburst: 'Gráfico de explosão solar',
+            custom: 'Gráfico personalizado',
+            chart: 'Gráfico'
         }
     },
     aria: {

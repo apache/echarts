@@ -281,13 +281,13 @@ class SliderZoomView extends DataZoomView {
         // Transform barGroup.
         sliderGroup.attr(
             (orient === HORIZONTAL && !inverse)
-                ? { scaleY: otherAxisInverse ? 1 : -1, scaleX: 1 }
-                : (orient === HORIZONTAL && inverse)
-                    ? { scaleY: otherAxisInverse ? 1 : -1, scaleX: -1 }
-                    : (orient === VERTICAL && !inverse)
-                        ? { scaleY: otherAxisInverse ? -1 : 1, scaleX: 1, rotation: Math.PI / 2 }
-                        // Dont use Math.PI, considering shadow direction.
-                        : { scaleY: otherAxisInverse ? -1 : 1, scaleX: -1, rotation: Math.PI / 2 }
+            ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: 1 }
+            : (orient === HORIZONTAL && inverse)
+            ? {scaleY: otherAxisInverse ? 1 : -1, scaleX: -1 }
+            : (orient === VERTICAL && !inverse)
+            ? {scaleY: otherAxisInverse ? -1 : 1, scaleX: 1, rotation: Math.PI / 2}
+            // Don't use Math.PI, considering shadow direction.
+            : {scaleY: otherAxisInverse ? -1 : 1, scaleX: -1, rotation: Math.PI / 2}
         );
 
         // Position barGroup
@@ -359,7 +359,8 @@ class SliderZoomView extends DataZoomView {
         const oldSize = this._shadowSize || [];
         const seriesModel = info.series;
         const data = seriesModel.getRawData();
-        const otherDim: string = seriesModel.getShadowDim
+        const candlestickDim = seriesModel.getShadowDim && seriesModel.getShadowDim();
+        const otherDim: string = candlestickDim && data.getDimensionInfo(candlestickDim)
             ? seriesModel.getShadowDim() // @see candlestick
             : info.otherDim;
 
@@ -627,20 +628,22 @@ class SliderZoomView extends DataZoomView {
             sliderGroup.add(handles[handleIndex] = path);
 
             const textStyleModel = dataZoomModel.getModel('textStyle');
+            const handleLabel = dataZoomModel.get('handleLabel') || {};
+            const handleLabelShow = handleLabel.show || false;
 
             thisGroup.add(
                 handleLabels[handleIndex] = new graphic.Text({
-                    silent: true,
-                    invisible: true,
-                    style: createTextStyle(textStyleModel, {
-                        x: 0, y: 0, text: '',
-                        verticalAlign: 'middle',
-                        align: 'center',
-                        fill: textStyleModel.getTextColor(),
-                        font: textStyleModel.getFont()
-                    }),
-                    z2: 10
-                }));
+                silent: true,
+                invisible: !handleLabelShow,
+                style: createTextStyle(textStyleModel, {
+                    x: 0, y: 0, text: '',
+                    verticalAlign: 'middle',
+                    align: 'center',
+                    fill: textStyleModel.getTextColor(),
+                    font: textStyleModel.getFont()
+                }),
+                z2: 10
+            }));
 
         }, this);
 
@@ -893,19 +896,25 @@ class SliderZoomView extends DataZoomView {
     }
 
     /**
-     * @param showOrHide true: show, false: hide
+     * @param isEmphasis true: show, false: hide
      */
-    private _showDataInfo(showOrHide?: boolean) {
-        // Always show when drgging.
-        showOrHide = this._dragging || showOrHide;
+    private _showDataInfo(isEmphasis?: boolean) {
+        const handleLabel = this.dataZoomModel.get('handleLabel') || {};
+        const normalShow = handleLabel.show || false;
+        const emphasisHandleLabel = this.dataZoomModel.getModel(['emphasis', 'handleLabel']);
+        const emphasisShow = emphasisHandleLabel.get('show') || false;
+        // Dragging is considered as emphasis, unless emphasisShow is false
+        const toShow = (isEmphasis || this._dragging)
+            ? emphasisShow
+            : normalShow;
         const displayables = this._displayables;
         const handleLabels = displayables.handleLabels;
-        handleLabels[0].attr('invisible', !showOrHide);
-        handleLabels[1].attr('invisible', !showOrHide);
+        handleLabels[0].attr('invisible', !toShow);
+        handleLabels[1].attr('invisible', !toShow);
 
         // Highlight move handle
         displayables.moveHandle
-            && this.api[showOrHide ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
+            && this.api[toShow ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
     }
 
     private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
@@ -994,12 +1003,24 @@ class SliderZoomView extends DataZoomView {
         const viewExtend = this._getViewExtent();
         const percentExtent = [0, 100];
 
-        this._range = asc([
-            linearMap(brushShape.x, viewExtend, percentExtent, true),
-            linearMap(brushShape.x + brushShape.width, viewExtend, percentExtent, true)
-        ]);
+        const handleEnds = this._handleEnds = [brushShape.x, brushShape.x + brushShape.width];
+        const minMaxSpan = this.dataZoomModel.findRepresentativeAxisProxy().getMinMaxSpan();
+        // Restrict range.
+        sliderMove(
+            0,
+            handleEnds,
+            viewExtend,
+            0,
+            minMaxSpan.minSpan != null
+                ? linearMap(minMaxSpan.minSpan, percentExtent, viewExtend, true) : null,
+            minMaxSpan.maxSpan != null
+                ? linearMap(minMaxSpan.maxSpan, percentExtent, viewExtend, true) : null
+        );
 
-        this._handleEnds = [brushShape.x, brushShape.x + brushShape.width];
+        this._range = asc([
+            linearMap(handleEnds[0], viewExtend, percentExtent, true),
+            linearMap(handleEnds[1], viewExtend, percentExtent, true)
+        ]);
 
         this._updateView();
 
@@ -1063,7 +1084,7 @@ class SliderZoomView extends DataZoomView {
     }
 
     private _findCoordRect() {
-        // Find the grid coresponding to the first axis referred by dataZoom.
+        // Find the grid corresponding to the first axis referred by dataZoom.
         let rect: RectLike;
         const coordSysInfoList = collectReferCoordSysModelInfo(this.dataZoomModel).infoList;
 
