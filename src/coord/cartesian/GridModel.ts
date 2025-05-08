@@ -32,6 +32,9 @@ export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, Shado
     // Whether grid size contain label.
     containLabel?: boolean;
 
+    // Whether grid size contain dataZoom.
+    containDataZoom?: boolean;
+
     backgroundColor?: ZRColor;
     borderWidth?: number;
     borderColor?: ZRColor;
@@ -59,6 +62,8 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         bottom: 65,
         // If grid size contain label
         containLabel: true,
+        // If grid size contain dataZoom
+        containDataZoom: true,
         // width: {totalWidth} - left - right,
         // height: {totalHeight} - top - bottom,
         backgroundColor: tokens.color.transparent,

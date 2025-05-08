@@ -383,6 +383,100 @@ under the License.
             },
             {
               title: {
+                text: 'dataZoom & legend (right/bottom)'
+              },
+              legend: {
+                show: true
+              },
+              tooltip: {
+                trigger: 'axis',
+              },
+              dataZoom: [
+                {
+                  show: true,
+                  realtime: true,
+                  start: 30,
+                  end: 70
+                },
+                {
+                  show: true,
+                  realtime: true,
+                  yAxisIndex: 0
+                },
+                {
+                  type: 'inside'
+                }
+              ],
+              xAxis: {
+                type: 'time',
+              },
+              yAxis: {
+                type: 'value'
+              },
+              series: [{
+                name: 'data',
+                type: 'line',
+                data: (function () {
+                  const data = [];
+                  const date = new Date();
+                  for (let i = 0; i < 100; i++) {
+                    date.setHours(date.getHours() + 1);
+                    data.push([date.toLocaleString(), Math.sin(i / 5) * 100 + 200]);
+                  }
+                  return data;
+                })()
+              }]
+            },
+            {
+              title: {
+                text: 'dataZoom & legend (left/top)'
+              },
+              legend: {
+                show: true
+              },
+              tooltip: {
+                trigger: 'axis',
+              },
+              dataZoom: [
+                {
+                  show: true,
+                  realtime: true,
+                  start: 30,
+                  end: 70,
+                  top: 50
+                },
+                {
+                  show: true,
+                  realtime: true,
+                  yAxisIndex: 0,
+                  left: 25
+                },
+                {
+                  type: 'inside'
+                }
+              ],
+              xAxis: {
+                type: 'time',
+              },
+              yAxis: {
+                type: 'value'
+              },
+              series: [{
+                name: 'data',
+                type: 'line',
+                data: (function () {
+                  const data = [];
+                  const date = new Date();
+                  for (let i = 0; i < 100; i++) {
+                    date.setHours(date.getHours() + 1);
+                    data.push([date.toLocaleString(), Math.sin(i / 5) * 100 + 200]);
+                  }
+                  return data;
+                })()
+              }]
+            },
+            {
+              title: {
                 text: 'visualMap & calendar',
               },
               calendar: {

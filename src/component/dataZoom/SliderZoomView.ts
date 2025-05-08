@@ -48,9 +48,9 @@ import tokens from '../../visual/tokens';
 const Rect = graphic.Rect;
 
 // Constants
-const DEFAULT_LOCATION_EDGE_GAP = 15;
+export const DEFAULT_SLIDER_MARGIN = 15;
 const DEFAULT_FRAME_BORDER_WIDTH = 1;
-const DEFAULT_FILLER_SIZE = 30;
+export const DEFAULT_SLIDER_SIZE = 30;
 const DEFAULT_MOVE_HANDLE_SIZE = 7;
 const HORIZONTAL = 'horizontal';
 const VERTICAL = 'vertical';
@@ -228,6 +228,7 @@ class SliderZoomView extends DataZoomView {
         // If some of x/y/width/height are not specified,
         // auto-adapt according to target grid.
         const coordRect = this._findCoordRect();
+        console.log(this);
         const ecSize = {width: api.getWidth(), height: api.getHeight()};
         // Default align by coordinate system rect.
         const positionInfo = this._orient === HORIZONTAL
@@ -235,14 +236,14 @@ class SliderZoomView extends DataZoomView {
                 // Why using 'right', because right should be used in vertical,
                 // and it is better to be consistent for dealing with position param merge.
                 right: ecSize.width - coordRect.x - coordRect.width,
-                top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP - moveHandleSize),
+                top: coordRect.y + coordRect.height + DEFAULT_SLIDER_MARGIN + moveHandleSize,
                 width: coordRect.width,
-                height: DEFAULT_FILLER_SIZE
+                height: DEFAULT_SLIDER_SIZE
             }
             : { // vertical
-                right: DEFAULT_LOCATION_EDGE_GAP,
+                right: ecSize.width - coordRect.x - coordRect.width - DEFAULT_SLIDER_MARGIN - DEFAULT_SLIDER_SIZE,
                 top: coordRect.y,
-                width: DEFAULT_FILLER_SIZE,
+                width: DEFAULT_SLIDER_SIZE,
                 height: coordRect.height
             };
 
