@@ -44,8 +44,6 @@ class PiecewiseVisualMapView extends VisualMapView {
         const visualMapModel = this.visualMapModel;
         const textGap = visualMapModel.get('textGap');
         const textStyleModel = visualMapModel.textStyleModel;
-        const textFont = textStyleModel.getFont();
-        const textFill = textStyleModel.getTextColor();
         const itemAlign = this._getItemAlign();
         const itemSize = visualMapModel.itemSize;
         const viewData = this._getViewData();
@@ -75,16 +73,17 @@ class PiecewiseVisualMapView extends VisualMapView {
             if (showLabel) {
                 const visualState = this.visualMapModel.getValueState(representValue);
                 itemGroup.add(new graphic.Text({
-                    style: {
+                    style: createTextStyle(textStyleModel, {
                         x: itemAlign === 'right' ? -textGap : itemSize[0] + textGap,
                         y: itemSize[1] / 2,
                         text: piece.text,
-                        verticalAlign: 'middle',
-                        align: itemAlign as TextAlign,
-                        font: textFont,
-                        fill: textFill,
-                        opacity: visualState === 'outOfRange' ? 0.5 : 1,
-                    },
+                        verticalAlign: textStyleModel.get('verticalAlign') || 'middle',
+                        align: textStyleModel.get('align') || itemAlign as TextAlign,
+                        opacity: zrUtil.retrieve2(
+                            textStyleModel.get('opacity'),
+                            visualState === 'outOfRange' ? 0.5 : 1
+                        ),
+                    }),
                     silent
                 }));
             }
