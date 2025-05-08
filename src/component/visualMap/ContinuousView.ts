@@ -191,8 +191,10 @@ class ContinuousView extends VisualMapView {
             style: createTextStyle(textStyleModel, {
                 x: position[0],
                 y: position[1],
-                verticalAlign: orient === 'horizontal' ? 'middle' : align as TextVerticalAlign,
-                align: orient === 'horizontal' ? align as TextAlign : 'center',
+                verticalAlign: textStyleModel.get('verticalAlign')
+                    || (orient === 'horizontal' ? 'middle' : align as TextVerticalAlign),
+                align: textStyleModel.get('align')
+                    || (orient === 'horizontal' ? align as TextAlign : 'center'),
                 text
             })
         }));
