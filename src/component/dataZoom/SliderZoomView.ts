@@ -48,9 +48,9 @@ import tokens from '../../visual/tokens';
 const Rect = graphic.Rect;
 
 // Constants
-export const DEFAULT_SLIDER_MARGIN = 15;
+const DEFAULT_LOCATION_EDGE_GAP = 15;
 const DEFAULT_FRAME_BORDER_WIDTH = 1;
-export const DEFAULT_SLIDER_SIZE = 30;
+const DEFAULT_FILLER_SIZE = 30;
 const DEFAULT_MOVE_HANDLE_SIZE = 7;
 const HORIZONTAL = 'horizontal';
 const VERTICAL = 'vertical';
@@ -235,14 +235,14 @@ class SliderZoomView extends DataZoomView {
                 // Why using 'right', because right should be used in vertical,
                 // and it is better to be consistent for dealing with position param merge.
                 right: ecSize.width - coordRect.x - coordRect.width,
-                top: coordRect.y + coordRect.height + DEFAULT_SLIDER_MARGIN + moveHandleSize,
+                top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP - moveHandleSize),
                 width: coordRect.width,
-                height: DEFAULT_SLIDER_SIZE
+                height: DEFAULT_FILLER_SIZE
             }
             : { // vertical
-                right: ecSize.width - coordRect.x - coordRect.width - DEFAULT_SLIDER_MARGIN - DEFAULT_SLIDER_SIZE,
+                right: DEFAULT_LOCATION_EDGE_GAP,
                 top: coordRect.y,
-                width: DEFAULT_SLIDER_SIZE,
+                width: DEFAULT_FILLER_SIZE,
                 height: coordRect.height
             };
 

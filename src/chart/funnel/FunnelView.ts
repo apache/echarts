@@ -131,9 +131,8 @@ class FunnelPiece extends graphic.Polygon {
         polygon.setTextConfig({
             local: true,
             inside: !!labelLayout.inside,
-            insideStroke: visualColor,
-            // insideFill: 'auto',
-            outsideFill: visualColor
+            // Remove insideStroke and outsideFill
+            // insideFill: 'auto'
         });
 
         const linePoints = labelLayout.linePoints;

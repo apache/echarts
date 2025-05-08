@@ -70,7 +70,7 @@ const defaultOption: AxisBaseOption = {
         breakLine: true,
     },
     axisTick: {
-        show: false,
+        show: true,
         // Whether axisTick is inside the grid or outside the grid.
         inside: false,
         // The length of axisTick.
@@ -155,7 +155,8 @@ const categoryAxis: AxisBaseOption = zrUtil.merge({
     axisTick: {
         // If tick is align with label when boundaryGap is true
         alignWithLabel: false,
-        interval: 'auto'
+        interval: 'auto',
+        show: 'auto'
     },
     axisLabel: {
         interval: 'auto'

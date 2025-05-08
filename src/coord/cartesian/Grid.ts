@@ -58,9 +58,6 @@ import { alignScaleTicks } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
 import { BoundingRect } from 'zrender';
-import type DataZoomModel from '../../component/dataZoom/DataZoomModel';
-import SliderZoomModel from '../../component/dataZoom/SliderZoomModel';
-import { DEFAULT_SLIDER_MARGIN, DEFAULT_SLIDER_SIZE } from '../../component/dataZoom/SliderZoomView';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -179,7 +176,6 @@ class Grid implements CoordinateSystemMaster {
 
         const boxLayoutParams = gridModel.getBoxLayoutParams();
         const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
-        const isContainDataZoom = !ignoreContainLabel && gridModel.get('containDataZoom');
 
         const gridRect = getLayoutRect(
             boxLayoutParams, {
@@ -190,16 +186,12 @@ class Grid implements CoordinateSystemMaster {
         this._rect = gridRect;
 
         const axesList = this._axesList;
-        const ecModel = gridModel.ecModel;
 
         adjustAxes();
 
         // Minus label, name, and nameGap size
         if (isContainLabel) {
             const reservedSpacePerAxis: ReservedSpace[] = [];
-
-            const dataZoomReservedSpace = {left: 0, top: 0, right: 0, bottom: 0};
-
             each(axesList, function (axis) {
                 const nameBoundingRect = computeNameBoundingRect(axis);
 
@@ -209,34 +201,6 @@ class Grid implements CoordinateSystemMaster {
                 }
 
                 reservedSpacePerAxis.push(computeReservedSpace(axis, labelUnionRect, nameBoundingRect));
-
-                if (isContainDataZoom) {
-                    const dataZoomModels = ecModel.findComponents({
-                        mainType: 'dataZoom',
-                        filter: (dataZoomModel: DataZoomModel) => {
-                            if (dataZoomModel.type !== SliderZoomModel.type) {
-                                return false;
-                            }
-                            const sliderModel = dataZoomModel as SliderZoomModel;
-                            const targetAxis = sliderModel.getFirstTargetAxisModel();
-                            return targetAxis.axis === axis && sliderModel.get('show');
-                        }
-                    }) as SliderZoomModel[];
-
-                    each(dataZoomModels, function (dataZoomModel) {
-                        const isHorizontal = axis.isHorizontal();
-                        // Extract the height from grid to slider dataZoom
-                        // only if uses 'ph', which means align to the grid rect.
-                        if (dataZoomModel.get(isHorizontal ? 'height' : 'width') === 'ph') {
-                            const left = dataZoomModel.get('left');
-                            const top = dataZoomModel.get('top');
-                            const side = isHorizontal
-                                ? ((top === 'ph' || top == null) ? 'bottom' : 'top')
-                                : ((left === 'ph' || left == null) ? 'right' : 'left');
-                            dataZoomReservedSpace[side] = DEFAULT_SLIDER_SIZE + DEFAULT_SLIDER_MARGIN;
-                        }
-                    });
-                }
             });
 
             const maxLabelSpace: CartesianAxisPositionMargins = { left: 0, top: 0, right: 0, bottom: 0};
@@ -254,19 +218,13 @@ class Grid implements CoordinateSystemMaster {
                     maxLabelSpace[reservedSpacePerAxis[axisIndex].namePositionCurrAxis];
             });
 
-            const maxReservedSpaceLeft = maxLabelSpace.left + maxNameAndNameGapSpace.left
-                + dataZoomReservedSpace.left;
-            const maxReservedSpaceTop = maxLabelSpace.top + maxNameAndNameGapSpace.top
-                + dataZoomReservedSpace.top;
+            const maxReservedSpaceLeft = maxLabelSpace.left + maxNameAndNameGapSpace.left;
+            const maxReservedSpaceTop = maxLabelSpace.top + maxNameAndNameGapSpace.top;
 
             gridRect.x += maxReservedSpaceLeft;
             gridRect.y += maxReservedSpaceTop;
-            gridRect.width -= maxReservedSpaceLeft + maxLabelSpace.right
-                + maxNameAndNameGapSpace.right
-                + dataZoomReservedSpace.right;
-            gridRect.height -= maxReservedSpaceTop + maxLabelSpace.bottom
-                + maxNameAndNameGapSpace.bottom
-                + dataZoomReservedSpace.bottom;
+            gridRect.width -= maxReservedSpaceLeft + maxLabelSpace.right + maxNameAndNameGapSpace.right;
+            gridRect.height -= maxReservedSpaceTop + maxLabelSpace.bottom + maxNameAndNameGapSpace.bottom;
 
             adjustAxes();
         }

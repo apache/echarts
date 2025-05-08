@@ -85,7 +85,7 @@ const tokens: Tokens = {
 
 const color = tokens.color = {
     theme: [
-        '#5978e3',
+        '#5070dd',
         '#b6d634',
         '#505372',
         '#ff994d',
