@@ -72,13 +72,14 @@ class PiecewiseVisualMapView extends VisualMapView {
 
             if (showLabel) {
                 const visualState = this.visualMapModel.getValueState(representValue);
+                const align = textStyleModel.get('align') || itemAlign as TextAlign;
                 itemGroup.add(new graphic.Text({
                     style: createTextStyle(textStyleModel, {
-                        x: itemAlign === 'right' ? -textGap : itemSize[0] + textGap,
+                        x: align === 'right' ? -textGap : itemSize[0] + textGap,
                         y: itemSize[1] / 2,
                         text: piece.text,
                         verticalAlign: textStyleModel.get('verticalAlign') || 'middle',
-                        align: textStyleModel.get('align') || itemAlign as TextAlign,
+                        align,
                         opacity: zrUtil.retrieve2(
                             textStyleModel.get('opacity'),
                             visualState === 'outOfRange' ? 0.5 : 1
