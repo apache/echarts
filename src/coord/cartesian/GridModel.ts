@@ -57,9 +57,9 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         // zlevel: 0,
         z: 0,
         left: tokens.size.xl,
-        top: 60,
+        top: 65,
         right: tokens.size.xl,
-        bottom: 65,
+        bottom: 60,
         // If grid size contain label
         containLabel: true,
         // If grid size contain dataZoom

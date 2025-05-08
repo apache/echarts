@@ -228,7 +228,6 @@ class SliderZoomView extends DataZoomView {
         // If some of x/y/width/height are not specified,
         // auto-adapt according to target grid.
         const coordRect = this._findCoordRect();
-        console.log(this);
         const ecSize = {width: api.getWidth(), height: api.getHeight()};
         // Default align by coordinate system rect.
         const positionInfo = this._orient === HORIZONTAL

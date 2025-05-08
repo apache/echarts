@@ -338,7 +338,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
                 color: tokens.color.primary
             },
             itemStyle: {
-                areaColor: tokens.color.backgroundShade
+                areaColor: tokens.color.neutral20
             }
         },
 

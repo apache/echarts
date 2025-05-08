@@ -198,7 +198,7 @@ class Grid implements CoordinateSystemMaster {
         if (isContainLabel) {
             const reservedSpacePerAxis: ReservedSpace[] = [];
 
-            let dataZoomReservedSpace = {left: 0, top: 0, right: 0, bottom: 0};
+            const dataZoomReservedSpace = {left: 0, top: 0, right: 0, bottom: 0};
 
             each(axesList, function (axis) {
                 const nameBoundingRect = computeNameBoundingRect(axis);
@@ -208,33 +208,35 @@ class Grid implements CoordinateSystemMaster {
                     labelUnionRect = estimateLabelUnionRect(axis);
                 }
 
-                const dataZoomModels = ecModel.findComponents({
-                    mainType: 'dataZoom',
-                    filter: (dataZoomModel: DataZoomModel) => {
-                        if (dataZoomModel.type !== SliderZoomModel.type) {
-                            return false;
-                        }
-                        const sliderModel = dataZoomModel as SliderZoomModel;
-                        const targetAxis = sliderModel.getFirstTargetAxisModel();
-                        return targetAxis.axis === axis && sliderModel.get('show');
-                    }
-                }) as SliderZoomModel[];
-
-                each(dataZoomModels, function (dataZoomModel) {
-                    const isHorizontal = axis.isHorizontal();
-                    // Extract the height from grid to slider dataZoom
-                    // only if uses 'ph', which means align to the grid rect.
-                    if (dataZoomModel.get(isHorizontal ? 'height' : 'width') === 'ph') {
-                        const left = dataZoomModel.get('left');
-                        const top = dataZoomModel.get('top');
-                        const side = isHorizontal
-                            ? ((top === 'ph' || top == null) ? 'bottom' : 'top')
-                            : ((left === 'ph' || left == null) ? 'right' : 'left');
-                        dataZoomReservedSpace[side] = DEFAULT_SLIDER_SIZE + DEFAULT_SLIDER_MARGIN;
-                    }
-                });
-
                 reservedSpacePerAxis.push(computeReservedSpace(axis, labelUnionRect, nameBoundingRect));
+
+                if (isContainDataZoom) {
+                    const dataZoomModels = ecModel.findComponents({
+                        mainType: 'dataZoom',
+                        filter: (dataZoomModel: DataZoomModel) => {
+                            if (dataZoomModel.type !== SliderZoomModel.type) {
+                                return false;
+                            }
+                            const sliderModel = dataZoomModel as SliderZoomModel;
+                            const targetAxis = sliderModel.getFirstTargetAxisModel();
+                            return targetAxis.axis === axis && sliderModel.get('show');
+                        }
+                    }) as SliderZoomModel[];
+
+                    each(dataZoomModels, function (dataZoomModel) {
+                        const isHorizontal = axis.isHorizontal();
+                        // Extract the height from grid to slider dataZoom
+                        // only if uses 'ph', which means align to the grid rect.
+                        if (dataZoomModel.get(isHorizontal ? 'height' : 'width') === 'ph') {
+                            const left = dataZoomModel.get('left');
+                            const top = dataZoomModel.get('top');
+                            const side = isHorizontal
+                                ? ((top === 'ph' || top == null) ? 'bottom' : 'top')
+                                : ((left === 'ph' || left == null) ? 'right' : 'left');
+                            dataZoomReservedSpace[side] = DEFAULT_SLIDER_SIZE + DEFAULT_SLIDER_MARGIN;
+                        }
+                    });
+                }
             });
 
             const maxLabelSpace: CartesianAxisPositionMargins = { left: 0, top: 0, right: 0, bottom: 0};

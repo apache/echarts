@@ -463,7 +463,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         borderRadius: 0,
         borderWidth: 0,
         padding: 5,
-        itemGap: 10,
+        itemGap: 8,
         itemWidth: 25,
         itemHeight: 14,
         symbolRotate: 'inherit',
