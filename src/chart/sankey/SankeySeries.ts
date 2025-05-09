@@ -42,6 +42,7 @@ import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import type View from '../../coord/View';
+import tokens from '../../visual/tokens';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
@@ -331,7 +332,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         nodeAlign: 'justify',
 
         lineStyle: {
-            color: '#314656',
+            color: tokens.color.neutral50,
             opacity: 0.2,
             curveness: 0.5
         },
@@ -347,7 +348,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         },
 

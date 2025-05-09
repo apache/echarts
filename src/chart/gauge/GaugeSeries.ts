@@ -34,6 +34,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
+import tokens from '../../visual/tokens';
 
 // [percent, color]
 type GaugeColorStop = [number, ColorString];
@@ -218,7 +219,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             show: true,
             roundCap: false,
             lineStyle: {       // 属性lineStyle控制线条样式
-                color: [[1, '#E6EBF8']],
+                color: [[1, tokens.color.neutral05]],
                 width: 10
             }
         },
@@ -240,7 +241,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             distance: 10,
             // 属性lineStyle（详见lineStyle）控制线条样式
             lineStyle: {
-                color: '#63677A',
+                color: tokens.color.axisTick,
                 width: 3,
                 type: 'solid'
             }
@@ -256,7 +257,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             distance: 10,
             // 属性lineStyle控制线条样式
             lineStyle: {
-                color: '#63677A',
+                color: tokens.color.axisTickMinor,
                 width: 1,
                 type: 'solid'
             }
@@ -265,7 +266,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             show: true,
             distance: 15,
             // formatter: null,
-            color: '#464646',
+            color: tokens.color.axisLabel,
             fontSize: 12,
             rotate: 0
         },
@@ -286,9 +287,9 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             offsetCenter: [0, 0],
             keepAspect: false,
             itemStyle: {
-                color: '#fff',
+                color: tokens.color.neutral00,
                 borderWidth: 0,
-                borderColor: '#5470c6'
+                borderColor: tokens.color.theme[0]
             }
         },
 
@@ -297,15 +298,15 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             // x, y，单位px
             offsetCenter: [0, '20%'],
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            color: '#464646',
+            color: tokens.color.secondary,
             fontSize: 16,
             valueAnimation: false
         },
         detail: {
             show: true,
-            backgroundColor: 'rgba(0,0,0,0)',
+            backgroundColor: tokens.color.transparent,
             borderWidth: 0,
-            borderColor: '#ccc',
+            borderColor: tokens.color.border,
             width: 100,
             height: null, // self-adaption
             padding: [5, 10],
@@ -313,7 +314,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             offsetCenter: [0, '40%'],
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            color: '#464646',
+            color: tokens.color.primary,
             fontSize: 30,
             fontWeight: 'bold',
             lineHeight: 30,

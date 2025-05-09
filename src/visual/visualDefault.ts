@@ -22,6 +22,7 @@
  */
 
 import * as zrUtil from 'zrender/src/core/util';
+import tokens from './tokens';
 
 const visualDefault = {
     /**
@@ -44,8 +45,8 @@ const defaultOption: {[key: string]: {
 }} = {
 
     color: {
-        active: ['#006edd', '#e0ffff'],
-        inactive: ['rgba(0,0,0,0)']
+        active: [tokens.color.accent70, tokens.color.accent20],
+        inactive: [tokens.color.transparent]
     },
 
     colorHue: {

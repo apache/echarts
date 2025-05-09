@@ -273,7 +273,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             remainedWidth: bandWidth,
             autoWidthCount: 0,
             categoryGap: null,
-            gap: '20%',
+            gap: '10%',
             stacks: {}
         };
         const stacks = columnsOnAxis.stacks;

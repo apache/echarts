@@ -11,6 +11,7 @@ import SeriesModel from '../../model/Series';
 import { BoxLayoutOptionMixin, ItemStyleOption } from '../../util/types';
 import RoamController, { RoamEventDefinition, RoamType } from '../../component/helper/RoamController';
 import Eventful from 'zrender/src/core/Eventful';
+import tokens from '../../visual/tokens';
 
 
 // TODO:
@@ -82,7 +83,7 @@ class Thumbnail extends Eventful<Pick<RoamEventDefinition, 'zoom' | 'pan'>> {
         const cursor = opt.roamType ? 'pointer' : 'default';
         const itemStyleModel = thumbnailModel.getModel('itemStyle');
         const itemStyle = itemStyleModel.getItemStyle();
-        itemStyle.fill = seriesModel.ecModel.get('backgroundColor') || '#fff';
+        itemStyle.fill = seriesModel.ecModel.get('backgroundColor') || tokens.color.neutral00;
 
         // Try to use border-box in thumbnail, see https://github.com/apache/echarts/issues/18022
         const boxBorderWidth = itemStyle.lineWidth || 0;
@@ -250,14 +251,14 @@ class Thumbnail extends Eventful<Pick<RoamEventDefinition, 'zoom' | 'pan'>> {
 
         itemStyle: {
             // Use echarts option.backgorundColor by default.
-            borderColor: '#555',
-            borderWidth: 2
+            borderColor: tokens.color.border,
+            borderWidth: 1
         },
 
         windowStyle: {
             borderWidth: 1,
-            color: 'green',
-            borderColor: '#000',
+            color: tokens.color.neutral30,
+            borderColor: tokens.color.neutral40,
             opacity: 0.3
         }
     };
