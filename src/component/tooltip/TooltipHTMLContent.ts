@@ -500,6 +500,7 @@ class TooltipHTMLContent {
     hide() {
         const style = this.el.style;
         style.visibility = 'hidden';
+        style.display = 'none';
         style.opacity = '0';
         env.transform3dSupported && (style.willChange = '');
         this._show = false;
