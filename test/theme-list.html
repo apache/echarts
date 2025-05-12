@@ -33,7 +33,7 @@ under the License.
     </head>
     <body>
         <style>
-          h1, h2, h3 {
+          h1, h2, h3, p {
             margin-left: 15px;
           }
 
@@ -71,7 +71,22 @@ under the License.
             margin: 10px 20px 10px 10px;
             display: inline-block;
           }
+
+          @media (prefers-color-scheme: dark) {
+            body {
+              background-color: #000;
+              color: #ccc;
+            }
+            h1, h2, h3 {
+              color: #fff;
+            }
+
+            .chart-item-h, .chart-item {
+              border-color: #444;
+            }
+          }
         </style>
+          <p>Set system dark mode to see dark mode charts.</p>
 
           <h2>Typical charts of different series count</h2>
           <div id="main0"></div>
@@ -92,6 +107,23 @@ under the License.
             // 'map/js/china',
             // './data/nutrients.json'
         ], function (echarts, geojson) {
+          const charts = [];
+
+          let wasDarkMode = false;
+          function updateDarkMode() {
+            const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (isDarkMode !== wasDarkMode) {
+              for (const chart of charts) {
+                chart.setTheme(isDarkMode ? 'dark' : 'light');
+              }
+              wasDarkMode = isDarkMode;
+            }
+          }
+          const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+          darkModeMediaQuery.addEventListener('change', () => {
+            updateDarkMode();
+          });
+
           echarts.registerMap('USA', geojson, {
             Alaska: {
               left: -131,
@@ -216,8 +248,9 @@ under the License.
               section.appendChild(div);
 
               const chart = echarts.init(div, null, {
-                renderer: 'svg'
+                // renderer: 'svg'
               });
+              charts.push(chart);
 
               const series = [];
               switch (c.data) {
@@ -534,11 +567,14 @@ under the License.
             main1.appendChild(div);
 
             const chart = echarts.init(div, null, {
-              renderer: 'svg'
+              // renderer: 'svg'
             });
+            charts.push(chart);
+
             chart.setOption(option);
           }
 
+          updateDarkMode();
         });
         </script>
     </body>

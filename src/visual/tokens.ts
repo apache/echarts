@@ -1,71 +1,75 @@
 import { extend } from 'zrender/src/core/util';
+import { modifyHSL } from 'zrender/src/tool/color';
+
+interface ColorToken {
+    theme: string[];
+    neutral00: string;
+    neutral05: string;
+    neutral10: string;
+    neutral15: string;
+    neutral20: string;
+    neutral25: string;
+    neutral30: string;
+    neutral35: string;
+    neutral40: string;
+    neutral45: string;
+    neutral50: string;
+    neutral55: string;
+    neutral60: string;
+    neutral65: string;
+    neutral70: string;
+    neutral75: string;
+    neutral80: string;
+    neutral85: string;
+    neutral90: string;
+    neutral95: string;
+    neutral99: string;
+    accent05: string;
+    accent10: string;
+    accent15: string;
+    accent20: string;
+    accent25: string;
+    accent30: string;
+    accent35: string;
+    accent40: string;
+    accent45: string;
+    accent50: string;
+    accent55: string;
+    accent60: string;
+    accent65: string;
+    accent70: string;
+    accent75: string;
+    accent80: string;
+    accent85: string;
+    accent90: string;
+    accent95: string;
+    transparent: string;
+    primary: string;
+    secondary: string;
+    tertiary: string;
+    quaternary: string;
+    disabled: string;
+    border: string;
+    borderTint: string;
+    borderShade: string;
+    background: string;
+    backgroundTint: string;
+    backgroundTransparent: string;
+    backgroundShade: string;
+    shadow: string;
+    shadowTint: string;
+    axisLine: string;
+    axisLineTint: string;
+    axisTick: string;
+    axisTickMinor: string;
+    axisLabel: string;
+    axisSplitLine: string;
+    axisMinorSplitLine: string;
+}
 
 interface Tokens {
-    color: {
-        theme: string[];
-        neutral00: string;
-        neutral05: string;
-        neutral10: string;
-        neutral15: string;
-        neutral20: string;
-        neutral25: string;
-        neutral30: string;
-        neutral35: string;
-        neutral40: string;
-        neutral45: string;
-        neutral50: string;
-        neutral55: string;
-        neutral60: string;
-        neutral65: string;
-        neutral70: string;
-        neutral75: string;
-        neutral80: string;
-        neutral85: string;
-        neutral90: string;
-        neutral95: string;
-        neutral99: string;
-        accent05: string;
-        accent10: string;
-        accent15: string;
-        accent20: string;
-        accent25: string;
-        accent30: string;
-        accent35: string;
-        accent40: string;
-        accent45: string;
-        accent50: string;
-        accent55: string;
-        accent60: string;
-        accent65: string;
-        accent70: string;
-        accent75: string;
-        accent80: string;
-        accent85: string;
-        accent90: string;
-        accent95: string;
-        transparent: string;
-        primary: string;
-        secondary: string;
-        tertiary: string;
-        quaternary: string;
-        disabled: string;
-        border: string;
-        borderTint: string;
-        borderShade: string;
-        background: string;
-        backgroundTint: string;
-        backgroundTransparent: string;
-        backgroundShade: string;
-        shadow: string;
-        shadowTint: string;
-        axisLine: string;
-        axisLineTint: string;
-        axisTick: string;
-        axisTickMinor: string;
-        axisLabel: string;
-        axisSplitLine: string;
-        axisMinorSplitLine: string;
-    };
+    color: ColorToken;
+    darkColor: ColorToken;
     size: {
         xxs: number;
         xs: number;
@@ -80,6 +84,7 @@ interface Tokens {
 
 const tokens: Tokens = {
     color: {} as Tokens['color'],
+    darkColor: {} as Tokens['darkColor'],
     size: {} as Tokens['size']
 };
 
@@ -168,6 +173,26 @@ extend(color, {
     axisSplitLine: color.neutral15,
     axisMinorSplitLine: color.neutral05,
 } as Tokens['color']);
+
+for (const key in color) {
+    if (color.hasOwnProperty(key)) {
+        const hex = color[key as keyof ColorToken] as string;
+        if (key === 'theme') {
+            // Don't modify theme colors.
+            tokens.darkColor.theme = color.theme.slice();
+        }
+        else if (key.indexOf('accent') === 0) {
+            // Desaturate and lighten accent colors.
+            // @ts-ignore-next-line
+            tokens.darkColor[key] = modifyHSL(hex, null, s => s * 0.5, l => Math.min(1, 1.3 - l));
+        }
+        else {
+            // @ts-ignore-next-line
+            tokens.darkColor[key] = modifyHSL(hex, null, s => s * 0.9, l => 1 - l);
+        }
+    }
+}
+
 
 tokens.size = {
     xxs: 2,
