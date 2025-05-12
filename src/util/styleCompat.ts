@@ -22,6 +22,7 @@ import { ElementTextConfig } from 'zrender/src/Element';
 import { TextStyleProps, TextStylePropsPart, TextProps } from 'zrender/src/graphic/Text';
 import { each, hasOwn } from 'zrender/src/core/util';
 import { ItemStyleProps } from '../model/mixin/itemStyle';
+import tokens from '../visual/tokens';
 
 export interface LegacyStyleProps {
     legacy?: boolean
@@ -180,14 +181,14 @@ export function convertToEC4StyleForCustomSerise(
     txCfg.distance != null && (out.textDistance = txCfg.distance);
 
     const isInside = (out.textPosition as string).indexOf('inside') >= 0;
-    const hostFill = itemStl.fill || '#000';
+    const hostFill = itemStl.fill || tokens.color.neutral99;
 
     convertToEC4RichItem(out, txStl);
 
     const textFillNotSet = out.textFill == null;
     if (isInside) {
         if (textFillNotSet) {
-            out.textFill = txCfg.insideFill || '#fff';
+            out.textFill = txCfg.insideFill || tokens.color.neutral00;
             !out.textStroke && txCfg.insideStroke && (out.textStroke = txCfg.insideStroke);
             !out.textStroke && (out.textStroke = hostFill);
             out.textStrokeWidth == null && (out.textStrokeWidth = 2);
@@ -195,7 +196,7 @@ export function convertToEC4StyleForCustomSerise(
     }
     else {
         if (textFillNotSet) {
-            out.textFill = itemStl.fill || txCfg.outsideFill || '#000';
+            out.textFill = itemStl.fill || txCfg.outsideFill || tokens.color.neutral00;
         }
         !out.textStroke && txCfg.outsideStroke && (out.textStroke = txCfg.outsideStroke);
     }

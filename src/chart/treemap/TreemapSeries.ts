@@ -45,6 +45,7 @@ import SeriesData from '../../data/SeriesData';
 import { normalizeToArray } from '../../util/model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import enableAriaDecalForTree from '../helper/enableAriaDecalForTree';
+import tokens from '../../visual/tokens';
 
 // Only support numeric value.
 type TreemapSeriesDataValue = number | number[];
@@ -244,10 +245,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         // Disable progressive rendering
         progressive: 0,
         // size: ['80%', '80%'],            // deprecated, compatible with ec2.
-        left: 'center',
-        top: 'middle',
-        width: '80%',
-        height: '80%',
+        left: tokens.size.l,
+        top: tokens.size.xxxl,
+        right: tokens.size.l,
+        bottom: tokens.size.xxxl,
         sort: true,
 
         clipWindow: 'origin',
@@ -259,7 +260,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
 
         zoomToNodeRatio: 0.32 * 0.32,
 
-        scaleLimit: null,
+        scaleLimit: {
+            max: 5,
+            min: 0.2
+        },
 
         roam: true,
         nodeClick: 'zoomToNode',
@@ -270,19 +274,19 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             show: true,
             height: 22,
             left: 'center',
-            top: 'bottom',
+            bottom: tokens.size.m,
             // right
             // bottom
             emptyItemWidth: 25,             // Width of empty node.
             itemStyle: {
-                color: 'rgba(0,0,0,0.7)', // '#5793f3',
+                color: tokens.color.backgroundShade,
                 textStyle: {
-                    color: '#fff'
+                    color: tokens.color.secondary
                 }
             },
             emphasis: {
                 itemStyle: {
-                    color: 'rgba(0,0,0,0.9)' // '#5793f3',
+                    color: tokens.color.background
                 }
             }
         },
@@ -293,7 +297,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             padding: 5,
             position: 'inside', // Can be [5, '5%'] or position string like 'insideTopLeft', ...
             // formatter: null,
-            color: '#fff',
+            color: tokens.color.neutral00,
             overflow: 'truncate'
             // align
             // verticalAlign
@@ -314,7 +318,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
             colorSaturation: null,  // Can be 'none' if not necessary.
             borderWidth: 0,
             gapWidth: 0,
-            borderColor: '#fff',
+            borderColor: tokens.color.neutral00,
             borderColorSaturation: null // If specified, borderColor will be ineffective, and the
                                         // border color is evaluated by color of current node and
                                         // borderColorSaturation.

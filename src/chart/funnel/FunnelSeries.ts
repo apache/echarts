@@ -42,6 +42,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
+import tokens from '../../visual/tokens';
 
 type FunnelLabelOption = Omit<SeriesLabelOption, 'position'> & {
     position?: LabelOption['position']
@@ -154,7 +155,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         left: 80,
         top: 60,
         right: 80,
-        bottom: 60,
+        bottom: 65,
         // width: {totalWidth} - left - right,
         // height: {totalHeight} - top - bottom,
 
@@ -177,12 +178,12 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
             length: 20,
             lineStyle: {
                 // color: 各异,
-                width: 1
+                width: 2
             }
         },
         itemStyle: {
             // color: 各异,
-            borderColor: '#fff',
+            borderColor: tokens.color.neutral00,
             borderWidth: 1
         },
         emphasis: {
@@ -192,7 +193,7 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
         },
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         }
     };

@@ -88,7 +88,6 @@ import {throttle} from '../util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from '../visual/style';
 import loadingDefault from '../loading/default';
 import Scheduler from './Scheduler';
-import lightTheme from '../theme/light';
 import darkTheme from '../theme/dark';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from '../coord/CoordinateSystem';
 import { parseClassType } from '../util/clazz';
@@ -3231,7 +3230,7 @@ function makeSelectChangedEvent(
 }
 
 // Default theme
-registerTheme('light', lightTheme);
+registerTheme('light', {});
 registerTheme('dark', darkTheme);
 
 // For backward compatibility, where the namespace `dataTool` will

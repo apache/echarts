@@ -41,6 +41,7 @@ import {
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
+import tokens from '../../visual/tokens';
 
 interface ScatterStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
@@ -151,7 +152,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         },
 

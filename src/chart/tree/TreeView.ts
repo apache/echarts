@@ -36,6 +36,7 @@ import { TreeNode } from '../../data/Tree';
 import SeriesData from '../../data/SeriesData';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
 import { AnimationOption, ECElement } from '../../util/types';
+import tokens from '../../visual/tokens';
 
 type TreeSymbol = SymbolClz & {
     __edge: graphic.BezierCurve | TreePath
@@ -75,7 +76,7 @@ class TreePath extends Path<TreeEdgePathProps> {
 
     getDefaultStyle() {
         return {
-            stroke: '#000',
+            stroke: tokens.color.neutral99,
             fill: null as string
         };
     }
@@ -348,7 +349,7 @@ function updateNode(
     const itemModel = node.getModel<TreeSeriesNodeItemOption>();
     const visualColor = (node.getVisual('style') as PathStyleProps).fill;
     const symbolInnerColor = node.isExpand === false && node.children.length !== 0
-            ? visualColor : '#fff';
+            ? visualColor : tokens.color.neutral00;
 
     const virtualRoot = data.tree.root;
 
