@@ -673,8 +673,8 @@ class TooltipView extends ComponentView {
         if (tooltipTrigger != null && tooltipTrigger !== 'item') {
             return;
         }
-
-        const params = dataModel.getDataParams(dataIndex, dataType);
+        const el = e.target;
+        const params = dataModel.getDataParams(dataIndex, dataType, el);
         const markupStyleCreator = new TooltipMarkupStyleCreator();
         // Pre-create marker style for makers. Users can assemble richText
         // text in `formatter` callback and use those markers style.

@@ -38,6 +38,7 @@ import {
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import Radar from '../../coord/radar/Radar';
+import IndicatorAxis from '../../coord/radar/IndicatorAxis';
 import {
     createTooltipMarkup, retrieveVisualColorForTooltipMarker
 } from '../../component/tooltip/tooltipMarkup';
@@ -71,6 +72,10 @@ export interface RadarSeriesOption
 
     data?: (RadarSeriesDataItemOption | RadarSeriesDataValue)[]
 }
+export interface RadarCallbackDataParams extends CallbackDataParams {
+    indicatorIndex: number,
+    indicatorAxes: Array<IndicatorAxis>
+}
 
 class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
 
@@ -100,6 +105,17 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
             generateCoord: 'indicator_',
             generateCoordCount: Infinity
         });
+    }
+
+    /**
+     * @overwrite
+     */
+    getDataParams(dataIndex: number, dataType: any, el?: Element): RadarCallbackDataParams {
+        const params = super.getDataParams(dataIndex) as RadarCallbackDataParams;
+        // indicatorIndex && indicatorAxes
+        params.indicatorIndex = (el && (el as any).__dimIdx) ?? null;
+        params.indicatorAxes = this.coordinateSystem.getIndicatorAxes();
+        return params;
     }
 
     formatTooltip(
