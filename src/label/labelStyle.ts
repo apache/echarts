@@ -395,15 +395,25 @@ function setTextStyleCommon(
     let richResult: TextStyleProps['rich'];
     if (richItemNames) {
         richResult = {};
+        const richInheritPlainLabelOptionName = 'richInheritPlainLabel' as const;
+        const richInheritPlainLabel = retrieve2(
+            textStyleModel.get(richInheritPlainLabelOptionName),
+            ecModel && ecModel.get(richInheritPlainLabelOptionName)
+        );
         for (const name in richItemNames) {
             if (richItemNames.hasOwnProperty(name)) {
                 // Cascade is supported in rich.
-                const richTextStyle = textStyleModel.getModel(['rich', name]);
+                const richTextStyle = textStyleModel.getModel(
+                    ['rich', name],
+                    richInheritPlainLabel !== false ? textStyleModel : void 0
+                );
                 // In rich, never `disableBox`.
-                // FIXME: consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
+                // consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
                 // That might confuses users. So probably we should put `textStyleModel` as the
                 // root ancestor of the `richTextStyle`. But that would be a break change.
+                // Since v6, the rich style inherits plain label by default
+                // but this behavior can be disabled by setting `richInheritPlainLabel` to `false`.
                 setTokenTextStyle(
                     richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached, false, true
                 );
