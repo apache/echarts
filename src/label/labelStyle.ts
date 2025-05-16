@@ -395,11 +395,18 @@ function setTextStyleCommon(
     let richResult: TextStyleProps['rich'];
     if (richItemNames) {
         richResult = {};
-        const richInheritPlainLabel = textStyleModel.get('richInheritPlainLabel') !== false;
+        const richInheritPlainLabelOptionName = 'richInheritPlainLabel' as const;
+        const richInheritPlainLabel = retrieve2(
+            textStyleModel.get(richInheritPlainLabelOptionName),
+            ecModel && ecModel.get(richInheritPlainLabelOptionName)
+        );
         for (const name in richItemNames) {
             if (richItemNames.hasOwnProperty(name)) {
                 // Cascade is supported in rich.
-                const richTextStyle = textStyleModel.getModel(['rich', name], richInheritPlainLabel && textStyleModel);
+                const richTextStyle = textStyleModel.getModel(
+                    ['rich', name],
+                    richInheritPlainLabel !== false ? textStyleModel : void 0
+                );
                 // In rich, never `disableBox`.
                 // consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
