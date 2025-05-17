@@ -36,6 +36,7 @@ class TooltipRichContent {
     private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
 
     private _hideTimeout: number;
+    private _showTimeout: number;
 
     private _alwaysShowContent: boolean = false;
 
@@ -68,8 +69,10 @@ class TooltipRichContent {
             clearTimeout(this._hideTimeout);
         }
 
-        this.el.show();
-        this._show = true;
+        this._showTimeout = setTimeout(() => {
+            this.el.show();
+            this._show = true;
+        }, 0)
     }
 
     /**
@@ -124,7 +127,9 @@ class TooltipRichContent {
             // clear the timeout in hideLater and keep showing tooltip
             if (self._enterable) {
                 clearTimeout(self._hideTimeout);
-                self._show = true;
+                this._showTimeout = setTimeout(() => {
+                    self._show = true;
+                }, 0)
             }
             self._inContent = true;
         });
@@ -188,6 +193,9 @@ class TooltipRichContent {
     }
 
     hide() {
+        if (this._showTimeout) {
+            clearTimeout(this._showTimeout);
+        }
         if (this.el) {
             this.el.hide();
         }
