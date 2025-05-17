@@ -855,7 +855,8 @@ class ContinuousView extends VisualMapView {
         }
 
         const data = dataModel.getData(ecData.dataType);
-        const value = data.getStore().get(visualMapModel.getDataDimensionIndex(data), ecData.dataIndex) as number;
+        const value = data.getStore()
+            .get(visualMapModel.getDataDimensionIndex(data, dataModel.seriesIndex), ecData.dataIndex) as number;
 
         if (!isNaN(value)) {
             this._showIndicator(value, value);
