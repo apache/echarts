@@ -54,47 +54,39 @@ under the License.
                         xAxis: [{
                         type: 'category',
                         name: 'x',
-                        splitLine: {show: false},
                         data: ['一', '二', '三', '四', '五', '六', '七', '八', '九']
                     }],
                     yAxis: [{
                         type: 'log',
                         name: 'y',
-                        scale: false,
-                        minorTick: {
-                            show: true,
-                            splitNumber: 10,
-                        },
-                        splitLine: {
-                            show: true,
-                        },
-                        minorSplitLine: {
-                            show: true,
-                        },
-                        min: (value) => value.min,
-                        max: (value) => value.max,
+                        axisLabel: {
+                            formatter: (val) => {
+                                return val.toExponential(2);
+                            }
+                        }
                     }],
                     series: [
                     {
                         name: '3的指数',
                         type: 'line',
-                        data: [1, 3, 9, 27, 81, 247, 741, 2223, 6669]
+                        data: [-1, -3, -9, -27, -81, -247, -741, -2223, -6669]
                     },
                     {
                         name: '2的指数',
                         type: 'line',
-                        data: [1, 2, 4, 8, 16, 32, 64, 128, 256]
+                        data: [-1, -2, -4, -8, -16, -32, -64, -128, -256]
                     },
                     {
                         name: '0.1 的指数',
                         type: 'line',
-                        data: [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
+                        data: [-1, -0.1, -0.01, -1e-3, -1e-4, -1e-5, -1e-6, -1e-7, -1e-8]
                     },
                     {
                         name: '0.1 的指数 reversed, pass through 0',
                         type: 'line',
-                        data: [1e-6, 1e-5, 1e-4, 1e-3, 0.01, 0.1, 1, 10, 100]
-                    }]
+                        data: [-1e-6, -1e-5, -1e-4, -1e-3, -0.01, -0.1, -1, -10, -100]
+                    }
+                ]
                 });
             });
 
@@ -107,20 +99,17 @@ under the License.
                 var chart = echarts.init(document.getElementById('main1'));
                 // See #13154
                 chart.setOption({
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: '{a} <br/>({c})'
-                    },
                     xAxis: {
                         type: 'log',
+                        axisLabel: {
+                            formatter: (val) => {
+                                return val.toExponential(1);
+                            }
+                        }
                     },
                     yAxis: {
                         type: 'log',
                         logBase: 2,
-                        minorTick: {
-                            show: true,
-                            splitNumber: 4,
-                        },
                     },
                     series: [
                         {
@@ -129,11 +118,11 @@ under the License.
                                 color: 'red',
                             },
                             data: [
-                                [1e-4, 2**(-8)],
-                                [1e-2, 2**(-4)],
-                                [1, 2**0],
-                                [100, 2**4],
-                                [1e4, 2**8],
+                                [-1e-4, -(2**(-8))],
+                                [-1e-2, -(2**(-4))],
+                                [-1, -(2**0)],
+                                [-100, -(2**4)],
+                                [-1e4, -(2**8)],
                             ],
                         },
                     ],
