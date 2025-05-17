@@ -30,7 +30,8 @@ import {
     ColorString,
     ZRStyleProps,
     AnimationOptionMixin,
-    InterpolatableValue
+    InterpolatableValue,
+    ViewRootGroup
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
@@ -38,7 +39,7 @@ import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
 import SeriesData from '../data/SeriesData';
-import { initProps, updateProps } from '../util/graphic';
+import * as graphic from '../util/graphic';
 
 type TextCommonParams = {
     /**
@@ -291,6 +292,66 @@ function setLabelStyle<TLabelDataIndex>(
     targetEl.dirty();
 }
 export { setLabelStyle };
+
+/**
+ * Set and create specific labels for box plot.
+ *
+ * This method should only be used for this case,
+ * as it manually creates multiple alternating labels
+ * specifically for the box plot.
+ */
+export function setBoxLabels(boxItemPositions: number[][], formattedLabels: Array<string>,
+    labelOption: any, group: ViewRootGroup) {
+    // get sorted and unique y positions of box items
+    const yPositions = boxItemPositions.map((pos: number[]) => pos[1]);
+    const uniqueYPositions: number[] = [];
+    yPositions.forEach(position => {
+        if (!uniqueYPositions.includes(position)) {
+            uniqueYPositions.push(position);
+        }
+    });
+    uniqueYPositions.sort(function (a: number, b: number) {
+        return b - a;
+    });
+
+    boxItemPositions.sort(function (a: number[], b: number[]) {
+        return a[0] - b[0];
+    });
+
+    // get alternating y positions for labels to avoid overlap
+    const uniqueAlternatingPositions = uniqueYPositions.map((posY: number, ind: number) => {
+            const matchingPositions = boxItemPositions.filter((orgPos: number[]) => orgPos[1] === posY);
+            const index = (ind % 2 === 0) ? 0 : matchingPositions.length - 1;
+            return matchingPositions[index];
+    });
+
+    // create labels and add them to their respective positions
+    formattedLabels.forEach((labelText: string, ind: number) => {
+        if (labelOption.show === 'iqr' && (ind === 0 || ind === 4)) {
+            return;
+        }
+        if (labelOption.show === 'median' && (ind !== 2)) {
+            return;
+        }
+        if (labelOption.show === 'whiskers' && (ind !== 0 && ind !== 4)) {
+            return;
+        }
+        const label = new graphic.Text({
+            style: {
+                text: labelText
+            },
+            z2: 1000
+        });
+        const defaultOffset = 5;
+        const defaultXOffset = (ind % 2) === 0 ? (-(label.getBoundingRect().width + defaultOffset)) : defaultOffset;
+        const defaultYOffset = -defaultOffset;
+        const customOffset = labelOption.offset ? labelOption.offset : [0, 0];
+        label.x = uniqueAlternatingPositions[ind][0] + defaultXOffset + customOffset[0],
+        label.y = uniqueAlternatingPositions[ind][1] + defaultYOffset + customOffset[1],
+        group.add(label);
+    });
+}
+
 
 export function getLabelStatesModels<LabelName extends string = 'label'>(
     itemModel: Model<StatesOptionMixin<any, any> & Partial<Record<LabelName, any>>>,
@@ -736,8 +797,8 @@ export function animateLabelValue(
 
     (textEl as ZRText & {percent?: number}).percent = 0;
     (labelInnerStore.prevValue == null
-        ? initProps
-        : updateProps
+        ? graphic.initProps
+        : graphic.updateProps
     )<TextProps & {percent?: number}>(textEl, {
         // percent is used to prevent animation from being aborted #15916
         percent: 1
