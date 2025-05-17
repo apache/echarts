@@ -516,6 +516,11 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
 
     // PENGING If selectedMode is null ?
     select(innerDataIndices: number[], dataType?: SeriesDataType): void {
+        // discard the marker series select event at now.
+        // TODO support marker(markerArea, markLine, etc) series select event.
+        if (dataType === 'marker') {
+            return;
+        };
         this._innerSelect(this.getData(dataType), innerDataIndices);
     }
 
