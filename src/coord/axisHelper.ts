@@ -324,7 +324,18 @@ export function estimateLabelUnionRect(axis: Axis) {
     if (tickCount > 40) {
         step = Math.ceil(tickCount / 40);
     }
+    const showMinLabel = axisLabelModel.get('showMinLabel');
+    const showMaxLabel = axisLabelModel.get('showMaxLabel');
     for (let i = 0; i < tickCount; i += step) {
+        if (showMinLabel === false && i === 0) {
+            continue;
+        }
+        // If the showMaxLabel is set to false and the current index plus the step size
+        // is less than the total length of Computation of Large Label Compatible with
+        // Large Data Volume, skip
+        if (showMaxLabel === false && !(i + step < tickCount)) {
+            continue;
+        }
         const tick = realNumberScaleTicks
             ? realNumberScaleTicks[i]
             : {
