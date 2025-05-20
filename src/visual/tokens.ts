@@ -123,25 +123,25 @@ const color = tokens.color = {
     neutral95: '#17171b',
     neutral99: '#000',
 
-    accent05: '#eef2fc',
-    accent10: '#dee4f9',
-    accent15: '#cdd7f7',
-    accent20: '#bdc9f4',
-    accent25: '#acbcf1',
-    accent30: '#9baeee',
-    accent35: '#8ba1eb',
-    accent40: '#7a93e9',
-    accent45: '#6a86e6',
-    accent50: '#5978e3',
-    accent55: '#506ccc',
-    accent60: '#4760b6',
-    accent65: '#3e549f',
-    accent70: '#354888',
-    accent75: '#2d3c72',
-    accent80: '#24305b',
-    accent85: '#1b2444',
-    accent90: '#12182d',
-    accent95: '#090c17',
+    accent05: '#eff1f9',
+    accent10: '#e0e4f2',
+    accent15: '#d0d6ec',
+    accent20: '#c0c9e6',
+    accent25: '#b1bbdf',
+    accent30: '#a1aed9',
+    accent35: '#91a0d3',
+    accent40: '#8292cc',
+    accent45: '#7285c6',
+    accent50: '#6578ba',
+    accent55: '#5c6da9',
+    accent60: '#536298',
+    accent65: '#4a5787',
+    accent70: '#404c76',
+    accent75: '#374165',
+    accent80: '#2e3654',
+    accent85: '#252b43',
+    accent90: '#1b2032',
+    accent95: '#121521',
 
     transparent: 'rgba(0,0,0,0)',
 } as Tokens['color'];
@@ -176,19 +176,19 @@ extend(color, {
 
 for (const key in color) {
     if (color.hasOwnProperty(key)) {
-        const hex = color[key as keyof ColorToken] as string;
+        const hex = color[key as keyof ColorToken];
         if (key === 'theme') {
             // Don't modify theme colors.
             tokens.darkColor.theme = color.theme.slice();
         }
         else if (key.indexOf('accent') === 0) {
             // Desaturate and lighten accent colors.
-            // @ts-ignore-next-line
-            tokens.darkColor[key] = modifyHSL(hex, null, s => s * 0.5, l => Math.min(1, 1.3 - l));
+            tokens.darkColor[key as keyof Omit<ColorToken, 'theme'>] =
+                modifyHSL(hex as string, null, s => s * 0.5, l => Math.min(1, 1.3 - l));
         }
         else {
-            // @ts-ignore-next-line
-            tokens.darkColor[key] = modifyHSL(hex, null, s => s * 0.9, l => 1 - l);
+            tokens.darkColor[key as keyof Omit<ColorToken, 'theme'>] =
+                modifyHSL(hex as string, null, s => s * 0.9, l => 1 - l);
         }
     }
 }

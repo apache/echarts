@@ -3229,8 +3229,9 @@ function makeSelectChangedEvent(
     };
 }
 
-// Default theme
-registerTheme('light', {});
+// Default theme, so that we can use `chart.setTheme('default')` to revert to
+// the default theme after changing to other themes.
+registerTheme('default', {});
 registerTheme('dark', darkTheme);
 
 // For backward compatibility, where the namespace `dataTool` will

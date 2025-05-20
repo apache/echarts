@@ -221,7 +221,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
             // start end
             position: 'start',
             margin: tokens.size.s,
-            color: tokens.color.tertiary
+            color: tokens.color.secondary
         },
 
         // month text style
@@ -247,7 +247,7 @@ class CalendarModel extends ComponentModel<CalendarOption> {
             position: null,
             margin: tokens.size.xl,
             formatter: null,
-            color: tokens.color.secondary,
+            color: tokens.color.quaternary,
             fontFamily: 'sans-serif',
             fontWeight: 'bolder',
             fontSize: 20

@@ -114,7 +114,7 @@ under the License.
             const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
             if (isDarkMode !== wasDarkMode) {
               for (const chart of charts) {
-                chart.setTheme(isDarkMode ? 'dark' : 'light');
+                chart.setTheme(isDarkMode ? 'dark' : 'default');
               }
               wasDarkMode = isDarkMode;
             }

@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import { modifyHSL } from 'zrender/src/tool/color';
 import tokens from '../visual/tokens';
 
 let platform = '';
@@ -28,6 +29,9 @@ if (typeof navigator !== 'undefined') {
 
 const decalColor = 'rgba(0, 0, 0, 0.2)';
 
+const themeColor = tokens.color.theme[0];
+const lightThemeColor = modifyHSL(themeColor, null, null, 0.9);
+
 export default {
 
     darkMode: 'auto',
@@ -37,7 +41,7 @@ export default {
 
     color: tokens.color.theme,
 
-    gradientColor: [tokens.color.accent10, tokens.color.accent50],
+    gradientColor: [lightThemeColor, themeColor],
 
     aria: {
         decal: {

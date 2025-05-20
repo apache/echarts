@@ -219,7 +219,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             show: true,
             roundCap: false,
             lineStyle: {       // 属性lineStyle控制线条样式
-                color: [[1, tokens.color.neutral05]],
+                color: [[1, tokens.color.neutral10]],
                 width: 10
             }
         },
@@ -306,7 +306,7 @@ class GaugeSeriesModel extends SeriesModel<GaugeSeriesOption> {
             show: true,
             backgroundColor: tokens.color.transparent,
             borderWidth: 0,
-            borderColor: tokens.color.border,
+            borderColor: tokens.color.neutral40,
             width: 100,
             height: null, // self-adaption
             padding: [5, 10],

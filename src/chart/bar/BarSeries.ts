@@ -158,7 +158,8 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: tokens.color.primary
+                borderColor: tokens.color.primary,
+                borderWidth: 2
             }
         },
 

@@ -284,7 +284,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             maxSurfaceAngle: 90,
             lineStyle: {
                 // color: 各异,
-                width: 2,
+                width: 1,
                 type: 'solid'
             }
         },

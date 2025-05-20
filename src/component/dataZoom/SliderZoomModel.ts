@@ -167,12 +167,12 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
 
         selectedDataBackground: {
             lineStyle: {
-                color: tokens.color.accent50,
+                color: tokens.color.accent40,
                 width: 0.5
             },
             areaStyle: {
-                color: tokens.color.accent30,
-                opacity: 0.5
+                color: tokens.color.accent20,
+                opacity: 0.3
             }
         },
 
@@ -205,7 +205,8 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
 
         brushSelect: true,
         brushStyle: {
-            color: tokens.color.backgroundTint
+            color: tokens.color.accent30,
+            opacity: 0.3
         },
 
         emphasis: {
@@ -213,7 +214,7 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
                 show: true
             },
             handleStyle: {
-                borderColor: tokens.color.accent50
+                borderColor: tokens.color.accent40
             },
             moveHandleStyle: {
                 opacity: 0.8

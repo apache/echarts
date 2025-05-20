@@ -167,7 +167,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         },
 
         lineStyle: {
-            width: 3,
+            width: 2,
             type: 'solid'
         },
 
@@ -188,7 +188,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         smooth: false,
         smoothMonotone: null,
         symbol: 'emptyCircle',
-        symbolSize: 8,
+        symbolSize: 6,
         symbolRotate: null,
 
         showSymbol: true,
