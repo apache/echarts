@@ -227,7 +227,7 @@ function makeStyleCoord(
         const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
-            transformLocalCoord(out, zrViewportRoot, container, zrX, zrY);
+            return transformLocalCoord(out, zrViewportRoot, container, zrX, zrY);
         }
     }
     else {
@@ -265,6 +265,7 @@ class TooltipHTMLContent {
     private _show: boolean = false;
 
     private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
+    private _styleCoordCleanups: ReturnType<typeof makeStyleCoord>;
 
     private _enterable = true;
     private _zr: ZRenderType;
@@ -307,7 +308,9 @@ class TooltipHTMLContent {
                     : isFunction(appendTo) && appendTo(api.getDom())
         );
 
-        makeStyleCoord(this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2);
+        this._styleCoordCleanups = makeStyleCoord(
+            this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2
+        );
 
         (container || api.getDom()).appendChild(el);
 
@@ -471,7 +474,7 @@ class TooltipHTMLContent {
             return;
         }
         const styleCoord = this._styleCoord;
-        makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
+        this._styleCoordCleanups = makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
             const style = this.el.style;
@@ -528,9 +531,16 @@ class TooltipHTMLContent {
         clearTimeout(this._hideTimeout);
         clearTimeout(this._longHideTimeout);
 
-        const parentNode = this.el.parentNode;
-        parentNode && parentNode.removeChild(this.el);
-        this.el = this._container = null;
+        each(this._styleCoordCleanups, function (cleanup) {
+            cleanup();
+        });
+
+        if (this.el) {
+            const parentNode = this.el.parentNode;
+            parentNode && parentNode.removeChild(this.el);
+        }
+
+        this._styleCoordCleanups = this.el = this._container = null;
     }
 
 }
