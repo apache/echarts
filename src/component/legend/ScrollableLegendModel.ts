@@ -96,8 +96,8 @@ class ScrollableLegendModel extends LegendModel<ScrollableLegendOption> {
             horizontal: ['M0,0L12,-10L12,10z', 'M0,0L-12,-10L-12,10z'],
             vertical: ['M0,0L20,0L10,-20z', 'M0,0L20,0L10,20z']
         },
-        pageIconColor: tokens.color.tertiary,
-        pageIconInactiveColor: tokens.color.disabled,
+        pageIconColor: tokens.color.accent50,
+        pageIconInactiveColor: tokens.color.accent10,
         pageIconSize: 15, // Can be [10, 3], which represents [width, height]
         pageTextStyle: {
             color: tokens.color.tertiary

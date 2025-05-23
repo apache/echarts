@@ -94,8 +94,6 @@ export interface MapSeriesOption extends
     nameProperty?: string;
 }
 
-const highlightColor = '#FFE782';
-
 class MapSeries extends SeriesModel<MapSeriesOption> {
 
     static type = 'series.map' as const;
@@ -340,7 +338,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
                 color: tokens.color.primary
             },
             itemStyle: {
-                areaColor: highlightColor
+                areaColor: tokens.color.highlight
             }
         },
 
@@ -350,7 +348,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
                 color: tokens.color.primary
             },
             itemStyle: {
-                color: highlightColor
+                color: tokens.color.highlight
             }
         },
 

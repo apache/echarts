@@ -118,7 +118,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
             margin: 3,
             color: tokens.color.neutral00,
             padding: [5, 7, 5, 7],
-            backgroundColor: 'auto', // default: axis line color
+            backgroundColor: tokens.color.accent60, // default: axis line color
             borderColor: null,
             borderWidth: 0,
             borderRadius: 3
@@ -133,7 +133,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
             margin: 50,
             // color: '#1b8bbd'
             // color: '#2f4554'
-            color: tokens.color.quaternary,
+            color: tokens.color.accent40,
 
             // For mobile performance
             throttle: 40

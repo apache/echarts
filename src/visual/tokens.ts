@@ -49,6 +49,7 @@ interface ColorToken {
     tertiary: string;
     quaternary: string;
     disabled: string;
+    highlight: string;
     border: string;
     borderTint: string;
     borderShade: string;
@@ -144,6 +145,8 @@ const color = tokens.color = {
     accent95: '#121521',
 
     transparent: 'rgba(0,0,0,0)',
+
+    highlight: 'rgba(255,231,130,0.8)'
 } as Tokens['color'];
 
 extend(color, {
@@ -180,6 +183,9 @@ for (const key in color) {
         if (key === 'theme') {
             // Don't modify theme colors.
             tokens.darkColor.theme = color.theme.slice();
+        }
+        else if (key === 'highlight') {
+            tokens.darkColor.highlight = 'rgba(255,231,130,0.4)';
         }
         else if (key.indexOf('accent') === 0) {
             // Desaturate and lighten accent colors.

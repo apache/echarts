@@ -138,7 +138,6 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // tooltip border width, unit is px, default is 0 (no border)
         borderWidth: 1,
-        // borderColor: 'auto',
 
         // Tooltip inside padding, default is 5 for all direction
         // Array is allowed to set up, right, bottom, left, same with css

@@ -189,12 +189,12 @@ class GeoModel extends ComponentModel<GeoOption> {
 
         label: {
             show: false,
-            color: tokens.color.secondary
+            color: tokens.color.tertiary
         },
 
         itemStyle: {
             borderWidth: 0.5,
-            borderColor: tokens.color.borderShade,
+            borderColor: tokens.color.border,
             // Default color:
             // + geoJSON: #eee
             // + geoSVG: null (use SVG original `fill`)
@@ -207,7 +207,7 @@ class GeoModel extends ComponentModel<GeoOption> {
                 color: tokens.color.primary
             },
             itemStyle: {
-                areaColor: tokens.color.background
+                areaColor: tokens.color.highlight
             }
         },
 
@@ -217,7 +217,7 @@ class GeoModel extends ComponentModel<GeoOption> {
                 color: tokens.color.primary
             },
             itemStyle: {
-                color: tokens.color.backgroundShade
+                color: tokens.color.highlight
             }
         },
 

@@ -874,8 +874,10 @@ class TooltipView extends ComponentView {
         color: ZRColor;
     } {
         if (trigger === 'axis' || isArray(tooltipDataParams)) {
+            const isDark = this._api.getZr().isDarkMode();
+            const defaultColor = isDark ? tokens.darkColor.border : tokens.color.border;
             return {
-                color: borderColor || (this._renderMode === 'html' ? tokens.color.neutral00 : 'none')
+                color: borderColor || defaultColor
             };
         }
 

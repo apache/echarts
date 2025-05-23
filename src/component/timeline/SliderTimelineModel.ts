@@ -110,8 +110,8 @@ class SliderTimelineModel extends TimelineModel {
             prevBtnSize: 18,
             nextBtnSize: 18,
 
-            color: tokens.color.accent30,
-            borderColor: tokens.color.accent30,
+            color: tokens.color.accent50,
+            borderColor: tokens.color.accent50,
             borderWidth: 0
         },
         emphasis: {
@@ -122,17 +122,17 @@ class SliderTimelineModel extends TimelineModel {
             },
 
             itemStyle: {
-                color: tokens.color.accent40
+                color: tokens.color.accent60
             },
 
             controlStyle: {
-                color: tokens.color.accent40
-            }
+                color: tokens.color.accent70
+            },
         },
 
         progress: {
             lineStyle: {
-                color: tokens.color.accent20
+                color: tokens.color.accent30
             },
             itemStyle: {
                 color: tokens.color.accent40

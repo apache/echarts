@@ -21,7 +21,6 @@ import tokens from '../visual/tokens';
 
 const color = tokens.darkColor;
 const backgroundColor = color.background;
-const mapHighlightColor = 'rgba(255,231,130,0.4)';
 
 const axisCommon = function () {
     return {
@@ -96,7 +95,7 @@ const theme = {
     },
     tooltip: {
         backgroundColor: color.neutral20,
-        borderColor: color.border,
+        // borderColor: color.border,
         textStyle: {
             color: color.tertiary
         }
@@ -251,7 +250,7 @@ const theme = {
                 color: color.primary
             },
             itemStyle: {
-                areaColor: mapHighlightColor
+                areaColor: color.highlight
             }
         },
         select: {
@@ -259,7 +258,29 @@ const theme = {
                 color: color.primary
             },
             itemStyle: {
-                areaColor: mapHighlightColor
+                areaColor: color.highlight
+            }
+        }
+    },
+    geo: {
+        itemStyle: {
+            borderColor: color.border,
+            areaColor: color.neutral10
+        },
+        emphasis: {
+            label: {
+                color: color.primary
+            },
+            itemStyle: {
+                areaColor: color.highlight
+            }
+        },
+        select: {
+            label: {
+                color: color.primary
+            },
+            itemStyle: {
+                color: color.highlight
             }
         }
     }

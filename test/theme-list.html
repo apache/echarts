@@ -344,6 +344,9 @@ under the License.
               yAxis: {
                 type: 'value'
               },
+              grid: {
+                bottom: 90
+              },
               options: [
               {
                 series: [{
@@ -377,6 +380,9 @@ under the License.
             {
               title: {
                 text: 'dataZoom & toolbox',
+              },
+              grid: {
+                bottom: 90
               },
               toolbox: {
                 feature: {
@@ -421,6 +427,9 @@ under the License.
             {
               title: {
                 text: 'dataZoom & legend (right/bottom)'
+              },
+              grid: {
+                bottom: 90
               },
               legend: {
                 show: true
@@ -557,8 +566,55 @@ under the License.
                   show: true
                 }
               }],
+            }, {
+              title: {
+                text: 'geo'
+              },
+              geo: [{
+                map: 'test1',
+                zoom: 1,
+                roam: true
+              }],
+              series: [{
+                type: 'scatter',
+                coordinateSystem: 'geo',
+                symbol: 'roundRect',
+                symbolSize: 30,
+                data: (() => {
+                  const data = [];
+                  const step = 500;
+                  const lngStart = 1000;
+                  const latStart = 2000;
+                  for (let i = 0; i < 10; i++) {
+                    for (let j = 0; j < 10; j++) {
+                      data.push({
+                        value: [lngStart + j * step, latStart + i * step],
+                        symbolSize: 5 + j * 5
+                      });
+                    }
+                  }
+                  return data;
+                })()
+              }]
             }
           ];
+
+          const testGeoJson1 = {
+            type: 'FeatureCollection',
+            features: [{
+              geometry: {
+                type: 'Polygon',
+                coordinates: [
+                  [[2000, 3000], [5000, 3000], [5000, 8000], [2000, 8000]]
+                ]
+              },
+              properties: {
+                name: 'Some Area',
+                childNum: 1
+              }
+            }]
+          };
+          echarts.registerMap('test1', testGeoJson1);
 
           const main1 = document.getElementById('main1');
           for (const option of options) {
