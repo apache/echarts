@@ -216,7 +216,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         colorBy: 'data',
         // 默认全局居中
         center: ['50%', '50%'],
-        radius: [0, '75%'],
+        radius: [0, '50%'],
         // 默认顺时针
         clockwise: true,
         startAngle: 90,
@@ -278,7 +278,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // 引导线两段中的第一段长度
             length: 15,
             // 引导线两段中的第二段长度
-            length2: 15,
+            length2: 30,
             smooth: false,
             minTurnAngle: 90,
             maxSurfaceAngle: 90,

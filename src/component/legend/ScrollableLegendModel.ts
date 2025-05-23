@@ -26,6 +26,7 @@ import { ZRColor, LabelOption } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import { inheritDefaultOption } from '../../util/component';
+import tokens from '../../visual/tokens';
 
 export interface ScrollableLegendOption extends LegendOption {
     scrollDataIndex?: number
@@ -95,11 +96,11 @@ class ScrollableLegendModel extends LegendModel<ScrollableLegendOption> {
             horizontal: ['M0,0L12,-10L12,10z', 'M0,0L-12,-10L-12,10z'],
             vertical: ['M0,0L20,0L10,-20z', 'M0,0L20,0L10,20z']
         },
-        pageIconColor: '#2f4554',
-        pageIconInactiveColor: '#aaa',
+        pageIconColor: tokens.color.accent50,
+        pageIconInactiveColor: tokens.color.accent10,
         pageIconSize: 15, // Can be [10, 3], which represents [width, height]
         pageTextStyle: {
-            color: '#333'
+            color: tokens.color.tertiary
         },
 
         animationDurationUpdate: 800

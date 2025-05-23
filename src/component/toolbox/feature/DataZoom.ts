@@ -45,6 +45,7 @@ import {
 import ToolboxModel from '../ToolboxModel';
 import { registerInternalOptionCreator } from '../../../model/internalComponentCreator';
 import ComponentModel from '../../../model/Component';
+import tokens from '../../../visual/tokens';
 
 
 const each = zrUtil.each;
@@ -213,7 +214,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
             title: ecModel.getLocaleModel().get(['toolbox', 'dataZoom', 'title']),
             brushStyle: {
                 borderWidth: 0,
-                color: 'rgba(210,219,238,0.2)'
+                color: tokens.color.backgroundTint
             }
         };
 

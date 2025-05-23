@@ -39,6 +39,7 @@ import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
 import SeriesData from '../../data/SeriesData';
+import tokens from '../../visual/tokens';
 
 const mapVisual = VisualMapping.mapVisual;
 const eachVisual = VisualMapping.eachVisual;
@@ -620,18 +621,18 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         inverse: false,
         orient: 'vertical',        // 'horizontal' ¦ 'vertical'
 
-        backgroundColor: 'rgba(0,0,0,0)',
-        borderColor: '#ccc',       // 值域边框颜色
-        contentColor: '#5793f3',
-        inactiveColor: '#aaa',
+        backgroundColor: tokens.color.transparent,
+        borderColor: tokens.color.borderTint,       // 值域边框颜色
+        contentColor: tokens.color.theme[0],
+        inactiveColor: tokens.color.disabled,
         borderWidth: 0,
-        padding: 5,
+        padding: tokens.size.m,
                                     // 接受数组分别设定上右下左边距，同css
         textGap: 10,               //
         precision: 0,              // 小数精度，默认为0，无小数点
 
         textStyle: {
-            color: '#333'          // 值域文字颜色
+            color: tokens.color.secondary          // 值域文字颜色
         }
     };
 }

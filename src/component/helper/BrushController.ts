@@ -29,6 +29,7 @@ import { ElementEvent } from 'zrender/src/Element';
 import * as matrix from 'zrender/src/core/matrix';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
+import tokens from '../../visual/tokens';
 
 
 /**
@@ -155,8 +156,8 @@ const CURSOR_MAP = {
 const DEFAULT_BRUSH_OPT = {
     brushStyle: {
         lineWidth: 2,
-        stroke: 'rgba(210,219,238,0.3)',
-        fill: '#D2DBEE'
+        stroke: tokens.color.backgroundTint,
+        fill: tokens.color.borderTint
     },
     transformable: true,
     brushMode: 'single',

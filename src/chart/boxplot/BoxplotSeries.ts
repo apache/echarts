@@ -34,6 +34,7 @@ import {
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { mixin } from 'zrender/src/core/util';
+import tokens from '../../visual/tokens';
 
 // [min,  Q1,  median (or Q2),  Q3,  max]
 type BoxplotDataValue = OptionDataValueNumeric[];
@@ -111,7 +112,7 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
         boxWidth: [7, 50],
 
         itemStyle: {
-            color: '#fff',
+            color: tokens.color.neutral00,
             borderWidth: 1
         },
 
@@ -123,7 +124,7 @@ class BoxplotSeriesModel extends SeriesModel<BoxplotSeriesOption> {
                 shadowBlur: 5,
                 shadowOffsetX: 1,
                 shadowOffsetY: 1,
-                shadowColor: 'rgba(0,0,0,0.2)'
+                shadowColor: tokens.color.shadow
             }
         },
 

@@ -57,6 +57,7 @@ import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
 import { findEventDispatcher } from '../../util/event';
 import { clear, createOrUpdate } from '../../util/throttle';
+import tokens from '../../visual/tokens';
 
 const proxyRect = new Rect({
     shape: { x: -1, y: -1, width: 2, height: 2 }
@@ -877,8 +878,10 @@ class TooltipView extends ComponentView {
         color: ZRColor;
     } {
         if (trigger === 'axis' || isArray(tooltipDataParams)) {
+            const isDark = this._api.getZr().isDarkMode();
+            const defaultColor = isDark ? tokens.darkColor.border : tokens.color.border;
             return {
-                color: borderColor || (this._renderMode === 'html' ? '#fff' : 'none')
+                color: borderColor || defaultColor
             };
         }
 
