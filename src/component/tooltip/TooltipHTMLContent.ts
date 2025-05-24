@@ -265,7 +265,7 @@ class TooltipHTMLContent {
     private _show: boolean = false;
 
     private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
-    private _styleCoordCleanups: ReturnType<typeof makeStyleCoord>;
+    private _clearStyleCoord: ReturnType<typeof makeStyleCoord>;
 
     private _enterable = true;
     private _zr: ZRenderType;
@@ -308,7 +308,7 @@ class TooltipHTMLContent {
                     : isFunction(appendTo) && appendTo(api.getDom())
         );
 
-        this._styleCoordCleanups = makeStyleCoord(
+        this._clearStyleCoord = makeStyleCoord(
             this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2
         );
 
@@ -474,7 +474,7 @@ class TooltipHTMLContent {
             return;
         }
         const styleCoord = this._styleCoord;
-        this._styleCoordCleanups = makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
+        this._clearStyleCoord = makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
             const style = this.el.style;
@@ -531,16 +531,14 @@ class TooltipHTMLContent {
         clearTimeout(this._hideTimeout);
         clearTimeout(this._longHideTimeout);
 
-        each(this._styleCoordCleanups, function (cleanup) {
-            cleanup();
-        });
+        this._clearStyleCoord && this._clearStyleCoord();
 
         if (this.el) {
             const parentNode = this.el.parentNode;
             parentNode && parentNode.removeChild(this.el);
         }
 
-        this._styleCoordCleanups = this.el = this._container = null;
+        this._clearStyleCoord = this.el = this._container = null;
     }
 
 }
