@@ -44,7 +44,7 @@ function getPlugin(opt) {
 
     return {
         load: function (absolutePath) {
-            if (/\/src\/lang\.js$/.test(absolutePath)) {
+            if (/\/src\/lang\.js$/.test(absolutePath.replace(/\\/g, '/'))) {
                 let langPath = getLangFileInfo(lang).absolutePath;
                 if (langPath) {
                     absolutePath = langPath;
