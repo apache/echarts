@@ -91,6 +91,7 @@ export const DOWNPLAY_ACTION_TYPE = 'downplay';
 export const SELECT_ACTION_TYPE = 'select';
 export const UNSELECT_ACTION_TYPE = 'unselect';
 export const TOGGLE_SELECT_ACTION_TYPE = 'toggleSelect';
+export const SELECT_CHANGED_EVENT_TYPE = 'selectchanged';
 
 type ExtendedProps = {
     __highByOuter: number

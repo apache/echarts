@@ -449,7 +449,6 @@ class TooltipView extends ComponentView {
     ) {
         const el = e.target;
         const tooltipModel = this._tooltipModel;
-
         if (!tooltipModel) {
             return;
         }
@@ -472,16 +471,21 @@ class TooltipView extends ComponentView {
 
             let seriesDispatcher: Element;
             let cmptDispatcher: Element;
-            findEventDispatcher(el, (target) => {
+            findEventDispatcher(el, function (target) {
+                if ((target as ECElement).tooltipDisabled) {
+                    seriesDispatcher = cmptDispatcher = null;
+                    return true;
+                }
+                if (seriesDispatcher || cmptDispatcher) {
+                    return;
+                }
                 // Always show item tooltip if mouse is on the element with dataIndex
                 if (getECData(target).dataIndex != null) {
                     seriesDispatcher = target;
-                    return true;
                 }
                 // Tooltip provided directly. Like legend.
-                if (getECData(target).tooltipConfig != null) {
+                else if (getECData(target).tooltipConfig != null) {
                     cmptDispatcher = target;
-                    return true;
                 }
             }, true);
 
@@ -545,6 +549,9 @@ class TooltipView extends ComponentView {
                 if (!axisModel || axisValue == null) {
                     return;
                 }
+                // FIXME: when using `tooltip.trigger: 'axis'`, the precision of the axis value displayed in tooltip
+                //  should match the original series values rather than using the default stretegy in Interval.ts
+                //  (getPrecision(interval) + 2); otherwise it may cuase confusion.
                 const axisValueLabel = axisPointerViewHelper.getValueLabel(
                     axisValue, axisModel.axis, ecModel,
                     axisItem.seriesDataIndices,

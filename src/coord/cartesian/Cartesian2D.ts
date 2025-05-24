@@ -32,7 +32,7 @@ import { applyTransform } from 'zrender/src/core/vector';
 export const cartesian2DDimensions = ['x', 'y'];
 
 function canCalculateAffineTransform(scale: Scale) {
-    return scale.type === 'interval' || scale.type === 'time';
+    return (scale.type === 'interval' || scale.type === 'time') && !scale.hasBreaks();
 }
 
 class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
@@ -121,7 +121,8 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         out = out || [];
         const xVal = data[0];
         const yVal = data[1];
-        // Fast path
+        // [CAVEAT]: Do not add time consuming operation within and before fast path.
+        // Fast path.
         if (this._transform
             // It's supported that if data is like `[Inifity, 123]`, where only Y pixel calculated.
             && xVal != null
@@ -131,6 +132,7 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         ) {
             return applyTransform(out, data as number[], this._transform);
         }
+
         const xAxis = this.getAxis('x');
         const yAxis = this.getAxis('y');
         out[0] = xAxis.toGlobalCoord(xAxis.dataToCoord(xVal, clamp));
@@ -190,7 +192,6 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 
         return new BoundingRect(x, y, width, height);
     }
-
 };
 
 interface Cartesian2DArea extends BoundingRect {}

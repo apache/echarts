@@ -39,18 +39,18 @@ class RadarView extends ComponentView {
         const group = this.group;
         group.removeAll();
 
-        this._buildAxes(radarModel);
+        this._buildAxes(radarModel, api);
         this._buildSplitLineAndArea(radarModel);
     }
 
-    _buildAxes(radarModel: RadarModel) {
+    _buildAxes(radarModel: RadarModel, api: ExtensionAPI) {
         const radar = radarModel.coordinateSystem;
         const indicatorAxes = radar.getIndicatorAxes();
         const axisBuilders = zrUtil.map(indicatorAxes, function (indicatorAxis) {
             const axisName = indicatorAxis.model.get('showName')
                 ? indicatorAxis.name
                 : ''; // hide name
-            const axisBuilder = new AxisBuilder(indicatorAxis.model, {
+            const axisBuilder = new AxisBuilder(indicatorAxis.model, api, {
                 axisName: axisName,
                 position: [radar.cx, radar.cy],
                 rotation: indicatorAxis.angle,

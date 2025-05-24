@@ -103,12 +103,34 @@ window.__VRT_RUN_ACTIONS__ = async function (actions, restoredActionIndex, resto
             continue;
         }
         window.scrollTo(action.scrollX, action.scrollY);
-        await actionPlayback.runAction(action, index === restoredActionIndex ? restoredActionContext : null);
+        try {
+            await actionPlayback.runAction(action, index === restoredActionIndex ? restoredActionContext : null);
+        }
+        catch (err) {
+            // Any error in this JS task must be handled; otherwise __VRT_FINISH_ACTIONS__
+            // can not be called and the entire test execution will be blocked.
+            const errStr = errToStr(err);
+            // console.error(errStr);
+            __VRT_LOG_ERRORS__(errStr);
+        }
 
     }
     actionPlayback.stop();
 
     __VRT_FINISH_ACTIONS__();
+}
+
+function errToStr(err) {
+    if (typeof err === 'string') {
+        return err;
+    }
+    if (err && err.message != null) {
+        return err.message + (err.stack ? ' ' + err.stack : '');
+    }
+    if (err && err.toString) {
+        return err.toString();
+    }
+    return '[error] ' + err;
 }
 
 

@@ -59,7 +59,7 @@ under the License.
                 right: 0;
                 top: 0;
                 width: 200px;
-                height: 200px;
+                /*height: 200px;*/
                 background: rgba(0, 0, 0, 0.5);
                 color: #fff;
                 text-align: left;
@@ -77,7 +77,7 @@ under the License.
 
         <script>
         require(['echarts'/*, 'map/js/china' */], function (echarts) {
-            const charts = [];
+            const charts = window.__charts = [];
             allChartsOptions.forEach(function (chartOption) {
                 chartOption.series.forEach(function (series) {
                     series.selectedMode = 'single';
@@ -122,6 +122,13 @@ under the License.
 
                 chart.on('selectchanged', function (e) {
                     document.querySelector('#log').innerHTML = JSON.stringify(e.selected, null, 2);
+                    console.log('selectchanged', e);
+                });
+                chart.on('select', function (e) {
+                    console.log('select', e);
+                });
+                chart.on('unselect', function (e) {
+                    console.log('unselect', e);
                 });
 
                 charts.push(chart);

@@ -50,6 +50,7 @@ under the License.
 
                 var chart1 = echarts.init(document.getElementById('chart1'));
                 var chart2 = echarts.init(document.getElementById('chart2'));
+                var seriesSelectMode = 'single';
 
                 var data1 = [];
 
@@ -111,6 +112,7 @@ under the License.
                         {
                             name: 'scatter',
                             type: 'scatter',
+                            selectedMode: seriesSelectMode,
                             symbolSize: 30,
                             data: data1
                         }
@@ -163,6 +165,7 @@ under the License.
                         {
                             name: 'scatter',
                             type: 'scatter',
+                            selectedMode: seriesSelectMode,
                             symbolSize: 30,
                             data: data1
                         }

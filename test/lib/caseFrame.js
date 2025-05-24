@@ -53,6 +53,7 @@
         '        <div class="list-filter"></div>',
         '        <select class="dist-selector">',
         '           <option value="dist"/>echarts/dist</option>',
+        '           <option value="dist/echarts.simple"/>echarts/dist/echarts.simple</option>',
         '           <option value="webpack-req-ec"/>boilerplat/webpack-req-ec</option>',
         '           <option value="webpack-req-eclibec"/>boilerplat/webpack-req-eclibec</option>',
         '           <option value="webpackold-req-ec"/>boilerplat/webpackold-req-ec</option>',
@@ -225,7 +226,7 @@
         },
         // 'dist', 'webpack', 'webpackold'
         dist: function (pageURL) {
-            var matchResult = (pageURL || '').match(/[?&]__ECDIST__=(webpack-req-ec|webpack-req-eclibec|webpackold-req-ec|webpackold-req-eclibec)(&|$)/);
+            var matchResult = (pageURL || '').match(/[?&]__ECDIST__=(dist\/echarts\.simple|webpack-req-ec|webpack-req-eclibec|webpackold-req-ec|webpackold-req-eclibec)(&|$)/);
             return matchResult && matchResult[1] || 'dist';
         },
         listFilterName: function (pageURL) {
@@ -274,7 +275,7 @@
             '__USE_DIRTY_RECT__=' + curr.useDirtyRect,
             '__ECDIST__=' + curr.dist,
             '__FILTER__=' + curr.listFilterName,
-            '__CASE_FRAME__=1'
+            // '__CASE_FRAME__=1'
         ].join('&');
     }
 
