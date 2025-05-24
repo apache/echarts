@@ -19,7 +19,6 @@
 */
 
 var echarts = require("echarts");
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -38,10 +37,10 @@ var echarts = require("echarts");
 * specific language governing permissions and limitations
 * under the License.
 */
+
 function v2Equal(a, b) {
   return a && b && a[0] === b[0] && a[1] === b[1];
 }
-
 var _default = echarts.extendComponentModel({
   type: 'bmap',
   getBMap: function () {
@@ -68,5 +67,4 @@ var _default = echarts.extendComponentModel({
     roam: false
   }
 });
-
 module.exports = _default;

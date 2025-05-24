@@ -387,7 +387,7 @@ echarts.extendComponentView({
         var mapStyleStr = JSON.stringify(newMapStyle);
         if (JSON.stringify(originalStyle) !== mapStyleStr) {
             // FIXME May have blank tile when dragging if setMapStyle
-            if (!isEmptyObject(newMapStyle2)) {
+            if (!isEmptyObject(newMapStyle)) {
                 bmap.setMapStyle(echarts.util.clone(newMapStyle));
             }
             bMapModel.__mapStyle = JSON.parse(mapStyleStr);

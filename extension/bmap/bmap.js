@@ -19,13 +19,9 @@
 */
 
 var echarts = require("echarts");
-
 var BMapCoordSys = require("./BMapCoordSys");
-
 require("./BMapModel");
-
 require("./BMapView");
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -48,8 +44,10 @@ require("./BMapView");
 /**
  * BMap component extension
  */
-echarts.registerCoordinateSystem('bmap', BMapCoordSys); // Action
 
+echarts.registerCoordinateSystem('bmap', BMapCoordSys);
+
+// Action
 echarts.registerAction({
   type: 'bmapRoam',
   event: 'bmapRoam',

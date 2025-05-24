@@ -19,7 +19,6 @@
 */
 
 var numberUtil = require("../../lib/util/number");
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -72,7 +71,6 @@ function _default(rawData, opt) {
   var axisData = [];
   var boundIQR = opt.boundIQR;
   var useExtreme = boundIQR === 'none' || boundIQR === 0;
-
   for (var i = 0; i < rawData.length; i++) {
     axisData.push(i + '');
     var ascList = numberUtil.asc(rawData[i].slice());
@@ -85,10 +83,8 @@ function _default(rawData, opt) {
     var low = useExtreme ? min : Math.max(min, Q1 - bound);
     var high = useExtreme ? max : Math.min(max, Q3 + bound);
     boxData.push([low, Q1, Q2, Q3, high]);
-
     for (var j = 0; j < ascList.length; j++) {
       var dataItem = ascList[j];
-
       if (dataItem < low || dataItem > high) {
         var outlier = [i, dataItem];
         opt.layout === 'vertical' && outlier.reverse();
@@ -96,12 +92,10 @@ function _default(rawData, opt) {
       }
     }
   }
-
   return {
     boxData: boxData,
     outliers: outliers,
     axisData: axisData
   };
 }
-
 module.exports = _default;

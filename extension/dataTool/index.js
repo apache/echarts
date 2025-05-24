@@ -19,15 +19,10 @@
 */
 
 var echarts = require("echarts");
-
 var gexf = require("./gexf");
-
 exports.gexf = gexf;
-
 var prepareBoxplotData = require("./prepareBoxplotData");
-
 exports.prepareBoxplotData = prepareBoxplotData;
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -46,8 +41,8 @@ exports.prepareBoxplotData = prepareBoxplotData;
 * specific language governing permissions and limitations
 * under the License.
 */
-var version = '1.0.0';
 
+var version = '1.0.0';
 // For backward compatibility, where the namespace `dataTool` will
 // be mounted on `echarts` is the extension `dataTool` is imported.
 // But the old version of echarts do not have `dataTool` namespace,
@@ -57,5 +52,4 @@ if (echarts.dataTool) {
   echarts.dataTool.gexf = gexf;
   echarts.dataTool.prepareBoxplotData = prepareBoxplotData;
 }
-
 exports.version = version;

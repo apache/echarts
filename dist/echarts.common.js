@@ -277,6 +277,7 @@ var nativeFilter = arrayProto.filter;
 var nativeSlice = arrayProto.slice;
 var nativeMap = arrayProto.map;
 var nativeReduce = arrayProto.reduce;
+var protoKey = '__proto__';
 
 // Avoid assign to an exported variable, for transforming to cjs.
 var methods = {};
@@ -339,7 +340,7 @@ function clone(source) {
     else if (!BUILTIN_OBJECT[typeStr] && !isPrimitive(source) && !isDom(source)) {
         result = {};
         for (var key in source) {
-            if (source.hasOwnProperty(key)) {
+            if (source.hasOwnProperty(key) && key !== protoKey) {
                 result[key] = clone(source[key]);
             }
         }
@@ -362,7 +363,7 @@ function merge(target, source, overwrite) {
     }
 
     for (var key in source) {
-        if (source.hasOwnProperty(key)) {
+        if (source.hasOwnProperty(key) && key !== protoKey) {
             var targetProp = target[key];
             var sourceProp = source[key];
 
@@ -411,7 +412,7 @@ function mergeAll(targetAndSources, overwrite) {
  */
 function extend(target, source) {
     for (var key in source) {
-        if (source.hasOwnProperty(key)) {
+        if (source.hasOwnProperty(key) && key !== protoKey) {
             target[key] = source[key];
         }
     }
@@ -426,7 +427,7 @@ function extend(target, source) {
  */
 function defaults(target, source, overlay) {
     for (var key in source) {
-        if (source.hasOwnProperty(key)
+        if (source.hasOwnProperty(key) && key !== protoKey
             && (overlay ? source[key] != null : target[key] == null)
         ) {
             target[key] = source[key];
@@ -11595,7 +11596,7 @@ var instances$1 = {};    // ZRender实例map索引
 /**
  * @type {string}
  */
-var version$1 = '4.3.2';
+var version$1 = '4.3.3';
 
 /**
  * Initializing a zrender instance
@@ -27729,10 +27730,10 @@ var isFunction = isFunction$1;
 var isObject = isObject$1;
 var parseClassType = ComponentModel.parseClassType;
 
-var version = '4.9.0';
+var version = '4.9.1';
 
 var dependencies = {
-    zrender: '4.3.2'
+    zrender: '4.3.3'
 };
 
 var TEST_FRAME_REMAIN_TIME = 1;
@@ -35567,8 +35568,10 @@ function rotateTextRect(textRect, rotate) {
     var boundingBox = textRect.plain();
     var beforeWidth = boundingBox.width;
     var beforeHeight = boundingBox.height;
-    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians)) + Math.abs(beforeHeight * Math.sin(rotateRadians));
-    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians)) + Math.abs(beforeHeight * Math.cos(rotateRadians));
+    var afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians))
+        + Math.abs(beforeHeight * Math.sin(rotateRadians));
+    var afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians))
+        + Math.abs(beforeHeight * Math.cos(rotateRadians));
     var rotatedRect = new BoundingRect(boundingBox.x, boundingBox.y, afterWidth, afterHeight);
 
     return rotatedRect;
