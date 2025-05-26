@@ -156,13 +156,14 @@ const app = new Vue({
 
         runConfig: Object.assign({
             sortBy: 'name',
-            actualVersion: null,
+            actualVersion: 'local',
             expectedVersion: null,
             expectedSource: 'release',
-            actualSource: 'local',
+            actualSource: 'release',
             renderer: 'canvas',
             useCoarsePointer: 'auto',
-            threads: 4
+            threads: 4,
+            theme: 'none'
         }, urlRunConfig)
     },
 
@@ -483,6 +484,9 @@ const app = new Vue({
             if (test.useCoarsePointer) {
                 searches.push('__COARSE__POINTER__=true');
             }
+            if (test.theme && test.theme !== 'none') {
+                searches.push('__THEME__=' + test.theme);
+            }
             let src = test.fileUrl;
             if (searches.length) {
                 src = src + '?' + searches.join('&');
@@ -504,6 +508,7 @@ const app = new Vue({
             // TODO
             this.runConfig.renderer = runResult.renderer;
             this.runConfig.useCoarsePointer = runResult.useCoarsePointer;
+            this.runConfig.theme = runResult.theme || 'none';
 
             this.showRunsDialog = false;
         },
@@ -570,6 +575,7 @@ function runTests(tests, noHeadless) {
         threads: app.runConfig.threads,
         renderer: app.runConfig.renderer,
         useCoarsePointer: app.runConfig.useCoarsePointer,
+        theme: app.runConfig.theme,
         noHeadless,
         replaySpeed: noHeadless ? 5 : 5
     });

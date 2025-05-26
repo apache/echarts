@@ -56,7 +56,7 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         left: '15%',
         top: 65,
         right: '10%',
-        bottom: 60,
+        bottom: 80,
         // If grid size contain label
         containLabel: false,
         // width: {totalWidth} - left - right,

@@ -91,7 +91,8 @@ function getRunHash(params) {
         params.actualSource,
         actualVersion,
         params.renderer,
-        params.useCoarsePointer
+        params.useCoarsePointer,
+        params.theme || 'none'
     ].join(TEST_HASH_SPLITTER);
 }
 
@@ -114,7 +115,8 @@ function parseRunHash(str) {
         actualSource: parts[2],
         actualVersion: actualVersion,
         renderer: parts[4],
-        useCoarsePointer: parts[5]
+        useCoarsePointer: parts[5],
+        theme: parts[6] || 'none'
     };
 }
 
@@ -123,12 +125,12 @@ function getResultBaseDir() {
 }
 
 module.exports.clearStaledResults = async function () {
-    // If split by __ and there is no 6 parts, it is staled.
+    // If split by __ and there is no 7 parts, it is staled.
     try {
         const dirs = await globby('*', { cwd: RESULTS_ROOT_DIR, onlyDirectories: true });
         for (let dir of dirs) {
             const parts = dir.split(TEST_HASH_SPLITTER);
-            if (parts.length !== 6) {
+            if (parts.length !== 7) {
                 await module.exports.delTestsRun(dir);
             }
         }
@@ -152,7 +154,8 @@ module.exports.checkStoreVersion = function (runParams) {
         && storeParams.actualSource === runParams.actualSource
         && storeParams.actualVersion === runParams.actualVersion
         && storeParams.renderer === runParams.renderer
-        && storeParams.useCoarsePointer === runParams.useCoarsePointer;
+        && storeParams.useCoarsePointer === runParams.useCoarsePointer
+        && storeParams.theme === (runParams.theme || 'none');
 }
 
 function getResultFilePath() {
@@ -346,6 +349,7 @@ module.exports.getAllTestsRuns = async function () {
             actualVersion: params.actualVersion,
             renderer: params.renderer,
             useCoarsePointer: params.useCoarsePointer,
+            theme: params.theme || 'none',
             lastRunTime: lastRunTime > 0 ? formatDate(lastRunTime) : 'N/A',
             total: total,
             passed: passedCount,

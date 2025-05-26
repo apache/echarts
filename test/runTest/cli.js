@@ -45,6 +45,7 @@ program
     .option('--renderer <renderer>', 'svg/canvas renderer')
     .option('--use-coarse-pointer <useCoarsePointer>', '"auto" (by default) or "true" or "false"')
     .option('--threads <threads>', 'How many threads to run concurrently')
+    .option('--theme <theme>', 'Theme to use)')
     .option('--no-save', 'Don\'t save result')
     .option('--dir <dir>', 'Out dir');
 
@@ -55,6 +56,8 @@ program.actual = program.actual || 'local';
 program.threads = +program.threads || 1;
 program.renderer = (program.renderer || 'canvas').toLowerCase();
 program.useCoarsePointer = (program.useCoarsePointer || 'auto').toLowerCase();
+program.theme = program.theme || 'none';
+console.log('CLI theme parameter:', program.theme);
 program.dir = program.dir || (__dirname + '/tmp');
 
 if (!program.tests) {
@@ -300,7 +303,7 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
             width: 800,
             height: 600,
         });
-        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`, {
+        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}&__THEME__=${program.theme}`, {
             waitUntil: 'networkidle2',
             timeout: 10000,
             // timeout: 0
@@ -431,6 +434,7 @@ async function runTest(browser, testOpt, runtimeCode, expectedSource, expectedVe
         testOpt.expectedVersion = expectedVersion;
         testOpt.useSVG = program.renderer === 'svg';
         testOpt.useCoarsePointer = program.useCoarsePointer;
+        testOpt.theme = program.theme;
         testOpt.lastRun = Date.now();
     }
     else {

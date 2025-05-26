@@ -48,6 +48,9 @@
     if (params.__USE_DIRTY_RECT__) {
         window.__ECHARTS__DEFAULT__USE_DIRTY_RECT__ = params.__USE_DIRTY_RECT__ === 'true';
     }
+    if (params.__THEME__) {
+        window.__ECHARTS__DEFAULT__THEME__ = params.__THEME__;
+    }
 
     // Set echarts source code.
     var ecDistPath;

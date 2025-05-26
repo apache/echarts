@@ -155,7 +155,7 @@
      * @param {boolean} [opt.recordVideo]
      * @param {string} [opt.renderer] 'canvas' or 'svg'
      */
-    testHelper.create = function (echarts, domOrId, opt) {
+    testHelper.create = async function (echarts, domOrId, opt) {
         var dom = getDom(domOrId);
 
         if (!dom) {
@@ -229,7 +229,7 @@
                 + '</div>';
         }
 
-        chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts, errMsgPrefix);
+        chart = await testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts, errMsgPrefix);
 
         var dataTables = opt.dataTables;
         if (!dataTables && opt.dataTable) {
@@ -793,7 +793,7 @@
      * @param {string} opt.renderer 'canvas' or 'svg'
      * @param {string} errMsgPrefix
      */
-    testHelper.createChart = function (echarts, domOrId, option, opt, errMsgPrefix) {
+    testHelper.createChart = async function (echarts, domOrId, option, opt, errMsgPrefix) {
         if (typeof opt === 'number') {
             opt = {height: opt};
         }
@@ -811,7 +811,19 @@
                 dom.style.height = opt.height + 'px';
             }
 
-            var chart = echarts.init(dom, null, {
+            var theme = opt.theme && opt.theme !== 'none' ? opt.theme : null;
+            if (theme == null && window.__ECHARTS__DEFAULT__THEME__) {
+                theme = window.__ECHARTS__DEFAULT__THEME__;
+            }
+            if (theme) {
+                await new Promise((resolve) => {
+                    require([`theme/${theme}`], function() {
+                        resolve();
+                    });
+                });
+            }
+
+            var chart = echarts.init(dom, theme, {
                 renderer: opt.renderer,
                 useCoarsePointer: opt.useCoarsePointer,
                 pointerSize: opt.pointerSize

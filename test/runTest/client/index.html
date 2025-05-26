@@ -219,6 +219,13 @@ under the License.
                             </el-select>
                             <!-- <el-slider style="width: 100px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider> -->
                         </div>
+                        <div class="run-config-item">
+                            <span class="label">Theme</span>
+                            <el-select :disabled="running" size="mini" style="width: 100px;" v-model="runConfig.theme" placeholder="none">
+                                <el-option key="none" label="none" value="none"></el-option>
+                                <el-option key="v5" label="v5" value="v5"></el-option>
+                            </el-select>
+                        </div>
                     </div>
                 </div>
 
