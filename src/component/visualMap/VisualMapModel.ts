@@ -32,7 +32,8 @@ import {
     BorderOptionMixin,
     OptionDataValue,
     BuiltinVisualProperty,
-    DimensionIndex
+    DimensionIndex,
+    OptionId
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
@@ -67,12 +68,13 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
     /**
      * 'all' or null/undefined: all series.
      * A number or an array of number: the specified series.
-     * set min: 0, max: 200, only for campatible with ec2.
-     * In fact min max should not have default value.
      */
     seriesIndex?: 'all' | number[] | number
+    seriesId?: OptionId | OptionId[]
 
     /**
+     * set min: 0, max: 200, only for campatible with ec2.
+     * In fact min max should not have default value.
      * min value, must specified if pieces is not specified.
      */
     min?: number
@@ -237,23 +239,30 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 
     /**
-     * @protected
-     * @return {Array.<number>} An array of series indices.
+     * @return An array of series indices.
      */
-    getTargetSeriesIndices() {
-        const optionSeriesIndex = this.option.seriesIndex;
-        let seriesIndices: number[] = [];
-
-        if (optionSeriesIndex == null || optionSeriesIndex === 'all') {
-            this.ecModel.eachSeries(function (seriesModel, index) {
-                seriesIndices.push(index);
-            });
-        }
-        else {
-            seriesIndices = modelUtil.normalizeToArray(optionSeriesIndex);
+    protected getTargetSeriesIndices(): number[] {
+        const optionSeriesId = this.option.seriesId;
+        let optionSeriesIndex = this.option.seriesIndex;
+        if (optionSeriesIndex == null && optionSeriesId == null) {
+            optionSeriesIndex = 'all';
         }
 
-        return seriesIndices;
+        const seriesModels = modelUtil.queryReferringComponents(
+            this.ecModel,
+            'series',
+            {
+                index: optionSeriesIndex,
+                id: optionSeriesId,
+            },
+            {
+                useDefault: false,
+                enableAll: true,
+                enableNone: false,
+            }
+        ).models;
+
+        return zrUtil.map(seriesModels, seriesModel => seriesModel.componentIndex);
     }
 
     /**
@@ -605,7 +614,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         // zlevel: 0,
         z: 4,
 
-        seriesIndex: 'all',
+        // seriesIndex: 'all',
 
         min: 0,
         max: 200,
