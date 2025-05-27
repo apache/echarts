@@ -166,6 +166,10 @@ under the License.
                 data: 'data1d'
               },
               {
+                type: 'radar',
+                data: 'data1d'
+              },
+              {
                 type: 'treemap',
                 data: 'dataTree'
               },
@@ -326,6 +330,35 @@ under the License.
                   }
                 };
               }
+              else if (['radar'].includes(c.type)) {
+                const indicators = 6;
+                const indicator = [];
+                for (let i = 0; i < indicators; i++) {
+                  indicator.push({
+                    name: `Indicator ${i + 1}`,
+                    max: 100
+                  });
+                }
+                option.radar = {
+                  indicator: indicator
+                };
+
+                const data = [];
+                for (let i = 0; i < maxSeriesCount; i++) {
+                  const value = [];
+                  for (let j = 0; j < indicators; j++) {
+                    value.push(Math.min(Math.round(Math.random() * 50 + i * 10), 100));
+                  }
+                  data.push({
+                    name: `Series ${i + 1}`,
+                    value: value
+                  });
+                }
+                option.series = [{
+                  type: 'radar',
+                  data: data
+                }]
+              }
 
               chart.setOption(option);
             }
@@ -342,7 +375,10 @@ under the License.
                 data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
               },
               yAxis: {
-                type: 'value'
+                type: 'value',
+                splitArea: {
+                  show: true
+                }
               },
               options: [
               {

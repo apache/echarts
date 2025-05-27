@@ -49,7 +49,8 @@ const axisCommon = function () {
         },
         axisLabel: {
             color: color.axisLabel
-        }
+        },
+        axisName: {}
     };
 };
 
@@ -95,7 +96,7 @@ const theme = {
     },
     tooltip: {
         backgroundColor: color.neutral20,
-        // borderColor: color.border,
+        defaultBorderColor: color.border,
         textStyle: {
             color: color.tertiary
         }
@@ -217,6 +218,14 @@ const theme = {
             borderColor: color.background
         }
     },
+    radar: (() => {
+        const radar = axisCommon();
+        radar.axisName = {
+            color: color.axisLabel
+        };
+        radar.axisLine.lineStyle.color = color.neutral20;
+        return radar;
+    })(),
     treemap: {
         breadcrumb: {
             itemStyle: {

@@ -183,12 +183,13 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
         center: ['50%', '50%'],
 
-        radius: '75%',
+        radius: '50%',
 
         startAngle: 90,
 
         axisName: {
-            show: true
+            show: true,
+            color: tokens.color.axisLabel
             // formatter: null
             // textStyle: {}
         },
@@ -207,7 +208,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
         axisLine: zrUtil.merge(
             {
                 lineStyle: {
-                    color: tokens.color.axisSplitLine
+                    color: tokens.color.neutral20
                 }
             },
             valueAxisDefault.axisLine

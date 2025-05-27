@@ -79,6 +79,11 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     className?: string
 
+    /**
+     * Default border color to use when there are multiple series
+     */
+    defaultBorderColor?: string
+
     order?: TooltipOrderMode
 }
 
@@ -138,6 +143,8 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // tooltip border width, unit is px, default is 0 (no border)
         borderWidth: 1,
+
+        defaultBorderColor: tokens.color.border,
 
         // Tooltip inside padding, default is 5 for all direction
         // Array is allowed to set up, right, bottom, left, same with css

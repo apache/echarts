@@ -127,7 +127,10 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
         handleLabel: SliderHandleLabelOption
         handleStyle?: ItemStyleOption
         moveHandleStyle?: ItemStyleOption
-    }
+    },
+
+    // Distance between the slider and the edge of the chart.
+    defaultLocationEdgeGap?: number
 }
 
 
@@ -219,7 +222,9 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
             moveHandleStyle: {
                 opacity: 0.8
             }
-        }
+        },
+
+        defaultLocationEdgeGap: 15
     } as SliderDataZoomOption);
 }
 

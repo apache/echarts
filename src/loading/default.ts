@@ -58,7 +58,7 @@ export default function defaultLoading(
         fontWeight: 'normal',
         fontStyle: 'normal',
         fontFamily: 'sans-serif',
-        maskColor: tokens.color.backgroundTint,
+        maskColor: 'rgba(255,255,255,0.8)',
         showSpinner: true,
         color: tokens.color.theme[0],
         spinnerRadius: 10,
