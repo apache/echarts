@@ -484,7 +484,7 @@ const app = new Vue({
             if (test.useCoarsePointer) {
                 searches.push('__COARSE__POINTER__=true');
             }
-            if (test.theme && test.theme !== 'none') {
+            if (test.theme && test.theme !== 'none' && ecVersion === 'local') {
                 searches.push('__THEME__=' + test.theme);
             }
             let src = test.fileUrl;

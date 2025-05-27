@@ -303,7 +303,14 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
             width: 800,
             height: 600,
         });
-        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}&__THEME__=${program.theme}`, {
+
+        let url = `${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`;
+
+        if (program.theme && program.theme !== 'none' && version === 'local') {
+            url += `&__THEME__=${program.theme}`;
+        }
+
+        await page.goto(url, {
             waitUntil: 'networkidle2',
             timeout: 10000,
             // timeout: 0
