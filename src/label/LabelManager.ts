@@ -18,6 +18,7 @@
 */
 
 // TODO: move labels out of viewport.
+import { DISPLAY_STATES } from '../util/states';
 
 import {
     Text as ZRText,
@@ -54,6 +55,7 @@ import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
 import { labelInner, animateLabelValue } from './labelStyle';
 import { normalizeRadian } from 'zrender/src/contain/util';
+import { TextProps } from 'zrender';
 
 interface LabelDesc {
     label: ZRText
@@ -359,7 +361,6 @@ class LabelManager {
             let needsUpdateLabelLine = false;
             if (layoutOption.x != null) {
                 // TODO width of chart view.
-                label.x = parsePercent(layoutOption.x, width);
                 label.setStyle('x', 0);  // Ignore movement in style. TODO: origin.
                 needsUpdateLabelLine = true;
             }
@@ -370,7 +371,6 @@ class LabelManager {
 
             if (layoutOption.y != null) {
                 // TODO height of chart view.
-                label.y = parsePercent(layoutOption.y, height);
                 label.setStyle('y', 0);  // Ignore movement in style.
                 needsUpdateLabelLine = true;
             }
@@ -397,12 +397,32 @@ class LabelManager {
             label.scaleX = defaultLabelAttr.scaleX;
             label.scaleY = defaultLabelAttr.scaleY;
 
-            for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
-                const key = LABEL_OPTION_TO_STYLE_KEYS[k];
-                label.setStyle(key, layoutOption[key] != null ? layoutOption[key] : defaultLabelAttr.style[key]);
+            for (const state of DISPLAY_STATES) {
+                const isNormal = state === 'normal';
+                const labelState = isNormal ? label : label.ensureState(state);
+                if (layoutOption.x != null) {
+                    labelState.x = parsePercent(layoutOption.x, width);
+                }
+
+                if (layoutOption.y != null) {
+                    labelState.y = parsePercent(layoutOption.y, height);
+                }
+
+
+                for (let k = 0; k < LABEL_OPTION_TO_STYLE_KEYS.length; k++) {
+                    const key = LABEL_OPTION_TO_STYLE_KEYS[k];
+                    const val = layoutOption[key];
+                    if (isNormal) {
+                        label.setStyle(key, val != null ? val : defaultLabelAttr.style[key]);
+                    }
+                    else if (val != null) {
+                        labelState.style = labelState.style || {};
+                        (labelState.style[key] as TextProps['style'][typeof key]) = val;
+                    }
+                }
+
+
             }
-
-
             if (layoutOption.draggable) {
                 label.draggable = true;
                 label.cursor = 'move';
