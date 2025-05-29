@@ -108,7 +108,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // whether restraint content inside viewRect.
         // If renderMode: 'richText', default true.
-        // If renderMode: 'html', defaut false (for backward compat).
+        // If renderMode: 'html', defaults to `false` (for backward compat).
         confine: null,
 
         showDelay: 0,
@@ -117,6 +117,8 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // Animation transition time, unit is second
         transitionDuration: 0.4,
+
+        displayTransition: true,
 
         enterable: false,
 
