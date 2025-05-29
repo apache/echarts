@@ -531,21 +531,6 @@
                 iconStyle: {
                     borderColor: '#3E98C5'
                 }
-            },
-            feature: {
-                dataView: {
-                    backgroundColor: '#fff',
-                    textColor: '#000',
-                    textareaColor: '#fff',
-                    textareaBorderColor: '#333',
-                    buttonColor: '#c23531',
-                    buttonTextColor: '#fff'
-                },
-                dataZoom: {
-                    brushStyle: {
-                        color: 'rgba(210,219,238,0.2)'
-                    }
-                }
             }
         },
 

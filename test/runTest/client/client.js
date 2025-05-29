@@ -55,7 +55,23 @@ function assembleParams(paramsObj) {
     return paramsArr.join('&');
 }
 
-function processTestsData(tests, oldTestsData) {
+function shouldShowMarkAsExpected(test, expectedSource, expectedVersion) {
+    if (expectedSource !== 'release'
+        || expectedVersion !== test.expectedVersion
+        || !test.markedAsExpected
+    ) {
+        return false;
+    }
+
+    for (let i = 0; i < test.markedAsExpected.length; i++) {
+        if (test.markedAsExpected[i].lastVersion === expectedVersion) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function processTestsData(tests, oldTestsData, expectedSource, expectedVersion) {
     tests.forEach((test, idx) => {
         let passed = 0;
         test.index = idx;
@@ -73,6 +89,9 @@ function processTestsData(tests, oldTestsData) {
         if (test.percentage === 100) {
             test.summary = 'success';
         }
+        else if (shouldShowMarkAsExpected(test, expectedSource, expectedVersion)) {
+            test.summary = 'markedAsExpected';
+        }
         else if (test.percentage < 50) {
             test.summary = 'exception';
         }
@@ -82,12 +101,32 @@ function processTestsData(tests, oldTestsData) {
 
         // To simplify the condition in sort
         test.actualErrors = test.actualErrors || [];
+
+        // Format date for marks display
+        if (test.markedAsExpected) {
+            test.markedAsExpected.forEach(mark => {
+                if (mark.markTime && !mark.markTimeFormatted) {
+                    mark.markTimeFormatted = formatDate(mark.markTime);
+                }
+            });
+        }
+
         // Keep select status not change.
         if (oldTestsData && oldTestsData[idx]) {
             test.selected = oldTestsData[idx].selected;
             // Keep source information
             test.expectedSource = oldTestsData[idx].expectedSource;
             test.actualSource = oldTestsData[idx].actualSource;
+
+            // 如果旧数据有 markedAsExpected 而新数据没有，保留旧数据的 markedAsExpected
+            if (oldTestsData[idx].markedAsExpected && !test.markedAsExpected) {
+                test.markedAsExpected = oldTestsData[idx].markedAsExpected;
+            }
+
+            // 确保 markedAsExpected 为空时设置为 null 而非空数组
+            if (test.markedAsExpected && Array.isArray(test.markedAsExpected) && test.markedAsExpected.length === 0) {
+                test.markedAsExpected = null;
+            }
         }
         else {
             test.selected = false;
@@ -164,10 +203,21 @@ const app = new Vue({
             useCoarsePointer: 'auto',
             threads: 4,
             theme: 'none'
-        }, urlRunConfig)
+        }, urlRunConfig),
+
+        userMeta: null
     },
 
     async mounted() {
+        socket.on('userMeta', meta => {
+            this.userMeta = meta;
+        });
+        socket.emit('getUserMeta');
+
+        socket.on('updateTestsList', testsList => {
+            this.updateTestsList(testsList);
+        });
+
         // Add call to fetch branches
         await this.fetchBranchVersions();
 
@@ -179,6 +229,7 @@ const app = new Vue({
             forceSet: Object.keys(urlRunConfig).length > 0
         });
         socket.on('syncRunConfig_return', res => {
+            console.log('syncRunConfig_return', res.runConfig.expectedSource, res.runConfig.expectedVersion);
             this.versions = res.versions || [];
             this.nightlyVersions = res.nightlyVersions || [];
             this.prVersions = res.prVersions || [];
@@ -187,11 +238,13 @@ const app = new Vue({
             handlingSourceChange = true;
             this.$nextTick(() => {
                 if (!this.runConfig.expectedVersion) {
+                    console.log('this.runConfig.expectedVersion null');
                     this.runConfig.expectedVersion = getVersionFromSource(
                         this.runConfig.expectedSource,
                         this.versions,
                         this.nightlyVersions
                     );
+                    console.log('this.runConfig.expectedVersion', this.runConfig.expectedVersion);
                 }
 
                 if (!this.runConfig.actualVersion) {
@@ -402,6 +455,32 @@ const app = new Vue({
     },
 
     methods: {
+        validateMarkExpected(lastVersion) {
+            if (this.runConfig.expectedSource !== 'release') {
+                return {
+                    valid: false,
+                    reason: 'Only valid when the expected version is release'
+                }
+            }
+            if (lastVersion !== this.runConfig.expectedVersion) {
+                return {
+                    valid: false,
+                    reason: 'Only valid when the expected version is ' + lastVersion
+                };
+            }
+            return {
+                valid: true,
+                reason: 'Valid'
+            };
+        },
+
+        getMarkRowClass(data) {
+            if (this.validateMarkExpected(data.row.lastVersion).valid) {
+                return '';
+            }
+            return 'faded-row';
+        },
+
         scrollToCurrent() {
             const el = document.querySelector(`.test-list>li[title="${this.currentTestName}"]`);
             if (el) {
@@ -461,6 +540,309 @@ const app = new Vue({
                 tests = this.fullTests;
             }
             runTests(tests.map(test => test.name), false);
+        },
+        markAsExpected() {
+            if (!this.currentTest) {
+                return;
+            }
+            this.showMarkAsExpectedDialog();
+        },
+        deleteMark(mark) {
+            this.$confirm('Are you sure you want to delete this mark? This action cannot be undone.', 'Warning', {
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel',
+                type: 'warning'
+            }).then(() => {
+                socket.emit('deleteMark', {
+                    testName: this.currentTest.name,
+                    markTime: mark.markTime
+                }, (err) => {
+                    if (err) {
+                        this.$message.error('Failed to delete: ' + err);
+                        return;
+                    }
+
+                    if (this.currentTest && this.currentTest.markedAsExpected) {
+                        if (Array.isArray(this.currentTest.markedAsExpected)) {
+                            this.currentTest.markedAsExpected = this.currentTest.markedAsExpected.filter(
+                                item => item.markTime !== mark.markTime
+                            );
+
+                            if (this.currentTest.markedAsExpected.length === 0) {
+                                this.currentTest.markedAsExpected = null;
+                            }
+                        } else if (this.currentTest.markedAsExpected.markTime === mark.markTime) {
+                            this.currentTest.markedAsExpected = null;
+                        }
+                    }
+
+                    this.$message.success('Mark deleted successfully');
+                });
+            }).catch(() => {
+                // User canceled
+            });
+        },
+        showMarkAsExpectedDialog() {
+            // Reset input values each time the dialog is opened
+            let linkValue = '';
+            let commentValue = '';
+            let selectedType = 'New Feature';
+            // Only initialize identity fields from user meta
+            let markedBy = this.userMeta?.myGitHubId || '';
+            let lastVersion = this.userMeta?.lastEChartsVersion || '';
+
+            // Create our own custom dialog without using $prompt
+            const h = this.$createElement;
+
+            this.$msgbox({
+                title: 'Mark Difference as Expected',
+                message: h('div', { class: 'mark-expected-form' }, [
+                    h('div', { class: 'form-item' }, [
+                        h('div', { class: 'form-label' }, [
+                            'Your GitHub ID: ',
+                            h('span', { style: { color: '#F56C6C' } }, '*')
+                        ]),
+                        h('input', {
+                            class: 'el-input__inner',
+                            attrs: {
+                                type: 'text',
+                                placeholder: ''
+                            },
+                            domProps: {
+                                value: markedBy
+                            },
+                            on: {
+                                input: (e) => {
+                                    markedBy = e.target.value;
+                                    if (!this.userMeta) {
+                                        this.userMeta = {
+                                            myGitHubId: markedBy
+                                        };
+                                    }
+                                    else {
+                                        this.userMeta.myGitHubId = markedBy;
+                                    }
+                                }
+                            }
+                        })
+                    ]),
+                    h('div', { class: 'form-item' }, [
+                        h('div', { class: 'form-label' }, [
+                            'Last Version: ',
+                            h('span', { style: { color: '#F56C6C' } }, '*')
+                        ]),
+                        h('input', {
+                            class: 'el-input__inner',
+                            attrs: {
+                                type: 'text',
+                                placeholder: '5.6.0'
+                            },
+                            domProps: {
+                                value: lastVersion
+                            },
+                            on: {
+                                input: (e) => {
+                                        lastVersion = e.target.value;
+                                    if (!this.userMeta) {
+                                        this.userMeta = {
+                                            lastEChartsVersion: lastVersion
+                                        };
+                                    }
+                                    else {
+                                        this.userMeta.lastEChartsVersion = lastVersion;
+                                    }
+                                }
+                            }
+                        })
+                    ]),
+                    h('div', { class: 'form-item type-selection' }, [
+                        h('div', { class: 'form-label' }, [
+                            'Type: ',
+                            h('span', { style: { color: '#F56C6C' } }, '*')
+                        ]),
+                        h('div', { class: 'radio-group' }, [
+                            h('label', { class: 'radio-label' }, [
+                                h('input', {
+                                    attrs: {
+                                        type: 'radio',
+                                        name: 'mark-type',
+                                        value: 'New Feature',
+                                        checked: selectedType === 'New Feature'
+                                    },
+                                    on: {
+                                        change: (e) => {
+                                            selectedType = e.target.value;
+                                        }
+                                    }
+                                }),
+                                ' New Feature'
+                            ]),
+                            h('label', { class: 'radio-label' }, [
+                                h('input', {
+                                    attrs: {
+                                        type: 'radio',
+                                        name: 'mark-type',
+                                        value: 'Bug Fixing',
+                                        checked: selectedType === 'Bug Fixing'
+                                    },
+                                    on: {
+                                        change: (e) => {
+                                            selectedType = e.target.value;
+                                        }
+                                    }
+                                }),
+                                ' Bug Fixing'
+                            ]),
+                            h('label', { class: 'radio-label' }, [
+                                h('input', {
+                                    attrs: {
+                                        type: 'radio',
+                                        name: 'mark-type',
+                                        value: 'Others',
+                                        checked: selectedType === 'Others'
+                                    },
+                                    on: {
+                                        change: (e) => {
+                                            selectedType = e.target.value;
+                                        }
+                                    }
+                                }),
+                                ' Others'
+                            ])
+                        ])
+                    ]),
+                    h('div', { class: 'form-item' }, [
+                        h('div', { class: 'form-label' }, 'PR or commit link (optional but recommended):'),
+                        h('input', {
+                            class: 'el-input__inner link-input',
+                            attrs: {
+                                type: 'text',
+                                placeholder: 'https://github.com/apache/echarts/pull/xxx'
+                            },
+                            on: {
+                                input: (e) => {
+                                    linkValue = e.target.value;
+                                }
+                            }
+                        })
+                    ]),
+                    h('div', { class: 'form-item' }, [
+                        h('div', { class: 'form-label' }, 'Comment (optional):'),
+                        h('textarea', {
+                            class: 'el-textarea__inner comment-input',
+                            style: { minHeight: '60px' },
+                            on: {
+                                input: (e) => {
+                                    commentValue = e.target.value;
+                                }
+                            }
+                        })
+                    ])
+                ]),
+                showCancelButton: true,
+                confirmButtonText: 'Confirm',
+                cancelButtonText: 'Cancel',
+                customClass: 'mark-as-expected-dialog',
+                beforeClose: (action, instance, done) => {
+                    if (action === 'confirm') {
+                        if (!selectedType) {
+                            this.$message({
+                                message: 'Please select a type',
+                                type: 'error'
+                            });
+                            // Don't close the dialog
+                            done(false);
+                            return;
+                        }
+
+                        if (!markedBy) {
+                            this.$message({
+                                message: 'Please enter your GitHub ID',
+                                type: 'error'
+                            });
+                            done(false);
+                            return;
+                        }
+
+                        if (!lastVersion) {
+                            this.$message({
+                                message: 'Please enter the last version',
+                                type: 'error'
+                            });
+                            done(false);
+                            return;
+                        }
+
+                        if (linkValue && !(linkValue.startsWith('http://') || linkValue.startsWith('https://'))) {
+                            this.$message({
+                                message: 'Link must start with http:// or https://',
+                                type: 'error'
+                            });
+                            done(false);
+                            return;
+                        }
+
+                        // Use a variable to track if the callback has been called
+                        let callbackCalled = false;
+
+                        // Create a callback function with proper error handling
+                        const handleMarkAsExpectedResponse = function(err) {
+                            callbackCalled = true;
+
+                            if (err) {
+                                app.$notify({
+                                    title: 'Error',
+                                    message: err,
+                                    type: 'error',
+                                    duration: 5000
+                                });
+                                done(false);
+                                return;
+                            }
+
+                            app.$notify({
+                                title: 'Success',
+                                message: 'Marked as expected',
+                                type: 'success',
+                                duration: 3000
+                            });
+                            done();
+                        };
+
+                        // Save user meta info for future use
+                        socket.emit('saveUserMeta', {
+                            myGitHubId: markedBy,
+                            lastEChartsVersion: lastVersion
+                        });
+
+                        socket.emit('markAsExpected', {
+                            testName: this.currentTest.name,
+                            link: linkValue,
+                            comment: commentValue,
+                            type: selectedType,
+                            markedBy: markedBy,
+                            lastVersion: lastVersion,
+                            markTime: new Date().getTime()
+                        }, handleMarkAsExpectedResponse);
+
+                        // Add a timeout to ensure the dialog closes even if callback is not called
+                        setTimeout(() => {
+                            if (!callbackCalled) {
+                                console.error('Socket callback was not called after 5 seconds');
+                                app.$notify({
+                                    title: 'Warning',
+                                    message: 'Operation may not have completed properly',
+                                    type: 'warning',
+                                    duration: 5000
+                                });
+                                done();
+                            }
+                        }, 5000);
+                    } else {
+                        done();
+                    }
+                }
+            });
         },
         stopTests() {
             this.running = false;
@@ -546,7 +928,22 @@ const app = new Vue({
                 console.error('Failed to fetch branches:', error);
                 this.branchVersions = [];
             }
-        }
+        },
+
+        updateTestsList(testsList) {
+            this.fullTests = processTestsData(testsList, this.fullTests, this.runConfig.expectedSource, this.runConfig.expectedVersion);
+
+            if (!this.currentTestName && this.fullTests.length > 0) {
+                this.currentTestName = this.fullTests[0].name;
+            }
+
+            if (this.currentTestName) {
+                const currentTest = this.fullTests.find(test => test.name === this.currentTestName);
+                if (!currentTest && this.fullTests.length > 0) {
+                    this.currentTestName = this.fullTests[0].name;
+                }
+            }
+        },
     }
 });
 
@@ -604,7 +1001,12 @@ socket.on('update', msg => {
 
     // TODO
     app.running = !!msg.running;
-    app.fullTests = processTestsData(msg.tests, app.fullTests);
+    app.fullTests = processTestsData(
+        msg.tests,
+        app.fullTests,
+        app.runConfig.expectedSource,
+        app.runConfig.expectedVersion
+    );
 
     if (!app.currentTestName) {
         app.currentTestName = app.fullTests[0].name;
@@ -666,3 +1068,9 @@ app.$watch('runConfig', (newVal, oldVal) => {
         });
     }
 }, { deep: true });
+
+function formatDate(timestamp) {
+    const date = new Date(timestamp);
+    const pad = num => (num < 10 ? '0' + num : num);
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}

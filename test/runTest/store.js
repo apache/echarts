@@ -21,8 +21,9 @@ const path = require('path');
 const fse = require('fs-extra');
 const fs = require('fs');
 const globby = require('globby');
-const {testNameFromFile} = require('./util');
+const {testNameFromFile, getUserMetaFullPath} = require('./util');
 const {blacklist, SVGBlacklist} = require('./blacklist');
+const {getMarkedAsExpectedFullPath} = require('./util');
 
 let _tests = [];
 let _testsMap = {};
@@ -238,6 +239,18 @@ module.exports.updateTestsList = async function (
 
     _tests.forEach(testOpt => {
         testOpt.actions = actionsMetaData[testOpt.name] || 0;
+
+        // Load marks for each test
+        try {
+            const marksPath = require('./util').getMarkedAsExpectedFullPath(testOpt.name);
+            if (fs.existsSync(marksPath)) {
+                // Always load as an array
+                testOpt.markedAsExpected = JSON.parse(fs.readFileSync(marksPath, 'utf-8'));
+            }
+        } catch (e) {
+            console.error(`Error loading marks for ${testOpt.name}:`, e);
+            // Ignore errors when loading marks
+        }
     });
 
     // Save once.
@@ -365,4 +378,169 @@ module.exports.getAllTestsRuns = async function () {
 
 module.exports.delTestsRun = async function (hash) {
     fse.removeSync(path.join(RESULTS_ROOT_DIR, hash));
+}
+
+module.exports.markTestAsExpected = function (testData) {
+    const testName = testData.testName;
+    const mark = {
+        link: testData.link || '',
+        comment: testData.comment || '',
+        type: testData.type,
+        markedBy: testData.markedBy || '',
+        lastVersion: testData.lastVersion || '',
+        markTime: testData.markTime || new Date().getTime()
+    };
+
+    console.log('Saving mark data:', mark);
+
+    // Find the test
+    const test = _tests.find(test => test.name === testName);
+    if (!test) {
+        throw new Error(`Test ${testName} not found`);
+    }
+
+    // Get existing marks or initialize an empty array
+    let marks = [];
+    const markFilePath = require('./util').getMarkedAsExpectedFullPath(testName);
+
+    // Check if the marks file exists and load existing marks
+    if (fs.existsSync(markFilePath)) {
+        try {
+            marks = JSON.parse(fs.readFileSync(markFilePath, 'utf-8'));
+            if (!Array.isArray(marks)) {
+                // Convert to array if it's a single object
+                marks = [marks];
+            }
+        } catch (e) {
+            console.error('Error reading existing marks file:', e);
+            // Continue with empty array if there was an error
+        }
+    }
+
+    // Add the new mark to the beginning of the array
+    marks.unshift(mark);
+
+    // Update test with marks array
+    test.markedAsExpected = marks;
+
+    // Save marks
+    try {
+        // Ensure directory exists
+        const dirname = path.dirname(markFilePath);
+        fse.ensureDirSync(dirname);
+
+        // Write marks array to file
+        fs.writeFileSync(markFilePath, JSON.stringify(marks, null, 2));
+        console.log('Marks saved to', markFilePath);
+        return true;
+    }
+    catch (e) {
+        console.error('Failed to save marks:', e);
+        throw e;
+    }
+}
+
+module.exports.getUserMeta = function () {
+    const metaPath = getUserMetaFullPath();
+    if (fs.existsSync(metaPath)) {
+        try {
+            return JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+        }
+        catch (e) {
+            console.error('Failed to read user meta:', e);
+            return {};
+        }
+    }
+    return {};
+}
+
+module.exports.saveUserMeta = function (data) {
+    const metaPath = getUserMetaFullPath();
+    // Read existing data if exists
+    let existingData = {};
+    if (fs.existsSync(metaPath)) {
+        try {
+            existingData = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+        }
+        catch (e) {
+            console.error('Failed to read existing meta file:', e);
+        }
+    }
+
+    // Merge new data with existing
+    const updatedData = Object.assign({}, existingData, data);
+
+    try {
+        fs.writeFileSync(metaPath, JSON.stringify(updatedData, null, 2), 'utf-8');
+        console.log('User meta saved successfully');
+        return true;
+    }
+    catch (e) {
+        console.error('Failed to save user meta:', e);
+        return false;
+    }
+}
+
+/**
+ * Delete a specific mark for a test by its timestamp
+ * @param {string} testName The name of the test
+ * @param {number} markTime The timestamp of the mark to delete
+ * @return {boolean} Whether the operation was successful
+ */
+module.exports.deleteMark = function(testName, markTime) {
+    try {
+        // Get the file path for the marks
+        const marksFilePath = getMarkedAsExpectedFullPath(testName);
+
+        // Check if the file exists
+        if (!fs.existsSync(marksFilePath)) {
+            console.log(`No marks file found for test "${testName}"`);
+            return true; // Consider it successful if there was no file to delete
+        }
+
+        // Read the current marks
+        const marksContent = fs.readFileSync(marksFilePath, 'utf-8');
+        let marks;
+
+        try {
+            marks = JSON.parse(marksContent);
+            // Ensure marks is an array
+            if (!Array.isArray(marks)) {
+                marks = [marks];
+            }
+        } catch (e) {
+            console.error(`Error parsing marks file for test "${testName}":`, e);
+            return false;
+        }
+
+        // Filter out the mark with the given timestamp
+        const filteredMarks = marks.filter(mark => mark.markTime !== markTime);
+
+        // If no marks were removed, return false
+        if (filteredMarks.length === marks.length) {
+            console.log(`No mark found with timestamp ${markTime} for test "${testName}"`);
+            return false;
+        }
+
+        // Update the test object in memory
+        const test = _tests.find(test => test.name === testName);
+        if (test) {
+            if (filteredMarks.length === 0) {
+                test.markedAsExpected = null;
+                // Remove the file if there are no marks left
+                fs.unlinkSync(marksFilePath);
+                console.log(`Deleted marks file for test "${testName}"`);
+            } else {
+                test.markedAsExpected = filteredMarks;
+                // Write the filtered marks back to the file
+                fs.writeFileSync(marksFilePath, JSON.stringify(filteredMarks, null, 2), 'utf-8');
+                console.log(`Deleted mark with timestamp ${markTime} for test "${testName}"`);
+            }
+        }
+
+        return true;
+    } catch (e) {
+        console.error(`Error deleting mark for test "${testName}" at time ${markTime}:`, e);
+        return false;
+    }
 }

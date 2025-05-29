@@ -57,6 +57,14 @@ module.exports.getActionsFullPath = function (testName) {
     return path.join(__dirname, 'actions', testName + '.json');
 };
 
+module.exports.getMarkedAsExpectedFullPath = function (testName) {
+    return path.join(__dirname, 'marks', testName + '.json');
+};
+
+module.exports.getUserMetaFullPath = function () {
+    return path.join(__dirname, 'tmp', 'meta.json');
+};
+
 module.exports.getEChartsTestFileName = function () {
     return `echarts.test-${config.testVersion}.js`;
 };

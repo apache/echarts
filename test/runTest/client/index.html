@@ -78,8 +78,11 @@ under the License.
                                     :width="20"
                                     :stroke-width="2"
                                     :percentage="test.percentage"
-                                    :status="test.summary"
-                                ></el-progress>
+                                    :status="test.summary === 'markedAsExpected' ? 'success' : test.summary"
+                                    :class="{'is-markedAsExpected': test.summary === 'markedAsExpected'}"
+                                    :color="test.summary === 'markedAsExpected' ? '#00ADE6' : undefined"
+                                >
+                                </el-progress>
                             </el-tooltip>
                         </template>
                         <el-tooltip
@@ -238,9 +241,12 @@ under the License.
                             :width="30"
                             :stroke-width="4"
                             :percentage="currentTest.percentage"
-                            :status="currentTest.summary"
+                            :status="currentTest.summary === 'markedAsExpected' ? 'success' : currentTest.summary"
+                            :class="{'is-markedAsExpected': currentTest.summary === 'markedAsExpected'}"
+                            :color="currentTest.summary === 'markedAsExpected' ? '#00ADE6' : undefined"
                             style="margin-top: 5px;"
-                        ></el-progress>
+                        >
+                        </el-progress>
                         <h3>{{currentTest.name}}</h3>
                     </div>
                     <div class="single-test-ops">
@@ -250,6 +256,83 @@ under the License.
                         </el-button-group>
                         <el-button size="mini" @click="open(currentTestUrl, '_blank')" icon="el-icon-link">Open Demo</el-button>
                         <el-button size="mini" @click="open(currentTestRecordUrl, '_blank')" icon="el-icon-video-camera">Record Interaction</el-button>
+                        <el-button size="mini" @click="markAsExpected" icon="el-icon-edit">
+                            <el-tooltip content="Mark the diff as the expected change due to bug fixing or a new feature and the diff should be ignored" placement="top">
+                                <span>Mark Diff As Expected</span>
+                            </el-tooltip>
+                        </el-button>
+                    </div>
+
+                    <!-- Display mark as expected info if available -->
+                    <div v-if="currentTest.markedAsExpected && currentTest.markedAsExpected.length > 0" class="marked-as-expected">
+                        <h4>Marked As Expected History</h4>
+                        <el-table
+                            :data="currentTest.markedAsExpected"
+                            style="width: 100%"
+                            size="small"
+                            :row-class-name="getMarkRowClass">
+                            <el-table-column
+                                label="Time"
+                                width="180">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.markTimeFormatted }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                prop="type"
+                                label="Type"
+                                width="120">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.type }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                prop="markedBy"
+                                label="Marked By"
+                                width="120">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.markedBy || '-' }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                prop="lastVersion"
+                                label="Last Version"
+                                width="120">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.lastVersion || '-' }}</span>
+                                    <el-tooltip
+                                        :content="validateMarkExpected(scope.row.lastVersion).reason"
+                                        placement="top"
+                                        v-if="!validateMarkExpected(scope.row.lastVersion).valid"
+                                    >
+                                        <el-tag size="mini" type="warning" style="margin-left: 5px">
+                                            Staled
+                                        </el-tag>
+                                    </el-tooltip>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                label="Link">
+                                <template slot-scope="scope">
+                                    <a v-if="scope.row.link" :href="scope.row.link" target="_blank">{{scope.row.link}}</a>
+                                    <span v-else>-</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                label="Comment">
+                                <template slot-scope="scope">
+                                    <span v-if="scope.row.comment">{{scope.row.comment}}</span>
+                                    <span v-else>-</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                label="Operations"
+                                width="100">
+                                <template slot-scope="scope">
+                                    <el-button type="danger" size="mini" plain @click="deleteMark(scope.row)">Delete</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
                     </div>
 
                     <div v-if="currentTest.results.length > 0">
