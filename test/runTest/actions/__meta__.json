@@ -201,6 +201,7 @@
   "tooltip-axisPointer2": 4,
   "tooltip-cascade": 4,
   "tooltip-component": 6,
+  "tooltip-displayTransition": 1,
   "tooltip-domnode": 1,
   "tooltip-event": 1,
   "tooltip-link": 2,

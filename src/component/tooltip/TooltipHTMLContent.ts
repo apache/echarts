@@ -186,8 +186,8 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
     const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
 
     cssText.push('box-shadow:' + boxShadow);
-    // Animation transition. Do not animate when transitionDuration is 0.
-    enableTransition && transitionDuration && cssText.push(assembleTransition(transitionDuration, onlyFade));
+    // Animation transition. Do not animate when transitionDuration <= 0.
+    enableTransition && transitionDuration > 0 && cssText.push(assembleTransition(transitionDuration, onlyFade));
 
     if (backgroundColor) {
         cssText.push('background-color:' + backgroundColor);
@@ -284,6 +284,8 @@ class TooltipHTMLContent {
      */
     private _longHideTimeout: number;
 
+    private _enableDisplayTransition: boolean;
+
     constructor(
         api: ExtensionAPI,
         opt: TooltipContentOption
@@ -375,6 +377,9 @@ class TooltipHTMLContent {
 
         // update alwaysShowContent
         this._alwaysShowContent = alwaysShowContent;
+
+        this._enableDisplayTransition = tooltipModel.get('displayTransition')
+            && tooltipModel.get('transitionDuration') > 0;
 
         // update className
         this.el.className = tooltipModel.get('className') || '';
@@ -499,9 +504,13 @@ class TooltipHTMLContent {
 
     hide() {
         const style = this.el.style;
-        style.visibility = 'hidden';
-        style.display = 'none';
-        style.opacity = '0';
+        if (this._enableDisplayTransition) {
+            style.visibility = 'hidden';
+            style.opacity = '0';
+        }
+        else {
+            style.display = 'none';
+        }
         env.transform3dSupported && (style.willChange = '');
         this._show = false;
         this._longHideTimeout = setTimeout(() => this._longHide = true, 500) as any;
