@@ -450,7 +450,6 @@ class TooltipView extends ComponentView {
     ) {
         const el = e.target;
         const tooltipModel = this._tooltipModel;
-
         if (!tooltipModel) {
             return;
         }
@@ -473,16 +472,21 @@ class TooltipView extends ComponentView {
 
             let seriesDispatcher: Element;
             let cmptDispatcher: Element;
-            findEventDispatcher(el, (target) => {
+            findEventDispatcher(el, function (target) {
+                if ((target as ECElement).tooltipDisabled) {
+                    seriesDispatcher = cmptDispatcher = null;
+                    return true;
+                }
+                if (seriesDispatcher || cmptDispatcher) {
+                    return;
+                }
                 // Always show item tooltip if mouse is on the element with dataIndex
                 if (getECData(target).dataIndex != null) {
                     seriesDispatcher = target;
-                    return true;
                 }
                 // Tooltip provided directly. Like legend.
-                if (getECData(target).tooltipConfig != null) {
+                else if (getECData(target).tooltipConfig != null) {
                     cmptDispatcher = target;
-                    return true;
                 }
             }, true);
 
