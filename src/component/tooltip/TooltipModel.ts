@@ -51,8 +51,6 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     trigger?: 'item' | 'axis' | 'none'
 
-    displayMode?: 'single' | 'multipleByCoordSys';
-
     /**
      * 'auto': use html by default, and use non-html if `document` is not defined
      * 'html': use html for tooltip
@@ -105,8 +103,6 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         triggerOn: 'mousemove|click',
 
         alwaysShowContent: false,
-
-        displayMode: 'single', // 'single' | 'multipleByCoordSys'
 
         renderMode: 'auto', // 'auto' | 'html' | 'richText'
 
