@@ -103,15 +103,21 @@ function assembleArrow(
     return `<div style="${styleCss.join('')}"></div>`;
 }
 
-function assembleTransition(duration: number, onlyFade?: boolean): string {
+function assembleTransition(duration: number, onlyFadeTransition: boolean, enableDisplayTransition: boolean): string {
     const transitionCurve = 'cubic-bezier(0.23,1,0.32,1)';
-    let transitionOption = ` ${duration / 2}s ${transitionCurve}`;
-    let transitionText = `opacity${transitionOption},visibility${transitionOption}`;
-    if (!onlyFade) {
+    let transitionOption = '';
+    let transitionText = '';
+    if (enableDisplayTransition) {
+        transitionOption = ` ${duration / 2}s ${transitionCurve}`;
+        transitionText = `opacity${transitionOption},visibility${transitionOption}`;
+    }
+    if (!onlyFadeTransition) {
         transitionOption = ` ${duration}s ${transitionCurve}`;
-        transitionText += env.transformSupported
-            ? `,${CSS_TRANSFORM_VENDOR}${transitionOption}`
-            : `,left${transitionOption},top${transitionOption}`;
+        transitionText += (transitionText.length ? ',' : '') + (
+            env.transformSupported
+                ? `${CSS_TRANSFORM_VENDOR}${transitionOption}`
+                : `,left${transitionOption},top${transitionOption}`
+        );
     }
 
     return CSS_TRANSITION_VENDOR + ':' + transitionText;
@@ -173,7 +179,12 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     return cssText.join(';');
 }
 
-function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: boolean, onlyFade?: boolean) {
+function assembleCssText(
+    tooltipModel: Model<TooltipOption>,
+    enableTransition: boolean,
+    onlyFadeTransition: boolean,
+    enableDisplayTransition: boolean
+) {
     const cssText: string[] = [];
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
@@ -187,7 +198,8 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
 
     cssText.push('box-shadow:' + boxShadow);
     // Animation transition. Do not animate when transitionDuration <= 0.
-    enableTransition && transitionDuration > 0 && cssText.push(assembleTransition(transitionDuration, onlyFade));
+    enableTransition && transitionDuration > 0
+        && cssText.push(assembleTransition(transitionDuration, onlyFadeTransition, enableDisplayTransition));
 
     if (backgroundColor) {
         cssText.push('background-color:' + backgroundColor);
@@ -400,7 +412,7 @@ class TooltipHTMLContent {
         }
         else {
             style.cssText = gCssText
-                + assembleCssText(tooltipModel, !this._firstShow, this._longHide)
+                + assembleCssText(tooltipModel, !this._firstShow, this._longHide, this._enableDisplayTransition)
                 // initial transform
                 + assembleTransform(styleCoord[0], styleCoord[1], true)
                 + `border-color:${convertToColorString(nearPointColor)};`
