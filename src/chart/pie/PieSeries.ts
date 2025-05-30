@@ -39,6 +39,7 @@ import {
     DefaultEmphasisFocus
 } from '../../util/types';
 import type SeriesData from '../../data/SeriesData';
+import { registerLayOutOnCoordSysUsage } from '../../core/CoordinateSystem';
 
 interface PieItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // can be 10
@@ -168,9 +169,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      * @overwrite
      */
     getInitialData(this: PieSeriesModel): SeriesData {
-        const isMatrix = this.option.coordinateSystem === 'matrix';
         return createSeriesDataSimply(this, {
-            coordDimensions: isMatrix ? ['x', 'y', 'value'] : ['value'],
+            coordDimensions: ['value'],
             encodeDefaulter: zrUtil.curry(makeSeriesEncodeForNameBased, this)
         });
     }
@@ -244,6 +244,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         stillShowZeroSum: true,
 
         // cursor: null,
+        coordinateSystemUsage: 'box',
 
         left: 0,
         top: 0,
@@ -266,7 +267,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // Works only position is 'outer' and alignTo is 'edge'.
             edgeDistance: '25%',
             // Works only position is 'outer' and alignTo is not 'edge'.
-            bleedMargin: 10,
+            // The default `bleedMargin` is auto determined according to view rect size.
+            // bleedMargin: 10,
             // Distance between text and label line.
             distanceToLabelLine: 5
             // formatter: 标签文本格式器，同 tooltip.formatter，不支持异步回调
@@ -327,5 +329,14 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     };
 
 }
+
+registerLayOutOnCoordSysUsage({
+    fullType: PieSeriesModel.type,
+    getCoord2(model: PieSeriesModel) {
+        // Not able to validate `center` type here.
+        // But percentage center, such as '12%', is not allowed in this case.
+        return model.getShallow('center');
+    }
+});
 
 export default PieSeriesModel;

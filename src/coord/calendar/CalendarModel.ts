@@ -36,6 +36,7 @@ import {
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
+import { CoordinateSystemHostModel } from '../CoordinateSystem';
 
 export interface CalendarMonthLabelFormatterCallbackParams {
     nameMap: string
@@ -152,11 +153,13 @@ export interface CalendarOption extends ComponentOption, BoxLayoutOptionMixin {
     }
 }
 
-class CalendarModel extends ComponentModel<CalendarOption> {
+class CalendarModel extends ComponentModel<CalendarOption> implements CoordinateSystemHostModel {
     static type = 'calendar';
     type = CalendarModel.type;
 
     coordinateSystem: Calendar;
+
+    static layoutMode = 'box' as const;
 
     /**
      * @override
@@ -185,7 +188,9 @@ class CalendarModel extends ComponentModel<CalendarOption> {
 
     static defaultOption: CalendarOption = {
         // zlevel: 0,
-        z: 2,
+        // As a most basic coord sys, `z` should be lower than
+        // other series and coord sys, such as, grid.
+        z: -50,
         left: 80,
         top: 60,
 

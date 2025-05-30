@@ -20,13 +20,17 @@
 // Layout helpers for each component positioning
 
 import * as zrUtil from 'zrender/src/core/util';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
-import { BoxLayoutOptionMixin, ComponentLayoutMode } from './types';
+import { BoxLayoutOptionMixin, ComponentLayoutMode, NullUndefined } from './types';
 import Group from 'zrender/src/graphic/Group';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
+import { ComponentModel } from '../echarts.all';
+import ExtensionAPI from '../core/ExtensionAPI';
+import { error } from './log';
+import { BoxCoordinateSystemCoordFrom, getCoordForBoxCoordSys } from '../core/CoordinateSystem';
 
 const each = zrUtil.each;
 
@@ -189,6 +193,13 @@ export function getAvailableSize(
     };
 }
 
+type GetLayoutRectInputContainerRect = {
+    x?: number, // 0 by default
+    y?: number, // 0 by default
+    width: number,
+    height: number,
+};
+
 /**
  * Parse position info.
  */
@@ -196,7 +207,7 @@ export function getLayoutRect(
     positionInfo: BoxLayoutOptionMixin & {
         aspect?: number // aspect is width / height
     },
-    containerRect: {width: number, height: number},
+    containerRect: GetLayoutRectInputContainerRect,
     margin?: number | number[]
 ): LayoutRect {
     margin = formatUtil.normalizeCssArray(margin || 0);
@@ -287,9 +298,103 @@ export function getLayoutRect(
         height = containerHeight - verticalMargin - top - (bottom || 0);
     }
 
-    const rect = new BoundingRect(left + margin[3], top + margin[0], width, height) as LayoutRect;
+    const rect = new BoundingRect(
+        (containerRect.x || 0) + left + margin[3],
+        (containerRect.y || 0) + top + margin[0],
+        width,
+        height
+    ) as LayoutRect;
     rect.margin = margin;
     return rect;
+}
+
+type CreateBoxLayoutReferenceOpt<TEnableByCenter extends boolean = false> = {
+    // Use this only if:
+    //  - Intending to layout based on coord sys that can not get a rect from `dataToLayout`.
+    //  - Can layout based only on center but a rect is not essential, such as pie, chord.
+    enableLayoutOnlyByCenter?: TEnableByCenter;
+};
+export const BoxLayoutReferenceType = {
+    rect: 1,
+    point: 2,
+} as const;
+export type BoxLayoutReferenceType = (typeof BoxLayoutReferenceType)[keyof typeof BoxLayoutReferenceType];
+
+type BoxLayoutReferenceResult<TEnableByCenter> = TEnableByCenter extends true
+    ? (BoxLayoutReferenceRectResult | BoxLayoutReferencePointResult)
+    : BoxLayoutReferenceRectResult;
+type BoxLayoutReferenceRectResult = {
+    // This is the defualt way.
+    type: typeof BoxLayoutReferenceType.rect;
+    refContainer: LayoutRect;
+    refPoint: number[]; // The center of rect in this case.
+    boxCoordFrom: BoxCoordinateSystemCoordFrom | NullUndefined;
+};
+type BoxLayoutReferencePointResult = {
+    // This is available only if `enableLayoutOnlyByCenter: true`
+    //  and `layoutRect` is not available.
+    type: typeof BoxLayoutReferenceType.point;
+    refPoint: number[];
+    boxCoordFrom: BoxCoordinateSystemCoordFrom | NullUndefined;
+};
+
+/**
+ * Uniformly calculate layout reference (rect or center) based on either:
+ *  - viewport:
+ *      - Get `refContainer` as `{x: 0, y: 0, width: api.getWidth(), height: api.getHeight()}`
+ *  - coordinate system, which can serve in several ways:
+ *      - Use `dataToPoint` to get the `refPoint`, such as, in cartesian2d coord sys.
+ *      - Use `dataToLayout` to get the `refContainer`, such as, in matrix coord sys.
+ */
+export function createBoxLayoutReference<TEnableByCenter extends boolean = false>(
+    model: ComponentModel,
+    api: ExtensionAPI,
+    opt?: CreateBoxLayoutReferenceOpt<TEnableByCenter>
+): BoxLayoutReferenceResult<TEnableByCenter> {
+
+    let refContainer: RectLike | NullUndefined;
+    let refPoint: number[] | NullUndefined;
+    let layoutRefType: BoxLayoutReferenceType | NullUndefined;
+
+    const boxCoordSys = model.boxCoordinateSystem;
+    let boxCoordFrom: BoxCoordinateSystemCoordFrom | NullUndefined;
+    if (boxCoordSys) {
+        const {coord, from} = getCoordForBoxCoordSys(model);
+        // Do not use `clamp` in `dataToLayout` and `dataToPoint`, because:
+        //  1. Should support overflow (such as, by dataZoom), where NaN should be in the result.
+        //  2. Be consistent with the way used in `series.data`
+        if (boxCoordSys.dataToLayout) {
+            layoutRefType = BoxLayoutReferenceType.rect;
+            boxCoordFrom = from;
+            const result = boxCoordSys.dataToLayout(coord);
+            refContainer = result.contentRect || result.rect;
+        }
+        else if (opt && opt.enableLayoutOnlyByCenter && boxCoordSys.dataToPoint) {
+            layoutRefType = BoxLayoutReferenceType.point;
+            boxCoordFrom = from;
+            refPoint = boxCoordSys.dataToPoint(coord);
+        }
+        else {
+            if (__DEV__) {
+                error(`${model.type}[${model.componentIndex}]`
+                    + ` layout based on ${boxCoordSys.type} is not supported.`
+                );
+            }
+        }
+    }
+
+    if (layoutRefType == null) {
+        layoutRefType = BoxLayoutReferenceType.rect;
+    }
+
+    if (layoutRefType === BoxLayoutReferenceType.rect) {
+        if (!refContainer) {
+            refContainer = {x: 0, y: 0, width: api.getWidth(), height: api.getHeight()};
+        }
+        refPoint = [refContainer.x + refContainer.width / 2, refContainer.y + refContainer.height / 2];
+    }
+
+    return {type: layoutRefType, refContainer, refPoint, boxCoordFrom} as BoxLayoutReferenceResult<TEnableByCenter>;
 }
 
 
@@ -336,7 +441,7 @@ export function getLayoutRect(
 export function positionElement(
     el: Element,
     positionInfo: BoxLayoutOptionMixin,
-    containerRect: {width: number, height: number},
+    containerRect: GetLayoutRectInputContainerRect,
     margin?: number[] | number,
     opt?: {
         hv: [1 | 0 | boolean, 1 | 0 | boolean],

@@ -158,8 +158,8 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
         return out;
     }
 
-    pointToData(point: number[], clamp?: boolean): number[] {
-        const out: number[] = [];
+    pointToData(point: number[], clamp?: boolean, out?: number[]): number[] {
+        out = out || [];
         if (this._invTransform) {
             return applyTransform(out, point, this._invTransform);
         }

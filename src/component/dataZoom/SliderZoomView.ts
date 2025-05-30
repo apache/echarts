@@ -224,17 +224,18 @@ class SliderZoomView extends DataZoomView {
         const showMoveHandle = dataZoomModel.get('brushSelect');
         const moveHandleSize = showMoveHandle ? DEFAULT_MOVE_HANDLE_SIZE : 0;
 
+        const refContainer = layout.createBoxLayoutReference(dataZoomModel, api).refContainer;
+
         // If some of x/y/width/height are not specified,
         // auto-adapt according to target grid.
         const coordRect = this._findCoordRect();
-        const ecSize = {width: api.getWidth(), height: api.getHeight()};
         // Default align by coordinate system rect.
         const positionInfo = this._orient === HORIZONTAL
             ? {
                 // Why using 'right', because right should be used in vertical,
                 // and it is better to be consistent for dealing with position param merge.
-                right: ecSize.width - coordRect.x - coordRect.width,
-                top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP - moveHandleSize),
+                right: refContainer.width - coordRect.x - coordRect.width,
+                top: (refContainer.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP - moveHandleSize),
                 width: coordRect.width,
                 height: DEFAULT_FILLER_SIZE
             }
@@ -258,7 +259,7 @@ class SliderZoomView extends DataZoomView {
 
         const layoutRect = layout.getLayoutRect(
             layoutParams,
-            ecSize
+            refContainer
         );
 
         this._location = {x: layoutRect.x, y: layoutRect.y};

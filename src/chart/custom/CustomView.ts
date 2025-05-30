@@ -152,6 +152,8 @@ const attachedTxInfoTmp = {
 
 
 /**
+ * FIXME: register rather than import directly, for size.
+ *
  * To reduce total package size of each coordinate systems, the modules `prepareCustom`
  * of each coordinate systems are not required by each coordinate systems directly, but
  * required by the module `custom`.

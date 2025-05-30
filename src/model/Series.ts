@@ -146,7 +146,8 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // @readonly
     seriesIndex: number;
 
-    // coordinateSystem will be injected in the echarts/CoordinateSystem
+    // Will be injected.
+    // @see `injectCoordinateSystem`
     coordinateSystem: CoordinateSystem;
 
     // Injected outside

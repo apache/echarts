@@ -45,6 +45,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
+import { CoordinateSystemUsageKind, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
 
 export interface MapStateOption<TCbParams = never> {
     itemStyle?: GeoItemStyleOption<TCbParams>
@@ -146,10 +147,15 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
      * inner exclusive geo model.
      */
     getHostGeoModel(): GeoModel {
-        const geoIndex = this.option.geoIndex;
-        return geoIndex != null
-            ? this.ecModel.getComponent('geo', geoIndex) as GeoModel
-            : null;
+        if (decideCoordSysUsageKind(this).kind === CoordinateSystemUsageKind.boxCoordSys) {
+            // Always use an internal geo if specify a boxCoordSys.
+            // Notice that currently we do not support laying out a geo based on
+            // another geo, but preserve the possibility.
+            return;
+        }
+        return this.getReferringComponents(
+            'geo', {useDefault: false, enableAll: false, enableNone: false}
+        ).models[0] as GeoModel;
     }
 
     getMapType(): string {

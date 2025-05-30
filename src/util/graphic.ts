@@ -38,7 +38,7 @@ import Arc from 'zrender/src/graphic/shape/Arc';
 import CompoundPath from 'zrender/src/graphic/CompoundPath';
 import LinearGradient from 'zrender/src/graphic/LinearGradient';
 import RadialGradient from 'zrender/src/graphic/RadialGradient';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import OrientedBoundingRect from 'zrender/src/core/OrientedBoundingRect';
 import Point from 'zrender/src/core/Point';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -52,7 +52,8 @@ import {
     ZRRectLike,
     ZRStyleProps,
     CommonTooltipOption,
-    ComponentItemTooltipLabelFormatterParams
+    ComponentItemTooltipLabelFormatterParams,
+    NullUndefined
 } from './types';
 import {
     extend,
@@ -63,7 +64,8 @@ import {
     keys,
     each,
     hasOwn,
-    isArray
+    isArray,
+    isNumber
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import ComponentModel from '../model/Component';
@@ -90,6 +92,9 @@ const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
+
+export const XY = ['x', 'y'] as const;
+export const WH = ['width', 'height'] as const;
 
 /**
  * Extend shape with parameters
@@ -281,16 +286,16 @@ export function subPixelOptimizeLine(
 /**
  * Sub pixel optimize rect for canvas
  */
-export function subPixelOptimizeRect(param: {
+export function subPixelOptimizeRect(
     shape: {
         x: number, y: number, width: number, height: number
     },
     style: {
-        lineWidth: number
+        lineWidth?: number
     }
-}) {
-    subPixelOptimizeUtil.subPixelOptimizeRect(param.shape, param.shape, param.style);
-    return param;
+) {
+    subPixelOptimizeUtil.subPixelOptimizeRect(shape, shape, style);
+    return shape;
 }
 
 /**
@@ -562,6 +567,87 @@ function nearZero(val: number) {
     return val <= (1e-6) && val >= -(1e-6);
 }
 
+/**
+ * FIXME: merge this method with `applyMarginToRect` in other git branch.
+ *
+ * NOTE:
+ *  A negative-width/height rect (due to negative margins) is not supported;
+ *  it will be clampped to zero width/height.
+ *  Although negative-width/height rects can be defined reasonably following the
+ *  similar sense in CSS, but they are rarely used, hard to understand and complicated.
+ *
+ * @param rect Assume its width/height >= 0 if existing.
+ *  x/y/width/height is allowed to be NaN,
+ *  for the case that only x/width or y/height is intended to be computed.
+ * @param delta
+ *  If be `number[]`, should be `[top, right, bottom, left]`,
+ *      which can be used in padding or margin case.
+ *      @see `normalizeCssArray` in `util/format.ts`
+ *  If be `number`, it means [delta, delta, delta, delta],
+ *      which can be used in lineWidth (borderWith) case,
+ *      [NOTICE]: commonly pass lineWidth / 2, following the convention that border is
+ *      half inside half outside of the rect.
+ * @param shrinkOrExpand
+ *  `true` - shrink if `delta[i]` is positive, commmonly used in `padding` case.
+ *  `false` - expand if `delta[i]` is positive, commmonly used in `margin` case. (default)
+ * @param noNegative
+ *  `true` - negative `delta[i]` will be clampped to 0.
+ *  `false` - No clamp to `delta`. (defualt).
+ */
+export function expandOrShrinkRect(
+    rect: RectLike,
+    delta: number[] | number | NullUndefined,
+    shrinkOrExpand: boolean,
+    noNegative: boolean
+): void {
+    if (delta == null) {
+        return;
+    }
+    else if (isNumber(delta)) {
+        _tmpExpandRectDelta[0] = _tmpExpandRectDelta[1] = _tmpExpandRectDelta[2] = _tmpExpandRectDelta[3] = delta;
+    }
+    else {
+        _tmpExpandRectDelta[0] = delta[0];
+        _tmpExpandRectDelta[1] = delta[1];
+        _tmpExpandRectDelta[2] = delta[2];
+        _tmpExpandRectDelta[3] = delta[3];
+    }
+    if (noNegative) {
+        _tmpExpandRectDelta[0] = Math.max(0, _tmpExpandRectDelta[0]);
+        _tmpExpandRectDelta[1] = Math.max(0, _tmpExpandRectDelta[1]);
+        _tmpExpandRectDelta[2] = Math.max(0, _tmpExpandRectDelta[2]);
+        _tmpExpandRectDelta[3] = Math.max(0, _tmpExpandRectDelta[3]);
+    }
+    if (shrinkOrExpand) {
+        _tmpExpandRectDelta[0] = -_tmpExpandRectDelta[0];
+        _tmpExpandRectDelta[1] = -_tmpExpandRectDelta[1];
+        _tmpExpandRectDelta[2] = -_tmpExpandRectDelta[2];
+        _tmpExpandRectDelta[3] = -_tmpExpandRectDelta[3];
+    }
+    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'x', 'width', 3, 1);
+    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'y', 'height', 0, 2);
+}
+const _tmpExpandRectDelta = [0, 0, 0, 0];
+function expandRectOnOneDimension(
+    rect: RectLike, delta: number[], xy: 'x' | 'y', wh: 'width' | 'height', ltIdx: 3 | 0, rbIdx: 1 | 2
+): void {
+    const deltaSum = delta[rbIdx] + delta[ltIdx];
+    const oldSize = rect[wh];
+    rect[wh] += deltaSum;
+    if (rect[wh] < 0) {
+        rect[wh] = 0;
+        // Try to make the position of the zero rect reasonable in most visual cases.
+        rect[xy] += (
+            delta[ltIdx] >= 0 ? -delta[ltIdx]
+            : delta[rbIdx] >= 0 ? oldSize + delta[rbIdx]
+            : Math.abs(deltaSum) > 1e-8 ? oldSize * delta[ltIdx] / deltaSum
+            : 0
+        );
+    }
+    else {
+        rect[xy] -= delta[ltIdx];
+    }
+}
 
 export function setTooltipConfig(opt: {
     el: Element,

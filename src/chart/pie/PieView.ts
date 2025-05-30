@@ -19,7 +19,7 @@
 */
 
 
-import { extend, retrieve3 } from 'zrender/src/core/util';
+import { clone, extend, retrieve3 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
@@ -33,7 +33,7 @@ import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGu
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 import { saveOldStyle } from '../../animation/basicTransition';
-import { getBasicPieLayout, getSeriesLayoutData } from './pieLayout';
+import { getSeriesLayoutData } from './pieLayout';
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -262,7 +262,7 @@ class PieView extends ChartView {
         if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
             const layoutData = getSeriesLayoutData(seriesModel);
             const sector = new graphic.Sector({
-                shape: extend(getBasicPieLayout(seriesModel, api), layoutData)
+                shape: clone(layoutData)
             });
             sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
             this._emptyCircleSector = sector;

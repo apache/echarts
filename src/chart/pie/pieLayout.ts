@@ -26,25 +26,51 @@ import PieSeriesModel from './PieSeries';
 import { SectorShape } from 'zrender/src/graphic/shape/Sector';
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 import { makeInner } from '../../util/model';
+import { BoxCoordinateSystemCoordFrom } from '../../core/CoordinateSystem';
 
 const PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
 
-function getViewRect(seriesModel: PieSeriesModel, api: ExtensionAPI) {
-    return layout.getLayoutRect(
-        seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
-    );
+function getViewRectAndCenter(seriesModel: PieSeriesModel, api: ExtensionAPI) {
+
+    const layoutRef = layout.createBoxLayoutReference(seriesModel, api, {
+        enableLayoutOnlyByCenter: true,
+    });
+    const boxLayoutParams = seriesModel.getBoxLayoutParams();
+
+    let viewRect: layout.LayoutRect;
+    let center: number[];
+    if (layoutRef.type === layout.BoxLayoutReferenceType.point) {
+        center = layoutRef.refPoint;
+        // `viewRect` is required in `pie/labelLayout.ts`.
+        viewRect = layout.getLayoutRect(
+            boxLayoutParams, {width: api.getWidth(), height: api.getHeight()}
+        );
+    }
+    else { // layoutRef.type === layout.BoxLayoutReferenceType.rect
+        const centerOption = seriesModel.get('center');
+        const centerOptionArr = zrUtil.isArray(centerOption)
+            ? centerOption : [centerOption, centerOption];
+        viewRect = layout.getLayoutRect(
+            boxLayoutParams, layoutRef.refContainer
+        );
+        center = layoutRef.boxCoordFrom === BoxCoordinateSystemCoordFrom.coord2
+            ? layoutRef.refPoint // option `series.center` has been used as coord.
+            : [
+                parsePercent(centerOptionArr[0], viewRect.width) + viewRect.x,
+                parsePercent(centerOptionArr[1], viewRect.height) + viewRect.y,
+            ];
+    }
+
+    return {viewRect, center};
 }
 
-export function getBasicPieLayout(seriesModel: PieSeriesModel, api: ExtensionAPI):
-    Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> {
-    const viewRect = getViewRect(seriesModel, api);
+function getBasicPieLayout(seriesModel: PieSeriesModel, api: ExtensionAPI):
+    Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> & {viewRect: layout.LayoutRect} {
 
     // center can be string or number when coordinateSystem is specified
-    let center = seriesModel.get('center');
+    const {viewRect, center} = getViewRectAndCenter(seriesModel, api);
+
     let radius = seriesModel.get('radius');
 
     if (!zrUtil.isArray(radius)) {
@@ -56,28 +82,12 @@ export function getBasicPieLayout(seriesModel: PieSeriesModel, api: ExtensionAPI
     const r0 = parsePercent(radius[0], size / 2);
     const r = parsePercent(radius[1], size / 2);
 
-    let cx: number;
-    let cy: number;
-    const coordSys = seriesModel.coordinateSystem;
-    if (coordSys) {
-        // percentage is not allowed when coordinate system is specified
-        const point = coordSys.dataToPoint(center);
-        cx = point[0] || 0;
-        cy = point[1] || 0;
-    }
-    else {
-        if (!zrUtil.isArray(center)) {
-            center = [center, center];
-        }
-        cx = parsePercent(center[0], width) + viewRect.x;
-        cy = parsePercent(center[1], height) + viewRect.y;
-    }
-
     return {
-        cx,
-        cy,
+        cx: center[0],
+        cy: center[1],
         r0,
-        r
+        r,
+        viewRect,
     };
 }
 
@@ -89,9 +99,8 @@ export default function pieLayout(
     ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeriesModel) {
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
-        const viewRect = getViewRect(seriesModel, api);
 
-        const { cx, cy, r, r0 } = getBasicPieLayout(seriesModel, api);
+        const { cx, cy, r, r0, viewRect } = getBasicPieLayout(seriesModel, api);
 
         let startAngle = -seriesModel.get('startAngle') * RADIAN;
         let endAngle = seriesModel.get('endAngle');
@@ -132,6 +141,10 @@ export default function pieLayout(
         layoutData.startAngle = startAngle;
         layoutData.endAngle = endAngle;
         layoutData.clockwise = clockwise;
+        layoutData.cx = cx;
+        layoutData.cy = cy;
+        layoutData.r = r;
+        layoutData.r0 = r0;
 
         const angleRange = Math.abs(endAngle - startAngle);
 
@@ -141,6 +154,7 @@ export default function pieLayout(
 
         let currentAngle = startAngle;
 
+        // Requird by `pieLabelLayout`.
         data.setLayout({ viewRect, r });
 
         data.each(valueDim, function (value: number, idx: number) {
@@ -274,4 +288,8 @@ export const getSeriesLayoutData = makeInner<{
     startAngle: number
     endAngle: number
     clockwise: boolean
+    cx: number
+    cy: number
+    r: number
+    r0: number
 }, PieSeriesModel>();

@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
-import {getLayoutRect} from '../../util/layout';
+import {createBoxLayoutReference, getLayoutRect} from '../../util/layout';
 import ComponentModel from '../../model/Component';
 import {
     ComponentOption,
@@ -130,7 +130,6 @@ class TitleModel extends ComponentModel<TitleOption> {
     };
 }
 
-
 // View
 class TitleView extends ComponentView {
 
@@ -209,11 +208,10 @@ class TitleView extends ComponentView {
         const layoutOption = titleModel.getBoxLayoutParams();
         layoutOption.width = groupRect.width;
         layoutOption.height = groupRect.height;
+
+        const layoutRef = createBoxLayoutReference(titleModel, api);
         const layoutRect = getLayoutRect(
-            layoutOption, {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }, titleModel.get('padding')
+            layoutOption, layoutRef.refContainer, titleModel.get('padding')
         );
         // Adjust text align based on position
         if (!textAlign) {

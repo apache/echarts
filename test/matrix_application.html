@@ -37,9 +37,11 @@ under the License.
 
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main1_b"></div>
         <div id="main2"></div>
         <div id="main3"></div>
         <div id="main4"></div>
+        <div id="main5"></div>
 
         <script>
             require([
@@ -104,16 +106,10 @@ under the License.
                         renderItem: function (params, api) {
                             const x = api.value(0);
                             const y = api.value(1);
-                            const center = api.coord([x, y]);
-                            const size = api.size([x, y]);
+                            const rect = api.layout([x, y]).rect;
                             return {
                                 type: 'rect',
-                                shape: {
-                                    x: center[0] - size[0] / 2,
-                                    y: center[1] - size[1] / 2,
-                                    width: size[0],
-                                    height: size[1]
-                                },
+                                shape: rect,
                                 style: api.style({
                                     fill: x === y ? '#8f8' : '#f88',
                                 }),
@@ -247,6 +243,124 @@ under the License.
             });
         </script>
 
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                const makeRenderItem = (xDim, yDim, valDim, dataExtent) => (params, api) => {
+                    const xval = api.value(xDim);
+                    const yval = api.value(yDim);
+                    const labelVal = api.value(valDim);
+                    const rect = api.layout([xval, yval]).rect;
+                    const height = rect.height * 0.3;
+                    const y = rect.y + (rect.height - height) / 2;
+                    const x = rect.x + rect.width * 0.3;
+                    const widthMax = rect.width * 0.5;
+                    const width = linearMap(labelVal, dataExtent, [0, widthMax])
+                    return {
+                        type: 'group',
+                        children: [{
+                            type: 'rect',
+                            shape: {x, y, width, height},
+                            style: api.style({
+                                fill: '#47f',
+                            }),
+                        }, {
+                            type: 'text',
+                            x: rect.x + 15,
+                            y: rect.y + rect.height / 2,
+                            style: {
+                                text: labelVal + '',
+                                fill: '#333',
+                                textVerticalAlign: 'middle',
+                            },
+                        }]
+                    };
+                };
+
+                function linearMap(val, domain, range) {
+                    const d0 = domain[0];
+                    const d1 = domain[1];
+                    const r0 = range[0];
+                    const r1 = range[1];
+                    const subDomain = d1 - d0;
+                    const subRange = r1 - r0;
+
+                    return subDomain === 0 ? subRange === 0 ? r0 : (r0 + r1) / 2
+                        : val === d0 ? r0
+                        : val === d1 ? r1
+                        : (val - d0) / subDomain * subRange + r0;
+                }
+
+                const _dataExtent = [0, 10000];
+
+                var option = {
+                    dataset: {
+                        source: [
+                            ['2021-02-01', 0, 1212, 1, 2321, 2, 1412],
+                            ['2021-02-02', 0, 7181, 1, 2114, 2, 1402],
+                            ['2021-02-03', 0, 2763, 1, 4212, 2, 8172],
+                            ['2021-02-04', 0, 6122, 1, 2942, 2, 6121],
+                            ['2021-02-05', 0, 4221, 1, 3411, 2, 1987],
+                            ['2021-02-06', 0, 7221, 1, 5121, 2, 1303],
+                        ]
+                    },
+                    matrix: {
+                        x: {
+                            data: ['Operation Count', 'File Count', 'Total Size'],
+                            itemStyle: {
+                                color: '#333',
+                            },
+                            label: {
+                                color: '#eee',
+                            }
+                        },
+                        y: {
+                            levelSize: 100,
+                        },
+                        corner: {
+                            itemStyle: {
+                                color: '#333',
+                            },
+                            label: {
+                                color: '#eee',
+                            },
+                            data: [{coord: [-1, -1], value: 'Date'}]
+                        }
+                    },
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        encode: {x: 1, y: 0},
+                        renderItem: makeRenderItem(1, 0, 2, _dataExtent),
+                    }, {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        symbol: 'rect',
+                        encode: {x: 3, y: 0},
+                        renderItem: makeRenderItem(3, 0, 4, _dataExtent),
+                    }, {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        encode: {x: 5, y: 0},
+                        renderItem: makeRenderItem(5, 0, 6, _dataExtent),
+                    }],
+                };
+
+                var chart = testHelper.create(echarts, 'main1_b', {
+                    title: [
+                        'custom series, tiny bar.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
         <script>
             require([
                 'echarts',
@@ -340,8 +454,6 @@ under the License.
         <script>
             require([
                 'echarts',
-                // 'map/js/china',
-                // './data/nutrients.json'
             ], function (echarts) {
                 const xData = [];
                 const yData = [];
@@ -401,11 +513,11 @@ under the License.
                     matrix: {
                         x: {
                             data: xData,
-                            show: false
+                            // show: false
                         },
                         y: {
                             data: yData,
-                            show: false
+                            // show: false
                         },
                         width: 500,
                         height: 500,
@@ -460,8 +572,6 @@ under the License.
         <script>
             require([
                 'echarts',
-                // 'map/js/china',
-                // './data/nutrients.json'
             ], function (echarts) {
                 const colors = {
                     red: '#f88',
@@ -494,8 +604,10 @@ under the License.
                         backgroundStyle: {
                             borderWidth: 0
                         },
-                        innerBackgroundStyle: {
-                            borderWidth: 0
+                        body: {
+                            itemStyle: {
+                                borderWidth: 0
+                            }
                         }
                     },
                     series: {
@@ -647,17 +759,16 @@ under the License.
                         renderItem: function (params, api) {
                             const x = api.value(0);
                             const y = api.value(1);
-                            const center = api.coord([x, y]);
-                            const size = api.size([x, y]);
+                            const rect = api.layout([x, y]).rect;
                             const isElement = !isNaN(api.value(2));
                             const margin = 2;
                             return {
                                 type: 'rect',
                                 shape: {
-                                    x: center[0] - size[0] / 2 + margin,
-                                    y: center[1] - size[1] / 2 + margin,
-                                    width: size[0] - margin * 2,
-                                    height: size[1] - margin * 2
+                                    x: rect.x + margin,
+                                    y: rect.y + margin,
+                                    width: rect.width - margin * 2,
+                                    height: rect.height - margin * 2
                                 },
                                 style: api.style({
                                     fill: api.value(4),
@@ -715,6 +826,235 @@ under the License.
                 });
             });
         </script>
+
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+
+                const _matrixDimensionData = {
+                    x: [
+                        'Mon', 'Tue', 'Wed', 'Thu', 'Fri'
+                    ],
+                    y: [
+                        '8:00 - 10:00',
+                        '10:00 - 12:00',
+                        '12:00 - 14:00',
+                        '14:00 - 16:00',
+                        '16:00 - 18:00',
+                        '18:00 - 20:00',
+                    ]
+                };
+                const _yBreakTimeIndex = 2; // '12:00 - 14:00',
+
+                function eachMatrixCell(cb) {
+                    _matrixDimensionData.y.forEach((yval, yidx) => {
+                        if (yidx === _yBreakTimeIndex) {
+                            return;
+                        }
+                        _matrixDimensionData.x.forEach((xval, xidx) => {
+                            cb(xval, yval, xidx, yidx);
+                        });
+                    });
+                }
+
+                function generateSeriesData(dayCount) {
+                    const dataSource = {};
+                    let allDataMax = 0;
+                    let allDataMin = 0;
+
+                    eachMatrixCell((xval, yval, xidx, yidx) => {
+                        const dayStart = new Date('2025-05-05T00:00:00.000Z'); // Monday
+                        dayStart.setDate(xidx + 5);
+                        const timeStart = dayStart.getTime();
+                        const sevenDay = 7 * 1000 * 3600 * 24;
+                        const cellData = dataSource[makeId(xidx, yidx)] = [];
+                        let lastVal = +(Math.random() * 300).toFixed(0);
+
+                        let turnCount = null;
+                        let sign = -1;
+                        for (let idx = 0; idx < dayCount; idx++) {
+
+                            if (turnCount == null || idx >= turnCount) {
+                                turnCount = idx + Math.round(dayCount / 4 * ((Math.random() - 0.5) * 0.1));
+                                sign = -sign;
+                            }
+                            const deltaMag = 50;
+                            const delta = +(Math.random() * deltaMag - deltaMag / 2 + sign * deltaMag / 3).toFixed(0);
+                            const val = Math.max(0, lastVal += delta);
+                            const xTime = timeStart + idx * sevenDay;
+                            const dataXVal = echarts.time.format(xTime, '{yyyy}-{MM}-{dd}');
+                            cellData.push([dataXVal, val]);
+                            allDataMax = Math.max(val, allDataMax);
+                        }
+                    });
+
+                    const {axisMin, axisMax} = uniformAxisMinMax([allDataMin, allDataMax]);
+                    return {dataSource, axisMax, axisMin};
+                }
+
+                function uniformAxisMinMax(dataExtent) {
+                    if (dataExtent[0] > dataExtent[1]) {
+                        dataExtent = dataExtent.slice();
+                        dataExtent.reverse();
+                    }
+                    function getMinMax(idx) {
+                        const methods = ['floor', 'ceil'];
+                        const exponent = echarts.number.quantityExponent(dataExtent[idx]);
+                        const multiplier = Math.pow(10, exponent);
+                        return Math[methods[idx]](dataExtent[idx] / multiplier) * multiplier;
+                    }
+                    return {
+                        axisMin: getMinMax(0),
+                        axisMax: getMinMax(1),
+                    };
+                }
+
+                const _data = generateSeriesData(365);
+
+                function makeId(xidx, yidx) {
+                    return `${xidx}|${yidx}`;
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: _matrixDimensionData.x,
+                            label: {
+                                fontSize: 18,
+                                color: '#555'
+                            },
+                        },
+                        y: {
+                            data: _matrixDimensionData.y,
+                            label: {
+                                fontSize: 16,
+                                color: '#777'
+                            },
+                        },
+                        corner: {
+                            data: [{
+                                coord: [-1, -1],
+                                value: 'Time',
+                            }],
+                            label: {
+                                fontSize: 16,
+                                color: '#777'
+                            },
+                        },
+                        body: {
+                            data: [{
+                                coord: [null, _yBreakTimeIndex],
+                                mergeCells: true,
+                                value: 'Break',
+                                label: {
+                                    color: '#999',
+                                    fontSize: 16,
+                                }
+                            }],
+                        },
+                        top: 30,
+                        bottom: 80,
+                        width: '80%',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+                    grid: (function () {
+                        const optionList = [];
+                        eachMatrixCell((xval, yval, xidx, yidx) => {
+                            optionList.push({
+                                id: makeId(xidx, yidx),
+                                coordinateSystem: 'matrix',
+                                coord: [xval, yval],
+                                top: 10,
+                                bottom: 10,
+                                left: 'center',
+                                width: '90%',
+                                containLabel: true,
+                            });
+                        });
+                        return optionList;
+                    })(),
+                    xAxis: (function () {
+                        const optionList = [];
+                        eachMatrixCell((xval, yval, xidx, yidx) => {
+                            optionList.push({
+                                type: 'category',
+                                id: makeId(xidx, yidx),
+                                gridId: makeId(xidx, yidx),
+                                scale: true,
+                                axisTick: {show: false},
+                                axisLabel: {show: false},
+                                axisLine: {show: false},
+                                splitLine: {show: false},
+                            });
+                        });
+                        return optionList;
+                    })(),
+                    yAxis: (function () {
+                        const optionList = [];
+                        eachMatrixCell((xval, yval, xidx, yidx) => {
+                            optionList.push({
+                                id: makeId(xidx, yidx),
+                                gridId: makeId(xidx, yidx),
+                                // interval: _data.axisMax - _data.axisMin,
+                                interval: Number.MAX_SAFE_INTEGER,
+                                // min: _data.axisMin,
+                                // max: _data.axisMax,
+                                scale: true,
+                                axisLabel: {
+                                    showMaxLabel: true,
+                                    fontSize: 9,
+                                },
+                                axisLine: {show: false},
+                                axisTick: {show: false},
+                            });
+                        });
+                        return optionList;
+                    })(),
+                    dataZoom: {
+                        type: 'slider',
+                        xAxisIndex: 'all',
+                        left: '10%',
+                        right: '10%',
+                        bottom: 30,
+                        height: 30,
+                        throttle: 120,
+                    },
+                    series: (function () {
+                        const optionList = [];
+                        eachMatrixCell((xval, yval, xidx, yidx) => {
+                            optionList.push({
+                                xAxisId: makeId(xidx, yidx),
+                                yAxisId: makeId(xidx, yidx),
+                                type: 'line',
+                                symbol: 'none',
+                                lineStyle: {
+                                    lineWidth: 1,
+                                },
+                                data: _data.dataSource[makeId(xidx, yidx)],
+                            });
+                        });
+                        return optionList;
+                    })(),
+                };
+
+                var chart = testHelper.create(echarts, 'main5', {
+                    title: [
+                        'Cartesians in matrix'
+                    ],
+                    option: option,
+                    height: 500,
+                });
+            });
+
+        </script>
+
     </body>
 </html>
 

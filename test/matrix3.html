@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main_layout_components_series"></div>
+
+        <div id="main_layout_timeline"></div>
+
+
+
+        <script>
+            require([
+                'echarts',
+                './data/czech_geo.json',
+                'data/svg/Beef_cuts_France.svg',
+            ], function (echarts, czech_geo, Beef_cuts_France) {
+
+                echarts.registerMap('czech_geo', czech_geo);
+                echarts.registerMap('Beef_cuts_France', {
+                    svg: Beef_cuts_France
+                });
+
+                // --- state ------
+                let _xShowing = true;
+                let _yShowing = true;
+                let _testCase = null;
+                // ----------------
+
+                var option;
+                option = {
+                    backgroundColor: '#eee',
+                    tooltip: {},
+                    title: {
+                        text: '',
+                        right: 'center',
+                    },
+                    matrix: [{
+                        // matrix 0
+                        id: 'matrix0',
+                        left: 10,
+                        bottom: 10,
+                        width: '30%',
+                        top: 40,
+                        x: {
+                            levelSize: 20,
+                            data: ['X1', 'X2', 'X3'],
+                        },
+                        y: {
+                            levelSize: 30,
+                            data: ['Y1', 'Y2', 'Y3', 'Y4'],
+                        },
+                        body: {
+                            data: [{
+                                coord: [[0, 2], 1],
+                                mergeCells: true,
+                            }, {
+                                coord: [['X1', 'X2'], 'Y1'],
+                                mergeCells: true,
+                            }, {
+                                coord: [['X1', 'X2'], 'Y3'],
+                                mergeCells: true,
+                            }, {
+                                coord: [['X1', 'X2'], 'Y4'],
+                                mergeCells: true,
+                            }]
+                        },
+                    }, {
+                        // matrix 1
+                        id: 'matrix1',
+                        right: 10,
+                        left: '35%',
+                        top: 20,
+                        bottom: 30,
+                        tooltip: {
+                            show: true,
+                            formatter(params) {
+                                return params.name;
+                            }
+                        },
+                        x: {
+                            label: {
+                                color: '#eee'
+                            },
+                            itemStyle: {
+                                color: 'rgba(10,10,0,0.9)'
+                            },
+                            levels: [null, {levelSize: 30}],
+                            data: [{
+                                value: 'R',
+                                children: ['R1', {value: 'R2'}]
+                            }, {
+                                value: 'S'
+                            }, {
+                                value: 'T',
+                                children: [
+                                    {
+                                        value: 'T1',
+                                        children: ['T11'],
+                                    }
+                                ]
+                            },
+                            'O',
+                            'P',
+                            'Q',
+                            ]
+                        },
+                        y: {
+                            levelSize: 30,
+                            label: {
+                                color: '#eee'
+                            },
+                            itemStyle: {
+                                color: 'rgba(10,10,0,0.9)'
+                            },
+                            data: [{
+                                value: 'A',
+                                children: ['A1', 'A2', {
+                                    value: 'A3',
+                                    children: ['A31', 'A32']
+                                }]
+                            }, {
+                                value: 'B',
+                                children: ['B1', 'B2', 'B3', 'B4']
+                            }, {
+                                value: 'C',
+                            }, {
+                                value: 'D',
+                            }],
+                        },
+                        body: {
+                            label: {
+                            },
+                            itemStyle: {
+                                // color: 'rgba(240,240,140,0.5)'
+                            },
+                            data: [{
+                                coord: ['R2', 'A3'],
+                                mergeCells: true,
+                            }, {
+                                coord: ['R1', ['B4', 'C']],
+                                mergeCells: true,
+                            }, {
+                                coord: [['R1', 'R2'], ['B2', 'B3']],
+                                mergeCells: true,
+                            }, {
+                                coord: [['O', 'P'], ['B3', 'C']],
+                                mergeCells: true,
+                            }, {
+                                coord: ['T', ['A1', 'A31']],
+                                mergeCells: true,
+                            }, {
+                                coord: [null, 'D'],
+                                mergeCells: true,
+                            }, {
+                                coord: [['P', 'Q'], 'A1'],
+                                mergeCells: true,
+                            }],
+                        },
+                        corner: {
+                            label: {
+                                color: '#eee'
+                            },
+                            itemStyle: {
+                                color: 'rgba(10,10,0,0.9)',
+                                // borderWidth: 1,
+                            },
+                            data: [{
+                                coord: [[-1, -3], -1],
+                                mergeCells: true,
+                                value: 'Y values',
+                            }, {
+                                coord: [[-1, -2], -2],
+                                mergeCells: true,
+                                value: 'X values',
+                                label: {
+                                    position: 'insideRight'
+                                }
+                            }],
+                        }
+                    }],
+                    toolbox: {
+                        show: true,
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            // dataView: { readOnly: false },
+                            restore: {},
+                            saveAsImage: {}
+                        },
+                        top: 'center',
+                        left: 'center',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: [['P', 'Q'], 'A1'],
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisLabel: {fontSize: 9},
+                    },
+                    radiusAxis: {
+                        axisLabel: {fontSize: 9},
+                    },
+                    polar: {
+                        // center: ['40%', '50%'],
+                        radius: '50%',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X3', 'Y3']
+                    },
+                    radar: {
+                        axisName: {
+                            color: '#333',
+                            fontSize: 9,
+                        },
+                        nameGap: 0,
+                        radius: '80%',
+                        indicator : [
+                           {text: 'IE8-', max: 400},
+                           {text: 'IE9+', max: 400},
+                           {text: 'Safari', max: 400},
+                           {text: 'Firefox', max: 400},
+                           {text: 'Chrome', max: 400}
+                        ],
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X3', 'Y4'],
+                    },
+                    singleAxis: {
+                        type: 'value',
+                        // height: height,
+                        splitArea: {
+                            show: true
+                        },
+                        axisTick: {show: false},
+                        axisLabel: {fontSize: 9, margin: 3},
+                        bottom: 12,
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['R1', 'D'],
+                    },
+                    parallelAxis: [
+                        {dim: 0, name: 'f0'},
+                        {dim: 1, name: 'f1'},
+                        {dim: 2, name: 'f2'}
+                    ],
+                    parallel: {
+                        left: 10,
+                        right: 30,
+                        top: 30,
+                        bottom: 10,
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y4'],
+                        parallelAxisDefault: {
+                            nameGap: 5,
+                        }
+                    },
+                    grid: [{
+                        id: 'cartesian_a',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        left: 3,
+                        right: 3,
+                        top: 3,
+                        bottom: 3,
+                        containLabel: true,
+                        coord: ['R2', 'B2'],
+                    }, {
+                        id: 'cartesian_b',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        left: 3,
+                        right: 3,
+                        top: 30,
+                        bottom: 30,
+                        containLabel: true,
+                        coord: ['X1', 'Y3'],
+                    }],
+                    xAxis: [{
+                        id: 'cartesian_a',
+                        gridId: 'cartesian_a',
+                    }, {
+                        id: 'cartesian_b',
+                        gridId: 'cartesian_b',
+                        axisTick: {length: 3},
+                        axisLabel: {fontSize: 9, margin: 5},
+                    }],
+                    yAxis: [{
+                        id: 'cartesian_a',
+                        gridId: 'cartesian_a',
+                    }, {
+                        id: 'cartesian_b',
+                        gridId: 'cartesian_b',
+                        axisTick: {length: 3},
+                        axisLabel: {fontSize: 9, margin: 5},
+                    }],
+                    geo: [{
+                        map: 'czech_geo',
+                        id: 'czech_geo_component',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y2'],
+                        // left: '50%',
+                        // right: 10,
+                        // layoutCenter: [10, 10],
+                        // layoutSize: 100,
+                    }],
+                    visualMap: [{
+                        type: 'continuous',
+                        left: 'center',
+                        bottom: 0,
+                        // width: '50%',
+                        itemHeight: 90,
+                        itemWidth: 10,
+                        min: 5,
+                        max: 100,
+                        // text: ['Price'],
+                        realtime: true,
+                        calculable: true,
+                        orient: 'horizontal',
+                        seriesId: ['Beef_cuts_France', 'czech_geo_series'],
+                        inRange: {
+                            color: ['#dbac00', '#db6e00', '#cf0000']
+                        },
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y1'],
+                    }, {
+                        type: 'piecewise',
+                        right: 0,
+                        bottom: 0,
+                        top: 'center',
+                        // width: '50%',
+                        // itemHeight: 90,
+                        itemWidth: 10,
+                        itemGap: 5,
+                        min: 5,
+                        max: 100,
+                        // text: ['Price'],
+                        realtime: true,
+                        calculable: true,
+                        textStyle: {
+                            fontSize: 9,
+                        },
+                        textGap: 3,
+                        // orient: 'horizontal',
+                        seriesId: ['Beef_cuts_France', 'czech_geo_series'],
+                        inRange: {
+                            color: ['#dbac00', '#db6e00', '#cf0000']
+                        },
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y2'],
+                    }],
+                    dataZoom: [{
+                        type: 'slider',
+                        xAxisId: 'cartesian_b',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y3'],
+                        bottom: 0,
+                        height: 20,
+                        // left: 0,
+                        left: 'center'
+                    }],
+                    legend: {
+                        data: ['line_a', 'line_b'],
+                        coordinateSystem: 'matrix',
+                        coord: ['X1', 'Y3'],
+                        textStyle: {
+                            fontSize: 11,
+                        },
+                        itemHeight: 7,
+                        itemWidth: 15,
+                    },
+                    title: [{
+                        text: 'series-map (svg source)',
+                        coordinateSystem: 'matrix',
+                        coord: ['X1', 'Y1'],
+                        textStyle: {
+                            fontSize: 10
+                        }
+                    }, {
+                        text: 'series-map\n(standalone)',
+                        coordinateSystem: 'matrix',
+                        coord: ['X3', 'Y1'],
+                        textStyle: {
+                            fontSize: 10
+                        }
+                    }, {
+                        text: 'geo component\n(and serves a series.map)',
+                        coordinateSystem: 'matrix',
+                        coord: ['X3', 'Y2'],
+                        textStyle: {
+                            fontSize: 10
+                        }
+                    }],
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        matrixIndex: 1,
+                        symbolSize: 30,
+                        data: [
+                            ['R1', 'A1', 'scatter'], ['R2', 'A1', 20], ['R1', 'A2', 30]
+                        ],
+                        encode: {label: 2},
+                        label: {show: true}
+                    }, {
+                        type: 'scatter',
+                        xAxisId: 'cartesian_a',
+                        yAxisId: 'cartesian_a',
+                        data: [[12,56], [98,76], [37,82]],
+                    }, {
+                        type: 'line',
+                        name: 'line_a',
+                        xAxisId: 'cartesian_b',
+                        yAxisId: 'cartesian_b',
+                        data: [[12,16], [48, 86], [68, 16], [97, 62]],
+                    }, {
+                        type: 'line',
+                        name: 'line_b',
+                        xAxisId: 'cartesian_b',
+                        yAxisId: 'cartesian_b',
+                        data: [[16,26], [28, 46], [58, 96], [87, 52]],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_a',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['O', 'B3'],
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a1', value: 123},
+                            {name: 'no_center', value: 234},
+                            {name: 'c1', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_b',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['P', 'B2'],
+                        center: [15, 15],
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a2', value: 123},
+                            {name: 'center_15', value: 234},
+                            {name: 'c2', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_c',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        center: ['O', 'B2'],
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a', value: 123},
+                            {name: 'b', value: 234},
+                            {name: 'no_coord', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_d',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['Q', 'B2'],
+                        left: '50%',
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a', value: 123},
+                            {name: 'b', value: 234},
+                            {name: 'left:50%', value: 345},
+                        ],
+                    }, {
+                        type: 'funnel',
+                        id: 'funnel_a',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['O', 'A1'],
+                        gap: 3,
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        label: {position: 'inside'},
+                        sort: 'ascending',
+                        data:[
+                            {value:60, name:'a'},
+                            {value:40, name:'b'},
+                            {value:20, name:'c'},
+                            {value:80, name:'d'},
+                        ]
+                    }, {
+                        type: 'graph',
+                        id: 'graph_a',
+                        layout: 'none',
+                        coordinateSystem: 'matrix',
+                        coordinateSystemUsage: 'box',
+                        matrixId: 'matrix1',
+                        coord: ['T', 'A1'],
+                        symbolSize: 15,
+                        roam: true,
+                        label: {show: true, fontSize: 10},
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 7],
+                        lineStyle: {opacity: 0.9, width: 2, curveness: 0},
+                        data: [
+                            {name: 'Node 0', x: 300, y: 300},
+                            {name: 'Node 1', x: 800, y: 300},
+                            {name: 'all in one cell', x: 550, y: 100},
+                            {name: 'Node 3', x: 550, y: 500}
+                        ],
+                        links: [
+                            {source: 0, target: 1},
+                            {source: 1, target: 2},
+                            {source: 0, target: 3}
+                        ],
+                    }, {
+                        type: 'graph',
+                        id: 'graph_b',
+                        layout: 'none',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        // no coord, but use coord sys by data.
+                        symbolSize: 15,
+                        roam: true,
+                        label: {show: true, fontSize: 10},
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 7],
+                        lineStyle: {opacity: 0.9, width: 2, curveness: 0},
+                        data: [
+                            {name: 'Node 0', value: ['T', 'A32']},
+                            {name: 'Node 1', value: ['O', 'A32']},
+                            {name: 'cross cells', value: ['O', 'A31']},
+                        ],
+                        links: [
+                            {source: 0, target: 1},
+                            {source: 1, target: 2},
+                            {source: 0, target: 3}
+                        ],
+                    }, {
+                        name: 'French Beef Cuts',
+                        id: 'Beef_cuts_France',
+                        type: 'map',
+                        map: 'Beef_cuts_France',
+                        coordinateSystem: 'matrix',
+                        coordinateSystemUsage: 'box',
+                        coord: ['X1', 'Y1'],
+                        roam: true,
+                        // top: 0,
+                        bottom: 0,
+                        aspectScale: 1,
+                        zoom: 1,
+                        // layoutSize: '30%',
+                        showLegendSymbol: false,
+                        emphasis: {
+                            label: {
+                                show: false
+                            }
+                        },
+                        data: [
+                            { name: 'Queue', value: 15 },
+                            { name: 'Langue', value: 35 },
+                            { name: 'Plat de joue', value: 15 },
+                            { name: 'Gros bout de poitrine', value: 25 },
+                            { name: 'Jumeau à pot-au-feu', value: 45 },
+                            { name: 'Onglet', value: 85 },
+                            { name: 'Plat de tranche', value: 25 },
+                            { name: 'Araignée', value: 15 },
+                            { name: 'Gîte à la noix', value: 55 },
+                            { name: 'Bavette d\'aloyau', value: 25 },
+                            { name: 'Tende de tranche', value: 65 },
+                            { name: 'Rond de gîte', value: 45 },
+                            { name: 'Bavettede de flanchet', value: 85 },
+                            { name: 'Flanchet', value: 35 },
+                            { name: 'Hampe', value: 75 },
+                            { name: 'Plat de côtes', value: 65 },
+                            { name: 'Tendron Milieu de poitrine', value: 65 },
+                            { name: 'Macreuse à pot-au-feu', value: 85 },
+                            { name: 'Rumsteck', value: 75 },
+                            { name: 'Faux-filet', value: 65 },
+                            { name: 'Côtes Entrecôtes', value: 55 },
+                            { name: 'Basses côtes', value: 45 },
+                            { name: 'Collier', value: 85 },
+                            { name: 'Jumeau à biftek', value: 15 },
+                            { name: 'Paleron', value: 65 },
+                            { name: 'Macreuse à bifteck', value: 45 },
+                            { name: 'Gîte', value: 85 },
+                            { name: 'Aiguillette baronne', value: 65 },
+                            { name: 'Filet', value: 95 },
+                        ]
+                    }, {
+                        type: 'map',
+                        map: 'czech_geo',
+                        coordinateSystem: 'matrix',
+                        coordinateSystemUsage: 'box',
+                        matrixId: 'matrix0',
+                        coord: ['X3', 'Y1'],
+                        // left: '50%',
+                        // right: 10,
+                        // layoutCenter: [10, 10],
+                        // layoutSize: 100,
+                    }, {
+                        type: 'map',
+                        geoId: 'czech_geo_component',
+                        id: 'czech_geo_series',
+                        geoIndex: 0,
+                        data: [
+                            {name: 'Praha', value: 23},
+                            {name: 'Plzeňský kraj', value: 51},
+                            {name: 'Středočeský kraj', value: 91}
+                        ]
+                    }, {
+                        type: 'bar',
+                        data: [1, 2, '-', 3, 0, 5, 7],
+                        coordinateSystem: 'polar',
+                        barMaxWidth: '50%',
+                        barMinHeight: 10
+                    }, {
+                        type: 'parallel',
+                        smooth: 0,
+                        lineStyle: {color: 'red'},
+                        data: (function () {
+                            function generate_data(n, m, lb, ub) {
+                                let s = [];
+                                for (let i = 0; i < n; i++) {
+                                    let vec = [];
+                                    for (let j = 0; j < m; j++) {
+                                        vec.push(lb + (Math.random() * (ub - lb)));
+                                    }
+                                    s.push(vec);
+                                }
+                                return s;
+                            }
+                            data = generate_data(20, 3, 0.0, 1.0);
+                            return data;
+                        })(),
+                    }, {
+                        type: 'radar',
+                        symbol: 'none',
+                        lineStyle: {
+                            color: 'rgba(180,100,120)',
+                            width: 1,
+                        },
+                        emphasis: {
+                            areaStyle: {
+                                color:'rgba(0,250,0,0.3)'
+                            }
+                        },
+                        data: (function () {
+                            const dataList = [];
+                            for (let i = 0; i < 10; i++) {
+                                dataList.push({
+                                    value:[
+                                        (40 - i) * 10,
+                                        (38 - i) * 4 + 60,
+                                        i * 15 + 10,
+                                        i * 30,
+                                        i * 50 / 2
+                                    ],
+                                    name: i + 2000 + ''
+                                });
+                            }
+                            return dataList;
+                        })()
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: function (val) {
+                            return val[1] / 2;
+                        },
+                        data: (function () {
+                            const dataList = [];
+                            for (let i = 0; i < 30; i++) {
+                                dataList.push([Math.random() * 100, Math.random() * 30]);
+                            }
+                            return dataList;
+                        })()
+                    }],
+                };
+
+                var chart = testHelper.create(echarts, 'main_layout_components_series', {
+                    title: [
+                        'Declaratively lay out components(coord sys) and series.',
+                    ],
+                    height: 550,
+                    option: option,
+                    inputsStyle: 'compact',
+                    draggable: true,
+                    // boundingRect: true,
+                    inputs: [
+                        {
+                            text: 'matrix.x show:',
+                            type: 'select',
+                            values: [true, false],
+                            onchange() {
+                                _xShowing = this.value;
+                                chart.setOption({
+                                    matrix: [{
+                                        x: {show: _xShowing},
+                                    }, {
+                                        x: {show: _xShowing},
+                                    }],
+                                });
+                            }
+                        },
+                        {
+                            text: 'matrix.y show:',
+                            type: 'select',
+                            values: [true, false],
+                            onchange() {
+                                _yShowing = this.value;
+                                chart.setOption({
+                                    matrix: [{
+                                        y: {show: _yShowing},
+                                    }, {
+                                        y: {show: _yShowing},
+                                    }],
+                                });
+                            }
+                        },
+                    ]
+                });
+
+
+            });
+
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var dates = ["2010", '2011', '2012', '2013'];
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                grid: {
+                    coordinateSystem: 'matrix',
+                    coord: ['a', 'r'],
+                    containLabel: true,
+                    top: 10,
+                    bottom: 10,
+                },
+                matrix: {
+                    x: {data: ['a', 'b', 'c']},
+                    y: {data: ['r', 's', 't']},
+                    body: {
+                        data: [
+                            {coord: [null, 's'], mergeCells: true}
+                        ]
+                    }
+                },
+                options: [
+                    {
+                        series: [{
+                        data: [130, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                        }],
+                    }, {
+                        series: [{
+                        data: [140, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                        }],
+                    }, {
+                        series: [{
+                        data: [90, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                        }],
+                    }, {
+                        series: [{
+                        data: [50, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                        }],
+                    }
+                ],
+                timeline: {
+                    data: dates,
+                    loop: false,
+                    playInterval: 800,
+                    coordinateSystem: 'matrix',
+                    coord: ['a', 's'],
+                    top: 'center',
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_layout_timeline', {
+                title: [
+                    'timline layout in matrix',
+                ],
+                option: option,
+                height: 300,
+            });
+
+        });
+        </script>
+
+    </body>
+</html>
+

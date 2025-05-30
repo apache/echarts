@@ -24,7 +24,7 @@
  */
 
 import {isObject, each, indexOf, retrieve3, keys} from 'zrender/src/core/util';
-import {getLayoutRect, LayoutRect} from '../../util/layout';
+import {createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
     ifAxisCrossZero,
@@ -46,13 +46,14 @@ import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { ScaleDataValue } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import OrdinalScale from '../../scale/Ordinal';
-import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
+import { findAxisModels, isCartesian2DInjectedAsDataCoordSys } from './cartesianAxisHelper';
 import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { isIntervalOrLogScale } from '../../scale/helper';
 import { alignScaleTicks } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
+import { injectCoordSysByOption } from '../../core/CoordinateSystem';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -169,16 +170,12 @@ class Grid implements CoordinateSystemMaster {
      */
     resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
 
-        const boxLayoutParams = gridModel.getBoxLayoutParams();
         const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
 
-        const gridRect = getLayoutRect(
-            boxLayoutParams, {
-                width: api.getWidth(),
-                height: api.getHeight()
-            });
-
-        this._rect = gridRect;
+        const layoutRef = createBoxLayoutReference(gridModel, api);
+        const gridRect = this._rect = getLayoutRect(gridModel.getBoxLayoutParams(), layoutRef.refContainer);
+        // PENDING: whether to support that if the input `coord` is out of the base coord sys,
+        //  do not render anything. At present, the behavior is undefined.
 
         const axesList = this._axesList;
 
@@ -468,7 +465,10 @@ class Grid implements CoordinateSystemMaster {
         });
 
         ecModel.eachSeries(function (seriesModel) {
-            if (isCartesian2DSeries(seriesModel)) {
+            // If pie (or other similar series) use cartesian2d, the unionExtent logic below is
+            // wrong, therefore skip it temporarily. See also in `defaultAxisExtentFromData.ts`.
+            // TODO: support union extent in this case.
+            if (isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
                 const axesModelMap = findAxisModels(seriesModel);
                 const xAxisModel = axesModelMap.xAxisModel;
                 const yAxisModel = axesModelMap.yAxisModel;
@@ -535,36 +535,40 @@ class Grid implements CoordinateSystemMaster {
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
-            if (!isCartesian2DSeries(seriesModel)) {
-                return;
-            }
+            injectCoordSysByOption({
+                targetModel: seriesModel,
+                coordSysType: 'cartesian2d',
+                coordSysProvider: coordSysProvider
+            });
 
-            const axesModelMap = findAxisModels(seriesModel);
-            const xAxisModel = axesModelMap.xAxisModel;
-            const yAxisModel = axesModelMap.yAxisModel;
+            function coordSysProvider() {
+                const axesModelMap = findAxisModels(seriesModel);
+                const xAxisModel = axesModelMap.xAxisModel;
+                const yAxisModel = axesModelMap.yAxisModel;
 
-            const gridModel = xAxisModel.getCoordSysModel();
+                const gridModel = xAxisModel.getCoordSysModel();
 
-            if (__DEV__) {
-                if (!gridModel) {
-                    throw new Error(
-                        'Grid "' + retrieve3(
-                            xAxisModel.get('gridIndex'),
-                            xAxisModel.get('gridId'),
-                            0
-                        ) + '" not found'
-                    );
+                if (__DEV__) {
+                    if (!gridModel) {
+                        throw new Error(
+                            'Grid "' + retrieve3(
+                                xAxisModel.get('gridIndex'),
+                                xAxisModel.get('gridId'),
+                                0
+                            ) + '" not found'
+                        );
+                    }
+                    if (xAxisModel.getCoordSysModel() !== yAxisModel.getCoordSysModel()) {
+                        throw new Error('xAxis and yAxis must use the same grid');
+                    }
                 }
-                if (xAxisModel.getCoordSysModel() !== yAxisModel.getCoordSysModel()) {
-                    throw new Error('xAxis and yAxis must use the same grid');
-                }
+
+                const grid = gridModel.coordinateSystem as Grid;
+
+                return grid.getCartesian(
+                    xAxisModel.componentIndex, yAxisModel.componentIndex
+                );
             }
-
-            const grid = gridModel.coordinateSystem as Grid;
-
-            seriesModel.coordinateSystem = grid.getCartesian(
-                xAxisModel.componentIndex, yAxisModel.componentIndex
-            );
         });
 
         return grids;
