@@ -134,7 +134,9 @@
             newEC.init = function () {
                 var args = Array.prototype.slice.call(arguments);
                 // Set default renderer in dev mode.
-                if (window.__ECHARTS__DEFAULT__THEME__ != null) {
+                if ((args[1] == null || args[1] === '')
+                    && window.__ECHARTS__DEFAULT__THEME__ != null
+                ) {
                     args[1] = window.__ECHARTS__DEFAULT__THEME__;
                 }
                 return originalInit.apply(this, args);

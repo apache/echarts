@@ -70,8 +70,7 @@ class SliderTimelineModel extends TimelineModel {
         },
         itemStyle: {
             color: tokens.color.accent20,
-            borderWidth: 0,
-            borderColor: tokens.color.accent20
+            borderWidth: 0
         },
 
         checkpointStyle: {

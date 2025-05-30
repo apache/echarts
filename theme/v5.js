@@ -92,7 +92,7 @@
         // Series
 
         bar: {
-            barGap: '20%',
+            defaultBarGap: '20%',
             select: {
                 itemStyle: {
                     borderColor: '#212121',
@@ -133,8 +133,22 @@
                     color: '#63677A'
                 }
             },
+            axisTick: {
+                lineStyle: {
+                    color: '#63677A'
+                }
+            },
             axisLabel: {
-                borderColor: '#5470c6'
+                color: '#464646'
+            },
+            anchor: {
+                itemStyle: {
+                    color: '#fff',
+                    borderColor: '#5470c6'
+                }
+            },
+            title: {
+                color: '#464646',
             },
             detail: {
                 backgroundColor: 'rgba(0,0,0,0)',
@@ -183,6 +197,7 @@
         },
 
         map: {
+            defaultItemStyleColor: '#eee',
             label: {
                 color: '#000'
             },
@@ -297,9 +312,7 @@
                 color: 'rgba(210,219,238,0.3)',
                 borderColor: '#D2DBEE'
             },
-            outOfBrush: {
-                color: '#ddd'
-            }
+            defaultOutOfBrushColor: '#ddd'
         },
 
         calendar: {
@@ -376,6 +389,7 @@
         },
 
         geo: {
+            defaultItemStyleColor: '#eee',
             label: {
                 color: '#000'
             },

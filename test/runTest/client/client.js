@@ -56,11 +56,13 @@ function assembleParams(paramsObj) {
 }
 
 function shouldShowMarkAsExpected(test, expectedSource, expectedVersion) {
-    if (expectedSource !== 'release'
-        || expectedVersion !== test.expectedVersion
+    if (expectedSource === 'release' && (expectedVersion !== test.expectedVersion)
         || !test.markedAsExpected
     ) {
         return false;
+    }
+    if (expectedSource !== 'release' && test.markedAsExpected.length > 0) {
+        return true;
     }
 
     for (let i = 0; i < test.markedAsExpected.length; i++) {
@@ -205,7 +207,12 @@ const app = new Vue({
             theme: 'none'
         }, urlRunConfig),
 
-        userMeta: null
+        userMeta: null,
+
+        // Mark as expected form values
+        linkValue: '',
+        commentValue: '',
+        selectedType: 'New Feature'
     },
 
     async mounted() {
@@ -229,7 +236,6 @@ const app = new Vue({
             forceSet: Object.keys(urlRunConfig).length > 0
         });
         socket.on('syncRunConfig_return', res => {
-            console.log('syncRunConfig_return', res.runConfig.expectedSource, res.runConfig.expectedVersion);
             this.versions = res.versions || [];
             this.nightlyVersions = res.nightlyVersions || [];
             this.prVersions = res.prVersions || [];
@@ -238,13 +244,11 @@ const app = new Vue({
             handlingSourceChange = true;
             this.$nextTick(() => {
                 if (!this.runConfig.expectedVersion) {
-                    console.log('this.runConfig.expectedVersion null');
                     this.runConfig.expectedVersion = getVersionFromSource(
                         this.runConfig.expectedSource,
                         this.versions,
                         this.nightlyVersions
                     );
-                    console.log('this.runConfig.expectedVersion', this.runConfig.expectedVersion);
                 }
 
                 if (!this.runConfig.actualVersion) {
@@ -306,6 +310,12 @@ const app = new Vue({
             let sortFunc = this.runConfig.sortBy === 'name'
                 ? (a, b) => a.name.localeCompare(b.name)
                 : (a, b) => {
+                    if (a.summary === 'markedAsExpected' && b.summary !== 'markedAsExpected') {
+                        return -1;
+                    }
+                    if (a.summary !== 'markedAsExpected' && b.summary === 'markedAsExpected') {
+                        return 1;
+                    }
                     if (a.actualErrors.length === b.actualErrors.length) {
                         if (a.percentage === b.percentage) {
                             return a.name.localeCompare(b.name);
@@ -458,8 +468,8 @@ const app = new Vue({
         validateMarkExpected(lastVersion) {
             if (this.runConfig.expectedSource !== 'release') {
                 return {
-                    valid: false,
-                    reason: 'Only valid when the expected version is release'
+                    valid: true,
+                    reason: 'Valid'
                 }
             }
             if (lastVersion !== this.runConfig.expectedVersion) {
@@ -583,10 +593,6 @@ const app = new Vue({
             });
         },
         showMarkAsExpectedDialog() {
-            // Reset input values each time the dialog is opened
-            let linkValue = '';
-            let commentValue = '';
-            let selectedType = 'New Feature';
             // Only initialize identity fields from user meta
             let markedBy = this.userMeta?.myGitHubId || '';
             let lastVersion = this.userMeta?.lastEChartsVersion || '';
@@ -667,11 +673,11 @@ const app = new Vue({
                                         type: 'radio',
                                         name: 'mark-type',
                                         value: 'New Feature',
-                                        checked: selectedType === 'New Feature'
+                                        checked: this.selectedType === 'New Feature'
                                     },
                                     on: {
                                         change: (e) => {
-                                            selectedType = e.target.value;
+                                            this.selectedType = e.target.value;
                                         }
                                     }
                                 }),
@@ -683,11 +689,11 @@ const app = new Vue({
                                         type: 'radio',
                                         name: 'mark-type',
                                         value: 'Bug Fixing',
-                                        checked: selectedType === 'Bug Fixing'
+                                        checked: this.selectedType === 'Bug Fixing'
                                     },
                                     on: {
                                         change: (e) => {
-                                            selectedType = e.target.value;
+                                            this.selectedType = e.target.value;
                                         }
                                     }
                                 }),
@@ -699,11 +705,11 @@ const app = new Vue({
                                         type: 'radio',
                                         name: 'mark-type',
                                         value: 'Others',
-                                        checked: selectedType === 'Others'
+                                        checked: this.selectedType === 'Others'
                                     },
                                     on: {
                                         change: (e) => {
-                                            selectedType = e.target.value;
+                                            this.selectedType = e.target.value;
                                         }
                                     }
                                 }),
@@ -719,9 +725,12 @@ const app = new Vue({
                                 type: 'text',
                                 placeholder: 'https://github.com/apache/echarts/pull/xxx'
                             },
+                            domProps: {
+                                value: this.linkValue
+                            },
                             on: {
                                 input: (e) => {
-                                    linkValue = e.target.value;
+                                    this.linkValue = e.target.value;
                                 }
                             }
                         })
@@ -731,9 +740,12 @@ const app = new Vue({
                         h('textarea', {
                             class: 'el-textarea__inner comment-input',
                             style: { minHeight: '60px' },
+                            domProps: {
+                                value: this.commentValue
+                            },
                             on: {
                                 input: (e) => {
-                                    commentValue = e.target.value;
+                                    this.commentValue = e.target.value;
                                 }
                             }
                         })
@@ -745,7 +757,7 @@ const app = new Vue({
                 customClass: 'mark-as-expected-dialog',
                 beforeClose: (action, instance, done) => {
                     if (action === 'confirm') {
-                        if (!selectedType) {
+                        if (!this.selectedType) {
                             this.$message({
                                 message: 'Please select a type',
                                 type: 'error'
@@ -773,7 +785,7 @@ const app = new Vue({
                             return;
                         }
 
-                        if (linkValue && !(linkValue.startsWith('http://') || linkValue.startsWith('https://'))) {
+                        if (this.linkValue && !(this.linkValue.startsWith('http://') || this.linkValue.startsWith('https://'))) {
                             this.$message({
                                 message: 'Link must start with http:// or https://',
                                 type: 'error'
@@ -817,9 +829,9 @@ const app = new Vue({
 
                         socket.emit('markAsExpected', {
                             testName: this.currentTest.name,
-                            link: linkValue,
-                            comment: commentValue,
-                            type: selectedType,
+                            link: this.linkValue,
+                            comment: this.commentValue,
+                            type: this.selectedType,
                             markedBy: markedBy,
                             lastVersion: lastVersion,
                             markTime: new Date().getTime()
@@ -923,7 +935,12 @@ const app = new Vue({
             try {
                 const response = await fetch('https://api.github.com/repos/apache/echarts/branches?per_page=100');
                 const branches = await response.json();
-                this.branchVersions = branches.map(branch => branch.name);
+                if (branches.length > 0) {
+                    this.branchVersions = branches.map(branch => branch.name);
+                }
+                else {
+                    this.branchVersions = [];
+                }
             } catch (error) {
                 console.error('Failed to fetch branches:', error);
                 this.branchVersions = [];

@@ -133,6 +133,11 @@ export interface GeoOption extends
     selectedMap?: Dictionary<boolean>
 
     tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
+
+    /**
+     * @private
+     */
+    defaultItemStyleColor?: ZRColor;
 }
 
 class GeoModel extends ComponentModel<GeoOption> {
@@ -207,7 +212,7 @@ class GeoModel extends ComponentModel<GeoOption> {
                 color: tokens.color.primary
             },
             itemStyle: {
-                areaColor: tokens.color.highlight
+                color: tokens.color.highlight
             }
         },
 
@@ -229,15 +234,15 @@ class GeoModel extends ComponentModel<GeoOption> {
     };
 
     init(option: GeoOption, parentModel: Model, ecModel: GlobalModel): void {
+        this.mergeDefaultAndTheme(option, ecModel);
+
         const source = geoSourceManager.getGeoResource(option.map);
         if (source && source.type === 'geoJSON') {
             const itemStyle = option.itemStyle = option.itemStyle || {};
             if (!('color' in itemStyle)) {
-                itemStyle.color = tokens.color.backgroundTint;
+                itemStyle.color = option.defaultItemStyleColor || tokens.color.backgroundTint;
             }
         }
-
-        this.mergeDefaultAndTheme(option, ecModel);
 
         // Default label emphasis `show`
         modelUtil.defaultEmphasis(option, 'label', ['show']);

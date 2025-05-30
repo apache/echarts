@@ -129,7 +129,10 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
         moveHandleStyle?: ItemStyleOption
     },
 
-    // Distance between the slider and the edge of the chart.
+    /**
+     * @private
+     * Distance between the slider and the edge of the chart.
+     */
     defaultLocationEdgeGap?: number
 }
 

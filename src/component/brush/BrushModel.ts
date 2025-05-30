@@ -21,7 +21,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as visualSolution from '../../visual/visualSolution';
 import Model from '../../model/Model';
-import { ComponentOption, ZRColor, VisualOptionFixed } from '../../util/types';
+import type { ComponentOption, ZRColor, VisualOptionFixed, ColorString } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import BrushTargetManager from '../helper/BrushTargetManager';
 import {
@@ -30,8 +30,6 @@ import {
 } from '../helper/BrushController';
 import { ModelFinderObject } from '../../util/model';
 import tokens from '../../visual/tokens';
-
-const DEFAULT_OUT_OF_BRUSH_COLOR = tokens.color.disabled;
 
 /**
  * The input to define brush areas.
@@ -121,6 +119,11 @@ export interface BrushOption extends ComponentOption, ModelFinderObject {
     transformable?: boolean;
     brushMode?: BrushMode;
     removeOnClick?: boolean;
+
+    /**
+     * @private
+     */
+    defaultOutOfBrushColor?: ColorString;
 }
 
 class BrushModel extends ComponentModel<BrushOption> {
@@ -143,7 +146,8 @@ class BrushModel extends ComponentModel<BrushOption> {
         throttleType: 'fixRate',
         throttleDelay: 0,
         removeOnClick: true,
-        z: 10000
+        z: 10000,
+        defaultOutOfBrushColor: tokens.color.disabled
     };
 
     /**
@@ -178,7 +182,7 @@ class BrushModel extends ComponentModel<BrushOption> {
 
         const inBrush = thisOption.inBrush = thisOption.inBrush || {};
         // Always give default visual, consider setOption at the second time.
-        thisOption.outOfBrush = thisOption.outOfBrush || {color: DEFAULT_OUT_OF_BRUSH_COLOR};
+        thisOption.outOfBrush = thisOption.outOfBrush || {color: this.option.defaultOutOfBrushColor};
 
         if (!inBrush.hasOwnProperty('liftZ')) {
             // Bigger than the highlight z lift, otherwise it will
