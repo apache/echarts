@@ -19,7 +19,7 @@
 
 import { isString, indexOf, each, bind, isFunction, isArray, isDom, retrieve2 } from 'zrender/src/core/util';
 import { normalizeEvent } from 'zrender/src/core/event';
-import { transformLocalCoord } from 'zrender/src/core/dom';
+import { transformLocalCoord, transformLocalCoordClear } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
 import { convertToColorString, toCamelCase, normalizeCssArray } from '../../util/format';
 import type ExtensionAPI from '../../core/ExtensionAPI';
@@ -239,7 +239,7 @@ function makeStyleCoord(
         const zrViewportRoot = zrPainter && zrPainter.getViewportRoot();
         if (zrViewportRoot) {
             // Some APPs might use scale on body, so we support CSS transform here.
-            return transformLocalCoord(out, zrViewportRoot, container, zrX, zrY);
+            transformLocalCoord(out, zrViewportRoot, container, zrX, zrY);
         }
     }
     else {
@@ -277,7 +277,6 @@ class TooltipHTMLContent {
     private _show: boolean = false;
 
     private _styleCoord: [number, number, number, number] = [0, 0, 0, 0];
-    private _clearStyleCoord: ReturnType<typeof makeStyleCoord>;
 
     private _enterable = true;
     private _zr: ZRenderType;
@@ -322,9 +321,7 @@ class TooltipHTMLContent {
                     : isFunction(appendTo) && appendTo(api.getDom())
         );
 
-        this._clearStyleCoord = makeStyleCoord(
-            this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2
-        );
+        makeStyleCoord(this._styleCoord, zr, container, api.getWidth() / 2, api.getHeight() / 2);
 
         (container || api.getDom()).appendChild(el);
 
@@ -491,7 +488,7 @@ class TooltipHTMLContent {
             return;
         }
         const styleCoord = this._styleCoord;
-        this._clearStyleCoord = makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
+        makeStyleCoord(styleCoord, this._zr, this._container, zrX, zrY);
 
         if (styleCoord[0] != null && styleCoord[1] != null) {
             const style = this.el.style;
@@ -553,14 +550,15 @@ class TooltipHTMLContent {
         clearTimeout(this._hideTimeout);
         clearTimeout(this._longHideTimeout);
 
-        this._clearStyleCoord && this._clearStyleCoord();
+        const zr = this._zr;
+        transformLocalCoordClear(zr && zr.painter && zr.painter.getViewportRoot(), this._container);
 
         if (this.el) {
             const parentNode = this.el.parentNode;
             parentNode && parentNode.removeChild(this.el);
         }
 
-        this._clearStyleCoord = this.el = this._container = null;
+        this.el = this._container = null;
     }
 
 }
