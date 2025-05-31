@@ -69,15 +69,31 @@ export default function dataStack(ecModel: GlobalModel) {
                 return;
             }
 
-            stackInfoList.length && data.setCalculationInfo(
-                'stackedOnSeries', stackInfoList[stackInfoList.length - 1].seriesModel
-            );
-
             stackInfoList.push(stackInfo);
         }
     });
 
-    stackInfoMap.each(calculateStack);
+    // Process each stack group
+    stackInfoMap.each(function (stackInfoList) {
+        // Check if stack order needs to be reversed
+        const firstSeries = stackInfoList[0].seriesModel;
+        const stackOrder = firstSeries.get('stackOrder');
+
+        if (stackOrder === 'reverse') {
+            stackInfoList.reverse();
+        }
+
+        // Set stackedOnSeries for each series in the final order
+        each(stackInfoList, function (stackInfo, index) {
+            stackInfo.data.setCalculationInfo(
+                'stackedOnSeries',
+                index > 0 ? stackInfoList[index - 1].seriesModel : null
+            );
+        });
+
+        // Calculate stack values
+        calculateStack(stackInfoList);
+    });
 }
 
 function calculateStack(stackInfoList: StackInfo[]) {
