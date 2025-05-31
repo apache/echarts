@@ -239,13 +239,13 @@ export function applyLeaveTransition(
             // TODO Data index?
             const config = getElementAnimationConfig('update', el, elOption, animatableModel, 0);
             config.done = () => {
-                parent.remove(el);
+                parent && parent.remove(el);
                 onRemove && onRemove();
             };
             el.animateTo(leaveToProps, config);
         }
         else {
-            parent.remove(el);
+            parent && parent.remove(el);
             onRemove && onRemove();
         }
     }

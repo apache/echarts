@@ -29,7 +29,7 @@ import MarkPointModel, {MarkPointDataItemOption} from './MarkPointModel';
 import GlobalModel from '../../model/Global';
 import MarkerModel from './MarkerModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { HashMap, isFunction, map, filter, curry, extend } from 'zrender/src/core/util';
+import { HashMap, isFunction, map, filter, curry, extend, retrieve2 } from 'zrender/src/core/util';
 import { getECData } from '../../util/innerStore';
 import { getVisualFromData } from '../../visual/helper';
 import { ZRColor } from '../../util/types';
@@ -160,12 +160,14 @@ class MarkPointView extends MarkerView {
             }
 
             const style = itemModel.getModel('itemStyle').getItemStyle();
+            const z2 = itemModel.get('z2');
             const color = getVisualFromData(seriesData, 'color') as ZRColor;
             if (!style.fill) {
                 style.fill = color;
             }
 
             mpData.setItemVisual(idx, {
+                z2: retrieve2(z2, 0),
                 symbol: symbol,
                 symbolSize: symbolSize,
                 symbolRotate: symbolRotate,

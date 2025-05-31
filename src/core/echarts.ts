@@ -828,10 +828,6 @@ class ECharts extends Eventful<ECEventDefinition> {
      * Get svg data url
      */
     getSvgDataURL(): string {
-        if (!env.svgSupported) {
-            return;
-        }
-
         const zr = this._zr;
         const list = zr.storage.getDisplayList();
         // Stop animations

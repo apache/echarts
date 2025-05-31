@@ -77,7 +77,7 @@ const stableVersion = `${major}.${minor}.${patch}`;
 const releaseFullName = `Apache ECharts ${stableVersion} (release candidate ${rc})`;
 
 console.log('[Release Repo] ' + repo);
-console.log('[Release Verion] ' + rcVersion);
+console.log('[Release Version] ' + rcVersion);
 console.log('[Release Commit] ' + releaseCommit);
 console.log('[Release Name] ' + releaseFullName);
 

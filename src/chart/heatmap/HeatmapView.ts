@@ -266,9 +266,15 @@ class HeatmapView extends ChartView {
                     continue;
                 }
 
+                const contentShape = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
+                // Ignore data that are not in range
+                if (isNaN(contentShape.x) || isNaN(contentShape.y)) {
+                    continue;
+                }
+
                 rect = new graphic.Rect({
                     z2: 1,
-                    shape: coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape,
+                    shape: contentShape,
                     style
                 });
             }

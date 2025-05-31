@@ -734,9 +734,29 @@ under the License.
                             name: '访问来源1',
                             type: 'pie',
                             radius: '50%',
+                            center: ['50%', '50%'],
+                            data: [
+                                { value: 1, name: '搜索引擎' },
+                            ],
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            },
+                            label: {
+                                position: 'outside'
+                            }
+                        },
+                        {
+                            name: '访问来源3',
+                            type: 'pie',
+                            radius: '50%',
                             center: ['75%', '50%'],
                             data: [
                                 { value: 1, name: '搜索引擎' },
+                                { value: 1, name: '直接访问', label: { position: 'inside' } },
                             ],
                             emphasis: {
                                 itemStyle: {
@@ -768,12 +788,41 @@ under the License.
                     chart.setOption(option);
                 }, 6000);
 
+                setTimeout(() => {
+                    option.series[2].data[0].label = { position: 'inside' };
+                    chart.setOption(option);
+                }, 100);
+
                 var chart = testHelper.create(echarts, 'main8', {
-                    title: 'labelLine should be hidden when position is not \'outside\'',
+                    title: [
+                        'labelLine should be **HIDDEN** when position is not \'outside\'',
+                        // https://github.com/apache/echarts/issues/20904
+                        // https://github.com/apache/echarts/issues/20905
+                        'The item **\'直接访问\'** of the third chart **SHOULD NOT** display labelLine'
+                    ],
                     height: 300,
                     option: option
                 });
-
+                // should have no error in SVG renderer
+                try {
+                    const dataUrl = chart.getDataURL()
+                    // console.log(dataUrl)
+                } catch (e) {
+                    console.error(e.stack)
+                    chart.setOption({
+                        title: {
+                            right: 10,
+                            top: 10,
+                            text: 'ERROR: ' + e.toString(),
+                            textStyle: {
+                                width: 250,
+                                color: 'red',
+                                fontWeight: 'bold',
+                                overflow: 'break'
+                            }
+                        }
+                    })
+                }
             });
         </script>
 

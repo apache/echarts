@@ -51,8 +51,6 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     trigger?: 'item' | 'axis' | 'none'
 
-    displayMode?: 'single' | 'multipleByCoordSys';
-
     /**
      * 'auto': use html by default, and use non-html if `document` is not defined
      * 'html': use html for tooltip
@@ -106,13 +104,11 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         alwaysShowContent: false,
 
-        displayMode: 'single', // 'single' | 'multipleByCoordSys'
-
         renderMode: 'auto', // 'auto' | 'html' | 'richText'
 
         // whether restraint content inside viewRect.
         // If renderMode: 'richText', default true.
-        // If renderMode: 'html', defaut false (for backward compat).
+        // If renderMode: 'html', defaults to `false` (for backward compat).
         confine: null,
 
         showDelay: 0,
@@ -121,6 +117,8 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // Animation transition time, unit is second
         transitionDuration: 0.4,
+
+        displayTransition: true,
 
         enterable: false,
 
