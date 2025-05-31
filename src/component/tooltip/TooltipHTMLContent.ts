@@ -19,7 +19,7 @@
 
 import { isString, indexOf, each, bind, isFunction, isArray, isDom, retrieve2 } from 'zrender/src/core/util';
 import { normalizeEvent } from 'zrender/src/core/event';
-import { transformLocalCoord } from 'zrender/src/core/dom';
+import { transformLocalCoord, transformLocalCoordClear } from 'zrender/src/core/dom';
 import env from 'zrender/src/core/env';
 import { convertToColorString, toCamelCase, normalizeCssArray } from '../../util/format';
 import type ExtensionAPI from '../../core/ExtensionAPI';
@@ -550,8 +550,14 @@ class TooltipHTMLContent {
         clearTimeout(this._hideTimeout);
         clearTimeout(this._longHideTimeout);
 
-        const parentNode = this.el.parentNode;
-        parentNode && parentNode.removeChild(this.el);
+        const zr = this._zr;
+        transformLocalCoordClear(zr && zr.painter && zr.painter.getViewportRoot(), this._container);
+
+        if (this.el) {
+            const parentNode = this.el.parentNode;
+            parentNode && parentNode.removeChild(this.el);
+        }
+
         this.el = this._container = null;
     }
 
