@@ -588,7 +588,10 @@ under the License.
                             },
                             itemStyle: {
                                 borderWidth: 0
-                            }
+                            },
+                            dividerLineStyle: {
+                                width: 0,
+                            },
                         },
                         y: {
                             data: Array.from({length: 10}, (_, i) => i + 1 + ''),
@@ -597,7 +600,10 @@ under the License.
                             },
                             itemStyle: {
                                 borderWidth: 0
-                            }
+                            },
+                            dividerLineStyle: {
+                                width: 0,
+                            },
                         },
                         left: 'center',
                         width: 900,
@@ -608,7 +614,7 @@ under the License.
                             itemStyle: {
                                 borderWidth: 0
                             }
-                        }
+                        },
                     },
                     series: {
                         type: 'custom',
@@ -831,8 +837,6 @@ under the License.
         <script>
             require([
                 'echarts',
-                // 'map/js/china',
-                // './data/nutrients.json'
             ], function (echarts) {
 
                 const _matrixDimensionData = {

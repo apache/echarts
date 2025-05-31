@@ -51,7 +51,8 @@ interface MatrixBodyCornerBaseOption extends MatrixCellStyleOption {
      * It can represent both body cells and top-left corner cells.
      *
      * [body/corner cell locating]:
-     *  (The rule applied in `matrix.dataToPoint` and `matrix.dataToLayout`.)
+     *  The rule is uniformly applied, such as, in `matrix.dataToPoint`
+     *  and `matrix.dataToLayout` and `xxxComponent.coord`.
      *  Suppose the matrix.x/y dimensions (header) are defined as:
      *  matrix: {
      *      x: [{ value: 'Xa0', children: ['Xb0', 'Xb1'] }, 'Xa1'],
@@ -189,7 +190,7 @@ export interface MatrixCellStyleOption {
     cursor?: string;
     // By default, auto decide whether to be silent, considering tooltip.
     silent?: boolean | NullUndefined;
-    // Used when style conflict - espetially thick border style.
+    // Used when style conflict - especially for thick border style.
     z2?: number;
 }
 
