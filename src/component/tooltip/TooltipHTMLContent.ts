@@ -103,15 +103,21 @@ function assembleArrow(
     return `<div style="${styleCss.join('')}"></div>`;
 }
 
-function assembleTransition(duration: number, onlyFade?: boolean): string {
+function assembleTransition(duration: number, onlyFadeTransition: boolean, enableDisplayTransition: boolean): string {
     const transitionCurve = 'cubic-bezier(0.23,1,0.32,1)';
-    let transitionOption = ` ${duration / 2}s ${transitionCurve}`;
-    let transitionText = `opacity${transitionOption},visibility${transitionOption}`;
-    if (!onlyFade) {
+    let transitionOption = '';
+    let transitionText = '';
+    if (enableDisplayTransition) {
+        transitionOption = ` ${duration / 2}s ${transitionCurve}`;
+        transitionText = `opacity${transitionOption},visibility${transitionOption}`;
+    }
+    if (!onlyFadeTransition) {
         transitionOption = ` ${duration}s ${transitionCurve}`;
-        transitionText += env.transformSupported
-            ? `,${CSS_TRANSFORM_VENDOR}${transitionOption}`
-            : `,left${transitionOption},top${transitionOption}`;
+        transitionText += (transitionText.length ? ',' : '') + (
+            env.transformSupported
+                ? `${CSS_TRANSFORM_VENDOR}${transitionOption}`
+                : `,left${transitionOption},top${transitionOption}`
+        );
     }
 
     return CSS_TRANSITION_VENDOR + ':' + transitionText;
@@ -173,7 +179,12 @@ function assembleFont(textStyleModel: Model<TooltipOption['textStyle']>): string
     return cssText.join(';');
 }
 
-function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: boolean, onlyFade?: boolean) {
+function assembleCssText(
+    tooltipModel: Model<TooltipOption>,
+    enableTransition: boolean,
+    onlyFadeTransition: boolean,
+    enableDisplayTransition: boolean
+) {
     const cssText: string[] = [];
     const transitionDuration = tooltipModel.get('transitionDuration');
     const backgroundColor = tooltipModel.get('backgroundColor');
@@ -186,8 +197,9 @@ function assembleCssText(tooltipModel: Model<TooltipOption>, enableTransition?: 
     const boxShadow = `${shadowOffsetX}px ${shadowOffsetY}px ${shadowBlur}px ${shadowColor}`;
 
     cssText.push('box-shadow:' + boxShadow);
-    // Animation transition. Do not animate when transitionDuration is 0.
-    enableTransition && transitionDuration && cssText.push(assembleTransition(transitionDuration, onlyFade));
+    // Animation transition. Do not animate when transitionDuration <= 0.
+    enableTransition && transitionDuration > 0
+        && cssText.push(assembleTransition(transitionDuration, onlyFadeTransition, enableDisplayTransition));
 
     if (backgroundColor) {
         cssText.push('background-color:' + backgroundColor);
@@ -284,6 +296,8 @@ class TooltipHTMLContent {
      */
     private _longHideTimeout: number;
 
+    private _enableDisplayTransition: boolean;
+
     constructor(
         api: ExtensionAPI,
         opt: TooltipContentOption
@@ -376,6 +390,9 @@ class TooltipHTMLContent {
         // update alwaysShowContent
         this._alwaysShowContent = alwaysShowContent;
 
+        this._enableDisplayTransition = tooltipModel.get('displayTransition')
+            && tooltipModel.get('transitionDuration') > 0;
+
         // update className
         this.el.className = tooltipModel.get('className') || '';
 
@@ -395,7 +412,7 @@ class TooltipHTMLContent {
         }
         else {
             style.cssText = gCssText
-                + assembleCssText(tooltipModel, !this._firstShow, this._longHide)
+                + assembleCssText(tooltipModel, !this._firstShow, this._longHide, this._enableDisplayTransition)
                 // initial transform
                 + assembleTransform(styleCoord[0], styleCoord[1], true)
                 + `border-color:${convertToColorString(nearPointColor)};`
@@ -499,8 +516,13 @@ class TooltipHTMLContent {
 
     hide() {
         const style = this.el.style;
-        style.visibility = 'hidden';
-        style.opacity = '0';
+        if (this._enableDisplayTransition) {
+            style.visibility = 'hidden';
+            style.opacity = '0';
+        }
+        else {
+            style.display = 'none';
+        }
         env.transform3dSupported && (style.willChange = '');
         this._show = false;
         this._longHideTimeout = setTimeout(() => this._longHide = true, 500) as any;
