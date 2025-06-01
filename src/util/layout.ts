@@ -205,7 +205,7 @@ type CircleLayoutSeriesOption = SeriesOption & CircleLayoutOptionMixin<{
     centerExtra: string | number
 }>;
 
-function getViewRectAndCenter<TOption extends CircleLayoutSeriesOption>(
+function getViewRectAndCenterForCircleLayout<TOption extends CircleLayoutSeriesOption>(
     seriesModel: SeriesModel<TOption>,
     api: ExtensionAPI
 ) {
@@ -247,7 +247,7 @@ export function getCircleLayout<TOption extends CircleLayoutSeriesOption>(
 ): Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> & {viewRect: LayoutRect} {
 
     // center can be string or number when coordinateSystem is specified
-    const {viewRect, center} = getViewRectAndCenter(seriesModel, api);
+    const {viewRect, center} = getViewRectAndCenterForCircleLayout(seriesModel, api);
 
     let radius = seriesModel.get('radius');
 
