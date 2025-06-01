@@ -101,15 +101,13 @@ export interface PieDataItemOption extends
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption<PieCallbackDataParams>, ExtraStateOption>, 'labelLine'>,
     PieStateOption<PieCallbackDataParams>,
-    Omit<CircleLayoutOptionMixin, 'center'>,
+    CircleLayoutOptionMixin<{centerExtra: string | number}>,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 
     type?: 'pie'
 
     roseType?: 'radius' | 'area'
-
-    center?: string | number | (string | number)[]
 
     clockwise?: boolean
     startAngle?: number

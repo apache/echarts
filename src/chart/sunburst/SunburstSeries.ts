@@ -67,7 +67,7 @@ interface SunburstDataParams extends CallbackDataParams {
 
 interface SunburstStatesMixin {
     emphasis?: {
-        focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor'
+        focus?: DefaultEmphasisFocus | 'descendant' | 'ancestor' | 'relative'
     }
 }
 

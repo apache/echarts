@@ -18,7 +18,8 @@
 */
 
 import {
-    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, indexOf
+    hasOwn, assert, isString, retrieve2, retrieve3, defaults, each, indexOf,
+    map
 } from 'zrender/src/core/util';
 import * as graphicUtil from '../../util/graphic';
 import { setDefaultStateProxy, toggleHoverEmphasis } from '../../util/states';
@@ -57,7 +58,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import Displayable from 'zrender/src/graphic/Displayable';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { PathStyleProps } from 'zrender/src/graphic/Path';
+import Path, { PathStyleProps } from 'zrender/src/graphic/Path';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import {
     convertToEC4StyleForCustomSerise,
@@ -88,7 +89,8 @@ import CustomSeriesModel, {
     PrepareCustomInfo,
     CustomPathOption,
     CustomRootElementOption,
-    CustomSeriesOption
+    CustomSeriesOption,
+    CustomCompoundPathOption
 } from './CustomSeries';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import {
@@ -101,6 +103,7 @@ import {
     stopPreviousKeyframeAnimationAndRestore
 } from '../../animation/customGraphicKeyframeAnimation';
 import type SeriesModel from '../../model/Series';
+import { getCustomSeries } from './customSeriesRegister';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -355,7 +358,36 @@ function createEl(elOption: CustomElementOption): Element {
         el = new graphicUtil.Group();
     }
     else if (graphicType === 'compoundPath') {
-        throw new Error('"compoundPath" is not supported yet.');
+        const shape = (elOption as CustomCompoundPathOption).shape;
+        if (!shape || !shape.paths) {
+            let errMsg = '';
+            if (__DEV__) {
+                errMsg = 'shape.paths must be specified in compoundPath';
+            }
+            throwError(errMsg);
+        }
+        const paths = map(shape.paths as Path[], function (path) {
+            if (path.type === 'path') {
+                return graphicUtil.makePath(path.shape.pathData, path, null);
+            }
+            const Clz = graphicUtil.getShapeClass(path.type);
+            if (!Clz) {
+                if (typeof path.buildPath === 'function') {
+                    return path;
+                }
+                let errMsg = '';
+                if (__DEV__) {
+                    errMsg = 'graphic type "' + graphicType + '" can not be found.';
+                }
+                throwError(errMsg);
+            }
+            return new Clz();
+        });
+        el = new graphicUtil.CompoundPath({
+            shape: {
+                paths
+            }
+        });
     }
     else {
         const Clz = graphicUtil.getShapeClass(graphicType);
@@ -595,7 +627,18 @@ function makeRenderItem(
     ecModel: GlobalModel,
     api: ExtensionAPI
 ) {
-    const renderItem = customSeries.get('renderItem');
+    let renderItem = customSeries.get('renderItem');
+    if (typeof renderItem === 'string') {
+        // Find renderItem in registered custom series
+        const registeredRenderItem = getCustomSeries(renderItem);
+        if (registeredRenderItem) {
+            renderItem = registeredRenderItem;
+        }
+        else if (__DEV__) {
+            console.warn(`Custom series renderItem '${renderItem}' not found.
+                Call 'echarts.registerCustomSeries' to register it.`);
+        }
+    }
     const coordSys = customSeries.coordinateSystem;
     let prepareResult = {} as ReturnType<PrepareCustomInfo>;
 
@@ -639,7 +682,8 @@ function makeRenderItem(
         seriesIndex: customSeries.seriesIndex,
         coordSys: prepareResult.coordSys,
         dataInsideLength: data.count(),
-        encode: wrapEncodeDef(customSeries.getData())
+        encode: wrapEncodeDef(customSeries.getData()),
+        itemPayload: customSeries.get('itemPayload') || {}
     } as CustomSeriesRenderItemParams;
 
     // If someday intending to refactor them to a class, should consider do not
@@ -1001,6 +1045,9 @@ function doCreateOrUpdateEl(
     else if ((el as ECElement).disableMorphing) {
         (el as ECElement).disableMorphing = false;
     }
+    if (elOption.tooltipDisabled) {
+        (el as ECElement).tooltipDisabled = true;
+    }
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =
         attachedTxInfoTmp.emphasis.cfg = attachedTxInfoTmp.emphasis.conOpt =
@@ -1139,7 +1186,7 @@ function doCreateOrUpdateAttachedTx(
     attachedTxInfo: AttachedTxInfo
 ): void {
     // Group does not support textContent temporarily until necessary.
-    if (el.isGroup) {
+    if (el.isGroup || el.type === 'compoundPath') {
         return;
     }
 

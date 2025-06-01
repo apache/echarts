@@ -83,6 +83,9 @@ const theme = {
     legend: {
         textStyle: {
             color: contrastColor
+        },
+        pageTextStyle: {
+            color: contrastColor
         }
     },
     textStyle: {

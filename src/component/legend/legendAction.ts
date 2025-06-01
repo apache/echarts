@@ -17,59 +17,81 @@
 * under the License.
 */
 
-// @ts-nocheck
+import {curry, each, hasOwn} from 'zrender/src/core/util';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import { Payload } from '../../util/types';
+import type GlobalModel from '../../model/Global';
+import type LegendModel from './LegendModel';
 
-import {curry, each} from 'zrender/src/core/util';
+type LegendSelectMethodNames = 'select' | 'unSelect' | 'toggleSelected' | 'allSelect' | 'inverseSelect';
 
-function legendSelectActionHandler(methodName, payload, ecModel) {
-    const selectedMap = {};
-    const isToggleSelect = methodName === 'toggleSelected';
-    let isSelected;
-    // Update all legend components
-    ecModel.eachComponent('legend', function (legendModel) {
-        if (isToggleSelect && isSelected != null) {
-            // Force other legend has same selected status
-            // Or the first is toggled to true and other are toggled to false
-            // In the case one legend has some item unSelected in option. And if other legend
-            // doesn't has the item, they will assume it is selected.
-            legendModel[isSelected ? 'select' : 'unSelect'](payload.name);
-        }
-        else if (methodName === 'allSelect' || methodName === 'inverseSelect') {
+function legendSelectActionHandler(methodName: LegendSelectMethodNames, payload: Payload, ecModel: GlobalModel) {
+    const isAllSelect = methodName === 'allSelect' || methodName === 'inverseSelect';
+    const selectedMap: Record<string, boolean> = {};
+
+    const actionLegendIndices: number[] = [];
+    ecModel.eachComponent({ mainType: 'legend', query: payload }, function (legendModel: LegendModel) {
+        if (isAllSelect) {
             legendModel[methodName]();
         }
         else {
             legendModel[methodName](payload.name);
-            isSelected = legendModel.isSelected(payload.name);
         }
-        const legendData = legendModel.getData();
-        each(legendData, function (model) {
-            const name = model.get('name');
-            // Wrap element
-            if (name === '\n' || name === '') {
-                return;
-            }
-            const isItemSelected = legendModel.isSelected(name);
-            if (selectedMap.hasOwnProperty(name)) {
-                // Unselected if any legend is unselected
-                selectedMap[name] = selectedMap[name] && isItemSelected;
-            }
-            else {
-                selectedMap[name] = isItemSelected;
-            }
-        });
+
+        makeSelectedMap(legendModel, selectedMap);
+
+        actionLegendIndices.push(legendModel.componentIndex);
     });
+
+    const allSelectedMap: Record<string, boolean> = {};
+
+    // make selectedMap from all legend components
+    ecModel.eachComponent('legend', function (legendModel: LegendModel) {
+        each(selectedMap, function (isSelected, name) {
+            // Force other legend has same selected status
+            // Or the first is toggled to true and other are toggled to false
+            // In the case one legend has some item unSelected in option. And if other legend
+            // doesn't has the item, they will assume it is selected.
+            legendModel[isSelected ? 'select' : 'unSelect'](name);
+        });
+
+        makeSelectedMap(legendModel, allSelectedMap);
+    });
+
     // Return the event explicitly
-    return (methodName === 'allSelect' || methodName === 'inverseSelect')
+    return isAllSelect
         ? {
-            selected: selectedMap
+            selected: allSelectedMap,
+            // return legendIndex array to tell the developers which legends are allSelect / inverseSelect
+            legendIndex: actionLegendIndices
         }
         : {
             name: payload.name,
-            selected: selectedMap
+            selected: allSelectedMap
         };
 }
 
-export function installLegendAction(registers) {
+function makeSelectedMap(legendModel: LegendModel, out?: Record<string, boolean>) {
+    const selectedMap: Record<string, boolean> = out || {};
+    each(legendModel.getData(), function (model) {
+        const name = model.get('name');
+        // Wrap element
+        if (name === '\n' || name === '') {
+            return;
+        }
+        const isItemSelected = legendModel.isSelected(name);
+        if (hasOwn(selectedMap, name)) {
+            // Unselected if any legend is unselected
+            selectedMap[name] = selectedMap[name] && isItemSelected;
+        }
+        else {
+            selectedMap[name] = isItemSelected;
+        }
+    });
+    return selectedMap;
+}
+
+export function installLegendAction(registers: EChartsExtensionInstallRegisters) {
     /**
      * @event legendToggleSelect
      * @type {Object}

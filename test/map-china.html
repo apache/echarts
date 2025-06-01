@@ -49,15 +49,31 @@ under the License.
         <script>
         require([
             'echarts',
-            'map/json/china-new.json'
-        ], function (echarts, chinaJson) {
+            './data/map/js/china.js'
+        ], function (echarts) {
             var option;
-            echarts.registerMap('china', chinaJson)
 
             option = {
+                title: [{
+                    text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                    subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                    link: 'https://cloudcenter.tianditu.gov.cn/',
+                    bottom: 15,
+                    left: 15,
+                    textStyle: {
+                        color: '#888',
+                        fontSize: 12
+                    },
+                    subtextStyle: {
+                        color: '#aaa',
+                        fontSize: 12
+                    }
+                }],
                 series: {
                     type: 'map',
-                    map: 'china'
+                    map: 'china',
+                    center: [104.2, 36],
+                    zoom: 1.4
                 }
             };
 
@@ -75,39 +91,56 @@ under the License.
         <script>
         require([
             'echarts',
-            'map/json/china-new.json'
-        ], function (echarts, chinaJson) {
+            './data/map/js/china.js'
+        ], function (echarts) {
             var option;
-            echarts.registerMap('china', chinaJson)
 
             option = {
+                title: [{
+                    text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                    subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                    link: 'https://cloudcenter.tianditu.gov.cn/',
+                    bottom: 15,
+                    left: 15,
+                    textStyle: {
+                        color: '#888',
+                        fontSize: 12
+                    },
+                    subtextStyle: {
+                        color: '#aaa',
+                        fontSize: 12
+                    }
+                }],
                 series: {
                     type: 'map',
                     map: 'china',
                     itemStyle: {
                         areaColor: '#fff'
                     },
+                    roam: true,
                     data: [{
-                        name: '广西',
+                        name: '广西壮族自治区',
                         itemStyle: {
                             areaColor: '#ddd'
                         }
                     }, {
-                        name: '广东',
+                        name: '广东省',
                         itemStyle: {
                             areaColor: '#aaa'
                         }
                     }, {
-                        name: '海南',
+                        name: '海南省',
                         itemStyle: {
                             areaColor: '#bbb'
                         }
                     }, {
-                        name: '台湾',
+                        name: '台湾省',
                         itemStyle: {
                             areaColor: '#ccc'
                         }
-                    }]
+                    }],
+                    center: [104.2, 36],
+                    zoom: 1.4
                 }
             };
 
@@ -123,12 +156,26 @@ under the License.
         <script>
             require([
                 'echarts',
-                'map/json/china-new.json'
-            ], function (echarts, chinaJson) {
+                './data/map/js/china.js'
+            ], function (echarts) {
                 var option;
-                echarts.registerMap('china', chinaJson)
 
                 option = {
+                    title: [{
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 15,
+                        textStyle: {
+                            color: '#888',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     legend: {
                         show: true,
                         data: ['销售额']
@@ -143,18 +190,20 @@ under the License.
                         },
                         data: [
                             {
-                                name: '上海',
+                                name: '上海市',
                                 value: 506772
                             },
                             {
-                                name: '内蒙古',
+                                name: '内蒙古自治区',
                                 value: 79776
                             },
                             {
-                                name: '台湾',
+                                name: '台湾省',
                                 value: 68885
                             }
-                        ]
+                        ],
+                        center: [104.2, 36],
+                        zoom: 1.4
                     }
                 };
 

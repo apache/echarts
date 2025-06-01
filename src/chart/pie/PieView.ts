@@ -25,7 +25,7 @@ import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { Payload, ColorString } from '../../util/types';
+import { Payload, ColorString, CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
@@ -34,6 +34,7 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 import { saveOldStyle } from '../../animation/basicTransition';
 import { getSeriesLayoutData } from './pieLayout';
+
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -205,7 +206,7 @@ class PiePiece extends graphic.Sector {
             z2: 10
         });
 
-        const labelPosition = seriesModel.get(['label', 'position']);
+        const labelPosition = itemModel.get(['label', 'position']);
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
             sector.removeTextGuideLine();
         }

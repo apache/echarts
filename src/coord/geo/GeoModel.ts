@@ -59,11 +59,17 @@ interface GeoLabelFormatterDataParams {
     status: DisplayState;
 }
 
-export interface RegoinOption extends GeoStateOption, StatesOptionMixin<GeoStateOption, StatesMixinBase> {
+export interface RegionOption extends GeoStateOption, StatesOptionMixin<GeoStateOption, StatesMixinBase> {
     name?: string
     selected?: boolean
     tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
+    silent?: boolean
 }
+
+/**
+ * @deprecated Use `RegionOption` instead.
+ */
+export interface RegoinOption extends RegionOption {}
 
 export interface GeoTooltipFormatterParams {
     componentType: 'geo'
@@ -118,7 +124,7 @@ export interface GeoOption extends
     show?: boolean;
     silent?: boolean;
 
-    regions?: RegoinOption[];
+    regions?: RegionOption[];
 
     stateAnimation?: AnimationOptionMixin
 
@@ -137,7 +143,7 @@ class GeoModel extends ComponentModel<GeoOption> {
 
     static layoutMode = 'box' as const;
 
-    private _optionModelMap: zrUtil.HashMap<Model<RegoinOption>>;
+    private _optionModelMap: zrUtil.HashMap<Model<RegionOption>>;
 
     static defaultOption: GeoOption = {
 
@@ -263,7 +269,7 @@ class GeoModel extends ComponentModel<GeoOption> {
     /**
      * Get model of region.
      */
-    getRegionModel(name: string): Model<RegoinOption> {
+    getRegionModel(name: string): Model<RegionOption> {
         return this._optionModelMap.get(name) || new Model(null, this, this.ecModel);
     }
 

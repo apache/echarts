@@ -144,7 +144,9 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 
     color?: ColorString[] | 'none'
 
-    decal?: DecalObject[] | 'none'
+    decal?: DecalObject[] | 'none',
+
+    cursor?: string
 }
 
 export interface TreemapSeriesOption
@@ -232,6 +234,12 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
     private _idIndexMap: zrUtil.HashMap<number>;
     private _idIndexMapCount: number;
 
+    zoom: number;
+    zoomLimit: {
+        max?: number;
+        min?: number;
+    };
+
     static defaultOption: TreemapSeriesOption = {
         // Disable progressive rendering
         progressive: 0,
@@ -250,6 +258,8 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
                                             // to align specialized icon. ▷▶❒❐▼✚
 
         zoomToNodeRatio: 0.32 * 0.32,
+
+        scaleLimit: null,
 
         roam: true,
         nodeClick: 'zoomToNode',

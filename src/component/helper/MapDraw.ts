@@ -30,7 +30,7 @@ import {
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption, RegoinOption } from '../../coord/geo/GeoModel';
+import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption, RegionOption } from '../../coord/geo/GeoModel';
 import MapSeries, { MapDataItemOption } from '../../chart/map/MapSeries';
 import GlobalModel from '../../model/Global';
 import { Payload, ECElement, LineStyleOption, InnerFocus, DisplayState } from '../../util/types';
@@ -240,7 +240,7 @@ class MapDraw {
         const regionsGroupByName = this._regionsGroupByName = zrUtil.createHashMap<RegionsGroup, string>();
         const regionsInfoByName = zrUtil.createHashMap<{
             dataIdx: number;
-            regionModel: Model<RegoinOption> | Model<MapDataItemOption>;
+            regionModel: Model<RegionOption> | Model<MapDataItemOption>;
         }, string>();
         const regionsGroup = this._regionsGroup;
         const transformInfoRaw = viewBuildCtx.transformInfoRaw;
@@ -301,6 +301,9 @@ class MapDraw {
                 regionModel = viewBuildCtx.isGeo
                     ? mapOrGeoModel.getRegionModel(regionName)
                     : (data ? data.getItemModel(dataIdx) as Model<MapDataItemOption> : null);
+
+                const silent = (regionModel as Model<RegionOption>).get('silent', true);
+                silent != null && (regionGroup.silent = silent);
 
                 regionsInfoByName.set(regionName, { dataIdx, regionModel });
             }
@@ -420,6 +423,9 @@ class MapDraw {
             if (el instanceof Displayable) {
                 el.culling = true;
             }
+
+            const silent = (regionModel as Model<RegionOption>).get('silent', true);
+            silent != null && (el.silent = silent);
 
             // We do not know how the SVG like so we'd better not to change z2.
             // Otherwise it might bring some unexpected result. For example,
@@ -595,6 +601,7 @@ class MapDraw {
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
+                totalZoom: controllerHost.zoom,
                 zoom: e.scale,
                 originX: e.originX,
                 originY: e.originY,

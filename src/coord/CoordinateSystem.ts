@@ -222,7 +222,11 @@ export interface CoordinateSystemHostModel extends ComponentModel {
  * It is used to clip the graphic elements with the contain methods.
  */
 export interface CoordinateSystemClipArea {
-    contain(x: number, y: number): boolean
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    contain(x: number, y: number): boolean;
 }
 
 export function isCoordinateSystemType<T extends CoordinateSystem, S = T['type']>(

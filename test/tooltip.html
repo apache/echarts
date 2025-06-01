@@ -66,8 +66,8 @@ under the License.
         <div class="chart" id="positionSpecified"></div>
         <!--<h1>alwaysShowContent (check when hover on the last one, the content should not be the previous one)</h1>-->
         <!--<div class="chart" id="alwaysShowContent"></div>-->
-
-
+        <h1>Tooltip shouldn't render legend name as HTML element by default</h1>
+        <div class="chart" id="tooltip-legend-xss"></div>
 
 
 
@@ -785,34 +785,68 @@ under the License.
         <script>
 
             require(['echarts'], function (echarts) {
+                // 鼠标悬停在图例名称处将显示图片
+                const legendName1 =
+                    '<img src="https://echarts.apache.org/en/images/favicon.png" />';
+                // 鼠标悬停在图例名称处将清空 HTML 并显示 XSS
+                const legendName2 =
+                    '<img src="https://echarts.apache.org/en/images/favicon.png1111" onerror="document.body.innerHTML = \'XSS\'" />';
+
+                let renderMode = 'html';
 
                 var option = {
+                    title: {
+                        text: renderMode
+                    },
                     tooltip: {
                         trigger: 'axis',
-                        triggerOn: 'click',
-                        axisPointer: {
-                            type: 'cross'
-                        }
-                    }
-                };
-                var baseTop = 90;
-                var height = 150;
-                var gap = 50;
-                makeCategoryGrid(option, {
-                    grid: {top: baseTop, height: height},
-                    yAxis: {
-                        name: 'click show tip',
+                        renderMode
+                    },
+                    legend: {
+                        data: [legendName1, legendName2],
                         tooltip: {
                             show: true
                         }
-                    }
-                });
-                baseTop += height + gap;
-
-                createChart('click', echarts, option, baseTop);
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: {},
+                    toolbox: {
+                        feature: {
+                            myTool2: {
+                                show: true,
+                                title: 'Switch renderMode',
+                                icon: 'image://https://echarts.apache.org/en/images/favicon.png',
+                                onclick() {
+                                    renderMode = renderMode === 'html' ? 'richText' : 'html'
+                                    option.tooltip.renderMode
+                                        = option.title.text
+                                        = renderMode
+                                    chart.setOption(option, true)
+                                }
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            name: legendName1,
+                            type: 'line',
+                            data: [220, 182, 191, 234, 290, 330, 310]
+                        },
+                        {
+                            name: legendName2,
+                            type: 'line',
+                            data: [145, 240, 188, 169, 155, 174, 260]
+                        }
+                    ]
+                };
+                var chart = createChart('tooltip-legend-xss', echarts, option, 500);
             })
         </script>
 
 
     </body>
 </html>
+

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main_animation_brush_1"></div>
+        <div id="main_animation_brush_2"></div>
+
+        <div id="main_api_pixel_value_converter_1"></div>
+
+        <div id="main_singleAxis_1"></div>
+
+        <div id="main_avoid_split_overlap_1"></div>
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+            var GRID_TOP = 50;
+            var GRID_BOTTOM = 50;
+            option = {
+                tooltip: {
+                },
+                xAxis: [{
+                    splitLine: {
+                        show: false,
+                    }
+                }],
+                yAxis: [{
+                    triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
+                    axisLabel: {
+                    },
+                    minorTick: {
+                        show: true
+                    },
+                    breakArea: {
+                        expandOnClick: false,
+                        itemStyle: {
+                            borderColor: '#777',
+                            opacity: 0
+                        }
+                    }
+                }],
+                grid: [{
+                    top: GRID_TOP,
+                    bottom: GRID_BOTTOM,
+                }],
+                legend: {
+                    data: ['s2']
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                series: [{
+                    type: 'line',
+                    name: 's2',
+                    symbol: 'circle',
+                    symbolSize: 5,
+                    data: (function createSeriesData() {
+                        function makeRandom(range) {
+                            return Math.random() * (range[1] - range[0]) + range[0];
+                        }
+                        var seriesData = [];
+                        var DATA_COUNT = 100;
+                        for (var idx = 0; idx < DATA_COUNT; idx++) {
+                            let yVal = 0;
+                            if (idx < DATA_COUNT / 4) {
+                                yVal = makeRandom([0, 100])
+                            }
+                            else if (idx < 2 * DATA_COUNT / 3) {
+                                yVal = makeRandom([10000, 12000]);
+                            }
+                            else {
+                                yVal = makeRandom([30000, 31000]);
+                            }
+                            seriesData.push([idx, yVal]);
+                        }
+                        return seriesData;
+                    })(),
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_animation_brush_1', {
+                title: [
+                    'Fisheye: Brush an area on the cartesian to break. **(only Y)**',
+                ],
+                option: option,
+                buttons: [{
+                    text: 'Reset',
+                    onclick: function (event) {
+                        chart.setOption({
+                            yAxis: {
+                                breaks: []
+                            }
+                        });
+                    }
+                }]
+            });
+
+            var _brushingEl = null;
+            var _brushShape = null;
+
+            if (chart) {
+                chart.on('axisbreakchanged', function (params) {
+                    console.log('axisbreakchanged', params);
+                });
+                chart.getZr().on('mousedown', function (params) {
+                    _brushingEl = new echarts.graphic.Rect({
+                        shape: {
+                            x: 0,
+                            y: params.offsetY,
+                        },
+                        ignore: true,
+                        style: {
+                            stroke: 'none',
+                            fill: '#ccc',
+                        }
+                    });
+                    chart.getZr().add(_brushingEl);
+                });
+                chart.getZr().on('mousemove', function (params) {
+                    if (!_brushingEl) {
+                        return;
+                    }
+                    var initX = _brushingEl.shape.x;
+                    var initY = _brushingEl.shape.y;
+                    var currPoint = [params.offsetX, params.offsetY];
+                    _brushingEl.setShape('width', chart.getWidth());
+                    _brushingEl.setShape('height', currPoint[1] - initY);
+                    _brushingEl.ignore = false;
+                });
+                document.addEventListener('mouseup', function (params) {
+                    if (_brushingEl) {
+                        var initX = _brushingEl.shape.x;
+                        var initY = _brushingEl.shape.y;
+                        var currPoint = [params.offsetX, params.offsetY];
+                        var pixelSpan = Math.abs(currPoint[1] - initY);
+                        if (pixelSpan > 2) {
+                            var dataXY0 = chart.convertFromPixel({gridIndex: 0}, [initX, initY]);
+                            var dataXY1 = chart.convertFromPixel({gridIndex: 0}, [currPoint[0], currPoint[1]]);
+                            updateBreak(chart, pixelSpan, [dataXY0[1], dataXY1[1]]);
+                        }
+
+                        chart.getZr().remove(_brushingEl);
+                        _brushingEl = null;
+                    }
+                });
+
+                function getYAxisPixelSpan(chart) {
+                    return chart.getHeight() - GRID_BOTTOM - GRID_TOP;
+                }
+
+                function updateBreak(chart, pixelSpan, dataRange) {
+                    function round(val) {
+                        return +(+val).toFixed(0);
+                    }
+                    dataRange = dataRange.slice();
+                    dataRange[0] = round(dataRange[0]);
+                    dataRange[1] = round(dataRange[1]);
+
+                    var gapPercent = pixelSpan / getYAxisPixelSpan(chart);
+
+                    function makeOption(gapPercentStr) {
+                        return {
+                            yAxis: {
+                                breaks: [{
+                                    start: dataRange[0],
+                                    end: dataRange[1],
+                                    gap: gapPercentStr,
+                                }]
+                            }
+                        };
+                    }
+
+                    chart.setOption(makeOption((gapPercent * 100) + '%'));
+                    setTimeout(() => {
+                        chart.setOption(makeOption('70%'));
+                    }, 0);
+                }
+            }
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+            var GRID_TOP = 50;
+            var GRID_BOTTOM = 50;
+            var GRID_LEFT = 80;
+            var GRID_RIGHT = 50;
+            option = {
+                tooltip: {
+                },
+                xAxis: [{
+                    splitLine: {
+                        show: false,
+                    },
+                    breakArea: {
+                        expandOnClick: false,
+                        itemStyle: {
+                            borderColor: '#777',
+                            opacity: 0
+                        }
+                    }
+                }],
+                yAxis: [{
+                    triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
+                    axisLabel: {
+                    },
+                    minorTick: {
+                        show: true
+                    },
+                    breakArea: {
+                        itemStyle: {
+                            borderColor: '#999',
+                            opacity: 0
+                        }
+                    }
+                }],
+                grid: [{
+                    top: GRID_TOP,
+                    bottom: GRID_BOTTOM,
+                    left: GRID_LEFT,
+                    right: GRID_RIGHT,
+                }],
+                legend: {
+                    data: ['s2']
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                series: [{
+                    type: 'line',
+                    name: 's2',
+                    symbol: 'circle',
+                    symbolSize: 5,
+                    data: (function createSeriesData() {
+                        function makeRandom(range) {
+                            return Math.random() * (range[1] - range[0]) + range[0];
+                        }
+                        var seriesData = [];
+                        var DATA_COUNT = 100;
+                        for (var idx = 0; idx < DATA_COUNT; idx++) {
+                            let yVal = 0;
+                            if (idx < DATA_COUNT / 4) {
+                                yVal = makeRandom([0, 100])
+                            }
+                            else if (idx < 2 * DATA_COUNT / 3) {
+                                yVal = makeRandom([10000, 12000]);
+                            }
+                            else {
+                                yVal = makeRandom([30000, 31000]);
+                            }
+                            seriesData.push([idx, yVal]);
+                        }
+                        return seriesData;
+                    })(),
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_animation_brush_2', {
+                title: [
+                    'Fisheye: Brush an area on the cartesian to break. **(both XY)**',
+                ],
+                option: option,
+                buttons: [{
+                    text: 'Reset',
+                    onclick: function (event) {
+                        chart.setOption({
+                            xAxis: {
+                                breaks: []
+                            },
+                            yAxis: {
+                                breaks: []
+                            }
+                        });
+                    }
+                }]
+            });
+
+            var _brushingEl = null;
+            var _brushShape = null;
+
+            if (chart) {
+                chart.on('axisbreakchanged', function (params) {
+                    console.log('axisbreakchanged', params);
+                });
+                chart.getZr().on('mousedown', function (params) {
+                    _brushingEl = new echarts.graphic.Rect({
+                        shape: {
+                            x: params.offsetX,
+                            y: params.offsetY,
+                        },
+                        ignore: true,
+                        style: {
+                            stroke: '#777',
+                            fill: 'none',
+                            lineWidth: 2,
+                            lineDash: 'dashed'
+                        }
+                    });
+                    chart.getZr().add(_brushingEl);
+                });
+                chart.getZr().on('mousemove', function (params) {
+                    if (!_brushingEl) {
+                        return;
+                    }
+                    var initX = _brushingEl.shape.x;
+                    var initY = _brushingEl.shape.y;
+                    var currPoint = [params.offsetX, params.offsetY];
+                    _brushingEl.setShape('width', currPoint[0] - initX);
+                    _brushingEl.setShape('height', currPoint[1] - initY);
+                    _brushingEl.ignore = false;
+                });
+                document.addEventListener('mouseup', function (params) {
+                    if (_brushingEl) {
+                        var initX = _brushingEl.shape.x;
+                        var initY = _brushingEl.shape.y;
+                        var currPoint = [params.offsetX, params.offsetY];
+                        var xPixelSpan = Math.abs(currPoint[0] - initX);
+                        var yPixelSpan = Math.abs(currPoint[1] - initY);
+                        if (xPixelSpan > 2 && yPixelSpan > 2) {
+                            var dataXY0 = chart.convertFromPixel({gridIndex: 0}, [initX, initY]);
+                            var dataXY1 = chart.convertFromPixel({gridIndex: 0}, [currPoint[0], currPoint[1]]);
+                            updateBreak(
+                                chart,
+                                xPixelSpan,
+                                [dataXY0[0], dataXY1[0]],
+                                yPixelSpan,
+                                [dataXY0[1], dataXY1[1]],
+                            );
+                        }
+
+                        chart.getZr().remove(_brushingEl);
+                        _brushingEl = null;
+                    }
+                });
+
+                function getXYAxisPixelSpan(chart) {
+                    return [
+                        chart.getWidth() - GRID_LEFT - GRID_RIGHT,
+                        chart.getHeight() - GRID_BOTTOM - GRID_TOP
+                    ];
+                }
+
+                function updateBreak(chart, xPixelSpan, xDataRange, yPixelSpan, yDataRange) {
+                    function format(range) {
+                        function round(val) {
+                            return +(+val).toFixed(0);
+                        }
+                        range = range.slice();
+                        range[0] = round(range[0]);
+                        range[1] = round(range[1]);
+                        return range;
+                    }
+                    xDataRange = format(xDataRange);
+                    yDataRange = format(yDataRange);
+
+                    var xySpan = getXYAxisPixelSpan(chart);
+                    var xGapPercent = xPixelSpan / xySpan[0];
+                    var yGapPercent = yPixelSpan / xySpan[1];
+
+                    function makeOption(xGapPercentStr, yGapPercentStr) {
+                        return {
+                            xAxis: {
+                                breaks: [{
+                                    start: xDataRange[0],
+                                    end: xDataRange[1],
+                                    gap: xGapPercentStr,
+                                }]
+                            },
+                            yAxis: {
+                                breaks: [{
+                                    start: yDataRange[0],
+                                    end: yDataRange[1],
+                                    gap: yGapPercentStr,
+                                }]
+                            }
+                        };
+                    }
+
+                    chart.setOption(makeOption((xGapPercent * 100) + '%', (yGapPercent * 100) + '%'));
+                    setTimeout(() => {
+                        chart.setOption(makeOption('80%', '70%'));
+                    }, 0);
+                }
+            }
+        });
+        </script>
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var timeBase = 1741187840933;
+            var timeOffsetLimit = 5000
+            function time(offset) {
+                if (Math.abs(offset) > timeOffsetLimit) {
+                    throw new Error('offset over timeOffsetLimit:' + timeOffsetLimit);
+                }
+                return timeBase + offset;
+            }
+            function formatTime(value) {
+                value = +value.toFixed(0);
+                return echarts.time.format(value, '{yyyy}-{MM}-{dd}_{hh}:{mm}:{ss}.{SSS}');
+            }
+            var option = {
+                tooltip: {
+                },
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        rotate: 20,
+                        formatter: function (value) {
+                            return formatTime(value);
+                        }
+                    },
+                    splitLine: {
+                        show: true
+                    },
+                    axisPointer: {
+                        label: {
+                            show: true,
+                            margin: -250,
+                            formatter: function (params) {
+                                return formatTime(params.value);
+                            }
+                        }
+                    },
+                    breaks: [{
+                        start: time(600),
+                        end: time(1000),
+                        gap: '10%',
+                    }, {
+                        start: time(1534),
+                        end: time(1987),
+                        gap: 500,
+                    }],
+                    breakArea: {
+                        itemStyle: {color: 'green'},
+                        expandOnClick: false,
+                        zigzagAmplitude: 0,
+                    }
+                },
+                yAxis: {
+                    breaks: [{
+                        start: 7000,
+                        end: 12000,
+                        gap: '20%'
+                    }, {
+                        start: 15000,
+                        end: 18000,
+                        gap: 2000
+                    }],
+                    breakArea: {
+                        itemStyle: {color: 'orange'},
+                        expandOnClick: false,
+                        zigzagAmplitude: 0,
+                    }
+                },
+                // legend: {
+                //     data: ['s2'],
+                //     bottom: 10,
+                // },
+                grid: {
+                    right: 80,
+                    bottom: 120,
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                },
+                axisPointer: {
+                    show: true,
+                },
+                dataZoom: [{
+                    type: 'slider',
+                    xAxisIndex: 0,
+                }, {
+                    type: 'slider',
+                    yAxisIndex: 0,
+                    right: 25,
+                }],
+                series: [{
+                    type: 'scatter',
+                    name: 's2',
+                    data: [
+                        [time(100), -800],
+                        [time(1000), -1800], [time(1800), 5000], [time(3000), 20000],
+                        [time(2200), 9000], [time(500), 17000], [time(800), 14000],
+                        [time(1300), 18000]
+                    ],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_api_pixel_value_converter_1', {
+                title: [
+                    '- Test api.convertFromPixel (colored areas are breaks)',
+                    '- tooltip (trigger "axis") should be correct on point inside breaks',
+                    '- Click on the scatter, the displayed x/y value should be correct.',
+                    '- Move dataZoom and click, should still correct.',
+                    '- axisPointer label should be correct in breaks.',
+                ],
+                option: option,
+            });
+            if (chart) {
+                chart.getZr().on('click', function (params) {
+                    const xyPx = [params.offsetX, params.offsetY];
+                    const xyVal = chart.convertFromPixel({gridIndex: 0}, xyPx);
+                    chart.setOption({
+                        title: {
+                            text: `api.convertFromPixel get:  xVal=${formatTime(xyVal[0])}, yVal=${xyVal[1].toFixed(3)}`,
+                            textStyle: {
+                                fontSize: 16,
+                                fontWeight: 'normal',
+                            }
+                        }
+                    });
+                });
+            }
+        });
+        </script>
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            function makeBreaks(isExpanded) {
+                return [{
+                    start: 600,
+                    end: 1000,
+                    gap: '10%',
+                    isExpanded: isExpanded,
+                }, {
+                    start: 1000534,
+                    end: 5000987,
+                    gap: 50000,
+                    isExpanded: isExpanded,
+                }];
+            }
+
+            var option = {
+                tooltip: {
+                },
+                singleAxis: {
+                    axisLabel: {
+                    },
+                    splitArea: {
+                        show: true,
+                    },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            color: '#000',
+                            // opacity: 1,
+                            width: 1
+                        }
+                    },
+                    bottom: 100,
+                    breaks: makeBreaks(false),
+                    breakArea: {
+                        itemStyle: {color: 'green'},
+                    }
+                },
+                legend: {
+                    data: ['s2'],
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'cross'
+                    },
+                },
+                dataZoom: [{
+                    type: 'slider',
+                    singleAxisIndex: 0,
+                }],
+                series: [{
+                    type: 'scatter',
+                    coordinateSystem: 'singleAxis',
+                    name: 's2',
+                    data: [
+                        100800,
+                        10001800,
+                        -3000,
+                        2200,
+                        500,
+                        800,
+                        1300
+                    ],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_singleAxis_1', {
+                title: [
+                    'single axis breaks',
+                ],
+                option: option,
+                height: 200,
+                buttons: [{
+                    text: 'reset breaks',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'collapseAxisBreak',
+                            singleAxisIndex: 0,
+                            breaks: makeBreaks(false)
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                xAxis: {
+                    data: ['a', 'b', 'c', 'd', 'e'],
+                    axisTick: {
+                        show: false
+                    },
+                    splitLine: {
+                        show: true,
+                    },
+                },
+                yAxis: {
+                    triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
+                    minorTick: {
+                        show: true
+                    },
+                    axisLabel: {
+                    },
+                    splitLine: {
+                        show: true
+                    },
+                    breaks: [{
+                        start: 123,
+                        end: 2058,
+                        gap: '20%'
+                    }, {
+                        start: 2305,
+                        end: 7400,
+                        gap: '10%'
+                    }],
+                    breakArea: {
+                    }
+                },
+                legend: {
+                    data: ['s2', 's3', 's4']
+                },
+                tooltip: {
+                },
+                dataZoom: [{
+                    id: 'dz0',
+                    type: 'slider',
+                    yAxisIndex: 0,
+                    right: 20,
+                    startValue: 0,
+                    endValue: 2073,
+                }],
+                series: [{
+                    type: 'bar',
+                    name: 's2',
+                    data: [12, 88, 650, 1200, 2235],
+                    label: {
+                        show: true,
+                        position: 'top'
+                    }
+                }, {
+                    type: 'scatter',
+                    name: 's4',
+                    data: [12, 88, 1150, 200, 7835],
+                    symbolSize: 30
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main_avoid_split_overlap_1', {
+                title: [
+                    'Split line and axis tick should not overlap.',
+                    'axis minor tick should be appropriate.',
+                    '**animation**: zigzag shape and split line animation should be smooth.',
+                    'The **top split line** should be always displayed.',
+                ],
+                option: option,
+                height: 400,
+                buttons: [{
+                    type: 'select',
+                    text: 'dataZoom cases:',
+                    values: [[0, 2073], [0, 2060], [0, 2098], [0, 3000]],
+                    onchange: function () {
+                        chart.setOption({
+                            dataZoom: {
+                                id: 'dz0',
+                                startValue: this.value[0],
+                                endValue: this.value[1],
+                            }
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'xAxis.split:',
+                    options: [{
+                        text: 'splitLine',
+                        value: {
+                            splitLine: {
+                                show: true,
+                            },
+                            splitArea: {
+                                show: false,
+                            },
+                        }
+                    }, {
+                        text: 'splitArea',
+                        value: {
+                            splitLine: {
+                                show: false,
+                            },
+                            splitArea: {
+                                show: true,
+                                areaStyle: {
+                                    color: ['rgba(0,0,0,0)', 'rgba(210,219,238,0.5)']
+                                }
+                            },
+                        }
+                    }],
+                    onchange: function () {
+                        chart.setOption({
+                            xAxis: {
+                                splitLine: this.value.splitLine,
+                                splitArea: this.value.splitArea,
+                            }
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'bar start value:',
+                    values: [0, 1000],
+                    onchange: function () {
+                        chart.setOption({
+                            yAxis: {
+                                startValue: this.value
+                            }
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+    </body>
+
+</html>
+

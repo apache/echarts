@@ -285,7 +285,7 @@ class HeatmapView extends ChartView {
                 }
                 const layout = coordSys.dataToLayout([data.get(dataDims[0], idx)]);
                 const shape = layout.contentRect || layout.rect;
-                if (zrUtil.eqNaN(shape.x)) {
+                if (zrUtil.eqNaN(shape.x) || zrUtil.eqNaN(shape.y)) {
                     continue;
                 }
                 rect = new graphic.Rect({

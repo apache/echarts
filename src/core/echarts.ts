@@ -51,6 +51,7 @@ import ComponentModel from '../model/Component';
 import SeriesModel from '../model/Series';
 import ComponentView, {ComponentViewConstructor} from '../view/Component';
 import ChartView, {ChartViewConstructor} from '../view/Chart';
+import type {CustomSeriesRenderItem} from '../chart/custom/CustomSeries';
 import * as graphic from '../util/graphic';
 import {getECData} from '../util/innerStore';
 import {
@@ -79,7 +80,8 @@ import {
     findComponentHighDownDispatchers,
     blurComponent,
     handleGlobalMouseOverForHighDown,
-    handleGlobalMouseOutForHighDown
+    handleGlobalMouseOutForHighDown,
+    SELECT_CHANGED_EVENT_TYPE
 } from '../util/states';
 import * as modelUtil from '../util/model';
 import {throttle} from '../util/throttle';
@@ -103,7 +105,7 @@ import {
     ComponentMainType,
     ComponentSubType,
     ColorString,
-    SelectChangedPayload,
+    SelectChangedEvent,
     ScaleDataValue,
     ZRElementEventName,
     ECElementEvent,
@@ -135,15 +137,19 @@ import lifecycle, {
 import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
 import { getImpl } from './impl';
 import type geoSourceManager from '../coord/geo/geoSourceManager';
+import { ExtendedElement } from './ExtendedElement';
+import {
+    registerCustomSeries as registerCustom
+} from '../chart/custom/customSeriesRegister';
 
 declare let global: any;
 
 type ModelFinder = modelUtil.ModelFinder;
 
-export const version = '5.5.0';
+export const version = '5.6.0';
 
 export const dependencies = {
-    zrender: '5.5.0'
+    zrender: '5.6.1'
 };
 
 const TEST_FRAME_REMAIN_TIME = 1;
@@ -232,6 +238,10 @@ export interface ResizeOpts {
     animation?: AnimationOption
     silent?: boolean // by default false.
 };
+
+export interface SetThemeOpts {
+    silent?: boolean;
+}
 
 interface PostIniter {
     (chart: EChartsType): void
@@ -422,11 +432,6 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         opts = opts || {};
 
-        // Get theme by name
-        if (isString(theme)) {
-            theme = themeStorage[theme] as object;
-        }
-
         this._dom = dom;
 
         let defaultRenderer = 'canvas';
@@ -477,10 +482,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         // Expect 60 fps.
         this._throttledZrFlush = throttle(bind(zr.flush, zr), 17);
 
-        theme = clone(theme);
-        theme && backwardCompat(theme as ECUnitOption, true);
-
-        this._theme = theme;
+        this._updateTheme(theme);
 
         this._locale = createLocaleObject(opts.locale || SYSTEM_LANG);
 
@@ -711,10 +713,69 @@ class ECharts extends Eventful<ECEventDefinition> {
     }
 
     /**
-     * @deprecated
+     * Update theme with name or theme option and repaint the chart.
+     * @param theme Theme name or theme option.
+     * @param opts Optional settings
      */
-    private setTheme(): void {
-        deprecateLog('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
+    setTheme(theme: string | ThemeOption, opts?: SetThemeOpts): void {
+        if (this[IN_MAIN_PROCESS_KEY]) {
+            if (__DEV__) {
+                error('`setTheme` should not be called during main process.');
+            }
+            return;
+        }
+
+        if (this._disposed) {
+            disposedWarning(this.id);
+            return;
+        }
+
+        const ecModel = this._model;
+        if (!ecModel) {
+            return;
+        }
+
+        let silent = opts && opts.silent;
+        let updateParams = null as UpdateLifecycleParams;
+
+        if (this[PENDING_UPDATE]) {
+            if (silent == null) {
+                silent = (this[PENDING_UPDATE] as any).silent;
+            }
+            updateParams = (this[PENDING_UPDATE] as any).updateParams;
+            this[PENDING_UPDATE] = null;
+        }
+
+        this[IN_MAIN_PROCESS_KEY] = true;
+
+        try {
+            this._updateTheme(theme);
+            ecModel.setTheme(this._theme);
+
+            prepare(this);
+            updateMethods.update.call(this, {type: 'setTheme'}, updateParams);
+        }
+        catch (e) {
+            this[IN_MAIN_PROCESS_KEY] = false;
+            throw e;
+        }
+
+        this[IN_MAIN_PROCESS_KEY] = false;
+
+        flushPendingActions.call(this, silent);
+        triggerUpdatedEvent.call(this, silent);
+    }
+
+    private _updateTheme(theme: string | ThemeOption): void {
+        if (isString(theme)) {
+            theme = themeStorage[theme] as object;
+        }
+
+        if (theme) {
+            theme = clone(theme);
+            theme && backwardCompat(theme as ECUnitOption, true);
+            this._theme = theme;
+        }
     }
 
     // We don't want developers to use getModel directly.
@@ -787,10 +848,6 @@ class ECharts extends Eventful<ECEventDefinition> {
      * Get svg data url
      */
     getSvgDataURL(): string {
-        if (!env.svgSupported) {
-            return;
-        }
-
         const zr = this._zr;
         const list = zr.storage.getDisplayList();
         // Stop animations
@@ -1211,24 +1268,14 @@ class ECharts extends Eventful<ECEventDefinition> {
             this._zr.on(eveName, handler, this);
         });
 
-        each(eventActionMap, (actionType, eventType) => {
-            this._messageCenter.on(eventType, function (event: Payload) {
-                (this as any).trigger(eventType, event);
-            }, this);
+        const messageCenter = this._messageCenter;
+        each(publicEventTypeMap, (_, eventType) => {
+            messageCenter.on(eventType, event => {
+                this.trigger(eventType, event);
+            });
         });
 
-        // Extra events
-        // TODO register?
-        each(
-            ['selectchanged'],
-            (eventType) => {
-                this._messageCenter.on(eventType, function (event: Payload) {
-                    (this as any).trigger(eventType, event);
-                }, this);
-            }
-        );
-
-        handleLegacySelectEvents(this._messageCenter, this, this._api);
+        handleLegacySelectEvents(messageCenter, this, this._api);
     }
 
     isDisposed(): boolean {
@@ -1402,7 +1449,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
     makeActionFromEvent(eventObj: ECActionEvent): Payload {
         const payload = extend({}, eventObj) as Payload;
-        payload.type = eventActionMap[eventObj.type];
+        payload.type = connectionEventRevertMap[eventObj.type];
         return payload;
     }
 
@@ -1633,9 +1680,9 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
 
             const query: QueryConditionKindA['query'] = {};
-            query[mainType + 'Id'] = payload[mainType + 'Id'];
-            query[mainType + 'Index'] = payload[mainType + 'Index'];
-            query[mainType + 'Name'] = payload[mainType + 'Name'];
+            query[mainType + 'Id'] = payload[mainType + 'Id'] as any;
+            query[mainType + 'Index'] = payload[mainType + 'Index'] as any;
+            query[mainType + 'Name'] = payload[mainType + 'Name'] as any;
 
             const condition = {mainType: mainType, query: query} as QueryConditionKindA;
             subType && (condition.subType = subType); // subType may be '' by parseClassType;
@@ -1669,7 +1716,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     }
                     else {
                         const { focusSelf, dispatchers } = findComponentHighDownDispatchers(
-                            model.mainType, model.componentIndex, payload.name, ecIns._api
+                            model.mainType, model.componentIndex, payload.name as string, ecIns._api
                         );
                         if (payload.type === HIGHLIGHT_ACTION_TYPE && focusSelf && !payload.notBlur) {
                             blurComponent(model.mainType, model.componentIndex, ecIns._api);
@@ -1718,7 +1765,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             prepareAndUpdate(this: ECharts, payload: Payload): void {
                 prepare(this);
-                updateMethods.update.call(this, payload, {
+                updateMethods.update.call(this, payload, payload && {
                     // Needs to mark option changed if newOption is given.
                     // It's from MagicType.
                     // TODO If use a separate flag optionChanged in payload?
@@ -1976,8 +2023,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             const ecModel = this.getModel();
             const payloadType = payload.type;
             const escapeConnect = payload.escapeConnect;
-            const actionWrap = actions[payloadType];
-            const actionInfo = actionWrap.actionInfo;
+            const actionInfo = actions[payloadType];
 
             const cptTypeTmp = (actionInfo.update || 'update').split(':');
             const updateMethod = cptTypeTmp.pop();
@@ -1999,6 +2045,8 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             const eventObjBatch: ECEventData[] = [];
             let eventObj: ECActionEvent;
+            const actionResultBatch: ECActionEvent[] = [];
+            const nonRefinedEventType = actionInfo.nonRefinedEventType;
 
             const isSelectChange = isSelectChangePayload(payload);
             const isHighDown = isHighDownPayload(payload);
@@ -2010,11 +2058,15 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             each(payloads, (batchItem) => {
                 // Action can specify the event by return it.
-                eventObj = actionWrap.action(batchItem, this._model, this._api) as ECActionEvent;
-                // Emit event outside
+                const actionResult = actionInfo.action(batchItem, ecModel, this._api) as ECActionEvent;
+                if (actionInfo.refineEvent) {
+                    actionResultBatch.push(actionResult);
+                }
+                else {
+                    eventObj = actionResult;
+                }
                 eventObj = eventObj || extend({} as ECActionEvent, batchItem);
-                // Convert type to eventType
-                eventObj.type = actionInfo.event || eventObj.type;
+                eventObj.type = nonRefinedEventType;
                 eventObjBatch.push(eventObj);
 
                 // light update does not perform data process, layout and visual.
@@ -2056,7 +2108,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             // Follow the rule of action batch
             if (batched) {
                 eventObj = {
-                    type: actionInfo.event || payloadType,
+                    type: nonRefinedEventType,
                     escapeConnect: escapeConnect,
                     batch: eventObjBatch
                 };
@@ -2068,19 +2120,26 @@ class ECharts extends Eventful<ECEventDefinition> {
             this[IN_MAIN_PROCESS_KEY] = false;
 
             if (!silent) {
+                let refinedEvent: ECActionEvent;
+                if (actionInfo.refineEvent) {
+                    const {eventContent} = actionInfo.refineEvent(
+                        actionResultBatch, payload, ecModel, this._api
+                    );
+                    assert(isObject(eventContent));
+                    refinedEvent = defaults({type: actionInfo.refinedEventType}, eventContent);
+                    refinedEvent.fromAction = payload.type;
+                    refinedEvent.fromActionPayload = payload;
+                    refinedEvent.escapeConnect = true;
+                }
+
                 const messageCenter = this._messageCenter;
+                // - If `refineEvent` created a `refinedEvent`, `eventObj` (replicated from the original payload)
+                //  is still needed to be triggered for the feature `connect`. But it will not be triggered to
+                //  users in this case.
+                // - If no `refineEvent` used, `eventObj` will be triggered for both `connect` and users.
                 messageCenter.trigger(eventObj.type, eventObj);
-                // Extra triggered 'selectchanged' event
-                if (isSelectChange) {
-                    const newObj: SelectChangedPayload = {
-                        type: 'selectchanged',
-                        escapeConnect: escapeConnect,
-                        selected: getAllSelectedIndices(ecModel),
-                        isFromClick: payload.isFromClick || false,
-                        fromAction: payload.type as 'select' | 'unselect' | 'toggleSelected',
-                        fromActionPayload: payload
-                    };
-                    messageCenter.trigger(newObj.type, newObj);
+                if (refinedEvent) {
+                    messageCenter.trigger(refinedEvent.type, refinedEvent);
                 }
             }
         };
@@ -2444,13 +2503,19 @@ class ECharts extends Eventful<ECEventDefinition> {
             const zlevel = model.get('zlevel') || 0;
             // Set z and zlevel
             view.eachRendered((el) => {
-                doUpdateZ(el, z, zlevel, -Infinity);
+                doUpdateZ(el, z, zlevel, -Infinity, false);
                 // Don't traverse the children because it has been traversed in _updateZ.
                 return true;
             });
         };
 
-        function doUpdateZ(el: Element, z: number, zlevel: number, maxZ2: number): number {
+        function doUpdateZ(
+            el: Element,
+            z: number,
+            zlevel: number,
+            maxZ2: number,
+            ignoreModelZ: boolean
+        ): number {
             // Group may also have textContent
             const label = el.getTextContent();
             const labelLine = el.getTextGuideLine();
@@ -2460,10 +2525,25 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // set z & zlevel of children elements of Group
                 const children = (el as graphic.Group).childrenRef();
                 for (let i = 0; i < children.length; i++) {
-                    maxZ2 = Math.max(doUpdateZ(children[i], z, zlevel, maxZ2), maxZ2);
+                    ignoreModelZ = ignoreModelZ || (el as ExtendedElement).ignoreModelZ;
+                    maxZ2 = Math.max(
+                        doUpdateZ(
+                            children[i],
+                            z,
+                            zlevel,
+                            maxZ2,
+                            ignoreModelZ || (el as ExtendedElement).ignoreModelZ
+                        ),
+                        maxZ2
+                    );
                 }
             }
             else {
+                if (ignoreModelZ || (el as ExtendedElement).ignoreModelZ) {
+                    // This child element will not be set z and zlevel of the group
+                    return maxZ2;
+                }
+
                 // not Group
                 (el as Displayable).z = z;
                 (el as Displayable).zlevel = zlevel;
@@ -2633,7 +2713,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
             }
 
-            each(eventActionMap, function (actionType, eventType) {
+            each(connectionEventRevertMap, function (_, eventType) {
                 chart._messageCenter.on(eventType, function (event: ECActionEvent) {
                     if (connectedGroups[chart.group] && chart[CONNECT_STATUS_KEY] !== CONNECT_STATUS_PENDING) {
                         if (event && event.escapeConnect) {
@@ -2693,18 +2773,29 @@ function disposedWarning(id: string): void {
     }
 }
 
-
+/**
+ * @see {ActionInfo}
+ */
+type ActionInfoParsed = {
+    actionType: string;
+    nonRefinedEventType: string;
+    refinedEventType: string;
+    update: ActionInfo['update'];
+    action: ActionInfo['action'];
+    refineEvent: ActionInfo['refineEvent'];
+};
 const actions: {
-    [actionType: string]: {
-        action: ActionHandler,
-        actionInfo: ActionInfo
-    }
+    [actionType: string]: ActionInfoParsed
 } = {};
 
 /**
- * Map eventType to actionType
+ * Map event type to action type for reproducing action from event for `connect`.
  */
-const eventActionMap: {[eventType: string]: string} = {};
+const connectionEventRevertMap: {[eventType: string]: string} = {};
+/**
+ * To remove duplication.
+ */
+const publicEventTypeMap: {[eventType: string]: 1} = {};
 
 const dataProcessorFuncs: StageHandlerInternal[] = [];
 
@@ -2909,50 +3000,89 @@ export function registerUpdateLifecycle<T extends keyof LifecycleEvents>(
  *     {type: 'someAction', event: 'someEvent', update: 'updateView'},
  *     function () { ... }
  * );
- *
- * @param {(string|Object)} actionInfo
- * @param {string} actionInfo.type
- * @param {string} [actionInfo.event]
- * @param {string} [actionInfo.update]
- * @param {string} [eventName]
- * @param {Function} action
+ * registerAction({
+ *     type: 'someAction',
+ *     event: 'someEvent',
+ *     update: 'updateView'
+ *     action: function () { ... }
+ *     refineEvent: function () { ... }
+ * });
+ * @see {ActionInfo} for more details.
  */
-export function registerAction(type: string, eventName: string, action: ActionHandler): void;
+export function registerAction(type: string, eventType: string, action: ActionHandler): void;
 export function registerAction(type: string, action: ActionHandler): void;
-export function registerAction(actionInfo: ActionInfo, action: ActionHandler): void;
+export function registerAction(actionInfo: ActionInfo, action?: ActionHandler): void;
 export function registerAction(
-    actionInfo: string | ActionInfo,
-    eventName: string | ActionHandler,
+    arg0: string | ActionInfo,
+    arg1: string | ActionHandler,
     action?: ActionHandler
 ): void {
-    if (isFunction(eventName)) {
-        action = eventName;
-        eventName = '';
+    let actionType: ActionInfo['type'];
+    let publicEventType: ActionInfo['event'];
+    let refineEvent: ActionInfo['refineEvent'];
+    let update: ActionInfo['update'];
+    let publishNonRefinedEvent: ActionInfo['publishNonRefinedEvent'];
+
+    if (isFunction(arg1)) {
+        action = arg1;
+        arg1 = '';
     }
-    const actionType = isObject(actionInfo)
-        ? (actionInfo as ActionInfo).type
-        : ([actionInfo, actionInfo = {
-            event: eventName
-        } as ActionInfo][0]);
 
-    // Event name is all lowercase
-    (actionInfo as ActionInfo).event = (
-        (actionInfo as ActionInfo).event || actionType as string
-    ).toLowerCase();
-    eventName = (actionInfo as ActionInfo).event;
+    if (isObject(arg0)) {
+        actionType = arg0.type;
+        publicEventType = arg0.event;
+        update = arg0.update;
+        publishNonRefinedEvent = arg0.publishNonRefinedEvent;
+        if (!action) {
+            action = arg0.action;
+        }
+        refineEvent = arg0.refineEvent;
+    }
+    else {
+        actionType = arg0;
+        publicEventType = arg1;
+    }
 
-    if (eventActionMap[eventName as string]) {
-        // Already registered.
+    function createEventType(actionOrEventType: string) {
+        // Event type should be all lowercase
+        return actionOrEventType.toLowerCase();
+    }
+
+    publicEventType = createEventType(publicEventType || actionType);
+    // See comments on {ActionInfo} for the reason.
+    const nonRefinedEventType = refineEvent ? createEventType(actionType) : publicEventType;
+
+    // Support calling `registerAction` multiple times with the same action
+    // type; subsequent calls have no effect.
+    if (actions[actionType]) {
         return;
     }
 
     // Validate action type and event name.
-    assert(ACTION_REG.test(actionType as string) && ACTION_REG.test(eventName));
-
-    if (!actions[actionType as string]) {
-        actions[actionType as string] = {action: action, actionInfo: actionInfo as ActionInfo};
+    assert(ACTION_REG.test(actionType) && ACTION_REG.test(publicEventType));
+    if (refineEvent) {
+        // An event replicated from the action will be triggered internally for `connect` in this case.
+        assert(publicEventType !== actionType);
     }
-    eventActionMap[eventName as string] = actionType as string;
+
+    actions[actionType] = {
+        actionType,
+        refinedEventType: publicEventType,
+        nonRefinedEventType,
+        update,
+        action,
+        refineEvent,
+    };
+
+    publicEventTypeMap[publicEventType] = 1;
+    if (refineEvent && publishNonRefinedEvent) {
+        publicEventTypeMap[nonRefinedEventType] = 1;
+    }
+
+    if (__DEV__ && connectionEventRevertMap[nonRefinedEventType]) {
+        error(`${nonRefinedEventType} must not be shared; use "refineEvent" if you intend to share an event name.`);
+    }
+    connectionEventRevertMap[nonRefinedEventType] = actionType;
 }
 
 export function registerCoordinateSystem(
@@ -2974,6 +3104,10 @@ export function getCoordinateSystemDimensions(type: string): DimensionDefinition
             ? coordSysCreator.getDimensionsInfo()
             : coordSysCreator.dimensions.slice();
     }
+}
+
+export function registerCustomSeries(seriesType: string, renderItem: CustomSeriesRenderItem) {
+    registerCustom(seriesType, renderItem);
 }
 
 export {registerLocale} from './locale';
@@ -3139,21 +3273,41 @@ registerAction({
 
 registerAction({
     type: SELECT_ACTION_TYPE,
-    event: SELECT_ACTION_TYPE,
-    update: SELECT_ACTION_TYPE
-}, noop);
+    event: SELECT_CHANGED_EVENT_TYPE,
+    update: SELECT_ACTION_TYPE,
+    action: noop,
+    refineEvent: makeSelectChangedEvent,
+    publishNonRefinedEvent: true, // Backward compat but deprecated.
+});
 
 registerAction({
     type: UNSELECT_ACTION_TYPE,
-    event: UNSELECT_ACTION_TYPE,
-    update: UNSELECT_ACTION_TYPE
-}, noop);
+    event: SELECT_CHANGED_EVENT_TYPE,
+    update: UNSELECT_ACTION_TYPE,
+    action: noop,
+    refineEvent: makeSelectChangedEvent,
+    publishNonRefinedEvent: true, // Backward compat but deprecated.
+});
 
 registerAction({
     type: TOGGLE_SELECT_ACTION_TYPE,
-    event: TOGGLE_SELECT_ACTION_TYPE,
-    update: TOGGLE_SELECT_ACTION_TYPE
-}, noop);
+    event: SELECT_CHANGED_EVENT_TYPE,
+    update: TOGGLE_SELECT_ACTION_TYPE,
+    action: noop,
+    refineEvent: makeSelectChangedEvent,
+    publishNonRefinedEvent: true, // Backward compat but deprecated.
+});
+
+function makeSelectChangedEvent(
+    actionResultBatch: ECEventData[], payload: Payload, ecModel: GlobalModel, api: ExtensionAPI
+): {eventContent: Omit<SelectChangedEvent, 'type'>} {
+    return {
+        eventContent: {
+            selected: getAllSelectedIndices(ecModel),
+            isFromClick: (payload.isFromClick as boolean) || false,
+        }
+    };
+}
 
 // Default theme
 registerTheme('light', lightTheme);

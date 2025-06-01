@@ -24,7 +24,7 @@ import {
     createAxisLabels,
     calculateCategoryInterval
 } from './axisTickLabelBuilder';
-import Scale from '../scale/Scale';
+import Scale, { ScaleGetTicksOpt } from '../scale/Scale';
 import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
@@ -87,7 +87,7 @@ class Axis {
      * If axis extent contain given data
      */
     containData(data: ScaleDataValue): boolean {
-        return this.scale.contain(data);
+        return this.scale.contain(this.scale.parse(data));
     }
 
     /**
@@ -122,7 +122,7 @@ class Axis {
     dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
         let extent = this._extent;
         const scale = this.scale;
-        data = scale.normalize(data);
+        data = scale.normalize(scale.parse(data));
 
         if (this.onBand && scale.type === 'ordinal') {
             extent = extent.slice() as [number, number];
@@ -168,12 +168,17 @@ class Axis {
      */
     getTicksCoords(opt?: {
         tickModel?: Model,
-        clamp?: boolean
+        clamp?: boolean,
+        breakTicks?: ScaleGetTicksOpt['breakTicks'],
+        pruneByBreak?: ScaleGetTicksOpt['pruneByBreak']
     }): TickCoord[] {
         opt = opt || {};
 
         const tickModel = opt.tickModel || this.getTickModel();
-        const result = createAxisTicks(this, tickModel as AxisBaseModel);
+        const result = createAxisTicks(this, tickModel as AxisBaseModel, {
+            breakTicks: opt.breakTicks,
+            pruneByBreak: opt.pruneByBreak,
+        });
         const ticks = result.ticks;
 
         const ticksCoords = map(ticks, function (tickVal) {
@@ -289,7 +294,10 @@ function fixExtentWithBands(extent: [number, number], nTick: number): void {
 // to displayed labels. (So we should not use `getBandWidth` in this
 // case).
 function fixOnBandTicksCoords(
-    axis: Axis, ticksCoords: TickCoord[], alignWithLabel: boolean, clamp: boolean
+    axis: Axis,
+    ticksCoords: TickCoord[],
+    alignWithLabel: boolean,
+    clamp: boolean
 ) {
     const ticksLen = ticksCoords.length;
 
@@ -302,7 +310,7 @@ function fixOnBandTicksCoords(
     let diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
-        last = ticksCoords[1] = {coord: axisExtent[1]};
+        last = ticksCoords[1] = {coord: axisExtent[1], tickValue: ticksCoords[0].tickValue};
     }
     else {
         const crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
@@ -315,7 +323,7 @@ function fixOnBandTicksCoords(
         const dataExtent = axis.scale.getExtent();
         diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
 
-        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize};
+        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize, tickValue: dataExtent[1] + 1};
 
         ticksCoords.push(last);
     }

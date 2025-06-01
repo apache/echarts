@@ -43,6 +43,7 @@ import {
     TreeChart,
     TreemapChart,
     GraphChart,
+    ChordChart,
     GaugeChart,
     FunnelChart,
     ParallelChart,
@@ -90,7 +91,9 @@ import {
 
 import {
     UniversalTransition,
-    LabelLayout
+    LabelLayout,
+    AxisBreak,
+    ScatterJitter
 } from './export/features';
 
 
@@ -128,6 +131,7 @@ use([
     TreeChart,
     TreemapChart,
     GraphChart,
+    ChordChart,
     GaugeChart,
     FunnelChart,
     ParallelChart,
@@ -146,8 +150,6 @@ use([
 // -------------------
 // Coordinate systems
 // -------------------
-
-
 
 // All of the axis modules have been included in the
 // coordinate system module below, do not need to
@@ -362,3 +364,7 @@ use(UniversalTransition);
 //     }
 // })
 use(LabelLayout);
+
+use(AxisBreak);
+
+use(ScatterJitter);

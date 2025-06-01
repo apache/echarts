@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { Payload, SelectChangedPayload } from '../util/types';
+import { Payload, SelectChangedEvent } from '../util/types';
 import SeriesModel from '../model/Series';
 import { extend, each, isArray, isString } from 'zrender/src/core/util';
 import GlobalModel from '../model/Global';
@@ -66,7 +66,7 @@ function handleSeriesLegacySelectEvents(
     eventPostfix: 'selectchanged' | 'selected' | 'unselected',
     ecIns: EChartsType,
     ecModel: GlobalModel,
-    payload: SelectChangedPayload
+    payload: SelectChangedEvent
 ) {
     const legacyEventName = type + eventPostfix;
     if (!ecIns.isSilent(legacyEventName)) {
@@ -96,7 +96,7 @@ function handleSeriesLegacySelectEvents(
 }
 
 export function handleLegacySelectEvents(messageCenter: Eventful, ecIns: EChartsType, api: ExtensionAPI) {
-    messageCenter.on('selectchanged', function (params: SelectChangedPayload) {
+    messageCenter.on('selectchanged', function (params: SelectChangedEvent) {
         const ecModel = api.getModel();
         if (params.isFromClick) {
             handleSeriesLegacySelectEvents('map', 'selectchanged', ecIns, ecModel, params);
