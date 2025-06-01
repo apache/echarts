@@ -568,8 +568,6 @@ function nearZero(val: number) {
 }
 
 /**
- * FIXME: merge this method with `applyMarginToRect` in other git branch.
- *
  * NOTE:
  *  A negative-width/height rect (due to negative margins) is not supported;
  *  it will be clampped to zero width/height.
@@ -593,15 +591,16 @@ function nearZero(val: number) {
  * @param noNegative
  *  `true` - negative `delta[i]` will be clampped to 0.
  *  `false` - No clamp to `delta`. (defualt).
+ * @return The input `rect`.
  */
-export function expandOrShrinkRect(
-    rect: RectLike,
+export function expandOrShrinkRect<TRect extends RectLike>(
+    rect: TRect,
     delta: number[] | number | NullUndefined,
     shrinkOrExpand: boolean,
     noNegative: boolean
-): void {
+): TRect {
     if (delta == null) {
-        return;
+        return rect;
     }
     else if (isNumber(delta)) {
         _tmpExpandRectDelta[0] = _tmpExpandRectDelta[1] = _tmpExpandRectDelta[2] = _tmpExpandRectDelta[3] = delta;
@@ -626,6 +625,8 @@ export function expandOrShrinkRect(
     }
     expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'x', 'width', 3, 1);
     expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'y', 'height', 0, 2);
+
+    return rect;
 }
 const _tmpExpandRectDelta = [0, 0, 0, 0];
 function expandRectOnOneDimension(

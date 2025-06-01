@@ -38,6 +38,9 @@ import SeriesModel from '../model/Series';
 
 const each = zrUtil.each;
 
+/**
+ * @see {getLayoutRect}
+ */
 export interface LayoutRect extends BoundingRect {
     margin: number[]
 }
@@ -281,8 +284,17 @@ export function getLayoutRect(
         aspect?: number // aspect is width / height
     },
     containerRect: GetLayoutRectInputContainerRect,
-    // This is the margin to the containerRect. If width/height is specified,
-    // `margin` does not effect width/height.
+    // This is the space from the `containerRect` to the returned bounding rect.
+    // Commonly used in option `legend.padding`, `timeline.padding`, `title.padding`,
+    //  `visualMap.padding`, ...
+    // [NOTICE]:
+    //  It's named `margin`, becuase it's the space that outside the bounding rect. But from
+    //  the perspective of the the caller, it's commonly used as the `padding` of a component,
+    //  because conventionally background color covers this space.
+    // [BEHAVIOR]:
+    //  - If width/height is specified, `margin` does not effect them.
+    //  - Otherwise, they are calculated based on the rect that `containerRect` shrinked by `margin`.
+    //  - left/right/top/bottom are based on the rect that `containerRect` shrinked by `margin`.
     margin?: number | number[]
 ): LayoutRect {
     margin = formatUtil.normalizeCssArray(margin || 0);
@@ -726,16 +738,4 @@ export function copyLayoutParams(target: BoxLayoutOptionMixin, source: BoxLayout
         source.hasOwnProperty(name) && (target[name] = source[name]);
     });
     return target;
-}
-
-/**
- * Apply pedding (CSS like) to a rect, and return the input rect.
- */
-export function applyPedding<TRect extends RectLike>(rect: TRect, pedding?: number | number[]): TRect {
-    const peddingArr = formatUtil.normalizeCssArray(pedding || 0);
-    rect.x += peddingArr[3];
-    rect.y += peddingArr[0];
-    rect.width -= peddingArr[1] + peddingArr[3];
-    rect.height -= peddingArr[0] + peddingArr[2];
-    return rect;
 }
