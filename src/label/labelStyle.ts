@@ -428,6 +428,10 @@ function setTextStyleCommon(
     if (overflow) {
         textStyle.overflow = overflow;
     }
+    const lineOverflow = textStyleModel.get('lineOverflow');
+    if (lineOverflow) {
+        textStyle.lineOverflow = lineOverflow;
+    }
     const margin = textStyleModel.get('minMargin');
     if (margin != null) {
         textStyle.margin = margin;

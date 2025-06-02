@@ -1248,6 +1248,7 @@ export interface LabelOption<
 
     overflow?: TextStyleProps['overflow']
     ellipsis?: TextStyleProps['ellipsis']
+    lineOverflow?: TextStyleProps['lineOverflow']
 
     silent?: boolean
     precision?: number | 'auto'

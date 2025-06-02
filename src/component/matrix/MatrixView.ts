@@ -22,7 +22,7 @@ import ComponentView from '../../view/Component';
 import { createTextStyle } from '../../label/labelStyle';
 import { MatrixCellLayoutInfo, MatrixDim, MatrixXYLocator } from '../../coord/matrix/MatrixDim';
 import Model from '../../model/Model';
-import { NullUndefined, OrdinalRawValue } from '../../util/types';
+import { NullUndefined } from '../../util/types';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as vectorUtil from 'zrender/src/core/vector';
 import { RectShape } from 'zrender/src/graphic/shape/Rect';
@@ -308,6 +308,7 @@ function createMatrixCell(
                         width: makeCellLabelWH(_tmpContentRect, _tmpCellLabelModel, 0),
                         height: makeCellLabelWH(_tmpContentRect, _tmpCellLabelModel, 1),
                     }),
+                    ignoreHostSilent: true,
                     z2: z2 + 1,
                 })
             );
@@ -323,24 +324,24 @@ function createMatrixCell(
         });
     }
 
-    let rectSilent = _tmpCellModel.get('silent');
-    let labelSilent = _tmpCellLabelModel.get('silent');
-    // auto, tooltip of text cells need silient: false, but non-text cells
-    // do not need a special cursor in most cases.
-    if (labelSilent == null) {
-        labelSilent = !(tooltipOptionShow && labelShown);
+    if (cellText) {
+        let labelSilent = _tmpCellLabelModel.get('silent');
+        // auto, tooltip of text cells need silient: false, but non-text cells
+        // do not need a special cursor in most cases.
+        if (labelSilent == null) {
+            labelSilent = !(tooltipOptionShow && labelShown);
+        }
+        cellText.silent = labelSilent;
     }
+    let rectSilent = _tmpCellModel.get('silent');
     if (rectSilent == null) {
-        rectSilent = labelSilent || (
+        rectSilent = (
+            // If no background color in cell, set `rect.silent: false` will cause that only
+            // the border response to mouse hovering, which is probably weird.
             !cellRect.style || cellRect.style.fill === 'none' || !cellRect.style.fill
         );
     }
     cellRect.silent = rectSilent;
-    if (cellText) {
-        // FIXME: but currently label is impl as `textContent`, where it's not
-        // supported that it's owner is silent but text is not silent.
-        cellText.silent = labelSilent;
-    }
 }
 const _tmpCellModel = new Model<MatrixCellStyleOption>();
 const _tmpCellItemStyleModel = new Model<MatrixCellStyleOption['itemStyle']>();

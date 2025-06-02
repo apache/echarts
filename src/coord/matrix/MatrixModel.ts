@@ -205,6 +205,7 @@ const defaultLabelOption: LabelOption = {
     show: true,
     color: '#333',
     overflow: 'truncate',
+    lineOverflow: 'truncate',
 };
 function makeDefaultCellItemStyleOption(isCorner: boolean) {
     return {
