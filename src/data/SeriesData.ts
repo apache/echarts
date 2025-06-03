@@ -135,6 +135,7 @@ export interface DataCalculationInfo<SERIES_MODEL> {
     stackedOverDimension: DimensionName;
     stackResultDimension: DimensionName;
     stackedOnSeries?: SERIES_MODEL;
+    isPercentStackEnabled?: boolean;
 }
 
 // -----------------------------

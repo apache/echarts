@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style></style>
+
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+        <div id="main7"></div>
+
+        <!-- Example 1 -->
+        <script>
+            require(["echarts"], function (echarts) {
+                const option = {
+                    tooltip: {
+                        trigger: "axis",
+                        order: "seriesDesc",
+                    },
+                    legend: {},
+                    xAxis: {
+                        type: "category",
+                        data: ["a", "b", "c", "d", "e"],
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: { formatter: "{value}%" },
+                        max: 100,
+                    },
+                    series: [
+                        {
+                            name: "Grapes",
+                            type: "line",
+                            areaStyle: {},
+                            stack: "fruit",
+                            stackPercent: true,
+                            data: [10, 20, 10, 20, 10],
+                        },
+                        {
+                            name: "Apples",
+                            type: "line",
+                            areaStyle: {},
+                            stack: "fruit",
+                            stackPercent: true,
+                            data: [50, 20, 60, 80, 30],
+                        },
+                        {
+                            name: "Bananas",
+                            type: "line",
+                            areaStyle: {},
+                            stack: "fruit",
+                            stackPercent: true,
+                            data: [50, 80, 40, 20, 70],
+                        },
+                    ],
+                };
+                testHelper.create(echarts, "main1", {
+                    title: ["example 1: line series - stackPercent: true"],
+                    option,
+                });
+            });
+        </script>
+
+        <!-- Example 2 -->
+        <script>
+            require(["echarts"], function (echarts) {
+                const option = {
+                    tooltip: {
+                        trigger: "axis",
+                        order: "seriesDesc",
+                        axisPointer: { type: "shadow" },
+                    },
+                    legend: {},
+                    xAxis: {
+                        type: "category",
+                        data: ["a", "b", "c", "d", "e"],
+                    },
+                    yAxis: {
+                        type: "value",
+                        max: 100,
+                        axisLabel: { formatter: "{value}%" },
+                    },
+                    series: [
+                        {
+                            name: "Grapes",
+                            type: "bar",
+                            areaStyle: {},
+                            stack: "fruit",
+                            stackPercent: true,
+                            data: [10, 20, 10, 20, 10],
+                        },
+                        {
+                            name: "Apples",
+                            type: "bar",
+                            areaStyle: {},
+                            stack: "fruit",
+                            stackPercent: true,
+                            data: [50, 20, 60, 80, 30],
+                        },
+                        {
+                            name: "Bananas",
+                            type: "bar",
+                            areaStyle: {},
+                            stack: "fruit",
+                            stackPercent: true,
+                            data: [50, 80, 40, 20, 70],
+                        },
+                    ],
+                };
+                testHelper.create(echarts, "main2", {
+                    title: ["example 2: bar series - stackPercent: true"],
+                    option,
+                });
+            });
+        </script>
+
+        <!-- Example 3 -->
+        <script>
+            require(["echarts"], function (echarts) {
+                const rawData = [
+                    [100, 302, 301, 334, 390, 330, 320],
+                    [320, 132, 101, 134, 90, 230, 210],
+                    [220, 182, 191, 234, 290, 330, 310],
+                    [150, 212, 201, 154, 190, 330, 410],
+                    [820, 832, 901, 934, 1290, 1330, 1320],
+                ];
+                const labels = [
+                    "Direct",
+                    "Mail Ad",
+                    "Affiliate Ad",
+                    "Video Ad",
+                    "Search Engine",
+                ];
+                const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+                const series = labels.map((name, sid) => ({
+                    name,
+                    type: "bar",
+                    stack: "total",
+                    stackPercent: true,
+                    data: rawData[sid],
+                    label: {
+                        show: true,
+                        formatter: (params) => {
+                            return `${params.percent}%`;
+                        },
+                    },
+                }));
+                const option = {
+                    legend: {},
+                    tooltip: {
+                        trigger: "item",
+                        // https://echarts.apache.org/en/option.html#tooltip.formatter
+                        formatter: (params) => {
+                            return `Normalized value: ${params.percent}%`;
+                        },
+                    },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: { formatter: "{value}%" },
+                    },
+                    xAxis: { type: "category", data: days },
+                    series,
+                };
+                testHelper.create(echarts, "main3", {
+                    title: ["example 3: formatter - stackPercent: true"],
+                    option,
+                });
+            });
+        </script>
+
+        <!-- Example 4 -->
+        <script>
+            require(["echarts"], function (echarts) {
+                const option = {
+                    tooltip: {
+                        trigger: "axis",
+                        order: "seriesDesc",
+                        axisPointer: { type: "shadow" },
+                    },
+                    legend: { data: ["Forest", "Steppe", "Desert", "Wetland"] },
+                    xAxis: [
+                        {
+                            type: "category",
+                            data: ["2012", "2013", "2014", "2015", "2016"],
+                        },
+                    ],
+                    yAxis: [{ type: "value" }],
+                    series: [
+                        {
+                            name: "Forest",
+                            type: "bar",
+                            stack: "total",
+                            stackPercent: true,
+                            data: [320, 332, 301, 334, 390],
+                        },
+                        {
+                            name: "Steppe",
+                            type: "bar",
+                            stack: "total",
+                            stackPercent: true,
+                            data: [220, 182, 191, 234, 290],
+                        },
+                        {
+                            name: "Desert",
+                            type: "bar",
+                            stack: "total",
+                            stackPercent: true,
+                            data: [150, 232, 201, 154, 190],
+                        },
+                        {
+                            name: "Wetland",
+                            type: "bar",
+                            stack: "total",
+                            stackPercent: true,
+                            data: [98, 77, 101, 99, 40],
+                        },
+                    ],
+                };
+                testHelper.create(echarts, "main4", {
+                    title: ["example 4: bar series - stackPercent: true"],
+                    option,
+                });
+            });
+        </script>
+
+        <!-- Example 5: Time-based axis -->
+        <script>
+            require(["echarts"], function (echarts) {
+                const baseTime = new Date("2024-01-01T00:00:00Z").getTime();
+                const timeStamps = Array.from(
+                    { length: 6 },
+                    (_, i) => baseTime + i * 86400 * 1000
+                ); // 1 day apart
+
+                const option = {
+                    tooltip: {
+                        trigger: "axis",
+                        axisPointer: { type: "shadow" },
+                    },
+                    legend: {},
+                    xAxis: {
+                        type: "time",
+                        min: timeStamps[0],
+                        max: timeStamps[timeStamps.length - 1],
+                    },
+                    yAxis: { type: "value" },
+                    dataset: {
+                        source: timeStamps.map((ts, i) => [
+                            new Date(ts),
+                            10 + i * 2, // Low
+                            20 + (i % 3) * 5, // Medium
+                            30 + (i % 2) * 10, // High
+                        ]),
+                    },
+                    series: [
+                        {
+                            name: "Low",
+                            type: "bar",
+                            stack: "all",
+                            stackPercent: true,
+                            encode: { x: 0, y: 1 },
+                        },
+                        {
+                            name: "Medium",
+                            type: "bar",
+                            stack: "all",
+                            stackPercent: true,
+                            encode: { x: 0, y: 1 },
+                        },
+                        {
+                            name: "High",
+                            type: "bar",
+                            stack: "all",
+                            stackPercent: true,
+                            encode: { x: 0, y: 1 },
+                        },
+                    ],
+                };
+
+                testHelper.create(echarts, "main5", {
+                    title: ["example 5: time xAxis - stackPercent: true"],
+                    option,
+                });
+            });
+        </script>
+
+        <!-- Example 6: Uneven bar counts -->
+        <script>
+            require(["echarts"], function (echarts) {
+                const option = {
+                    tooltip: {
+                        trigger: "axis",
+                        axisPointer: { type: "shadow" },
+                    },
+                    legend: {},
+                    xAxis: { type: "category", data: ["A", "B", "C", "D"] },
+                    yAxis: {
+                        type: "value",
+                        axisLabel: { formatter: "{value}%" },
+                    },
+                    series: [
+                        {
+                            name: "Alpha",
+                            type: "bar",
+                            stack: "z",
+                            stackPercent: true,
+                            data: [40, 20, 30, 10],
+                        },
+                        {
+                            name: "Beta",
+                            type: "bar",
+                            stack: "z",
+                            stackPercent: true,
+                            data: [30, 40, 20, 10],
+                        },
+                        {
+                            name: "Gamma",
+                            type: "bar",
+                            stack: "z",
+                            stackPercent: true,
+                            data: [30, 40, null, 80],
+                        },
+                    ],
+                };
+                testHelper.create(echarts, "main6", {
+                    title: ["example 6: uneven / null - stackPercent: true"],
+                    option,
+                });
+            });
+        </script>
+
+        <!-- Example 7 -->
+        <script>
+            require(["echarts"], function (echarts) {
+                const option = {
+                    tooltip: {
+                        trigger: "axis",
+                        order: "seriesDesc",
+                        axisPointer: { type: "shadow" },
+                    },
+                    legend: {
+                        data: [
+                            "prometheus",
+                            "alertmanager",
+                            "kube-state-metrics",
+                            "node-exporter",
+                        ],
+                    },
+                    xAxis: [
+                        {
+                            type: "time",
+                        },
+                    ],
+                    yAxis: [
+                        {
+                            type: "value",
+                        },
+                    ],
+                    series: [
+                        {
+                            name: "prometheus",
+                            type: "line",
+                            stack: "total",
+                            stackPercent: true,
+                            areaStyle: {},
+                            data: [
+                                [1746523665000, 2.38860000000065],
+                                [1746523680000, 2.38860000000065],
+                                [1746523695000, 2.38860000000065],
+                                [1746523710000, 2.38860000000065],
+                                [1746523725000, 2.38860000000065],
+                                [1746523740000, 2.38415000000116],
+                            ],
+                        },
+                        {
+                            name: "alertmanager",
+                            type: "line",
+                            stack: "total",
+                            stackPercent: true,
+                            areaStyle: {},
+                            data: [
+                                [1746523665000, 0.015500000000000968],
+                                [1746523680000, 0.015500000000000968],
+                                [1746523695000, 0.015500000000000968],
+                                [1746523710000, 0.015500000000000968],
+                                [1746523725000, 0.015500000000000968],
+                                [1746523740000, 0.015549999999999406],
+                            ],
+                        },
+                        {
+                            name: "kube-state-metrics",
+                            type: "line",
+                            stack: "total",
+                            stackPercent: true,
+                            areaStyle: {},
+                            data: [
+                                [1746523665000, 0],
+                                [1746523680000, 0],
+                                [1746523695000, 0],
+                                [1746523710000, 0],
+                                [1746523725000, 0],
+                                [1746523740000, 0],
+                            ],
+                        },
+                        {
+                            name: "node-exporter",
+                            type: "line",
+                            stack: "total",
+                            stackPercent: true,
+                            areaStyle: {},
+                            data: [
+                                [1746523665000, 0.47871666666666474],
+                                [1746523680000, 0.47871666666666474],
+                                [1746523695000, 0.47871666666666474],
+                                [1746523710000, 0.47871666666666474],
+                                [1746523725000, 0.47871666666666474],
+                                [1746523740000, 0.4786833333333303],
+                            ],
+                        },
+                    ],
+                };
+                testHelper.create(echarts, "main7", {
+                    title: ["example 7: time axis - stackPercent: true"],
+                    option,
+                });
+            });
+        </script>
+    </body>
+</html>
