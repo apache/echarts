@@ -31,6 +31,9 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { isString, retrieve3 } from 'zrender/src/core/util';
 import type { GraphEdge } from '../../data/Graph';
+import RoamController from '../../component/helper/RoamController';
+import * as roamHelper from '../../component/helper/roamHelper';
+import View from '../../coord/View';
 
 class SankeyPathShape {
     x1 = 0;
@@ -106,15 +109,28 @@ class SankeyView extends ChartView {
     readonly type = SankeyView.type;
 
     private _model: SankeySeriesModel;
-
+    private _mainGroup = new graphic.Group();
     private _focusAdjacencyDisabled = false;
 
     private _data: SeriesData;
 
+    private _controller: RoamController;
+    private _controllerHost: roamHelper.RoamControllerHost;
+
+    init(ecModel: GlobalModel, api: ExtensionAPI): void {
+        this._controller = new RoamController(api.getZr());
+
+        this._controllerHost = {
+            target: this.group
+        } as roamHelper.RoamControllerHost;
+
+        this.group.add(this._mainGroup);
+    }
+
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const sankeyView = this;
         const graph = seriesModel.getGraph();
-        const group = this.group;
+        const group = this._mainGroup;
         const layoutInfo = seriesModel.layoutInfo;
         // view width
         const width = layoutInfo.width;
@@ -128,8 +144,8 @@ class SankeyView extends ChartView {
 
         group.removeAll();
 
-        group.x = layoutInfo.x;
-        group.y = layoutInfo.y;
+        this._updateViewCoordSys(seriesModel, api);
+        roamHelper.updateController(seriesModel, api, group, this._controller, this._controllerHost);
 
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
@@ -259,13 +275,15 @@ class SankeyView extends ChartView {
             const dragX = itemModel.get('localX');
             const dragY = itemModel.get('localY');
             const emphasisModel = itemModel.getModel('emphasis');
+            const borderRadius = itemModel.get(['itemStyle', 'borderRadius']) as number | number[] || 0;
 
             const rect = new graphic.Rect({
                 shape: {
                     x: dragX != null ? dragX * width : layout.x,
                     y: dragY != null ? dragY * height : layout.y,
                     width: layout.dx,
-                    height: layout.dy
+                    height: layout.dy,
+                    r: borderRadius
                 },
                 style: itemModel.getModel('itemStyle').getItemStyle(),
                 z2: 10
@@ -344,6 +362,25 @@ class SankeyView extends ChartView {
     }
 
     dispose() {
+        this._controller && this._controller.dispose();
+        this._controllerHost = null;
+    }
+
+    private _updateViewCoordSys(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
+        const layoutInfo = seriesModel.layoutInfo;
+        const width = layoutInfo.width;
+        const height = layoutInfo.height;
+
+        const viewCoordSys = seriesModel.coordinateSystem = new View();
+        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
+
+        viewCoordSys.setBoundingRect(0, 0, width, height);
+
+        viewCoordSys.setCenter(seriesModel.get('center'), api);
+        viewCoordSys.setZoom(seriesModel.get('zoom'));
+
+        this._mainGroup.x = layoutInfo.x;
+        this._mainGroup.y = layoutInfo.y;
     }
 }
 
@@ -387,7 +424,7 @@ function createGridClipShape(rect: RectLike, seriesModel: SankeySeriesModel, cb:
             x: rect.x - 10,
             y: rect.y - 10,
             width: 0,
-            height: rect.height + 20
+            height: rect.height + 20,
         }
     });
     graphic.initProps(rectEl, {

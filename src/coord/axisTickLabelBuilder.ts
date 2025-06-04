@@ -31,6 +31,8 @@ import { AxisBaseOption } from './axisCommonTypes';
 import OrdinalScale from '../scale/Ordinal';
 import { AxisBaseModel } from './AxisBaseModel';
 import type Axis2D from './cartesian/Axis2D';
+import { NullUndefined, ScaleTick, VisualAxisBreak } from '../util/types';
+import { ScaleGetTicksOpt } from '../scale/Scale';
 
 type CacheKey = string | number;
 
@@ -60,15 +62,47 @@ type InnerStore = {
 
 const inner = makeInner<InnerStore, any>();
 
+function tickValuesToNumbers(axis: Axis, values: (number | string | Date)[]) {
+    const nums = zrUtil.map(values, val => axis.scale.parse(val));
+    if (axis.type === 'time' && nums.length > 0) {
+        // Time axis needs duplicate first/last tick (see TimeScale.getTicks())
+        // The first and last tick/label don't get drawn
+        nums.sort();
+        nums.unshift(nums[0]);
+        nums.push(nums[nums.length - 1]);
+    }
+    return nums;
+}
+
 export function createAxisLabels(axis: Axis): {
     labels: {
-        level?: number,
         formattedLabel: string,
         rawLabel: string,
-        tickValue: number
+        tickValue: number,
+        time: ScaleTick['time'] | NullUndefined,
+        break: VisualAxisBreak | NullUndefined,
     }[],
     labelCategoryInterval?: number
 } {
+    const custom = axis.getLabelModel().get('customValues');
+    if (custom) {
+        const labelFormatter = makeLabelFormatter(axis);
+        const extent = axis.scale.getExtent();
+        const tickNumbers = tickValuesToNumbers(axis, custom);
+        const ticks = zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1]);
+        return {
+            labels: zrUtil.map(ticks, numval => {
+                const tick = {value: numval};
+                return {
+                    formattedLabel: labelFormatter(tick),
+                    rawLabel: axis.scale.getLabel(tick),
+                    tickValue: numval,
+                    time: undefined,
+                    break: undefined,
+                };
+            })
+        };
+    }
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryLabels(axis)
@@ -83,14 +117,26 @@ export function createAxisLabels(axis: Axis): {
  *     tickCategoryInterval: number
  * }
  */
-export function createAxisTicks(axis: Axis, tickModel: AxisBaseModel): {
+export function createAxisTicks(
+    axis: Axis,
+    tickModel: AxisBaseModel,
+    opt?: Pick<ScaleGetTicksOpt, 'breakTicks' | 'pruneByBreak'>
+): {
     ticks: number[],
     tickCategoryInterval?: number
 } {
+    const custom = axis.getTickModel().get('customValues');
+    if (custom) {
+        const extent = axis.scale.getExtent();
+        const tickNumbers = tickValuesToNumbers(axis, custom);
+        return {
+            ticks: zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1])
+        };
+    }
     // Only ordinal scale support tick interval
     return axis.type === 'category'
         ? makeCategoryTicks(axis, tickModel)
-        : {ticks: zrUtil.map(axis.scale.getTicks(), tick => tick.value) };
+        : {ticks: zrUtil.map(axis.scale.getTicks(opt), tick => tick.value)};
 }
 
 function makeCategoryLabels(axis: Axis) {
@@ -177,10 +223,11 @@ function makeRealNumberLabels(axis: Axis) {
     return {
         labels: zrUtil.map(ticks, function (tick, idx) {
             return {
-                level: tick.level,
                 formattedLabel: labelFormatter(tick, idx),
                 rawLabel: axis.scale.getLabel(tick),
-                tickValue: tick.value
+                tickValue: tick.value,
+                time: tick.time,
+                break: tick.break,
             };
         })
     };
@@ -331,6 +378,8 @@ interface MakeLabelsResultObj {
     formattedLabel: string
     rawLabel: string
     tickValue: number
+    time: undefined
+    break: undefined
 }
 
 function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: number): MakeLabelsResultObj[];
@@ -388,7 +437,9 @@ function makeLabelsByNumericCategoryInterval(axis: Axis, categoryInterval: numbe
             : {
                 formattedLabel: labelFormatter(tickObj),
                 rawLabel: ordinalScale.getLabel(tickObj),
-                tickValue: tickValue
+                tickValue: tickValue,
+                time: undefined,
+                break: undefined,
             }
         );
     }
@@ -421,7 +472,9 @@ function makeLabelsByCustomizedCategoryInterval(axis: Axis, categoryInterval: Ca
                 : {
                     formattedLabel: labelFormatter(tick),
                     rawLabel: rawLabel,
-                    tickValue: tickValue
+                    tickValue: tickValue,
+                    time: undefined,
+                    break: undefined,
                 }
             );
         }

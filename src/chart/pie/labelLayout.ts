@@ -89,7 +89,7 @@ function adjustSingleSide(
             const rA = r + item.len;
             const rA2 = rA * rA;
             // Use ellipse implicit function to calculate x
-            const dx = Math.sqrt((1 - Math.abs(dy * dy / rB2)) * rA2);
+            const dx = Math.sqrt(Math.abs((1 - dy * dy / rB2) * rA2));
             const newX = cx + (dx + item.len2) * dir;
             const deltaX = newX - item.label.x;
             const newTargetWidth = item.targetTextWidth - deltaX * dir;
@@ -327,7 +327,7 @@ function constrainTextWidth(
 
         const newRect = label.getBoundingRect();
         textRect.width = newRect.width;
-        const margin = (label.style.margin || 0) + 2.1;
+        const margin = ((label.style.margin as number) || 0) + 2.1;
         textRect.height = newRect.height + margin;
         textRect.y -= (textRect.height - oldHeight) / 2;
     }
@@ -501,7 +501,7 @@ export default function pieLabelLayout(
             const textRect = label.getBoundingRect().clone();
             textRect.applyTransform(label.getComputedTransform());
             // Text has a default 1px stroke. Exclude this.
-            const margin = (label.style.margin || 0) + 2.1;
+            const margin = ((label.style.margin as number) || 0) + 2.1;
             textRect.y -= margin / 2;
             textRect.height += margin;
 

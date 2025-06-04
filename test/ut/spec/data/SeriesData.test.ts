@@ -1,4 +1,3 @@
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -262,26 +261,6 @@ describe('SeriesData', function () {
             data.initData(store);
             const data2 = data.cloneShallow();
             expect(data2.getStore()).toBe(data.getStore());
-        });
-    });
-
-    describe('Data read', function () {
-        it('indicesOfNearest', function () {
-            const data = new SeriesData(['value'], new Model());
-            // ---- index: 0   1   2   3   4   5   6   7
-            data.initData([10, 20, 30, 35, 40, 40, 35, 50]);
-
-            expect(data.indicesOfNearest('value', 24.5)).toEqual([1]);
-            expect(data.indicesOfNearest('value', 25)).toEqual([1]);
-            expect(data.indicesOfNearest('value', 25.5)).toEqual([2]);
-            expect(data.indicesOfNearest('value', 25.5)).toEqual([2]);
-            expect(data.indicesOfNearest('value', 41)).toEqual([4, 5]);
-            expect(data.indicesOfNearest('value', 39)).toEqual([4, 5]);
-            expect(data.indicesOfNearest('value', 41)).toEqual([4, 5]);
-            expect(data.indicesOfNearest('value', 36)).toEqual([3, 6]);
-
-            expect(data.indicesOfNearest('value', 50.6, 0.5)).toEqual([]);
-            expect(data.indicesOfNearest('value', 50.5, 0.5)).toEqual([7]);
         });
     });
 

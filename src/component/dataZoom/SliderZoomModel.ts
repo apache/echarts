@@ -28,6 +28,10 @@ import {
 } from '../../util/types';
 import { inheritDefaultOption } from '../../util/component';
 
+interface SliderHandleLabelOption {
+    show?: boolean
+}
+
 export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
 
     show?: boolean
@@ -79,6 +83,8 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
 
     handleIcon?: string
 
+    handleLabel?: SliderHandleLabelOption
+
     /**
      * number: height of icon. width will be calculated according to the aspect of icon.
      * string: percent of the slider height. width will be calculated according to the aspect of icon.
@@ -117,6 +123,7 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
     brushStyle?: ItemStyleOption
 
     emphasis?: {
+        handleLabel: SliderHandleLabelOption
         handleStyle?: ItemStyleOption
         moveHandleStyle?: ItemStyleOption
     }
@@ -201,6 +208,9 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         },
 
         emphasis: {
+            handleLabel: {
+                show: true
+            },
             handleStyle: {
                 borderColor: '#8FB0F7'
             },

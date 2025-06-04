@@ -25,8 +25,7 @@ import {radialCoordinate} from './layoutHelper';
 import * as bbox from 'zrender/src/core/bbox';
 import View from '../../coord/View';
 import * as roamHelper from '../../component/helper/roamHelper';
-import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
-import {onIrrelevantElement} from '../../component/helper/cursorHelper';
+import RoamController from '../../component/helper/RoamController';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
@@ -132,7 +131,7 @@ class TreeView extends ChartView {
     private _mainGroup = new graphic.Group();
 
     private _controller: RoamController;
-    private _controllerHost: RoamControllerHost;
+    private _controllerHost: roamHelper.RoamControllerHost;
 
     private _data: SeriesData<TreeSeriesModel>;
 
@@ -145,7 +144,7 @@ class TreeView extends ChartView {
 
         this._controllerHost = {
             target: this.group
-        } as RoamControllerHost;
+        } as roamHelper.RoamControllerHost;
 
         this.group.add(this._mainGroup);
     }
@@ -277,44 +276,17 @@ class TreeView extends ChartView {
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        const controller = this._controller;
-        const controllerHost = this._controllerHost;
-        const group = this.group;
-        controller.setPointerChecker(function (e, x, y) {
-            const rect = group.getBoundingRect();
-            rect.applyTransform(group.transform);
-            return rect.contain(x, y)
-                && !onIrrelevantElement(e, api, seriesModel);
-        });
+        roamHelper.updateController(
+            seriesModel,
+            api,
+            this.group,
+            this._controller,
+            this._controllerHost
+        );
 
-        controller.enable(seriesModel.get('roam'));
-        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-        controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
-
-        controller
-            .off('pan')
-            .off('zoom')
-            .on('pan', (e) => {
-                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'treeRoam',
-                    dx: e.dx,
-                    dy: e.dy
-                });
-            })
+        this._controller
             .on('zoom', (e) => {
-                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'treeRoam',
-                    zoom: e.scale,
-                    originX: e.originX,
-                    originY: e.originY
-                });
                 this._updateNodeAndLinkScale(seriesModel);
-                // Only update label layout on zoom
-                api.updateLabelLayout();
             });
     }
 

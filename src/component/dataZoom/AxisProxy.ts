@@ -42,8 +42,6 @@ interface MinMaxSpan {
     maxValueSpan: number
 }
 
-type SupportedAxis = 'xAxis' | 'yAxis' | 'angleAxis' | 'radiusAxis' | 'singleAxis';
-
 /**
  * Operate single axis.
  * One axis can only operated by one axis operator.

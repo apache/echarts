@@ -20,13 +20,16 @@
 // Layout helpers for each component positioning
 
 import * as zrUtil from 'zrender/src/core/util';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
-import { BoxLayoutOptionMixin, ComponentLayoutMode } from './types';
+import { BoxLayoutOptionMixin, CircleLayoutOptionMixin, ComponentLayoutMode, SeriesOption } from './types';
 import Group from 'zrender/src/graphic/Group';
+import { SectorShape } from 'zrender/src/graphic/shape/Sector';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
+import SeriesModel from '../model/Series';
+import ExtensionAPI from '../core/ExtensionAPI';
 
 const each = zrUtil.each;
 
@@ -189,6 +192,60 @@ export function getAvailableSize(
     };
 }
 
+export function getViewRect(seriesModel: SeriesModel, api: ExtensionAPI) {
+    return getLayoutRect(
+        seriesModel.getBoxLayoutParams(), {
+            width: api.getWidth(),
+            height: api.getHeight()
+        }
+    );
+}
+
+export function getCircleLayout<T extends CircleLayoutOptionMixin & SeriesOption>(
+    seriesModel: SeriesModel<T>,
+    api: ExtensionAPI
+):
+    Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> {
+    const viewRect = getViewRect(seriesModel, api);
+
+    // center can be string or number when coordinateSystem is specified
+    let center = seriesModel.get('center');
+    let radius = seriesModel.get('radius');
+
+    if (!zrUtil.isArray(radius)) {
+        radius = [0, radius];
+    }
+    const width = parsePercent(viewRect.width, api.getWidth());
+    const height = parsePercent(viewRect.height, api.getHeight());
+    const size = Math.min(width, height);
+    const r0 = parsePercent(radius[0], size / 2);
+    const r = parsePercent(radius[1], size / 2);
+
+    let cx: number;
+    let cy: number;
+    const coordSys = seriesModel.coordinateSystem;
+    if (coordSys) {
+        // percentage is not allowed when coordinate system is specified
+        const point = coordSys.dataToPoint(center);
+        cx = point[0] || 0;
+        cy = point[1] || 0;
+    }
+    else {
+        if (!zrUtil.isArray(center)) {
+            center = [center, center];
+        }
+        cx = parsePercent(center[0], width) + viewRect.x;
+        cy = parsePercent(center[1], height) + viewRect.y;
+    }
+
+    return {
+        cx,
+        cy,
+        r0,
+        r
+    };
+}
+
 /**
  * Parse position info.
  */
@@ -196,7 +253,22 @@ export function getLayoutRect(
     positionInfo: BoxLayoutOptionMixin & {
         aspect?: number // aspect is width / height
     },
-    containerRect: {width: number, height: number},
+    // The options in `positionInfo` is based on the container rect:
+    containerRect: {
+        x?: number; // by default 0
+        y?: number; // by default 0
+        width: number; // required
+        height: number; // required
+    },
+    // This is the margin to the canvas. If width/height is specified,
+    // `margin` does not effect width/height.
+    // If using `margin`, we should make sure:
+    // either [A]:
+    //      layout like CSS content-box, that is, user specified width/height means
+    //      content width/height, which do not include border-width and pedding.
+    // or [B]:
+    //      layout like CSS border-box, but user can not specify width/height
+    //      (like in `title`/`tootbox` component did)
     margin?: number | number[]
 ): LayoutRect {
     margin = formatUtil.normalizeCssArray(margin || 0);
@@ -289,6 +361,12 @@ export function getLayoutRect(
 
     const rect = new BoundingRect(left + margin[3], top + margin[0], width, height) as LayoutRect;
     rect.margin = margin;
+    if (containerRect.x) {
+        rect.x += containerRect.x;
+    }
+    if (containerRect.y) {
+        rect.y += containerRect.y;
+    }
     return rect;
 }
 
@@ -545,4 +623,16 @@ export function copyLayoutParams(target: BoxLayoutOptionMixin, source: BoxLayout
         source.hasOwnProperty(name) && (target[name] = source[name]);
     });
     return target;
+}
+
+/**
+ * Apply pedding (CSS like) to a rect, and return the input rect.
+ */
+export function applyPedding<TRect extends RectLike>(rect: TRect, pedding?: number | number[]): TRect {
+    const peddingArr = formatUtil.normalizeCssArray(pedding || 0);
+    rect.x += peddingArr[3];
+    rect.y += peddingArr[0];
+    rect.width -= peddingArr[1] + peddingArr[3];
+    rect.height -= peddingArr[0] + peddingArr[2];
+    return rect;
 }
