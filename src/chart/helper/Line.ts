@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isArray, each } from 'zrender/src/core/util';
+import { isArray, each, retrieve2 } from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
@@ -165,9 +165,11 @@ class Line extends graphic.Group {
     _createLine(lineData: LineList, idx: number, seriesScope?: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
         const linePoints = lineData.getItemLayout(idx);
+        const z2 = lineData.getItemVisual(idx, 'z2');
         const line = createLine(linePoints);
         line.shape.percent = 0;
         graphic.initProps(line, {
+            z2: retrieve2(z2, 0),
             shape: {
                 percent: 1
             }

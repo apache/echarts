@@ -237,6 +237,7 @@ export interface LegendOption extends ComponentOption, LegendStyleOption,
      */
     tooltip?: CommonTooltipOption<LegendTooltipFormatterParams>
 
+    triggerEvent?: boolean
 }
 
 class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentModel<Ops> {
@@ -530,7 +531,9 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
 
         tooltip: {
             show: false
-        }
+        },
+
+        triggerEvent: false
     };
 }
 

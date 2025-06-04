@@ -26,7 +26,7 @@ import * as graphic from '../../util/graphic';
 import { toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
 import * as markerHelper from './markerHelper';
 import MarkerView from './MarkerView';
-import { retrieve, mergeAll, map, curry, filter, HashMap, extend, isString } from 'zrender/src/core/util';
+import { retrieve, mergeAll, map, curry, filter, HashMap, extend, isString, retrieve2 } from 'zrender/src/core/util';
 import { ScaleDataValue, ZRColor } from '../../util/types';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
 import MarkAreaModel, { MarkArea2DDataItemOption } from './MarkAreaModel';
@@ -302,8 +302,9 @@ class MarkAreaView extends MarkerView {
                 allClipped: allClipped
             });
 
-
-            const style = areaData.getItemModel<MarkAreaMergedItemOption>(idx).getModel('itemStyle').getItemStyle();
+            const itemModel = areaData.getItemModel<MarkAreaMergedItemOption>(idx);
+            const style = itemModel.getModel('itemStyle').getItemStyle();
+            const z2 = itemModel.get('z2');
             const color = getVisualFromData(seriesData, 'color') as ZRColor;
             if (!style.fill) {
                 style.fill = color;
@@ -316,14 +317,17 @@ class MarkAreaView extends MarkerView {
             }
             // Visual
             areaData.setItemVisual(idx, 'style', style);
+            areaData.setItemVisual(idx, 'z2', retrieve2(z2, 0));
         });
 
 
         areaData.diff(inner(polygonGroup).data)
             .add(function (idx) {
                 const layout = areaData.getItemLayout(idx);
+                const z2 = areaData.getItemVisual(idx, 'z2');
                 if (!layout.allClipped) {
                     const polygon = new graphic.Polygon({
+                        z2: retrieve2(z2, 0),
                         shape: {
                             points: layout.points
                         }
@@ -335,9 +339,11 @@ class MarkAreaView extends MarkerView {
             .update(function (newIdx, oldIdx) {
                 let polygon = inner(polygonGroup).data.getItemGraphicEl(oldIdx) as graphic.Polygon;
                 const layout = areaData.getItemLayout(newIdx);
+                const z2 = areaData.getItemVisual(newIdx, 'z2');
                 if (!layout.allClipped) {
                     if (polygon) {
                         graphic.updateProps(polygon, {
+                            z2: retrieve2(z2, 0),
                             shape: {
                                 points: layout.points
                             }

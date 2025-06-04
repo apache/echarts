@@ -39,6 +39,9 @@ import {windowOpen} from '../../util/format';
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import tokens from '../../visual/tokens';
 
+interface TitleTextStyleOption extends LabelOption {
+    width?: number
+}
 
 export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
 
@@ -76,9 +79,9 @@ export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, Bord
      */
     itemGap?: number
 
-    textStyle?: LabelOption
+    textStyle?: TitleTextStyleOption
 
-    subtextStyle?: LabelOption
+    subtextStyle?: TitleTextStyleOption
 
     /**
      * If trigger mouse or touch event
