@@ -526,7 +526,7 @@ function fixMinMaxLabelShow(
     // If they are overlapped, we need to hide the min(max) tick label
     const showMinLabel = axisModel.get(['axisLabel', 'showMinLabel']);
     const showMaxLabel = axisModel.get(['axisLabel', 'showMaxLabel']);
-    
+
     // FIXME
     // Have not consider onBand yet, where tick els is more than label els.
 
