@@ -28,6 +28,7 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
         <!-- <script src="ut/lib/canteen.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
@@ -41,7 +42,8 @@ under the License.
         <div id="main2"></div>
         <div id="main3"></div>
         <div id="main4"></div>
-        <div id="main5"></div>
+        <div id="main_tiny_cartesians"></div>
+        <div id="main_grid_layout"></div>
 
         <script>
             require([
@@ -795,6 +797,10 @@ under the License.
                     height: 600
                 });
 
+                if (!chart) {
+                    return;
+                }
+
                 const elements = [
                     ['2', '9', 'Lanthanides', 20],
                     ['2', '10', 'Actinides', 20],
@@ -1048,7 +1054,7 @@ under the License.
                     })(),
                 };
 
-                var chart = testHelper.create(echarts, 'main5', {
+                var chart = testHelper.create(echarts, 'main_tiny_cartesians', {
                     title: [
                         'Cartesians in matrix'
                     ],
@@ -1058,6 +1064,317 @@ under the License.
             });
 
         </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                const _contentDefList = [{
+                    option: {
+                        title: {
+                            id: 'header_1',
+                            text: 'Header section',
+                            textStyle: {fontSize: 14},
+                            left: 'center',
+                            top: 15,
+                        },
+                        xAxis: {
+                            type: 'time',
+                            id: 'header_1',
+                            gridId: 'header_1',
+                        },
+                        yAxis: {
+                            id: 'header_1',
+                            gridId: 'header_1',
+                        },
+                        grid: {
+                            id: 'header_1',
+                            containLabel: true,
+                            top: 50,
+                            bottom: 10,
+                            left: 10,
+                            right: 10,
+                        },
+                        series: {
+                            type: 'line',
+                            id: 'header_1',
+                            xAxisId: 'header_1',
+                            yAxisId: 'header_1',
+                            symbol: 'none',
+                            data: generateSingleSeriesData(100),
+                        },
+                    },
+                }, {
+                    option: {
+                        title: {
+                            id: 'sidebar_1',
+                            text: 'Sidebar section',
+                            textStyle: {fontSize: 14},
+                            left: 'center',
+                            top: 15,
+                        },
+                        xAxis: {
+                            id: 'sidebar_1',
+                            gridId: 'sidebar_1',
+                            axisLabel: {
+                                hideOverlap: true,
+                            },
+                        },
+                        yAxis: {
+                            type: 'time',
+                            id: 'sidebar_1',
+                            gridId: 'sidebar_1',
+                            axisLabel: {
+                                hideOverlap: true,
+                            },
+                        },
+                        grid: {
+                            id: 'sidebar_1',
+                            top: 50,
+                            bottom: 30,
+                            left: 40,
+                            right: 30,
+                        },
+                        series: {
+                            type: 'bar',
+                            id: 'sidebar_1',
+                            xAxisId: 'sidebar_1',
+                            yAxisId: 'sidebar_1',
+                            data: generateSingleSeriesData(10, true),
+                        },
+                    },
+                }, {
+                    option: {
+                        title: {
+                            id: 'main_content_area_1',
+                            text: 'Main Content Area',
+                            textStyle: {fontSize: 14},
+                            left: 'center',
+                            top: 15,
+                        },
+                        xAxis: {
+                            type: 'time',
+                            id: 'main_content_area_1',
+                            gridId: 'main_content_area_1',
+                        },
+                        yAxis: {
+                            id: 'main_content_area_1',
+                            gridId: 'main_content_area_1'
+                        },
+                        grid: {
+                            id: 'main_content_area_1',
+                            containLabel: true,
+                            top: 50,
+                            bottom: 10,
+                            left: 10,
+                            right: 10,
+                        },
+                        series: {
+                            type: 'line',
+                            id: 'main_content_area_1',
+                            xAxisId: 'main_content_area_1',
+                            yAxisId: 'main_content_area_1',
+                            symbol: 'none',
+                            data: generateSingleSeriesData(100),
+                        },
+                    },
+                }, {
+                    option: {
+                        title: {
+                            id: 'footer_1',
+                            text: 'Footer section',
+                            textStyle: {fontSize: 14},
+                            left: 'center',
+                            top: 15,
+                        },
+                        xAxis: {
+                            type: 'time',
+                            id: 'footer_1',
+                            gridId: 'footer_1',
+                        },
+                        yAxis: {
+                            id: 'footer_1',
+                            gridId: 'footer_1'
+                        },
+                        grid: {
+                            id: 'footer_1',
+                            containLabel: true,
+                            top: 50,
+                            bottom: 10,
+                            left: 10,
+                            right: 10,
+                        },
+                        series: {
+                            type: 'bar',
+                            id: 'footer_1',
+                            xAxisId: 'footer_1',
+                            yAxisId: 'footer_1',
+                            data: generateSingleSeriesData(10),
+                        },
+                    },
+                }];
+
+                const _option = {
+                    matrix: {
+                        x: {show: false, data: []},
+                        y: {show: false, data: []},
+                        body: {
+                            itemStyle: {borderColor: 'none'}
+                        },
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+
+                    media: (function () {
+                        const mediaList = [{
+                            query: {maxWidth: 500},
+                            matrix: {
+                                x: {data: Array(1).fill(null)},
+                                y: {data: Array(4).fill(null)},
+                            },
+                            coordList: [{
+                                id: 'header_1',
+                                coord: [0, 0],
+                            }, {
+                                id: 'sidebar_1',
+                                coord: [0, 1],
+                            }, {
+                                id: 'main_content_area_1',
+                                coord: [0, 2],
+                            }, {
+                                id: 'footer_1',
+                                coord: [0, 3],
+                            }]
+                        }, {
+                            // default with no query,
+                            matrix: {
+                                x: {data: Array(4).fill(null)},
+                                y: {data: Array(3).fill(null)},
+                            },
+                            coordList: [{
+                                id: 'header_1',
+                                coord: [[0, 3], 0],
+                            }, {
+                                id: 'sidebar_1',
+                                coord: [0, [1, 2]],
+                            }, {
+                                id: 'main_content_area_1',
+                                coord: [[1, 3], 1],
+                            }, {
+                                id: 'footer_1',
+                                coord: [[1, 3], 2],
+                            }]
+                        }];
+
+                        const mediaOption = mediaList.map(({query, matrix, coordList}) => ({
+                            query,
+                            option: {
+                                matrix: matrix,
+                                title: coordList.map(({id, coord}) => ({id, coord, coordinateSystem: 'matrix'})),
+                                grid: coordList.map(({id, coord}) => ({id, coord, coordinateSystem: 'matrix'})),
+                            },
+                        }));
+                        console.log('mediaOption', mediaOption);
+                        return mediaOption;
+                    })(),
+
+                    // Other components and series:
+                    ...(function () {
+                        const partialOption = {};
+                        for (const def of _contentDefList) {
+                            if (!def.option) {
+                                continue;
+                            }
+                            Object.keys(def.option).forEach(componentName => {
+                                partialOption[componentName] = partialOption[componentName] || [];
+                                if (Array.isArray(def.option[componentName])) {
+                                    partialOption[componentName] =
+                                        partialOption[componentName].concat(def.option[componentName]);
+                                }
+                                else {
+                                    partialOption[componentName].push(def.option[componentName]);
+                                }
+                            })
+                        }
+                        return partialOption;
+                    })()
+                }; // End of _option
+
+                console.log(_option);
+
+                function generateSingleSeriesData(dayCount, inverseXY) {
+                    const dayStart = new Date('2025-05-05T00:00:00.000Z'); // Monday
+                    const timeStart = dayStart.getTime();
+                    const sevenDay = 7 * 1000 * 3600 * 24;
+                    const seriesData = [];
+                    let lastVal = +(Math.random() * 300).toFixed(0);
+
+                    let turnCount = null;
+                    let sign = -1;
+                    for (let idx = 0; idx < dayCount; idx++) {
+                        if (turnCount == null || idx >= turnCount) {
+                            turnCount = idx + Math.round(dayCount / 4 * ((Math.random() - 0.5) * 0.1));
+                            sign = -sign;
+                        }
+                        const deltaMag = 50;
+                        const delta = +(Math.random() * deltaMag - deltaMag / 2 + sign * deltaMag / 3).toFixed(0);
+                        const val = Math.max(0, lastVal += delta);
+                        const xTime = timeStart + idx * sevenDay;
+                        const dataXVal = echarts.time.format(xTime, '{yyyy}-{MM}-{dd}');
+                        const item = [dataXVal, val];
+                        if (inverseXY) {
+                            item.reverse();
+                        }
+                        seriesData.push(item);
+                    }
+
+                    return seriesData;
+                }
+
+                var chart = testHelper.create(echarts, 'main_grid_layout', {
+                    title: [
+                        'Responsive grid layout',
+                        'Using media query; resize to change the layout',
+                    ],
+                    option: _option,
+                    width: 700,
+                    height: 400,
+                    inputsStyle: 'compact',
+                    draggable: true,
+                    inputs: [{
+                        type: 'select',
+                        text: 'show frame lines:',
+                        values: [false, true],
+                        onchange() {
+                            const shouldShow = this.value;
+                            chart.setOption({
+                                matrix: {
+                                    body: {itemStyle: {borderColor: shouldShow ? '#ccc' : 'none'}}
+                                }
+                            });
+                        }
+                    }]
+                });
+            });
+
+        </script>
+
+
+
+
+
 
     </body>
 </html>
