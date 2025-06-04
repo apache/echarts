@@ -120,12 +120,12 @@ function processTestsData(tests, oldTestsData, expectedSource, expectedVersion) 
             test.expectedSource = oldTestsData[idx].expectedSource;
             test.actualSource = oldTestsData[idx].actualSource;
 
-            // 如果旧数据有 markedAsExpected 而新数据没有，保留旧数据的 markedAsExpected
+            // If old data has markedAsExpected but new data doesn't, keep the old data.
             if (oldTestsData[idx].markedAsExpected && !test.markedAsExpected) {
                 test.markedAsExpected = oldTestsData[idx].markedAsExpected;
             }
 
-            // 确保 markedAsExpected 为空时设置为 null 而非空数组
+            // Ensure markedAsExpected is null when it's empty
             if (test.markedAsExpected && Array.isArray(test.markedAsExpected) && test.markedAsExpected.length === 0) {
                 test.markedAsExpected = null;
             }
@@ -200,7 +200,7 @@ const app = new Vue({
             actualVersion: null,
             expectedVersion: null,
             expectedSource: 'release',
-            actualSource: 'release',
+            actualSource: 'local',
             renderer: 'canvas',
             useCoarsePointer: 'auto',
             threads: 4,
