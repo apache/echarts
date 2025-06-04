@@ -249,7 +249,10 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     static defaultOption: TreeSeriesOption = {
         // zlevel: 0,
         z: 2,
-        coordinateSystem: 'view',
+
+        // `coordinateSystem` can be declared as 'matrix', 'calendar',
+        //  which provides box layout container.
+        coordinateSystemUsage: 'box',
 
         // the position of the whole view
         left: '12%',

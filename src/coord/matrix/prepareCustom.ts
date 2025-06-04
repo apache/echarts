@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import Matrix from './Matrix';
+import type Matrix from './Matrix';
 
 export default function matrixPrepareCustom(coordSys: Matrix) {
     const rect = coordSys.getRect();
@@ -31,12 +31,17 @@ export default function matrixPrepareCustom(coordSys: Matrix) {
             height: rect.height
         },
         api: {
-            coord: function (data: [string, string]) {
-                return coordSys.dataToPoint(data);
+            coord: function (
+                data: Parameters<Matrix['dataToPoint']>[0],
+                opt?: Parameters<Matrix['dataToPoint']>[1]
+            ): ReturnType<Matrix['dataToPoint']> {
+                return coordSys.dataToPoint(data, opt);
             },
-            size: function (data: [string, string]) {
-                const rect = coordSys.dataToRect(data);
-                return [rect.width, rect.height];
+            layout: function (
+                data: Parameters<Matrix['dataToLayout']>[0],
+                opt?: Parameters<Matrix['dataToLayout']>[1]
+            ): ReturnType<Matrix['dataToLayout']> {
+                return coordSys.dataToLayout(data, opt);
             }
         }
     };

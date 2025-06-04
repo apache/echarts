@@ -323,7 +323,7 @@ export function createTextStyle(
     return textStyle;
 }
 export function createTextConfig(
-    textStyleModel: Model,
+    textStyleModel: Model<LabelOption<{positionExtra: 'outside'}>>,
     opt?: Pick<TextCommonParams, 'defaultOutsidePosition' | 'inheritColor'>,
     isNotNormal?: boolean
 ) {
@@ -336,7 +336,7 @@ export function createTextConfig(
     labelPosition = textStyleModel.getShallow('position')
         || (isNotNormal ? null : 'inside');
     // 'outside' is not a valid zr textPostion value, but used
-    // in bar series, and magric type should be considered.
+    // in bar series, and magic type should be considered.
     labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
     if (labelPosition != null) {
         textConfig.position = labelPosition;
@@ -357,6 +357,7 @@ export function createTextConfig(
         : 'auto';
     return textConfig;
 }
+
 /**
  * The uniform entry of set text style, that is, retrieve style definitions
  * from `model` and set to `textStyle` object.
@@ -426,6 +427,10 @@ function setTextStyleCommon(
     const overflow = textStyleModel.get('overflow');
     if (overflow) {
         textStyle.overflow = overflow;
+    }
+    const lineOverflow = textStyleModel.get('lineOverflow');
+    if (lineOverflow) {
+        textStyle.lineOverflow = lineOverflow;
     }
     const margin = textStyleModel.get('minMargin');
     if (margin != null) {

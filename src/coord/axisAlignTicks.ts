@@ -131,8 +131,9 @@ export function alignScaleTicks(
         if (ticks[1]
             && (!isValueNice(interval) || getPrecisionSafe(ticks[1].value) > getPrecisionSafe(interval))) {
             warn(
-                // eslint-disable-next-line
-                `The ticks may be not readable when set min: ${axisModel.get('min')}, max: ${axisModel.get('max')} and alignTicks: true`
+                `The ticks may be not readable when set min: ${axisModel.get('min')}, max: ${axisModel.get('max')}`
+                + ` and alignTicks: true. (${axisModel.axis?.dim}AxisIndex: ${axisModel.componentIndex})`,
+                true
             );
         }
     }

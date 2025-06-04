@@ -384,7 +384,11 @@ export default function pieLabelLayout(
         const labelDistance = labelModel.get('distanceToLabelLine');
         const labelAlignTo = labelModel.get('alignTo');
         const edgeDistance = parsePercent(labelModel.get('edgeDistance'), viewWidth);
-        const bleedMargin = labelModel.get('bleedMargin');
+        let bleedMargin = labelModel.get('bleedMargin');
+        if (bleedMargin == null) {
+            // An arbitrary strategy for small viewRect - especial pie is layout in calendar or matrix coord sys.
+            bleedMargin = Math.min(viewWidth, viewHeight) > 200 ? 10 : 2;
+        }
 
         const labelLineModel = itemModel.getModel('labelLine');
         let labelLineLen = labelLineModel.get('length');

@@ -42,9 +42,9 @@ under the License.
         <div id="main0-2"></div>
         <div id="main1"></div>
         <div id="main2"></div>
-        <div id="main3"></div>
         <div id="main4"></div>
-
+        <div id="main_collect"></div>
+        <div id="main_series_data_use_ordinal_number"></div>
 
 
 
@@ -53,8 +53,6 @@ under the License.
         <script>
         require([
             'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
         ], function (echarts) {
             var option;
 
@@ -303,8 +301,6 @@ under the License.
         <script>
             require([
                 'echarts',
-                // 'map/js/china',
-                // './data/nutrients.json'
             ], function (echarts) {
                 var option;
                 option = {
@@ -320,6 +316,13 @@ under the License.
                         },
                         y: {
                             data: ['U', 'V']
+                        },
+                        body: {
+                            data: [{
+                                // coord: ['A31', 'V']
+                                coord: ['A3', 'V'],
+                                mergeCells: true,
+                            }]
                         }
                     },
                     series: [{
@@ -359,74 +362,9 @@ under the License.
 
 
 
-
-
         <script>
             require([
                 'echarts',
-                // 'map/js/china',
-                // './data/nutrients.json'
-            ], function (echarts) {
-                var option;
-                option = {
-                    matrix: {
-                        x: {
-                            data: [{
-                                value: 'A',
-                                children: ['A1', 'A2', {
-                                    value: 'A3',
-                                    children: ['A31', 'A32']
-                                }]
-                            }]
-                        },
-                        y: {
-                            data: ['U', 'V']
-                        }
-                    },
-                    series: [{
-                        type: 'scatter',
-                        coordinateSystem: 'matrix',
-                        symbolSize: 30,
-                        data: [
-                            ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30]
-                        ],
-                        label: {
-                            show: true,
-                            formatter: params => {
-                                return params.data[2];
-                            }
-                        }
-                    }, {
-                        type: 'effectScatter',
-                        coordinateSystem: 'matrix',
-                        symbolSize: function (val) {
-                            return val[2] / 3;
-                        },
-                        data: [
-                            ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
-                        ],
-                    }]
-                };
-
-                var chart = testHelper.create(echarts, 'main3', {
-                    title: [
-                        'Scatter and effectScatter with Matrix'
-                    ],
-                    option: option
-                });
-            });
-        </script>
-
-
-
-
-
-
-        <script>
-            require([
-                'echarts',
-                // 'map/js/china',
-                // './data/nutrients.json'
             ], function (echarts) {
                 var option;
                 option = {
@@ -459,22 +397,19 @@ under the License.
                         renderItem: function (params, api) {
                             const x = api.value(0);
                             const y = api.value(1);
-                            const center = api.coord([x, y]);
-                            const size = api.size([x, y]);
+                            const rect = api.layout([x, y]).rect;
                             const fontSize = 20;
                             const padding = 10;
-                            const left = center[0] - size[0] / 2;
-                            const top = center[1] - size[1] / 2;
                             const value = api.value(2);
                             return {
                                 type: 'group',
                                 children: [{
                                     type: 'rect',
                                     shape: {
-                                        x: left + padding,
-                                        y: top + padding,
-                                        width: (size[0] - padding * 2) / 100 * value,
-                                        height: size[1] - padding * 2
+                                        x: rect.x + padding,
+                                        y: rect.y + padding,
+                                        width: (rect.width - padding * 2) / 100 * value,
+                                        height: rect.height - padding * 2
                                     },
                                     style: {
                                         fill: value > 90 ? 'green'
@@ -484,8 +419,8 @@ under the License.
                                 }, {
                                     type: 'text',
                                     style: {
-                                        x: left + (size[0] - padding * 2) / 100 * value - padding,
-                                        y: center[1] - fontSize / 2,
+                                        x: rect.x + (rect.width - padding * 2) / 100 * value - padding,
+                                        y: rect.y + rect.height / 2 - fontSize / 2,
                                         text: api.value(3),
                                         fontSize: fontSize,
                                         textBaseline: 'middle',
@@ -494,8 +429,8 @@ under the License.
                                 }, {
                                     type: 'text',
                                     style: {
-                                        x: left + 30,
-                                        y: center[1] - fontSize / 2,
+                                        x: rect.x + 30,
+                                        y: rect.y + rect.height / 2 - fontSize / 2,
                                         text: api.value(2),
                                         fontSize: fontSize,
                                         textBaseline: 'middle',
@@ -516,6 +451,145 @@ under the License.
                 });
             });
         </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                const makeRenderItem = (xDim, yDim, valDim, dataExtent) => (params, api) => {
+                    const xval = api.value(xDim);
+                    const yval = api.value(yDim);
+                    const labelVal = api.value(valDim);
+                    const rect = api.layout([xval, yval]).rect;
+                    const height = rect.height * 0.3;
+                    const y = rect.y + (rect.height - height) / 2;
+                    const x = rect.x + rect.width * 0.3;
+                    const widthMax = rect.width * 0.5;
+                    const width = linearMap(labelVal, dataExtent, [0, widthMax])
+                    return {
+                        type: 'group',
+                        children: [{
+                            type: 'rect',
+                            shape: {x, y, width, height},
+                            style: api.style({
+                                fill: '#47f',
+                            }),
+                        }, {
+                            type: 'text',
+                            x: rect.x + 15,
+                            y: rect.y + rect.height / 2,
+                            style: {
+                                text: labelVal + '',
+                                fill: '#333',
+                                textVerticalAlign: 'middle',
+                            },
+                        }]
+                    };
+                };
+
+                function linearMap(val, domain, range) {
+                    const d0 = domain[0];
+                    const d1 = domain[1];
+                    const r0 = range[0];
+                    const r1 = range[1];
+                    const subDomain = d1 - d0;
+                    const subRange = r1 - r0;
+
+                    return subDomain === 0 ? subRange === 0 ? r0 : (r0 + r1) / 2
+                        : val === d0 ? r0
+                        : val === d1 ? r1
+                        : (val - d0) / subDomain * subRange + r0;
+                }
+
+                const _dataExtent = [0, 10000];
+
+                var option = {
+                    dataset: {
+                        source: [
+                            ['2021-02-01', 'amount', 1212, 'file', 2321, 'Q', 1412],
+                            ['2021-02-02', 'amount', 7181, 'file', 2114, 'Q', 1402],
+                            ['2021-02-03', 'amount', 2763, 'file', 4212, 'Q', 8172],
+                            ['2021-02-04', 'amount', 6122, 'file', 2942, 'Q', 6121],
+                            ['2021-02-05', 'amount', 4221, 'file', 3411, 'Q', 1987],
+                            ['2021-02-06', 'amount', 7221, 'file', 5121, 'Q', 1303],
+                        ]
+                    },
+                    matrix: {},
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        encode: {x: 1, y: 0},
+                        renderItem: makeRenderItem(1, 0, 2, _dataExtent),
+                    }, {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        symbol: 'rect',
+                        encode: {x: 3, y: 0},
+                        renderItem: makeRenderItem(3, 0, 4, _dataExtent),
+                    }, {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        encode: {x: 5, y: 0},
+                        renderItem: makeRenderItem(5, 0, 6, _dataExtent),
+                    }],
+                };
+
+                var chart = testHelper.create(echarts, 'main_collect', {
+                    title: [
+                        'No matrix.x.data, matrix.y.data declared, collect form dataset.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var option = {
+                    matrix: {
+                        x: {data: ['fruit', 'bread', 'milk']},
+                        y: {data: ['good', 'medium', 'bad']},
+                    },
+                    series: {
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        label: {show: true},
+                        encode: {label: 2},
+                        symbolSize: 20,
+                        data: [
+                            [0, 0, 1223],
+                            [1, 0, 323],
+                            [2, 0, 142],
+                            [0, 1, 63],
+                            [1, 1, 91],
+                            [2, 1, 45],
+                            [0, 2, 55],
+                            [1, 2, 15],
+                            [2, 2, 53],
+                        ]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_series_data_use_ordinal_number', {
+                    title: [
+                        'series.data specify ordinal number rather than text'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
     </body>
 </html>
 

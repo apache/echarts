@@ -82,7 +82,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
     static readonly type = 'series.scatter';
     type = ScatterSeriesModel.type;
 
-    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
+    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar', 'matrix'];
 
     hasSymbolVisual = true;
 

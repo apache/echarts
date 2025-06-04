@@ -19,29 +19,34 @@
 
 // FIXME Where to create the simple view coordinate system
 import View from '../../coord/View';
-import {getLayoutRect} from '../../util/layout';
+import {createBoxLayoutReference, getLayoutRect} from '../../util/layout';
 import * as bbox from 'zrender/src/core/bbox';
 import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import { extend } from 'zrender/src/core/util';
+import { injectCoordSysByOption } from '../../core/CoordinateSystem';
 
 function getViewRect(seriesModel: GraphSeriesModel, api: ExtensionAPI, aspect: number) {
+    const layoutRef = createBoxLayoutReference(seriesModel, api);
     const option = extend(seriesModel.getBoxLayoutParams(), {
         aspect: aspect
     });
-    return getLayoutRect(option, {
-        width: api.getWidth(),
-        height: api.getHeight()
-    });
+    return getLayoutRect(option, layoutRef.refContainer);
 }
 
 export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionAPI) {
     const viewList: View[] = [];
     ecModel.eachSeriesByType('graph', function (seriesModel: GraphSeriesModel) {
-        const coordSysType = seriesModel.get('coordinateSystem');
-        if (!coordSysType || coordSysType === 'view') {
 
+        injectCoordSysByOption({
+            targetModel: seriesModel,
+            coordSysType: 'view',
+            coordSysProvider: createViewCoordSys,
+            isDefaultDataCoordSys: true,
+        });
+
+        function createViewCoordSys() {
             const data = seriesModel.getData();
             const positions = data.mapArray(function (idx) {
                 const itemModel = data.getItemModel<GraphNodeItemOption>(idx);
@@ -77,7 +82,7 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             const viewWidth = viewRect.width;
             const viewHeight = viewRect.height;
 
-            const viewCoordSys = seriesModel.coordinateSystem = new View();
+            const viewCoordSys = new View();
             viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
             viewCoordSys.setBoundingRect(
@@ -92,6 +97,8 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             viewCoordSys.setZoom(seriesModel.get('zoom'));
 
             viewList.push(viewCoordSys);
+
+            return viewCoordSys;
         }
     });
 

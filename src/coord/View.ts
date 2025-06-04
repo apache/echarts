@@ -282,19 +282,24 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     /**
      * Convert a (x, y) point to (lon, lat) data
      */
-    pointToData(point: number[]): number[] {
+    pointToData(point: number[], reserved?: unknown, out?: number[]): number[] {
+        out = out || [];
         const invTransform = this.invTransform;
         return invTransform
-            ? v2ApplyTransform([], point, invTransform)
-            : [point[0], point[1]];
+            ? v2ApplyTransform(out, point, invTransform)
+            : (out[0] = point[0], out[1] = point[1], out);
     }
 
-    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
+    convertToPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]
+    ): number[] {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.dataToPoint(value) : null;
     }
 
-    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]): number[] {
+    convertFromPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]
+    ): number[] {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.pointToData(pixel) : null;
     }

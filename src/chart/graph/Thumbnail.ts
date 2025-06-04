@@ -100,10 +100,12 @@ class Thumbnail extends Eventful<Pick<RoamEventDefinition, 'zoom' | 'pan'>> {
                 height: api.getHeight()
             }
         );
-        const borderBoundingRect =
-            layout.applyPedding(boxContainBorder.clone(), boxBorderWidth / 2);
-        const contentBoundingRect = this._contentBoundingRect =
-            layout.applyPedding(boxContainBorder.clone(), boxBorderWidth);
+        const borderBoundingRect = graphic.expandOrShrinkRect(
+            boxContainBorder.clone(), boxBorderWidth / 2, true, true
+        );
+        const contentBoundingRect = this._contentBoundingRect = graphic.expandOrShrinkRect(
+            boxContainBorder.clone(), boxBorderWidth, true, true
+        );
 
         const clipGroup = new graphic.Group();
         group.add(clipGroup);

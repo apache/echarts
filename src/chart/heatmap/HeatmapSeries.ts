@@ -38,6 +38,7 @@ import SeriesData from '../../data/SeriesData';
 import type Geo from '../../coord/geo/Geo';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
+import Matrix from '../../coord/matrix/Matrix';
 
 type HeatmapDataValue = OptionDataValue[];
 
@@ -67,7 +68,7 @@ export interface HeatmapSeriesOption
 
     type?: 'heatmap'
 
-    coordinateSystem?: 'cartesian2d' | 'geo' | 'calendar'
+    coordinateSystem?: 'cartesian2d' | 'geo' | 'calendar' | 'matrix'
 
     // Available on geo coordinate system
     blurSize?: number
@@ -84,9 +85,8 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
     static readonly type = 'series.heatmap';
     readonly type = HeatmapSeriesModel.type;
 
-    static readonly dependencies = ['grid', 'geo', 'calendar'];
-    // @ts-ignore
-    coordinateSystem: Cartesian2D | Geo | Calendar;
+    static readonly dependencies = ['grid', 'geo', 'calendar', 'matrix'];
+    coordinateSystem: Cartesian2D | Geo | Calendar | Matrix;
 
     getInitialData(option: HeatmapSeriesOption, ecModel: GlobalModel): SeriesData {
         return createSeriesData(null, this, {

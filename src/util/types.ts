@@ -411,9 +411,10 @@ export type TooltipOrderMode = 'valueAsc' | 'valueDesc' | 'seriesAsc' | 'seriesD
 // Data and dimension related types
 // ---------------------------------
 
+// Represents the values in series.data that need to be treated in a non-numeric way.
+// Can be used by axis.type 'category' (i.e. scale.type 'ordinal').
 // Finally the user data will be parsed and stored in `list._storage`.
 // `NaN` represents "no data" (raw data `null`/`undefined`/`NaN`/`'-'`).
-// `Date` will be parsed to timestamp.
 // Ordinal/category data will be parsed to its index if possible, otherwise
 // keep its original string in list._storage.
 // Check `convertValue` for more details.
@@ -458,6 +459,24 @@ export type ParsedValueNumeric = number | OrdinalNumber;
  *  TS interface (user callback) and need comprehensive checks for all of the parsing of `ScaleDataValue`.
  */
 export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
+
+
+/**
+ * - `ScaleDataValue`:
+ *   e.g. geo accept that primative input, like `convertToPixel('some_place')`;
+ *   Some coord sys, such as 'cartesian2d', also supports that for only query only a single axis.
+ * - `ScaleDataValue[]`:
+ *   This is the most common case, each array item represent each data in
+ *   every dimension required by the coord sys. e.g., `[12, 98]` represents `[xData, yData]`.
+ * - `(ScaleDataValue[])[]`:
+ *   represents `[data_range_x, data_range_y]`. e.g., `dataToPoint([[5, 600], [8889, 9000]])`,
+ *   represents data range `[5, 600]` in x, and `[8889, 9000]` in y.
+ *   Can be also `[5, [8999, 9000]]`.
+ */
+export type CoordinateSystemDataCoord =
+    (ScaleDataValue | NullUndefined)
+    | (ScaleDataValue | NullUndefined)[]
+    | (ScaleDataValue | ScaleDataValue[] | NullUndefined)[];
 
 export type AxisBreakOption = {
     start: ScaleDataValue,
@@ -561,6 +580,22 @@ export interface OrdinalScaleTick extends ScaleTick {
      */
     value: number
 };
+
+/**
+ * Return type of API `CoordinateSystem['dataToLayout']`, expose to users.
+ */
+export interface CoordinateSystemDataLayout {
+    // Base layout rect for a data item.
+    rect?: RectLike;
+    // Commonly equals or shrinked from `rect, may considered padding and border
+    // (depends on every coordinate system).
+    contentRect?: RectLike;
+    // Only available in matrix coordinate system.
+    matrixXYLocatorRange?: number[][];
+
+    // May extend.
+}
+
 
 // Can only be string or index, because it is used in object key in some code.
 // Making the type alias here just intending to show the meaning clearly in code.
@@ -913,21 +948,28 @@ export interface ColorPaletteOptionMixin {
     color?: ZRColor | ZRColor[]
     colorLayer?: ZRColor[][]
 }
+
 /**
  * Mixin of option set to control the box layout of each component.
  */
 export interface BoxLayoutOptionMixin {
-    width?: number | string;
-    height?: number | string;
-    top?: number | string;
-    right?: number | string;
-    bottom?: number | string;
-    left?: number | string;
+    width?: PositionSizeOption;
+    height?: PositionSizeOption;
+    top?: PositionSizeOption;
+    right?: PositionSizeOption;
+    bottom?: PositionSizeOption;
+    left?: PositionSizeOption;
 }
+/**
+ * Need to be parsed by `parsePositionOption` or `parsePositionSizeOption`.
+ * Accept number, or numeric stirng (`'123'`), or percentage ('100%'), as x/y/width/height pixel number.
+ * If null/undefined or invalid, return NaN.
+ */
+export type PositionSizeOption = number | string;
 
-export interface CircleLayoutOptionMixin {
+export interface CircleLayoutOptionMixin<TNuance extends {centerExtra: unknown} = {centerExtra: never}> {
     // Can be percent
-    center?: (number | string)[]
+    center?: (number | string)[] | TNuance['centerExtra']
     // Can specify [innerRadius, outerRadius]
     radius?: (number | string)[] | number | string
 }
@@ -1161,7 +1203,7 @@ export interface TextCommonOption extends ShadowOptionMixin {
     borderRadius?: number | number[]
     padding?: number | number[]
 
-    width?: number | string// Percent
+    width?: number | string // Percent
     height?: number
     textBorderColor?: string
     textBorderWidth?: number
@@ -1183,14 +1225,16 @@ export interface LabelFormatterCallback<T = CallbackDataParams> {
  * LabelOption is an option set to control the style of labels.
  * Include color, background, shadow, truncate, rotation, distance, etc..
  */
-export interface LabelOption extends TextCommonOption {
+export interface LabelOption<
+    TNuance extends {positionExtra: unknown} = {positionExtra: never}
+> extends TextCommonOption {
     /**
      * If show label
      */
     show?: boolean
     // TODO: TYPE More specified 'inside', 'insideTop'....
     // x, y can be both percent string or number px.
-    position?: ElementTextConfig['position']
+    position?: ElementTextConfig['position'] | TNuance['positionExtra']
     distance?: number
     rotate?: number
     offset?: number[]
@@ -1204,6 +1248,7 @@ export interface LabelOption extends TextCommonOption {
 
     overflow?: TextStyleProps['overflow']
     ellipsis?: TextStyleProps['ellipsis']
+    lineOverflow?: TextStyleProps['lineOverflow']
 
     silent?: boolean
     precision?: number | 'auto'
@@ -1228,8 +1273,11 @@ export interface LabelExtendedText extends ZRText {
     __marginType?: (typeof LabelMarginType)[keyof typeof LabelMarginType]
 }
 
-export interface SeriesLabelOption<T extends CallbackDataParams = CallbackDataParams> extends LabelOption {
-    formatter?: string | LabelFormatterCallback<T>
+export interface SeriesLabelOption<
+    TCallbackDataParams extends CallbackDataParams = CallbackDataParams,
+    TNuance extends {positionExtra: unknown} = {positionExtra: never}
+> extends LabelOption<TNuance> {
+    formatter?: string | LabelFormatterCallback<TCallbackDataParams>
 }
 
 /**
@@ -1634,7 +1682,24 @@ export interface ComponentOption {
 
     z?: number;
     zlevel?: number;
+
+    coordinateSystem?: string
+    coordinateSystemUsage?: CoordinateSystemUsageOption
+    coord?: CoordinateSystemDataCoord
 }
+
+/**
+ * - "data": Use it as "dataCoordSys", each data item is laid out based on a coord sys.
+ * - "box": Use it as "boxCoordSys", the overall bounding rect or anchor point is calculated based on a coord sys.
+ *   e.g.,
+ *      grid rect (cartesian rect) is calculate based on matrix/calendar coord sys;
+ *      pie center is calculated based on calendar/cartesian;
+ *
+ * The default value (if not declared in option `coordinateSystemUsage`):
+ *  For series, be "data", since this is the most case and backward compatible.
+ *  For non-series components, be "box", since "data" is not applicable.
+ */
+export type CoordinateSystemUsageOption = 'data' | 'box';
 
 export type BlurScope = 'coordinateSystem' | 'series' | 'global';
 
@@ -1767,10 +1832,6 @@ export interface SeriesOption<
     progressive?: number | false
     progressiveThreshold?: number
     progressiveChunkMode?: 'mod'
-    /**
-     * Not available on every series
-     */
-    coordinateSystem?: string
 
     hoverLayerThreshold?: number
 
@@ -1837,7 +1898,7 @@ export interface SeriesOnCalendarOptionMixin {
     calendarId?: string
 }
 
-export interface SeriesOnMatrixOptionMixin {
+export interface ComponentOnMatrixOptionMixin {
     matrixIndex?: number
     matrixId?: string
 }

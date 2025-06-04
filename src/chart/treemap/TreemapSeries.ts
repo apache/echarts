@@ -248,6 +248,10 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         top: 'middle',
         width: '80%',
         height: '80%',
+        // `coordinateSystem` can be declared as 'matrix', 'calendar',
+        //  which provides box layout container.
+        coordinateSystemUsage: 'box',
+
         sort: true,
 
         clipWindow: 'origin',
