@@ -163,42 +163,6 @@ export const vbox = zrUtil.curry(boxLayout, 'vertical');
  */
 export const hbox = zrUtil.curry(boxLayout, 'horizontal');
 
-/**
- * If x or x2 is not specified or 'center' 'left' 'right',
- * the width would be as long as possible.
- * If y or y2 is not specified or 'middle' 'top' 'bottom',
- * the height would be as long as possible.
- */
-export function getAvailableSize(
-    positionInfo: {
-        left?: number | string
-        top?: number | string
-        right?: number | string
-        bottom?: number | string
-    },
-    containerRect: { width: number, height: number },
-    margin?: number[] | number
-) {
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
-
-    let x = parsePercent(positionInfo.left, containerWidth);
-    let y = parsePercent(positionInfo.top, containerHeight);
-    let x2 = parsePercent(positionInfo.right, containerWidth);
-    let y2 = parsePercent(positionInfo.bottom, containerHeight);
-
-    (isNaN(x) || isNaN(parseFloat(positionInfo.left as string))) && (x = 0);
-    (isNaN(x2) || isNaN(parseFloat(positionInfo.right as string))) && (x2 = containerWidth);
-    (isNaN(y) || isNaN(parseFloat(positionInfo.top as string))) && (y = 0);
-    (isNaN(y2) || isNaN(parseFloat(positionInfo.bottom as string))) && (y2 = containerHeight);
-
-    margin = formatUtil.normalizeCssArray(margin || 0);
-
-    return {
-        width: Math.max(x2 - x - margin[1] - margin[3], 0),
-        height: Math.max(y2 - y - margin[0] - margin[2], 0)
-    };
-}
 
 type CircleLayoutSeriesOption = SeriesOption & CircleLayoutOptionMixin<{
     // `center: string | number` has been accepted in series.pie.
