@@ -57,7 +57,6 @@ import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
 import { findEventDispatcher } from '../../util/event';
 import { clear, createOrUpdate } from '../../util/throttle';
-import tokens from '../../visual/tokens';
 
 const proxyRect = new Rect({
     shape: { x: -1, y: -1, width: 2, height: 2 }
