@@ -401,7 +401,6 @@ function setTextStyleCommon(
             textStyleModel.get(richInheritPlainLabelOptionName),
             ecModel ? ecModel.get(richInheritPlainLabelOptionName) : undefined
         );
-        const plainTextStyle = textStyleModel.option ? textStyleModel.option.textStyle : null;
         for (const name in richItemNames) {
             if (richItemNames.hasOwnProperty(name)) {
                 // Cascade is supported in rich.
@@ -414,7 +413,7 @@ function setTextStyleCommon(
                 // Since v6, the rich style inherits plain label by default
                 // but this behavior can be disabled by setting `richInheritPlainLabel` to `false`.
                 setTokenTextStyle(
-                    richResult[name] = {}, richTextStyle, globalTextStyle, plainTextStyle, richInheritPlainLabel,
+                    richResult[name] = {}, richTextStyle, globalTextStyle, textStyleModel, richInheritPlainLabel,
                     opt, isNotNormal, isAttached, false, true
                 );
             }
@@ -484,7 +483,7 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
-    plainTextStyle: LabelOption | NullUndefined,
+    plainTextModel: Model<LabelOption> | NullUndefined,
     richInheritPlainLabel: boolean,
     opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
@@ -576,9 +575,9 @@ function setTokenTextStyle(
         // And if some props is specified in default options, users may have to reset them one by one.
         // Therefore, we only allow these props to inherit from plainTextStyle.
         // `richInheritPlainLabel` is switch for backward compatibility
-        const val = richInheritPlainLabel !== false
+        const val = (richInheritPlainLabel !== false && plainTextModel)
             ? retrieve3(
-                textStyleModel.getShallow(key), plainTextStyle ? plainTextStyle[key] : null, globalTextStyle[key]
+                textStyleModel.getShallow(key), plainTextModel.getShallow(key), globalTextStyle[key]
             )
             : retrieve2(textStyleModel.getShallow(key), globalTextStyle[key]);
         if (val != null) {
