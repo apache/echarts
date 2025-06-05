@@ -70,6 +70,10 @@ export interface LineEndLabelOption extends SeriesLabelOption {
     valueAnimation?: boolean
 }
 
+export interface LinePiece {
+    startDataIndices: number[]
+    lineStyle: LineStyleOption[]
+}
 
 export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackDataParams>, LineStateOptionMixin & {
     emphasis?: {
@@ -100,6 +104,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
     endLabel?: LineEndLabelOption
 
     lineStyle?: LineStyleOption
+    linePieces?: LinePiece[]
 
     areaStyle?: AreaStyleOption & {
         origin?: 'auto' | 'start' | 'end' | number
