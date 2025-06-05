@@ -88,7 +88,6 @@ import {throttle} from '../util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from '../visual/style';
 import loadingDefault from '../loading/default';
 import Scheduler from './Scheduler';
-import lightTheme from '../theme/light';
 import darkTheme from '../theme/dark';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from '../coord/CoordinateSystem';
 import { parseClassType } from '../util/clazz';
@@ -3226,8 +3225,9 @@ function makeSelectChangedEvent(
     };
 }
 
-// Default theme
-registerTheme('light', lightTheme);
+// Default theme, so that we can use `chart.setTheme('default')` to revert to
+// the default theme after changing to other themes.
+registerTheme('default', {});
 registerTheme('dark', darkTheme);
 
 // For backward compatibility, where the namespace `dataTool` will

@@ -72,6 +72,11 @@ class CartesianAxisView extends AxisView {
                 const cartesians = gridModel.coordinateSystem.getCartesians();
                 for (let i = 0; i < cartesians.length; i++) {
                     if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {
+                        if (elementType === 'axisTick' && axisModel.axis.type === 'category'
+                            && axisModel.axis.onBand
+                        ) {
+                            return false;
+                        }
                         // Still show axis tick or axisLine if other axis is value / log
                         return true;
                     }

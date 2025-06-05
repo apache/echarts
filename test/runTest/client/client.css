@@ -168,17 +168,15 @@
 .test-list li a.menu-link i {
     font-size: 16px;
     margin-left: 10px;
-    color: #ccc;
+    color: #aaa;
 }
 
 .test-list li.active {
-    background: #5470C6;
-}
-.test-list li.active a {
-    color: #fff;
+    background: #e8e8ff;
 }
 .test-list li:hover {
-    border-right: 4px solid #5470C6
+    border-right: 4px solid #545dc6;
+    background: #cfcfff;
 }
 .test-list li>* {
     vertical-align: middle;
@@ -196,6 +194,10 @@
 .el-progress.is-exception .el-progress__text {
     color: #F56C6C;
     -webkit-text-stroke: 1px #F56C6C;
+}
+.el-progress.is-markedAsExpected .el-progress__text {
+    color: #00ADE6;
+    -webkit-text-stroke: 1px #00ADE6;
 }
 
 .no-result {
@@ -327,3 +329,106 @@ iframe {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(0,0,0,0.5) !important
 }
+
+/* Add styles for the markAsExpected dialog */
+.mark-as-expected-dialog .el-message-box__header {
+    padding-bottom: 10px;
+}
+
+.mark-as-expected-dialog .el-message-box__content {
+    padding-top: 10px;
+}
+
+.mark-as-expected-dialog .el-message-box__input {
+    margin-top: 0;
+}
+
+.mark-expected-form .form-item {
+    margin-bottom: 15px;
+}
+
+.mark-expected-form .form-label {
+    font-size: 14px;
+    color: #606266;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.mark-expected-form .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.mark-expected-form .radio-label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+.mark-expected-form .radio-label input {
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.mark-expected-form input.el-input__inner,
+.mark-expected-form textarea.el-textarea__inner {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Add styles for the marked as expected section */
+.marked-as-expected {
+    margin-top: 30px;
+    padding: 0 20px;
+}
+
+.marked-as-expected .el-table {
+    margin-top: 10px;
+}
+
+.marked-as-expected .el-table a {
+    color: #409EFF;
+    text-decoration: none;
+}
+
+.marked-as-expected .el-table a:hover {
+    text-decoration: underline;
+}
+
+.marked-as-expected .el-tag {
+    margin-right: 5px;
+}
+
+.marked-as-expected .el-table td {
+    padding: 5px 0;
+}
+
+.marked-as-expected .mark-info {
+    margin-top: 10px;
+}
+
+.marked-as-expected .mark-header {
+    margin: 10px 0;
+    color: #606266;
+}
+
+.marked-as-expected .mark-info p {
+    margin: 5px 0;
+}
+
+.marked-as-expected .mark-info a {
+    color: #409EFF;
+    text-decoration: none;
+}
+
+.marked-as-expected .mark-info a:hover {
+    text-decoration: underline;
+}
+
+.mark-as-expected-dialog .comment-header {
+    margin-bottom: 5px;
+}
+
+.faded-row td {
+    opacity: 0.5 !important;
+}
+

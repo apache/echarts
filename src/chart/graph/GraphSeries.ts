@@ -55,6 +55,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
 import Thumbnail, { ThumbnailOption } from './Thumbnail';
+import tokens from '../../visual/tokens';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -496,7 +497,8 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         itemStyle: {},
 
         lineStyle: {
-            color: '#aaa',
+            // Don't use tokens.color.border because of the opacity
+            color: tokens.color.neutral50,
             width: 1,
             opacity: 0.5
         },
@@ -509,7 +511,7 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         },
 

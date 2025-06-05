@@ -811,7 +811,15 @@
                 dom.style.height = opt.height + 'px';
             }
 
-            var chart = echarts.init(dom, null, {
+            var theme = opt.theme && opt.theme !== 'none' ? opt.theme : null;
+            if (theme == null && window.__ECHARTS__DEFAULT__THEME__) {
+                theme = window.__ECHARTS__DEFAULT__THEME__;
+            }
+            if (theme) {
+                require([`theme/${theme}`]);
+            }
+
+            var chart = echarts.init(dom, theme, {
                 renderer: opt.renderer,
                 useCoarsePointer: opt.useCoarsePointer,
                 pointerSize: opt.pointerSize

@@ -51,6 +51,7 @@ import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import { getECData } from '../../util/innerStore';
+import tokens from '../../visual/tokens';
 import Element from 'zrender/src/Element';
 
 const curry = zrUtil.curry;
@@ -694,7 +695,7 @@ function getDefaultLegendIcon(opt: LegendIconParams): ECSymbol {
 
     if (symboType.indexOf('empty') > -1) {
         icon.style.stroke = icon.style.fill;
-        icon.style.fill = '#fff';
+        icon.style.fill = tokens.color.neutral00;
         icon.style.lineWidth = 2;
     }
 

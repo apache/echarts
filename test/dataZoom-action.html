@@ -22,7 +22,6 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="../dist/echarts.js"></script>
         <script src="lib/testHelper.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/jquery.min.js"></script>
@@ -57,7 +56,7 @@ under the License.
 
 
         <script>
-
+        require(['echarts'], function (echarts) {
             function makeButtons(ctx) {
 
                 function printStates() {
@@ -148,6 +147,7 @@ under the License.
                     end: 41
                 }];
             }
+        });
         </script>
 
 
@@ -162,7 +162,7 @@ under the License.
         <script>
 
 
-        require(['./data/ec-star.json'], function (data) {
+        require(['./data/ec-star.json', 'echarts'], function (data, echarts) {
 
             var minStartValue = '2013-06-06';
             var maxEndValue = '2017-10-17';
@@ -312,7 +312,7 @@ under the License.
 
 
         <script>
-
+        require(['echarts'], function (echarts) {
             var option;
 
             var base = +new Date(1990, 9, 3);
@@ -424,7 +424,7 @@ under the License.
                 height: 200,
                 buttons: makeButtons(ctx)
             });
-
+        });
         </script>
 
 
@@ -435,7 +435,7 @@ under the License.
 
 
         <script>
-
+        require(['echarts'], function (echarts) {
             var option;
 
             var base = +new Date(1990, 9, 3);
@@ -545,7 +545,7 @@ under the License.
                 height: 200,
                 buttons: makeButtons(ctx)
             });
-
+        });
         </script>
 
 
@@ -564,7 +564,7 @@ under the License.
 
 
         <script>
-
+        require(['echarts'], function (echarts) {
             var option;
 
             var base = +new Date(1990, 9, 3);
@@ -649,7 +649,7 @@ under the License.
                 height: 200,
                 buttons: makeButtons(ctx)
             });
-
+        });
         </script>
 
 
