@@ -30,10 +30,11 @@ import {
     ColorString,
     ZRStyleProps,
     AnimationOptionMixin,
-    InterpolatableValue
+    InterpolatableValue,
+    NullUndefined
 } from '../util/types';
 import GlobalModel from '../model/Global';
-import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
+import { isFunction, retrieve2, extend, keys, trim, retrieve3 } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
@@ -398,15 +399,12 @@ function setTextStyleCommon(
         const richInheritPlainLabelOptionName = 'richInheritPlainLabel' as const;
         const richInheritPlainLabel = retrieve2(
             textStyleModel.get(richInheritPlainLabelOptionName),
-            ecModel && ecModel.get(richInheritPlainLabelOptionName)
+            ecModel ? ecModel.get(richInheritPlainLabelOptionName) : undefined
         );
         for (const name in richItemNames) {
             if (richItemNames.hasOwnProperty(name)) {
                 // Cascade is supported in rich.
-                const richTextStyle = textStyleModel.getModel(
-                    ['rich', name],
-                    richInheritPlainLabel !== false ? textStyleModel : void 0
-                );
+                const richTextStyle = textStyleModel.getModel(['rich', name]);
                 // In rich, never `disableBox`.
                 // consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
@@ -415,7 +413,8 @@ function setTextStyleCommon(
                 // Since v6, the rich style inherits plain label by default
                 // but this behavior can be disabled by setting `richInheritPlainLabel` to `false`.
                 setTokenTextStyle(
-                    richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached, false, true
+                    richResult[name] = {}, richTextStyle, globalTextStyle, textStyleModel, richInheritPlainLabel,
+                    opt, isNotNormal, isAttached, false, true
                 );
             }
         }
@@ -431,7 +430,9 @@ function setTextStyleCommon(
     if (margin != null) {
         textStyle.margin = margin;
     }
-    setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
+    setTokenTextStyle(
+        textStyle, textStyleModel, globalTextStyle, null, null, opt, isNotNormal, isAttached, true, false
+    );
 }
 // Consider case:
 // {
@@ -482,6 +483,8 @@ function setTokenTextStyle(
     textStyle: TextStyleProps['rich'][string],
     textStyleModel: Model<LabelOption>,
     globalTextStyle: LabelOption,
+    plainTextModel: Model<LabelOption> | NullUndefined,
+    richInheritPlainLabel: boolean,
     opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean,
@@ -566,7 +569,17 @@ function setTokenTextStyle(
     // others should remain their original value got from normal style.
     for (let i = 0; i < TEXT_PROPS_WITH_GLOBAL.length; i++) {
         const key = TEXT_PROPS_WITH_GLOBAL[i];
-        const val = retrieve2(textStyleModel.getShallow(key), globalTextStyle[key]);
+        // props width, height, padding, margin, tag, backgroundColor, borderColor,
+        // borderWidth, borderRadius, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY
+        // may inappropriate to inherit from plainTextStyle.
+        // And if some props is specified in default options, users may have to reset them one by one.
+        // Therefore, we only allow these props to inherit from plainTextStyle.
+        // `richInheritPlainLabel` is switch for backward compatibility
+        const val = (richInheritPlainLabel !== false && plainTextModel)
+            ? retrieve3(
+                textStyleModel.getShallow(key), plainTextModel.getShallow(key), globalTextStyle[key]
+            )
+            : retrieve2(textStyleModel.getShallow(key), globalTextStyle[key]);
         if (val != null) {
             (textStyle as any)[key] = val;
         }
