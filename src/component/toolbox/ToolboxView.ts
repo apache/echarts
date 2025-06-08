@@ -41,6 +41,7 @@ import Displayable from 'zrender/src/graphic/Displayable';
 import ZRText from 'zrender/src/graphic/Text';
 import { getFont } from '../../label/labelStyle';
 import { box, createBoxLayoutReference, getLayoutRect, positionElement } from '../../util/layout';
+import tokens from '../../visual/tokens';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
@@ -264,7 +265,7 @@ class ToolboxView extends ComponentView {
                           );
                     textContent.setStyle({
                         fill: (iconStyleEmphasisModel.get('textFill')
-                            || hoverStyle.fill || hoverStyle.stroke || '#000') as string,
+                            || hoverStyle.fill || hoverStyle.stroke || tokens.color.neutral99) as string,
                         backgroundColor: iconStyleEmphasisModel.get('textBackgroundColor')
                     });
                     path.setTextConfig({

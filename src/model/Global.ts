@@ -1017,7 +1017,9 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
     const notMergeColorLayer = option.color && !option.colorLayer;
 
     each(theme, function (themeItem, name) {
-        if (name === 'colorLayer' && notMergeColorLayer) {
+        if (name === 'colorLayer' && notMergeColorLayer
+            || name === 'color' && option.color
+        ) {
             return;
         }
 

@@ -23,6 +23,7 @@ import {
     ScaleDataValue,
     CommonAxisPointerOption
 } from '../../util/types';
+import tokens from '../../visual/tokens';
 
 interface MapperParamAxisInfo {
     axisIndex: number
@@ -101,13 +102,13 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
         animationDurationUpdate: 200,
 
         lineStyle: {
-            color: '#B9BEC9',
+            color: tokens.color.border,
             width: 1,
             type: 'dashed'
         },
 
         shadowStyle: {
-            color: 'rgba(210,219,238,0.2)'
+            color: tokens.color.shadowTint
         },
 
         label: {
@@ -115,9 +116,9 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
             formatter: null, // string | Function
             precision: 'auto', // Or a number like 0, 1, 2 ...
             margin: 3,
-            color: '#fff',
+            color: tokens.color.neutral00,
             padding: [5, 7, 5, 7],
-            backgroundColor: 'auto', // default: axis line color
+            backgroundColor: tokens.color.accent60, // default: axis line color
             borderColor: null,
             borderWidth: 0,
             borderRadius: 3
@@ -132,11 +133,7 @@ class AxisPointerModel extends ComponentModel<AxisPointerOption> {
             margin: 50,
             // color: '#1b8bbd'
             // color: '#2f4554'
-            color: '#333',
-            shadowBlur: 3,
-            shadowColor: '#aaa',
-            shadowOffsetX: 0,
-            shadowOffsetY: 2,
+            color: tokens.color.accent40,
 
             // For mobile performance
             throttle: 40

@@ -104,6 +104,7 @@ import {
 } from '../../animation/customGraphicKeyframeAnimation';
 import type SeriesModel from '../../model/Series';
 import { getCustomSeries } from './customSeriesRegister';
+import tokens from '../../visual/tokens';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -813,7 +814,7 @@ function makeRenderItem(
         visualColor != null && (itemStyle.fill = visualColor);
         opacity != null && (itemStyle.opacity = opacity);
 
-        const opt = {inheritColor: isString(visualColor) ? visualColor : '#000'};
+        const opt = {inheritColor: isString(visualColor) ? visualColor : tokens.color.neutral99};
         const labelModel = getLabelModel(dataIndexInside, NORMAL);
         // Now that the feature of "auto adjust text fill/stroke" has been migrated to zrender
         // since ec5, we should set `isAttached` as `false` here and make compat in

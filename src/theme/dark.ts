@@ -17,167 +17,171 @@
 * under the License.
 */
 
-const contrastColor = '#B9B8CE';
-const backgroundColor = '#100C2A';
+import tokens from '../visual/tokens';
+
+const color = tokens.darkColor;
+const backgroundColor = color.background;
+
 const axisCommon = function () {
     return {
         axisLine: {
             lineStyle: {
-                color: contrastColor
+                color: color.axisLine
             }
         },
         splitLine: {
             lineStyle: {
-                color: '#484753'
+                color: color.axisSplitLine
             }
         },
         splitArea: {
             areaStyle: {
-                color: ['rgba(255,255,255,0.02)', 'rgba(255,255,255,0.05)']
+                color: [
+                    color.backgroundTint,
+                    color.backgroundTransparent
+                ]
             }
         },
         minorSplitLine: {
             lineStyle: {
-                color: '#20203B'
+                color: color.axisMinorSplitLine
             }
-        }
+        },
+        axisLabel: {
+            color: color.axisLabel
+        },
+        axisName: {}
     };
 };
 const matrixAxis = {
     label: {
-        color: contrastColor
+        color: color.secondary
     },
     itemStyle: {
-        borderColor: '#484753'
+        borderColor: color.neutral20
     }
 };
 
-const colorPalette = [
-    '#4992ff',
-    '#7cffb2',
-    '#fddd60',
-    '#ff6e76',
-    '#58d9f9',
-    '#05c091',
-    '#ff8a45',
-    '#8d48e3',
-    '#dd79ff'
-];
 const theme = {
     darkMode: true,
 
-    color: colorPalette,
+    color: color.theme,
     backgroundColor: backgroundColor,
     axisPointer: {
         lineStyle: {
-            color: '#817f91'
+            color: color.border
         },
         crossStyle: {
-            color: '#817f91'
+            color: color.borderShade
         },
         label: {
-            // TODO Contrast of label backgorundColor
-            color: '#fff'
+            color: color.tertiary
         }
     },
     legend: {
         textStyle: {
-            color: contrastColor
+            color: color.secondary
         },
         pageTextStyle: {
-            color: contrastColor
+            color: color.tertiary
         }
     },
     textStyle: {
-        color: contrastColor
+        color: color.secondary
     },
     title: {
         textStyle: {
-            color: '#EEF1FA'
+            color: color.primary
         },
         subtextStyle: {
-            color: '#B9B8CE'
+            color: color.quaternary
         }
     },
     toolbox: {
         iconStyle: {
-            borderColor: contrastColor
+            borderColor: color.accent50
+        }
+    },
+    tooltip: {
+        backgroundColor: color.neutral20,
+        defaultBorderColor: color.border,
+        textStyle: {
+            color: color.tertiary
         }
     },
     dataZoom: {
-        borderColor: '#71708A',
+        borderColor: color.accent10,
         textStyle: {
-            color: contrastColor
+            color: color.tertiary
         },
         brushStyle: {
-            color: 'rgba(135,163,206,0.3)'
+            color: color.backgroundTint
         },
         handleStyle: {
-            color: '#353450',
-            borderColor: '#C5CBE3'
+            color: color.neutral00,
+            borderColor: color.accent20
         },
         moveHandleStyle: {
-            color: '#B0B6C3',
-            opacity: 0.3
+            color: color.accent40
         },
-        fillerColor: 'rgba(135,163,206,0.2)',
         emphasis: {
             handleStyle: {
-                borderColor: '#91B7F2',
-                color: '#4D587D'
-            },
-            moveHandleStyle: {
-                color: '#636D9A',
-                opacity: 0.7
+                borderColor: color.accent50
             }
         },
         dataBackground: {
             lineStyle: {
-                color: '#71708A',
-                width: 1
+                color: color.accent30
             },
             areaStyle: {
-                color: '#71708A'
+                color: color.accent20
             }
         },
         selectedDataBackground: {
             lineStyle: {
-                color: '#87A3CE'
+                color: color.accent50
             },
             areaStyle: {
-                color: '#87A3CE'
+                color: color.accent30
             }
         }
     },
     visualMap: {
         textStyle: {
-            color: contrastColor
+            color: color.secondary
+        },
+        inRange: {
+            color: [color.neutral10, color.theme[0]]
+        },
+        handleStyle: {
+            borderColor: color.neutral30
         }
     },
     timeline: {
         lineStyle: {
-            color: contrastColor
+            color: color.accent10
         },
         label: {
-            color: contrastColor
+            color: color.tertiary
         },
         controlStyle: {
-            color: contrastColor,
-            borderColor: contrastColor
+            color: color.accent30,
+            borderColor: color.accent30
         }
     },
     calendar: {
         itemStyle: {
-            color: backgroundColor
+            color: color.neutral00,
+            borderColor: color.neutral20
         },
         dayLabel: {
-            color: contrastColor
+            color: color.tertiary
         },
         monthLabel: {
-            color: contrastColor
+            color: color.secondary
         },
         yearLabel: {
-            color: contrastColor
+            color: color.secondary
         }
     },
     matrix: {
@@ -199,22 +203,22 @@ const theme = {
         symbol: 'circle'
     },
     graph: {
-        color: colorPalette
+        color: color.theme
     },
     gauge: {
         title: {
-            color: contrastColor
+            color: color.secondary
         },
         axisLine: {
             lineStyle: {
-                color: [[1, 'rgba(207,212,219,0.2)']]
+                color: [[1, color.neutral05]]
             }
         },
         axisLabel: {
-            color: contrastColor
+            color: color.axisLabel
         },
         detail: {
-            color: '#EEF1FA'
+            color: color.primary
         }
     },
     candlestick: {
@@ -225,6 +229,86 @@ const theme = {
             borderColor0: '#54ea92'
             // borderColor: '#ca2824',
             // borderColor0: '#09a443'
+        }
+    },
+    funnel: {
+        itemStyle: {
+            borderColor: color.background
+        }
+    },
+    radar: (() => {
+        const radar = axisCommon();
+        radar.axisName = {
+            color: color.axisLabel
+        };
+        radar.axisLine.lineStyle.color = color.neutral20;
+        return radar;
+    })(),
+    treemap: {
+        breadcrumb: {
+            itemStyle: {
+                color: color.neutral20,
+                textStyle: {
+                    color: color.secondary
+                }
+            },
+            emphasis: {
+                itemStyle: {
+                    color: color.neutral30
+                }
+            }
+        }
+    },
+    sunburst: {
+        itemStyle: {
+            borderColor: color.background
+        }
+    },
+    map: {
+        itemStyle: {
+            borderColor: color.border,
+            areaColor: color.neutral10
+        },
+        label: {
+            color: color.tertiary
+        },
+        emphasis: {
+            label: {
+                color: color.primary
+            },
+            itemStyle: {
+                areaColor: color.highlight
+            }
+        },
+        select: {
+            label: {
+                color: color.primary
+            },
+            itemStyle: {
+                areaColor: color.highlight
+            }
+        }
+    },
+    geo: {
+        itemStyle: {
+            borderColor: color.border,
+            areaColor: color.neutral10
+        },
+        emphasis: {
+            label: {
+                color: color.primary
+            },
+            itemStyle: {
+                areaColor: color.highlight
+            }
+        },
+        select: {
+            label: {
+                color: color.primary
+            },
+            itemStyle: {
+                color: color.highlight
+            }
         }
     }
 };

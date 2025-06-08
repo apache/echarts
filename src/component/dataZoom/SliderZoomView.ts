@@ -43,11 +43,11 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { createTextStyle } from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import tokens from '../../visual/tokens';
 
 const Rect = graphic.Rect;
 
 // Constants
-const DEFAULT_LOCATION_EDGE_GAP = 7;
 const DEFAULT_FRAME_BORDER_WIDTH = 1;
 const DEFAULT_FILLER_SIZE = 30;
 const DEFAULT_MOVE_HANDLE_SIZE = 7;
@@ -229,18 +229,19 @@ class SliderZoomView extends DataZoomView {
         // If some of x/y/width/height are not specified,
         // auto-adapt according to target grid.
         const coordRect = this._findCoordRect();
+        const edgeGap = dataZoomModel.get('defaultLocationEdgeGap', true) || 0;
         // Default align by coordinate system rect.
         const positionInfo = this._orient === HORIZONTAL
             ? {
                 // Why using 'right', because right should be used in vertical,
                 // and it is better to be consistent for dealing with position param merge.
                 right: refContainer.width - coordRect.x - coordRect.width,
-                top: (refContainer.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP - moveHandleSize),
+                top: refContainer.height - DEFAULT_FILLER_SIZE - edgeGap - moveHandleSize,
                 width: coordRect.width,
                 height: DEFAULT_FILLER_SIZE
             }
             : { // vertical
-                right: DEFAULT_LOCATION_EDGE_GAP,
+                right: edgeGap,
                 top: coordRect.y,
                 width: DEFAULT_FILLER_SIZE,
                 height: coordRect.height
@@ -575,7 +576,7 @@ class SliderZoomView extends DataZoomView {
                 stroke: dataZoomModel.get('dataBackgroundColor' as any)
                     || dataZoomModel.get('borderColor'),
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
-                fill: 'rgba(0,0,0,0)'
+                fill: tokens.color.transparent
             }
         }));
 
@@ -665,7 +666,7 @@ class SliderZoomView extends DataZoomView {
             const moveHandleIcon = displayables.moveHandleIcon = createSymbol(
                 dataZoomModel.get('moveHandleIcon'),
                 -iconSize / 2, -iconSize / 2, iconSize, iconSize,
-                '#fff',
+                tokens.color.neutral00,
                 true
             );
             moveHandleIcon.silent = true;

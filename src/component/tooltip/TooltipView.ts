@@ -828,7 +828,8 @@ class TooltipView extends ComponentView {
             [x, y],
             params,
             tooltipModel.get('trigger'),
-            tooltipModel.get('borderColor')
+            tooltipModel.get('borderColor'),
+            tooltipModel.get('defaultBorderColor', true)
         );
         const nearPointColor = nearPoint.color;
 
@@ -872,13 +873,14 @@ class TooltipView extends ComponentView {
         point: number[],
         tooltipDataParams: TooltipCallbackDataParams | TooltipCallbackDataParams[],
         trigger: TooltipOption['trigger'],
-        borderColor: ZRColor
+        borderColor: ZRColor,
+        defaultBorderColor: ZRColor
     ): {
         color: ZRColor;
     } {
         if (trigger === 'axis' || isArray(tooltipDataParams)) {
             return {
-                color: borderColor || (this._renderMode === 'html' ? '#fff' : 'none')
+                color: borderColor || defaultBorderColor
             };
         }
 

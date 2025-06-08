@@ -47,6 +47,7 @@ import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
 import { CoordinateSystemUsageKind, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
 import { GeoJSONRegion } from '../../coord/geo/Region';
+import tokens from '../../visual/tokens';
 
 export interface MapStateOption<TCbParams = never> {
     itemStyle?: GeoItemStyleOption<TCbParams>
@@ -266,7 +267,7 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         if (iconType.indexOf('empty') > -1) {
             icon.style.stroke = icon.style.fill;
-            icon.style.fill = '#fff';
+            icon.style.fill = tokens.color.neutral00;
             icon.style.lineWidth = 2;
         }
         return icon;
@@ -328,32 +329,32 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
 
         label: {
             show: false,
-            color: '#000'
+            color: tokens.color.tertiary
         },
         // scaleLimit: null,
         itemStyle: {
             borderWidth: 0.5,
-            borderColor: '#444',
-            areaColor: '#eee'
+            borderColor: tokens.color.border,
+            areaColor: tokens.color.background
         },
 
         emphasis: {
             label: {
                 show: true,
-                color: 'rgb(100,0,0)'
+                color: tokens.color.primary
             },
             itemStyle: {
-                areaColor: 'rgba(255,215,0,0.8)'
+                areaColor: tokens.color.highlight
             }
         },
 
         select: {
             label: {
                 show: true,
-                color: 'rgb(100,0,0)'
+                color: tokens.color.primary
             },
             itemStyle: {
-                color: 'rgba(255,215,0,0.8)'
+                color: tokens.color.highlight
             }
         },
 

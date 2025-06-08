@@ -39,6 +39,7 @@ import type Geo from '../../coord/geo/Geo';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
 import Matrix from '../../coord/matrix/Matrix';
+import tokens from '../../visual/tokens';
 
 type HeatmapDataValue = OptionDataValue[];
 
@@ -126,7 +127,7 @@ class HeatmapSeriesModel extends SeriesModel<HeatmapSeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         }
     };

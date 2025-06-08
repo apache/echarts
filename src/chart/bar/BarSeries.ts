@@ -36,6 +36,7 @@ import type Polar from '../../coord/polar/Polar';
 import { inheritDefaultOption } from '../../util/component';
 import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
+import tokens from '../../visual/tokens';
 
 type PolarBarLabelPositionExtra = 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd';
 export type PolarBarLabelPosition = SeriesLabelOption['position'] | PolarBarLabelPositionExtra;
@@ -157,7 +158,8 @@ class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary,
+                borderWidth: 2
             }
         },
 

@@ -33,11 +33,10 @@ under the License.
     <body>
         <div id="main0"></div>
 
-        <!-- please run npm run build/watch -->
-        <script src="../dist/echarts.js"></script>
-        <!-- compare with rc1 -->
-        <!-- <script src="https://cdn.jsdelivr.net/npm/echarts@5.0.0-rc.1/dist/echarts.js"></script> -->
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
         <script>
+        require(['echarts'], function (echarts) {
             var container = document.getElementById('main0');
             var chart = echarts.init(container, null, {
                 renderer: 'svg',
@@ -70,9 +69,9 @@ under the License.
             };
 
             chart.setOption(option);
+        });
         </script>
 
 
     </body>
 </html>
-

@@ -37,6 +37,7 @@ import {
 import GlobalModel from '../../model/Global';
 import Model from '../../model/Model';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
+import tokens from '../../visual/tokens';
 
 export interface CalendarMonthLabelFormatterCallbackParams {
     nameMap: string
@@ -203,7 +204,7 @@ class CalendarModel extends ComponentModel<CalendarOption> implements Coordinate
         splitLine: {
             show: true,
             lineStyle: {
-                color: '#000',
+                color: tokens.color.axisLine,
                 width: 1,
                 type: 'solid'
             }
@@ -211,9 +212,9 @@ class CalendarModel extends ComponentModel<CalendarOption> implements Coordinate
 
         // rect style  temporarily unused emphasis
         itemStyle: {
-            color: '#fff',
+            color: tokens.color.neutral00,
             borderWidth: 1,
-            borderColor: '#ccc'
+            borderColor: tokens.color.neutral10
         },
 
         // week text style
@@ -224,8 +225,8 @@ class CalendarModel extends ComponentModel<CalendarOption> implements Coordinate
 
             // start end
             position: 'start',
-            margin: '50%', // 50% of cellSize
-            color: '#000'
+            margin: tokens.size.s,
+            color: tokens.color.secondary
         },
 
         // month text style
@@ -234,13 +235,13 @@ class CalendarModel extends ComponentModel<CalendarOption> implements Coordinate
 
             // start end
             position: 'start',
-            margin: 5,
+            margin: tokens.size.s,
 
             // center or left
             align: 'center',
 
             formatter: null,
-            color: '#000'
+            color: tokens.color.secondary
         },
 
         // year text style
@@ -249,9 +250,9 @@ class CalendarModel extends ComponentModel<CalendarOption> implements Coordinate
 
             // top bottom left right
             position: null,
-            margin: 30,
+            margin: tokens.size.xl,
             formatter: null,
-            color: '#ccc',
+            color: tokens.color.quaternary,
             fontFamily: 'sans-serif',
             fontWeight: 'bolder',
             fontSize: 20
