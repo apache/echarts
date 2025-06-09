@@ -124,15 +124,14 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
     private _resize(matrixModel: MatrixModel, api: ExtensionAPI) {
         const dims = this._dims;
         const dimModels = this._dimModels;
-        const viewportSize = new Point(api.getWidth(), api.getHeight());
 
         const rect = this._rect = getLayoutRect(matrixModel.getBoxLayoutParams(), {
-            width: viewportSize.x,
-            height: viewportSize.y,
+            width: api.getWidth(),
+            height: api.getHeight(),
         });
 
-        layOutUnitsOnDimension(dimModels, dims, rect, viewportSize, 0);
-        layOutUnitsOnDimension(dimModels, dims, rect, viewportSize, 1);
+        layOutUnitsOnDimension(dimModels, dims, rect, 0);
+        layOutUnitsOnDimension(dimModels, dims, rect, 1);
 
         layOutDimCellsRestInfoByUnit(0, dims);
         layOutDimCellsRestInfoByUnit(1, dims);
@@ -325,7 +324,6 @@ function layOutUnitsOnDimension(
     dimModels: Matrix['_dimModels'],
     dims: MatrixDimPair,
     matrixRect: RectLike,
-    viewportSize: Point,
     dimIdx: number
 ): void {
     const otherDimIdx = 1 - dimIdx;
@@ -363,7 +361,7 @@ function layOutUnitsOnDimension(
         }
     }
     function layOutSpecified(item: MatrixCellLayoutInfo, sizeOption: unknown): void {
-        const size = parseSizeOption(sizeOption, dimIdx, matrixRect, viewportSize);
+        const size = parseSizeOption(sizeOption, dimIdx, matrixRect);
         if (!eqNaN(size)) {
             item.wh = confineSize(size, restSize);
             restSize = confineSize(restSize - item.wh);
@@ -457,9 +455,8 @@ function parseSizeOption(
     sizeOption: unknown,
     dimIdx: number,
     matrixRect: RectLike,
-    viewportSize: Point
 ): number {
-    const sizeNum = parsePositionSizeOption(sizeOption, viewportSize[XY[dimIdx]]);
+    const sizeNum = parsePositionSizeOption(sizeOption, matrixRect[WH[dimIdx]]);
     return confineSize(sizeNum, matrixRect[WH[dimIdx]]);
 }
 
