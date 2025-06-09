@@ -43,6 +43,8 @@ export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
     // Used on the outer border and the divider line.
     borderZ2?: number;
     tooltip?: CommonTooltipOption<MatrixTooltipFormatterParams>;
+
+    // PENDING: do we need to support other states, i.e., `emphasis`, `blur`, `select`?
 }
 
 interface MatrixBodyCornerBaseOption extends MatrixCellStyleOption {
@@ -64,12 +66,12 @@ interface MatrixBodyCornerBaseOption extends MatrixCellStyleOption {
      *  |cornerQ|cornerP|  Xb0  |  Xb1  |       |
      *  |-------+-------+-------+-------+--------
      *  |       |  Yb0  | bodyR | bodyS |       |
-     *  |  Ya0  |-------+-------+-------+-------|
+     *  |  Ya0  |-------+-------+---------------|
      *  |       |  Yb1  |       |     bodyT     |
      *  |---------------|------------------------
      *  "Locator number" (`MatrixXYLocator`):
      *    The term `locator` refers to a integer number to locate cells on x or y direction.
-     *    Use the top-left corner of the body as the orgin point (0, 0),
+     *    Use the top-left cell of the body as the origin point (0, 0),
      *      the non-negative locator indicates the right/bottom of the origin point;
      *      the negative locator indicates the left/top of the origin point.
      *  "Ordinal number" (`OrdinalNumber`):
@@ -160,6 +162,7 @@ export interface MatrixDimensionCellOption extends MatrixBaseCellOption {
     // column width (for x dimension) or row height (for y dimension).
     // If not specified (null/undefined), auto calculate it.
     // Only available on leaves, to avoid unnecessary complex.
+    // If it is a percentage, such as '30%', based on the matrix width/height, rather than the canvas size.
     size?: PositionSizeOption;
     children?: MatrixDimensionCellOption[];
 }
@@ -170,6 +173,7 @@ export interface MatrixDimensionLevelOption {
     // `matrix.levels[i].levelSize` specifies the size of a certain level.
     // For x dimension, that is height; for y dimension, that is width.
     // If not specified (null/undefined), auto calculate it.
+    // If it is a percentage, such as '30%', based on the matrix width/height, rather than the canvas size.
     levelSize?: PositionSizeOption;
     // Other level specific options may added if needed, such as border-bottom/right style.
 }
@@ -183,10 +187,16 @@ export interface MatrixDimensionModel extends Model<MatrixDimensionOption> {
  *  - priority-low: style options defined in `matrix.x/y/coner/body`
  */
 export interface MatrixCellStyleOption {
+    // [NOTE - padding]:
+    //  - Consider the option for the space between cell boundary to text, percentage value for
+    //    `label.width/height` is not supported, because it is not ideal - the padding would vary
+    //    with the cell size, making the layout inconsistent.
+    //  - The inner text padding uses `lable.style.padding`.
+    //    The text truncation rect is obtained by cell rect minus by padding.
+    //  - The inner series / other coord sys padding is not supported, to avoid necessary complexity.
+    //    Consider some series, such as heatmap, prefer no padding.
     label?: LabelOption;
     itemStyle?: ItemStyleOption;
-    // Padding for the inner content (label / series / other coord sys).
-    padding?: number | number[];
     cursor?: string;
     // By default, auto decide whether to be silent, considering tooltip.
     silent?: boolean | NullUndefined;
@@ -204,14 +214,18 @@ export interface MatrixTooltipFormatterParams {
 const defaultLabelOption: LabelOption = {
     show: true,
     color: '#333',
-    overflow: 'truncate',
+    // overflow: 'truncate',
+    overflow: 'break',
     lineOverflow: 'truncate',
+    padding: [2, 3, 2, 3],
+    // Prefer to use `padding`, rather than distance.
+    distance: 0,
 };
 function makeDefaultCellItemStyleOption(isCorner: boolean) {
     return {
         color: 'none',
         borderWidth: 1,
-        borderColor: isCorner ? 'transparent' : '#ccc',
+        borderColor: isCorner ? 'none' : '#ccc',
     };
 };
 const defaultDimOption: MatrixDimensionOption = {

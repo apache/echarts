@@ -1093,9 +1093,10 @@ under the License.
                             return;
                         }
                         const {input, expectDefault} = _testCase;
-                        const isDefaultCase =
-                            (_convertToLayoutClampOpt == null || _convertToLayoutClampOpt === MatrixClampOption.none)
-                            && !_ignoreMergeCells;
+                        const shouldBeClampped = !(
+                            _convertToLayoutClampOpt == null || _convertToLayoutClampOpt === MatrixClampOption.none
+                        );
+                        const isDefaultCase = !shouldBeClampped && !_ignoreMergeCells;
 
                         const meta = calcMeta();
                         let opt = undefined;
@@ -1134,7 +1135,7 @@ under the License.
                                     assert(isFinite(result.rect[prop]));
                                 }
                             }
-                            else {
+                            else if (shouldBeClampped) {
                                 assert(isFinite(result.rect[prop]));
                             }
                         });

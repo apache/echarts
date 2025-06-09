@@ -19,7 +19,6 @@
 
 import MatrixModel, { MatrixBaseCellOption, MatrixCellStyleOption, MatrixOption } from '../../coord/matrix/MatrixModel';
 import ComponentView from '../../view/Component';
-import { createTextStyle } from '../../label/labelStyle';
 import { MatrixCellLayoutInfo, MatrixDim, MatrixXYLocator } from '../../coord/matrix/MatrixDim';
 import Model from '../../model/Model';
 import { NullUndefined } from '../../util/types';
@@ -30,12 +29,12 @@ import { ItemStyleProps } from '../../model/mixin/itemStyle';
 import { LineStyleProps } from '../../model/mixin/lineStyle';
 import { LineShape } from 'zrender/src/graphic/shape/Line';
 import { subPixelOptimize } from 'zrender/src/graphic/helper/subPixelOptimize';
-import { Group, Text, Rect, Line, XY, WH, setTooltipConfig, expandOrShrinkRect } from '../../util/graphic';
+import { Group, Text, Rect, Line, XY, setTooltipConfig, expandOrShrinkRect } from '../../util/graphic';
 import { ListIterator } from '../../util/model';
-import { isNumber, normalizeCssArray, retrieve2 } from 'zrender/src/core/util';
+import { clone, retrieve2 } from 'zrender/src/core/util';
 import { createNaNRectLike } from '../../coord/matrix/matrixCoordHelper';
 import { MatrixBodyCorner, MatrixBodyOrCornerKind } from '../../coord/matrix/MatrixBodyCorner';
-import { ElementTextConfig } from 'zrender/src/Element';
+import { setLabelStyle } from '../../label/labelStyle';
 
 const round = Math.round;
 
@@ -63,6 +62,9 @@ class MatrixView extends ComponentView {
         const yDimModel = matrixModel.getDimensionModel('y');
         const xDim = xDimModel.dim;
         const yDim = yDimModel.dim;
+
+        // PENDING:
+        //  reuse the existing text and rect elements for performance?
 
         renderDimensionCells(
             group,
@@ -278,7 +280,7 @@ function createMatrixCell(
     if (cursorOption != null) {
         cellRect.attr('cursor', cursorOption);
     }
-    let cellText: Text;
+    let cellText: Text | NullUndefined;
 
     if (textValue != null) {
         const text = textValue + '';
@@ -287,31 +289,24 @@ function createMatrixCell(
         if (_tmpCellLabelModel.getShallow('show')) {
             labelShown = true;
 
-            const padding = decideCellPadding(_tmpCellModel);
-            const lineWidth = cellRect && cellRect.style && cellRect.style.lineWidth;
-
             BoundingRect.copy(_tmpContentRect, shape);
-            expandOrShrinkRect(_tmpContentRect, lineWidth, true, true);
-            expandOrShrinkRect(_tmpContentRect, padding, true, true);
+            const lineWidth = cellRect.style?.lineWidth || 0;
+            // `lineWidth` is half outside half inside the bounding rect.
+            expandOrShrinkRect(_tmpContentRect, lineWidth / 2, true, true);
 
-            // Be conservative, currently do not use `labelStyle.ts#createTextConfig`
-            // to support all `LabelOption`.
-            const textConfig: ElementTextConfig = {};
-            textConfig.position = _tmpCellLabelModel.getShallow('position') || 'inside';
-            textConfig.distance = retrieve2(_tmpCellLabelModel.getShallow('distance'), 5);
-            cellRect.setTextConfig(textConfig);
-
-            cellRect.setTextContent(
-                cellText = new Text({
-                    style: createTextStyle(_tmpCellLabelModel, {
-                        text,
-                        width: makeCellLabelWH(_tmpContentRect, _tmpCellLabelModel, 0),
-                        height: makeCellLabelWH(_tmpContentRect, _tmpCellLabelModel, 1),
-                    }),
-                    ignoreHostSilent: true,
-                    z2: z2 + 1,
-                })
+            setLabelStyle(
+                cellRect,
+                // Currently do not support other states (`emphasis`, `select`, `blur`)
+                {normal: _tmpCellLabelModel},
+                {
+                    defaultText: text,
+                    autoOverflowArea: true,
+                    // By default based on boundingRect. But boundingRect contains borderWidth,
+                    // and borderWidth is half outside the cell. Thus specific `layoutRect` explicitly.
+                    layoutRect: clone(cellRect.shape)
+                },
             );
+            cellText = cellRect.getTextContent();
         }
         setTooltipConfig({ // At least for text overflow.
             el: cellRect,
@@ -325,6 +320,7 @@ function createMatrixCell(
     }
 
     if (cellText) {
+        cellText.z2 = z2 + 1;
         let labelSilent = _tmpCellLabelModel.get('silent');
         // auto, tooltip of text cells need silient: false, but non-text cells
         // do not need a special cursor in most cases.
@@ -332,6 +328,7 @@ function createMatrixCell(
             labelSilent = !(tooltipOptionShow && labelShown);
         }
         cellText.silent = labelSilent;
+        cellText.ignoreHostSilent = true;
     }
     let rectSilent = _tmpCellModel.get('silent');
     if (rectSilent == null) {
@@ -387,27 +384,5 @@ function createMatrixLine(shape: Omit<LineShape, 'percent'>, style: LineStylePro
         z2,
     });
 }
-
-function makeCellLabelWH(
-    contentRect: RectLike, cellLabelModel: Model<MatrixCellStyleOption['label']>, dimIdx: number
-): number {
-    // - To add some spacing between the text and cell border, using percentage value for `label.width/height`
-    //  is not ideal, becuase the padding would vary with the cell size, making the layout inconsistent.
-    // - `lineWith` is not considered deliberatedly, since it may be modified with user interaction.
-    let size = cellLabelModel.getShallow(WH[dimIdx]);
-    if (!isNumber(size)) {
-        size = contentRect[WH[dimIdx]];
-    }
-    return size;
-}
-
-export function decideCellPadding(cellModel: Model<MatrixCellStyleOption>): number[] {
-    const paddingOption = retrieve2(cellModel.getShallow('padding'), DEFAULT_CELL_PADDING_IF_TEXT);
-    // If cell is used to fill other series, such as heatmap, it's preferable no padding,
-    // but it's irrelevant since currently `dataToLayout` does not consider padding.
-    return normalizeCssArray(paddingOption);
-}
-// Consider text overflow truncate
-const DEFAULT_CELL_PADDING_IF_TEXT = 3;
 
 export default MatrixView;

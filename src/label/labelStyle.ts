@@ -65,6 +65,9 @@ type TextCommonParams = {
     // supportLegacyAuto?: boolean
 
     textStyle?: ZRStyleProps
+
+    autoOverflowArea?: ElementTextConfig['autoOverflowArea'],
+    layoutRect?: ElementTextConfig['layoutRect'],
 };
 const EMPTY_OBJ = {};
 
@@ -313,7 +316,7 @@ export function getLabelStatesModels<LabelName extends string = 'label'>(
 export function createTextStyle(
     textStyleModel: Model,
     specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    opt?: Parameters<typeof setTextStyleCommon>[2],
     isNotNormal?: boolean,
     isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ) {
@@ -325,7 +328,10 @@ export function createTextStyle(
 }
 export function createTextConfig(
     textStyleModel: Model<LabelOption<{positionExtra: 'outside'}>>,
-    opt?: Pick<TextCommonParams, 'defaultOutsidePosition' | 'inheritColor'>,
+    opt?: Pick<
+        TextCommonParams,
+        'defaultOutsidePosition' | 'inheritColor' | 'autoOverflowArea' | 'layoutRect'
+    >,
     isNotNormal?: boolean
 ) {
     opt = opt || {};
@@ -356,6 +362,12 @@ export function createTextConfig(
     textConfig.outsideFill = textStyleModel.get('color') === 'inherit'
         ? (opt.inheritColor || null)
         : 'auto';
+    if (opt.autoOverflowArea != null) {
+        textConfig.autoOverflowArea = opt.autoOverflowArea;
+    }
+    if (opt.layoutRect != null) {
+        textConfig.layoutRect = opt.layoutRect;
+    }
     return textConfig;
 }
 

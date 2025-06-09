@@ -25,7 +25,7 @@ import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } 
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { curry, defaults } from 'zrender/src/core/util';
-import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/types';
+import { ZRElementEvent, ECElement } from '../../util/types';
 import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
 import { convertOptionIdName } from '../../util/model';
