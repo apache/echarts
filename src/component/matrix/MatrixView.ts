@@ -32,7 +32,7 @@ import { subPixelOptimize } from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Group, Text, Rect, Line, XY, setTooltipConfig, expandOrShrinkRect } from '../../util/graphic';
 import { ListIterator } from '../../util/model';
 import { clone, retrieve2 } from 'zrender/src/core/util';
-import { createNaNRectLike } from '../../coord/matrix/matrixCoordHelper';
+import { invert } from 'zrender/src/core/matrix';
 import { MatrixBodyCorner, MatrixBodyOrCornerKind } from '../../coord/matrix/MatrixBodyCorner';
 import { setLabelStyle } from '../../label/labelStyle';
 
@@ -271,7 +271,6 @@ function createMatrixCell(
         (cellOption && cellOption.itemStyle) ? zrCellDefault.special : zrCellDefault.normal
     );
     const tooltipOptionShow = tooltipOption && tooltipOption.show;
-    let labelShown = false;
 
     const cellRect = createMatrixRect(shape, _tmpCellItemStyleModel.getItemStyle(), z2);
     group.add(cellRect);
@@ -286,28 +285,39 @@ function createMatrixCell(
         const text = textValue + '';
         _tmpCellLabelModel.option = cellOption ? cellOption.label : null;
         _tmpCellLabelModel.parentModel = parentLabelModel;
-        if (_tmpCellLabelModel.getShallow('show')) {
-            labelShown = true;
 
-            BoundingRect.copy(_tmpContentRect, shape);
-            const lineWidth = cellRect.style?.lineWidth || 0;
-            // `lineWidth` is half outside half inside the bounding rect.
-            expandOrShrinkRect(_tmpContentRect, lineWidth / 2, true, true);
+        setLabelStyle(
+            cellRect,
+            // Currently do not support other states (`emphasis`, `select`, `blur`)
+            {normal: _tmpCellLabelModel},
+            {
+                defaultText: text,
+                autoOverflowArea: true,
+                // By default based on boundingRect. But boundingRect contains borderWidth,
+                // and borderWidth is half outside the cell. Thus specific `layoutRect` explicitly.
+                layoutRect: clone(cellRect.shape)
+            },
+        );
+        cellText = cellRect.getTextContent();
+        if (cellText) {
+            cellText.z2 = z2 + 1;
 
-            setLabelStyle(
-                cellRect,
-                // Currently do not support other states (`emphasis`, `select`, `blur`)
-                {normal: _tmpCellLabelModel},
-                {
-                    defaultText: text,
-                    autoOverflowArea: true,
-                    // By default based on boundingRect. But boundingRect contains borderWidth,
-                    // and borderWidth is half outside the cell. Thus specific `layoutRect` explicitly.
-                    layoutRect: clone(cellRect.shape)
-                },
-            );
-            cellText = cellRect.getTextContent();
+            const style = cellText.style;
+            if (style && (style.overflow && style.overflow !== 'none' && style.lineOverflow)) {
+                // `overflow: 'break'/'breakAll'/'truncate'` does not guarantee prevention of overflow
+                // when space is insufficient. Use a `clipPath` in such case.
+                const clipShape = {} as RectLike;
+                BoundingRect.copy(clipShape, shape);
+                // `lineWidth` is half outside half inside the bounding rect.
+                expandOrShrinkRect(clipShape, (cellRect.style?.lineWidth || 0) / 2, true, true);
+                cellRect.updateInnerText();
+                cellText.getLocalTransform(_tmpInnerTextTrans);
+                invert(_tmpInnerTextTrans, _tmpInnerTextTrans);
+                BoundingRect.applyTransform(clipShape, clipShape, _tmpInnerTextTrans);
+                cellText.setClipPath(new Rect({shape: clipShape}));
+            }
         }
+
         setTooltipConfig({ // At least for text overflow.
             el: cellRect,
             componentModel: matrixModel,
@@ -319,13 +329,13 @@ function createMatrixCell(
         });
     }
 
+    // Set silent
     if (cellText) {
-        cellText.z2 = z2 + 1;
         let labelSilent = _tmpCellLabelModel.get('silent');
         // auto, tooltip of text cells need silient: false, but non-text cells
         // do not need a special cursor in most cases.
         if (labelSilent == null) {
-            labelSilent = !(tooltipOptionShow && labelShown);
+            labelSilent = !tooltipOptionShow;
         }
         cellText.silent = labelSilent;
         cellText.ignoreHostSilent = true;
@@ -343,8 +353,7 @@ function createMatrixCell(
 const _tmpCellModel = new Model<MatrixCellStyleOption>();
 const _tmpCellItemStyleModel = new Model<MatrixCellStyleOption['itemStyle']>();
 const _tmpCellLabelModel = new Model<MatrixCellStyleOption['label']>();
-const _tmpContentRect = createNaNRectLike();
-
+const _tmpInnerTextTrans: number[] = [];
 
 function createMatrixRect(
     shape: RectShape, style: ItemStyleProps, z2: number
