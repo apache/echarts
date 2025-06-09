@@ -41,6 +41,7 @@ import {
 import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import geoSourceManager from './geoSourceManager';
+import tokens from '../../visual/tokens';
 
 
 export interface GeoItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
@@ -132,6 +133,11 @@ export interface GeoOption extends
     selectedMap?: Dictionary<boolean>
 
     tooltip?: CommonTooltipOption<GeoTooltipFormatterParams>
+
+    /**
+     * @private
+     */
+    defaultItemStyleColor?: ZRColor;
 }
 
 class GeoModel extends ComponentModel<GeoOption> {
@@ -188,12 +194,12 @@ class GeoModel extends ComponentModel<GeoOption> {
 
         label: {
             show: false,
-            color: '#000'
+            color: tokens.color.tertiary
         },
 
         itemStyle: {
             borderWidth: 0.5,
-            borderColor: '#444'
+            borderColor: tokens.color.border,
             // Default color:
             // + geoJSON: #eee
             // + geoSVG: null (use SVG original `fill`)
@@ -203,20 +209,20 @@ class GeoModel extends ComponentModel<GeoOption> {
         emphasis: {
             label: {
                 show: true,
-                color: 'rgb(100,0,0)'
+                color: tokens.color.primary
             },
             itemStyle: {
-                color: 'rgba(255,215,0,0.8)'
+                color: tokens.color.highlight
             }
         },
 
         select: {
             label: {
                 show: true,
-                color: 'rgb(100,0,0)'
+                color: tokens.color.primary
             },
             itemStyle: {
-                color: 'rgba(255,215,0,0.8)'
+                color: tokens.color.highlight
             }
         },
 
@@ -228,15 +234,15 @@ class GeoModel extends ComponentModel<GeoOption> {
     };
 
     init(option: GeoOption, parentModel: Model, ecModel: GlobalModel): void {
+        this.mergeDefaultAndTheme(option, ecModel);
+
         const source = geoSourceManager.getGeoResource(option.map);
         if (source && source.type === 'geoJSON') {
             const itemStyle = option.itemStyle = option.itemStyle || {};
             if (!('color' in itemStyle)) {
-                itemStyle.color = '#eee';
+                itemStyle.color = option.defaultItemStyleColor || tokens.color.backgroundTint;
             }
         }
-
-        this.mergeDefaultAndTheme(option, ecModel);
 
         // Default label emphasis `show`
         modelUtil.defaultEmphasis(option, 'label', ['show']);

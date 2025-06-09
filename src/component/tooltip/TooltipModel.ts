@@ -27,6 +27,7 @@ import {
     CallbackDataParams,
     TooltipOrderMode
 } from '../../util/types';
+import tokens from '../../visual/tokens';
 import {AxisPointerOption} from '../axisPointer/AxisPointerModel';
 
 
@@ -76,6 +77,11 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      */
     className?: string
 
+    /**
+     * Default border color to use when there are multiple series
+     */
+    defaultBorderColor?: string
+
     order?: TooltipOrderMode
 }
 
@@ -122,7 +128,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         enterable: false,
 
-        backgroundColor: '#fff',
+        backgroundColor: tokens.color.neutral00,
 
         // box shadow
         shadowBlur: 10,
@@ -135,6 +141,8 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // tooltip border width, unit is px, default is 0 (no border)
         borderWidth: 1,
+
+        defaultBorderColor: tokens.color.border,
 
         // Tooltip inside padding, default is 5 for all direction
         // Array is allowed to set up, right, bottom, left, same with css
@@ -161,7 +169,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
             animationEasingUpdate: 'exponentialOut',
 
             crossStyle: {
-                color: '#999',
+                color: tokens.color.borderShade,
                 width: 1,
                 type: 'dashed',
 
@@ -173,7 +181,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
             // otherwise it will always override those styles on option.axisPointer.
         },
         textStyle: {
-            color: '#666',
+            color: tokens.color.tertiary,
             fontSize: 14
         }
     };

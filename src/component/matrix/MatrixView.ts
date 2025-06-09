@@ -17,10 +17,34 @@
 * under the License.
 */
 
-import MatrixModel from '../../coord/matrix/MatrixModel';
+import MatrixModel, { MatrixBaseCellOption, MatrixCellStyleOption, MatrixOption } from '../../coord/matrix/MatrixModel';
 import ComponentView from '../../view/Component';
-import { createTextStyle } from '../../label/labelStyle';
-import * as graphic from '../../util/graphic';
+import { MatrixCellLayoutInfo, MatrixDim, MatrixXYLocator } from '../../coord/matrix/MatrixDim';
+import Model from '../../model/Model';
+import { NullUndefined } from '../../util/types';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
+import * as vectorUtil from 'zrender/src/core/vector';
+import { RectShape } from 'zrender/src/graphic/shape/Rect';
+import { ItemStyleProps } from '../../model/mixin/itemStyle';
+import { LineStyleProps } from '../../model/mixin/lineStyle';
+import { LineShape } from 'zrender/src/graphic/shape/Line';
+import { subPixelOptimize } from 'zrender/src/graphic/helper/subPixelOptimize';
+import { Group, Text, Rect, Line, XY, setTooltipConfig, expandOrShrinkRect } from '../../util/graphic';
+import { ListIterator } from '../../util/model';
+import { clone, retrieve2 } from 'zrender/src/core/util';
+import { createNaNRectLike } from '../../coord/matrix/matrixCoordHelper';
+import { MatrixBodyCorner, MatrixBodyOrCornerKind } from '../../coord/matrix/MatrixBodyCorner';
+import { setLabelStyle } from '../../label/labelStyle';
+
+const round = Math.round;
+
+// When special border style is defined on cell, it
+// should be over all of the other borders.
+type Z2CellDefault = {normal: number, special: number};
+const Z2_BACKGROUND = 0;
+const Z2_OUTER_BORDER = 99;
+const Z2_BODY_CORNER_CELL_DEFAULT: Z2CellDefault = {normal: 25, special: 100};
+const Z2_DIMENSION_CELL_DEFAULT: Z2CellDefault = {normal: 50, special: 125};
 
 class MatrixView extends ComponentView {
 
@@ -29,152 +53,336 @@ class MatrixView extends ComponentView {
 
     render(matrixModel: MatrixModel) {
 
+        this.group.removeAll();
+
         const group = this.group;
-
-        group.removeAll();
-
-        this._renderTable(matrixModel);
-    }
-
-    protected _renderTable(matrixModel: MatrixModel) {
         const coordSys = matrixModel.coordinateSystem;
-        const xDim = coordSys.getDim('x');
-        const yDim = coordSys.getDim('y');
-        const xModel = matrixModel.getModel('x');
-        const yModel = matrixModel.getModel('y');
-        const xLabelModel = xModel.getModel('label');
-        const yLabelModel = yModel.getModel('label');
-        const xItemStyle = xModel.getModel('itemStyle').getItemStyle();
-        const yItemStyle = yModel.getModel('itemStyle').getItemStyle();
-
         const rect = coordSys.getRect();
-        const xLeavesCnt = xDim.getLeavesCount();
-        const yLeavesCnt = yDim.getLeavesCount();
-        const xCells = xDim.getCells();
-        const xHeight = xDim.getHeight();
-        const yCells = yDim.getCells();
-        const yHeight = yDim.getHeight();
-        const cellWidth = rect.width / (xLeavesCnt + yHeight);
-        const cellHeight = rect.height / (yLeavesCnt + xHeight);
+        const xDimModel = matrixModel.getDimensionModel('x');
+        const yDimModel = matrixModel.getDimensionModel('y');
+        const xDim = xDimModel.dim;
+        const yDim = yDimModel.dim;
 
-        const xLeft = rect.x + cellWidth * yHeight;
-        if (xModel.get('show')) {
-            for (let i = 0; i < xCells.length; i++) {
-                const cell = xCells[i];
-                const width = cellWidth * cell.colSpan;
-                const height = cellHeight * cell.rowSpan;
-                const left = xLeft + cellWidth * cell.colId;
-                const top = rect.y + cellHeight * cell.rowId;
+        // PENDING:
+        //  reuse the existing text and rect elements for performance?
 
-                const cellRect = new graphic.Rect({
-                    shape: {
-                        x: left,
-                        y: top,
-                        width: width,
-                        height: height
+        renderDimensionCells(
+            group,
+            matrixModel
+        );
+
+        createBodyAndCorner(
+            group,
+            matrixModel,
+            xDim,
+            yDim
+        );
+
+        const borderZ2Option = matrixModel.getShallow('borderZ2', true);
+        const outerBorderZ2 = retrieve2(borderZ2Option, Z2_OUTER_BORDER);
+        const dividerLineZ2 = outerBorderZ2 - 1;
+
+        // Outer border and overall background. Use separate elements because of z-order:
+        // The overall background should appear below any other elements.
+        // But in most cases, the outer border and the divider line should be above the normal cell borders -
+        // especially when cell borders have different colors. But users may highlight some specific cells by
+        // overstirking their border, in which case it should be above the outer border.
+        const bgStyle = matrixModel.getModel('backgroundStyle').getItemStyle(
+            ['borderWidth']
+        );
+        bgStyle.lineWidth = 0;
+        const borderStyle = matrixModel.getModel('backgroundStyle').getItemStyle(
+            ['color', 'decal', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY']
+        );
+        borderStyle.fill = 'none';
+        const bgRect = createMatrixRect(rect.clone(), bgStyle, Z2_BACKGROUND);
+        const borderRect = createMatrixRect(rect.clone(), borderStyle, outerBorderZ2);
+        bgRect.silent = true;
+        borderRect.silent = true;
+        group.add(bgRect);
+        group.add(borderRect);
+
+        // Header split line.
+        const xDimCell0 = xDim.getUnitLayoutInfo(0, 0);
+        const yDimCell0 = yDim.getUnitLayoutInfo(1, 0);
+        if (xDimCell0 && yDimCell0) {
+            if (xDim.shouldShow()) {
+                group.add(createMatrixLine(
+                    {
+                        x1: rect.x,
+                        y1: yDimCell0.xy,
+                        x2: rect.x + rect.width,
+                        y2: yDimCell0.xy,
                     },
-                    style: xItemStyle
-                });
-                this.group.add(cellRect);
-
-                if (xLabelModel.get('show')) {
-                    cellRect.setTextConfig({
-                        position: 'inside'
-                    });
-                    cellRect.setTextContent(
-                        new graphic.Text({
-                            style: createTextStyle(xLabelModel, {
-                                text: cell.value,
-                                verticalAlign: 'middle',
-                                align: 'center'
-                            }),
-                            silent: xLabelModel.get('silent')
-                        })
-                    );
-                }
+                    xDimModel.getModel('dividerLineStyle').getLineStyle(),
+                    dividerLineZ2,
+                ));
+            }
+            if (yDim.shouldShow()) {
+                group.add(createMatrixLine(
+                    {
+                        x1: xDimCell0.xy,
+                        y1: rect.y,
+                        x2: xDimCell0.xy,
+                        y2: rect.y + rect.height,
+                    },
+                    yDimModel.getModel('dividerLineStyle').getLineStyle(),
+                    dividerLineZ2,
+                ));
             }
         }
-
-        const yTop = rect.y + cellHeight * xHeight;
-        if (yModel.get('show')) {
-            for (let i = 0; i < yCells.length; i++) {
-                const cell = yCells[i];
-                const width = cellWidth * cell.rowSpan;
-                const height = cellHeight * cell.colSpan;
-                const left = rect.x + cellWidth * cell.rowId;
-                const top = yTop + cellHeight * cell.colId;
-
-                this.group.add(new graphic.Rect({
-                    shape: {
-                        x: left,
-                        y: top,
-                        width: width,
-                        height: height
-                    },
-                    style: yItemStyle
-                }));
-                if (yLabelModel.get('show')) {
-                    this.group.add(new graphic.Text({
-                        style: createTextStyle(yLabelModel, {
-                            text: cell.value,
-                            x: left + width / 2,
-                            y: top + height / 2,
-                            verticalAlign: 'middle',
-                            align: 'center'
-                        })
-                    }));
-                }
-            }
-        }
-
-        // Inner cells
-        const innerBackgroundStyle = matrixModel
-            .getModel('innerBackgroundStyle')
-            .getItemStyle();
-        for (let i = 0; i < xLeavesCnt; i++) {
-            for (let j = 0; j < yLeavesCnt; j++) {
-                const left = xLeft + cellWidth * i;
-                const top = yTop + cellHeight * j;
-                this.group.add(new graphic.Rect({
-                    shape: {
-                        x: left,
-                        y: top,
-                        width: cellWidth,
-                        height: cellHeight
-                    },
-                    style: innerBackgroundStyle
-                }));
-            }
-        }
-
-        // Outer border
-        const backgroundStyle = matrixModel
-            .getModel('backgroundStyle')
-            .getItemStyle();
-        this.group.add(new graphic.Rect({
-            shape: rect,
-            style: backgroundStyle
-        }));
-        // Header border
-        this.group.add(new graphic.Line({
-            shape: {
-                x1: rect.x,
-                y1: yTop,
-                x2: rect.x + rect.width,
-                y2: yTop
-            },
-            style: backgroundStyle
-        }));
-        this.group.add(new graphic.Line({
-            shape: {
-                x1: xLeft,
-                y1: rect.y,
-                x2: xLeft,
-                y2: rect.y + rect.height
-            },
-            style: backgroundStyle
-        }));
     }
+}
+
+function renderDimensionCells(group: Group, matrixModel: MatrixModel) {
+
+    renderOnDimension(0);
+    renderOnDimension(1);
+
+    function renderOnDimension(dimIdx: 0 | 1) {
+        const thisDimModel = matrixModel.getDimensionModel(XY[dimIdx]);
+        const thisDim = thisDimModel.dim;
+
+        if (!thisDim.shouldShow()) {
+            return;
+        }
+
+        const thisDimBgStyleModel = thisDimModel.getModel('itemStyle');
+        const thisDimLabelModel = thisDimModel.getModel('label');
+        const tooltipOption = matrixModel.getShallow('tooltip', true);
+        const xyLocator: MatrixXYLocator[] = [];
+
+        for (const it = thisDim.resetCellIterator(); it.next();) {
+            const dimCell = it.item;
+            const shape = {} as RectLike;
+            BoundingRect.copy(shape, dimCell.rect);
+
+            vectorUtil.set(xyLocator, dimCell.id.x, dimCell.id.y);
+
+            createMatrixCell(
+                xyLocator,
+                matrixModel,
+                group,
+                dimCell.option,
+                thisDimBgStyleModel,
+                thisDimLabelModel,
+                thisDimModel,
+                shape,
+                dimCell.option.value,
+                Z2_DIMENSION_CELL_DEFAULT,
+                tooltipOption
+            );
+        }
+    }
+}
+
+function createBodyAndCorner(
+    group: Group,
+    matrixModel: MatrixModel,
+    xDim: MatrixDim,
+    yDim: MatrixDim
+): void {
+
+    createBodyOrCornerCells('body', matrixModel.getBody(), xDim, yDim);
+    if (xDim.shouldShow() && yDim.shouldShow()) {
+        createBodyOrCornerCells('corner', matrixModel.getCorner(), yDim, xDim);
+    }
+
+    function createBodyOrCornerCells<TBodyOrCornerKind extends MatrixBodyOrCornerKind>(
+        bodyCornerOptionRoot: TBodyOrCornerKind,
+        bodyOrCorner: MatrixBodyCorner<TBodyOrCornerKind>,
+        dimForCoordX: MatrixDim, // Can be `matrix.y` (transposed) for corners.
+        dimForCoordY: MatrixDim, // Can be `matrix.x` (trnasposed) for corners.
+    ): void {
+        // Prevent inheriting from ancestor.
+        const parentCellModel = new Model(matrixModel.getShallow(bodyCornerOptionRoot, true));
+        const parentItemStyleModel = parentCellModel.getModel('itemStyle');
+        const parentLabelModel = parentCellModel.getModel('label');
+
+        const itx = new ListIterator<MatrixCellLayoutInfo>();
+        const ity = new ListIterator<MatrixCellLayoutInfo>();
+        const xyLocator: number[] = [];
+        const tooltipOption = matrixModel.getShallow('tooltip', true);
+
+        for (dimForCoordY.resetLayoutIterator(ity, 1); ity.next();) {
+            for (dimForCoordX.resetLayoutIterator(itx, 0); itx.next();) {
+                const xLayout = itx.item;
+                const yLayout = ity.item;
+
+                vectorUtil.set(xyLocator, xLayout.id.x, yLayout.id.y);
+                const bodyCornerCell = bodyOrCorner.getCell(xyLocator);
+
+                // If in span of an other body or corner cell, never render it.
+                if (bodyCornerCell && bodyCornerCell.inSpanOf && bodyCornerCell.inSpanOf !== bodyCornerCell) {
+                    continue;
+                }
+
+                const shape = {} as RectLike;
+                if (bodyCornerCell && bodyCornerCell.span) {
+                    BoundingRect.copy(shape, bodyCornerCell.spanRect);
+                }
+                else {
+                    xLayout.dim.getLayout(shape, 0, xyLocator[0]);
+                    yLayout.dim.getLayout(shape, 1, xyLocator[1]);
+                }
+
+                const bodyCornerCellOption = bodyCornerCell ? bodyCornerCell.option : null;
+
+                createMatrixCell(
+                    xyLocator,
+                    matrixModel,
+                    group,
+                    bodyCornerCellOption,
+                    parentItemStyleModel,
+                    parentLabelModel,
+                    parentCellModel,
+                    shape,
+                    bodyCornerCellOption ? bodyCornerCellOption.value : null,
+                    Z2_BODY_CORNER_CELL_DEFAULT,
+                    tooltipOption
+                );
+            }
+        }
+    } // End of createBodyOrCornerCells
+}
+
+function createMatrixCell(
+    xyLocator: MatrixXYLocator[],
+    matrixModel: MatrixModel,
+    group: Group,
+    cellOption: MatrixBaseCellOption | NullUndefined,
+    parentItemStyleModel: Model<MatrixCellStyleOption['itemStyle']>,
+    parentLabelModel: Model<MatrixCellStyleOption['label']>,
+    parentCellModel: Model<MatrixCellStyleOption>,
+    shape: RectLike,
+    textValue: unknown,
+    zrCellDefault: Z2CellDefault,
+    tooltipOption: MatrixOption['tooltip'],
+): void {
+    // Do not use getModel for handy performance optimization.
+    _tmpCellItemStyleModel.option = cellOption ? cellOption.itemStyle : null;
+    _tmpCellItemStyleModel.parentModel = parentItemStyleModel;
+    _tmpCellModel.option = cellOption;
+    _tmpCellModel.parentModel = parentCellModel;
+
+    // Use different z2 becuase special border may be defined in itemStyle.
+    const z2 = retrieve2(
+        _tmpCellModel.getShallow('z2'),
+        (cellOption && cellOption.itemStyle) ? zrCellDefault.special : zrCellDefault.normal
+    );
+    const tooltipOptionShow = tooltipOption && tooltipOption.show;
+    let labelShown = false;
+
+    const cellRect = createMatrixRect(shape, _tmpCellItemStyleModel.getItemStyle(), z2);
+    group.add(cellRect);
+
+    const cursorOption = _tmpCellModel.get('cursor');
+    if (cursorOption != null) {
+        cellRect.attr('cursor', cursorOption);
+    }
+    let cellText: Text | NullUndefined;
+
+    if (textValue != null) {
+        const text = textValue + '';
+        _tmpCellLabelModel.option = cellOption ? cellOption.label : null;
+        _tmpCellLabelModel.parentModel = parentLabelModel;
+        if (_tmpCellLabelModel.getShallow('show')) {
+            labelShown = true;
+
+            BoundingRect.copy(_tmpContentRect, shape);
+            const lineWidth = cellRect.style?.lineWidth || 0;
+            // `lineWidth` is half outside half inside the bounding rect.
+            expandOrShrinkRect(_tmpContentRect, lineWidth / 2, true, true);
+
+            setLabelStyle(
+                cellRect,
+                // Currently do not support other states (`emphasis`, `select`, `blur`)
+                {normal: _tmpCellLabelModel},
+                {
+                    defaultText: text,
+                    autoOverflowArea: true,
+                    // By default based on boundingRect. But boundingRect contains borderWidth,
+                    // and borderWidth is half outside the cell. Thus specific `layoutRect` explicitly.
+                    layoutRect: clone(cellRect.shape)
+                },
+            );
+            cellText = cellRect.getTextContent();
+        }
+        setTooltipConfig({ // At least for text overflow.
+            el: cellRect,
+            componentModel: matrixModel,
+            itemName: text,
+            itemTooltipOption: tooltipOption,
+            formatterParamsExtra: {
+                xyLocator: xyLocator.slice()
+            }
+        });
+    }
+
+    if (cellText) {
+        cellText.z2 = z2 + 1;
+        let labelSilent = _tmpCellLabelModel.get('silent');
+        // auto, tooltip of text cells need silient: false, but non-text cells
+        // do not need a special cursor in most cases.
+        if (labelSilent == null) {
+            labelSilent = !(tooltipOptionShow && labelShown);
+        }
+        cellText.silent = labelSilent;
+        cellText.ignoreHostSilent = true;
+    }
+    let rectSilent = _tmpCellModel.get('silent');
+    if (rectSilent == null) {
+        rectSilent = (
+            // If no background color in cell, set `rect.silent: false` will cause that only
+            // the border response to mouse hovering, which is probably weird.
+            !cellRect.style || cellRect.style.fill === 'none' || !cellRect.style.fill
+        );
+    }
+    cellRect.silent = rectSilent;
+}
+const _tmpCellModel = new Model<MatrixCellStyleOption>();
+const _tmpCellItemStyleModel = new Model<MatrixCellStyleOption['itemStyle']>();
+const _tmpCellLabelModel = new Model<MatrixCellStyleOption['label']>();
+const _tmpContentRect = createNaNRectLike();
+
+
+function createMatrixRect(
+    shape: RectShape, style: ItemStyleProps, z2: number
+): Rect {
+    // Currently `subPixelOptimizeRect` can not be used here because it will break rect alignment.
+    // Optimize line and rect with the same direction.
+    const lineWidth = style.lineWidth;
+    if (lineWidth) {
+        const x2Original = shape.x + shape.width;
+        const y2Original = shape.y + shape.height;
+        shape.x = subPixelOptimize(shape.x, lineWidth, true);
+        shape.y = subPixelOptimize(shape.y, lineWidth, true);
+        shape.width = subPixelOptimize(x2Original, lineWidth, true) - shape.x;
+        shape.height = subPixelOptimize(y2Original, lineWidth, true) - shape.y;
+    }
+    return new Rect({
+        shape,
+        style: style,
+        z2,
+    });
+}
+
+function createMatrixLine(shape: Omit<LineShape, 'percent'>, style: LineStyleProps, z2: number): Line {
+    const lineWidth = style.lineWidth;
+    if (lineWidth) {
+        if (round(shape.x1 * 2) === round(shape.x2 * 2)) {
+            shape.x1 = shape.x2 = subPixelOptimize(shape.x1, lineWidth, true);
+        }
+        if (round(shape.y1 * 2) === round(shape.y2 * 2)) {
+            shape.y1 = shape.y2 = subPixelOptimize(shape.y1, lineWidth, true);
+        }
+    }
+    return new Line({
+        shape,
+        style,
+        silent: true,
+        z2,
+    });
 }
 
 export default MatrixView;

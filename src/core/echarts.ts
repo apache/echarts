@@ -88,7 +88,6 @@ import {throttle} from '../util/throttle';
 import {seriesStyleTask, dataStyleTask, dataColorPaletteTask} from '../visual/style';
 import loadingDefault from '../loading/default';
 import Scheduler from './Scheduler';
-import lightTheme from '../theme/light';
 import darkTheme from '../theme/dark';
 import {CoordinateSystemMaster, CoordinateSystemCreator, CoordinateSystemHostModel} from '../coord/CoordinateSystem';
 import { parseClassType } from '../util/clazz';
@@ -110,6 +109,9 @@ import {
     ZRElementEventName,
     ECElementEvent,
     AnimationOption,
+    CoordinateSystemDataLayout,
+    NullUndefined,
+    CoordinateSystemDataCoord,
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
@@ -288,12 +290,29 @@ let updateMethods: {
     updateVisual: UpdateMethod,
     updateLayout: UpdateMethod
 };
-let doConvertPixel: (
-    ecIns: ECharts,
-    methodName: string,
-    finder: ModelFinder,
-    value: (number | number[]) | (ScaleDataValue | ScaleDataValue[])
-) => (number | number[]);
+let doConvertPixel: {
+    (
+        ecIns: ECharts,
+        methodName: 'convertFromPixel',
+        finder: ModelFinder,
+        value: number | number[],
+        opt: unknown
+    ): number | number[];
+    (
+        ecIns: ECharts,
+        methodName: 'convertToPixel',
+        finder: ModelFinder,
+        value: CoordinateSystemDataCoord,
+        opt: unknown
+    ): number | number[];
+    (
+        ecIns: ECharts,
+        methodName: 'convertToLayout',
+        finder: ModelFinder,
+        value: CoordinateSystemDataCoord,
+        opt: unknown
+    ): CoordinateSystemDataLayout;
+};
 let updateStreamModes: (ecIns: ECharts, ecModel: GlobalModel) => void;
 let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void;
 let flushPendingActions: (this: ECharts, silent: boolean) => void;
@@ -997,21 +1016,61 @@ class ECharts extends Eventful<ECEventDefinition> {
     /**
      * Convert from logical coordinate system to pixel coordinate system.
      * See CoordinateSystem#convertToPixel.
+     *
+     * TODO / PENDING:
+     *  currently `convertToPixel` `convertFromPixel` `convertToLayout` may not be suitable
+     *  for some extremely performance-sensitive scenarios (such as, handling massive amounts of data),
+     *  since it performce "find component" every time.
+     *  And it is not friendly to the nuances between different coordinate systems.
+     *  @see https://github.com/apache/echarts/issues/20985 for details
+     *
+     * @see CoordinateSystem['dataToPoint'] for parameters and return.
+     * @see CoordinateSystemDataCoord
      */
     convertToPixel(finder: ModelFinder, value: ScaleDataValue): number;
     convertToPixel(finder: ModelFinder, value: ScaleDataValue[]): number[];
-    convertToPixel(finder: ModelFinder, value: ScaleDataValue | ScaleDataValue[]): number | number[] {
-        return doConvertPixel(this, 'convertToPixel', finder, value);
+    convertToPixel(
+        finder: ModelFinder, value: ScaleDataValue | ScaleDataValue[]
+    ): number | number[];
+    // The above are signatures from before v6, thus they should be preserved for backward compat.
+    convertToPixel(
+        finder: ModelFinder, value: (ScaleDataValue | ScaleDataValue[] | NullUndefined)[]
+    ): number | number[];
+    convertToPixel(
+        finder: ModelFinder,
+        value: (ScaleDataValue | NullUndefined) | (ScaleDataValue | ScaleDataValue[] | NullUndefined)[],
+        opt?: unknown
+    ): number | number[] {
+        return doConvertPixel(this, 'convertToPixel', finder, value, opt);
+    }
+
+    /**
+     * Convert from logical coordinate system to pixel coordinate system.
+     * See CoordinateSystem#convertToPixel.
+     *
+     * @see CoordinateSystem['dataToLayout'] for parameters and return.
+     * @see CoordinateSystemDataCoord
+     */
+    convertToLayout(
+        finder: ModelFinder,
+        value: (ScaleDataValue | NullUndefined) | (ScaleDataValue | ScaleDataValue[] | NullUndefined)[],
+        opt?: unknown
+    ): CoordinateSystemDataLayout {
+        return doConvertPixel(this, 'convertToLayout', finder, value, opt);
     }
 
     /**
      * Convert from pixel coordinate system to logical coordinate system.
      * See CoordinateSystem#convertFromPixel.
+     *
+     * @see CoordinateSystem['pointToData'] for parameters and return.
      */
     convertFromPixel(finder: ModelFinder, value: number): number;
     convertFromPixel(finder: ModelFinder, value: number[]): number[];
-    convertFromPixel(finder: ModelFinder, value: number | number[]): number | number[] {
-        return doConvertPixel(this, 'convertFromPixel', finder, value);
+    convertFromPixel(finder: ModelFinder, value: number | number[]): number | number[];
+    // The above are signatures from before v6, thus they should be preserved for backward compat.
+    convertFromPixel(finder: ModelFinder, value: number | number[], opt?: unknown): number | number[] {
+        return doConvertPixel(this, 'convertFromPixel', finder, value, opt);
     }
 
     /**
@@ -1896,12 +1955,34 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
         };
 
-        doConvertPixel = function (
+        function doConvertPixelImpl(
             ecIns: ECharts,
-            methodName: 'convertFromPixel' | 'convertToPixel',
+            methodName: 'convertFromPixel',
             finder: ModelFinder,
-            value: (number | number[]) | (ScaleDataValue | ScaleDataValue[])
-        ): (number | number[]) {
+            value: number | number[],
+            opt: unknown
+        ): number | number[];
+        function doConvertPixelImpl(
+            ecIns: ECharts,
+            methodName: 'convertToPixel',
+            finder: ModelFinder,
+            value: CoordinateSystemDataCoord,
+            opt: unknown
+        ): number | number[];
+        function doConvertPixelImpl(
+            ecIns: ECharts,
+            methodName: 'convertToLayout',
+            finder: ModelFinder,
+            value: CoordinateSystemDataCoord,
+            opt: unknown
+        ): CoordinateSystemDataLayout;
+        function doConvertPixelImpl(
+            ecIns: ECharts,
+            methodName: 'convertFromPixel' | 'convertToPixel' | 'convertToLayout',
+            finder: ModelFinder,
+            value: number | number[] | CoordinateSystemDataCoord,
+            opt: unknown
+        ) {
             if (ecIns._disposed) {
                 disposedWarning(ecIns.id);
                 return;
@@ -1915,7 +1996,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             for (let i = 0; i < coordSysList.length; i++) {
                 const coordSys = coordSysList[i];
                 if (coordSys[methodName]
-                    && (result = coordSys[methodName](ecModel, parsedFinder, value as any)) != null
+                    && (result = coordSys[methodName](ecModel, parsedFinder, value as any, opt)) != null
                 ) {
                     return result;
                 }
@@ -1927,6 +2008,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 );
             }
         };
+        doConvertPixel = doConvertPixelImpl;
 
         updateStreamModes = function (ecIns: ECharts, ecModel: GlobalModel): void {
             const chartsMap = ecIns._chartsMap;
@@ -3226,8 +3308,9 @@ function makeSelectChangedEvent(
     };
 }
 
-// Default theme
-registerTheme('light', lightTheme);
+// Default theme, so that we can use `chart.setTheme('default')` to revert to
+// the default theme after changing to other themes.
+registerTheme('default', {});
 registerTheme('dark', darkTheme);
 
 // For backward compatibility, where the namespace `dataTool` will

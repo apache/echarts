@@ -194,13 +194,8 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
      * Resize the parallel coordinate system.
      */
     resize(parallelModel: ParallelModel, api: ExtensionAPI): void {
-        this._rect = layoutUtil.getLayoutRect(
-            parallelModel.getBoxLayoutParams(),
-            {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }
-        );
+        const refContainer = layoutUtil.createBoxLayoutReference(parallelModel, api).refContainer;
+        this._rect = layoutUtil.getLayoutRect(parallelModel.getBoxLayoutParams(), refContainer);
 
         this._layoutAxes();
     }

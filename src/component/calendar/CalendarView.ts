@@ -97,7 +97,7 @@ class CalendarView extends ComponentView {
             i = coordSys.getNextNDay(i, 1).time
         ) {
 
-            const point = coordSys.dataToRect([i], false).tl;
+            const point = coordSys.dataToCalendarLayout([i], false).tl;
 
             // every rect
             const rect = new graphic.Rect({
@@ -158,7 +158,7 @@ class CalendarView extends ComponentView {
         function addPoints(date: OptionDataValueDate) {
 
             self._firstDayOfMonth.push(coordSys.getDateInfo(date));
-            self._firstDayPoints.push(coordSys.dataToRect([date], false).tl);
+            self._firstDayPoints.push(coordSys.dataToCalendarLayout([date], false).tl);
 
             const points = self._getLinePointsOfOneWeek(calendarModel, date, orient);
 
@@ -214,7 +214,7 @@ class CalendarView extends ComponentView {
         for (let i = 0; i < 7; i++) {
 
             const tmpD = coordSys.getNextNDay(parsedDate.time, i);
-            const point = coordSys.dataToRect([tmpD.time], false);
+            const point = coordSys.dataToCalendarLayout([tmpD.time], false);
 
             points[2 * tmpD.day] = point.tl;
             points[2 * tmpD.day + 1] = point[orient === 'horizontal' ? 'bl' : 'tr'];
@@ -542,7 +542,7 @@ class CalendarView extends ComponentView {
         for (let i = 0; i < 7; i++) {
 
             const tmpD = coordSys.getNextNDay(start, i);
-            const point = coordSys.dataToRect([tmpD.time], false).center;
+            const point = coordSys.dataToCalendarLayout([tmpD.time], false).center;
             let day = i;
             day = Math.abs((i + firstDayOfWeek) % 7);
             const weekText = new graphic.Text({

@@ -17,57 +17,27 @@
 * under the License.
 */
 
-// @ts-nocheck
-
-import {
-    getLayoutRect,
-    box as layoutBox,
-    positionElement
-} from '../../util/layout';
 import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';
+import { RectLike } from 'zrender/src/core/BoundingRect';
+import { ItemStyleOption, ZRColor } from '../../util/types';
+import Model from '../../model/Model';
 
-/**
- * Layout list like component.
- * It will box layout each items in group of component and then position the whole group in the viewport
- * @param {module:zrender/group/Group} group
- * @param {module:echarts/model/Component} componentModel
- * @param {module:echarts/ExtensionAPI}
- */
-export function layout(group, componentModel, api) {
-    const boxLayoutParams = componentModel.getBoxLayoutParams();
-    const padding = componentModel.get('padding');
-    const viewportSize = {width: api.getWidth(), height: api.getHeight()};
 
-    const rect = getLayoutRect(
-        boxLayoutParams,
-        viewportSize,
-        padding
-    );
+interface BackgroundRelatedOption {
+    backgroundColor?: ZRColor
+    borderRadius?: number | number[]
+    padding?: number | number[]
+    itemStyle?: Omit<ItemStyleOption, 'color' | 'opacity'>
+};
 
-    layoutBox(
-        componentModel.get('orient'),
-        group,
-        componentModel.get('itemGap'),
-        rect.width,
-        rect.height
-    );
-
-    positionElement(
-        group,
-        boxLayoutParams,
-        viewportSize,
-        padding
-    );
-}
-
-export function makeBackground(rect, componentModel) {
+export function makeBackground(rect: RectLike, componentModel: Model<BackgroundRelatedOption>): graphic.Rect {
     const padding = formatUtil.normalizeCssArray(
         componentModel.get('padding')
     );
     const style = componentModel.getItemStyle(['color', 'opacity']);
     style.fill = componentModel.get('backgroundColor');
-    rect = new graphic.Rect({
+    const bgRect = new graphic.Rect({
         shape: {
             x: rect.x - padding[3],
             y: rect.y - padding[0],
@@ -84,5 +54,5 @@ export function makeBackground(rect, componentModel) {
     // and background rect when setting like `left: 0`, `top: 0`.
     // graphic.subPixelOptimizeRect(rect);
 
-    return rect;
+    return bgRect;
 }

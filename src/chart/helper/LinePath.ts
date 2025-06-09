@@ -25,6 +25,7 @@ import * as graphic from '../../util/graphic';
 import * as vec2 from 'zrender/src/core/vector';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { ColorString } from '../../util/types';
+import tokens from '../../visual/tokens';
 
 const straightLineProto = graphic.Line.prototype;
 const bezierCurveProto = graphic.BezierCurve.prototype;
@@ -64,7 +65,7 @@ class ECLinePath extends graphic.Path<ECLineProps> {
 
     getDefaultStyle() {
         return {
-            stroke: '#000',
+            stroke: tokens.color.neutral99,
             fill: null as ColorString
         };
     }

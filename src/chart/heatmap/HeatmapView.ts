@@ -265,33 +265,33 @@ class HeatmapView extends ChartView {
                 });
             }
             else if (isMatrix) {
+                const shape = coordSys.dataToLayout([
+                    data.get(dataDims[0], idx),
+                    data.get(dataDims[1], idx)
+                ]).rect;
+                if (zrUtil.eqNaN(shape.x)) {
+                    continue;
+                }
                 rect = new graphic.Rect({
                     z2: 1,
-                    shape: coordSys.dataToRect(
-                        [
-                            data.get(dataDims[0], idx) as string,
-                            data.get(dataDims[1], idx) as string
-                        ]
-                    ),
-                    style
+                    shape,
+                    style,
                 });
             }
-            else {
+            else { // Calendar
                 // Ignore empty data
                 if (isNaN(data.get(dataDims[1], idx) as number)) {
                     continue;
                 }
-
-                const contentShape = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
-                // Ignore data that are not in range
-                if (isNaN(contentShape.x) || isNaN(contentShape.y)) {
+                const layout = coordSys.dataToLayout([data.get(dataDims[0], idx)]);
+                const shape = layout.contentRect || layout.rect;
+                if (zrUtil.eqNaN(shape.x) || zrUtil.eqNaN(shape.y)) {
                     continue;
                 }
-
                 rect = new graphic.Rect({
                     z2: 1,
-                    shape: contentShape,
-                    style
+                    shape,
+                    style,
                 });
             }
 

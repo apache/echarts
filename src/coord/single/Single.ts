@@ -23,7 +23,7 @@
 
 import SingleAxis from './SingleAxis';
 import * as axisHelper from '../axisHelper';
-import {getLayoutRect} from '../../util/layout';
+import {createBoxLayoutReference, getLayoutRect} from '../../util/layout';
 import {each} from 'zrender/src/core/util';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
@@ -111,20 +111,8 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      * Resize the single coordinate system.
      */
     resize(axisModel: SingleAxisModel, api: ExtensionAPI) {
-        this._rect = getLayoutRect(
-            {
-                left: axisModel.get('left'),
-                top: axisModel.get('top'),
-                right: axisModel.get('right'),
-                bottom: axisModel.get('bottom'),
-                width: axisModel.get('width'),
-                height: axisModel.get('height')
-            },
-            {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }
-        );
+        const refContainer = createBoxLayoutReference(axisModel, api).refContainer;
+        this._rect = getLayoutRect(axisModel.getBoxLayoutParams(), refContainer);
 
         this._adjustAxis();
     }
@@ -215,38 +203,44 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
         }
     }
 
-    pointToData(point: number[]) {
+    pointToData(point: number[], reserved?: null, out?: number[]) {
+        out = out || [];
         const axis = this.getAxis();
-        return [axis.coordToData(axis.toLocalCoord(
+        out[0] = axis.coordToData(axis.toLocalCoord(
             point[axis.orient === 'horizontal' ? 0 : 1]
-        ))];
+        ));
+        return out;
     }
 
     /**
      * Convert the series data to concrete point.
      * Can be [val] | val
      */
-    dataToPoint(val: ScaleDataValue | ScaleDataValue[]) {
+    dataToPoint(val: ScaleDataValue | ScaleDataValue[], reserved?: unknown, out?: number[]) {
         const axis = this.getAxis();
         const rect = this.getRect();
-        const pt = [];
+        out = out || [];
         const idx = axis.orient === 'horizontal' ? 0 : 1;
 
         if (val instanceof Array) {
             val = val[0];
         }
 
-        pt[idx] = axis.toGlobalCoord(axis.dataToCoord(+val));
-        pt[1 - idx] = idx === 0 ? (rect.y + rect.height / 2) : (rect.x + rect.width / 2);
-        return pt;
+        out[idx] = axis.toGlobalCoord(axis.dataToCoord(+val));
+        out[1 - idx] = idx === 0 ? (rect.y + rect.height / 2) : (rect.x + rect.width / 2);
+        return out;
     }
 
-    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]) {
+    convertToPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]
+    ) {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? this.dataToPoint(value) : null;
     }
 
-    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
+    convertFromPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]
+    ) {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? this.pointToData(pixel) : null;
     }
