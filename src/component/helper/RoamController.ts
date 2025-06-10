@@ -180,7 +180,7 @@ class RoamController extends Eventful<RoamEventDefinition> {
         const x = e.offsetX;
         const y = e.offsetY;
 
-        // Only check on mosedown, but not mousemove.
+        // To determine dragging start, only by checking on mosedown, but not mousemove.
         // Mouse can be out of target when mouse moving.
         if (this.pointerChecker && this.pointerChecker(e, x, y)) {
             this._x = x;
@@ -190,16 +190,34 @@ class RoamController extends Eventful<RoamEventDefinition> {
     }
 
     private _mousemoveHandler(e: ZRElementEvent) {
-        if (!this._dragging
-            || !isAvailableBehavior('moveOnMouseMove', e, this._opt)
-            || e.gestureEvent === 'pinch'
-            || interactionMutex.isTaken(this._zr, 'globalPan')
+        const zr = this._zr;
+        if (e.gestureEvent === 'pinch'
+            || interactionMutex.isTaken(zr, 'globalPan')
         ) {
             return;
         }
 
         const x = e.offsetX;
         const y = e.offsetY;
+
+        if (!this._dragging
+            || !isAvailableBehavior('moveOnMouseMove', e, this._opt)
+        ) {
+            if (this.pointerChecker && this.pointerChecker(e, x, y)
+                // This `grab` cursor style should take the lowest precedence. If the hovring element already
+                // have a cursor, zrender will set it to be non-'default' before entering this handler.
+                && e.event && e.event.zrCursorStyle === 'default'
+            ) {
+                // To indicate users that this area is draggable, otherwise users probably cannot kwown
+                // that when hovering out of the shape but still inside the bounding rect.
+                zr.setCursorStyle('grab');
+                // Do not need to set the cursor back, because in the current impl, zr is responsible
+                // for setting the cursor on each mousemove.
+            }
+            return;
+        }
+
+        zr.setCursorStyle('grabbing');
 
         const oldX = this._x;
         const oldY = this._y;
