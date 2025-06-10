@@ -171,10 +171,11 @@ class Matrix implements CoordinateSystem, CoordinateSystemMaster {
      * - The returned `out.rect` and `out.matrixXYLocatorRange` is always an object or an 2d-array,
      *  but never be null/undefined. If it cannot be located or invalid, `NaN` is in their
      *  corresponding number props.
-     * - Do not provide `out.contentRect` currently until real requirements come, because it's
-     *  allowed to input non-leaf dimension x/y, which determines a rect covering multiple cells
-     *  (even not merged), in which case the padding and borderWidth can not be determined to
-     *  make a contentRect. Therefore only return `out.rect` in any case for consistency.
+     * - Do not provide `out.contentRect`, because it's allowed to input non-leaf dimension x/y or
+     *  a range of x/y, which determines a rect covering multiple cells (even not merged), in which
+     *  case the padding and borderWidth can not be determined to make a contentRect. Therefore only
+     *  return `out.rect` in any case for consistency. The caller is responsible for adding space to
+     *  avoid covering cell borders, if necessary.
      */
     dataToLayout(
         data: MatrixCoordRangeOption[],

@@ -51,16 +51,16 @@ export interface HeatmapStateOption<TCbParams = never> {
     label?: SeriesLabelOption
 }
 
-interface FunnelStatesMixin {
+interface HeatmapStatesMixin {
     emphasis?: DefaultStatesMixinEmphasis
 }
 export interface HeatmapDataItemOption extends HeatmapStateOption,
-    StatesOptionMixin<HeatmapStateOption, FunnelStatesMixin> {
+    StatesOptionMixin<HeatmapStateOption, HeatmapStatesMixin> {
     value: HeatmapDataValue
 }
 
 export interface HeatmapSeriesOption
-    extends SeriesOption<HeatmapStateOption<CallbackDataParams>, FunnelStatesMixin>,
+    extends SeriesOption<HeatmapStateOption<CallbackDataParams>, HeatmapStatesMixin>,
     HeatmapStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin,
     SeriesOnGeoOptionMixin,
