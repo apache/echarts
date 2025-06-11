@@ -138,7 +138,10 @@
      *                  type: 'range',
      *                  // ... Other properties of `range` input except `onchange` and `text`.
      *                  // When this option is not selected, the range input will be disabled.
-     *              }}
+     *              }},
+     *              // If more than one options have internal `input`, `id` (option id) must be specified.
+     *              // It can be visited by `onchange() { if (this.optionId) {...} }`.
+     *              {text: 'd', id: 'some_option_id', input: {...}}
      *          ],
      *          optionIndex: 0,          // Optional. Or `valueIndex`. The initial value index.
      *                                   // By default, the first option.
@@ -154,7 +157,7 @@
      *          // They are the same: `oninput` `input`
      *          //                    `onchange` `change` `onchanged` `changed`
      *          //                    `onselect` `select` (capital insensitive)
-     *          onchange: function () { console.log(this.value); }
+     *          onchange: function () { console.log(this.value, this.optionId); }
      *      },
      *      {
      *          // Group inputs. Only one group can be displayed at a time with in a group set.
@@ -904,6 +907,7 @@
             var _rangeInputListener;
             var _rangeInputEl;
             var _rangeInputValueEl;
+            var _opSuffix = internallyForceDef && internallyForceDef.id || '';
 
             dealInitRangeInput();
 
@@ -948,7 +952,7 @@
                             updateRangeInputViewValue(_currVal);
                             dispatchRangeInputChangedEvent();
                         },
-                        op: btnName
+                        op: btnName + _opSuffix
                     }));
                 }
                 createRangeInputDeltaBtn('decrease', -_step);
@@ -964,7 +968,7 @@
                         updateRangeInputViewValue(_currVal);
                         dispatchRangeInputChangedEvent();
                     },
-                    op: 'slide',
+                    op: 'slide' + _opSuffix,
                     createRecordArgs: function () {
                         return [+this.value];
                     },
@@ -1055,6 +1059,7 @@
                 '    options: [',
                 '        {text?: string, value: any},',
                 '        {text?: string, input: {type: "range", ...}},',
+                '        {text?: string, id: "some_option_id", input: {type: "range", ...}},',
                 '        ...,',
                 '    ],',
                 '    onchange() { ... },',
@@ -1131,6 +1136,7 @@
                 //  (value can be null/undefined/array/object/... everything).
                 // Convinient but might cause ambiguity when a value happens to be {text, value}, but rarely happen.
                 if (inputDefine.options) {
+                    var innerInputCount = 0;
                     for (var optionIdx = 0; optionIdx < inputDefine.options.length; optionIdx++) {
                         var optionDef = inputDefine.options[optionIdx];
                         assert(isObject(optionDef), [
@@ -1148,8 +1154,17 @@
                         selectCtx._optionList.push({
                             value: optionDef.value,
                             input: optionDef.input,
+                            id: optionDef.id,
                             text: text
                         });
+                        if (optionDef.input) {
+                            innerInputCount++;
+                        }
+                        assert(innerInputCount < 2 || optionDef.id != null, [
+                            errMsgPrefix + ' If more than one inner input in a select,'
+                                + ' option id must be specified. ',
+                            _SAMPLE_SELECT_DEFINITION
+                        ].join('\n'));
                     }
                 }
                 else if (inputDefine.values) {
@@ -1182,6 +1197,7 @@
                         }
                         var rangeInputCreated = createRangeInput(optionDef.input, {
                             text: '',
+                            id: optionDef.id,
                             onchange: function () {
                                 if (selectCtx._disabled) { return; }
                                 triggerUserSelectChangedEvent();
@@ -1281,7 +1297,9 @@
                 else if (inputDefine.hasOwnProperty('value')) {
                     var found = false;
                     for (var idx = 0; idx < selectCtx._optionList.length; idx++) {
-                        if (!selectCtx._optionList[idx].input && selectCtx._optionList[idx].value === inputDefine.value) {
+                        if (!selectCtx._optionList[idx].input
+                            && selectCtx._optionList[idx].value === inputDefine.value
+                        ) {
                             found = true;
                             initOptionIdx = idx;
                         }
@@ -1311,7 +1329,8 @@
             function triggerUserSelectChangedEvent() {
                 var optionIdx = getSelectInputOptionIndex();
                 var value = getSelectInputValueByOptionIndex(optionIdx);
-                var target = {value: value};
+                var optionId = selectCtx._optionList[optionIdx].id;
+                var target = {value: value, optionId: optionId};
                 _selectListener.call(target, {target: target});
             }
 
@@ -1790,7 +1809,7 @@
                 theme = window.__ECHARTS__DEFAULT__THEME__;
             }
             if (theme) {
-                require([`theme/${theme}`]);
+                require(['theme/' + theme]);
             }
 
             var chart = echarts.init(dom, theme, {
