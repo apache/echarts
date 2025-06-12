@@ -277,14 +277,16 @@ const SymbolClz = graphic.Path.extend({
         x: 0,
         y: 0,
         width: 0,
-        height: 0
+        height: 0,
+        rotate: 0
     },
 
     calculateTextPosition(out, config, rect) {
         const res = calculateTextPosition(out, config, rect);
         const shape = this.shape;
         if (shape && shape.symbolType === 'pin' && config.position === 'inside') {
-            res.y = rect.y + rect.height * 0.4;
+            res.x = res.x - rect.width * 0.1 * Math.sin(Math.PI * shape.rotate / 180);
+            res.y = res.y - rect.height * 0.1 * Math.cos(Math.PI * shape.rotate / 180);
         }
         return res;
     },
@@ -337,7 +339,8 @@ export function createSymbol(
     h: number,
     color?: ZRColor,
     // whether to keep the ratio of w/h,
-    keepAspect?: boolean
+    keepAspect?: boolean,
+    rotate?: number
 ) {
     // TODO Support image object, DynamicImage.
 
@@ -369,7 +372,8 @@ export function createSymbol(
                 x: x,
                 y: y,
                 width: w,
-                height: h
+                height: h,
+                rotate: rotate
             }
         }) as unknown as ECSymbol;
     }
