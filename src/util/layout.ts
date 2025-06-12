@@ -23,16 +23,24 @@ import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
-import { BoxLayoutOptionMixin, CircleLayoutOptionMixin, ComponentLayoutMode, SeriesOption } from './types';
+import {
+    BoxLayoutOptionMixin, CircleLayoutOptionMixin, NullUndefined, ComponentLayoutMode, SeriesOption
+} from './types';
 import Group from 'zrender/src/graphic/Group';
 import { SectorShape } from 'zrender/src/graphic/shape/Sector';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
-import SeriesModel from '../model/Series';
+import { ComponentModel } from '../echarts.all';
 import ExtensionAPI from '../core/ExtensionAPI';
+import { error } from './log';
+import { BoxCoordinateSystemCoordFrom, getCoordForBoxCoordSys } from '../core/CoordinateSystem';
+import SeriesModel from '../model/Series';
 
 const each = zrUtil.each;
 
+/**
+ * @see {getLayoutRect}
+ */
 export interface LayoutRect extends BoundingRect {
     margin: number[]
 }
@@ -155,61 +163,56 @@ export const vbox = zrUtil.curry(boxLayout, 'vertical');
  */
 export const hbox = zrUtil.curry(boxLayout, 'horizontal');
 
-/**
- * If x or x2 is not specified or 'center' 'left' 'right',
- * the width would be as long as possible.
- * If y or y2 is not specified or 'middle' 'top' 'bottom',
- * the height would be as long as possible.
- */
-export function getAvailableSize(
-    positionInfo: {
-        left?: number | string
-        top?: number | string
-        right?: number | string
-        bottom?: number | string
-    },
-    containerRect: { width: number, height: number },
-    margin?: number[] | number
-) {
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
 
-    let x = parsePercent(positionInfo.left, containerWidth);
-    let y = parsePercent(positionInfo.top, containerHeight);
-    let x2 = parsePercent(positionInfo.right, containerWidth);
-    let y2 = parsePercent(positionInfo.bottom, containerHeight);
+type CircleLayoutSeriesOption = SeriesOption & CircleLayoutOptionMixin<{
+    // `center: string | number` has been accepted in series.pie.
+    centerExtra: string | number
+}>;
 
-    (isNaN(x) || isNaN(parseFloat(positionInfo.left as string))) && (x = 0);
-    (isNaN(x2) || isNaN(parseFloat(positionInfo.right as string))) && (x2 = containerWidth);
-    (isNaN(y) || isNaN(parseFloat(positionInfo.top as string))) && (y = 0);
-    (isNaN(y2) || isNaN(parseFloat(positionInfo.bottom as string))) && (y2 = containerHeight);
-
-    margin = formatUtil.normalizeCssArray(margin || 0);
-
-    return {
-        width: Math.max(x2 - x - margin[1] - margin[3], 0),
-        height: Math.max(y2 - y - margin[0] - margin[2], 0)
-    };
-}
-
-export function getViewRect(seriesModel: SeriesModel, api: ExtensionAPI) {
-    return getLayoutRect(
-        seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
-    );
-}
-
-export function getCircleLayout<T extends CircleLayoutOptionMixin & SeriesOption>(
-    seriesModel: SeriesModel<T>,
+function getViewRectAndCenterForCircleLayout<TOption extends CircleLayoutSeriesOption>(
+    seriesModel: SeriesModel<TOption>,
     api: ExtensionAPI
-):
-    Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> {
-    const viewRect = getViewRect(seriesModel, api);
+) {
+    const layoutRef = createBoxLayoutReference(seriesModel, api, {
+        enableLayoutOnlyByCenter: true,
+    });
+    const boxLayoutParams = seriesModel.getBoxLayoutParams();
+
+    let viewRect: LayoutRect;
+    let center: number[];
+    if (layoutRef.type === BoxLayoutReferenceType.point) {
+        center = layoutRef.refPoint;
+        // `viewRect` is required in `pie/labelLayout.ts`.
+        viewRect = getLayoutRect(
+            boxLayoutParams, {width: api.getWidth(), height: api.getHeight()}
+        );
+    }
+    else { // layoutRef.type === layout.BoxLayoutReferenceType.rect
+        const centerOption = seriesModel.get('center');
+        const centerOptionArr = zrUtil.isArray(centerOption)
+            ? centerOption : [centerOption, centerOption];
+        viewRect = getLayoutRect(
+            boxLayoutParams, layoutRef.refContainer
+        );
+        center = layoutRef.boxCoordFrom === BoxCoordinateSystemCoordFrom.coord2
+            ? layoutRef.refPoint // option `series.center` has been used as coord.
+            : [
+                parsePercent(centerOptionArr[0], viewRect.width) + viewRect.x,
+                parsePercent(centerOptionArr[1], viewRect.height) + viewRect.y,
+            ];
+    }
+
+    return {viewRect, center};
+}
+
+export function getCircleLayout<TOption extends CircleLayoutSeriesOption>(
+    seriesModel: SeriesModel<TOption>,
+    api: ExtensionAPI
+): Pick<SectorShape, 'cx' | 'cy' | 'r' | 'r0'> & {viewRect: LayoutRect} {
 
     // center can be string or number when coordinateSystem is specified
-    let center = seriesModel.get('center');
+    const {viewRect, center} = getViewRectAndCenterForCircleLayout(seriesModel, api);
+
     let radius = seriesModel.get('radius');
 
     if (!zrUtil.isArray(radius)) {
@@ -221,30 +224,21 @@ export function getCircleLayout<T extends CircleLayoutOptionMixin & SeriesOption
     const r0 = parsePercent(radius[0], size / 2);
     const r = parsePercent(radius[1], size / 2);
 
-    let cx: number;
-    let cy: number;
-    const coordSys = seriesModel.coordinateSystem;
-    if (coordSys) {
-        // percentage is not allowed when coordinate system is specified
-        const point = coordSys.dataToPoint(center);
-        cx = point[0] || 0;
-        cy = point[1] || 0;
-    }
-    else {
-        if (!zrUtil.isArray(center)) {
-            center = [center, center];
-        }
-        cx = parsePercent(center[0], width) + viewRect.x;
-        cy = parsePercent(center[1], height) + viewRect.y;
-    }
-
     return {
-        cx,
-        cy,
+        cx: center[0],
+        cy: center[1],
         r0,
-        r
+        r,
+        viewRect,
     };
 }
+
+type GetLayoutRectInputContainerRect = {
+    x?: number, // 0 by default
+    y?: number, // 0 by default
+    width: number,
+    height: number,
+};
 
 /**
  * Parse position info.
@@ -253,22 +247,18 @@ export function getLayoutRect(
     positionInfo: BoxLayoutOptionMixin & {
         aspect?: number // aspect is width / height
     },
-    // The options in `positionInfo` is based on the container rect:
-    containerRect: {
-        x?: number; // by default 0
-        y?: number; // by default 0
-        width: number; // required
-        height: number; // required
-    },
-    // This is the margin to the canvas. If width/height is specified,
-    // `margin` does not effect width/height.
-    // If using `margin`, we should make sure:
-    // either [A]:
-    //      layout like CSS content-box, that is, user specified width/height means
-    //      content width/height, which do not include border-width and pedding.
-    // or [B]:
-    //      layout like CSS border-box, but user can not specify width/height
-    //      (like in `title`/`tootbox` component did)
+    containerRect: GetLayoutRectInputContainerRect,
+    // This is the space from the `containerRect` to the returned bounding rect.
+    // Commonly used in option `legend.padding`, `timeline.padding`, `title.padding`,
+    //  `visualMap.padding`, ...
+    // [NOTICE]:
+    //  It's named `margin`, becuase it's the space that outside the bounding rect. But from
+    //  the perspective of the the caller, it's commonly used as the `padding` of a component,
+    //  because conventionally background color covers this space.
+    // [BEHAVIOR]:
+    //  - If width/height is specified, `margin` does not effect them.
+    //  - Otherwise, they are calculated based on the rect that `containerRect` shrinked by `margin`.
+    //  - left/right/top/bottom are based on the rect that `containerRect` shrinked by `margin`.
     margin?: number | number[]
 ): LayoutRect {
     margin = formatUtil.normalizeCssArray(margin || 0);
@@ -359,15 +349,104 @@ export function getLayoutRect(
         height = containerHeight - verticalMargin - top - (bottom || 0);
     }
 
-    const rect = new BoundingRect(left + margin[3], top + margin[0], width, height) as LayoutRect;
+    const rect = new BoundingRect(
+        (containerRect.x || 0) + left + margin[3],
+        (containerRect.y || 0) + top + margin[0],
+        width,
+        height
+    ) as LayoutRect;
     rect.margin = margin;
-    if (containerRect.x) {
-        rect.x += containerRect.x;
-    }
-    if (containerRect.y) {
-        rect.y += containerRect.y;
-    }
+
     return rect;
+}
+
+type CreateBoxLayoutReferenceOpt<TEnableByCenter extends boolean = false> = {
+    // Use this only if:
+    //  - Intending to layout based on coord sys that can not get a rect from `dataToLayout`.
+    //  - Can layout based only on center but a rect is not essential, such as pie, chord.
+    enableLayoutOnlyByCenter?: TEnableByCenter;
+};
+export const BoxLayoutReferenceType = {
+    rect: 1,
+    point: 2,
+} as const;
+export type BoxLayoutReferenceType = (typeof BoxLayoutReferenceType)[keyof typeof BoxLayoutReferenceType];
+
+type BoxLayoutReferenceResult<TEnableByCenter> = TEnableByCenter extends true
+    ? (BoxLayoutReferenceRectResult | BoxLayoutReferencePointResult)
+    : BoxLayoutReferenceRectResult;
+type BoxLayoutReferenceRectResult = {
+    // This is the defualt way.
+    type: typeof BoxLayoutReferenceType.rect;
+    refContainer: LayoutRect;
+    refPoint: number[]; // The center of rect in this case.
+    boxCoordFrom: BoxCoordinateSystemCoordFrom | NullUndefined;
+};
+type BoxLayoutReferencePointResult = {
+    // This is available only if `enableLayoutOnlyByCenter: true`
+    //  and `layoutRect` is not available.
+    type: typeof BoxLayoutReferenceType.point;
+    refPoint: number[];
+    boxCoordFrom: BoxCoordinateSystemCoordFrom | NullUndefined;
+};
+
+/**
+ * Uniformly calculate layout reference (rect or center) based on either:
+ *  - viewport:
+ *      - Get `refContainer` as `{x: 0, y: 0, width: api.getWidth(), height: api.getHeight()}`
+ *  - coordinate system, which can serve in several ways:
+ *      - Use `dataToPoint` to get the `refPoint`, such as, in cartesian2d coord sys.
+ *      - Use `dataToLayout` to get the `refContainer`, such as, in matrix coord sys.
+ */
+export function createBoxLayoutReference<TEnableByCenter extends boolean = false>(
+    model: ComponentModel,
+    api: ExtensionAPI,
+    opt?: CreateBoxLayoutReferenceOpt<TEnableByCenter>
+): BoxLayoutReferenceResult<TEnableByCenter> {
+
+    let refContainer: RectLike | NullUndefined;
+    let refPoint: number[] | NullUndefined;
+    let layoutRefType: BoxLayoutReferenceType | NullUndefined;
+
+    const boxCoordSys = model.boxCoordinateSystem;
+    let boxCoordFrom: BoxCoordinateSystemCoordFrom | NullUndefined;
+    if (boxCoordSys) {
+        const {coord, from} = getCoordForBoxCoordSys(model);
+        // Do not use `clamp` in `dataToLayout` and `dataToPoint`, because:
+        //  1. Should support overflow (such as, by dataZoom), where NaN should be in the result.
+        //  2. Be consistent with the way used in `series.data`
+        if (boxCoordSys.dataToLayout) {
+            layoutRefType = BoxLayoutReferenceType.rect;
+            boxCoordFrom = from;
+            const result = boxCoordSys.dataToLayout(coord);
+            refContainer = result.contentRect || result.rect;
+        }
+        else if (opt && opt.enableLayoutOnlyByCenter && boxCoordSys.dataToPoint) {
+            layoutRefType = BoxLayoutReferenceType.point;
+            boxCoordFrom = from;
+            refPoint = boxCoordSys.dataToPoint(coord);
+        }
+        else {
+            if (__DEV__) {
+                error(`${model.type}[${model.componentIndex}]`
+                    + ` layout based on ${boxCoordSys.type} is not supported.`
+                );
+            }
+        }
+    }
+
+    if (layoutRefType == null) {
+        layoutRefType = BoxLayoutReferenceType.rect;
+    }
+
+    if (layoutRefType === BoxLayoutReferenceType.rect) {
+        if (!refContainer) {
+            refContainer = {x: 0, y: 0, width: api.getWidth(), height: api.getHeight()};
+        }
+        refPoint = [refContainer.x + refContainer.width / 2, refContainer.y + refContainer.height / 2];
+    }
+
+    return {type: layoutRefType, refContainer, refPoint, boxCoordFrom} as BoxLayoutReferenceResult<TEnableByCenter>;
 }
 
 
@@ -414,7 +493,7 @@ export function getLayoutRect(
 export function positionElement(
     el: Element,
     positionInfo: BoxLayoutOptionMixin,
-    containerRect: {width: number, height: number},
+    containerRect: GetLayoutRectInputContainerRect,
     margin?: number[] | number,
     opt?: {
         hv: [1 | 0 | boolean, 1 | 0 | boolean],
@@ -623,16 +702,4 @@ export function copyLayoutParams(target: BoxLayoutOptionMixin, source: BoxLayout
         source.hasOwnProperty(name) && (target[name] = source[name]);
     });
     return target;
-}
-
-/**
- * Apply pedding (CSS like) to a rect, and return the input rect.
- */
-export function applyPedding<TRect extends RectLike>(rect: TRect, pedding?: number | number[]): TRect {
-    const peddingArr = formatUtil.normalizeCssArray(pedding || 0);
-    rect.x += peddingArr[3];
-    rect.y += peddingArr[0];
-    rect.width -= peddingArr[1] + peddingArr[3];
-    rect.height -= peddingArr[0] + peddingArr[2];
-    return rect;
 }

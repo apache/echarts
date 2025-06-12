@@ -245,10 +245,16 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         // Disable progressive rendering
         progressive: 0,
         // size: ['80%', '80%'],            // deprecated, compatible with ec2.
+
+        // `coordinateSystem` can be declared as 'matrix', 'calendar',
+        //  which provides box layout container.
+        coordinateSystemUsage: 'box',
+
         left: tokens.size.l,
         top: tokens.size.xxxl,
         right: tokens.size.l,
         bottom: tokens.size.xxxl,
+
         sort: true,
 
         clipWindow: 'origin',

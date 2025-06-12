@@ -28,13 +28,18 @@ under the License.
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
-        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
         <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
         </style>
-
 
 <!-- TPL_DOM_PLACE -->
 
@@ -48,33 +53,105 @@ under the License.
 <!-- TPL_SEGMENT_DELIMITER -->
 
 
-
         <script>
-        require([
-            'echarts',
-            // 'map/js/china',
-            // './data/nutrients.json'
-        ], function (echarts) {
-            var option;
 
-            option = {
-                xAxis: {},
-                yAxis: {},
-                series: {
-                    type: 'line',
-                    data: [[11, 22], [33, 44]]
-                }
-            };
+            require([
+                'echarts',
+                // 'data/life-expectancy-table.json'
+                // 'theme/dark.js', // auto register if load.
+            ], function (echarts /*, data */) {
 
-            var chart = testHelper.create(echarts, '{{TPL_DOM_ID}}', {
-                title: [
-                    'Test Case Description of {{TPL_DOM_ID}}',
-                    '(Muliple lines and **emphasis** are supported in description)'
-                ],
-                option: option
-                // height: 300,
-                // buttons: [{text: 'btn-txt', onclick: function () {}}],
-                // recordCanvas: true,
-            });
-        });
+                // // Data can be fetched by:
+                // $.getJSON('./data/nutrients.json', function (data) {
+                // });
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: {
+                        type: 'scatter',
+                        symbolSize: 50,
+                        label: {show: true, position: 'top'},
+                        data: [[1, 2], [100, 200], [500, 50]]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, '{{TPL_DOM_ID}}', {
+                    title: [
+                        'Test Case Description of {{TPL_DOM_ID}}',
+                        '(Muliple lines and **emphasis** are supported in description)'
+                    ],
+                    option: option,
+                    //
+                    // -------------------------- Optional settings: --------------------------
+                    // height: 400,         // Optional. Specify a different chart height.
+                    // draggable: true,     // Optional. Add a draggable button to mutify the chart size.
+                    //                      //           This feature require "test/lib/draggable.js"
+                    // recordCanvas: true,  // Optional. Record canvas instructions. (for debug)
+                    //                      //           This feature requires "test/lib/canteen.js"
+                    // boundingRect: true,  // Optional. Show boundingRects of zrender elements (for debug).
+                    //
+                    // ------------------- Inputs (button/range/select/br/hr): ----------------
+                    // inputsHeight: 30,    // Optional. Fix the height of inputs area (scrollable if overflow)
+                    inputsStyle: 'compact', // Optional.
+                    inputs: [               // Optional. The following are sample inputs:
+                        {
+                            type: 'select',
+                            text: '(sample) boundingRect:',
+                            values: [false, true, undefined, {color: 'rgba(255,0,0,0.8)', silent: false}],
+                            onchange: function () {
+                                chart.__testHelper.boundingRect(this.value);
+                            }
+                        },
+                        {
+                            type: 'range',
+                            text: '(sample) symbolSize:',
+                            // min: -100, // Optional.
+                            // max: 100, // Optional.
+                            // value: 50, // Optional.
+                            onchange: function () {
+                                console.log('range changed:', this.value);
+                                chart.setOption({series: {symbolSize: this.value}});
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: '(sample range embedded select) grid.left:',
+                            options: [
+                                {value: undefined},
+                                {value: 30},
+                                {input: {type: 'range', min: -300, max: 300, value: 50}}
+                            ],
+                            onchange: function () {
+                                var newVal = this.value;
+                                console.log('select 2 changed:', newVal);
+                                chart.setOption({grid: {left: newVal}});
+                            }
+                        },
+                        {
+                            type: 'br', // line break
+                        },
+                        {
+                            text: '(sample) print failures to screen',
+                            onclick: function () {
+                                testHelper.printAssert('{{TPL_DOM_ID}}', function (assert) {
+                                    assert(true);
+                                });
+                            }
+                        },
+                        {
+                            text: '(sample) copy option to clipboard',
+                            onclick: function () {
+                                // console.log(testHelper.printObject(option));
+                                testHelper.clipboard(option);
+                            }
+                        }
+
+                    ] // End of `inputs`
+
+                }); // End of `testHelper.create`
+
+            }); // End of `require`
+
+
         </script>

@@ -138,22 +138,22 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      * Convert a single data item to (x, y) point.
      * Parameter data is an array which the first element is radius and the second is angle
      */
-    dataToPoint(data: ScaleDataValue[], clamp?: boolean) {
+    dataToPoint(data: ScaleDataValue[], clamp?: boolean, out?: number[]) {
         return this.coordToPoint([
             this._radiusAxis.dataToRadius(data[0], clamp),
             this._angleAxis.dataToAngle(data[1], clamp)
-        ]);
+        ], out);
     }
 
     /**
      * Convert a (x, y) point to data
      */
-    pointToData(point: number[], clamp?: boolean) {
+    pointToData(point: number[], clamp?: boolean, out?: number[]) {
+        out = out || [];
         const coord = this.pointToCoord(point);
-        return [
-            this._radiusAxis.radiusToData(coord[0], clamp),
-            this._angleAxis.angleToData(coord[1], clamp)
-        ];
+        out[0] = this._radiusAxis.radiusToData(coord[0], clamp);
+        out[1] = this._angleAxis.angleToData(coord[1], clamp);
+        return out;
     }
 
     /**
@@ -190,14 +190,15 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
     /**
      * Convert a (radius, angle) coord to (x, y) point
      */
-    coordToPoint(coord: number[]) {
+    coordToPoint(coord: number[], out?: number[]) {
+        out = out || [];
         const radius = coord[0];
         const radian = coord[1] / 180 * Math.PI;
-        const x = Math.cos(radian) * radius + this.cx;
+        out[0] = Math.cos(radian) * radius + this.cx;
         // Inverse the y
-        const y = -Math.sin(radian) * radius + this.cy;
+        out[1] = -Math.sin(radian) * radius + this.cy;
 
-        return [x, y];
+        return out;
     }
 
     /**
@@ -245,12 +246,16 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
         };
     }
 
-    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]) {
+    convertToPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]
+    ) {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? this.dataToPoint(value) : null;
     }
 
-    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
+    convertFromPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]
+    ) {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? this.pointToData(pixel) : null;
     }

@@ -34,6 +34,7 @@ import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import type Element from 'zrender/src/Element';
+import type Matrix from '../../coord/matrix/Matrix';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -129,8 +130,11 @@ class HeatmapView extends ChartView {
         this.group.removeAll();
 
         const coordSys = seriesModel.coordinateSystem;
-        if (coordSys.type === 'cartesian2d' || coordSys.type === 'calendar') {
-            this._renderOnCartesianAndCalendar(seriesModel, api, 0, seriesModel.getData().count());
+        if (coordSys.type === 'cartesian2d'
+            || coordSys.type === 'calendar'
+            || coordSys.type === 'matrix'
+        ) {
+            this._renderOnGridLike(seriesModel, api, 0, seriesModel.getData().count());
         }
         else if (isGeoCoordSys(coordSys)) {
             this._renderOnGeo(
@@ -157,7 +161,7 @@ class HeatmapView extends ChartView {
             }
             else {
                 this._progressiveEls = [];
-                this._renderOnCartesianAndCalendar(seriesModel, api, params.start, params.end, true);
+                this._renderOnGridLike(seriesModel, api, params.start, params.end, true);
             }
         }
     }
@@ -166,16 +170,16 @@ class HeatmapView extends ChartView {
         graphic.traverseElements(this._progressiveEls || this.group, cb);
     }
 
-    _renderOnCartesianAndCalendar(
+    _renderOnGridLike(
         seriesModel: HeatmapSeriesModel,
         api: ExtensionAPI,
         start: number,
         end: number,
         incremental?: boolean
     ) {
-
-        const coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar;
+        const coordSys = seriesModel.coordinateSystem as Cartesian2D | Calendar | Matrix;
         const isCartesian2d = isCoordinateSystemType<Cartesian2D>(coordSys, 'cartesian2d');
+        const isMatrix = isCoordinateSystemType<Matrix>(coordSys, 'matrix');
         let width;
         let height;
         let xAxisExtent;
@@ -214,7 +218,7 @@ class HeatmapView extends ChartView {
         let blurScope = emphasisModel.get('blurScope');
         let emphasisDisabled = emphasisModel.get('disabled');
 
-        const dataDims = isCartesian2d
+        const dataDims = (isCartesian2d || isMatrix)
             ? [
                 data.mapDimension('x'),
                 data.mapDimension('y'),
@@ -260,22 +264,34 @@ class HeatmapView extends ChartView {
                     style
                 });
             }
-            else {
+            else if (isMatrix) {
+                const shape = coordSys.dataToLayout([
+                    data.get(dataDims[0], idx),
+                    data.get(dataDims[1], idx)
+                ]).rect;
+                if (zrUtil.eqNaN(shape.x)) {
+                    continue;
+                }
+                rect = new graphic.Rect({
+                    z2: 1,
+                    shape,
+                    style,
+                });
+            }
+            else { // Calendar
                 // Ignore empty data
                 if (isNaN(data.get(dataDims[1], idx) as number)) {
                     continue;
                 }
-
-                const contentShape = coordSys.dataToRect([data.get(dataDims[0], idx)]).contentShape;
-                // Ignore data that are not in range
-                if (isNaN(contentShape.x) || isNaN(contentShape.y)) {
+                const layout = coordSys.dataToLayout([data.get(dataDims[0], idx)]);
+                const shape = layout.contentRect || layout.rect;
+                if (zrUtil.eqNaN(shape.x) || zrUtil.eqNaN(shape.y)) {
                     continue;
                 }
-
                 rect = new graphic.Rect({
                     z2: 1,
-                    shape: contentShape,
-                    style
+                    shape,
+                    style,
                 });
             }
 
