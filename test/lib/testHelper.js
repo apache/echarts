@@ -108,6 +108,7 @@
      *          max: 100,        // Optional
      *          value: 30,       // Optional. Must be a number.
      *          step: 1,         // Optional
+     *          suffix: '%',     // Optional. e.g., '%' means the number is displayed as '33%'
      *          disabled: false, // Optional.
      *          prevent: {       // Optional.
      *              recordInputs: false, // Optional.
@@ -996,7 +997,7 @@
 
             function updateRangeInputViewValue(newVal) {
                 _rangeInputEl.value = +newVal;
-                _rangeInputValueEl.innerHTML = encodeHTML(newVal + '');
+                _rangeInputValueEl.innerHTML = encodeHTML(newVal + '' + (inputDefine.suffix || ''));
             }
             function resetRangeInputWrapperCSS(wrapperEl, disabled) {
                 wrapperEl.className = 'test-inputs-slider'
