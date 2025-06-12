@@ -143,7 +143,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     contain(rank: OrdinalRawValue | OrdinalNumber): boolean {
         rank = this.parse(rank);
         return scaleHelper.contain(rank, this._extent)
-            && this._ordinalMeta.categories[rank] != null;
+            && rank >= 0 && rank < this._ordinalMeta.categories.length;
     }
 
     /**
