@@ -66,6 +66,7 @@
      * @param {boolean} [opt.notMerge] Optional. `chart.setOption(option, {norMerge});`
      * @param {boolean} [opt.lazyUpdate] Optional. `chart.setOption(option, {lazyUpdate});`
      * @param {boolean} [opt.autoResize=true] Optional. Enable chart auto response to window resize.
+     * @param {Function} [opt.onResize] Optional. Available when `opt.autoResize` or `opt.draggable` is true.
      * @param {string} [opt.renderer] Optional. 'canvas' or 'svg'. DO NOT set it in formmal test cases;
      *  leave it controlled by __ECHARTS__DEFAULT__RENDERER__ for visual testing.
      *
@@ -1826,7 +1827,7 @@
                         + '<script src="lib/draggable.js"></script>'
                     );
                 }
-                window.draggable.init(dom, chart, {throttle: 70});
+                window.draggable.init(dom, chart, {throttle: 70, onResize: opt.onResize});
             }
 
             option && chart.setOption(option, {
@@ -1836,7 +1837,7 @@
 
             var isAutoResize = opt.autoResize == null ? true : opt.autoResize;
             if (isAutoResize) {
-                testHelper.resizable(chart);
+                testHelper.resizable(chart, {onResize: opt.onResize});
             }
 
             return chart;
@@ -2010,7 +2011,8 @@
         }
     }
 
-    testHelper.resizable = function (chart) {
+    testHelper.resizable = function (chart, opt) {
+        opt = opt || {};
         var dom = chart.getDom();
         var width = dom.clientWidth;
         var height = dom.clientHeight;
@@ -2024,6 +2026,10 @@
                 }
                 width = newWidth;
                 height = newHeight;
+
+                if (opt.onResize) {
+                    opt.onResize();
+                }
             }
         }
         if (window.attachEvent) {
