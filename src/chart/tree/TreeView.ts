@@ -257,7 +257,7 @@ class TreeView extends ChartView {
 
         viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
-        viewCoordSys.setCenter(seriesModel.get('center'), api);
+        viewCoordSys.setCenter(seriesModel.get('center'), {api, ecModel: seriesModel.ecModel});
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
         // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group

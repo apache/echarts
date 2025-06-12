@@ -708,6 +708,8 @@ export type ECUnitOption = {
     useUTC?: boolean
     hoverLayerThreshold?: number
 
+    legacyViewCoordSysCenterBase?: boolean
+
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
     stateAnimation?: AnimationOption

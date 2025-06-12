@@ -30,7 +30,9 @@ import { CoordinateSystemMaster, CoordinateSystem } from './CoordinateSystem';
 import GlobalModel from '../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../util/model';
 import { parsePercent } from '../util/number';
-import type ExtensionAPI from '../core/ExtensionAPI';
+import { RoamOptionMixin } from '../util/types';
+import { clone } from 'zrender/src/core/util';
+import ExtensionAPI from '../core/ExtensionAPI';
 
 const v2ApplyTransform = vector.applyTransform;
 
@@ -65,17 +67,20 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     /**
      * This is a user specified point on the source, which will be
      * located to the center of the `View['_viewRect']`.
-     * The unit this the same as `View['_rect']`.
+     * The unit and the origin of this point is the same as that of `[View['_rect']`.
      */
     private _center: number[];
+    private _centerOption: RoamOptionMixin['center'];
+
     private _zoom: number;
 
     /**
      * The rect of the source, where the measure is used by "data" and "center".
      * Has nothing to do with roam/zoom.
      * The unit is defined by the source. For example,
-     * for geo source the unit is lat/lng,
-     * for SVG source the unit is the same as the width/height defined in SVG.
+     *  - for geo source the unit is lat/lng,
+     *  - for SVG source the unit is the same as the width/height defined in SVG.
+     *  - for series.graph/series.tree/series.sankey the uiit is px.
      */
     private _rect: BoundingRect;
     /**
@@ -91,6 +96,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
 
     setBoundingRect(x: number, y: number, width: number, height: number): BoundingRect {
         this._rect = new BoundingRect(x, y, width, height);
+        this._updateCenterAndZoom();
         return this._rect;
     }
 
@@ -126,16 +132,33 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     }
 
     /**
-     * Set center of view
+     * [NOTICE]
+     *  The definition of this center has always been irrelevant to some other series center like
+     *  'series-pie.center' - this center is a point on the same coord sys as `View['_rect'].x/y`,
+     *  rather than canvas viewport, and the unit is not necessarily pixel (e.g., in geo case).
+     *  @see {View['_center']} for details.
      */
-    setCenter(centerCoord: (number | string)[], api: ExtensionAPI): void {
-        if (!centerCoord) {
-            return;
+    setCenter(
+        centerCoord: RoamOptionMixin['center'],
+        opt?: {
+            // Only for backward compat.
+            ecModel?: GlobalModel
+            api?: ExtensionAPI
         }
-        this._center = [
-            parsePercent(centerCoord[0], api.getWidth()),
-            parsePercent(centerCoord[1], api.getHeight())
-        ];
+    ): void {
+        // #16904 introcuded percentage string here, such as '33%'. But it was based on canvas
+        // width/height, which is not reasonable - the unit may incorrect, and it is unpredictable if
+        // the `View['_rect']` is not calculated based on the current canvas rect. Therefore the percentage
+        // value is changed to based on `View['_rect'].width/height` since v6. Under this definition, users
+        // can use '0%' to map the top-left of `View['_rect']` to the center of `View['_viewRect']`.
+        if (opt && opt.api && opt.ecModel && opt.ecModel.getShallow('legacyViewCoordSysCenterBase') && centerCoord) {
+            centerCoord = [
+                parsePercent(centerCoord[0], opt.api.getWidth()),
+                parsePercent(centerCoord[1], opt.api.getWidth())
+            ];
+        }
+
+        this._centerOption = clone(centerCoord);
         this._updateCenterAndZoom();
     }
 
@@ -181,9 +204,19 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     }
 
     /**
-     * Remove roam
+     * Ensure this method is idempotent, since it should be called when
+     * every relevant prop (e.g. _centerOption/_zoom/_rect/_viewRect) changed.
      */
     private _updateCenterAndZoom(): void {
+        const centerOption = this._centerOption;
+        const rect = this._rect;
+        if (centerOption && rect) {
+            this._center = [
+                parsePercent(centerOption[0], rect.width, rect.x),
+                parsePercent(centerOption[1], rect.height, rect.y)
+            ];
+        }
+
         // Must update after view transform updated
         const rawTransformMatrix = this._rawTransformable.getLocalTransform();
         const roamTransform = this._roamTransformable;

@@ -58,7 +58,7 @@ export function updateCenterAndZoom(
         point[0] -= payload.dx;
         point[1] -= payload.dy;
 
-        view.setCenter(getCenterCoord(view, point), api);
+        view.setCenter(getCenterCoord(view, point));
     }
     if (zoom != null) {
         if (zoomLimit) {
@@ -81,7 +81,7 @@ export function updateCenterAndZoom(
 
         view.updateTransform();
         // Get the new center
-        view.setCenter(getCenterCoord(view, point), api);
+        view.setCenter(getCenterCoord(view, point));
         view.setZoom(zoom * previousZoom);
     }
 

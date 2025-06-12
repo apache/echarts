@@ -112,7 +112,7 @@ export const parsePercent = parsePositionOption;
  * @see {parsePositionSizeOption} and also accept a string preset.
  * @see {PositionSizeOption}
  */
-export function parsePositionOption(option: unknown, percentBase: number): number {
+export function parsePositionOption(option: unknown, percentBase: number, percentOffset?: number): number {
     switch (option) {
         case 'center':
         case 'middle':
@@ -127,7 +127,7 @@ export function parsePositionOption(option: unknown, percentBase: number): numbe
             option = '100%';
             break;
     }
-    return parsePositionSizeOption(option, percentBase);
+    return parsePositionSizeOption(option, percentBase, percentOffset);
 }
 
 /**
@@ -136,10 +136,10 @@ export function parsePositionOption(option: unknown, percentBase: number): numbe
  * (But allow JS type coercion (`+option`) due to backward compatibility)
  * @see {PositionSizeOption}
  */
-export function parsePositionSizeOption(option: unknown, percentBase: number): number {
+export function parsePositionSizeOption(option: unknown, percentBase: number, percentOffset?: number): number {
     if (zrUtil.isString(option)) {
         if (_trim(option).match(/%$/)) {
-            return parseFloat(option) / 100 * percentBase;
+            return parseFloat(option) / 100 * percentBase + (percentOffset || 0);
         }
         return parseFloat(option);
     }

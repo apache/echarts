@@ -1,0 +1,338 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+
+        <div id="main0"></div>
+
+        <script>
+
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                const _ctx = {
+                    center: null,
+                };
+                const layoutParams = {
+                    left: 'center',
+                    top: 'center',
+                };
+
+                var option = {
+                    backgroundColor: '#f4f4f9',
+                    tooltip: {},
+                    graphic: {
+                        elements: [{
+                            id: 'geo_boundary_indicator',
+                            type: 'rect',
+                            style: {
+                                fill: '#e0e0e0',
+                                stroke: '#aaa',
+                                lineWidth: 1,
+                            },
+                            textContent: {
+                                type: 'text',
+                                style: {
+                                    text: 'graph view rect',
+                                    fill: '#777',
+                                    fontSize: 10,
+                                },
+                            },
+                            textConfig: {
+                                position: 'insideTopRight'
+                            }
+                        }]
+                    },
+                    series : [
+                        {
+                            type: 'graph',
+                            id: 'graph0',
+                            symbolSize: 40,
+                            roam: true,
+                            itemStyle: {
+                                color: 'rgba(100,100,0,0.5)',
+                            },
+                            label: {
+                                show: true,
+                                fontSize: 18,
+                                formatter: function (param) {
+                                    return `series.data[i].x: ${param.data.x}\nseries.data[i].y: ${param.data.y}`
+                                }
+                            },
+                            ...layoutParams,
+                            center: _ctx.center,
+                            edgeSymbol: ['circle', 'arrow'],
+                            edgeSymbolSize: [4, 10],
+                            edgeLabel: {
+                                normal: {
+                                    textStyle: {
+                                        color: 'green',
+                                        fontSize: 30
+                                    }
+                                },
+                                emphasis: {
+                                    textStyle: {
+                                        color: '#987654'
+                                    }
+                                }
+                            },
+                            // focusNodeAdjacency: focusNodeAdjacency,
+                            data: [{
+                                name: 'node_1',
+                                x: 300,
+                                y: 300,
+                            }, {
+                                name: 'node_2',
+                                x: 800,
+                                y: 300
+                            }, {
+                                name: 'node_3',
+                                x: 550,
+                                y: 100
+                            }, {
+                                name: 'node_4',
+                                x: 550,
+                                y: 500
+                            }],
+                            lineStyle: {
+                                normal: {
+                                    width: 3,
+                                    color: '#184029',
+                                    curveness: 0
+                                }
+                            },
+                            links: [{
+                                source: 0,
+                                target: 1,
+                                symbolSize: [5, 20],
+                                lineStyle: {
+                                    width: 5,
+                                    opacity: 1,
+                                    curveness: 0.2
+                                },
+                                emphasis: {
+                                    lineStyle: {
+                                        color: 'blue',
+                                        width: 20,
+                                        opacity: 0.1
+                                    },
+                                    label: {
+                                        fontSize: 40,
+                                        color: 'red'
+                                    }
+                                }
+                            }, {
+                                source: 'node_2',
+                                target: 'node_1',
+                                lineStyle: {
+                                    curveness: 0.2
+                                }
+                            }, {
+                                source: 'node_1',
+                                target: 'node_3',
+                                emphasis: {
+                                    label: {
+                                        show: true
+                                    }
+                                }
+                            }, {
+                                source: 'node_2',
+                                target: 'node_3'
+                            }, {
+                                source: 'node_2',
+                                target: 'node_4'
+                            }, {
+                                source: 'node_1',
+                                target: 'node_4'
+                            }]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'graph layout center',
+                        'expect the layout is consistent with the viewRect when resize',
+                        '(when legacyViewCoordSysCenterBase: true, it is inconsistent)'
+                    ],
+                    option: option,
+                    draggable: true,
+                    onResize() {
+                        renderViewRect();
+                    },
+                    inputsStyle: 'compact',
+                    inputs: [
+                        {
+                            type: 'select',
+                            text: 'geo box:',
+                            values: [
+                                'do_nothing',
+                                {left: 50, top: 50, right: '30%', bottom: 30},
+                                {left: null, top: null, right: null, bottom: null},
+                            ],
+                            onchange: function () {
+                                var layoutParams = this.value;
+                                if (layoutParams == null) {
+                                    return;
+                                }
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        ...layoutParams,
+                                        // zoom: 1,
+                                        // center: [0, 0],
+                                    },
+                                    grid: {
+                                        id: 'geo_boundary_indicator',
+                                        ...layoutParams
+                                    },
+                                });
+
+                                renderViewRect();
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            text: 'legacyViewCoordSysCenterBase:',
+                            type: 'select',
+                            values: [false, true],
+                            onchange() {
+                                chart.setOption({
+                                    legacyViewCoordSysCenterBase: this.value,
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'specify center',
+                            values: [false, true],
+                            onchange() {
+                                chart.__testHelper.switchGroup(
+                                    this.value ? 'group_use_center' : 'group_no_center'
+                                )
+                                if (this.value) {
+                                    _ctx.center = _ctx.center || ['50%', '50%'];
+                                }
+                                else {
+                                    _ctx.center = null;
+                                }
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        center: _ctx.center
+                                    }
+                                });
+                                renderViewRect();
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'groupset',
+                            inputsHeight: 70,
+                            groups: [{
+                                id: 'group_no_center',
+                                text: 'no center',
+                            }, {
+                                id: 'group_use_center',
+                                text: 'specify center',
+                                inputs: [
+                                    ...[0, 1].map(centerIdx => ({
+                                        type: 'select',
+                                        text: `center[${centerIdx}]:`,
+                                        options: [
+                                            {
+                                                id: 'percent',
+                                                text: 'percent',
+                                                input: {type: 'range', min: -50, max: 150, value: 50, suffix: '%'}
+                                            },
+                                            {
+                                                id: 'absolute',
+                                                text: 'absolute',
+                                                input: {type: 'range', min: -100, max: 800, value: 100}
+                                            },
+                                        ],
+                                        onchange() {
+                                            if (this.optionId === 'absolute') {
+                                                _ctx.center[centerIdx] = this.value;
+                                            }
+                                            else if (this.optionId === 'percent') {
+                                                _ctx.center[centerIdx] = this.value + '%';
+                                            }
+                                            chart.setOption({
+                                                series: {
+                                                    id: 'graph0',
+                                                    center: _ctx.center
+                                                }
+                                            });
+
+                                            renderViewRect();
+                                        }
+                                    }))
+                                ]
+                            }]
+                        }, // End of groupset
+                    ] // End of inputs
+                });
+
+                renderViewRect();
+
+                function renderViewRect() {
+                    if (!chart) {
+                        return;
+                    }
+                    // [CAVEAT] Internal data structure, probably change, do not use it outside.
+                    const viewRect = chart.getModel().getComponent('series', 0).coordinateSystem.getViewRect();
+                    chart.setOption({
+                        graphic: {
+                            elements: [{
+                                id: 'geo_boundary_indicator',
+                                shape: {
+                                    x: viewRect.x,
+                                    y: viewRect.y,
+                                    width: viewRect.width,
+                                    height: viewRect.height,
+                                }
+                            }]
+                        },
+                    });
+                }
+
+            });
+
+
+
+        </script>
+    </body>
+</html>

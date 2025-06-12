@@ -376,7 +376,7 @@ class SankeyView extends ChartView {
 
         viewCoordSys.setBoundingRect(0, 0, width, height);
 
-        viewCoordSys.setCenter(seriesModel.get('center'), api);
+        viewCoordSys.setCenter(seriesModel.get('center'), {api, ecModel: seriesModel.ecModel});
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
         this._mainGroup.x = layoutInfo.x;
