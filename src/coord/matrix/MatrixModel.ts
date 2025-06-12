@@ -30,6 +30,7 @@ import Matrix from './Matrix';
 import { MatrixDim, MatrixXYLocator } from './MatrixDim';
 import { MatrixBodyCorner } from './MatrixBodyCorner';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
+import tokens from '../../visual/tokens';
 
 
 export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
@@ -213,7 +214,7 @@ export interface MatrixTooltipFormatterParams {
 
 const defaultLabelOption: LabelOption = {
     show: true,
-    color: '#333',
+    color: tokens.color.secondary,
     // overflow: 'truncate',
     overflow: 'break',
     lineOverflow: 'truncate',
@@ -225,7 +226,7 @@ function makeDefaultCellItemStyleOption(isCorner: boolean) {
     return {
         color: 'none',
         borderWidth: 1,
-        borderColor: isCorner ? 'none' : '#ccc',
+        borderColor: isCorner ? 'none' : tokens.color.borderTint,
     };
 };
 const defaultDimOption: MatrixDimensionOption = {
@@ -235,7 +236,7 @@ const defaultDimOption: MatrixDimensionOption = {
     silent: undefined,
     dividerLineStyle: {
         width: 1,
-        color: '#aaa',
+        color: tokens.color.border,
     },
 };
 const defaultBodyOption: MatrixBodyOption = {
@@ -262,7 +263,7 @@ const defaultMatrixOption: MatrixOption = {
     corner: defaultCornerOption,
     backgroundStyle: {
         color: 'none',
-        borderColor: '#aaa',
+        borderColor: tokens.color.axisLine,
         borderWidth: 1,
     },
 };
