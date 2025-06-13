@@ -75,11 +75,14 @@ export default function dataStack(ecModel: GlobalModel) {
 
     // Process each stack group
     stackInfoMap.each(function (stackInfoList) {
+        if (stackInfoList.length === 0) {
+            return;
+        }
         // Check if stack order needs to be reversed
         const firstSeries = stackInfoList[0].seriesModel;
-        const stackOrder = firstSeries.get('stackOrder');
+        const stackOrder = firstSeries.get('stackOrder') || 'seriesAsc';
 
-        if (stackOrder === 'reverse') {
+        if (stackOrder === 'seriesDesc') {
             stackInfoList.reverse();
         }
 
