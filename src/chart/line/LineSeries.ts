@@ -121,7 +121,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
 
     triggerLineEvent?: boolean
 
-    triggerAreaEvent?: boolean
+    triggerLineOnlyEvent?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -215,11 +215,11 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             divideShape: 'clone'
         },
 
+        // Whether to trigger event when hovering on either line or area.
         triggerLineEvent: false,
 
-        // When false, this option gives more control in case hovering on the shaded area should not trigger mouse events.
-        // Defaults to true for backwards compatibility and sense it only works when triggerLineEvent is true.
-        triggerAreaEvent: true
+        // Whether to trigger event when hovering only on line.
+        triggerLineOnlyEvent: false
     };
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {

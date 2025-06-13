@@ -922,9 +922,11 @@ class LineView extends ChartView {
 
         if (seriesModel.get('triggerLineEvent')) {
             this.packEventData(seriesModel, polyline);
-            if (seriesModel.get('triggerAreaEvent')) {
-                polygon && this.packEventData(seriesModel, polygon);
-            }
+            polygon && this.packEventData(seriesModel, polygon);
+        }
+
+        if (seriesModel.get('triggerLineOnlyEvent')) {
+            this.packEventData(seriesModel, polyline);
         }
     }
 
