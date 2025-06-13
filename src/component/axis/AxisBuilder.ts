@@ -547,18 +547,30 @@ function fixMinMaxLabelShow(
         ignoreEl(firstLabel);
         ignoreEl(firstTick);
     }
-    else if (isTwoLabelOverlapped(firstLabel, nextLabel) && !showMinLabel) {
-        ignoreEl(firstLabel);
-        ignoreEl(firstTick);
+    else if (isTwoLabelOverlapped(firstLabel, nextLabel)) {
+        if (showMinLabel) {
+            ignoreEl(nextLabel);
+            ignoreEl(nextTick);
+        }
+        else {
+            ignoreEl(firstLabel);
+            ignoreEl(firstTick);
+        }
     }
 
     if (showMaxLabel === false) {
         ignoreEl(lastLabel);
         ignoreEl(lastTick);
     }
-    else if (isTwoLabelOverlapped(prevLabel, lastLabel) && !showMaxLabel) {
-        ignoreEl(lastLabel);
-        ignoreEl(lastTick);
+    else if (isTwoLabelOverlapped(prevLabel, lastLabel)) {
+        if (showMaxLabel) {
+            ignoreEl(prevLabel);
+            ignoreEl(prevTick);
+        }
+        else {
+            ignoreEl(lastLabel);
+            ignoreEl(lastTick);
+        }
     }
 }
 

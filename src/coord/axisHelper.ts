@@ -368,8 +368,7 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
  * @param {Object} axis axisModel.axis
  */
 export function shouldShowAllLabels(axis: Axis): boolean {
-    return axis.type === 'category'
-        && getOptionCategoryInterval(axis.getLabelModel()) === 0;
+    return getOptionCategoryInterval(axis.getLabelModel()) === 0;
 }
 
 export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): DimensionName[] {
