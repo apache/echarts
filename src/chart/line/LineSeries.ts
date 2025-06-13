@@ -120,6 +120,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
     data?: (LineDataValue | LineDataItemOption)[]
 
     triggerLineEvent?: boolean
+
+    triggerLineOnlyEvent?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -213,7 +215,11 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             divideShape: 'clone'
         },
 
-        triggerLineEvent: false
+        // Whether to trigger event when hovering on either line or area.
+        triggerLineEvent: false,
+
+        // Whether to trigger event when hovering only on line.
+        triggerLineOnlyEvent: false
     };
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
