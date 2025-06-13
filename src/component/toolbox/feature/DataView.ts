@@ -24,7 +24,8 @@ import * as zrUtil from 'zrender/src/core/util';
 import GlobalModel from '../../../model/Global';
 import SeriesModel from '../../../model/Series';
 import { ToolboxFeature, ToolboxFeatureOption } from '../featureManager';
-import { ColorString, ECUnitOption, SeriesOption, Payload, Dictionary } from '../../../util/types';
+import { ColorString, ECUnitOption, SeriesOption, Payload, Dictionary,
+    BoxLayoutOptionMixin } from '../../../util/types';
 import ExtensionAPI from '../../../core/ExtensionAPI';
 import { addEventListener } from 'zrender/src/core/event';
 import Axis from '../../../coord/Axis';
@@ -312,6 +313,8 @@ export interface ToolboxDataViewFeatureOption extends ToolboxFeatureOption {
 
     buttonColor?: ColorString
     buttonTextColor?: ColorString
+
+    buttonPosition?: BoxLayoutOptionMixin
 }
 
 class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
@@ -375,7 +378,12 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         const blockMetaList = result.meta;
 
         const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'position:absolute;bottom:5px;left:0;right:0';
+        const buttonPosition = model.get('buttonPosition') || {};
+        buttonContainer.style.cssText = 'position:absolute;top:' + buttonPosition.top
+            + ';left:' + buttonPosition.left
+            + ';right:' + buttonPosition.right
+            + ';bottom:' + buttonPosition.bottom
+            + ';';
 
         // eslint-disable-next-line max-len
         let buttonStyle = 'float:right;margin-right:20px;border:none;cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
@@ -469,7 +477,11 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
             textareaColor: '#fff',
             textareaBorderColor: '#333',
             buttonColor: '#c23531',
-            buttonTextColor: '#fff'
+            buttonTextColor: '#fff',
+            buttonPosition: {
+                right: 0,
+                bottom: '5px'
+            }
         };
 
         return defaultOption;
