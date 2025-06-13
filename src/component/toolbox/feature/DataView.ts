@@ -378,11 +378,12 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         const blockMetaList = result.meta;
 
         const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'position:absolute;top:' + model.get('buttonPosition').top
-                                        + ';left:' + model.get('buttonPosition').left
-                                        + ';right:' + model.get('buttonPosition').right
-                                        + ';bottom:' + model.get('buttonPosition').bottom
-                                        + ';';
+        const buttonPosition = model.get('buttonPosition') || {};
+        buttonContainer.style.cssText = 'position:absolute;top:' + buttonPosition.top
+            + ';left:' + buttonPosition.left
+            + ';right:' + buttonPosition.right
+            + ';bottom:' + buttonPosition.bottom
+            + ';';
 
         // eslint-disable-next-line max-len
         let buttonStyle = 'float:right;margin-right:20px;border:none;cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
