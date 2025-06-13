@@ -69,6 +69,7 @@ export function enableDataStack(
     | 'isStackedByIndex'
     | 'stackedOverDimension'
     | 'stackResultDimension'
+    | 'isPercentStackEnabled'
 > {
     opt = opt || {};
     let byIndex = opt.byIndex;
@@ -192,7 +193,8 @@ export function enableDataStack(
         stackedByDimension: stackedByDimInfo && stackedByDimInfo.name,
         isStackedByIndex: byIndex,
         stackedOverDimension: stackedOverDimension,
-        stackResultDimension: stackResultDimension
+        stackResultDimension: stackResultDimension,
+        isPercentStackEnabled: seriesModel.get('stackPercent'),
     };
 }
 
