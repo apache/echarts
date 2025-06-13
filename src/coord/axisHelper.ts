@@ -368,7 +368,10 @@ export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel
  * @param {Object} axis axisModel.axis
  */
 export function shouldShowAllLabels(axis: Axis): boolean {
-    return getOptionCategoryInterval(axis.getLabelModel()) === 0;
+    const labelModel = axis.getLabelModel();
+    const hideOverlap = labelModel.get('hideOverlap');
+    return hideOverlap === false
+        || (axis.type === 'category' && getOptionCategoryInterval(labelModel) === 0);
 }
 
 export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): DimensionName[] {
