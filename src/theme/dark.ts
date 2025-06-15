@@ -53,6 +53,14 @@ const axisCommon = function () {
         axisName: {}
     };
 };
+const matrixAxis = {
+    label: {
+        color: color.secondary
+    },
+    itemStyle: {
+        borderColor: color.neutral20
+    }
+};
 
 const theme = {
     darkMode: true,
@@ -174,6 +182,16 @@ const theme = {
         },
         yearLabel: {
             color: color.secondary
+        }
+    },
+    matrix: {
+        x: matrixAxis,
+        y: matrixAxis,
+        backgroundColor: {
+            borderColor: '#817f91'
+        },
+        innerBackgroundStyle: {
+            borderColor: '#484753'
         }
     },
     timeAxis: axisCommon(),

@@ -293,6 +293,7 @@ function collectSeriesInfo(result: CollectionResult, ecModel: GlobalModel) {
         const seriesTooltipTrigger = seriesModel.get(['tooltip', 'trigger'], true);
         const seriesTooltipShow = seriesModel.get(['tooltip', 'show'], true);
         if (!coordSys
+            || !coordSys.model // PENDING: radar do not have a model.
             || seriesTooltipTrigger === 'none'
             || seriesTooltipTrigger === false
             || seriesTooltipTrigger === 'item'

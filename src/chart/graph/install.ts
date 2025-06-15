@@ -29,7 +29,7 @@ import createView from './createView';
 import View from '../../coord/View';
 import GraphView from './GraphView';
 import GraphSeriesModel from './GraphSeries';
-import { RoamPayload, updateCenterAndZoom } from '../../action/roamHelper';
+import { RoamPayload, updateCenterAndZoomInAction } from '../../component/helper/roamHelper';
 import GlobalModel from '../../model/Global';
 import { noop } from 'zrender/src/core/util';
 import type ExtensionAPI from '../../core/ExtensionAPI';
@@ -79,7 +79,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         }, function (seriesModel: GraphSeriesModel) {
             const coordSys = seriesModel.coordinateSystem as View;
 
-            const res = updateCenterAndZoom(coordSys, payload, undefined, api);
+            const res = updateCenterAndZoomInAction(coordSys, payload, seriesModel.get('scaleLimit'));
 
             seriesModel.setCenter
                 && seriesModel.setCenter(res.center);

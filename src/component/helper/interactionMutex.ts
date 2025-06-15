@@ -17,19 +17,30 @@
 * under the License.
 */
 
-// @ts-nocheck
+import { ZRenderType } from 'zrender/src/zrender';
 import * as echarts from '../../core/echarts';
 import { noop } from 'zrender/src/core/util';
+import { makeInner } from '../../util/model';
 
-const ATTR = '\0_ec_interaction_mutex';
+type InteractionMutexResource = {
+    globalPan: string
+};
+const inner = makeInner<InteractionMutexResource, ZRenderType>();
 
-export function take(zr, resourceKey, userKey) {
-    const store = getStore(zr);
-    store[resourceKey] = userKey;
+export function take(
+    zr: ZRenderType,
+    resourceKey: keyof InteractionMutexResource,
+    userKey: InteractionMutexResource[keyof InteractionMutexResource]
+) {
+    inner(zr)[resourceKey] = userKey;
 }
 
-export function release(zr, resourceKey, userKey) {
-    const store = getStore(zr);
+export function release(
+    zr: ZRenderType,
+    resourceKey: keyof InteractionMutexResource,
+    userKey: InteractionMutexResource[keyof InteractionMutexResource]
+) {
+    const store = inner(zr);
     const uKey = store[resourceKey];
 
     if (uKey === userKey) {
@@ -37,12 +48,11 @@ export function release(zr, resourceKey, userKey) {
     }
 }
 
-export function isTaken(zr, resourceKey) {
-    return !!getStore(zr)[resourceKey];
-}
-
-function getStore(zr) {
-    return zr[ATTR] || (zr[ATTR] = {});
+export function isTaken(
+    zr: ZRenderType,
+    resourceKey: keyof InteractionMutexResource,
+) {
+    return !!inner(zr)[resourceKey];
 }
 
 /**

@@ -33,6 +33,7 @@ import type {SingleAxisOption as SingleAxisComponentOption} from '../coord/singl
 import type {ParallelAxisOption as ParallelAxisComponentOption} from '../coord/parallel/AxisModel';
 import type {ParallelCoordinateSystemOption as ParallelComponentOption} from '../coord/parallel/ParallelModel';
 import type {CalendarOption as CalendarComponentOption} from '../coord/calendar/CalendarModel';
+import type {MatrixOption as MatrixComponentOption} from '../coord/matrix/MatrixModel';
 import type {ToolboxOption} from '../component/toolbox/ToolboxModel';
 import type {
     TooltipOption as TooltipComponentOption,
@@ -156,6 +157,7 @@ export {
     AngleAxisComponentOption,
     ParallelComponentOption,
     CalendarComponentOption,
+    MatrixComponentOption,
     TooltipComponentOption,
     AxisPointerComponentOption,
     BrushComponentOption,
@@ -262,6 +264,7 @@ export interface EChartsOption extends ECBasicOption {
     parallel?: ParallelComponentOption | ParallelComponentOption[];
     parallelAxis?: ParallelAxisComponentOption | ParallelAxisComponentOption[];
     calendar?: CalendarComponentOption | CalendarComponentOption[];
+    matrix?: MatrixComponentOption | MatrixComponentOption[];
     toolbox?: ToolboxComponentOption | ToolboxComponentOption[];
     tooltip?: TooltipComponentOption | TooltipComponentOption[];
     axisPointer?: AxisPointerComponentOption | AxisPointerComponentOption[];

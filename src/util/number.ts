@@ -37,6 +37,9 @@ function _trim(str: string): string {
     return str.replace(/^\s+|\s+$/g, '');
 }
 
+export const mathMin = Math.min;
+export const mathMax = Math.max;
+
 /**
  * Linear mapping a value from domain to range
  * @param  val
@@ -100,33 +103,48 @@ export function linearMap(
 }
 
 /**
- * Convert a percent string to absolute number.
- * Returns NaN if percent is not a valid string or number
+ * Preserve the name `parsePercent` for backward compatibility,
+ * and it's effectively published as `echarts.number.parsePercent`.
  */
-export function parsePercent(percent: number | string, all: number): number {
-    switch (percent) {
+export const parsePercent = parsePositionOption;
+
+/**
+ * @see {parsePositionSizeOption} and also accept a string preset.
+ * @see {PositionSizeOption}
+ */
+export function parsePositionOption(option: unknown, percentBase: number, percentOffset?: number): number {
+    switch (option) {
         case 'center':
         case 'middle':
-            percent = '50%';
+            option = '50%';
             break;
         case 'left':
         case 'top':
-            percent = '0%';
+            option = '0%';
             break;
         case 'right':
         case 'bottom':
-            percent = '100%';
+            option = '100%';
             break;
     }
-    if (zrUtil.isString(percent)) {
-        if (_trim(percent).match(/%$/)) {
-            return parseFloat(percent) / 100 * all;
+    return parsePositionSizeOption(option, percentBase, percentOffset);
+}
+
+/**
+ * Accept number, or numeric stirng (`'123'`), or percentage ('100%'), as x/y/width/height pixel number.
+ * If null/undefined or invalid, return NaN.
+ * (But allow JS type coercion (`+option`) due to backward compatibility)
+ * @see {PositionSizeOption}
+ */
+export function parsePositionSizeOption(option: unknown, percentBase: number, percentOffset?: number): number {
+    if (zrUtil.isString(option)) {
+        if (_trim(option).match(/%$/)) {
+            return parseFloat(option) / 100 * percentBase + (percentOffset || 0);
         }
-
-        return parseFloat(percent);
+        return parseFloat(option);
     }
-
-    return percent == null ? NaN : +percent;
+    // Allow flexible input due to backward compatibility.
+    return option == null ? NaN : +option;
 }
 
 /**

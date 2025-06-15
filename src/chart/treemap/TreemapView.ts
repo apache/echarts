@@ -31,10 +31,7 @@ import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
 import type { RoamControllerHost } from '../../component/helper/roamHelper';
-// eslint-disable-next-line no-duplicate-imports
-import type { RoamEventParams } from '../../component/helper/RoamController';
-// eslint-disable-next-line no-duplicate-imports
-import RoamController from '../../component/helper/RoamController';
+import RoamController, { RoamEventParams } from '../../component/helper/RoamController';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as animationUtil from '../../util/animation';
@@ -178,7 +175,6 @@ class TreemapView extends ChartView {
         api: ExtensionAPI,
         payload: TreemapZoomToNodePayload | TreemapRenderPayload | TreemapMovePayload | TreemapRootToNodePayload
     ) {
-
         const models = ecModel.findComponents({
             mainType: 'series', subType: 'treemap', query: payload
         });
@@ -493,20 +489,34 @@ class TreemapView extends ChartView {
             controllerHost = this._controllerHost;
         }
 
+        const seriesModel = this.seriesModel;
+
         // Init controller.
         if (!controller) {
             controller = this._controller = new RoamController(api.getZr());
-            controller.enable(this.seriesModel.get('roam'));
-            controllerHost.zoomLimit = this.seriesModel.get('scaleLimit');
-            controllerHost.zoom = this.seriesModel.get('zoom');
             controller.on('pan', bind(this._onPan, this));
             controller.on('zoom', bind(this._onZoom, this));
         }
 
-        const rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
-        controller.setPointerChecker(function (e, x, y) {
-            return rect.contain(x, y);
+        controller.enable(seriesModel.get('roam'), {
+            api,
+            zInfo: {component: seriesModel},
+            triggerInfo: {
+                roamTrigger: seriesModel.get('roamTrigger'),
+                isInSelf: (e, x, y) => {
+                    const containerGroup = this._containerGroup;
+                    return containerGroup
+                        // Currently only x, y exist in tranform.
+                        ? containerGroup.getBoundingRect().contain(x - containerGroup.x, y - containerGroup.y)
+                        : false;
+                },
+                // isInClip: (e, x, y) => {
+                // }
+            },
         });
+
+        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
+        controllerHost.zoom = seriesModel.get('zoom');
     }
 
     private _clearController() {
@@ -708,13 +718,12 @@ class TreemapView extends ChartView {
     }
 
     /**
-     * @public
-     * @param {number} x Global coord x.
-     * @param {number} y Global coord y.
-     * @return {Object} info If not found, return undefined;
-     * @return {number} info.node Target node.
-     * @return {number} info.offsetX x refer to target node.
-     * @return {number} info.offsetY y refer to target node.
+     * @param x Global coord x.
+     * @param y Global coord y.
+     * @return info If not found, return undefined;
+     * @return info.node Target node.
+     * @return info.offsetX x refer to target node.
+     * @return info.offsetY y refer to target node.
      */
     findTarget(x: number, y: number): FoundTargetInfo {
         let targetInfo;
@@ -749,9 +758,6 @@ class TreemapView extends ChartView {
     }
 }
 
-/**
- * @inner
- */
 function createStorage(): RenderElementStorage | LastCfgStorage {
     return {
         nodeGroup: [],
@@ -761,7 +767,6 @@ function createStorage(): RenderElementStorage | LastCfgStorage {
 }
 
 /**
- * @inner
  * @return Return undefined means do not travel further.
  */
 function renderNode(

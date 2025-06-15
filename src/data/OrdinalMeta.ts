@@ -33,18 +33,46 @@ class OrdinalMeta {
 
     private _map: HashMap<OrdinalNumber>;
 
+    private _onCollect: (category: OrdinalRawValue, index: number) => void;
+
     readonly uid: number;
 
-
+    /**
+     * PENDING - Regarding forcibly converting to string:
+     *  In the early days, the underlying hash map impl used JS plain object and converted the key to
+     *  string; later in https://github.com/ecomfe/zrender/pull/966 it was changed to a JS Map (in supported
+     *  platforms), which does not require string keys. But consider any input that `scale/Ordinal['parse']`
+     *  is involved, a number input represents an `OrdinalNumber` (i.e., an index), and affect the query
+     *  behavior:
+     *    - If forcbily converting to string:
+     *      pros: users can use numeric string (such as, '123') to query the raw data (123), tho it's probably
+     *      still confusing.
+     *      cons: NaN/null/undefined in data will be equals to 'NaN'/'null'/'undefined', if simply using
+     *      `val + ''` to convert them, like currently `getName` does.
+     *    - Otherwise:
+     *      pros: see NaN/null/undefined case above.
+     *      cons: users cannot query the raw data (123) any more.
+     *  There are two inconsistent behaviors in the current impl:
+     *    - Force conversion is applied on the case `xAxis{data: ['aaa', 'bbb', ...]}`,
+     *      but no conversion applied to the case `xAxis{data: [{value: 'aaa'}, ...]}` and
+     *      the case `dataset: {source: [['aaa', 123], ['bbb', 234], ...]}`.
+     *    - behaves differently according to whether JS Map is supported (the polyfill is simply using JS
+     *      plain object) (tho it seems rare platform that do not support it).
+     *  Since there's no sufficient good solution to offset cost of the breaking change, we preserve the
+     *  current behavior, until real issues is reported.
+     */
     constructor(opt: {
         categories?: OrdinalRawValue[],
         needCollect?: boolean
         deduplication?: boolean
+        // Called only on `needCollect` is true and collect happens.
+        onCollect?: OrdinalMeta['_onCollect']
     }) {
         this.categories = opt.categories || [];
         this._needCollect = opt.needCollect;
         this._deduplication = opt.deduplication;
         this.uid = ++uidBase;
+        this._onCollect = opt.onCollect;
     }
 
     static createByAxisModel(axisModel: Model): OrdinalMeta {
@@ -61,7 +89,6 @@ class OrdinalMeta {
     };
 
     getOrdinal(category: OrdinalRawValue): OrdinalNumber {
-        // @ts-ignore
         return this._getOrCreateMap().get(category);
     }
 
@@ -92,19 +119,19 @@ class OrdinalMeta {
         if (needCollect && !this._deduplication) {
             index = this.categories.length;
             this.categories[index] = category;
+            this._onCollect && this._onCollect(category, index);
             return index;
         }
 
         const map = this._getOrCreateMap();
-        // @ts-ignore
         index = map.get(category);
 
         if (index == null) {
             if (needCollect) {
                 index = this.categories.length;
                 this.categories[index] = category;
-                // @ts-ignore
                 map.set(category, index);
+                this._onCollect && this._onCollect(category, index);
             }
             else {
                 index = NaN;

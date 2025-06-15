@@ -51,6 +51,7 @@ import prepareGeo from '../../coord/geo/prepareCustom';
 import prepareSingleAxis from '../../coord/single/prepareCustom';
 import preparePolar from '../../coord/polar/prepareCustom';
 import prepareCalendar from '../../coord/calendar/prepareCustom';
+import prepareMatrix from '../../coord/matrix/prepareCustom';
 import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -155,6 +156,8 @@ const attachedTxInfoTmp = {
 
 
 /**
+ * FIXME: register rather than import directly, for size.
+ *
  * To reduce total package size of each coordinate systems, the modules `prepareCustom`
  * of each coordinate systems are not required by each coordinate systems directly, but
  * required by the module `custom`.
@@ -170,7 +173,8 @@ const prepareCustoms: Dictionary<PrepareCustomInfo> = {
     geo: prepareGeo,
     single: prepareSingleAxis,
     polar: preparePolar,
-    calendar: prepareCalendar
+    calendar: prepareCalendar,
+    matrix: prepareMatrix
 };
 
 

@@ -87,6 +87,7 @@ const BUITIN_COMPONENTS_MAP = {
     singleAxis: 'SingleAxisComponent',
     parallel: 'ParallelComponent',
     calendar: 'CalendarComponent',
+    matrix: 'MatrixComponent',
     graphic: 'GraphicComponent',
     toolbox: 'ToolboxComponent',
     tooltip: 'TooltipComponent',
