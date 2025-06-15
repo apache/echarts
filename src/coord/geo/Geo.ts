@@ -25,9 +25,10 @@ import { GeoJSONRegion, Region } from './Region';
 import { GeoProjection, GeoResource, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING } from '../../util/model';
-import GeoModel from './GeoModel';
+import type GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
 import { warn } from '../../util/log';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 
 const GEO_DEFAULT_PARAMS: {
     [type in GeoResource['type']]: {
@@ -79,9 +80,11 @@ class Geo extends View {
             nameMap?: NameMap;
             nameProperty?: string;
             aspectScale?: number;
+            api: ExtensionAPI;
+            ecModel: GlobalModel;
         }
     ) {
-        super(name);
+        super(name, {api: opt.api, ecModel: opt.ecModel});
 
         this.map = map;
 

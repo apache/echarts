@@ -285,12 +285,14 @@ export function injectCoordSysByOption(opt: {
     coordSysType: string;
     coordSysProvider: CoordSysInjectionProvider;
     isDefaultDataCoordSys?: boolean;
+    allowNotFound?: boolean
 }): boolean {
     const {
         targetModel,
         coordSysType,
         coordSysProvider,
         isDefaultDataCoordSys,
+        allowNotFound,
     } = opt;
     if (__DEV__) {
         zrUtil.assert(!!coordSysType);
@@ -314,9 +316,11 @@ export function injectCoordSysByOption(opt: {
     const coordSys = coordSysProvider(coordSysType, targetModel);
     if (!coordSys) {
         if (__DEV__) {
-            error(`${coordSysType} cannot be found for`
-                + ` ${targetModel.type} (index: ${targetModel.componentIndex}).`
-            );
+            if (!allowNotFound) {
+                error(`${coordSysType} cannot be found for`
+                    + ` ${targetModel.type} (index: ${targetModel.componentIndex}).`
+                );
+            }
         }
         return false;
     }

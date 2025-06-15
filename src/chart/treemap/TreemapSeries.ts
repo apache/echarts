@@ -272,6 +272,7 @@ class TreemapSeriesModel extends SeriesModel<TreemapSeriesOption> {
         },
 
         roam: true,
+        roamTrigger: 'global',
         nodeClick: 'zoomToNode',
         animation: true,
         animationDurationUpdate: 900,

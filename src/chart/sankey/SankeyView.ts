@@ -130,7 +130,7 @@ class SankeyView extends ChartView {
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const sankeyView = this;
         const graph = seriesModel.getGraph();
-        const group = this._mainGroup;
+        const mainGroup = this._mainGroup;
         const layoutInfo = seriesModel.layoutInfo;
         // view width
         const width = layoutInfo.width;
@@ -142,10 +142,13 @@ class SankeyView extends ChartView {
 
         this._model = seriesModel;
 
-        group.removeAll();
+        mainGroup.removeAll();
+
+        mainGroup.x = layoutInfo.x;
+        mainGroup.y = layoutInfo.y;
 
         this._updateViewCoordSys(seriesModel, api);
-        roamHelper.updateController(seriesModel, api, group, this._controller, this._controllerHost);
+        roamHelper.updateController(seriesModel, api, mainGroup, this._controller, this._controllerHost, null);
 
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
@@ -253,7 +256,7 @@ class SankeyView extends ChartView {
                 return style;
             });
 
-            group.add(curve);
+            mainGroup.add(curve);
 
             edgeData.setItemGraphicEl(edge.dataIndex, curve);
 
@@ -309,7 +312,7 @@ class SankeyView extends ChartView {
 
             setStatesStylesFromModel(rect, itemModel);
 
-            group.add(rect);
+            mainGroup.add(rect);
 
             nodeData.setItemGraphicEl(node.dataIndex, rect);
 
@@ -353,8 +356,8 @@ class SankeyView extends ChartView {
         });
 
         if (!this._data && seriesModel.isAnimationEnabled()) {
-            group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
-                group.removeClipPath();
+            mainGroup.setClipPath(createGridClipShape(mainGroup.getBoundingRect(), seriesModel, function () {
+                mainGroup.removeClipPath();
             }));
         }
 
@@ -371,16 +374,20 @@ class SankeyView extends ChartView {
         const width = layoutInfo.width;
         const height = layoutInfo.height;
 
-        const viewCoordSys = seriesModel.coordinateSystem = new View();
+        const viewCoordSys = seriesModel.coordinateSystem = new View(null, {api, ecModel: seriesModel.ecModel});
         viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
         viewCoordSys.setBoundingRect(0, 0, width, height);
 
-        viewCoordSys.setCenter(seriesModel.get('center'), {api, ecModel: seriesModel.ecModel});
+        viewCoordSys.setCenter(seriesModel.get('center'));
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
-        this._mainGroup.x = layoutInfo.x;
-        this._mainGroup.y = layoutInfo.y;
+        this._controllerHost.target.attr({
+            x: viewCoordSys.x,
+            y: viewCoordSys.y,
+            scaleX: viewCoordSys.scaleX,
+            scaleY: viewCoordSys.scaleY
+        });
     }
 }
 

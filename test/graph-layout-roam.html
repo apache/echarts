@@ -40,42 +40,102 @@ under the License.
 
                 const _ctx = {
                     center: null,
+                    layoutParams: {
+                        left: 'center',
+                        top: 'center',
+                    },
                 };
-                const layoutParams = {
-                    left: 'center',
-                    top: 'center',
+
+                const _graphDataset = {
+                    fourNodes: {
+                        data: [{
+                            name: 'node_1',
+                            x: 300,
+                            y: 300,
+                        }, {
+                            name: 'node_2',
+                            x: 800,
+                            y: 300
+                        }, {
+                            name: 'node_3',
+                            x: 550,
+                            y: 100
+                        }, {
+                            name: 'node_4',
+                            x: 550,
+                            y: 500
+                        }],
+                        links: [{
+                            source: 0,
+                            target: 1,
+                            symbolSize: [5, 20],
+                            lineStyle: {
+                                width: 5,
+                                opacity: 1,
+                                curveness: 0.2
+                            },
+                            emphasis: {
+                                lineStyle: {
+                                    color: 'blue',
+                                    width: 20,
+                                    opacity: 0.1
+                                },
+                                label: {
+                                    fontSize: 40,
+                                    color: 'red'
+                                }
+                            }
+                        }, {
+                            source: 'node_2',
+                            target: 'node_1',
+                            lineStyle: {
+                                curveness: 0.2
+                            }
+                        }, {
+                            source: 'node_1',
+                            target: 'node_3',
+                            emphasis: {
+                                label: {
+                                    show: true
+                                }
+                            }
+                        }, {
+                            source: 'node_2',
+                            target: 'node_3'
+                        }, {
+                            source: 'node_2',
+                            target: 'node_4'
+                        }, {
+                            source: 'node_1',
+                            target: 'node_4'
+                        }]
+                    },
+                    heightZero: {
+                        data: [{
+                            name: 'node_1',
+                            x: 300,
+                            y: 300,
+                        }, {
+                            name: 'node_2',
+                            x: 800,
+                            y: 300
+                        }],
+                        links: [{
+                            source: 0,
+                            target: 1,
+                            symbolSize: [5, 20],
+                        }]
+                    }
                 };
 
                 var option = {
                     backgroundColor: '#f4f4f9',
                     tooltip: {},
-                    graphic: {
-                        elements: [{
-                            id: 'geo_boundary_indicator',
-                            type: 'rect',
-                            style: {
-                                fill: '#e0e0e0',
-                                stroke: '#aaa',
-                                lineWidth: 1,
-                            },
-                            textContent: {
-                                type: 'text',
-                                style: {
-                                    text: 'graph view rect',
-                                    fill: '#777',
-                                    fontSize: 10,
-                                },
-                            },
-                            textConfig: {
-                                position: 'insideTopRight'
-                            }
-                        }]
-                    },
-                    series : [
+                    series: [
                         {
                             type: 'graph',
                             id: 'graph0',
-                            symbolSize: 40,
+                            symbolSize: 20,
                             roam: true,
                             itemStyle: {
                                 color: 'rgba(100,100,0,0.5)',
@@ -87,16 +147,14 @@ under the License.
                                     return `series.data[i].x: ${param.data.x}\nseries.data[i].y: ${param.data.y}`
                                 }
                             },
-                            ...layoutParams,
+                            ..._ctx.layoutParams,
                             center: _ctx.center,
                             edgeSymbol: ['circle', 'arrow'],
                             edgeSymbolSize: [4, 10],
                             edgeLabel: {
-                                normal: {
-                                    textStyle: {
-                                        color: 'green',
-                                        fontSize: 30
-                                    }
+                                textStyle: {
+                                    color: 'green',
+                                    fontSize: 30
                                 },
                                 emphasis: {
                                     textStyle: {
@@ -105,77 +163,86 @@ under the License.
                                 }
                             },
                             // focusNodeAdjacency: focusNodeAdjacency,
-                            data: [{
-                                name: 'node_1',
-                                x: 300,
-                                y: 300,
-                            }, {
-                                name: 'node_2',
-                                x: 800,
-                                y: 300
-                            }, {
-                                name: 'node_3',
-                                x: 550,
-                                y: 100
-                            }, {
-                                name: 'node_4',
-                                x: 550,
-                                y: 500
-                            }],
                             lineStyle: {
-                                normal: {
-                                    width: 3,
-                                    color: '#184029',
-                                    curveness: 0
-                                }
+                                width: 3,
+                                color: '#184029',
+                                curveness: 0
                             },
-                            links: [{
-                                source: 0,
-                                target: 1,
-                                symbolSize: [5, 20],
-                                lineStyle: {
-                                    width: 5,
-                                    opacity: 1,
-                                    curveness: 0.2
-                                },
-                                emphasis: {
-                                    lineStyle: {
-                                        color: 'blue',
-                                        width: 20,
-                                        opacity: 0.1
-                                    },
-                                    label: {
-                                        fontSize: 40,
-                                        color: 'red'
-                                    }
-                                }
-                            }, {
-                                source: 'node_2',
-                                target: 'node_1',
-                                lineStyle: {
-                                    curveness: 0.2
-                                }
-                            }, {
-                                source: 'node_1',
-                                target: 'node_3',
-                                emphasis: {
-                                    label: {
-                                        show: true
-                                    }
-                                }
-                            }, {
-                                source: 'node_2',
-                                target: 'node_3'
-                            }, {
-                                source: 'node_2',
-                                target: 'node_4'
-                            }, {
-                                source: 'node_1',
-                                target: 'node_4'
-                            }]
+                            ..._graphDataset.fourNodes,
                         }
                     ]
                 };
+
+
+                function makeRectIndicators(option) {
+                    var graphicOption = option.graphic = option.graphic || {};
+                    graphicElsOption = graphicOption.elements = graphicOption.elements || [];
+                    graphicElsOption.push({
+                        id: 'view_rect_indicator',
+                        type: 'rect',
+                        silent: true,
+                        z: -9,
+                        style: {
+                            // fill: '#e0e0e0',
+                            fill: 'none',
+                            stroke: '#999',
+                            lineWidth: 1,
+                            lineDash: 'dashed',
+                        },
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'view rect',
+                                fill: '#555',
+                                fontSize: 11,
+                            },
+                        },
+                        textConfig: {
+                            position: 'insideTopRight'
+                        }
+                    }, {
+                        id: 'content_rect_indicator',
+                        type: 'rect',
+                        silent: true,
+                        z: -10,
+                        style: {
+                            // fill: 'rgba(150,100,50,0.3)',
+                            fill: 'none',
+                            stroke: '#999',
+                            lineWidth: 1,
+                            lineDash: 'dashed',
+                        },
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'content bounding rect',
+                                fill: '#555',
+                                fontSize: 11,
+                            },
+                        },
+                        textConfig: {
+                            position: 'insideTopRight'
+                        }
+                    });
+
+                    var gridOptions = option.grid = option.grid || [];
+                    if (!Array.isArray(gridOptions)) {
+                        gridOptions = option.grid = [option.grid];
+                    }
+                    gridOptions.push({
+                        id: 'viewport_indicator',
+                        show: true,
+                        // Using `grid` as a indicator is a tricky way - should no bounding rect,
+                        // otherwise it affect the trigger of geo roam due to `onIrrelevantElement`.
+                        backgroundColor: '#ccd',
+                        silent: false,
+                        ..._ctx.layoutParams,
+                        borderColor: '#aaa',
+                        borderType: 'dashed',
+                        z: -100,
+                    });
+                }
+                makeRectIndicators(option);
 
                 var chart = testHelper.create(echarts, 'main0', {
                     title: [
@@ -186,16 +253,31 @@ under the License.
                     option: option,
                     draggable: true,
                     onResize() {
-                        renderViewRect();
+                        renderIndicatorRect();
                     },
+                    height: 300,
                     inputsStyle: 'compact',
                     inputs: [
+                        {
+                            type: 'select',
+                            text: 'graph data:',
+                            values: Object.keys(_graphDataset),
+                            onchange() {
+                                const dataKey = this.value;
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        ..._graphDataset[dataKey],
+                                    }
+                                });
+                            }
+                        },
                         {
                             type: 'select',
                             text: 'geo box:',
                             values: [
                                 'do_nothing',
-                                {left: 50, top: 50, right: '30%', bottom: 30},
+                                {left: 120, top: 100, right: '30%', bottom: 80},
                                 {left: null, top: null, right: null, bottom: null},
                             ],
                             onchange: function () {
@@ -203,24 +285,34 @@ under the License.
                                 if (layoutParams == null) {
                                     return;
                                 }
+                                _ctx.layoutParams = layoutParams;
                                 chart.setOption({
                                     series: {
                                         id: 'graph0',
-                                        ...layoutParams,
+                                        ..._ctx.layoutParams,
                                         // zoom: 1,
                                         // center: [0, 0],
                                     },
-                                    grid: {
-                                        id: 'geo_boundary_indicator',
-                                        ...layoutParams
-                                    },
                                 });
 
-                                renderViewRect();
+                                renderIndicatorRect();
                             }
                         },
                         {
                             type: 'br',
+                        },
+                        {
+                            text: 'graph layout:',
+                            type: 'select',
+                            values: [undefined, 'force', 'circular', 'none'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        layout: this.value,
+                                    },
+                                });
+                            },
                         },
                         {
                             text: 'legacyViewCoordSysCenterBase:',
@@ -234,7 +326,35 @@ under the License.
                         },
                         {
                             type: 'select',
-                            text: 'specify center',
+                            text: 'roamTrigger:',
+                            values: [undefined, 'global'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        roamTrigger: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            text: 'zoom:',
+                            type: 'select',
+                            values: [undefined, 0.5, 1, 5],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        zoom: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'specify center:',
                             values: [false, true],
                             onchange() {
                                 chart.__testHelper.switchGroup(
@@ -252,7 +372,7 @@ under the License.
                                         center: _ctx.center
                                     }
                                 });
-                                renderViewRect();
+                                renderIndicatorRect();
                             }
                         },
                         {
@@ -260,7 +380,7 @@ under the License.
                         },
                         {
                             type: 'groupset',
-                            inputsHeight: 70,
+                            inputsHeight: 40,
                             groups: [{
                                 id: 'group_no_center',
                                 text: 'no center',
@@ -297,33 +417,89 @@ under the License.
                                                 }
                                             });
 
-                                            renderViewRect();
+                                            renderIndicatorRect();
                                         }
                                     }))
                                 ]
                             }]
                         }, // End of groupset
+                        {
+                            type: 'select',
+                            text: 'preserveAspect:',
+                            values: [undefined, 'contain', 'cover'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        preserveAspect: this.value
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'preserveAspectAlign:',
+                            values: [undefined, 'left', 'right', 'center'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        preserveAspectAlign: this.value
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'preserveAspectVerticalAlign:',
+                            values: [undefined, 'top', 'bottom', 'middle'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        preserveAspectVerticalAlign: this.value
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        }
                     ] // End of inputs
                 });
 
-                renderViewRect();
+                renderIndicatorRect();
 
-                function renderViewRect() {
+                if (chart) {
+                    chart.on('graphroam', function () {
+                        renderIndicatorRect();
+                    });
+                }
+
+                function renderIndicatorRect() {
                     if (!chart) {
                         return;
                     }
                     // [CAVEAT] Internal data structure, probably change, do not use it outside.
-                    const viewRect = chart.getModel().getComponent('series', 0).coordinateSystem.getViewRect();
+                    const viewCoordSys = chart.getModel().getComponent('series', 0).coordinateSystem;
+                    const viewRect = viewCoordSys.getViewRect();
+                    const contentBoundingRect = viewCoordSys.getBoundingRect().clone();
+                    const trans = viewCoordSys.getComputedTransform();
+                    if (trans) {
+                        contentBoundingRect.applyTransform(trans);
+                    }
                     chart.setOption({
+                        grid: {
+                            id: 'viewport_indicator',
+                            ..._ctx.layoutParams,
+                        },
                         graphic: {
                             elements: [{
-                                id: 'geo_boundary_indicator',
-                                shape: {
-                                    x: viewRect.x,
-                                    y: viewRect.y,
-                                    width: viewRect.width,
-                                    height: viewRect.height,
-                                }
+                                id: 'view_rect_indicator',
+                                shape: viewRect,
+                            }, {
+                                id: 'content_rect_indicator',
+                                shape: contentBoundingRect,
                             }]
                         },
                     });

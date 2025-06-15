@@ -2498,11 +2498,10 @@ class ECharts extends Eventful<ECEventDefinition> {
             if (model.preventAutoZ) {
                 return;
             }
-            const z = model.get('z') || 0;
-            const zlevel = model.get('zlevel') || 0;
+            const zInfo = modelUtil.retrieveZInfo(model);
             // Set z and zlevel
             view.eachRendered((el) => {
-                doUpdateZ(el, z, zlevel, -Infinity, false);
+                doUpdateZ(el, zInfo.z, zInfo.zlevel, -Infinity, false);
                 // Don't traverse the children because it has been traversed in _updateZ.
                 return true;
             });

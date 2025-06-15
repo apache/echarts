@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {updateCenterAndZoom, RoamPayload} from '../../action/roamHelper';
+import {updateCenterAndZoomInAction, RoamPayload} from '../../component/helper/roamHelper';
 import { Payload } from '../../util/types';
 import TreeSeriesModel from './TreeSeries';
 import GlobalModel from '../../model/Global';
@@ -57,13 +57,10 @@ export function installTreeAction(registers: EChartsExtensionInstallRegisters) {
             mainType: 'series', subType: 'tree', query: payload
         }, function (seriesModel: TreeSeriesModel) {
             const coordSys = seriesModel.coordinateSystem;
-            const res = updateCenterAndZoom(coordSys, payload, undefined, api);
+            const res = updateCenterAndZoomInAction(coordSys, payload, seriesModel.get('scaleLimit'));
 
-            seriesModel.setCenter
-                && seriesModel.setCenter(res.center);
-
-            seriesModel.setZoom
-                && seriesModel.setZoom(res.zoom);
+            seriesModel.setCenter(res.center);
+            seriesModel.setZoom(res.zoom);
         });
     });
 

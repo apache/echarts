@@ -355,6 +355,9 @@ const _tmpCellItemStyleModel = new Model<MatrixCellStyleOption['itemStyle']>();
 const _tmpCellLabelModel = new Model<MatrixCellStyleOption['label']>();
 const _tmpInnerTextTrans: number[] = [];
 
+// FIXME: move all of the subpixel process to Matrix.ts resize, otherwise the result of
+// `dataToLayout` is not consistent with this rendering, and the caller (like heatmap) can
+// not precisely align with the matrix border.
 function createMatrixRect(
     shape: RectShape, style: ItemStyleProps, z2: number
 ): Rect {

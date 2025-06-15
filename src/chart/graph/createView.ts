@@ -19,7 +19,7 @@
 
 // FIXME Where to create the simple view coordinate system
 import View from '../../coord/View';
-import {createBoxLayoutReference, getLayoutRect} from '../../util/layout';
+import {createBoxLayoutReference, getLayoutRect, applyPreserveAspect} from '../../util/layout';
 import * as bbox from 'zrender/src/core/bbox';
 import GraphSeriesModel, { GraphNodeItemOption } from './GraphSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -32,7 +32,8 @@ function getViewRect(seriesModel: GraphSeriesModel, api: ExtensionAPI, aspect: n
     const option = extend(seriesModel.getBoxLayoutParams(), {
         aspect: aspect
     });
-    return getLayoutRect(option, layoutRef.refContainer);
+    const viewRect = getLayoutRect(option, layoutRef.refContainer);
+    return applyPreserveAspect(seriesModel, viewRect, aspect);
 }
 
 export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionAPI) {
@@ -79,7 +80,7 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             const bbWidth = max[0] - min[0];
             const bbHeight = max[1] - min[1];
 
-            const viewCoordSys = new View();
+            const viewCoordSys = new View(null, {api, ecModel});
             viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
             viewCoordSys.setBoundingRect(
@@ -90,7 +91,7 @@ export default function createViewCoordSys(ecModel: GlobalModel, api: ExtensionA
             );
 
             // Update roam info
-            viewCoordSys.setCenter(seriesModel.get('center'), {api, ecModel});
+            viewCoordSys.setCenter(seriesModel.get('center'));
             viewCoordSys.setZoom(seriesModel.get('zoom'));
 
             viewList.push(viewCoordSys);

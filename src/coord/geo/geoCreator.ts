@@ -144,11 +144,12 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
         boxLayoutOption.aspect = aspect;
 
         viewRect = layout.getLayoutRect(boxLayoutOption, refContainer);
+        viewRect = layout.applyPreserveAspect(geoModel, viewRect, aspect);
     }
 
     this.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
 
-    this.setCenter(geoModel.get('center'), api);
+    this.setCenter(geoModel.get('center'));
     this.setZoom(geoModel.get('zoom'));
 }
 
@@ -181,7 +182,9 @@ class GeoCreator implements CoordinateSystemCreator {
             const mapName = geoModel.get('map');
 
             const geo = new Geo(mapName + idx, mapName, zrUtil.extend({
-                nameMap: geoModel.get('nameMap')
+                nameMap: geoModel.get('nameMap'),
+                api,
+                ecModel,
             }, getCommonGeoProperties(geoModel)));
 
             geo.zoomLimit = geoModel.get('scaleLimit');
@@ -209,7 +212,8 @@ class GeoCreator implements CoordinateSystemCreator {
                             'geo', SINGLE_REFERRING
                         ).models[0] as GeoModel;
                     return geoModel && geoModel.coordinateSystem;
-                }
+                },
+                allowNotFound: true,
             });
         });
 
@@ -230,7 +234,9 @@ class GeoCreator implements CoordinateSystemCreator {
             });
 
             const geo = new Geo(mapType, mapType, zrUtil.extend({
-                nameMap: zrUtil.mergeAll(nameMapList)
+                nameMap: zrUtil.mergeAll(nameMapList),
+                api,
+                ecModel,
             }, getCommonGeoProperties(mapSeries[0])));
 
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {

@@ -25,7 +25,6 @@ import {
     updateViewOnPan,
     RoamControllerHost
 } from '../../component/helper/roamHelper';
-import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
 import {getNodeGlobalScale} from './graphHelper';
@@ -45,6 +44,7 @@ import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
 import { clone, extend } from 'zrender/src/core/util';
 import ECLinePath from '../helper/LinePath';
+import { NullUndefined } from '../../util/types';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -127,7 +127,7 @@ class GraphView extends ChartView {
 
         this._updateNodeAndLinkScale();
 
-        this._updateController(seriesModel, ecModel, api);
+        this._updateController(null, seriesModel, api);
 
         clearTimeout(this._layoutTimeout);
         const forceLayout = seriesModel.forceLayout;
@@ -251,29 +251,29 @@ class GraphView extends ChartView {
     }
 
     private _updateController(
+        clipRect: graphic.BoundingRect | NullUndefined,
         seriesModel: GraphSeriesModel,
-        ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
         const controller = this._controller;
         const controllerHost = this._controllerHost;
-        const group = this.group;
+        const coordSys = seriesModel.coordinateSystem;
 
-        controller.setPointerChecker((e, x, y) => {
-            const rect = group.getBoundingRect();
-            rect.applyTransform(group.transform);
-            return rect.contain(x, y)
-                && !this._thumbnail.contain(x, y)
-                && !onIrrelevantElement(e, api, seriesModel);
-        });
-
-        if (!isViewCoordSys(seriesModel.coordinateSystem)) {
+        if (!isViewCoordSys(coordSys)) {
             controller.disable();
             return;
         }
-        controller.enable(seriesModel.get('roam'));
+        controller.enable(seriesModel.get('roam'), {
+            api,
+            zInfo: {component: seriesModel},
+            triggerInfo: {
+                roamTrigger: seriesModel.get('roamTrigger'),
+                isInSelf: (e, x, y) => coordSys.containPoint([x, y]),
+                isInClip: (e, x, y) => !clipRect || clipRect.contain(x, y),
+            },
+        });
         controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-        controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
+        controllerHost.zoom = coordSys.getZoom();
 
         controller
             .off('pan')
@@ -292,6 +292,9 @@ class GraphView extends ChartView {
         dx: number,
         dy: number
     ): void {
+        // FIXME: should do nothing except `api.dispatchAction` here, the other logic
+        //  should be performed in the action handler; otherwise, it causes inconsistency
+        //  if user triggers this action explicitly.
         updateViewOnPan(this._controllerHost, dx, dy);
         api.dispatchAction({
             seriesId: seriesModel.id,
@@ -309,6 +312,9 @@ class GraphView extends ChartView {
         originX: number,
         originY: number
     ) {
+        // FIXME: should do nothing except `api.dispatchAction` here, the other logic
+        //  should be performed in the action handler; otherwise, it causes inconsistency
+        //  if user triggers this action explicitly.
         updateViewOnZoom(this._controllerHost, scale, originX, originY);
         api.dispatchAction({
             seriesId: seriesModel.id,

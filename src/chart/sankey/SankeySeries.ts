@@ -317,6 +317,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         // true | false | 'move' | 'scale', see module:component/helper/RoamController.
         roam: false,
+        roamTrigger: 'global',
         center: null,
         zoom: 1,
 

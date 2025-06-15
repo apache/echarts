@@ -30,9 +30,10 @@ import { CoordinateSystemMaster, CoordinateSystem } from './CoordinateSystem';
 import GlobalModel from '../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../util/model';
 import { parsePercent } from '../util/number';
-import { RoamOptionMixin } from '../util/types';
+import { NullUndefined, RoamOptionMixin } from '../util/types';
 import { clone } from 'zrender/src/core/util';
 import ExtensionAPI from '../core/ExtensionAPI';
+import { clampByZoomLimit, ZoomLimit } from '../component/helper/roamHelper';
 
 const v2ApplyTransform = vector.applyTransform;
 
@@ -47,10 +48,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
 
     readonly name: string;
 
-    zoomLimit: {
-        max?: number;
-        min?: number;
-    };
+    zoomLimit: ZoomLimit;
 
     /**
      * Represents the transform brought by roam/zoom.
@@ -89,9 +87,19 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      */
     private _viewRect: BoundingRect;
 
-    constructor(name?: string) {
+    private _opt: {ecModel: GlobalModel, api: ExtensionAPI} | NullUndefined;
+
+    constructor(
+        name?: string,
+        opt?: {
+            // Only for backward compat.
+            ecModel: GlobalModel,
+            api: ExtensionAPI
+        }
+    ) {
         super();
         this.name = name;
+        this._opt = opt;
     }
 
     setBoundingRect(x: number, y: number, width: number, height: number): BoundingRect {
@@ -100,13 +108,14 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         return this._rect;
     }
 
-    /**
-     * @return {module:zrender/core/BoundingRect}
-     */
     getBoundingRect(): BoundingRect {
         return this._rect;
     }
 
+    /**
+     * If no need to transform `View['_rect']` to `View['_viewRect']`, the calling of
+     * `setViewRect` can be omitted.
+     */
     setViewRect(x: number, y: number, width: number, height: number): void {
         this._transformTo(x, y, width, height);
         this._viewRect = new BoundingRect(x, y, width, height);
@@ -139,18 +148,14 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
      *  @see {View['_center']} for details.
      */
     setCenter(
-        centerCoord: RoamOptionMixin['center'],
-        opt?: {
-            // Only for backward compat.
-            ecModel?: GlobalModel
-            api?: ExtensionAPI
-        }
+        centerCoord: RoamOptionMixin['center']
     ): void {
         // #16904 introcuded percentage string here, such as '33%'. But it was based on canvas
         // width/height, which is not reasonable - the unit may incorrect, and it is unpredictable if
         // the `View['_rect']` is not calculated based on the current canvas rect. Therefore the percentage
         // value is changed to based on `View['_rect'].width/height` since v6. Under this definition, users
         // can use '0%' to map the top-left of `View['_rect']` to the center of `View['_viewRect']`.
+        const opt = this._opt;
         if (opt && opt.api && opt.ecModel && opt.ecModel.getShallow('legacyViewCoordSysCenterBase') && centerCoord) {
             centerCoord = [
                 parsePercent(centerCoord[0], opt.api.getWidth()),
@@ -163,19 +168,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
     }
 
     setZoom(zoom: number): void {
-        zoom = zoom || 1;
-
-        const zoomLimit = this.zoomLimit;
-        if (zoomLimit) {
-            if (zoomLimit.max != null) {
-                zoom = Math.min(zoomLimit.max, zoom);
-            }
-            if (zoomLimit.min != null) {
-                zoom = Math.max(zoomLimit.min, zoom);
-            }
-        }
-        this._zoom = zoom;
-
+        this._zoom = clampByZoomLimit(zoom || 1, this.zoomLimit);
         this._updateCenterAndZoom();
     }
 

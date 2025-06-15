@@ -1063,6 +1063,24 @@ export interface RoamOptionMixin {
      */
     roam?: boolean | 'pan' | 'move' | 'zoom' | 'scale'
     /**
+     * Hover over an area where roaming is triggered.
+     * - if `null`/`undefined`, the trigger area is
+     *   the intersection of "self bounding rect" and "clipping rect (if any)".
+     * - if 'global', the trigger area is
+     *   the intersection of "the entire canvas" and "clipping rect (if any)".
+     * NOTE:
+     *  The clipping rect, which can be enabled by `clip: true`, is typically the layout rect.
+     *  The layout rect is typically determined by option `left`/`right`/`top`/`bottom`/`width`/`height`, some
+     *  components/series, such as `geo` and `series.map` can also be determined by `layoutCenter`/`layoutSize`,
+     *  and may modified by `preserveAspect`.
+     *
+     * PENDING: do we need to support to only trigger roaming on the shapes themselves,
+     *  rather than the bounding rect?
+     * PENDING: do we need to support to check by the laytout rect? But in this case,
+     *  `roamTrigger: 'global', clip: true` is more reasonable.
+     */
+    roamTrigger?: 'global' | 'selfRect' | NullUndefined
+    /**
      * Current center position.
      */
     center?: (number | string)[]
@@ -1075,6 +1093,21 @@ export interface RoamOptionMixin {
         min?: number
         max?: number
     }
+}
+
+export interface PreserveAspectMixin {
+    // Suppose a "viewport" is decided by `left`/`right`/`top`/`bottom`/`width`/`height`,
+    // - null/undefined/false (default): aspect ratio will not be preserved, but stretched to fill
+    //   the "viewport".
+    // - 'contain'/true: The aspect ratio is preserved; the viewRect is contained by the "viewport",
+    //   and scaled up as much as possible to meet the "viewport".
+    // - 'cover': The aspect ratio is preserved; the viewRect covers the "viewport", and scaled down
+    //   as much as possible to meet the "viewport".
+    preserveAspect?: boolean | 'contain' | 'cover';
+    // By default 'center'
+    preserveAspectAlign?: 'left' | 'right' | 'center';
+    // By default 'middle'
+    preserveAspectVerticalAlign?: 'top' | 'bottom' | 'middle';
 }
 
 // TODO: TYPE value type?

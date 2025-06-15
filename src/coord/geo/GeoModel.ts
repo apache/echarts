@@ -36,7 +36,8 @@ import {
     StatesOptionMixin,
     Dictionary,
     CommonTooltipOption,
-    StatesMixinBase
+    StatesMixinBase,
+    PreserveAspectMixin
 } from '../../util/types';
 import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
@@ -79,8 +80,7 @@ export interface GeoTooltipFormatterParams {
     $vars: ['name']
 }
 
-
-export interface GeoCommonOptionMixin extends RoamOptionMixin {
+export interface GeoCommonOptionMixin extends RoamOptionMixin, PreserveAspectMixin {
     // Map name
     map: string;
 
@@ -95,6 +95,10 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin {
     layoutCenter?: (number | string)[];
     // Like: `40` or `'50%'`.
     layoutSize?: number | string;
+
+    // Whether to clip by the viewRect (as a viewport, decided by
+    // `BoxLayoutOptionMixin` (or `layoutCenter`/`layoutSize`) and `PreserveAspectMixin`)
+    clip?: boolean
 
     // Define left-top, right-bottom lng/lat coords to control view
     // For example, [ [180, 90], [-180, -90] ]

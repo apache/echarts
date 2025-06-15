@@ -24,17 +24,20 @@ import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import {parsePercent} from './number';
 import * as formatUtil from './format';
 import {
-    BoxLayoutOptionMixin, CircleLayoutOptionMixin, NullUndefined, ComponentLayoutMode, SeriesOption
+    BoxLayoutOptionMixin, CircleLayoutOptionMixin, NullUndefined, ComponentLayoutMode, SeriesOption,
+    PreserveAspectMixin,
+    ComponentOption
 } from './types';
 import Group from 'zrender/src/graphic/Group';
 import { SectorShape } from 'zrender/src/graphic/shape/Sector';
 import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
-import { ComponentModel } from '../echarts.all';
 import ExtensionAPI from '../core/ExtensionAPI';
 import { error } from './log';
 import { BoxCoordinateSystemCoordFrom, getCoordForBoxCoordSys } from '../core/CoordinateSystem';
 import SeriesModel from '../model/Series';
+import type Model from '../model/Model';
+import type ComponentModel from '../model/Component';
 
 const each = zrUtil.each;
 
@@ -164,6 +167,17 @@ export const vbox = zrUtil.curry(boxLayout, 'vertical');
 export const hbox = zrUtil.curry(boxLayout, 'horizontal');
 
 
+export function getBoxLayoutParams(boxLayoutModel: Model<BoxLayoutOptionMixin>, ignoreParent: boolean) {
+    return {
+        left: boxLayoutModel.getShallow('left', ignoreParent),
+        top: boxLayoutModel.getShallow('top', ignoreParent),
+        right: boxLayoutModel.getShallow('right', ignoreParent),
+        bottom: boxLayoutModel.getShallow('bottom', ignoreParent),
+        width: boxLayoutModel.getShallow('width', ignoreParent),
+        height: boxLayoutModel.getShallow('height', ignoreParent)
+    };
+}
+
 type CircleLayoutSeriesOption = SeriesOption & CircleLayoutOptionMixin<{
     // `center: string | number` has been accepted in series.pie.
     centerExtra: string | number
@@ -245,7 +259,16 @@ type GetLayoutRectInputContainerRect = {
  */
 export function getLayoutRect(
     positionInfo: BoxLayoutOptionMixin & {
-        aspect?: number // aspect is width / height
+        // PENDING:
+        //  when width can not be decided but height can be decided and aspect is near Infinity,
+        //  or when height can not be decided but width can be decided and aspect is near 0,
+        //  the result width or height is near Inifity. It's logically correct, therefore
+        //  currently we do not handle it, until bad cases arise.
+        //
+        // aspect is width / height. But this method does not preserve aspect ratio if
+        // both width and height can be decided by the given left/top/bottom/right/width/height.
+        // To always preserve aspect ratio, uses `applyPreserveAspect` to prcess the result.
+        aspect?: number
     },
     containerRect: GetLayoutRectInputContainerRect,
     // This is the space from the `containerRect` to the returned bounding rect.
@@ -294,6 +317,9 @@ export function getLayoutRect(
         // Margin is not considered, because there is no case that both
         // using margin and aspect so far.
         if (isNaN(width) && isNaN(height)) {
+            // PENDING: if only `left` or `right` is defined, perhaps it's more preferable to
+            // calculate size based on `containerWidth - left` or `containerWidth - left` here,
+            // but for backward compatibility we do not change it.
             if (aspect > containerWidth / containerHeight) {
                 width = containerWidth * 0.8;
             }
@@ -359,6 +385,52 @@ export function getLayoutRect(
 
     return rect;
 }
+
+/**
+ * PENDING:
+ *  when preserveAspect: 'cover' and aspect is near Infinity
+ *  or when preserveAspect: 'contain' and aspect is near 0,
+ *  the result width or height is near Inifity. It's logically correct,
+ *  Therefore currently we do not handle it, until bad cases arise.
+ */
+export function applyPreserveAspect(
+    component: ComponentModel<ComponentOption & PreserveAspectMixin>,
+    layoutRect: LayoutRect,
+    // That is, `width / height`.
+    // Assume `aspect` is positive.
+    aspect: number,
+): LayoutRect {
+    const preserveAspect = component.getShallow('preserveAspect', true);
+    if (!preserveAspect) {
+        return layoutRect;
+    }
+
+    const actualAspect = layoutRect.width / layoutRect.height;
+
+    if (Math.abs(Math.atan(aspect) - Math.atan(actualAspect)) < 1e-9) {
+        return layoutRect;
+    }
+
+    const preserveAspectAlign = component.getShallow('preserveAspectAlign', true);
+    const preserveAspectVerticalAlign = component.getShallow('preserveAspectVerticalAlign', true);
+    const layoutOptInner: BoxLayoutOptionMixin = {width: layoutRect.width, height: layoutRect.height};
+    const isCover = preserveAspect === 'cover';
+
+    if ((actualAspect > aspect && !isCover) || (actualAspect < aspect && isCover)) {
+        layoutOptInner.width = layoutRect.height * aspect;
+        preserveAspectAlign === 'left' ? (layoutOptInner.left = 0)
+            : preserveAspectAlign === 'right' ? (layoutOptInner.right = 0)
+            : (layoutOptInner.left = 'center');
+    }
+    else {
+        layoutOptInner.height = layoutRect.width / aspect;
+        preserveAspectVerticalAlign === 'top' ? (layoutOptInner.top = 0)
+            : preserveAspectVerticalAlign === 'bottom' ? (layoutOptInner.bottom = 0)
+            : (layoutOptInner.top = 'middle');
+    }
+    return getLayoutRect(layoutOptInner, layoutRect);
+}
+
 
 type CreateBoxLayoutReferenceOpt<TEnableByCenter extends boolean = false> = {
     // Use this only if:

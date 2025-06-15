@@ -35,7 +35,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import SeriesData from '../../data/SeriesData';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
-import { AnimationOption, ECElement } from '../../util/types';
+import { AnimationOption, ECElement, NullUndefined } from '../../util/types';
 import tokens from '../../visual/tokens';
 
 type TreeSymbol = SymbolClz & {
@@ -173,7 +173,7 @@ class TreeView extends ChartView {
         }
 
         this._updateViewCoordSys(seriesModel, api);
-        this._updateController(seriesModel, ecModel, api);
+        this._updateController(seriesModel, null, ecModel, api);
 
         const oldData = this._data;
 
@@ -252,15 +252,16 @@ class TreeView extends ChartView {
             max[1] = oldMax ? oldMax[1] : max[1] + 1;
         }
 
-        const viewCoordSys = seriesModel.coordinateSystem = new View();
+        const viewCoordSys = seriesModel.coordinateSystem = new View(null, {api, ecModel: seriesModel.ecModel});
         viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
         viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
-        viewCoordSys.setCenter(seriesModel.get('center'), {api, ecModel: seriesModel.ecModel});
+        viewCoordSys.setCenter(seriesModel.get('center'));
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
-        // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group
+        // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group,
+        // and 'treeRoam' action.
         this.group.attr({
             x: viewCoordSys.x,
             y: viewCoordSys.y,
@@ -274,6 +275,7 @@ class TreeView extends ChartView {
 
     _updateController(
         seriesModel: TreeSeriesModel,
+        clipRect: graphic.BoundingRect | NullUndefined,
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
@@ -282,7 +284,8 @@ class TreeView extends ChartView {
             api,
             this.group,
             this._controller,
-            this._controllerHost
+            this._controllerHost,
+            clipRect
         );
 
         this._controller

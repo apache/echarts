@@ -23,7 +23,7 @@ import geoCreator from '../../coord/geo/geoCreator';
 import { ActionInfo } from '../../util/types';
 import { each } from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import { updateCenterAndZoom, RoamPayload } from '../../action/roamHelper';
+import { updateCenterAndZoomInAction, RoamPayload } from '../../component/helper/roamHelper';
 import MapSeries from '../../chart/map/MapSeries';
 import GeoView from './GeoView';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
@@ -126,8 +126,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
                     return;
                 }
 
-                const res = updateCenterAndZoom(
-                    geo, payload, (componentModel as GeoModel).get('scaleLimit'), api
+                const res = updateCenterAndZoomInAction(
+                    geo, payload, (componentModel as GeoModel).get('scaleLimit')
                 );
 
                 componentModel.setCenter

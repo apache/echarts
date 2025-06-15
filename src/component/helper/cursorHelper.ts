@@ -20,23 +20,56 @@
 
 import { ElementEvent } from 'zrender/src/Element';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import SeriesModel from '../../model/Series';
-import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
+import type Component from '../../model/Component';
+import { retrieveZInfo } from '../../util/model';
 
 const IRRELEVANT_EXCLUDES = {'axisPointer': 1, 'tooltip': 1, 'brush': 1};
 
 /**
- * Avoid that: mouse click on a elements that is over geo or graph,
- * but roam is triggered.
+ * Used on roam/brush triggering determination.
+ * This is to avoid that: mouse clicking on an elements that is over geo or graph,
+ * but roam is triggered unexpectedly.
  */
 export function onIrrelevantElement(
-    e: ElementEvent, api: ExtensionAPI, targetCoordSysModel: CoordinateSystem['model']
+    e: ElementEvent,
+    api: ExtensionAPI,
+    targetComponent: Component
 ): boolean {
-    const model = api.getComponentByElement(e.topTarget);
-    // If model is axisModel, it works only if it is injected with coordinateSystem.
-    const coordSys = model && (model as SeriesModel).coordinateSystem;
-    return model
-        && model !== targetCoordSysModel
-        && !IRRELEVANT_EXCLUDES.hasOwnProperty(model.mainType)
-        && (coordSys && coordSys.model !== targetCoordSysModel);
+    const eventElComponent = api.getComponentByElement(e.topTarget);
+
+    if (!eventElComponent
+        || eventElComponent === targetComponent
+        || IRRELEVANT_EXCLUDES.hasOwnProperty(eventElComponent.mainType)
+    ) {
+        return false;
+    }
+
+    // At present the `true` return is conservative. That is, the caller, such as a RoamController,
+    // is more likely to get a `false` return and start a roam behavior, becuase even if the
+    // `model.coordinateSystem` does not exist, the `e.topTarget` may be also a relevant element,
+    // such as axis split line/area or series elements, where roam should be available. Otherwise,
+    // if a dataZoom-served cartesian is full of series elements, the dataZoom-roaming can hardly
+    // be triggered.
+    const eventElCoordSys = (eventElComponent as CoordinateSystemHostModel).coordinateSystem;
+    // If eventElComponent is axisModel, it works only if it is injected with coordinateSystem.
+    if (!eventElCoordSys || eventElCoordSys.model === targetComponent) {
+        return false;
+    }
+
+    // e.g., if a cartesian is covered by a graph, the graph has a higher presedence in roam.
+    // A potential bad case is that RoamController does not prevent the cartesian from handling zr
+    // event, such as click and hovering, but it's fine so far.
+    // Aslo be conservative, if equals, return false.
+    const eventElCmptZInfo = retrieveZInfo(eventElComponent);
+    const targetCmptZInfo = retrieveZInfo(targetComponent);
+    if ((
+            (eventElCmptZInfo.zlevel - targetCmptZInfo.zlevel)
+            || (eventElCmptZInfo.z - targetCmptZInfo.z)
+        ) <= 0
+    ) {
+        return false;
+    }
+
+    return true;
 }

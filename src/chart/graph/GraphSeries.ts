@@ -43,7 +43,8 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    PreserveAspectMixin
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -144,7 +145,8 @@ export interface GraphSeriesOption
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin<CallbackDataParams>,
     RoamOptionMixin,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin,
+    PreserveAspectMixin {
 
     type?: 'graph'
 

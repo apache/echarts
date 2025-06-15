@@ -8,8 +8,8 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import SeriesModel from '../../model/Series';
-import { BoxLayoutOptionMixin, ItemStyleOption } from '../../util/types';
-import RoamController, { RoamEventDefinition, RoamType } from '../../component/helper/RoamController';
+import { BoxLayoutOptionMixin, ItemStyleOption, RoamOptionMixin } from '../../util/types';
+import RoamController, { RoamEventDefinition } from '../../component/helper/RoamController';
 import Eventful from 'zrender/src/core/Eventful';
 import tokens from '../../visual/tokens';
 
@@ -60,7 +60,7 @@ class Thumbnail extends Eventful<Pick<RoamEventDefinition, 'zoom' | 'pan'>> {
     render(opt: {
         seriesModel: GraphSeriesModel;
         api: ExtensionAPI;
-        roamType: RoamType;
+        roamType: RoamOptionMixin['roam'];
         z2Setting: ThumbnailZ2Setting;
         seriesBoundingRect: BoundingRect,
         renderThumbnailContent: (viewGroup: graphic.Group) => void
@@ -85,22 +85,13 @@ class Thumbnail extends Eventful<Pick<RoamEventDefinition, 'zoom' | 'pan'>> {
         const itemStyle = itemStyleModel.getItemStyle();
         itemStyle.fill = seriesModel.ecModel.get('backgroundColor') || tokens.color.neutral00;
 
+        const refContainer = layout.createBoxLayoutReference(seriesModel, api).refContainer;
+        const boxContainBorder = layout.getLayoutRect(
+            layout.getBoxLayoutParams(thumbnailModel, true),
+            refContainer
+        );
         // Try to use border-box in thumbnail, see https://github.com/apache/echarts/issues/18022
         const boxBorderWidth = itemStyle.lineWidth || 0;
-        const boxContainBorder = layout.getLayoutRect(
-            {
-                left: thumbnailModel.get('left', true),
-                top: thumbnailModel.get('top', true),
-                right: thumbnailModel.get('right', true),
-                bottom: thumbnailModel.get('bottom', true),
-                width: thumbnailModel.get('width', true),
-                height: thumbnailModel.get('height', true)
-            },
-            {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }
-        );
         const borderBoundingRect = graphic.expandOrShrinkRect(
             boxContainBorder.clone(), boxBorderWidth / 2, true, true
         );
@@ -155,7 +146,7 @@ class Thumbnail extends Eventful<Pick<RoamEventDefinition, 'zoom' | 'pan'>> {
         windowRect.__r = windowStyleModel.get('borderRadius', true);
         clipGroup.add(windowRect);
 
-        this._resetRoamController(opt.roamType);
+        this._resetRoamController(opt.roamType, z2Setting.background);
 
         this.updateWindow();
     }
@@ -188,14 +179,23 @@ class Thumbnail extends Eventful<Pick<RoamEventDefinition, 'zoom' | 'pan'>> {
         this._mtThumbnailToSerise = matrix.invert([], this._mtSeriesToThumbnail);
     }
 
-    private _resetRoamController(roamType: RoamType): void {
+    private _resetRoamController(
+        roamType: RoamOptionMixin['roam'],
+        z2: number
+    ): void {
         let thumbnailController = this._thumbnailController;
         if (!thumbnailController) {
             thumbnailController = this._thumbnailController = new RoamController(this._api.getZr());
-            thumbnailController.setPointerChecker((e, x, y) => this.contain(x, y));
         }
 
-        thumbnailController.enable(roamType);
+        thumbnailController.enable(roamType, {
+            api: this._api,
+            zInfo: {component: this._seriesModel, z2},
+            triggerInfo: {
+                roamTrigger: null,
+                isInSelf: (e, x, y) => this.contain(x, y)
+            }
+        });
         thumbnailController
             .off('pan')
             .off('zoom')

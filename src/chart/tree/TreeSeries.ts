@@ -271,6 +271,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         // true | false | 'move' | 'scale', see module:component/helper/RoamController.
         roam: false,
+        roamTrigger: 'global',
 
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.4,
