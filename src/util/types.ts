@@ -1303,6 +1303,15 @@ export interface CommonTooltipOption<FormatterParams> {
      */
     enterable?: boolean
 
+    /**
+     * Whether enable display transition when show/hide tooltip.
+     * Defaults to `true` for backward compatibility.
+     * If set to `false`, the tooltip 'display' will be set to 'none' when hidden.
+     * @default true
+     * @since v6.0.0
+     */
+    displayTransition?: boolean
+
     backgroundColor?: ColorString
     borderColor?: ColorString
     borderRadius?: number
@@ -1679,6 +1688,7 @@ export interface SeriesLargeOptionMixin {
 export interface SeriesStackOptionMixin {
     stack?: string
     stackStrategy?: 'samesign' | 'all' | 'positive' | 'negative';
+    stackOrder?: 'seriesAsc' | 'seriesDesc'; // default: seriesAsc
 }
 
 type SamplingFunc = (frame: ArrayLike<number>) => number;

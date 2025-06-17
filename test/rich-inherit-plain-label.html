@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <div id="main0"></div>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var richInheritPlainLabel = void 0;
+                var option = {
+                    // richInheritPlainLabel: false,
+                    title: {
+                        text: `richInheritPlainLabel: ${richInheritPlainLabel}`
+                    },
+                    tooltip: {},
+                    xAxis: {
+                        type: 'time',
+                        axisLabel: {
+                            fontFamily: 'monospace',
+                            fontSize: 20
+                        }
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            fontFamily: 'monospace',
+                            fontSize: 20,
+                            formatter: '{a|{value}}',
+                            rich: {
+                                a: {
+                                    fontWeight: 'bold'
+                                }
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            type: 'line',
+                            areaStyle: {},
+                            data: [
+                                ['2019-10-10', 200],
+                                ['2019-11-11', 560],
+                                ['2019-12-12', 750],
+                                ['2020-01-13', 580],
+                                ['2020-02-14', 250],
+                                ['2020-03-15', 300],
+                                ['2020-04-16', 450],
+                                ['2020-05-17', 300],
+                                ['2020-06-18', 100]
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'When **`richInheritPlainLabel`** is **true**:',
+                        '1. Both x-axis label font of **2020** and y-axis label font should be **`monospace`**',
+                        '2. Both x-axis label font size of **2020** and y-axis label should be **20**',
+                    ],
+                    option: option,
+                    buttons: [{
+                        text: 'Toggle RichInheritPlainLabel',
+                        onclick: toggleRichInheritPlainLabel
+                    }]
+                });
+
+                function toggleRichInheritPlainLabel() {
+                    richInheritPlainLabel = !richInheritPlainLabel;
+                    chart.setOption({
+                        title: {
+                            text: `richInheritPlainLabel: ${richInheritPlainLabel}`
+                        },
+                        xAxis: {
+                            axisLabel: {
+                                richInheritPlainLabel: richInheritPlainLabel
+                            }
+                        },
+                        yAxis: {
+                            axisLabel: {
+                                richInheritPlainLabel: richInheritPlainLabel
+                            }
+                        }
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
+
