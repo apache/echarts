@@ -38,7 +38,6 @@ import {
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import Radar from '../../coord/radar/Radar';
-import IndicatorAxis from '../../coord/radar/IndicatorAxis';
 import {
     createTooltipMarkup, retrieveVisualColorForTooltipMarker
 } from '../../component/tooltip/tooltipMarkup';
