@@ -52,15 +52,16 @@ under the License.
                     trigger: 'item',
                     //triggerOn:'click',
                     formatter: function (params) {
-                    // Customize the tooltip content
-                    if(params.indicatorIndex === null) // exit when no indicator index present
-					    return
-                    const legendName = params.name;
-                    const name = params.indicatorAxes[params.indicatorIndex].name; // Name of the hovered point
-                    const value = params.value[params.indicatorIndex]; // Value of the hovered point
-                    
-                    // Return the formatted tooltip content
-                    return `${legendName} <br/> ${name}  : ${value}`;
+                        // Customize the tooltip content
+                        const legendName = params.name;
+                        if(params.indicatorIndex !== undefined){
+                            const name = params.indicatorName; // Name of the hovered point
+                            const value = params.value[params.indicatorIndex]; // Value of the hovered point
+                            // Return the formatted tooltip content
+                            return `${legendName} <br/> ${name}  : ${value}`;
+                        } else {
+                            return null;
+                        }// exit when no indicator index present
                     },
                 },
                 legend: {

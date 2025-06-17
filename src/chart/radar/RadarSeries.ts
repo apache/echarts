@@ -74,7 +74,7 @@ export interface RadarSeriesOption
 }
 export interface RadarCallbackDataParams extends CallbackDataParams {
     indicatorIndex: number,
-    indicatorAxes: Array<IndicatorAxis>
+    indicatorName:string
 }
 
 class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
@@ -112,9 +112,13 @@ class RadarSeriesModel extends SeriesModel<RadarSeriesOption> {
      */
     getDataParams(dataIndex: number, dataType: any, el?: Element): RadarCallbackDataParams {
         const params = super.getDataParams(dataIndex) as RadarCallbackDataParams;
-        // indicatorIndex && indicatorAxes
-        params.indicatorIndex = (el && (el as any).__dimIdx) ?? null;
-        params.indicatorAxes = this.coordinateSystem.getIndicatorAxes();
+        // indicatorIndex && indicatorName
+        const indicatorIndex = (el && (el as any).__dimIdx) !== undefined ? (el as any).__dimIdx : null;
+        if (indicatorIndex != null) {
+            const indicatorAxis = this.coordinateSystem.getIndicatorAxes()[indicatorIndex];
+            params.indicatorIndex = indicatorIndex;
+            params.indicatorName = indicatorAxis.name;
+        }
         return params;
     }
 
