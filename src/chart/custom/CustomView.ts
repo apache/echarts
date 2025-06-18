@@ -369,9 +369,6 @@ function createEl(elOption: CustomElementOption): Element {
             }
             const Clz = graphicUtil.getShapeClass(path.type);
             if (!Clz) {
-                if (typeof path.buildPath === 'function') {
-                    return path;
-                }
                 let errMsg = '';
                 if (__DEV__) {
                     errMsg = 'graphic type "' + graphicType + '" can not be found.';
