@@ -312,6 +312,8 @@ export interface ToolboxDataViewFeatureOption extends ToolboxFeatureOption {
 
     buttonColor?: ColorString
     buttonTextColor?: ColorString
+
+    buttonExtraCssText?: string
 }
 
 class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
@@ -375,7 +377,8 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         const blockMetaList = result.meta;
 
         const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'position:absolute;bottom:5px;left:0;right:0';
+        const buttonExtraCssText = model.get('buttonExtraCssText') || '';
+        buttonContainer.style.cssText = 'position:absolute;' + buttonExtraCssText;
 
         // eslint-disable-next-line max-len
         let buttonStyle = 'float:right;margin-right:20px;border:none;cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
@@ -469,7 +472,8 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
             textareaColor: '#fff',
             textareaBorderColor: '#333',
             buttonColor: '#c23531',
-            buttonTextColor: '#fff'
+            buttonTextColor: '#fff',
+            buttonExtraCssText: 'right:0;bottom:5px;'
         };
 
         return defaultOption;
