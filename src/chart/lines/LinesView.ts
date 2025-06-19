@@ -179,7 +179,12 @@ class LinesView extends ChartView {
                 : new LineDraw(
                     isPolyline
                         ? (hasEffect ? EffectPolyline : Polyline)
-                        : (hasEffect ? EffectLine : Line)
+                        : (hasEffect ? EffectLine : Line),
+                    {
+                        component: 'series',
+                        element: 'line',
+                        subType: 'lines'
+                    }
                 );
             this._hasEffet = hasEffect;
             this._isPolyline = isPolyline;

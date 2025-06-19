@@ -31,6 +31,7 @@ import Model from '../../model/Model';
 import { convertOptionIdName } from '../../util/model';
 import { toggleHoverEmphasis, Z2_EMPHASIS_LIFT } from '../../util/states';
 import { createTextStyle } from '../../label/labelStyle';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const TEXT_PADDING = 8;
 const ITEM_GAP = 8;
@@ -197,6 +198,20 @@ class Breadcrumb {
             );
             this.group.add(el);
 
+            if (__EDITOR__) {
+                addEditorInfo(el, {
+                    component: 'series',
+                    subType: 'treemap',
+                    element: 'breadcrumb',
+                    componentIndex: seriesModel.componentIndex
+                });
+                addEditorInfo(el.getTextContent(), {
+                    component: 'series',
+                    subType: 'treemap',
+                    element: 'breadcrumbText',
+                    componentIndex: seriesModel.componentIndex
+                });
+            }
             packEventData(el, seriesModel, itemNode);
 
             lastX += itemWidth + ITEM_GAP;

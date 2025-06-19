@@ -28,6 +28,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
 import { getAxisBreakHelper } from './axisBreakHelper';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -151,12 +152,21 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
 
         const lineStyle = lineStyleModel.getLineStyle(['color']);
         for (let i = 0; i < splitLines.length; ++i) {
-            group.add(graphic.mergePath(splitLines[i], {
+            const splitLine = graphic.mergePath(splitLines[i], {
                 style: zrUtil.defaults({
                     stroke: lineColors[i % lineColors.length],
                 }, lineStyle),
                 silent: true
-            }));
+            });
+            if (__EDITOR__) {
+                addEditorInfo(splitLine, {
+                    component: axisModel.mainType,
+                    componentIndex: axisModel.componentIndex,
+                    subType: axisModel.subType,
+                    element: 'splitLine'
+                });
+            }
+            group.add(splitLine);
         }
     },
 

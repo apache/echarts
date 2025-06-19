@@ -34,6 +34,7 @@ import ZRImage from 'zrender/src/graphic/Image';
 import { extend, isFunction, isString, isNumber, each } from 'zrender/src/core/util';
 import {setCommonECData} from '../../util/innerStore';
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
+import { addEditorInfo } from '../../util/editorInfo';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
@@ -156,6 +157,14 @@ class GaugeView extends ChartView {
             ));
 
             sectors.push(sector);
+            if (__EDITOR__) {
+                addEditorInfo(sector, {
+                    component: 'series',
+                    subType: 'gauge',
+                    element: 'sector',
+                    componentIndex: seriesModel.componentIndex
+                });
+            }
 
             prevEndAngle = endAngle;
         }
@@ -264,6 +273,14 @@ class GaugeView extends ChartView {
                     });
                 }
 
+                if (__EDITOR__) {
+                    addEditorInfo(splitLine, {
+                        component: 'series',
+                        subType: 'gauge',
+                        element: 'splitLine',
+                        componentIndex: seriesModel.componentIndex
+                    });
+                }
                 group.add(splitLine);
             }
 
@@ -295,7 +312,7 @@ class GaugeView extends ChartView {
                 }
 
                 if (rotate === 0) {
-                    group.add(new graphic.Text({
+                    const text = new graphic.Text({
                         style: createTextStyle(labelModel, {
                             text: label,
                             x: textStyleX,
@@ -306,10 +323,19 @@ class GaugeView extends ChartView {
                             inheritColor: autoColor
                         }),
                         silent: true
-                    }));
+                    });
+                    if (__EDITOR__) {
+                        addEditorInfo(text, {
+                            component: 'series',
+                            subType: 'gauge',
+                            element: 'label',
+                            componentIndex: seriesModel.componentIndex
+                        });
+                    }
+                    group.add(text);
                 }
                 else {
-                    group.add(new graphic.Text({
+                    const text = new graphic.Text({
                         style: createTextStyle(labelModel, {
                             text: label,
                             x: textStyleX,
@@ -323,7 +349,16 @@ class GaugeView extends ChartView {
                         originX: textStyleX,
                         originY: textStyleY,
                         rotation: rotate
-                    }));
+                    });
+                    if (__EDITOR__) {
+                        addEditorInfo(text, {
+                            component: 'series',
+                            subType: 'gauge',
+                            element: 'label',
+                            componentIndex: seriesModel.componentIndex
+                        });
+                    }
+                    group.add(text);
                 }
             }
 
@@ -352,6 +387,14 @@ class GaugeView extends ChartView {
                         });
                     }
 
+                    if (__EDITOR__) {
+                        addEditorInfo(tickLine, {
+                            component: 'series',
+                            subType: 'gauge',
+                            element: 'tickLine',
+                            componentIndex: seriesModel.componentIndex
+                        });
+                    }
                     group.add(tickLine);
                     angle += subStep;
                 }
@@ -468,6 +511,14 @@ class GaugeView extends ChartView {
                                 + Math.PI / 2
                             )
                         }, seriesModel);
+                        if (__EDITOR__) {
+                            addEditorInfo(pointer, {
+                                component: 'series',
+                                subType: 'gauge',
+                                element: 'pointer',
+                                componentIndex: seriesModel.componentIndex
+                            });
+                        }
                         group.add(pointer);
                         data.setItemGraphicEl(idx, pointer);
                     }
@@ -480,6 +531,14 @@ class GaugeView extends ChartView {
                                 endAngle: linearMap(val, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
+                        if (__EDITOR__) {
+                            addEditorInfo(progress, {
+                                component: 'series',
+                                subType: 'gauge',
+                                element: 'progress',
+                                componentIndex: seriesModel.componentIndex
+                            });
+                        }
                         group.add(progress);
                         // Add data index and series index for indexing the data by element
                         // Useful in tooltip
@@ -500,6 +559,14 @@ class GaugeView extends ChartView {
                                     + Math.PI / 2
                             )
                         }, seriesModel);
+                        if (__EDITOR__) {
+                            addEditorInfo(pointer, {
+                                component: 'series',
+                                subType: 'gauge',
+                                element: 'pointer',
+                                componentIndex: seriesModel.componentIndex
+                            });
+                        }
                         group.add(pointer);
                         data.setItemGraphicEl(newIdx, pointer);
                     }
@@ -514,6 +581,14 @@ class GaugeView extends ChartView {
                                 endAngle: linearMap(val, valueExtent, angleExtent, isClip)
                             }
                         }, seriesModel);
+                        if (__EDITOR__) {
+                            addEditorInfo(progress, {
+                                component: 'series',
+                                subType: 'gauge',
+                                element: 'progress',
+                                componentIndex: seriesModel.componentIndex
+                            });
+                        }
                         group.add(progress);
                         // Add data index and series index for indexing the data by element
                         // Useful in tooltip
@@ -596,6 +671,14 @@ class GaugeView extends ChartView {
             ) as graphic.Path;
             anchor.z2 = anchorModel.get('showAbove') ? 1 : 0;
             anchor.setStyle(anchorModel.getModel('itemStyle').getItemStyle());
+            if (__EDITOR__) {
+                addEditorInfo(anchor, {
+                    component: 'series',
+                    subType: 'gauge',
+                    element: 'anchor',
+                    componentIndex: seriesModel.componentIndex
+                });
+            }
             this.group.add(anchor);
         }
     }
@@ -660,6 +743,14 @@ class GaugeView extends ChartView {
                     }, {inheritColor: autoColor})
                 });
 
+                if (__EDITOR__) {
+                    addEditorInfo(labelEl, {
+                        component: 'series',
+                        subType: 'gauge',
+                        element: 'title',
+                        componentIndex: seriesModel.componentIndex
+                    });
+                }
                 itemGroup.add(labelEl);
             }
 
@@ -706,6 +797,14 @@ class GaugeView extends ChartView {
                     }
                 });
 
+                if (__EDITOR__) {
+                    addEditorInfo(labelEl, {
+                        component: 'series',
+                        subType: 'gauge',
+                        element: 'detail',
+                        componentIndex: seriesModel.componentIndex
+                    });
+                }
                 itemGroup.add(labelEl);
             }
 

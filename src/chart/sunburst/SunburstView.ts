@@ -27,6 +27,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { ROOT_TO_NODE_ACTION } from './sunburstAction';
 import { windowOpen } from '../../util/format';
+import { addEditorInfo } from '../../util/editorInfo';
 
 interface DrawTreeNode extends TreeNode {
     parentNode: DrawTreeNode
@@ -135,6 +136,15 @@ class SunburstView extends ChartView {
                         ecModel,
                         api
                     );
+                    if (__EDITOR__) {
+                        addEditorInfo(piece, {
+                            component: 'series',
+                            subType: 'sunburst',
+                            element: 'piece',
+                            componentIndex: seriesModel.componentIndex,
+                            dataIndex: newNode.dataIndex
+                        });
+                    }
                     group.add(piece);
 
                     // For tooltip
@@ -171,6 +181,14 @@ class SunburstView extends ChartView {
                         ecModel,
                         api
                     );
+                    if (__EDITOR__) {
+                        addEditorInfo(self.virtualPiece, {
+                            component: 'series',
+                            subType: 'sunburst',
+                            element: 'rollUp',
+                            componentIndex: seriesModel.componentIndex
+                        });
+                    }
                     group.add(self.virtualPiece);
                 }
 

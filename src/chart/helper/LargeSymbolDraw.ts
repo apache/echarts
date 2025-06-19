@@ -31,6 +31,7 @@ import { StageHandlerProgressParams } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { getECData } from '../../util/innerStore';
 import Element from 'zrender/src/Element';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const BOOST_SIZE_THRESHOLD = 4;
 
@@ -316,6 +317,13 @@ class LargeSymbolDraw {
             cursor: 'default'
         });
         symbolEl.ignoreCoarsePointer = true;
+        if (__EDITOR__) {
+            addEditorInfo(symbolEl, {
+                component: 'series',
+                subType: 'scatter',
+                element: 'symbol'
+            });
+        }
         this.group.add(symbolEl);
         this._newAdded.push(symbolEl);
         return symbolEl;

@@ -33,6 +33,7 @@ import { VerticalAlign, HorizontalAlign, CommonAxisPointerOption } from '../../u
 import { PathProps } from 'zrender/src/graphic/Path';
 import Model from '../../model/Model';
 import { TextProps } from 'zrender/src/graphic/Text';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const inner = makeInner<{
     lastProp?: DisplayableProps
@@ -268,6 +269,12 @@ class BaseAxisPointer implements AxisPointer {
             const pointerEl = inner(group).pointerEl = new graphic[pointerOption.type](
                 clone(elOption.pointer)
             );
+            if (__EDITOR__) {
+                addEditorInfo(pointerEl, {
+                    component: 'axisPointer',
+                    element: 'pointer'
+                });
+            }
             group.add(pointerEl);
         }
     }
@@ -286,6 +293,12 @@ class BaseAxisPointer implements AxisPointer {
                 clone(elOption.label)
             );
 
+            if (__EDITOR__) {
+                addEditorInfo(labelEl, {
+                    component: 'axisPointer',
+                    element: 'label'
+                });
+            }
             group.add(labelEl);
             updateLabelShowHide(labelEl, axisPointerModel);
         }
@@ -368,6 +381,12 @@ class BaseAxisPointer implements AxisPointer {
                     ondragend: bind(this._onHandleDragEnd, this)
                 }
             );
+            if (__EDITOR__) {
+                addEditorInfo(handle, {
+                    component: 'axisPointer',
+                    element: 'handle'
+                });
+            }
             zr.add(handle);
         }
 

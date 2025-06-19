@@ -30,6 +30,7 @@ import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
 import { isIntervalOrLogScale } from '../../scale/helper';
 import { getAxisBreakHelper } from './axisBreakHelper';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -192,6 +193,14 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                 }, lineStyle),
                 silent: true
             });
+            if (__EDITOR__) {
+                addEditorInfo(line, {
+                    component: axisModel.mainType,
+                    componentIndex: axisModel.componentIndex,
+                    subType: axisModel.subType,
+                    element: 'splitLine'
+                });
+            }
             graphic.subPixelOptimizeLine(line.shape, lineStyle.lineWidth);
             axisGroup.add(line);
         }
@@ -244,6 +253,14 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                     style: lineStyle,
                     silent: true
                 });
+                if (__EDITOR__) {
+                    addEditorInfo(line, {
+                        component: axisModel.mainType,
+                        componentIndex: axisModel.componentIndex,
+                        subType: axisModel.subType,
+                        element: 'minorSplitLine'
+                    });
+                }
                 graphic.subPixelOptimizeLine(line.shape, lineStyle.lineWidth);
                 axisGroup.add(line);
             }

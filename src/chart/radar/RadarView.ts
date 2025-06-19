@@ -31,6 +31,7 @@ import { VectorArray } from 'zrender/src/core/vector';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { addEditorInfo } from '../../util/editorInfo';
 
 type RadarSymbol = ReturnType<typeof symbolUtil.createSymbol> & {
     __dimIdx: number
@@ -99,6 +100,15 @@ class RadarView extends ChartView {
                     else {
                         symbolPath.setPosition(newPoints[i]);
                     }
+                    if (__EDITOR__) {
+                        addEditorInfo(symbolPath, {
+                            component: 'series',
+                            subType: 'radar',
+                            element: 'symbol',
+                            componentIndex: seriesModel.componentIndex,
+                            dataIndex: symbolPath.__dimIdx
+                        });
+                    }
                     symbolGroup.add(symbolPath);
                 }
             }
@@ -134,6 +144,22 @@ class RadarView extends ChartView {
                 itemGroup.add(polygon);
                 itemGroup.add(symbolGroup);
 
+                if (__EDITOR__) {
+                    addEditorInfo(polyline, {
+                        component: 'series',
+                        subType: 'radar',
+                        element: 'polyline',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: idx
+                    });
+                    addEditorInfo(polygon, {
+                        component: 'series',
+                        subType: 'radar',
+                        element: 'polygon',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: idx
+                    });
+                }
                 updateSymbols(
                     polyline.shape.points, points, symbolGroup, data, idx, true
                 );
@@ -146,6 +172,22 @@ class RadarView extends ChartView {
                 const polyline = itemGroup.childAt(0) as graphic.Polyline;
                 const polygon = itemGroup.childAt(1) as graphic.Polygon;
                 const symbolGroup = itemGroup.childAt(2) as graphic.Group;
+                if (__EDITOR__) {
+                    addEditorInfo(polyline, {
+                        component: 'series',
+                        subType: 'radar',
+                        element: 'polyline',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIdx
+                    });
+                    addEditorInfo(polygon, {
+                        component: 'series',
+                        subType: 'radar',
+                        element: 'polygon',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIdx
+                    });
+                }
                 const target = {
                     shape: {
                         points: data.getItemLayout(newIdx)
@@ -245,7 +287,6 @@ class RadarView extends ChartView {
                 pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
                 let defaultText = data.getStore().get(data.getDimensionIndex(symbolPath.__dimIdx), idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
-
                 setLabelStyle(
                     symbolPath, getLabelStatesModels(itemModel),
                     {
@@ -255,6 +296,14 @@ class RadarView extends ChartView {
                         defaultText: defaultText as string,
                         inheritColor: color as ColorString,
                         defaultOpacity: itemStyle.opacity
+                    },
+                    undefined,
+                    {
+                        component: 'series',
+                        element: 'label',
+                        componentIndex: seriesModel.componentIndex,
+                        subType: 'radar',
+                        dataIndex: symbolPath.__dimIdx
                     }
                 );
             });

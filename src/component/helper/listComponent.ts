@@ -26,6 +26,7 @@ import {
 } from '../../util/layout';
 import * as formatUtil from '../../util/format';
 import * as graphic from '../../util/graphic';
+import { addEditorInfo } from '../../util/editorInfo';
 
 /**
  * Layout list like component.
@@ -79,6 +80,12 @@ export function makeBackground(rect, componentModel) {
         silent: true,
         z2: -1
     });
+    if (__EDITOR__) {
+        addEditorInfo(rect, {
+            component: 'listComponent',
+            element: 'background'
+        });
+    }
     // FIXME
     // `subPixelOptimizeRect` may bring some gap between edge of viewpart
     // and background rect when setting like `left: 0`, `top: 0`.

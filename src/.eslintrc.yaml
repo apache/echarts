@@ -45,4 +45,5 @@ globals:
     setTimeout: true
     clearTimeout: true
     __DEV__: true
+    __EDITOR__: true
 extends: '../.eslintrc-common.yaml'

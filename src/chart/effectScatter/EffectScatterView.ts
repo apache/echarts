@@ -27,6 +27,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import EffectScatterSeriesModel from './EffectScatterSeries';
 import { StageHandlerProgressExecutor } from '../../util/types';
+import { addEditorInfo } from '../../util/editorInfo';
 
 class EffectScatterView extends ChartView {
     static readonly type = 'effectScatter';
@@ -35,13 +36,27 @@ class EffectScatterView extends ChartView {
     private _symbolDraw: SymbolDraw;
 
     init() {
-        this._symbolDraw = new SymbolDraw(EffectSymbol);
+        this._symbolDraw = new SymbolDraw(EffectSymbol, {
+            component: 'series',
+            subType: 'effectScatter',
+            element: 'symbol'
+        });
     }
 
     render(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const effectSymbolDraw = this._symbolDraw;
-        effectSymbolDraw.updateData(data, {clipShape: this._getClipShape(seriesModel)});
+        effectSymbolDraw.updateData(
+            data, {clipShape: this._getClipShape(seriesModel)}, seriesModel.componentIndex
+        );
+        if (__EDITOR__) {
+            addEditorInfo(effectSymbolDraw.group, {
+                component: 'series',
+                subType: 'effectScatter',
+                element: 'effectScatter',
+                componentIndex: seriesModel.componentIndex
+            });
+        }
         this.group.add(effectSymbolDraw.group);
     }
 

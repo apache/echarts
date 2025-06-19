@@ -41,6 +41,7 @@ import Displayable from 'zrender/src/graphic/Displayable';
 import ZRText from 'zrender/src/graphic/Text';
 import { getFont } from '../../label/labelStyle';
 import tokens from '../../visual/tokens';
+import { addEditorInfo } from '../../util/editorInfo';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
@@ -213,6 +214,12 @@ class ToolboxView extends ComponentView {
                         height: itemSize
                     }
                 ) as Displayable;  // TODO handling image
+                if (__EDITOR__) {
+                    addEditorInfo(path, {
+                        component: 'toolbox',
+                        element: 'icon'
+                    });
+                }
                 path.setStyle(iconStyleModel.getItemStyle());
 
                 const pathEmphasisState = path.ensureState('emphasis');
@@ -236,6 +243,12 @@ class ToolboxView extends ComponentView {
                     },
                     ignore: true
                 });
+                if (__EDITOR__) {
+                    addEditorInfo(textContent, {
+                        component: 'toolbox',
+                        element: 'text'
+                    });
+                }
                 path.setTextContent(textContent);
 
                 graphic.setTooltipConfig({
@@ -296,7 +309,14 @@ class ToolboxView extends ComponentView {
         listComponentHelper.layout(group, toolboxModel, api);
         // Render background after group is layout
         // FIXME
-        group.add(listComponentHelper.makeBackground(group.getBoundingRect(), toolboxModel));
+        const background = listComponentHelper.makeBackground(group.getBoundingRect(), toolboxModel);
+        if (__EDITOR__) {
+            addEditorInfo(background, {
+                component: 'toolbox',
+                element: 'background'
+            });
+        }
+        group.add(background);
 
         // Adjust icon title positions to avoid them out of screen
         isVertical || group.eachChild(function (icon: IconPath) {

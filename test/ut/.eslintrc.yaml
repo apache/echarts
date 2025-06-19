@@ -44,9 +44,12 @@ globals:
     jQuery: false
     Promise: true
     __DEV__: true
+    __EDITOR__: true
     describe: true
     beforeEach: true
+    beforeAll: true
     afterEach: true
+    afterAll: true
     it: true
     expect: true
 extends: '../../.eslintrc-common.yaml'

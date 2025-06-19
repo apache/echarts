@@ -27,6 +27,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import VisualMapModel from './VisualMapModel';
 import { VisualOptionUnit, ColorString } from '../../util/types';
+import { addEditorInfo } from '../../util/editorInfo';
 
 type VisualState = VisualMapModel['stateList'][number];
 
@@ -74,7 +75,7 @@ class VisualMapView extends ComponentView {
         const padding = formatUtil.normalizeCssArray(visualMapModel.get('padding') || 0);
         const rect = group.getBoundingRect();
 
-        group.add(new Rect({
+        const background = new Rect({
             z2: -1, // Lay background rect on the lowest layer.
             silent: true,
             shape: {
@@ -88,7 +89,14 @@ class VisualMapView extends ComponentView {
                 stroke: visualMapModel.get('borderColor'),
                 lineWidth: visualMapModel.get('borderWidth')
             }
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(background, {
+                component: 'visualMap',
+                element: 'background'
+            });
+        }
+        group.add(background);
     }
 
     /**

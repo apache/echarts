@@ -37,6 +37,7 @@ import SeriesData from '../../data/SeriesData';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
 import { AnimationOption, ECElement } from '../../util/types';
 import tokens from '../../visual/tokens';
+import { addEditorInfo } from '../../util/editorInfo';
 
 type TreeSymbol = SymbolClz & {
     __edge: graphic.BezierCurve | TreePath
@@ -370,6 +371,11 @@ function updateNode(
         symbolEl = new SymbolClz(data, dataIndex, null, {
             symbolInnerColor,
             useNameLabel: true
+        }, {
+            component: 'series',
+            subType: 'tree',
+            element: 'symbol',
+            componentIndex: seriesModel.componentIndex
         }) as TreeSymbol;
         symbolEl.x = sourceOldLayout.x;
         symbolEl.y = sourceOldLayout.y;
@@ -386,6 +392,15 @@ function updateNode(
     symbolEl.__radialRawX = targetLayout.rawX;
     symbolEl.__radialRawY = targetLayout.rawY;
 
+    if (__EDITOR__) {
+        addEditorInfo(symbolEl, {
+            component: 'series',
+            subType: 'tree',
+            element: 'node',
+            componentIndex: seriesModel.componentIndex,
+            dataIndex
+        });
+    }
     group.add(symbolEl);
     data.setItemGraphicEl(dataIndex, symbolEl);
 
@@ -567,6 +582,14 @@ function drawEdge(
         setStatesStylesFromModel(edge, itemModel, 'lineStyle');
         setDefaultStateProxy(edge);
 
+        if (__EDITOR__) {
+            addEditorInfo(edge, {
+                component: 'series',
+                subType: 'tree',
+                element: 'edge',
+                componentIndex: seriesModel.componentIndex
+            });
+        }
         group.add(edge);
     }
 }

@@ -26,6 +26,7 @@ import Polar from '../../coord/polar/Polar';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
@@ -134,13 +135,22 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         // Simple optimization
         // Batching the lines if color are the same
         for (let i = 0; i < splitLines.length; i++) {
-            group.add(graphic.mergePath(splitLines[i], {
+            const splitLine = graphic.mergePath(splitLines[i], {
                 style: zrUtil.defaults({
                     stroke: lineColors[i % lineColors.length],
                     fill: null
                 }, lineStyleModel.getLineStyle()),
                 silent: true
-            }));
+            });
+            if (__EDITOR__) {
+                addEditorInfo(splitLine, {
+                    component: radiusAxisModel.mainType,
+                    componentIndex: radiusAxisModel.componentIndex,
+                    subType: radiusAxisModel.subType,
+                    element: 'splitLine'
+                });
+            }
+            group.add(splitLine);
         }
     },
 
@@ -165,13 +175,21 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
                 }));
             }
         }
-
-        group.add(graphic.mergePath(lines, {
+        const minorSplitLine = graphic.mergePath(lines, {
             style: zrUtil.defaults({
                 fill: null
             }, lineStyleModel.getLineStyle()),
             silent: true
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(minorSplitLine, {
+                component: radiusAxisModel.mainType,
+                componentIndex: radiusAxisModel.componentIndex,
+                subType: radiusAxisModel.subType,
+                element: 'minorSplitLine'
+            });
+        }
+        group.add(minorSplitLine);
     },
 
     splitArea(group, radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
@@ -209,12 +227,21 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         // Simple optimization
         // Batching the lines if color are the same
         for (let i = 0; i < splitAreas.length; i++) {
-            group.add(graphic.mergePath(splitAreas[i], {
+            const splitArea = graphic.mergePath(splitAreas[i], {
                 style: zrUtil.defaults({
                     fill: areaColors[i % areaColors.length]
                 }, areaStyleModel.getAreaStyle()),
                 silent: true
-            }));
+            });
+            if (__EDITOR__) {
+                addEditorInfo(splitArea, {
+                    component: radiusAxisModel.mainType,
+                    componentIndex: radiusAxisModel.componentIndex,
+                    subType: radiusAxisModel.subType,
+                    element: 'splitArea'
+                });
+            }
+            group.add(splitArea);
         }
     }
 };

@@ -30,6 +30,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import { ColorString } from '../../util/types';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { addEditorInfo } from '../../util/editorInfo';
 
 type LayerSeries = ReturnType<ThemeRiverSeriesModel['getLayerSeries']>;
 
@@ -113,6 +114,15 @@ class ThemeRiverView extends ChartView {
                     },
                     z2: 0
                 });
+                if (__EDITOR__) {
+                    addEditorInfo(polygon, {
+                        component: 'series',
+                        subType: 'themeRiver',
+                        element: 'polygon',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: idx
+                    });
+                }
                 layerGroup.add(polygon);
                 group.add(layerGroup);
 
@@ -148,6 +158,12 @@ class ThemeRiverView extends ChartView {
                     verticalAlign: 'middle'
                     // align: 'right'
                 }
+            }, {
+                component: 'series',
+                subType: 'themeRiver',
+                element: 'label',
+                componentIndex: seriesModel.componentIndex,
+                dataIndex: idx
             });
             polygon.setTextConfig({
                 position: null,

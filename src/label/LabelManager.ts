@@ -54,6 +54,7 @@ import Model from '../model/Model';
 import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
 import { labelInner, animateLabelValue } from './labelStyle';
 import { normalizeRadian } from 'zrender/src/contain/util';
+import { addEditorInfo } from '../util/editorInfo';
 
 interface LabelDesc {
     label: ZRText
@@ -499,6 +500,16 @@ class LabelManager {
 
             setLabelLineStyle(el, getLabelLineStatesModels(itemModel), defaultStyle);
 
+            if (__EDITOR__) {
+                const polyline = el.getTextGuideLine();
+                polyline && addEditorInfo(polyline, {
+                    component: seriesModel.mainType,
+                    subType: seriesModel.subType,
+                    element: 'labelLine',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex
+                });
+            }
             updateLabelLinePoints(el, labelLineModel);
         }
     }

@@ -20,11 +20,11 @@
 import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import {Group, Path} from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis } from '../../util/states';
-import SymbolClz from './Symbol';
+import SymbolClz, { SymbolOpts } from './Symbol';
 import SeriesData from '../../data/SeriesData';
-import type { ZRColor, ECElement } from '../../util/types';
+import type { ZRColor, ECElement, EditorInfo } from '../../util/types';
 import type Displayable from 'zrender/src/graphic/Displayable';
-import { SymbolDrawItemModelOption } from './SymbolDraw';
+import { SymbolDrawItemModelOption, SymbolDrawSeriesScope } from './SymbolDraw';
 
 interface RippleEffectCfg {
     showEffectOn?: 'emphasis' | 'render'
@@ -58,10 +58,15 @@ class EffectSymbol extends Group {
 
     private _effectCfg: RippleEffectCfg;
 
-    constructor(data: SeriesData, idx: number) {
+    constructor(
+        data: SeriesData, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts, editorInfo?: EditorInfo
+    ) {
         super();
 
-        const symbol = new SymbolClz(data, idx);
+        const symbol = new SymbolClz(data, idx, undefined, undefined, {
+            ...editorInfo,
+            element: 'effectSymbol'
+        });
         const rippleGroup = new Group();
         this.add(symbol);
         this.add(rippleGroup);

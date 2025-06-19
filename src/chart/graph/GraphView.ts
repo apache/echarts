@@ -46,6 +46,8 @@ import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
 import { clone, extend } from 'zrender/src/core/util';
 import ECLinePath from '../helper/LinePath';
 
+import { addEditorInfo } from '../../util/editorInfo';
+
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
 }
@@ -74,8 +76,16 @@ class GraphView extends ChartView {
     private _mainGroup: graphic.Group;
 
     init(ecModel: GlobalModel, api: ExtensionAPI) {
-        const symbolDraw = new SymbolDraw();
-        const lineDraw = new LineDraw();
+        const symbolDraw = new SymbolDraw(undefined, {
+            component: 'series',
+            subType: 'graph',
+            element: 'symbol'
+        });
+        const lineDraw = new LineDraw(undefined, {
+            component: 'series',
+            subType: 'graph',
+            element: 'line'
+        });
         const group = this.group;
         const mainGroup = new graphic.Group();
         this._controller = new RoamController(api.getZr());
@@ -103,6 +113,21 @@ class GraphView extends ChartView {
 
         const symbolDraw = this._symbolDraw;
         const lineDraw = this._lineDraw;
+        if (__EDITOR__) {
+            addEditorInfo(symbolDraw.group, {
+                component: 'series',
+                subType: 'graph',
+                element: 'node',
+                componentIndex: seriesModel.componentIndex
+            });
+            addEditorInfo(lineDraw.group, {
+                component: 'series',
+                subType: 'graph',
+                element: 'line',
+                componentIndex: seriesModel.componentIndex
+            });
+        }
+
         if (isViewCoordSys(coordSys)) {
             const groupNewProp = {
                 x: coordSys.x, y: coordSys.y,
@@ -119,11 +144,11 @@ class GraphView extends ChartView {
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         const data = seriesModel.getData();
-        symbolDraw.updateData(data as ListForSymbolDraw);
+        symbolDraw.updateData(data as ListForSymbolDraw, undefined, seriesModel.componentIndex);
 
         const edgeData = seriesModel.getEdgeData();
         // TODO: TYPE
-        lineDraw.updateData(edgeData as SeriesData);
+        lineDraw.updateData(edgeData as SeriesData, seriesModel.componentIndex);
 
         this._updateNodeAndLinkScale();
 

@@ -28,6 +28,7 @@ import { ColorString } from '../../util/types';
 import { setLabelLineStyle, getLabelLineStatesModels } from '../../label/labelGuideHelper';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { saveOldStyle } from '../../animation/basicTransition';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const opacityAccessPath = ['itemStyle', 'opacity'] as const;
 
@@ -35,10 +36,10 @@ const opacityAccessPath = ['itemStyle', 'opacity'] as const;
  * Piece of pie including Sector, Label, LabelLine
  */
 class FunnelPiece extends graphic.Polygon {
-
-    constructor(data: SeriesData, idx: number) {
+    private _componentIndex: number;
+    constructor(data: SeriesData, idx: number, componentIndex?: number) {
         super();
-
+        this._componentIndex = componentIndex;
         const polygon = this;
         const labelLine = new graphic.Polyline();
         const text = new graphic.Text();
@@ -105,6 +106,22 @@ class FunnelPiece extends graphic.Polygon {
         const labelLine = this.getTextGuideLine();
         const labelText = polygon.getTextContent();
 
+        if (__EDITOR__) {
+            addEditorInfo(labelLine, {
+                component: 'series',
+                subType: 'funnel',
+                element: 'labelLine',
+                componentIndex: this._componentIndex,
+                dataIndex: idx
+            });
+            addEditorInfo(labelText, {
+                component: 'series',
+                subType: 'funnel',
+                element: 'label',
+                componentIndex: this._componentIndex,
+                dataIndex: idx
+            });
+        }
         const seriesModel = data.hostModel;
         const itemModel = data.getItemModel<FunnelDataItemOption>(idx);
         const layout = data.getItemLayout(idx);
@@ -125,7 +142,14 @@ class FunnelPiece extends graphic.Polygon {
             { normal: {
                 align: labelLayout.textAlign,
                 verticalAlign: labelLayout.verticalAlign
-            } }
+            }},
+            {
+                component: 'series',
+                subType: 'funnel',
+                element: 'label',
+                componentIndex: this._componentIndex,
+                dataIndex: idx
+            }
         );
 
         const labelModel = itemModel.getModel('label');
@@ -190,10 +214,19 @@ class FunnelView extends ChartView {
 
         data.diff(oldData)
             .add(function (idx) {
-                const funnelPiece = new FunnelPiece(data, idx);
+                const funnelPiece = new FunnelPiece(data, idx, seriesModel.componentIndex);
 
                 data.setItemGraphicEl(idx, funnelPiece);
 
+                if (__EDITOR__) {
+                    addEditorInfo(funnelPiece, {
+                        component: 'series',
+                        subType: 'funnel',
+                        element: 'piece',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: idx
+                    });
+                }
                 group.add(funnelPiece);
             })
             .update(function (newIdx, oldIdx) {
@@ -201,6 +234,15 @@ class FunnelView extends ChartView {
 
                 piece.updateData(data, newIdx);
 
+                if (__EDITOR__) {
+                    addEditorInfo(piece, {
+                        component: 'series',
+                        subType: 'funnel',
+                        element: 'piece',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex: newIdx
+                    });
+                }
                 group.add(piece);
                 data.setItemGraphicEl(newIdx, piece);
             })

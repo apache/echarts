@@ -40,6 +40,7 @@ import ZRImage from 'zrender/src/graphic/Image';
 import { ECData, getECData } from '../../util/innerStore';
 import { createTextStyle } from '../../label/labelStyle';
 import { findEventDispatcher } from '../../util/event';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const linearMap = numberUtil.linearMap;
 const each = zrUtil.each;
@@ -186,8 +187,7 @@ class ContinuousView extends VisualMapView {
         );
         const orient = this._orient;
         const textStyleModel = this.visualMapModel.textStyleModel;
-
-        this.group.add(new graphic.Text({
+        const textEl = new graphic.Text({
             style: createTextStyle(textStyleModel, {
                 x: position[0],
                 y: position[1],
@@ -197,7 +197,14 @@ class ContinuousView extends VisualMapView {
                     || (orient === 'horizontal' ? align as TextAlign : 'center'),
                 text
             })
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(textEl, {
+                component: 'visualMap',
+                element: 'endText'
+            });
+        }
+        this.group.add(textEl);
     }
 
     private _renderBar(targetGroup: graphic.Group) {
@@ -213,16 +220,28 @@ class ContinuousView extends VisualMapView {
         mainGroup.add(gradientBarGroup);
 
         // Bar
-        gradientBarGroup.add(shapes.outOfRange = createPolygon());
-        gradientBarGroup.add(shapes.inRange = createPolygon(
+        shapes.outOfRange = createPolygon();
+        shapes.inRange = createPolygon(
             null,
             useHandle ? getCursor(this._orient) : null,
             zrUtil.bind(this._dragHandle, this, 'all', false),
             zrUtil.bind(this._dragHandle, this, 'all', true)
-        ));
+        );
+        if (__EDITOR__) {
+            addEditorInfo(shapes.outOfRange, {
+                component: 'visualMap',
+                element: 'outOfRange'
+            });
+            addEditorInfo(shapes.inRange, {
+                component: 'visualMap',
+                element: 'inRange'
+            });
+        }
+        gradientBarGroup.add(shapes.outOfRange);
+        gradientBarGroup.add(shapes.inRange);
 
         // A border radius clip.
-        gradientBarGroup.setClipPath(new graphic.Rect({
+        const clipPath = new graphic.Rect({
             shape: {
                 x: 0,
                 y: 0,
@@ -230,7 +249,14 @@ class ContinuousView extends VisualMapView {
                 height: itemSize[1],
                 r: 3
             }
-        }));
+        });
+        if (__EDITOR__) {
+            addEditorInfo(clipPath, {
+                component: 'visualMap',
+                element: 'clipPath'
+            });
+        }
+        gradientBarGroup.setClipPath(clipPath);
 
         const textRect = visualMapModel.textStyleModel.getTextRect('国');
         const textSize = mathMax(textRect.width, textRect.height);
@@ -266,6 +292,12 @@ class ContinuousView extends VisualMapView {
             -handleSize / 2, -handleSize / 2, handleSize, handleSize,
             null, true
         );
+        if (__EDITOR__) {
+            addEditorInfo(handleThumb, {
+                component: 'visualMap',
+                element: 'handleThumb'
+            });
+        }
         const cursor = getCursor(this._orient);
         handleThumb.attr({
             cursor: cursor,
@@ -310,6 +342,12 @@ class ContinuousView extends VisualMapView {
                 text: ''
             })
         });
+        if (__EDITOR__) {
+            addEditorInfo(handleLabel, {
+                component: 'visualMap',
+                element: 'handleText'
+            });
+        }
         handleLabel.ensureState('blur').style = {
             opacity: 0.1
         };
@@ -338,6 +376,12 @@ class ContinuousView extends VisualMapView {
             -scale / 2, -scale / 2, scale, scale,
             null, true
         );
+        if (__EDITOR__) {
+            addEditorInfo(indicator, {
+                component: 'visualMap',
+                element: 'indicatorIcon'
+            });
+        }
         indicator.attr({
             cursor: 'move',
             invisible: true,
@@ -370,6 +414,12 @@ class ContinuousView extends VisualMapView {
                 text: ''
             })
         });
+        if (__EDITOR__) {
+            addEditorInfo(indicatorLabel, {
+                component: 'visualMap',
+                element: 'indicatorText'
+            });
+        }
         this.group.add(indicatorLabel);
 
         const indicatorLabelPoint = [

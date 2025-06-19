@@ -35,6 +35,9 @@ import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import type Element from 'zrender/src/Element';
 
+import { addEditorInfo } from '../../util/editorInfo';
+
+
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
     dimensions: ['lng', 'lat']
@@ -316,6 +319,13 @@ class HeatmapView extends ChartView {
                     labelDataIndex: idx,
                     defaultOpacity: style.opacity,
                     defaultText: defaultText
+                }, undefined,
+                {
+                    component: 'series',
+                    subType: 'heatmap',
+                    element: 'label',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex: idx
                 }
             );
 
@@ -332,6 +342,15 @@ class HeatmapView extends ChartView {
                 rect.states.emphasis.hoverLayer = true;
             }
 
+            if (__EDITOR__) {
+                addEditorInfo(rect, {
+                    component: 'series',
+                    subType: 'heatmap',
+                    element: 'rect',
+                    componentIndex: seriesModel.componentIndex,
+                    dataIndex: idx
+                });
+            }
             group.add(rect);
             data.setItemGraphicEl(idx, rect);
 
@@ -414,6 +433,14 @@ class HeatmapView extends ChartView {
             },
             silent: true
         });
+        if (__EDITOR__) {
+            addEditorInfo(img, {
+                component: 'series',
+                subType: 'heatmap',
+                element: 'img',
+                componentIndex: seriesModel.componentIndex
+            });
+        }
         this.group.add(img);
     }
 }

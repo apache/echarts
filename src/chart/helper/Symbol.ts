@@ -23,7 +23,7 @@ import {getECData} from '../../util/innerStore';
 import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis } from '../../util/states';
 import {getDefaultLabel} from './labelHelper';
 import SeriesData from '../../data/SeriesData';
-import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin } from '../../util/types';
+import { ColorString, BlurScope, AnimationOption, ZRColor, AnimationOptionMixin, EditorInfo } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import { PathProps } from 'zrender/src/graphic/Path';
 import { SymbolDrawSeriesScope, SymbolDrawItemModelOption } from './SymbolDraw';
@@ -35,7 +35,7 @@ import Model from '../../model/Model';
 
 type ECSymbol = ReturnType<typeof createSymbol>;
 
-interface SymbolOpts {
+export interface SymbolOpts {
     disableAnimation?: boolean
 
     useNameLabel?: boolean
@@ -54,8 +54,17 @@ class Symbol extends graphic.Group {
 
     private _z2: number;
 
-    constructor(data: SeriesData, idx: number, seriesScope?: SymbolDrawSeriesScope, opts?: SymbolOpts) {
+    private editorInfo?: EditorInfo;
+
+    constructor(
+        data: SeriesData,
+        idx: number,
+        seriesScope?: SymbolDrawSeriesScope,
+        opts?: SymbolOpts,
+        editorInfo?: EditorInfo
+    ) {
         super();
+        this.editorInfo = editorInfo;
         this.updateData(data, idx, seriesScope, opts);
     }
 
@@ -321,6 +330,12 @@ class Symbol extends graphic.Group {
                 defaultText: getLabelDefaultText,
                 inheritColor: visualColor as ColorString,
                 defaultOpacity: symbolStyle.opacity
+            },
+            undefined,
+            {
+                ...this.editorInfo,
+                dataIndex: idx,
+                element: 'label'
             }
         );
 

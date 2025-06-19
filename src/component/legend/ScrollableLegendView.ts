@@ -32,6 +32,7 @@ import ScrollableLegendModel, {ScrollableLegendOption} from './ScrollableLegendM
 import Displayable from 'zrender/src/graphic/Displayable';
 import Element from 'zrender/src/Element';
 import { ZRRectLike } from '../../util/types';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const Group = graphic.Group;
 
@@ -132,7 +133,7 @@ class ScrollableLegendView extends LegendView {
         createPageButton('pagePrev', 0);
 
         const pageTextStyleModel = legendModel.getModel('pageTextStyle');
-        controllerGroup.add(new graphic.Text({
+        const legendPageText = new graphic.Text({
             name: 'pageText',
             style: {
                 // Placeholder to calculate a proper layout.
@@ -143,8 +144,14 @@ class ScrollableLegendView extends LegendView {
                 align: 'center'
             },
             silent: true
-        }));
-
+        });
+        if (__EDITOR__) {
+            addEditorInfo(legendPageText, {
+                component: 'legend',
+                element: 'pageText'
+            });
+        }
+        controllerGroup.add(legendPageText);
         createPageButton('pageNext', 1);
 
         function createPageButton(name: string, iconIdx: number) {
@@ -166,6 +173,12 @@ class ScrollableLegendView extends LegendView {
                 }
             );
             icon.name = name;
+            if (__EDITOR__) {
+                addEditorInfo(icon, {
+                    component: 'legend',
+                    element: 'pageButton'
+                });
+            }
             controllerGroup.add(icon);
         }
     }

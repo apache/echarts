@@ -69,6 +69,7 @@ import {createSectorCalculateTextPosition, SectorTextPosition, setSectorTextRota
 import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
@@ -244,6 +245,14 @@ class BarView extends ChartView {
                 return null;
             }
             const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
+            if (__EDITOR__) {
+                addEditorInfo(bgEl, {
+                    component: 'series',
+                    subType: 'bar',
+                    element: 'background',
+                    componentIndex: seriesModel.componentIndex
+                });
+            }
             bgEl.useStyle(backgroundModel.getItemStyle());
             // Only cartesian2d support borderRadius.
             if (coord.type === 'cartesian2d') {
@@ -327,6 +336,15 @@ class BarView extends ChartView {
 
                 data.setItemGraphicEl(dataIndex, el);
 
+                if (__EDITOR__) {
+                    addEditorInfo(el, {
+                        component: 'series',
+                        subType: 'bar',
+                        element: 'bar',
+                        componentIndex: seriesModel.componentIndex,
+                        dataIndex
+                    });
+                }
                 group.add(el);
                 el.ignore = isClipped;
             })
@@ -1055,6 +1073,14 @@ function updateStyle(
             inheritColor: style.fill as ColorString,
             defaultOpacity: style.opacity,
             defaultOutsidePosition: labelPositionOutside as BuiltinTextPosition
+        },
+        undefined,
+        {
+            component: 'series',
+            subType: 'bar',
+            element: 'label',
+            componentIndex: seriesModel.componentIndex,
+            dataIndex
         }
     );
 

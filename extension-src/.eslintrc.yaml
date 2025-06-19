@@ -44,4 +44,5 @@ globals:
     jQuery: false
     Promise: false
     __DEV__: true
+    __EDITOR__: true
 extends: '../.eslintrc-common.yaml'
