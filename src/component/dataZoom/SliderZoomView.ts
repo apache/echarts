@@ -389,7 +389,7 @@ class SliderZoomView extends DataZoomView {
 
             const areaPoints = [[size[0], 0], [0, 0]];
             const linePoints: number[][] = [];
-            const step = thisShadowExtent[1] / (data.count() - 1);
+            const step = thisShadowExtent[1] / (Math.max(1, data.count() - 1));
             const normalizationConstant = size[0] / (thisDataExtent[1] - thisDataExtent[0]);
             const isTimeAxis = info.thisAxis.type === 'time';
             let thisCoord = -step;
