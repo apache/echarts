@@ -140,7 +140,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
 
     contain(val: OrdinalNumber): boolean {
         return scaleHelper.contain(val, this._extent)
-            && this._ordinalMeta.categories[val] != null;
+            && val >= 0 && val < this._ordinalMeta.categories.length;
     }
 
     /**

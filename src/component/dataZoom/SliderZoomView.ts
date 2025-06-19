@@ -517,11 +517,12 @@ class SliderZoomView extends DataZoomView {
                 }
 
                 otherDim = seriesModel.getData().mapDimension(otherDim);
+                const thisDim = seriesModel.getData().mapDimension(axisDim);
 
                 result = {
                     thisAxis: thisAxis,
                     series: seriesModel,
-                    thisDim: axisDim,
+                    thisDim: thisDim,
                     otherDim: otherDim,
                     otherAxisInverse: otherAxisInverse
                 };
