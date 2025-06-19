@@ -221,7 +221,8 @@ class Axis {
     }
 
     getViewLabels(): ReturnType<typeof createAxisLabels>['labels'] {
-        return createAxisLabels(this).labels;
+        const labels = createAxisLabels(this).labels;
+        return labels;
     }
 
     getLabelModel(): Model<AxisBaseOption['axisLabel']> {
