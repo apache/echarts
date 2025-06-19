@@ -154,7 +154,7 @@ export function dataTransform(
     if (item.coord == null || !isArray(dims)) {
         item.coord = [];
         const baseAxis = seriesModel.getBaseAxis();
-        if (baseAxis) {
+        if (baseAxis && item.type && markerTypeCalculator[item.type]) {
             const otherAxis = coordSys.getOtherAxis(baseAxis);
             if (otherAxis) {
                 item.value = numCalculate(data, data.mapDimension(otherAxis.dim), item.type);
