@@ -292,8 +292,14 @@ class SliderZoomView extends DataZoomView {
 
         // Position barGroup
         const rect = thisGroup.getBoundingRect([sliderGroup]);
-        thisGroup.x = location.x - rect.x;
-        thisGroup.y = location.y - rect.y;
+        // there is only scaleX on sliderGroup.
+        thisGroup.scaleX = this._size[0] / rect.width;
+        // scaleY on sliderGroup is a bad idea.
+        // Because of the moveHandleSize maybe greater than zoom bar height.
+        // clip is better than scale hard.
+        const scaleY = this._size[1] / rect.height;
+        thisGroup.x = location.x - rect.x * thisGroup.scaleX;
+        thisGroup.y = location.y - rect.y * scaleY;
         thisGroup.markRedraw();
     }
 
