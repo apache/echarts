@@ -376,7 +376,7 @@ class SliderZoomView extends DataZoomView {
             data !== this._shadowData || otherDim !== this._shadowDim
             || size[0] !== oldSize[0] || size[1] !== oldSize[1]
         ) {
-            const thisDataExtent = data.getDataExtent(info.thisDim);
+            const thisScaleExtent = info.thisAxis.scale.getExtent();
             let otherDataExtent = data.getDataExtent(otherDim);
             // Nice extent.
             const otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
@@ -389,8 +389,8 @@ class SliderZoomView extends DataZoomView {
 
             const areaPoints = [[size[0], 0], [0, 0]];
             const linePoints: number[][] = [];
-            const step = thisShadowExtent[1] / (data.count() - 1);
-            const normalizationConstant = size[0] / (thisDataExtent[1] - thisDataExtent[0]);
+            const step = thisShadowExtent[1] / (Math.max(1, data.count() - 1));
+            const normalizationConstant = size[0] / (thisScaleExtent[1] - thisScaleExtent[0]);
             const isTimeAxis = info.thisAxis.type === 'time';
             let thisCoord = -step;
 
@@ -407,7 +407,7 @@ class SliderZoomView extends DataZoomView {
                 }
 
                 thisCoord = isTimeAxis
-                    ? (+thisValue - thisDataExtent[0]) * normalizationConstant
+                    ? (+thisValue - thisScaleExtent[0]) * normalizationConstant
                     : thisCoord + step;
 
                 // FIXME
