@@ -74,6 +74,8 @@ class GraphView extends ChartView {
 
     private _mainGroup: graphic.Group;
 
+    private _active: boolean;
+
     init(ecModel: GlobalModel, api: ExtensionAPI) {
         const symbolDraw = new SymbolDraw();
         const lineDraw = new LineDraw();
@@ -102,6 +104,7 @@ class GraphView extends ChartView {
 
         this._model = seriesModel;
         this._api = api;
+        this._active = true;
 
         const thumbnailInfo = this._getThumbnailInfo();
         if (thumbnailInfo) {
@@ -318,6 +321,9 @@ class GraphView extends ChartView {
         api: ExtensionAPI,
         params: Pick<RoamPayload, 'dx' | 'dy'>
     ): void {
+        if (!this._active) {
+            return;
+        }
         updateViewOnPan(this._controllerHost, params.dx, params.dy);
         this._updateThumbnailWindow();
     }
@@ -332,6 +338,9 @@ class GraphView extends ChartView {
         api: ExtensionAPI,
         params: Pick<RoamPayload, 'zoom' | 'originX' | 'originY'>
     ) {
+        if (!this._active) {
+            return;
+        }
         updateViewOnZoom(this._controllerHost, params.zoom, params.originX, params.originY);
         this._updateNodeAndLinkScale();
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
@@ -353,6 +362,10 @@ class GraphView extends ChartView {
     }
 
     updateLayout(seriesModel: GraphSeriesModel) {
+        if (!this._active) {
+            return;
+        }
+
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
 
         this._symbolDraw.updateLayout();
@@ -360,6 +373,7 @@ class GraphView extends ChartView {
     }
 
     remove() {
+        this._active = false;
         clearTimeout(this._layoutTimeout);
         this._layouting = false;
         this._layoutTimeout = null;
