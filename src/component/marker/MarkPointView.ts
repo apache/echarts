@@ -43,7 +43,7 @@ function updateMarkerLayout(
     const coordSys = seriesModel.coordinateSystem;
     const apiWidth = api.getWidth();
     const apiHeight = api.getHeight();
-    const coordRect = coordSys.getArea && coordSys.getArea();
+    const coordRect = coordSys && coordSys.getArea && coordSys.getArea();
     mpData.each(function (idx: number) {
         const itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
         const isRelativeToCoordinate = itemModel.get('relativeTo') === 'coordinate';
