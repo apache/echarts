@@ -84,6 +84,7 @@ import {
     VisualMapComponent,
     VisualMapContinuousComponent,
     VisualMapPiecewiseComponent,
+    ThumbnailComponent,
     AriaComponent,
     DatasetComponent,
     TransformComponent
@@ -331,6 +332,8 @@ use(VisualMapContinuousComponent);
 //     visualMap: {type: 'piecewise'}
 // });
 use(VisualMapPiecewiseComponent);
+
+use(ThumbnailComponent);
 
 // `aria` component providing aria, for example:
 // chart.setOption({

@@ -23,10 +23,12 @@ import * as interactionMutex from './interactionMutex';
 import { ZRenderType } from 'zrender/src/zrender';
 import { ZRElementEvent, RoamOptionMixin, NullUndefined } from '../../util/types';
 import { Bind3, isString, bind, defaults, extend, retrieve2 } from 'zrender/src/core/util';
-import { makeInner, retrieveZInfo } from '../../util/model';
+import { makeInner } from '../../util/model';
+import { retrieveZInfo } from '../../util/graphic';
 import type Component from '../../model/Component';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { onIrrelevantElement } from './cursorHelper';
+import Displayable from 'zrender/src/graphic/Displayable';
 
 
 export interface RoamOption {
@@ -97,6 +99,19 @@ export type RoamEventDefinition = {
 
 type RoamPointerChecker = (e: ZRElementEvent, x: number, y: number) => boolean;
 
+/**
+ * An manager of zoom and pan(darg) hehavior.
+ * But it is not responsible for updating the view, since view updates vary and can
+ * not be handled in a uniform way.
+ *
+ * Note: regarding view updates:
+ *  - Transformabe views typically use `coord/View` (e.g., geo and series.graph roaming).
+ *    Some commonly used view update logic has been organized into `roamHelper.ts`.
+ *  - Non-transformable views handle updates themselves, possibly involving re-layout,
+ *    (e.g., treemap).
+ *  - Some scenarios do not require transformation (e.g., dataZoom roaming for cartesian,
+ *    brush component).
+ */
 class RoamController extends Eventful<RoamEventDefinition> {
 
     private _zr: ZRenderType;
@@ -133,9 +148,11 @@ class RoamController extends Eventful<RoamEventDefinition> {
         const pinchHandler = bind(this._pinchHandler, this);
 
         /**
-         * Notice: only enable needed types. For example, if 'zoom'
-         * is not needed, 'zoom' should not be enabled, otherwise
-         * default mousewheel behaviour (scroll page) will be disabled.
+         * Notice:
+         *  - only enable needed types. For example, if 'zoom'
+         *    is not needed, 'zoom' should not be enabled, otherwise
+         *    default mousewheel behaviour (scroll page) will be disabled.
+         *  - This method is idempotent.
          */
         this.enable = function (controlType, rawOpt) {
             const zInfo = rawOpt.zInfo;
@@ -224,6 +241,29 @@ class RoamController extends Eventful<RoamEventDefinition> {
         return inArea;
     }
 
+    private _decideCursorStyle(
+        e: ZRElementEvent,
+        x: number,
+        y: number,
+        forReverse: boolean,
+    ): string | NullUndefined {
+        // If this cursor style decision is not strictly consistent with zrender,
+        // it's fine - zr will set the cursor on the next mousemove.
+
+        // This `grab` cursor style should take the lowest precedence. If the hovring element already
+        // have a cursor, zrender will set it to be non-'default' before entering this handler.
+        // (note, e.target is never silent, e.topTarget can be silent be irrelevant.)
+        const target = e.target;
+        if (!target && this._checkPointer(e, x, y)) {
+            // To indicate users that this area is draggable, otherwise users probably cannot kwown
+            // that when hovering out of the shape but still inside the bounding rect.
+            return 'grab';
+        }
+        if (forReverse) {
+            return target && (target as Displayable).cursor || 'default';
+        }
+    }
+
     dispose() {
         this.disable();
     }
@@ -271,17 +311,9 @@ class RoamController extends Eventful<RoamEventDefinition> {
         if (!this._dragging
             || !isAvailableBehavior('moveOnMouseMove', e, this._opt)
         ) {
-            if (this._checkPointer(e, x, y)
-                // This `grab` cursor style should take the lowest precedence. If the hovring element already
-                // have a cursor, zrender will set it to be non-'default' before entering this handler.
-                // && e.event && e.event.zrCursorStyle === 'default'
-                && (!e.topTarget || e.topTarget.silent)
-            ) {
-                // To indicate users that this area is draggable, otherwise users probably cannot kwown
-                // that when hovering out of the shape but still inside the bounding rect.
-                zr.setCursorStyle('grab');
-                // Do not need to set the cursor back, because in the current impl, zr is responsible
-                // for setting the cursor on each mousemove.
+            const cursorStyle = this._decideCursorStyle(e, x, y, false);
+            if (cursorStyle) {
+                zr.setCursorStyle(cursorStyle);
             }
             return;
         }
@@ -311,8 +343,14 @@ class RoamController extends Eventful<RoamEventDefinition> {
         if (eventConsumed(e)) {
             return;
         }
+        const zr = this._zr;
         if (!eventTool.isMiddleOrRightButtonOnMouseUpDown(e)) {
             this._dragging = false;
+
+            const cursorStyle = this._decideCursorStyle(e, e.offsetX, e.offsetY, true);
+            if (cursorStyle) {
+                zr.setCursorStyle(cursorStyle);
+            }
         }
     }
 

@@ -42,6 +42,7 @@ import type {
 import type {AxisPointerOption as AxisPointerComponentOption} from '../component/axisPointer/AxisPointerModel';
 import type {BrushOption as BrushComponentOption} from '../component/brush/BrushModel';
 import type {TitleOption as TitleComponentOption} from '../component/title/install';
+import type {ThumbnailOption as ThumbnailComponentOption} from '../component/thumbnail/ThumbnailModel';
 import type {TimelineOption as TimelineComponentOption} from '../component/timeline/TimelineModel';
 import type {SliderTimelineOption as TimelineSliderComponentOption} from '../component/timeline/SliderTimelineModel';
 
@@ -167,6 +168,7 @@ export {
     MarkPointComponentOption,
     MarkAreaComponentOption,
     ToolboxComponentOption,
+    ThumbnailComponentOption,
     GraphicComponentOption,
     AriaComponentOption,
     DatasetComponentOption
@@ -273,6 +275,7 @@ export interface EChartsOption extends ECBasicOption {
     legend?: LegendComponentOption | (LegendComponentOption)[];
     dataZoom?: DataZoomComponentOption | (DataZoomComponentOption)[];
     visualMap?: VisualMapComponentOption | (VisualMapComponentOption)[];
+    thumbnail?: ThumbnailComponentOption | (ThumbnailComponentOption)[];
     graphic?: GraphicComponentOption | GraphicComponentOption[];
 
     // TODO Generally we support specify a single object on series.

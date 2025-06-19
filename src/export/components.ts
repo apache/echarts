@@ -58,6 +58,8 @@ export {install as VisualMapContinuousComponent} from '../component/visualMap/in
 
 export {install as VisualMapPiecewiseComponent} from '../component/visualMap/installVisualMapPiecewise';
 
+export {install as ThumbnailComponent} from '../component/thumbnail/install';
+
 export {install as AriaComponent} from '../component/aria/install';
 
 export {install as TransformComponent} from '../component/transform/install';
@@ -99,6 +101,8 @@ export {
     DataZoomComponentOption,
 
     VisualMapComponentOption,
+
+    ThumbnailComponentOption,
 
     AriaComponentOption,
 

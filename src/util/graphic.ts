@@ -53,7 +53,8 @@ import {
     ZRStyleProps,
     CommonTooltipOption,
     ComponentItemTooltipLabelFormatterParams,
-    NullUndefined
+    NullUndefined,
+    ComponentOption
 } from './types';
 import {
     extend,
@@ -78,6 +79,7 @@ import {
     removeElementWithFadeOut,
     isElementRemoved
 } from '../animation/basicTransition';
+import { ExtendedElement } from '../core/ExtendedElement';
 
 /**
  * @deprecated export for compatitable reason
@@ -721,6 +723,129 @@ export function traverseElements(els: Element | Element[] | undefined | null, cb
         }
     }
 }
+
+export function retrieveZInfo(
+    model: Model<Partial<Pick<ComponentOption, 'z' | 'zlevel'>>>,
+): {
+    z: ComponentOption['z']
+    zlevel: ComponentOption['zlevel']
+} {
+    return {
+        z: model.get('z') || 0,
+        zlevel: model.get('zlevel') || 0,
+    };
+}
+
+/**
+ * Assume all of the elements has the same `z` and `zlevel`.
+ */
+export function calcZ2Range(el: Element): {
+    min: number
+    max: number
+} {
+    let max = -Infinity;
+    let min = Infinity;
+    traverseElement(el, el => {
+        visitEl(el);
+        visitEl(el.getTextContent());
+        visitEl(el.getTextGuideLine());
+    });
+    function visitEl(el: Element): void {
+        if (!el || el.isGroup) {
+            return;
+        }
+        const currentStates = el.currentStates;
+        if (currentStates.length) {
+            for (let idx = 0; idx < currentStates.length; idx++) {
+                calcZ2(el.states[currentStates[idx]] as Displayable);
+            }
+        }
+        calcZ2(el as Displayable);
+    }
+    function calcZ2(entity: Pick<Displayable, 'z2'>): void {
+        if (entity) {
+            const z2 = entity.z2;
+            // Consider z2 may be NullUndefined
+            if (z2 > max) {
+                max = z2;
+            }
+            if (z2 < min) {
+                min = z2;
+            }
+        }
+    }
+    if (min > max) {
+        min = max = 0;
+    }
+    return {min, max};
+}
+
+export function traverseUpdateZ(
+    el: Element,
+    z: number,
+    zlevel: number,
+): void {
+    doUpdateZ(el, z, zlevel);
+}
+
+function doUpdateZ(
+    el: Element,
+    z: number,
+    zlevel: number
+): number {
+    let maxZ2 = -Infinity;
+
+    // `ignoreModelZ` is used to intentionally lift elements to cover other elements,
+    // where maxZ2 (for label.z2) should also not be counted for its parents.
+    if ((el as ExtendedElement).ignoreModelZ) {
+        return maxZ2;
+    }
+
+    // Group may also have textContent
+    const label = el.getTextContent();
+    const labelLine = el.getTextGuideLine();
+    const isGroup = el.isGroup;
+
+    if (isGroup) {
+        // set z & zlevel of children elements of Group
+        const children = (el as Group).childrenRef();
+        for (let i = 0; i < children.length; i++) {
+            maxZ2 = Math.max(
+                doUpdateZ(
+                    children[i],
+                    z,
+                    zlevel,
+                ),
+                maxZ2
+            );
+        }
+    }
+    else {
+        // not Group
+        (el as Displayable).z = z;
+        (el as Displayable).zlevel = zlevel;
+
+        maxZ2 = Math.max((el as Displayable).z2 || 0, maxZ2);
+    }
+
+    // always set z and zlevel if label/labelLine exists
+    if (label) {
+        label.z = z;
+        label.zlevel = zlevel;
+        // lift z2 of text content
+        // TODO if el.emphasis.z2 is spcefied, what about textContent.
+        isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
+    }
+    if (labelLine) {
+        const textGuideLineConfig = el.textGuideLineConfig;
+        labelLine.z = z;
+        labelLine.zlevel = zlevel;
+        isFinite(maxZ2)
+            && (labelLine.z2 = maxZ2 + (textGuideLineConfig && textGuideLineConfig.showAbove ? 1 : -1));
+    }
+    return maxZ2;
+}
+
 
 // Register built-in shapes. These shapes might be overwritten
 // by users, although we do not recommend that.

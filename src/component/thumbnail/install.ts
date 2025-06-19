@@ -17,11 +17,11 @@
 * under the License.
 */
 
-/**
- * DataZoom component entry
- */
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import { ThumbnailModel } from './ThumbnailModel';
+import { ThumbnailView } from './ThumbnailView';
 
-import { use } from '../extension';
-import { install } from './timeline/install';
-
-use(install);
+export function install(registers: EChartsExtensionInstallRegisters) {
+    registers.registerComponentModel(ThumbnailModel);
+    registers.registerComponentView(ThumbnailView);
+}

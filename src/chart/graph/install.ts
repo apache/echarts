@@ -34,11 +34,6 @@ import GlobalModel from '../../model/Global';
 import { noop } from 'zrender/src/core/util';
 import type ExtensionAPI from '../../core/ExtensionAPI';
 
-const actionInfo = {
-    type: 'graphRoam',
-    event: 'graphRoam',
-    update: 'none'
-};
 
 export function install(registers: EChartsExtensionInstallRegisters) {
 
@@ -73,12 +68,26 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     }, noop);
 
     // Register roam action.
-    registers.registerAction(actionInfo, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
+    registers.registerAction({
+        type: 'graphRoam',
+        event: 'graphRoam',
+        update: 'none'
+    }, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
         ecModel.eachComponent({
             mainType: 'series', query: payload
         }, function (seriesModel: GraphSeriesModel) {
-            const coordSys = seriesModel.coordinateSystem as View;
 
+            const graphView = api.getViewOfSeriesModel(seriesModel) as GraphView;
+            if (graphView) {
+                if (payload.dx != null && payload.dy != null) {
+                    graphView.updateViewOnPan(seriesModel, api, payload);
+                }
+                if (payload.zoom != null && payload.originX != null && payload.originY != null) {
+                    graphView.updateViewOnZoom(seriesModel, api, payload);
+                }
+            }
+
+            const coordSys = seriesModel.coordinateSystem as View;
             const res = updateCenterAndZoomInAction(coordSys, payload, seriesModel.get('scaleLimit'));
 
             seriesModel.setCenter

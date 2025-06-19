@@ -55,7 +55,6 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
-import Thumbnail, { ThumbnailOption } from './Thumbnail';
 import tokens from '../../visual/tokens';
 
 
@@ -232,8 +231,6 @@ export interface GraphSeriesOption
      * auto curveness for multiple edge, invalid when `lineStyle.curveness` is set
      */
     autoCurveness?: boolean | number | number[]
-
-    thumbnail?: ThumbnailOption
 }
 
 class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
@@ -516,8 +513,6 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
                 borderColor: tokens.color.primary
             }
         },
-
-        thumbnail: Thumbnail.defaultOption
     };
 }
 

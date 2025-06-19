@@ -1114,18 +1114,6 @@ export function interpolateRawValues(
     }
 }
 
-export function retrieveZInfo(
-    model: Model<Partial<Pick<ComponentOption, 'z' | 'zlevel'>>>,
-): {
-    z: ComponentOption['z']
-    zlevel: ComponentOption['zlevel']
-} {
-    return {
-        z: model.get('z') || 0,
-        zlevel: model.get('zlevel') || 0,
-    };
-}
-
 /**
  * Use an iterator to avoid exposing the internal list or duplicating it
  * for the outside traveller, and no extra heap allocation.

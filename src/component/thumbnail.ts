@@ -17,11 +17,9 @@
 * under the License.
 */
 
-/**
- * DataZoom component entry
- */
+
 
 import { use } from '../extension';
-import { install } from './timeline/install';
+import { install } from './thumbnail/install';
 
 use(install);

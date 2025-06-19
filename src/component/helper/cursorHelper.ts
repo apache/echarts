@@ -22,7 +22,7 @@ import { ElementEvent } from 'zrender/src/Element';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
 import type Component from '../../model/Component';
-import { retrieveZInfo } from '../../util/model';
+import { retrieveZInfo } from '../../util/graphic';
 
 const IRRELEVANT_EXCLUDES = {'axisPointer': 1, 'tooltip': 1, 'brush': 1};
 

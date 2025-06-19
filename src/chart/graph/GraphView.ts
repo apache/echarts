@@ -23,7 +23,8 @@ import RoamController from '../../component/helper/RoamController';
 import {
     updateViewOnZoom,
     updateViewOnPan,
-    RoamControllerHost
+    RoamControllerHost,
+    RoamPayload
 } from '../../component/helper/roamHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
@@ -38,13 +39,13 @@ import Symbol from '../helper/Symbol';
 import SeriesData from '../../data/SeriesData';
 import Line from '../helper/Line';
 import { getECData } from '../../util/innerStore';
-import Thumbnail from './Thumbnail';
 
 import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
 import { clone, extend } from 'zrender/src/core/util';
 import ECLinePath from '../helper/LinePath';
 import { NullUndefined } from '../../util/types';
+import { getThumbnailBridge, ThumbnailBridge } from '../../component/helper/thumbnailBridge';
 
 function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
     return coordSys.type === 'view';
@@ -65,11 +66,11 @@ class GraphView extends ChartView {
 
     private _model: GraphSeriesModel;
 
+    private _api: ExtensionAPI;
+
     private _layoutTimeout: number;
 
     private _layouting: boolean;
-
-    private _thumbnail: Thumbnail = new Thumbnail();
 
     private _mainGroup: graphic.Group;
 
@@ -100,6 +101,12 @@ class GraphView extends ChartView {
         let isForceLayout = false;
 
         this._model = seriesModel;
+        this._api = api;
+
+        const thumbnailInfo = this._getThumbnailInfo();
+        if (thumbnailInfo) {
+            thumbnailInfo.bridge.reset(api);
+        }
 
         const symbolDraw = this._symbolDraw;
         const lineDraw = this._lineDraw;
@@ -218,7 +225,10 @@ class GraphView extends ChartView {
         });
 
         this._firstRender = false;
-        isForceLayout || this._renderThumbnail(seriesModel, api, this._symbolDraw, this._lineDraw);
+        // Force layout will render thumbnail when layout is finished.
+        if (!isForceLayout) {
+            this._renderThumbnail(seriesModel, api, this._symbolDraw, this._lineDraw);
+        }
     }
 
     dispose() {
@@ -226,7 +236,6 @@ class GraphView extends ChartView {
 
         this._controller && this._controller.dispose();
         this._controllerHost = null;
-        this._thumbnail.dispose();
     }
 
     private _startForceLayoutIteration(
@@ -235,12 +244,14 @@ class GraphView extends ChartView {
         layoutAnimation?: boolean
     ) {
         const self = this;
+        let firstRendered = false;
         (function step() {
             forceLayout.step(function (stopped) {
-                if (stopped) {
+                self.updateLayout(self._model);
+                if (stopped || !firstRendered) {
+                    firstRendered = true;
                     self._renderThumbnail(self._model, api, self._symbolDraw, self._lineDraw);
                 }
-                self.updateLayout(self._model);
                 (self._layouting = !stopped) && (
                     layoutAnimation
                         ? (self._layoutTimeout = setTimeout(step, 16) as any)
@@ -279,56 +290,55 @@ class GraphView extends ChartView {
             .off('pan')
             .off('zoom')
             .on('pan', (e) => {
-                this._updateViewOnPan(seriesModel, api, e.dx, e.dy);
+                api.dispatchAction({
+                    seriesId: seriesModel.id,
+                    type: 'graphRoam',
+                    dx: e.dx,
+                    dy: e.dy
+                });
             })
             .on('zoom', (e) => {
-                this._updateViewOnZoom(seriesModel, api, e.scale, e.originX, e.originY);
+                api.dispatchAction({
+                    seriesId: seriesModel.id,
+                    type: 'graphRoam',
+                    zoom: e.scale,
+                    originX: e.originX,
+                    originY: e.originY
+                });
             });
     }
 
-    private _updateViewOnPan(
+    /**
+     * A performance shortcut - called by action handler to update the view directly
+     * without any data/visual processing (which are assumed to be unchanged), while
+     * ensuring consistent behavior between internal and external action triggers.
+     */
+    updateViewOnPan(
         seriesModel: GraphSeriesModel,
         api: ExtensionAPI,
-        dx: number,
-        dy: number
+        params: Pick<RoamPayload, 'dx' | 'dy'>
     ): void {
-        // FIXME: should do nothing except `api.dispatchAction` here, the other logic
-        //  should be performed in the action handler; otherwise, it causes inconsistency
-        //  if user triggers this action explicitly.
-        updateViewOnPan(this._controllerHost, dx, dy);
-        api.dispatchAction({
-            seriesId: seriesModel.id,
-            type: 'graphRoam',
-            dx: dx,
-            dy: dy
-        });
-        this._thumbnail.updateWindow();
+        updateViewOnPan(this._controllerHost, params.dx, params.dy);
+        this._updateThumbnailWindow();
     }
 
-    private _updateViewOnZoom(
+    /**
+     * A performance shortcut - called by action handler to update the view directly
+     * without any data/visual processing (which are assumed to be unchanged), while
+     * ensuring consistent behavior between internal and external action triggers.
+     */
+    updateViewOnZoom(
         seriesModel: GraphSeriesModel,
         api: ExtensionAPI,
-        scale: number,
-        originX: number,
-        originY: number
+        params: Pick<RoamPayload, 'zoom' | 'originX' | 'originY'>
     ) {
-        // FIXME: should do nothing except `api.dispatchAction` here, the other logic
-        //  should be performed in the action handler; otherwise, it causes inconsistency
-        //  if user triggers this action explicitly.
-        updateViewOnZoom(this._controllerHost, scale, originX, originY);
-        api.dispatchAction({
-            seriesId: seriesModel.id,
-            type: 'graphRoam',
-            zoom: scale,
-            originX: originX,
-            originY: originY
-        });
+        updateViewOnZoom(this._controllerHost, params.zoom, params.originX, params.originY);
         this._updateNodeAndLinkScale();
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
         this._lineDraw.updateLayout();
         // Only update label layout on zoom
         api.updateLabelLayout();
-        this._thumbnail.updateWindow();
+        this._updateThumbnailWindow();
     }
 
     private _updateNodeAndLinkScale() {
@@ -357,84 +367,99 @@ class GraphView extends ChartView {
         this._symbolDraw && this._symbolDraw.remove();
         this._lineDraw && this._lineDraw.remove();
         this._controller && this._controller.disable();
-        this._thumbnail.remove();
     }
 
-    // TODO: register thumbnail (consider code size).
+    /**
+     * Get thumbnail data structure only if supported.
+     */
+    private _getThumbnailInfo(): {
+        bridge: ThumbnailBridge
+        coordSys: View
+    } | NullUndefined {
+        const model = this._model;
+        const coordSys = model.coordinateSystem;
+        if (coordSys.type !== 'view') {
+            return;
+        }
+        const bridge = getThumbnailBridge(model);
+        if (!bridge) {
+            return;
+        }
+        return {
+            bridge,
+            coordSys: coordSys as View,
+        };
+    }
+
+    private _updateThumbnailWindow() {
+        const info = this._getThumbnailInfo();
+        if (info) {
+            info.bridge.updateWindow(info.coordSys.transform, this._api);
+        }
+    }
+
     private _renderThumbnail(
         seriesModel: GraphSeriesModel,
         api: ExtensionAPI,
         symbolDraw: SymbolDraw,
         lineDraw: LineDraw
     ) {
-        const thumbnail = this._thumbnail;
-        this.group.add(thumbnail.group);
+        const info = this._getThumbnailInfo();
+        if (!info) {
+            return;
+        }
 
-        const renderThumbnailContent = (viewGroup: graphic.Group) => {
-            const symbolNodes = symbolDraw.group.children();
-            const lineNodes = lineDraw.group.children();
+        const bridgeGroup = new graphic.Group();
+        const symbolNodes = symbolDraw.group.children();
+        const lineNodes = lineDraw.group.children();
 
-            const lineGroup = new graphic.Group();
-            const symbolGroup = new graphic.Group();
-            viewGroup.add(symbolGroup);
-            viewGroup.add(lineGroup);
+        const lineGroup = new graphic.Group();
+        const symbolGroup = new graphic.Group();
+        bridgeGroup.add(symbolGroup);
+        bridgeGroup.add(lineGroup);
 
-            for (let i = 0; i < symbolNodes.length; i++) {
-                const node = symbolNodes[i];
-                const sub = (node as graphic.Group).children()[0];
-                const x = (node as Symbol).x;
-                const y = (node as Symbol).y;
-                const subShape = clone((sub as graphic.Path).shape);
-                const shape = extend(subShape, {
-                    width: sub.scaleX,
-                    height: sub.scaleY,
-                    x: x - sub.scaleX / 2,
-                    y: y - sub.scaleY / 2
-                });
-                const style = clone((sub as graphic.Path).style);
-                const subThumbnail = new (sub as any).constructor({
-                    shape,
-                    style,
-                    z2: 151
-                });
-                symbolGroup.add(subThumbnail);
-            }
+        // TODO: reuse elemenents for performance in large graph?
+        for (let i = 0; i < symbolNodes.length; i++) {
+            const node = symbolNodes[i];
+            const sub = (node as graphic.Group).children()[0];
+            const x = (node as Symbol).x;
+            const y = (node as Symbol).y;
+            const subShape = clone((sub as graphic.Path).shape);
+            const shape = extend(subShape, {
+                width: sub.scaleX,
+                height: sub.scaleY,
+                x: x - sub.scaleX / 2,
+                y: y - sub.scaleY / 2
+            });
+            const style = clone((sub as graphic.Path).style);
+            const subThumbnail = new (sub as any).constructor({
+                shape,
+                style,
+                z2: 151
+            });
+            symbolGroup.add(subThumbnail);
+        }
 
-            for (let i = 0; i < lineNodes.length; i++) {
-                const node = lineNodes[i];
-                const line = (node as graphic.Group).children()[0];
-                const style = clone((line as ECLinePath).style);
-                const shape = clone((line as ECLinePath).shape);
-                const lineThumbnail = new ECLinePath({
-                    style,
-                    shape,
-                    z2: 151
-                });
-                lineGroup.add(lineThumbnail);
-            }
-        };
+        for (let i = 0; i < lineNodes.length; i++) {
+            const node = lineNodes[i];
+            const line = (node as graphic.Group).children()[0];
+            const style = clone((line as ECLinePath).style);
+            const shape = clone((line as ECLinePath).shape);
+            const lineThumbnail = new ECLinePath({
+                style,
+                shape,
+                z2: 151
+            });
+            lineGroup.add(lineThumbnail);
+        }
 
-        thumbnail.render({
-            seriesModel,
+        info.bridge.renderContent({
             api,
             roamType: seriesModel.get('roam'),
-            z2Setting: {
-                background: 150,
-                window: 160
-            },
-            seriesBoundingRect: this._mainGroup.getBoundingRect(),
-            renderThumbnailContent
+            viewportRect: null,
+            group: bridgeGroup,
+            targetTrans: info.coordSys.transform,
         });
-
-        thumbnail
-            .off('pan')
-            .off('zoom')
-            .on('pan', (event) => {
-                this._updateViewOnPan(seriesModel, api, event.dx, event.dy);
-            })
-            .on('zoom', (event) => {
-                this._updateViewOnZoom(seriesModel, api, event.scale, event.originX, event.originY);
-            });
     }
 }
 
