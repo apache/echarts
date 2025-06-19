@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            body,
+            .test-container {
+                width: 100%;
+            }
+            .test-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .title {
+                font-size: 20px;
+            }
+            .chart {
+                width: 80vw;
+                height: 40vw;
+                border: 1px solid #000;
+                margin-bottom: 10px;
+            }
+        </style>
+        <div class="test-container">
+            <div class="title">测试坐标轴最大最小值标签显示</div>
+            <div class="chart" id="main1"></div>
+            <div class="chart" id="main2"></div>
+            <div class="chart" id="main3"></div>
+            <div class="chart" id="main4"></div>
+        </div>
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            // 生成测试数据
+            const data = Array(20).fill().map((_,i)=>[i,i*2])
+
+            const recalcMin = ({ min, max }) => min - (max - min) * 0.05;
+            const recalcMax = ({ min, max }) => max + (max - min) * 0.05;
+            const baseOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                grid: {
+                    top: 10,
+                    right: 10,
+                    left: 0,
+                    bottom: 0,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    min: recalcMin,
+                    max: recalcMax,
+                    axisLabel: {
+                        rotate: 90,
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: recalcMin,
+                    max: recalcMax,
+                },
+                series: [{
+                    data: data,
+                    type: 'scatter',
+                }]
+            };
+
+            // 测试用例1：默认情况（都显示）
+            const chart1 = echarts.init(document.getElementById('main1'));
+            chart1.setOption({
+                title: {
+                    text: '默认情况 (showMinLabel: true, showMaxLabel: true)',
+                    left: 'center'
+                },
+                ...baseOption
+            });
+
+            // 测试用例2：不显示最小值标签
+            const chart2 = echarts.init(document.getElementById('main2'));
+            chart2.setOption({
+                title: {
+                    text: '不显示最小值标签 (showMinLabel: false, showMaxLabel: true)',
+                    left: 'center'
+                },
+                ...baseOption,
+                xAxis: {
+                    ...baseOption.xAxis,
+                    axisLabel: {
+                        ...baseOption.xAxis.axisLabel,
+                        showMinLabel: false
+                    }
+                },
+                yAxis: {
+                    ...baseOption.yAxis,
+                    axisLabel: {
+                        showMinLabel: false
+                    }
+                }
+            });
+
+            // 测试用例3：不显示最大值标签
+            const chart3 = echarts.init(document.getElementById('main3'));
+            chart3.setOption({
+                title: {
+                    text: '不显示最大值标签 (showMinLabel: true, showMaxLabel: false)',
+                    left: 'center'
+                },
+                ...baseOption,
+                xAxis: {
+                    ...baseOption.xAxis,
+                    axisLabel: {
+                        ...baseOption.xAxis.axisLabel,
+                        showMaxLabel: false
+                    }
+                },
+                yAxis: {
+                    ...baseOption.yAxis,
+                    axisLabel: {
+                        showMaxLabel: false
+                    }
+                }
+            });
+
+            // 测试用例4：都不显示
+            const chart4 = echarts.init(document.getElementById('main4'));
+            chart4.setOption({
+                title: {
+                    text: '都不显示 (showMinLabel: false, showMaxLabel: false)',
+                    left: 'center'
+                },
+                ...baseOption,
+                xAxis: {
+                    ...baseOption.xAxis,
+                    axisLabel: {
+                        ...baseOption.xAxis.axisLabel,
+                        showMinLabel: false,
+                        showMaxLabel: false
+                    }
+                },
+                yAxis: {
+                    ...baseOption.yAxis,
+                    axisLabel: {
+                        showMinLabel: false,
+                        showMaxLabel: false
+                    }
+                }
+            });
+
+            // 响应式处理
+            window.addEventListener('resize', function() {
+                chart1.resize();
+                chart2.resize();
+                chart3.resize();
+                chart4.resize();
+            });
+        });
+        </script>
+    </body>
+</html>
