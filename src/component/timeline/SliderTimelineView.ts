@@ -46,6 +46,7 @@ import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis } from '../../util/states';
 import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 import Displayable from 'zrender/src/graphic/Displayable';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const PI = Math.PI;
 
@@ -345,7 +346,7 @@ class SliderTimelineView extends TimelineView {
         // Customize scale. The `tickValue` is `dataIndex`.
         scale.getTicks = function () {
             return data.mapArray(['value'], function (value: number) {
-                return {value};
+                return { value };
             });
         };
 
@@ -383,12 +384,18 @@ class SliderTimelineView extends TimelineView {
                 x2: axisExtent[1], y2: 0
             },
             style: extend(
-                {lineCap: 'round'},
+                { lineCap: 'round' },
                 timelineModel.getModel('lineStyle').getLineStyle()
             ),
             silent: true,
             z2: 1
         });
+        if (__EDITOR__) {
+            addEditorInfo(line, {
+                component: 'timeline',
+                element: 'line'
+            });
+        }
         group.add(line);
 
         const progressLine = this._progressLine = new graphic.Line({
@@ -405,6 +412,12 @@ class SliderTimelineView extends TimelineView {
             silent: true,
             z2: 1
         });
+        if (__EDITOR__) {
+            addEditorInfo(progressLine, {
+                component: 'timeline',
+                element: 'progressLine'
+            });
+        }
         group.add(progressLine);
     }
 
@@ -495,6 +508,12 @@ class SliderTimelineView extends TimelineView {
             textEl.ensureState('emphasis').style = createTextStyle(hoverLabelModel);
             textEl.ensureState('progress').style = createTextStyle(progressLabelModel);
 
+            if (__EDITOR__) {
+                addEditorInfo(textEl, {
+                    component: 'timeline',
+                    element: 'text'
+                });
+            }
             group.add(textEl);
             enableHoverEmphasis(textEl);
 
@@ -561,6 +580,12 @@ class SliderTimelineView extends TimelineView {
                 onclick: onclick
             });
             btn.ensureState('emphasis').style = hoverStyle;
+            if (__EDITOR__) {
+                addEditorInfo(btn, {
+                    component: 'timeline',
+                    element: 'button'
+                });
+            }
             group.add(btn);
             enableHoverEmphasis(btn);
         }
@@ -807,11 +832,23 @@ function giveSymbol(
         const symbolType = hostModel.get('symbol');
         symbol = createSymbol(symbolType, -1, -1, 2, 2, color);
         symbol.setStyle('strokeNoScale', true);
+        if (__EDITOR__) {
+            addEditorInfo(symbol, {
+                component: 'timeline',
+                element: 'symbol'
+            });
+        }
         group.add(symbol);
         callback && callback.onCreate(symbol);
     }
     else {
         symbol.setColor(color);
+        if (__EDITOR__) {
+            addEditorInfo(symbol, {
+                component: 'timeline',
+                element: 'symbol'
+            });
+        }
         group.add(symbol); // Group may be new, also need to add.
         callback && callback.onUpdate(symbol);
     }

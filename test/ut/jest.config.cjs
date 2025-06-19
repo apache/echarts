@@ -33,7 +33,8 @@ module.exports = {
         '<rootDir>/core/extendExpect.ts'
     ],
     globals: {
-        '__DEV__': true
+        '__DEV__': true,
+        '__EDITOR__': true
     },
     // Not exclude node_modules because zrender also needs to be transformed.
     transformIgnorePatterns: [

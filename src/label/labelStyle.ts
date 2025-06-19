@@ -31,7 +31,8 @@ import {
     ZRStyleProps,
     AnimationOptionMixin,
     InterpolatableValue,
-    NullUndefined
+    NullUndefined,
+    EditorInfo
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim, retrieve3 } from 'zrender/src/core/util';
@@ -40,6 +41,7 @@ import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
 import SeriesData from '../data/SeriesData';
 import { initProps, updateProps } from '../util/graphic';
+import { addEditorInfo } from '../util/editorInfo';
 
 type TextCommonParams = {
     /**
@@ -188,20 +190,23 @@ function setLabelStyle<TLabelDataIndex>(
     targetEl: ZRText,
     labelStatesModels: LabelStatesModels<LabelModelForText>,
     opt?: SetLabelStyleOpt<TLabelDataIndex>,
-    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
+    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>,
+    editorInfo?: EditorInfo
 ): void;
 // eslint-disable-next-line
 function setLabelStyle<TLabelDataIndex>(
     targetEl: Element,
     labelStatesModels: LabelStatesModels<LabelModel>,
     opt?: SetLabelStyleOpt<TLabelDataIndex>,
-    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
+    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>,
+    editorInfo?: EditorInfo
 ): void;
 function setLabelStyle<TLabelDataIndex>(
     targetEl: Element,
     labelStatesModels: LabelStatesModels<LabelModel>,
     opt?: SetLabelStyleOpt<TLabelDataIndex>,
-    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
+    stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>,
+    editorInfo?: EditorInfo
     // TODO specified position?
 ) {
     opt = opt || EMPTY_OBJ;
@@ -220,6 +225,9 @@ function setLabelStyle<TLabelDataIndex>(
             // Reuse the previous
             if (!textContent) {
                 textContent = new ZRText();
+                if (__EDITOR__) {
+                    addEditorInfo(textContent, editorInfo);
+                }
                 targetEl.setTextContent(textContent);
             }
             // Use same state proxy

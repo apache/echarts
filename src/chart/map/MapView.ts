@@ -27,6 +27,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, DisplayState, ECElement } from '../../util/types';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { setStatesFlag, Z2_EMPHASIS_LIFT } from '../../util/states';
+import { addEditorInfo } from '../../util/editorInfo';
 
 
 class MapView extends ChartView {
@@ -68,6 +69,14 @@ class MapView extends ChartView {
         ) {
             if (mapModel.needsDrawMap) {
                 const mapDraw = this._mapDraw || new MapDraw(api);
+                if (__EDITOR__) {
+                    addEditorInfo(mapDraw.group, {
+                        component: 'series',
+                        subType: 'map',
+                        element: 'map',
+                        componentIndex: mapModel.componentIndex
+                    });
+                }
                 group.add(mapDraw.group);
 
                 mapDraw.draw(mapModel, ecModel, api, this, payload);
@@ -82,6 +91,14 @@ class MapView extends ChartView {
         }
         else {
             const mapDraw = this._mapDraw;
+            if (__EDITOR__) {
+                addEditorInfo(mapDraw.group, {
+                    component: 'series',
+                    subType: 'map',
+                    element: 'map',
+                    componentIndex: mapModel.componentIndex
+                });
+            }
             mapDraw && group.add(mapDraw.group);
         }
 
@@ -175,6 +192,12 @@ class MapView extends ChartView {
                         }
                     },
                     defaultText: name
+                }, undefined,
+                {
+                    component: 'series',
+                    subType: 'map',
+                    componentIndex: mapModel.componentIndex,
+                    element: 'label'
                 });
                 (circle as ECElement).disableLabelAnimation = true;
                 if (!labelModel.get('position')) {
@@ -188,6 +211,14 @@ class MapView extends ChartView {
                 };
             }
 
+            if (__EDITOR__) {
+                addEditorInfo(circle, {
+                    component: 'series',
+                    subType: 'map',
+                    element: 'symbol',
+                    componentIndex: mapModel.componentIndex
+                });
+            }
             group.add(circle);
         });
     }

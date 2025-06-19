@@ -33,7 +33,8 @@ import {
     StatesOptionMixin,
     BlurScope,
     DisplayState,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    EditorInfo
 } from '../../util/types';
 import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import Model from '../../model/Model';
@@ -41,6 +42,7 @@ import { ScatterSeriesOption } from '../scatter/ScatterSeries';
 import { getLabelStatesModels } from '../../label/labelStyle';
 import Element from 'zrender/src/Element';
 import SeriesModel from '../../model/Series';
+import { addEditorInfo } from '../../util/editorInfo';
 
 interface UpdateOpt {
     isIgnore?(idx: number): boolean
@@ -56,7 +58,9 @@ interface SymbolLike extends graphic.Group {
 }
 
 interface SymbolLikeCtor {
-    new(data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt): SymbolLike
+    new(
+        data: SeriesData, idx: number, scope?: SymbolDrawSeriesScope, opt?: UpdateOpt, editorInfo?: EditorInfo
+    ): SymbolLike
 }
 
 function symbolNeedsDraw(data: SeriesData, point: number[], idx: number, opt: UpdateOpt) {
@@ -168,14 +172,17 @@ class SymbolDraw {
 
     private _progressiveEls: SymbolLike[];
 
-    constructor(SymbolCtor?: SymbolLikeCtor) {
+    private _editorInfo: EditorInfo;
+
+    constructor(SymbolCtor?: SymbolLikeCtor, editorInfo?: EditorInfo) {
+        this._editorInfo = editorInfo;
         this._SymbolCtor = SymbolCtor || SymbolClz as SymbolLikeCtor;
     }
 
     /**
      * Update symbols draw by new data
      */
-    updateData(data: ListForSymbolDraw, opt?: UpdateOpt) {
+    updateData(data: ListForSymbolDraw, opt?: UpdateOpt, componentIndex?: number) {
         // Remove progressive els.
         this._progressiveEls = null;
 
@@ -184,6 +191,7 @@ class SymbolDraw {
         const group = this.group;
         const seriesModel = data.hostModel;
         const oldData = this._data;
+        const _editorInfo = this._editorInfo;
         const SymbolCtor = this._SymbolCtor;
         const disableAnimation = opt.disableAnimation;
 
@@ -206,7 +214,19 @@ class SymbolDraw {
             .add(function (newIdx) {
                 const point = getSymbolPoint(newIdx);
                 if (symbolNeedsDraw(data, point, newIdx, opt)) {
-                    const symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
+                    const symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt, {
+                        ..._editorInfo,
+                        dataIndex: newIdx,
+                        componentIndex,
+                        element: 'symbol'
+                    });
+                    if (__EDITOR__) {
+                        addEditorInfo(symbolEl, {
+                            ..._editorInfo,
+                            componentIndex,
+                            dataIndex: newIdx
+                        });
+                    }
                     symbolEl.setPosition(point);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
@@ -230,7 +250,19 @@ class SymbolDraw {
                     || (oldSymbolType && oldSymbolType !== newSymbolType)
                 ) {
                     group.remove(symbolEl);
-                    symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt);
+                    symbolEl = new SymbolCtor(data, newIdx, seriesScope, symbolUpdateOpt, {
+                        ..._editorInfo,
+                        componentIndex,
+                        dataIndex: newIdx,
+                        element: 'symbol'
+                    });
+                    if (__EDITOR__) {
+                        addEditorInfo(symbolEl, {
+                            ..._editorInfo,
+                            componentIndex,
+                            dataIndex: newIdx
+                        });
+                    }
                     symbolEl.setPosition(point);
                 }
                 else {
@@ -282,7 +314,9 @@ class SymbolDraw {
     /**
      * Update symbols draw by new data
      */
-    incrementalUpdate(taskParams: StageHandlerProgressParams, data: ListForSymbolDraw, opt?: UpdateOpt) {
+    incrementalUpdate(
+        taskParams: StageHandlerProgressParams, data: ListForSymbolDraw, opt?: UpdateOpt, componentIndex?: number
+    ) {
 
         // Clear
         this._progressiveEls = [];
@@ -301,6 +335,13 @@ class SymbolDraw {
                 const el = new this._SymbolCtor(data, idx, this._seriesScope);
                 el.traverse(updateIncrementalAndHover);
                 el.setPosition(point);
+                if (__EDITOR__) {
+                    addEditorInfo(el, {
+                        ...this._editorInfo,
+                        componentIndex,
+                        dataIndex: idx
+                    });
+                }
                 this.group.add(el);
                 data.setItemGraphicEl(idx, el);
                 this._progressiveEls.push(el);

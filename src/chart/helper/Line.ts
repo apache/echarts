@@ -32,7 +32,8 @@ import {
     LineLabelOption,
     ColorString,
     DefaultEmphasisFocus,
-    BlurScope
+    BlurScope,
+    EditorInfo
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
@@ -40,6 +41,7 @@ import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import Model from '../../model/Model';
 import tokens from '../../visual/tokens';
+import { addEditorInfo } from '../../util/editorInfo';
 
 const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
@@ -156,9 +158,16 @@ class Line extends graphic.Group {
 
     private _fromSymbolType: string;
     private _toSymbolType: string;
+    private _editorInfo: EditorInfo;
 
-    constructor(lineData: SeriesData, idx: number, seriesScope?: LineDrawSeriesScope) {
+    constructor(
+        lineData: SeriesData,
+        idx: number,
+        seriesScope?: LineDrawSeriesScope,
+        editorInfo?: EditorInfo
+    ) {
         super();
+        this._editorInfo = editorInfo;
         this._createLine(lineData as LineList, idx, seriesScope);
     }
 
@@ -167,6 +176,12 @@ class Line extends graphic.Group {
         const linePoints = lineData.getItemLayout(idx);
         const z2 = lineData.getItemVisual(idx, 'z2');
         const line = createLine(linePoints);
+        if (__EDITOR__) {
+            addEditorInfo(line, {
+                ...this._editorInfo,
+                element: 'line'
+            });
+        }
         line.shape.percent = 0;
         graphic.initProps(line, {
             z2: retrieve2(z2, 0),
@@ -182,6 +197,12 @@ class Line extends graphic.Group {
             // symbols must added after line to make sure
             // it will be updated after line#update.
             // Or symbol position and rotation update in line#beforeUpdate will be one frame slow
+            if (__EDITOR__) {
+                addEditorInfo(symbol, {
+                    ...this._editorInfo,
+                    element: `line.${symbolCategory}`
+                });
+            }
             this.add(symbol);
             this[makeSymbolTypeKey(symbolCategory)] = makeSymbolTypeValue(symbolCategory, lineData, idx);
         }, this);
@@ -202,6 +223,12 @@ class Line extends graphic.Group {
         setLinePoints(target.shape, linePoints);
         graphic.updateProps(line, target, seriesModel, idx);
 
+        if (__EDITOR__) {
+            addEditorInfo(line, {
+                ...this.__editorInfo,
+                element: 'line'
+            });
+        }
         each(SYMBOL_CATEGORIES, function (symbolCategory) {
             const symbolType = makeSymbolTypeValue(symbolCategory, lineData as LineList, idx);
             const key = makeSymbolTypeKey(symbolCategory);
@@ -209,6 +236,12 @@ class Line extends graphic.Group {
             if (this[key] !== symbolType) {
                 this.remove(this.childOfName(symbolCategory));
                 const symbol = createSymbol(symbolCategory, lineData as LineList, idx);
+                if (__EDITOR__) {
+                    addEditorInfo(symbol, {
+                        ...this.__editorInfo,
+                        element: `line.${symbolCategory}`
+                    });
+                }
                 this.add(symbol);
             }
             this[key] = symbolType;
@@ -305,6 +338,11 @@ class Line extends graphic.Group {
                 : isFinite(rawVal)
                 ? round(rawVal)
                 : rawVal) + ''
+        }, undefined,
+        {
+            ...this._editorInfo,
+            dataIndex: idx,
+            element: 'label'
         });
         const label = this.getTextContent() as InnerLineLabel;
 

@@ -51,6 +51,7 @@ import { GeoJSONRegion } from '../../coord/geo/Region';
 import { SVGNodeTagLower } from 'zrender/src/tool/parseSVG';
 import { makeInner } from '../../util/model';
 import { GeoProjection, ProjectionStream } from '../../coord/geo/geoTypes';
+import { addEditorInfo } from '../../util/editorInfo';
 
 interface RegionsGroup extends graphic.Group {
 }
@@ -319,7 +320,15 @@ class MapDraw {
                         polys = projectPolys(polys, projectionStream);
                     }
                     zrUtil.each(polys, (poly) => {
-                        polygonSubpaths.push(new graphic.Polygon(getPolyShape(poly)));
+                        const polygon = new graphic.Polygon(getPolyShape(poly));
+                        if (__EDITOR__) {
+                            addEditorInfo(polygon, {
+                                component: 'series',
+                                subType: 'map',
+                                element: 'polygon'
+                            });
+                        }
+                        polygonSubpaths.push(polygon);
                     });
                 }
                 // LineString and MultiLineString
@@ -329,7 +338,15 @@ class MapDraw {
                         points = projectPolys(points, projectionStream, true);
                     }
                     zrUtil.each(points, points => {
-                        polylineSubpaths.push(new graphic.Polyline(getPolyShape(points)));
+                        const polyline = new graphic.Polyline(getPolyShape(points));
+                        if (__EDITOR__) {
+                            addEditorInfo(polyline, {
+                                component: 'series',
+                                subType: 'map',
+                                element: 'polyline'
+                            });
+                        }
+                        polylineSubpaths.push(polyline);
                     });
                 }
             });
@@ -347,6 +364,13 @@ class MapDraw {
                         paths: subpaths
                     }
                 });
+                if (__EDITOR__) {
+                    addEditorInfo(compoundPath, {
+                        component: 'series',
+                        subType: 'map',
+                        element: 'compoundPath'
+                    });
+                }
                 regionGroup.add(compoundPath);
                 applyOptionStyleForRegion(
                     viewBuildCtx, compoundPath, dataIdx, regionModel
@@ -779,7 +803,13 @@ function resetLabelForRegion(
                 labelDataIndex: query,
                 defaultText: regionName
             },
-            specifiedTextOpt
+            specifiedTextOpt,
+            {
+                component: 'series',
+                element: 'label',
+                subType: 'map',
+                componentIndex: mapOrGeoModel.componentIndex
+            }
         );
 
         const textEl = el.getTextContent();

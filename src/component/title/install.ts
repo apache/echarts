@@ -38,6 +38,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import {windowOpen} from '../../util/format';
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import tokens from '../../visual/tokens';
+import { addEditorInfo } from '../../util/editorInfo';
 
 interface TitleTextStyleOption extends LabelOption {
     width?: number
@@ -167,6 +168,12 @@ class TitleView extends ComponentView {
             z2: 10
         });
 
+        if (__EDITOR__) {
+            addEditorInfo(textEl, {
+                component: 'title',
+                element: 'text'
+            });
+        }
         const textRect = textEl.getBoundingRect();
 
         const subText = titleModel.get('subtext');
@@ -180,6 +187,12 @@ class TitleView extends ComponentView {
             z2: 10
         });
 
+        if (__EDITOR__) {
+            addEditorInfo(subTextEl, {
+                component: 'title',
+                element: 'subText'
+            });
+        }
         const link = titleModel.get('link');
         const sublink = titleModel.get('sublink');
         const triggerEvent = titleModel.get('triggerEvent', true);
@@ -280,6 +293,12 @@ class TitleView extends ComponentView {
             silent: true
         });
 
+        if (__EDITOR__) {
+            addEditorInfo(rect, {
+                component: 'title',
+                element: 'background'
+            });
+        }
         group.add(rect);
     }
 }

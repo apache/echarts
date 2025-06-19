@@ -123,7 +123,10 @@ class MarkPointView extends MarkerView {
 
         const symbolDrawMap = this.markerGroupMap;
         const symbolDraw = symbolDrawMap.get(seriesId)
-            || symbolDrawMap.set(seriesId, new SymbolDraw());
+            || symbolDrawMap.set(seriesId, new SymbolDraw(undefined, {
+               component: 'markPoint',
+               element: 'symbol'
+            }));
 
         const mpData = createData(coordSys, seriesModel, mpModel);
 
@@ -178,7 +181,7 @@ class MarkPointView extends MarkerView {
         });
 
         // TODO Text are wrong
-        symbolDraw.updateData(mpData);
+        symbolDraw.updateData(mpData, undefined, seriesModel.componentIndex);
         this.group.add(symbolDraw.group);
 
         // Set host model for tooltip

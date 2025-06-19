@@ -305,7 +305,11 @@ class MarkLineView extends MarkerView {
 
         const lineDrawMap = this.markerGroupMap;
         const lineDraw = lineDrawMap.get(seriesId)
-            || lineDrawMap.set(seriesId, new LineDraw());
+            || lineDrawMap.set(seriesId, new LineDraw(undefined, {
+                component: 'markLine',
+                componentIndex: seriesModel.componentIndex,
+                element: 'line'
+            }));
         this.group.add(lineDraw.group);
 
         const mlData = createList(coordSys, seriesModel, mlModel);
@@ -380,7 +384,7 @@ class MarkLineView extends MarkerView {
             });
         });
 
-        lineDraw.updateData(lineData);
+        lineDraw.updateData(lineData, seriesModel.componentIndex);
 
         // Set host model for tooltip
         // FIXME
