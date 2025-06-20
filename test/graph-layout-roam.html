@@ -1,0 +1,515 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+
+        <div id="main0"></div>
+
+        <script>
+
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                const _ctx = {
+                    center: null,
+                    layoutParams: {
+                        left: 'center',
+                        top: 'center',
+                    },
+                };
+
+                const _graphDataset = {
+                    fourNodes: {
+                        data: [{
+                            name: 'node_1',
+                            x: 300,
+                            y: 300,
+                        }, {
+                            name: 'node_2',
+                            x: 800,
+                            y: 300
+                        }, {
+                            name: 'node_3',
+                            x: 550,
+                            y: 100
+                        }, {
+                            name: 'node_4',
+                            x: 550,
+                            y: 500
+                        }],
+                        links: [{
+                            source: 0,
+                            target: 1,
+                            symbolSize: [5, 20],
+                            lineStyle: {
+                                width: 5,
+                                opacity: 1,
+                                curveness: 0.2
+                            },
+                            emphasis: {
+                                lineStyle: {
+                                    color: 'blue',
+                                    width: 20,
+                                    opacity: 0.1
+                                },
+                                label: {
+                                    fontSize: 40,
+                                    color: 'red'
+                                }
+                            }
+                        }, {
+                            source: 'node_2',
+                            target: 'node_1',
+                            lineStyle: {
+                                curveness: 0.2
+                            }
+                        }, {
+                            source: 'node_1',
+                            target: 'node_3',
+                            emphasis: {
+                                label: {
+                                    show: true
+                                }
+                            }
+                        }, {
+                            source: 'node_2',
+                            target: 'node_3'
+                        }, {
+                            source: 'node_2',
+                            target: 'node_4'
+                        }, {
+                            source: 'node_1',
+                            target: 'node_4'
+                        }]
+                    },
+                    heightZero: {
+                        data: [{
+                            name: 'node_1',
+                            x: 300,
+                            y: 300,
+                        }, {
+                            name: 'node_2',
+                            x: 800,
+                            y: 300
+                        }],
+                        links: [{
+                            source: 0,
+                            target: 1,
+                            symbolSize: [5, 20],
+                        }]
+                    }
+                };
+
+                var option = {
+                    backgroundColor: '#f4f4f9',
+                    tooltip: {},
+                    thumbnail: {},
+                    series: [
+                        {
+                            type: 'graph',
+                            id: 'graph0',
+                            symbolSize: 20,
+                            roam: true,
+                            itemStyle: {
+                                color: 'rgba(100,100,0,0.5)',
+                            },
+                            label: {
+                                show: true,
+                                fontSize: 18,
+                                formatter: function (param) {
+                                    return `series.data[i].x: ${param.data.x}\nseries.data[i].y: ${param.data.y}`
+                                }
+                            },
+                            ..._ctx.layoutParams,
+                            center: _ctx.center,
+                            edgeSymbol: ['circle', 'arrow'],
+                            edgeSymbolSize: [4, 10],
+                            edgeLabel: {
+                                textStyle: {
+                                    color: 'green',
+                                    fontSize: 30
+                                },
+                                emphasis: {
+                                    textStyle: {
+                                        color: '#987654'
+                                    }
+                                }
+                            },
+                            // focusNodeAdjacency: focusNodeAdjacency,
+                            lineStyle: {
+                                width: 3,
+                                color: '#184029',
+                                curveness: 0
+                            },
+                            ..._graphDataset.fourNodes,
+                        }
+                    ]
+                };
+
+
+                function makeRectIndicators(option) {
+                    var graphicOption = option.graphic = option.graphic || {};
+                    graphicElsOption = graphicOption.elements = graphicOption.elements || [];
+                    graphicElsOption.push({
+                        id: 'view_rect_indicator',
+                        type: 'rect',
+                        silent: true,
+                        z: -9,
+                        style: {
+                            // fill: '#e0e0e0',
+                            fill: 'none',
+                            stroke: '#999',
+                            lineWidth: 1,
+                            lineDash: 'dashed',
+                        },
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'view rect',
+                                fill: '#555',
+                                fontSize: 11,
+                            },
+                        },
+                        textConfig: {
+                            position: 'insideTopRight'
+                        }
+                    }, {
+                        id: 'content_rect_indicator',
+                        type: 'rect',
+                        silent: true,
+                        z: -10,
+                        style: {
+                            // fill: 'rgba(150,100,50,0.3)',
+                            fill: 'none',
+                            stroke: '#999',
+                            lineWidth: 1,
+                            lineDash: 'dashed',
+                        },
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'content bounding rect',
+                                fill: '#555',
+                                fontSize: 11,
+                            },
+                        },
+                        textConfig: {
+                            position: 'insideTopRight'
+                        }
+                    });
+
+                    var gridOptions = option.grid = option.grid || [];
+                    if (!Array.isArray(gridOptions)) {
+                        gridOptions = option.grid = [option.grid];
+                    }
+                    gridOptions.push({
+                        id: 'viewport_indicator',
+                        show: true,
+                        // Using `grid` as a indicator is a tricky way - should no bounding rect,
+                        // otherwise it affect the trigger of geo roam due to `onIrrelevantElement`.
+                        backgroundColor: '#ccd',
+                        silent: false,
+                        ..._ctx.layoutParams,
+                        borderColor: '#aaa',
+                        borderType: 'dashed',
+                        z: -100,
+                    });
+                }
+                makeRectIndicators(option);
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'graph layout center',
+                        'expect the layout is consistent with the viewRect when resize',
+                        '(when legacyViewCoordSysCenterBase: true, it is inconsistent)'
+                    ],
+                    option: option,
+                    draggable: true,
+                    onResize() {
+                        renderIndicatorRect();
+                    },
+                    height: 300,
+                    inputsStyle: 'compact',
+                    inputs: [
+                        {
+                            type: 'select',
+                            text: 'graph data:',
+                            values: Object.keys(_graphDataset),
+                            onchange() {
+                                const dataKey = this.value;
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        ..._graphDataset[dataKey],
+                                    }
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'geo box:',
+                            values: [
+                                'do_nothing',
+                                {left: 120, top: 100, right: '30%', bottom: 80},
+                                {left: null, top: null, right: null, bottom: null},
+                            ],
+                            onchange: function () {
+                                var layoutParams = this.value;
+                                if (layoutParams == null) {
+                                    return;
+                                }
+                                _ctx.layoutParams = layoutParams;
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        ..._ctx.layoutParams,
+                                        // zoom: 1,
+                                        // center: [0, 0],
+                                    },
+                                });
+
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            text: 'graph layout:',
+                            type: 'select',
+                            values: [undefined, 'force', 'circular', 'none'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        layout: this.value,
+                                    },
+                                });
+                            },
+                        },
+                        {
+                            text: 'legacyViewCoordSysCenterBase:',
+                            type: 'select',
+                            values: [false, true],
+                            onchange() {
+                                chart.setOption({
+                                    legacyViewCoordSysCenterBase: this.value,
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'roamTrigger:',
+                            values: [undefined, 'global'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        roamTrigger: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            text: 'zoom:',
+                            type: 'select',
+                            values: [undefined, 0.5, 1, 5],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        zoom: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'specify center:',
+                            values: [false, true],
+                            onchange() {
+                                chart.__testHelper.switchGroup(
+                                    this.value ? 'group_use_center' : 'group_no_center'
+                                )
+                                if (this.value) {
+                                    _ctx.center = _ctx.center || ['50%', '50%'];
+                                }
+                                else {
+                                    _ctx.center = null;
+                                }
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        center: _ctx.center
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'groupset',
+                            inputsHeight: 40,
+                            groups: [{
+                                id: 'group_no_center',
+                                text: 'no center',
+                            }, {
+                                id: 'group_use_center',
+                                text: 'specify center',
+                                inputs: [
+                                    ...[0, 1].map(centerIdx => ({
+                                        type: 'select',
+                                        text: `center[${centerIdx}]:`,
+                                        options: [
+                                            {
+                                                id: 'percent',
+                                                text: 'percent',
+                                                input: {type: 'range', min: -50, max: 150, value: 50, suffix: '%'}
+                                            },
+                                            {
+                                                id: 'absolute',
+                                                text: 'absolute',
+                                                input: {type: 'range', min: -100, max: 800, value: 100}
+                                            },
+                                        ],
+                                        onchange() {
+                                            if (this.optionId === 'absolute') {
+                                                _ctx.center[centerIdx] = this.value;
+                                            }
+                                            else if (this.optionId === 'percent') {
+                                                _ctx.center[centerIdx] = this.value + '%';
+                                            }
+                                            chart.setOption({
+                                                series: {
+                                                    id: 'graph0',
+                                                    center: _ctx.center
+                                                }
+                                            });
+
+                                            renderIndicatorRect();
+                                        }
+                                    }))
+                                ]
+                            }]
+                        }, // End of groupset
+                        {
+                            type: 'select',
+                            text: 'preserveAspect:',
+                            values: [undefined, 'contain', 'cover'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        preserveAspect: this.value
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'preserveAspectAlign:',
+                            values: [undefined, 'left', 'right', 'center'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        preserveAspectAlign: this.value
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'preserveAspectVerticalAlign:',
+                            values: [undefined, 'top', 'bottom', 'middle'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        preserveAspectVerticalAlign: this.value
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        }
+                    ] // End of inputs
+                });
+
+                renderIndicatorRect();
+
+                if (chart) {
+                    chart.on('graphroam', function () {
+                        renderIndicatorRect();
+                    });
+                }
+
+                function renderIndicatorRect() {
+                    if (!chart) {
+                        return;
+                    }
+                    // [CAVEAT] Internal data structure, probably change, do not use it outside.
+                    const viewCoordSys = chart.getModel().getComponent('series', 0).coordinateSystem;
+                    const viewRect = viewCoordSys.getViewRect();
+                    const contentBoundingRect = viewCoordSys.getBoundingRect().clone();
+                    const trans = viewCoordSys.getComputedTransform();
+                    if (trans) {
+                        contentBoundingRect.applyTransform(trans);
+                    }
+                    chart.setOption({
+                        grid: {
+                            id: 'viewport_indicator',
+                            ..._ctx.layoutParams,
+                        },
+                        graphic: {
+                            elements: [{
+                                id: 'view_rect_indicator',
+                                shape: viewRect,
+                            }, {
+                                id: 'content_rect_indicator',
+                                shape: contentBoundingRect,
+                            }]
+                        },
+                    });
+                }
+
+            });
+
+
+
+        </script>
+    </body>
+</html>

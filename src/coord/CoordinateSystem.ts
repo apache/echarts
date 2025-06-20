@@ -20,7 +20,10 @@
 import GlobalModel from '../model/Global';
 import {ParsedModelFinder} from '../util/model';
 import ExtensionAPI from '../core/ExtensionAPI';
-import { DimensionDefinitionLoose, ScaleDataValue, DimensionName } from '../util/types';
+import {
+    DimensionDefinitionLoose, ScaleDataValue, DimensionName, NullUndefined, CoordinateSystemDataLayout,
+    CoordinateSystemDataCoord
+} from '../util/types';
 import Axis from './Axis';
 import { BoundingRect } from '../util/graphic';
 import { MatrixArray } from 'zrender/src/core/matrix';
@@ -45,6 +48,8 @@ export interface CoordinateSystemCreator {
 
 /**
  * The instance get from `CoordinateSystemManger` is `CoordinateSystemMaster`.
+ * Consider a typical case: `grid` is a `CoordinateSystemMaster`, and it contains
+ * one or multiple `cartesian2d`s, which are `CoordinateSystem`s.
  */
 export interface CoordinateSystemMaster {
 
@@ -55,23 +60,45 @@ export interface CoordinateSystemMaster {
 
     model?: ComponentModel;
 
+    // Injected if required.
+    boxCoordinateSystem?: CoordinateSystem;
+
     update?: (ecModel: GlobalModel, api: ExtensionAPI) => void;
 
     // This methods is also responsible for determining whether this
     // coordinate system is applicable to the given `finder`.
     // Each coordinate system will be tried, until one returns non-
     // null/undefined value.
+    // Aslo support
+    //  const resultNumber = convertToPixel({someAxis: 0}, number);
     convertToPixel?(
-        ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]
-    ): number | number[];
+        ecModel: GlobalModel,
+        finder: ParsedModelFinder,
+        value: Parameters<CoordinateSystem['dataToPoint']>[0],
+        opt?: unknown
+    ): ReturnType<CoordinateSystem['dataToPoint']> | number | NullUndefined;
+
+    // This methods is also responsible for determining whether this
+    // coordinate system is applicable to the given `finder`.
+    // Each coordinate system will be tried, until one returns non-
+    // null/undefined value.
+    convertToLayout?(
+        ecModel: GlobalModel,
+        finder: ParsedModelFinder,
+        value: Parameters<CoordinateSystem['dataToLayout']>[0],
+        opt?: unknown
+    ): ReturnType<CoordinateSystem['dataToLayout']> | NullUndefined;
 
     // This methods is also responsible for determining whether this
     // coordinate system is applicable to the given `finder`.
     // Each coordinate system will be tried, until one returns non-
     // null/undefined value.
     convertFromPixel?(
-        ecModel: GlobalModel, finder: ParsedModelFinder, pixelValue: number | number[]
-    ): number | number[];
+        ecModel: GlobalModel,
+        finder: ParsedModelFinder,
+        pixelValue: Parameters<CoordinateSystem['pointToData']>[0],
+        opt?: unknown
+    ): ReturnType<CoordinateSystem['pointToData']> | NullUndefined;
 
     // @param point Point in global pixel coordinate system.
     // The signature of this method should be the same as `CoordinateSystemExecutive`
@@ -113,25 +140,46 @@ export interface CoordinateSystem {
     /**
      * @param data
      * @param reserved Defined by the coordinate system itself
-     * @param out
-     * @return {Array.<number>} point Point in global pixel coordinate system.
+     * @param out Fill it if passing, and return. For performance optimization.
+     * @return Point in global pixel coordinate system.
+     *  An invalid returned point should be represented by `[NaN, NaN]`,
+     *  rather than `null/undefined`.
      */
     dataToPoint(
-        data: ScaleDataValue | ScaleDataValue[],
-        reserved?: any,
+        data: CoordinateSystemDataCoord,
+        opt?: unknown,
         out?: number[]
     ): number[];
+
+    /**
+     * @param data See the meaning in `dataToPoint`.
+     * @param reserved Defined by the coordinate system itself
+     * @param out Fill it if passing, and return. For performance optimization. Vary by different coord sys.
+     * @return Layout in global pixel coordinate system.
+     *  An invalid returned rect should be represented by `{x: NaN, y: NaN, width: NaN, height: NaN}`,
+     *  Never return `null/undefined`.
+     */
+    dataToLayout?(
+        data: CoordinateSystemDataCoord,
+        opt?: unknown,
+        out?: CoordinateSystemDataLayout
+    ): CoordinateSystemDataLayout;
 
     /**
      * Some coord sys (like Parallel) might do not have `pointToData`,
      * or the meaning of this kind of features is not clear yet.
      * @param point point Point in global pixel coordinate system.
-     * @param clamp Clamp range
+     * @param out Fill it if passing, and return. For performance optimization.
      * @return data
+     *  An invalid returned data should be represented by `[NaN, NaN]` or `NaN`,
+     *  rather than `null/undefined`, which represents not-applicable in `convertFromPixel`.
+     *  Return `OrdinalNumber` in ordianal (category axis) case.
+     *  Return timestamp in time axis.
      */
     pointToData?(
         point: number[],
-        clamp?: boolean
+        opt?: unknown,
+        out?: number | number[]
     ): number | number[];
 
     // @param point Point in global pixel coordinate system.

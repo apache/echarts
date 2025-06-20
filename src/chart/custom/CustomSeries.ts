@@ -26,10 +26,12 @@ import {
     AnimationOption,
     BlurScope,
     CallbackDataParams,
+    CoordinateSystemDataLayout,
     Dictionary,
     DimensionLoose,
     ItemStyleOption,
     LabelOption,
+    NullUndefined,
     OptionDataValue,
     OrdinalRawValue,
     ParsedValue,
@@ -303,13 +305,30 @@ export interface CustomSeriesRenderItemParamsCoordSys {
 }
 export interface CustomSeriesRenderItemCoordinateSystemAPI {
     coord(
-        data: OptionDataValue | OptionDataValue[],
-        clamp?: boolean
+        // @see `CoordinateSystemDataCoord`
+        data: (OptionDataValue | NullUndefined)
+            | (OptionDataValue | NullUndefined)[]
+            | (OptionDataValue | OptionDataValue[] | NullUndefined)[],
+        // Some coord sys may support `clamp?: boolean` there.
+        // Can also be an `{xxx?: ...}` here.
+        opt?: unknown
     ): number[];
     size?(
+        // Represents a range, rather than a absolute value.
+        // e.g., `dataSize: [5, 100]` represents
+        // data range `5` in x and data range `100` in y.
         dataSize: OptionDataValue | OptionDataValue[],
+        // Represents a data point, based on which to calculate size.
+        // Some axis, such as logarithm, size varies in different points.
         dataItem?: OptionDataValue | OptionDataValue[]
     ): number | number[];
+    layout?(
+        // @see `CoordinateSystemDataCoord`
+        data: (OptionDataValue | NullUndefined)
+            | (OptionDataValue | NullUndefined)[]
+            | (OptionDataValue | OptionDataValue[] | NullUndefined)[],
+        opt?: unknown
+    ): CoordinateSystemDataLayout;
 }
 
 export type WrapEncodeDefRet = Dictionary<number[]>;
@@ -396,7 +415,7 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
     static type = 'series.custom';
     readonly type = CustomSeriesModel.type;
 
-    static dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
+    static dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar', 'matrix'];
 
     // preventAutoZ = true;
 

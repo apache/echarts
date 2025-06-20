@@ -33,6 +33,7 @@ import type {SingleAxisOption as SingleAxisComponentOption} from '../coord/singl
 import type {ParallelAxisOption as ParallelAxisComponentOption} from '../coord/parallel/AxisModel';
 import type {ParallelCoordinateSystemOption as ParallelComponentOption} from '../coord/parallel/ParallelModel';
 import type {CalendarOption as CalendarComponentOption} from '../coord/calendar/CalendarModel';
+import type {MatrixOption as MatrixComponentOption} from '../coord/matrix/MatrixModel';
 import type {ToolboxOption} from '../component/toolbox/ToolboxModel';
 import type {
     TooltipOption as TooltipComponentOption,
@@ -41,6 +42,7 @@ import type {
 import type {AxisPointerOption as AxisPointerComponentOption} from '../component/axisPointer/AxisPointerModel';
 import type {BrushOption as BrushComponentOption} from '../component/brush/BrushModel';
 import type {TitleOption as TitleComponentOption} from '../component/title/install';
+import type {ThumbnailOption as ThumbnailComponentOption} from '../component/thumbnail/ThumbnailModel';
 import type {TimelineOption as TimelineComponentOption} from '../component/timeline/TimelineModel';
 import type {SliderTimelineOption as TimelineSliderComponentOption} from '../component/timeline/SliderTimelineModel';
 
@@ -156,6 +158,7 @@ export {
     AngleAxisComponentOption,
     ParallelComponentOption,
     CalendarComponentOption,
+    MatrixComponentOption,
     TooltipComponentOption,
     AxisPointerComponentOption,
     BrushComponentOption,
@@ -165,6 +168,7 @@ export {
     MarkPointComponentOption,
     MarkAreaComponentOption,
     ToolboxComponentOption,
+    ThumbnailComponentOption,
     GraphicComponentOption,
     AriaComponentOption,
     DatasetComponentOption
@@ -262,6 +266,7 @@ export interface EChartsOption extends ECBasicOption {
     parallel?: ParallelComponentOption | ParallelComponentOption[];
     parallelAxis?: ParallelAxisComponentOption | ParallelAxisComponentOption[];
     calendar?: CalendarComponentOption | CalendarComponentOption[];
+    matrix?: MatrixComponentOption | MatrixComponentOption[];
     toolbox?: ToolboxComponentOption | ToolboxComponentOption[];
     tooltip?: TooltipComponentOption | TooltipComponentOption[];
     axisPointer?: AxisPointerComponentOption | AxisPointerComponentOption[];
@@ -270,6 +275,7 @@ export interface EChartsOption extends ECBasicOption {
     legend?: LegendComponentOption | (LegendComponentOption)[];
     dataZoom?: DataZoomComponentOption | (DataZoomComponentOption)[];
     visualMap?: VisualMapComponentOption | (VisualMapComponentOption)[];
+    thumbnail?: ThumbnailComponentOption | (ThumbnailComponentOption)[];
     graphic?: GraphicComponentOption | GraphicComponentOption[];
 
     // TODO Generally we support specify a single object on series.

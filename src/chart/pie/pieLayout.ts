@@ -18,14 +18,13 @@
 */
 
 import { linearMap } from '../../util/number';
-import * as layout from '../../util/layout';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import PieSeriesModel from './PieSeries';
 import { normalizeArcAngles } from 'zrender/src/core/PathProxy';
 import { makeInner } from '../../util/model';
-import SeriesModel from '../../model/Series';
-import { CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
+import { getCircleLayout } from '../../util/layout';
+
 
 const PI2 = Math.PI * 2;
 const RADIAN = Math.PI / 180;
@@ -39,12 +38,8 @@ export default function pieLayout(
     ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeriesModel) {
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
-        const viewRect = layout.getViewRect(seriesModel, api);
 
-        const { cx, cy, r, r0 } = layout.getCircleLayout(
-            seriesModel as unknown as SeriesModel<CircleLayoutOptionMixin & SeriesOption<unknown>>,
-            api
-        );
+        const { cx, cy, r, r0, viewRect } = getCircleLayout(seriesModel, api);
 
         let startAngle = -seriesModel.get('startAngle') * RADIAN;
         let endAngle = seriesModel.get('endAngle');
@@ -85,6 +80,10 @@ export default function pieLayout(
         layoutData.startAngle = startAngle;
         layoutData.endAngle = endAngle;
         layoutData.clockwise = clockwise;
+        layoutData.cx = cx;
+        layoutData.cy = cy;
+        layoutData.r = r;
+        layoutData.r0 = r0;
 
         const angleRange = Math.abs(endAngle - startAngle);
 
@@ -94,6 +93,7 @@ export default function pieLayout(
 
         let currentAngle = startAngle;
 
+        // Requird by `pieLabelLayout`.
         data.setLayout({ viewRect, r });
 
         data.each(valueDim, function (value: number, idx: number) {
@@ -227,4 +227,8 @@ export const getSeriesLayoutData = makeInner<{
     startAngle: number
     endAngle: number
     clockwise: boolean
+    cx: number
+    cy: number
+    r: number
+    r0: number
 }, PieSeriesModel>();

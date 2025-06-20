@@ -38,11 +38,13 @@ import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 import tokens from '../../visual/tokens';
 
-export type PolarBarLabelPosition = SeriesLabelOption['position']
-    | 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd';
+type PolarBarLabelPositionExtra = 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd';
+export type PolarBarLabelPosition = SeriesLabelOption['position'] | PolarBarLabelPositionExtra;
 
-export type BarSeriesLabelOption = Omit<SeriesLabelOption, 'position'>
-    & {position?: PolarBarLabelPosition | 'outside'};
+export type BarSeriesLabelOption = SeriesLabelOption<
+    CallbackDataParams,
+    {positionExtra: PolarBarLabelPositionExtra | 'outside'}
+>;
 
 export interface BarStateOption<TCbParams = never> {
     itemStyle?: BarItemStyleOption<TCbParams>

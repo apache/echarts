@@ -27,7 +27,8 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     DefaultEmphasisFocus,
-    SeriesEncodeOptionMixin
+    SeriesEncodeOptionMixin,
+    CallbackDataParams
 } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { inheritDefaultOption } from '../../util/component';
@@ -35,7 +36,7 @@ import tokens from '../../visual/tokens';
 
 export interface PictorialBarStateOption {
     itemStyle?: ItemStyleOption
-    label?: SeriesLabelOption
+    label?: SeriesLabelOption<CallbackDataParams, {positionExtra: 'outside'}>
 }
 
 interface PictorialBarSeriesSymbolOption {

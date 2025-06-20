@@ -250,7 +250,10 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     static defaultOption: TreeSeriesOption = {
         // zlevel: 0,
         z: 2,
-        coordinateSystem: 'view',
+
+        // `coordinateSystem` can be declared as 'matrix', 'calendar',
+        //  which provides box layout container.
+        coordinateSystemUsage: 'box',
 
         // the position of the whole view
         left: '12%',
@@ -268,6 +271,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         // true | false | 'move' | 'scale', see module:component/helper/RoamController.
         roam: false,
+        roamTrigger: 'global',
 
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.4,

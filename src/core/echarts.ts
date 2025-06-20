@@ -109,6 +109,9 @@ import {
     ZRElementEventName,
     ECElementEvent,
     AnimationOption,
+    CoordinateSystemDataLayout,
+    NullUndefined,
+    CoordinateSystemDataCoord,
 } from '../util/types';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { seriesSymbolTask, dataSymbolTask } from '../visual/symbol';
@@ -133,7 +136,6 @@ import lifecycle, {
 import { platformApi, setPlatformAPI } from 'zrender/src/core/platform';
 import { getImpl } from './impl';
 import type geoSourceManager from '../coord/geo/geoSourceManager';
-import { ExtendedElement } from './ExtendedElement';
 import {
     registerCustomSeries as registerCustom
 } from '../chart/custom/customSeriesRegister';
@@ -202,6 +204,11 @@ export const PRIORITY = {
 // This flag is used to carry out this rule.
 // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
 const IN_MAIN_PROCESS_KEY = '__flagInMainProcess' as const;
+// Useful for detecting outdated rendering results in scenarios that these issues are involved:
+//  - Use shortcut (such as, updateTransform, or no update) to start a main process.
+//  - Asynchronously update rendered view (e.g., graph force layout).
+//  - Multiple ChartView/ComponentView render to one group cooperatively.
+const MAIN_PROCESS_VERSION_KEY = '__mainProcessVersion' as const;
 const PENDING_UPDATE = '__pendingUpdate' as const;
 const STATUS_NEEDS_UPDATE_KEY = '__needsUpdateStatus' as const;
 const ACTION_REG = /^[a-zA-Z0-9_]+$/;
@@ -287,12 +294,29 @@ let updateMethods: {
     updateVisual: UpdateMethod,
     updateLayout: UpdateMethod
 };
-let doConvertPixel: (
-    ecIns: ECharts,
-    methodName: string,
-    finder: ModelFinder,
-    value: (number | number[]) | (ScaleDataValue | ScaleDataValue[])
-) => (number | number[]);
+let doConvertPixel: {
+    (
+        ecIns: ECharts,
+        methodName: 'convertFromPixel',
+        finder: ModelFinder,
+        value: number | number[],
+        opt: unknown
+    ): number | number[];
+    (
+        ecIns: ECharts,
+        methodName: 'convertToPixel',
+        finder: ModelFinder,
+        value: CoordinateSystemDataCoord,
+        opt: unknown
+    ): number | number[];
+    (
+        ecIns: ECharts,
+        methodName: 'convertToLayout',
+        finder: ModelFinder,
+        value: CoordinateSystemDataCoord,
+        opt: unknown
+    ): CoordinateSystemDataLayout;
+};
 let updateStreamModes: (ecIns: ECharts, ecModel: GlobalModel) => void;
 let doDispatchAction: (this: ECharts, payload: Payload, silent: boolean) => void;
 let flushPendingActions: (this: ECharts, silent: boolean) => void;
@@ -316,6 +340,7 @@ let enableConnect: (ecIns: ECharts) => void;
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
 let applyChangedStates: (ecIns: ECharts) => void;
+let updateMainProcessVersion: (ecIns: ECharts) => void;
 
 type RenderedEventParam = { elapsedTime: number };
 type ECEventDefinition = {
@@ -398,6 +423,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         updateParams: UpdateLifecycleParams
     };
     private [IN_MAIN_PROCESS_KEY]: boolean;
+    private [MAIN_PROCESS_VERSION_KEY]: number;
     private [CONNECT_STATUS_KEY]: ConnectStatus;
     private [STATUS_NEEDS_UPDATE_KEY]: boolean;
 
@@ -416,6 +442,8 @@ class ECharts extends Eventful<ECEventDefinition> {
         let defaultRenderer = 'canvas';
         let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
+
+        this[MAIN_PROCESS_VERSION_KEY] = 1;
 
         if (__DEV__) {
             const root = (
@@ -510,6 +538,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             const silent = (this[PENDING_UPDATE] as any).silent;
 
             this[IN_MAIN_PROCESS_KEY] = true;
+            updateMainProcessVersion(this);
 
             try {
                 prepare(this);
@@ -636,6 +665,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         }
 
         this[IN_MAIN_PROCESS_KEY] = true;
+        updateMainProcessVersion(this);
 
         if (!this._model || notMerge) {
             const optionManager = new OptionManager(this._api);
@@ -726,6 +756,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         }
 
         this[IN_MAIN_PROCESS_KEY] = true;
+        updateMainProcessVersion(this);
 
         try {
             this._updateTheme(theme);
@@ -996,21 +1027,61 @@ class ECharts extends Eventful<ECEventDefinition> {
     /**
      * Convert from logical coordinate system to pixel coordinate system.
      * See CoordinateSystem#convertToPixel.
+     *
+     * TODO / PENDING:
+     *  currently `convertToPixel` `convertFromPixel` `convertToLayout` may not be suitable
+     *  for some extremely performance-sensitive scenarios (such as, handling massive amounts of data),
+     *  since it performce "find component" every time.
+     *  And it is not friendly to the nuances between different coordinate systems.
+     *  @see https://github.com/apache/echarts/issues/20985 for details
+     *
+     * @see CoordinateSystem['dataToPoint'] for parameters and return.
+     * @see CoordinateSystemDataCoord
      */
     convertToPixel(finder: ModelFinder, value: ScaleDataValue): number;
     convertToPixel(finder: ModelFinder, value: ScaleDataValue[]): number[];
-    convertToPixel(finder: ModelFinder, value: ScaleDataValue | ScaleDataValue[]): number | number[] {
-        return doConvertPixel(this, 'convertToPixel', finder, value);
+    convertToPixel(
+        finder: ModelFinder, value: ScaleDataValue | ScaleDataValue[]
+    ): number | number[];
+    // The above are signatures from before v6, thus they should be preserved for backward compat.
+    convertToPixel(
+        finder: ModelFinder, value: (ScaleDataValue | ScaleDataValue[] | NullUndefined)[]
+    ): number | number[];
+    convertToPixel(
+        finder: ModelFinder,
+        value: (ScaleDataValue | NullUndefined) | (ScaleDataValue | ScaleDataValue[] | NullUndefined)[],
+        opt?: unknown
+    ): number | number[] {
+        return doConvertPixel(this, 'convertToPixel', finder, value, opt);
+    }
+
+    /**
+     * Convert from logical coordinate system to pixel coordinate system.
+     * See CoordinateSystem#convertToPixel.
+     *
+     * @see CoordinateSystem['dataToLayout'] for parameters and return.
+     * @see CoordinateSystemDataCoord
+     */
+    convertToLayout(
+        finder: ModelFinder,
+        value: (ScaleDataValue | NullUndefined) | (ScaleDataValue | ScaleDataValue[] | NullUndefined)[],
+        opt?: unknown
+    ): CoordinateSystemDataLayout {
+        return doConvertPixel(this, 'convertToLayout', finder, value, opt);
     }
 
     /**
      * Convert from pixel coordinate system to logical coordinate system.
      * See CoordinateSystem#convertFromPixel.
+     *
+     * @see CoordinateSystem['pointToData'] for parameters and return.
      */
     convertFromPixel(finder: ModelFinder, value: number): number;
     convertFromPixel(finder: ModelFinder, value: number[]): number[];
-    convertFromPixel(finder: ModelFinder, value: number | number[]): number | number[] {
-        return doConvertPixel(this, 'convertFromPixel', finder, value);
+    convertFromPixel(finder: ModelFinder, value: number | number[]): number | number[];
+    // The above are signatures from before v6, thus they should be preserved for backward compat.
+    convertFromPixel(finder: ModelFinder, value: number | number[], opt?: unknown): number | number[] {
+        return doConvertPixel(this, 'convertFromPixel', finder, value, opt);
     }
 
     /**
@@ -1317,6 +1388,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         }
 
         this[IN_MAIN_PROCESS_KEY] = true;
+        updateMainProcessVersion(this);
 
         try {
             needPrepare && prepare(this);
@@ -1895,12 +1967,34 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
         };
 
-        doConvertPixel = function (
+        function doConvertPixelImpl(
             ecIns: ECharts,
-            methodName: 'convertFromPixel' | 'convertToPixel',
+            methodName: 'convertFromPixel',
             finder: ModelFinder,
-            value: (number | number[]) | (ScaleDataValue | ScaleDataValue[])
-        ): (number | number[]) {
+            value: number | number[],
+            opt: unknown
+        ): number | number[];
+        function doConvertPixelImpl(
+            ecIns: ECharts,
+            methodName: 'convertToPixel',
+            finder: ModelFinder,
+            value: CoordinateSystemDataCoord,
+            opt: unknown
+        ): number | number[];
+        function doConvertPixelImpl(
+            ecIns: ECharts,
+            methodName: 'convertToLayout',
+            finder: ModelFinder,
+            value: CoordinateSystemDataCoord,
+            opt: unknown
+        ): CoordinateSystemDataLayout;
+        function doConvertPixelImpl(
+            ecIns: ECharts,
+            methodName: 'convertFromPixel' | 'convertToPixel' | 'convertToLayout',
+            finder: ModelFinder,
+            value: number | number[] | CoordinateSystemDataCoord,
+            opt: unknown
+        ) {
             if (ecIns._disposed) {
                 disposedWarning(ecIns.id);
                 return;
@@ -1914,7 +2008,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             for (let i = 0; i < coordSysList.length; i++) {
                 const coordSys = coordSysList[i];
                 if (coordSys[methodName]
-                    && (result = coordSys[methodName](ecModel, parsedFinder, value as any)) != null
+                    && (result = coordSys[methodName](ecModel, parsedFinder, value as any, opt)) != null
                 ) {
                     return result;
                 }
@@ -1926,6 +2020,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 );
             }
         };
+        doConvertPixel = doConvertPixelImpl;
 
         updateStreamModes = function (ecIns: ECharts, ecModel: GlobalModel): void {
             const chartsMap = ecIns._chartsMap;
@@ -1946,6 +2041,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             const cptType = cptTypeTmp[0] != null && parseClassType(cptTypeTmp[0]);
 
             this[IN_MAIN_PROCESS_KEY] = true;
+            updateMainProcessVersion(this);
 
             let payloads: Payload[] = [payload];
             let batched = false;
@@ -2328,6 +2424,10 @@ class ECharts extends Eventful<ECEventDefinition> {
             ecIns.getZr().wakeUp();
         };
 
+        updateMainProcessVersion = function (ecIns: ECharts): void {
+            ecIns[MAIN_PROCESS_VERSION_KEY] = (ecIns[MAIN_PROCESS_VERSION_KEY] + 1) % 1000;
+        };
+
         applyChangedStates = function (ecIns: ECharts): void {
             if (!ecIns[STATUS_NEEDS_UPDATE_KEY]) {
                 return;
@@ -2415,75 +2515,14 @@ class ECharts extends Eventful<ECEventDefinition> {
             if (model.preventAutoZ) {
                 return;
             }
-            const z = model.get('z') || 0;
-            const zlevel = model.get('zlevel') || 0;
+            const zInfo = graphic.retrieveZInfo(model);
             // Set z and zlevel
             view.eachRendered((el) => {
-                doUpdateZ(el, z, zlevel, -Infinity, false);
+                graphic.traverseUpdateZ(el, zInfo.z, zInfo.zlevel);
                 // Don't traverse the children because it has been traversed in _updateZ.
                 return true;
             });
         };
-
-        function doUpdateZ(
-            el: Element,
-            z: number,
-            zlevel: number,
-            maxZ2: number,
-            ignoreModelZ: boolean
-        ): number {
-            // Group may also have textContent
-            const label = el.getTextContent();
-            const labelLine = el.getTextGuideLine();
-            const isGroup = el.isGroup;
-
-            if (isGroup) {
-                // set z & zlevel of children elements of Group
-                const children = (el as graphic.Group).childrenRef();
-                for (let i = 0; i < children.length; i++) {
-                    ignoreModelZ = ignoreModelZ || (el as ExtendedElement).ignoreModelZ;
-                    maxZ2 = Math.max(
-                        doUpdateZ(
-                            children[i],
-                            z,
-                            zlevel,
-                            maxZ2,
-                            ignoreModelZ || (el as ExtendedElement).ignoreModelZ
-                        ),
-                        maxZ2
-                    );
-                }
-            }
-            else {
-                if (ignoreModelZ || (el as ExtendedElement).ignoreModelZ) {
-                    // This child element will not be set z and zlevel of the group
-                    return maxZ2;
-                }
-
-                // not Group
-                (el as Displayable).z = z;
-                (el as Displayable).zlevel = zlevel;
-
-                maxZ2 = Math.max((el as Displayable).z2, maxZ2);
-            }
-
-            // always set z and zlevel if label/labelLine exists
-            if (label) {
-                label.z = z;
-                label.zlevel = zlevel;
-                // lift z2 of text content
-                // TODO if el.emphasis.z2 is spcefied, what about textContent.
-                isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
-            }
-            if (labelLine) {
-                const textGuideLineConfig = el.textGuideLineConfig;
-                labelLine.z = z;
-                labelLine.zlevel = zlevel;
-                isFinite(maxZ2)
-                    && (labelLine.z2 = maxZ2 + (textGuideLineConfig && textGuideLineConfig.showAbove ? 1 : -1));
-            }
-            return maxZ2;
-        }
 
         // Clear states without animation.
         // TODO States on component.
@@ -2616,6 +2655,9 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
                 getViewOfSeriesModel(seriesModel: SeriesModel): ChartView {
                     return ecIns.getViewOfSeriesModel(seriesModel);
+                }
+                getMainProcessVersion(): number {
+                    return ecIns[MAIN_PROCESS_VERSION_KEY];
                 }
             })(ecIns);
         };

@@ -38,7 +38,7 @@ import Arc from 'zrender/src/graphic/shape/Arc';
 import CompoundPath from 'zrender/src/graphic/CompoundPath';
 import LinearGradient from 'zrender/src/graphic/LinearGradient';
 import RadialGradient from 'zrender/src/graphic/RadialGradient';
-import BoundingRect from 'zrender/src/core/BoundingRect';
+import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import OrientedBoundingRect from 'zrender/src/core/OrientedBoundingRect';
 import Point from 'zrender/src/core/Point';
 import IncrementalDisplayable from 'zrender/src/graphic/IncrementalDisplayable';
@@ -52,7 +52,9 @@ import {
     ZRRectLike,
     ZRStyleProps,
     CommonTooltipOption,
-    ComponentItemTooltipLabelFormatterParams
+    ComponentItemTooltipLabelFormatterParams,
+    NullUndefined,
+    ComponentOption
 } from './types';
 import {
     extend,
@@ -64,6 +66,7 @@ import {
     each,
     hasOwn,
     isArray,
+    isNumber,
     clone,
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
@@ -76,6 +79,7 @@ import {
     removeElementWithFadeOut,
     isElementRemoved
 } from '../animation/basicTransition';
+import { ExtendedElement } from '../core/ExtendedElement';
 
 /**
  * @deprecated export for compatitable reason
@@ -90,6 +94,9 @@ const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
 type ExtendShapeOpt = Parameters<typeof Path.extend>[0];
 type ExtendShapeReturn = ReturnType<typeof Path.extend>;
+
+export const XY = ['x', 'y'] as const;
+export const WH = ['width', 'height'] as const;
 
 /**
  * Extend shape with parameters
@@ -281,16 +288,16 @@ export function subPixelOptimizeLine(
 /**
  * Sub pixel optimize rect for canvas
  */
-export function subPixelOptimizeRect(param: {
+export function subPixelOptimizeRect(
     shape: {
         x: number, y: number, width: number, height: number
     },
     style: {
-        lineWidth: number
+        lineWidth?: number
     }
-}) {
-    subPixelOptimizeUtil.subPixelOptimizeRect(param.shape, param.shape, param.style);
-    return param;
+) {
+    subPixelOptimizeUtil.subPixelOptimizeRect(shape, shape, style);
+    return shape;
 }
 
 /**
@@ -562,6 +569,88 @@ function nearZero(val: number) {
     return val <= (1e-6) && val >= -(1e-6);
 }
 
+/**
+ * NOTE:
+ *  A negative-width/height rect (due to negative margins) is not supported;
+ *  it will be clampped to zero width/height.
+ *  Although negative-width/height rects can be defined reasonably following the
+ *  similar sense in CSS, but they are rarely used, hard to understand and complicated.
+ *
+ * @param rect Assume its width/height >= 0 if existing.
+ *  x/y/width/height is allowed to be NaN,
+ *  for the case that only x/width or y/height is intended to be computed.
+ * @param delta
+ *  If be `number[]`, should be `[top, right, bottom, left]`,
+ *      which can be used in padding or margin case.
+ *      @see `normalizeCssArray` in `util/format.ts`
+ *  If be `number`, it means [delta, delta, delta, delta],
+ *      which can be used in lineWidth (borderWith) case,
+ *      [NOTICE]: commonly pass lineWidth / 2, following the convention that border is
+ *      half inside half outside of the rect.
+ * @param shrinkOrExpand
+ *  `true` - shrink if `delta[i]` is positive, commmonly used in `padding` case.
+ *  `false` - expand if `delta[i]` is positive, commmonly used in `margin` case. (default)
+ * @param noNegative
+ *  `true` - negative `delta[i]` will be clampped to 0.
+ *  `false` - No clamp to `delta`. (defualt).
+ * @return The input `rect`.
+ */
+export function expandOrShrinkRect<TRect extends RectLike>(
+    rect: TRect,
+    delta: number[] | number | NullUndefined,
+    shrinkOrExpand: boolean,
+    noNegative: boolean
+): TRect {
+    if (delta == null) {
+        return rect;
+    }
+    else if (isNumber(delta)) {
+        _tmpExpandRectDelta[0] = _tmpExpandRectDelta[1] = _tmpExpandRectDelta[2] = _tmpExpandRectDelta[3] = delta;
+    }
+    else {
+        _tmpExpandRectDelta[0] = delta[0];
+        _tmpExpandRectDelta[1] = delta[1];
+        _tmpExpandRectDelta[2] = delta[2];
+        _tmpExpandRectDelta[3] = delta[3];
+    }
+    if (noNegative) {
+        _tmpExpandRectDelta[0] = Math.max(0, _tmpExpandRectDelta[0]);
+        _tmpExpandRectDelta[1] = Math.max(0, _tmpExpandRectDelta[1]);
+        _tmpExpandRectDelta[2] = Math.max(0, _tmpExpandRectDelta[2]);
+        _tmpExpandRectDelta[3] = Math.max(0, _tmpExpandRectDelta[3]);
+    }
+    if (shrinkOrExpand) {
+        _tmpExpandRectDelta[0] = -_tmpExpandRectDelta[0];
+        _tmpExpandRectDelta[1] = -_tmpExpandRectDelta[1];
+        _tmpExpandRectDelta[2] = -_tmpExpandRectDelta[2];
+        _tmpExpandRectDelta[3] = -_tmpExpandRectDelta[3];
+    }
+    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'x', 'width', 3, 1);
+    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'y', 'height', 0, 2);
+
+    return rect;
+}
+const _tmpExpandRectDelta = [0, 0, 0, 0];
+function expandRectOnOneDimension(
+    rect: RectLike, delta: number[], xy: 'x' | 'y', wh: 'width' | 'height', ltIdx: 3 | 0, rbIdx: 1 | 2
+): void {
+    const deltaSum = delta[rbIdx] + delta[ltIdx];
+    const oldSize = rect[wh];
+    rect[wh] += deltaSum;
+    if (rect[wh] < 0) {
+        rect[wh] = 0;
+        // Try to make the position of the zero rect reasonable in most visual cases.
+        rect[xy] += (
+            delta[ltIdx] >= 0 ? -delta[ltIdx]
+            : delta[rbIdx] >= 0 ? oldSize + delta[rbIdx]
+            : Math.abs(deltaSum) > 1e-8 ? oldSize * delta[ltIdx] / deltaSum
+            : 0
+        );
+    }
+    else {
+        rect[xy] -= delta[ltIdx];
+    }
+}
 
 export function setTooltipConfig(opt: {
     el: Element,
@@ -634,6 +723,129 @@ export function traverseElements(els: Element | Element[] | undefined | null, cb
         }
     }
 }
+
+export function retrieveZInfo(
+    model: Model<Partial<Pick<ComponentOption, 'z' | 'zlevel'>>>,
+): {
+    z: ComponentOption['z']
+    zlevel: ComponentOption['zlevel']
+} {
+    return {
+        z: model.get('z') || 0,
+        zlevel: model.get('zlevel') || 0,
+    };
+}
+
+/**
+ * Assume all of the elements has the same `z` and `zlevel`.
+ */
+export function calcZ2Range(el: Element): {
+    min: number
+    max: number
+} {
+    let max = -Infinity;
+    let min = Infinity;
+    traverseElement(el, el => {
+        visitEl(el);
+        visitEl(el.getTextContent());
+        visitEl(el.getTextGuideLine());
+    });
+    function visitEl(el: Element): void {
+        if (!el || el.isGroup) {
+            return;
+        }
+        const currentStates = el.currentStates;
+        if (currentStates.length) {
+            for (let idx = 0; idx < currentStates.length; idx++) {
+                calcZ2(el.states[currentStates[idx]] as Displayable);
+            }
+        }
+        calcZ2(el as Displayable);
+    }
+    function calcZ2(entity: Pick<Displayable, 'z2'>): void {
+        if (entity) {
+            const z2 = entity.z2;
+            // Consider z2 may be NullUndefined
+            if (z2 > max) {
+                max = z2;
+            }
+            if (z2 < min) {
+                min = z2;
+            }
+        }
+    }
+    if (min > max) {
+        min = max = 0;
+    }
+    return {min, max};
+}
+
+export function traverseUpdateZ(
+    el: Element,
+    z: number,
+    zlevel: number,
+): void {
+    doUpdateZ(el, z, zlevel);
+}
+
+function doUpdateZ(
+    el: Element,
+    z: number,
+    zlevel: number
+): number {
+    let maxZ2 = -Infinity;
+
+    // `ignoreModelZ` is used to intentionally lift elements to cover other elements,
+    // where maxZ2 (for label.z2) should also not be counted for its parents.
+    if ((el as ExtendedElement).ignoreModelZ) {
+        return maxZ2;
+    }
+
+    // Group may also have textContent
+    const label = el.getTextContent();
+    const labelLine = el.getTextGuideLine();
+    const isGroup = el.isGroup;
+
+    if (isGroup) {
+        // set z & zlevel of children elements of Group
+        const children = (el as Group).childrenRef();
+        for (let i = 0; i < children.length; i++) {
+            maxZ2 = Math.max(
+                doUpdateZ(
+                    children[i],
+                    z,
+                    zlevel,
+                ),
+                maxZ2
+            );
+        }
+    }
+    else {
+        // not Group
+        (el as Displayable).z = z;
+        (el as Displayable).zlevel = zlevel;
+
+        maxZ2 = Math.max((el as Displayable).z2 || 0, maxZ2);
+    }
+
+    // always set z and zlevel if label/labelLine exists
+    if (label) {
+        label.z = z;
+        label.zlevel = zlevel;
+        // lift z2 of text content
+        // TODO if el.emphasis.z2 is spcefied, what about textContent.
+        isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
+    }
+    if (labelLine) {
+        const textGuideLineConfig = el.textGuideLineConfig;
+        labelLine.z = z;
+        labelLine.zlevel = zlevel;
+        isFinite(maxZ2)
+            && (labelLine.z2 = maxZ2 + (textGuideLineConfig && textGuideLineConfig.showAbove ? 1 : -1));
+    }
+    return maxZ2;
+}
+
 
 // Register built-in shapes. These shapes might be overwritten
 // by users, although we do not recommend that.
