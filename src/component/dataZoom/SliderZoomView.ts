@@ -431,8 +431,10 @@ class SliderZoomView extends DataZoomView {
                     linePoints.push([thisCoord, 0]);
                 }
 
-                areaPoints.push([thisCoord, otherCoord]);
-                linePoints.push([thisCoord, otherCoord]);
+                if (!isEmpty) {
+                    areaPoints.push([thisCoord, otherCoord]);
+                    linePoints.push([thisCoord, otherCoord]);
+                }
 
                 lastIsEmpty = isEmpty;
             });
