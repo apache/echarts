@@ -138,22 +138,22 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
      * Convert a single data item to (x, y) point.
      * Parameter data is an array which the first element is radius and the second is angle
      */
-    dataToPoint(data: ScaleDataValue[], clamp?: boolean) {
+    dataToPoint(data: ScaleDataValue[], clamp?: boolean, out?: number[]) {
         return this.coordToPoint([
             this._radiusAxis.dataToRadius(data[0], clamp),
             this._angleAxis.dataToAngle(data[1], clamp)
-        ]);
+        ], out);
     }
 
     /**
      * Convert a (x, y) point to data
      */
-    pointToData(point: number[], clamp?: boolean) {
+    pointToData(point: number[], clamp?: boolean, out?: number[]) {
+        out = out || [];
         const coord = this.pointToCoord(point);
-        return [
-            this._radiusAxis.radiusToData(coord[0], clamp),
-            this._angleAxis.angleToData(coord[1], clamp)
-        ];
+        out[0] = this._radiusAxis.radiusToData(coord[0], clamp);
+        out[1] = this._angleAxis.angleToData(coord[1], clamp);
+        return out;
     }
 
     /**
@@ -190,14 +190,15 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
     /**
      * Convert a (radius, angle) coord to (x, y) point
      */
-    coordToPoint(coord: number[]) {
+    coordToPoint(coord: number[], out?: number[]) {
+        out = out || [];
         const radius = coord[0];
         const radian = coord[1] / 180 * Math.PI;
-        const x = Math.cos(radian) * radius + this.cx;
+        out[0] = Math.cos(radian) * radius + this.cx;
         // Inverse the y
-        const y = -Math.sin(radian) * radius + this.cy;
+        out[1] = -Math.sin(radian) * radius + this.cy;
 
-        return [x, y];
+        return out;
     }
 
     /**
@@ -214,7 +215,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
         const angleExtent = angleAxis.getExtent();
 
         const RADIAN = Math.PI / 180;
-
+        const EPSILON = 1e-4;
         return {
             cx: this.cx,
             cy: this.cy,
@@ -228,22 +229,33 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
                 // Start angle and end angle don't matter
                 const dx = x - this.cx;
                 const dy = y - this.cy;
-                // minus a tiny value 1e-4 to avoid being clipped unexpectedly
-                const d2 = dx * dx + dy * dy - 1e-4;
+                const d2 = dx * dx + dy * dy;
                 const r = this.r;
                 const r0 = this.r0;
 
-                return d2 <= r * r && d2 >= r0 * r0;
-            }
+                // minus a tiny value 1e-4 in double side to avoid being clipped unexpectedly
+                // r == r0 contain nothing
+                return r !== r0 && (d2 - EPSILON) <= r * r && (d2 + EPSILON) >= r0 * r0;
+            },
+
+            // As the bounding box
+            x: this.cx - radiusExtent[1],
+            y: this.cy - radiusExtent[1],
+            width: radiusExtent[1] * 2,
+            height: radiusExtent[1] * 2
         };
     }
 
-    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]) {
+    convertToPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue[]
+    ) {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? this.dataToPoint(value) : null;
     }
 
-    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
+    convertFromPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]
+    ) {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? this.pointToData(pixel) : null;
     }

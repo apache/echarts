@@ -25,6 +25,8 @@ import sankeyLayout from './sankeyLayout';
 import sankeyVisual from './sankeyVisual';
 import { Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
+import { updateCenterAndZoomInAction, RoamPayload } from '../../component/helper/roamHelper';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 
 interface SankeyDragNodePayload extends Payload {
     localX: number
@@ -53,4 +55,19 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         });
     });
 
+    registers.registerAction({
+        type: 'sankeyRoam',
+        event: 'sankeyRoam',
+        update: 'none'
+    }, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
+        ecModel.eachComponent({
+            mainType: 'series', subType: 'sankey', query: payload
+        }, function (seriesModel: SankeySeriesModel) {
+            const coordSys = seriesModel.coordinateSystem;
+            const res = updateCenterAndZoomInAction(coordSys, payload, seriesModel.get('scaleLimit'));
+
+            seriesModel.setCenter(res.center);
+            seriesModel.setZoom(res.zoom);
+        });
+    });
 }

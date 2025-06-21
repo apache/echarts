@@ -24,6 +24,7 @@ import { EChartsOption } from '../../../../../src/export/option';
 import { ContinousVisualMapOption } from '../../../../../src/component/visualMap/ContinuousModel';
 import { PiecewiseVisualMapOption } from '../../../../../src/component/visualMap/PiecewiseModel';
 import VisualMapModel from '../../../../../src/component/visualMap/VisualMapModel';
+import globalDefault from '../../../../../src/model/globalDefault';
 
 
 describe('vsiaulMap_setOption', function () {
@@ -215,7 +216,7 @@ describe('vsiaulMap_setOption', function () {
         }
         const inRangeColor = visualMapOptionGotten[0].target.inRange.color;
         expect(onlyColor).toEqual(true);
-        expect(inRangeColor).toEqual(['#f6efa6', '#d88273', '#bf444c']);
+        expect(inRangeColor).toEqual(globalDefault.gradientColor);
         expect(visualMapOptionGotten[0].controller.outOfRange.symbol).toEqual(['diamond']);
         done();
     });

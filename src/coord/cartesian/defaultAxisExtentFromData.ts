@@ -20,7 +20,9 @@
 import * as echarts from '../../core/echarts';
 import { createHashMap, each, HashMap, hasOwn, keys, map } from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
-import { isCartesian2DSeries, findAxisModels } from './cartesianAxisHelper';
+import {
+    isCartesian2DDeclaredSeries, findAxisModels, isCartesian2DInjectedAsDataCoordSys
+} from './cartesianAxisHelper';
 import { getDataDimensionsOnAxis, unionAxisExtentFromData } from '../axisHelper';
 import { AxisBaseModel } from '../AxisBaseModel';
 import Axis from '../Axis';
@@ -50,7 +52,7 @@ echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER + 10, {
     getTargetSeries: function (ecModel) {
         const seriesModelMap = createHashMap<SeriesModel>();
         ecModel.eachSeries(function (seriesModel: SeriesModel) {
-            isCartesian2DSeries(seriesModel) && seriesModelMap.set(seriesModel.uid, seriesModel);
+            isCartesian2DDeclaredSeries(seriesModel) && seriesModelMap.set(seriesModel.uid, seriesModel);
         });
         return seriesModelMap;
     },
@@ -71,7 +73,12 @@ function prepareDataExtentOnAxis(
     seriesRecords: SeriesRecord[]
 ): void {
     ecModel.eachSeries(function (seriesModel: SeriesModel) {
-        if (!isCartesian2DSeries(seriesModel)) {
+        // If pie (or other similar series) use cartesian2d, the logic below is
+        // probably wrong, therefore skip it temporarily.
+        // TODO: support union extent in this case.
+        //  e.g. make a fake seriesData by series.coord/series.center, and it can be
+        //  performed by data processing (such as, filter), and applied here.
+        if (!isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
             return;
         }
 

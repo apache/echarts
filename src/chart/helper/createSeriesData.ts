@@ -161,6 +161,16 @@ function createSeriesData(
     const dimValueGetter =
         firstCategoryDimIndex != null
         && isNeedCompleteOrdinalData(source)
+            /**
+             * This serves this case:
+             *  var echarts_option = {
+             *      xAxis: { data: ['a', 'b', 'c'] },
+             *      yAxis: {}
+             *      series: { data: [555, 666, 777] }
+             *  };
+             * The `series.data` is completed to:
+             *  [[0, 555], [1, 666], [2, 777]]
+             */
             ? function (this: DataStore, itemOpt: any, dimName: string, dataIndex: number, dimIndex: number) {
                 // Use dataIndex as ordinal value in categoryAxis
                 return dimIndex === firstCategoryDimIndex

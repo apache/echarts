@@ -80,27 +80,55 @@ under the License.
                     selectedMode: 'single',
                     geo: [
                         {
-                            name: 'detail',
-                            type: 'map',
-                            map: 'china',
-                            data: [],
-                            roam: true
-                        },
-                        {
                             name: 'contour',
                             type: 'map',
                             roam: true,
                             map: 'china-contour',
                             itemStyle: {
-                                normal: {
-                                    borderWidth: 3,
-                                    borderColor: '#000',
-                                    areaColor: 'transparent',
-                                },
+                                borderWidth: 3,
+                                borderColor: '#000',
+                                areaColor: 'transparent',
+                                borderJoin: 'round',
                                 emphasis: {
                                     areaColor: 'transparent'
                                 }
-                            }
+                            },
+                            center: [104.2, 36],
+                            zoom: 1
+                        },
+                        {
+                            name: 'detail',
+                            type: 'map',
+                            map: 'china',
+                            data: [],
+                            silent: true,
+                            roam: true,
+                            regions: [
+                                '南海',
+                                '香港特别行政区',
+                                '海南省海域与广东省海域',
+                                '江苏省与上海市沿江',
+                                '浙江省海域与上海市海域',
+                                '浙江省海域与福建省海域',
+                                '广东省海域与福建省海域',
+                                ''
+                            ].map(name => {
+                                return {
+                                    name: name + '境界线',
+                                    itemStyle: {
+                                        borderColor: '#000',
+                                        borderWidth: 2
+                                    }
+                                };
+                            }).concat({
+                                name: '新疆维吾尔自治区附近境界线',
+                                itemStyle: {
+                                    borderColor: '#fff',
+                                    borderWidth: 4
+                                },
+                            }),
+                            center: [104.2, 36],
+                            zoom: 1.415
                         }
                     ],
                     series : []

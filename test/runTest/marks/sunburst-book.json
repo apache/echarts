@@ -1,0 +1,10 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/20865",
+    "comment": "Sunburst use the first color for the \"Back Button\" after drilling down so it starts with the second theme color. v6 fixed this problem.",
+    "type": "Bug Fixing",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1748598509863
+  }
+]

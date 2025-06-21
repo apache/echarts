@@ -33,10 +33,7 @@
  *       the tree.
  */
 
-import * as layout from '../../util/layout';
 import { TreeNode } from '../../data/Tree';
-import TreeSeriesModel from './TreeSeries';
-import ExtensionAPI from '../../core/ExtensionAPI';
 
 interface HierNode {
     defaultAncestor: TreeLayoutNode,
@@ -162,18 +159,6 @@ export function radialCoordinate(rad: number, r: number) {
         x: r * Math.cos(rad),
         y: r * Math.sin(rad)
     };
-}
-
-/**
- * Get the layout position of the whole view.
- */
-export function getViewRect(seriesModel: TreeSeriesModel, api: ExtensionAPI) {
-    return layout.getLayoutRect(
-        seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
-    );
 }
 
 /**

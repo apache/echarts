@@ -49,16 +49,31 @@ under the License.
             ], function (echarts) {
 
                 var locations = [{
-                    name: '上海',
+                    name: '上海市',
                     coord: [121.472644, 31.231706]
                 }, {
-                    name: '北京',
+                    name: '北京市',
                     coord: [116.405285, 39.904989]
                 }, {
-                    name: '广东',
+                    name: '广东省',
                     coord: [113.280637, 23.839463714285714]
                 }];
                 var option = {
+                    title: [{
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 15,
+                        textStyle: {
+                            color: '#888',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     tooltip: {
                         trigger: 'item',
                         formatter: '{b}'

@@ -43,7 +43,8 @@ import {
     CommonTooltipOption,
     ColorString,
     SeriesOption,
-    SymbolOptionMixin
+    SymbolOptionMixin,
+    ItemStyleOption
 } from '../../util/types';
 import Model from '../../model/Model';
 import {LineStyleProps} from '../../model/mixin/lineStyle';
@@ -51,6 +52,8 @@ import {createSymbol, ECSymbol} from '../../util/symbol';
 import SeriesModel from '../../model/Series';
 import { createOrUpdatePatternFromDecal } from '../../util/decal';
 import { getECData } from '../../util/innerStore';
+import tokens from '../../visual/tokens';
+import Element from 'zrender/src/Element';
 
 const curry = zrUtil.curry;
 const each = zrUtil.each;
@@ -132,11 +135,11 @@ class LegendView extends ComponentView {
         this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
         // Perform layout.
+        const refContainer = layoutUtil.createBoxLayoutReference(legendModel, api).refContainer;
         const positionInfo = legendModel.getBoxLayoutParams();
-        const viewportSize = {width: api.getWidth(), height: api.getHeight()};
         const padding = legendModel.get('padding');
 
-        const maxSize = layoutUtil.getLayoutRect(positionInfo, viewportSize, padding);
+        const maxSize = layoutUtil.getLayoutRect(positionInfo, refContainer, padding);
 
         const mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
 
@@ -146,7 +149,7 @@ class LegendView extends ComponentView {
                 width: mainRect.width,
                 height: mainRect.height
             }, positionInfo),
-            viewportSize,
+            refContainer,
             padding
         );
         this.group.x = layoutRect.x - mainRect.x;
@@ -155,7 +158,11 @@ class LegendView extends ComponentView {
 
         // Render background after group is layout.
         this.group.add(
-            this._backgroundEl = makeBackground(mainRect, legendModel)
+            this._backgroundEl = makeBackground(
+                mainRect,
+                // FXIME: most itemStyle options does not work in background because inherit is not handled yet.
+                legendModel as Model<Omit<LegendOption, 'itemStyle'> & {itemStyle: ItemStyleOption}>
+            )
         );
     }
 
@@ -177,6 +184,7 @@ class LegendView extends ComponentView {
         const contentGroup = this.getContentGroup();
         const legendDrawnMap = zrUtil.createHashMap();
         const selectMode = legendModel.get('selectedMode');
+        const triggerEvent = legendModel.get('triggerEvent');
 
         const excludeSeriesId: string[] = [];
         ecModel.eachRawSeries(function (seriesModel) {
@@ -234,6 +242,11 @@ class LegendView extends ComponentView {
                         ecData.ssrType = 'legend';
                     });
                 }
+                if (triggerEvent) {
+                    itemGroup.eachChild(child => {
+                        this.packEventData(child, legendModel, seriesModel, dataIndex, name);
+                    });
+                }
 
                 legendDrawnMap.set(name, true);
             }
@@ -287,7 +300,11 @@ class LegendView extends ComponentView {
                                 ecData.ssrType = 'legend';
                             });
                         }
-
+                        if (triggerEvent) {
+                            itemGroup.eachChild(child => {
+                                this.packEventData(child, legendModel, seriesModel, dataIndex, name);
+                            });
+                        }
                         legendDrawnMap.set(name, true);
                     }
 
@@ -307,7 +324,22 @@ class LegendView extends ComponentView {
             this._createSelector(selector, legendModel, api, orient, selectorPosition);
         }
     }
-
+    private packEventData(
+        el: Element,
+        legendModel: LegendModel,
+        seriesModel: SeriesModel<SeriesOption & SymbolOptionMixin>,
+        dataIndex: number,
+        name: string
+    ) {
+        const eventData = {
+            componentType: 'legend',
+            componentIndex: legendModel.componentIndex,
+            dataIndex,
+            value: name,
+            seriesIndex: seriesModel.seriesIndex,
+        };
+        getECData(el).eventData = eventData;
+    };
     private _createSelector(
         selector: LegendSelectorButtonOption[],
         legendModel: LegendModel,
@@ -668,7 +700,7 @@ function getDefaultLegendIcon(opt: LegendIconParams): ECSymbol {
 
     if (symboType.indexOf('empty') > -1) {
         icon.style.stroke = icon.style.fill;
-        icon.style.fill = '#fff';
+        icon.style.fill = tokens.color.neutral00;
         icon.style.lineWidth = 2;
     }
 

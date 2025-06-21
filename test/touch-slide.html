@@ -753,6 +753,21 @@ under the License.
                 var chart = echarts.init(document.getElementById('main4'));
 
                 chart.setOption({
+                    title: [{
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 60,
+                        textStyle: {
+                            color: '#888',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     aria: {
                         show: true
                     },
@@ -797,7 +812,9 @@ under the License.
                                 borderWidth: 0,
                                 shadowColor: 'rgba(0, 0, 0, 0.5)'
                             }
-                        }
+                        },
+                        center: [104.2, 36],
+                        zoom: 1.4
                     },
                     series: [
                     ]

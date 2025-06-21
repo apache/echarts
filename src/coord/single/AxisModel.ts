@@ -97,7 +97,11 @@ class SingleAxisModel extends ComponentModel<SingleAxisOption>
                 type: 'dashed',
                 opacity: 0.2
             }
-        }
+        },
+
+        jitter: 0,
+        jitterOverlap: true,
+        jitterMargin: 2,
     };
 }
 

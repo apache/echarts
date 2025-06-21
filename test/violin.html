@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            function epanechnikovKernel(u) {
+                return Math.abs(u) <= 1 ? 0.75 * (1 - u * u) : 0;
+            }
+
+            function kernelDensityEstimator(kernel, bandwidth, data) {
+                return function(x) {
+                    let sum = 0;
+                    for (let i = 0; i < data.length; i++) {
+                        sum += kernel((x - data[i]) / bandwidth);
+                    }
+                    return sum / (data.length * bandwidth);
+                };
+            }
+
+            const grid = {
+                left: 80,
+                right: 50
+            };
+            const width = window.innerWidth - grid.left - grid.right;
+            const xData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const bandWidth = width / xData.length;
+            const yMax = 10;
+            const data = [];
+            const dataCount = 100;
+            for (let day = 0; day < xData.length; ++day) {
+                for (let i = 0; i < dataCount; ++i) {
+                    const y = Math.tan(i) / 2 + 3 * Math.random() + 2;
+                    data.push([day, y, 0]);
+                }
+            }
+
+            const violinData = [];
+            for (let i = 0; i < data.length; ++i) {
+                const x = data[i][0];
+                if (!violinData[x]) {
+                    violinData[x] = [];
+                }
+                violinData[x].push(data[i][1]);
+            }
+
+            option = {
+                title: {
+                    text: 'Scatter with Jittering'
+                },
+                grid,
+                xAxis: {
+                    type: 'category',
+                    jitter: bandWidth * 0.8,
+                    jitterOverlap: false,
+                    data: xData
+                },
+                yAxis: {
+                    type: 'value',
+                    max: yMax,
+                    min: 0
+                },
+                series: [
+                    {
+                        type: 'custom',
+                        data: violinData,
+                        renderItem: (params, api) => {
+                            const rawData = [];
+                            for (let i = 0; i < dataCount; ++i) {
+                                rawData.push(api.value(i));
+                            }
+                            const kde = kernelDensityEstimator(epanechnikovKernel, 1, rawData);
+                            const xRange = [...Array(100).keys()].map(x => x * (10 / 99));
+                            const density = xRange.map(x => [x, kde(x)]);
+                            const x = api.coord([
+                                params.dataIndex,
+                                0
+                            ])[0];
+
+                            const epsilonDensity = 0.001;
+                            const polylines = [];
+                            const points = [];
+                            for (let i = 0; i < density.length; ++i) {
+                                const coord = api.coord([
+                                    params.dataIndex,
+                                    density[i][0]
+                                ]);
+                                if (density[i][1] < epsilonDensity) {
+                                    if (points.length > 1) {
+                                        for (let j = points.length - 1; j >= 0; --j) {
+                                            points.push([
+                                                x * 2 - points[j][0],
+                                                points[j][1]
+                                            ]);
+                                        }
+                                        polylines.push({
+                                            type: 'polygon',
+                                            shape: {
+                                                points: points.slice()
+                                            },
+                                            style: api.style()
+                                        });
+                                    }
+                                    points.length = 0;
+                                    continue;
+                                }
+
+                                points.push([
+                                    coord[0] + bandWidth / 2 * density[i][1],
+                                    coord[1]
+                                ]);
+                            }
+                            if (points.length > 1) {
+                                for (let j = points.length - 1; j >= 0; --j) {
+                                    points.push([
+                                        x * 2 - points[j][0],
+                                        points[j][1]
+                                    ]);
+                                }
+                                polylines.push({
+                                    type: 'polygon',
+                                    shape: {
+                                        points: points.slice()
+                                    },
+                                    style: api.style()
+                                });
+                            }
+                            return {
+                                type: 'group',
+                                children: polylines
+                            }
+                        },
+                        colorBy: 'data',
+                        itemStyle: {
+                            opacity: 0.6
+                        }
+                    },
+                    {
+                        name: 'Sleeping Hours',
+                        type: 'scatter',
+                        data: data,
+                        colorBy: 'data',
+                        itemStyle: {
+                            opacity: 0.8
+                        },
+                        symbolSize: 5
+                    }
+                ]
+            };
+
+            const chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Test Case Description of main0',
+                    '(Muliple lines and **emphasis** are supported in description)'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

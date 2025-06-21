@@ -25,9 +25,10 @@ import { GeoJSONRegion, Region } from './Region';
 import { GeoProjection, GeoResource, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING } from '../../util/model';
-import GeoModel from './GeoModel';
+import type GeoModel from './GeoModel';
 import { resizeGeoType } from './geoCreator';
 import { warn } from '../../util/log';
+import type ExtensionAPI from '../../core/ExtensionAPI';
 
 const GEO_DEFAULT_PARAMS: {
     [type in GeoResource['type']]: {
@@ -79,9 +80,11 @@ class Geo extends View {
             nameMap?: NameMap;
             nameProperty?: string;
             aspectScale?: number;
+            api: ExtensionAPI;
+            ecModel: GlobalModel;
         }
     ) {
-        super(name);
+        super(name, {api: opt.api, ecModel: opt.ecModel});
 
         this.map = map;
 
@@ -215,32 +218,38 @@ class Geo extends View {
         }
     }
 
-    pointToData(point: number[]) {
+    pointToData(point: number[], reserved?: unknown, out?: number[]) {
         const projection = this.projection;
         if (projection) {
             // projection may return null point.
             point = projection.unproject(point);
         }
-        return point && this.pointToProjected(point);
+        // FIXME: if no `point`, should return [NaN, NaN], rather than undefined.
+        //  null/undefined has special meaning in `convertFromPixel`.
+        return point && this.pointToProjected(point, out);
     }
 
     /**
      * Point to projected data. Same with pointToData when projection is used.
      */
-    pointToProjected(point: number[]) {
-        return super.pointToData(point);
+    pointToProjected(point: number[], out?: number[]) {
+        return super.pointToData(point, 0, out);
     }
 
     projectedToPoint(projected: number[], noRoam?: boolean, out?: number[]) {
         return super.dataToPoint(projected, noRoam, out);
     }
 
-    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]): number[] {
+    convertToPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, value: number[]
+    ): number[] {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.dataToPoint(value) : null;
     }
 
-    convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]): number[] {
+    convertFromPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]
+    ): number[] {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.pointToData(pixel) : null;
     }

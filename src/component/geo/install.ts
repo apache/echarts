@@ -23,7 +23,7 @@ import geoCreator from '../../coord/geo/geoCreator';
 import { ActionInfo } from '../../util/types';
 import { each } from 'zrender/src/core/util';
 import GlobalModel from '../../model/Global';
-import { updateCenterAndZoom, RoamPayload } from '../../action/roamHelper';
+import { updateCenterAndZoomInAction, RoamPayload } from '../../component/helper/roamHelper';
 import MapSeries from '../../chart/map/MapSeries';
 import GeoView from './GeoView';
 import geoSourceManager from '../../coord/geo/geoSourceManager';
@@ -116,8 +116,22 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         event: 'geoRoam',
         update: 'updateTransform'
     }, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
-        const componentType = payload.componentType || 'series';
+        let componentType = payload.componentType;
+        if (!componentType) { // backward compat, but `payload.componentType` is deprecated.
+            if (payload.geoId != null) {
+                componentType = 'geo';
+            }
+            else if (payload.seriesId != null) {
+                componentType = 'series';
+            }
+        }
+        if (!componentType) {
+            componentType = 'series';
+        }
 
+        // FIXME: payload.geoId/payload.seriesId should be required, but historically
+        //  it is not mandatory, causing that all of the geo or series can be queried below,
+        //  which is not reasonable.
         ecModel.eachComponent(
             { mainType: componentType, query: payload },
             function (componentModel: GeoModel | MapSeries) {
@@ -126,8 +140,8 @@ export function install(registers: EChartsExtensionInstallRegisters) {
                     return;
                 }
 
-                const res = updateCenterAndZoom(
-                    geo, payload, (componentModel as GeoModel).get('scaleLimit'), api
+                const res = updateCenterAndZoomInAction(
+                    geo, payload, (componentModel as GeoModel).get('scaleLimit')
                 );
 
                 componentModel.setCenter

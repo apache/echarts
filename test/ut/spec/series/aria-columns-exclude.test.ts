@@ -20,25 +20,28 @@
 import { EChartsType } from '@/src/echarts';
 import { createChart, getECModel } from '../../core/utHelper';
 
+// Introduced in #20218
 describe('aria, omit data', function () {
     let chart: EChartsType;
     const option = {
-        'aria': {
-            'enabled': true,
-            'data': {
-                'excludeDimensionId': [0, 1, 2]
-            },
+        aria: {
+            enabled: true,
+            label: {
+                data: {
+                    excludeDimensionId: [0, 1, 2]
+                }
+            }
         },
-        'dataset': [
+        dataset: [
             {
-                'dimensions': [
+                dimensions: [
                     'lng',
                     'lat',
                     'name',
                     'value',
                     'capacity',
                 ],
-                'source': [
+                source: [
                     [
                         1.58285827,
                         42.099784969,
@@ -57,13 +60,13 @@ describe('aria, omit data', function () {
 
             }
         ],
-        'series': [
+        series: [
             {
-                'coordinateSystem': 'geo',
-                'encode': {
-                    'itemName': 'name'
+                coordinateSystem: 'geo',
+                encode: {
+                    itemName: 'name'
                 },
-                'type': 'scatter',
+                type: 'scatter',
             }
         ],
     };

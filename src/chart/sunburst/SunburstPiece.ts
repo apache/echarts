@@ -151,8 +151,9 @@ class SunburstPiece extends graphic.Sector {
 
         const focus = emphasisModel.get('focus');
 
-        const focusOrIndices =
-            focus === 'ancestor' ? node.getAncestorsIndices()
+        const focusOrIndices = focus === 'relative'
+            ? zrUtil.concatArray(node.getAncestorsIndices(), node.getDescendantIndices())
+            : focus === 'ancestor' ? node.getAncestorsIndices()
                 : focus === 'descendant' ? node.getDescendantIndices()
                     : focus;
 

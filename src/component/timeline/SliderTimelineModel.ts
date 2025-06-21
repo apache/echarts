@@ -22,6 +22,7 @@ import { DataFormatMixin } from '../../model/mixin/dataFormat';
 import { mixin } from 'zrender/src/core/util';
 import SeriesData from '../../data/SeriesData';
 import { inheritDefaultOption } from '../../util/component';
+import tokens from '../../visual/tokens';
 
 export interface SliderTimelineOption extends TimelineOption {
 }
@@ -37,7 +38,7 @@ class SliderTimelineModel extends TimelineModel {
     static defaultOption: SliderTimelineOption = inheritDefaultOption(TimelineModel.defaultOption, {
 
         backgroundColor: 'rgba(0,0,0,0)',   // 时间轴背景颜色
-        borderColor: '#ccc',               // 时间轴边框颜色
+        borderColor: tokens.color.border,     // 时间轴边框颜色
         borderWidth: 0,                    // 时间轴边框线宽，单位px，默认为0（无边框）
 
         orient: 'horizontal',              // 'vertical'
@@ -53,7 +54,7 @@ class SliderTimelineModel extends TimelineModel {
         lineStyle: {
             show: true,
             width: 2,
-            color: '#DAE1F5'
+            color: tokens.color.accent10
         },
         label: {                            // 文本标签
             position: 'auto',           // auto left right top bottom
@@ -65,23 +66,23 @@ class SliderTimelineModel extends TimelineModel {
             rotate: 0,
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-            color: '#A4B1D7'
+            color: tokens.color.tertiary
         },
         itemStyle: {
-            color: '#A4B1D7',
-            borderWidth: 1
+            color: tokens.color.accent20,
+            borderWidth: 0
         },
 
         checkpointStyle: {
             symbol: 'circle',
             symbolSize: 15,
-            color: '#316bf3',
-            borderColor: '#fff',
-            borderWidth: 2,
-            shadowBlur: 2,
-            shadowOffsetX: 1,
-            shadowOffsetY: 1,
-            shadowColor: 'rgba(0, 0, 0, 0.3)',
+            color: tokens.color.accent50,
+            borderColor: tokens.color.accent50,
+            borderWidth: 0,
+            shadowBlur: 0,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
+            shadowColor: 'rgba(0, 0, 0, 0)',
             // borderColor: 'rgba(194,53,49, 0.5)',
             animation: true,
             animationDuration: 300,
@@ -99,47 +100,44 @@ class SliderTimelineModel extends TimelineModel {
 
             position: 'left',  // 'left' 'right' 'top' 'bottom'
 
-            playIcon: 'path://M31.6,53C17.5,53,6,41.5,6,27.4S17.5,1.8,31.6,1.8C45.7,1.8,57.2,13.3,57.2,27.4S45.7,53,31.6,53z M31.6,3.3 C18.4,3.3,7.5,14.1,7.5,27.4c0,13.3,10.8,24.1,24.1,24.1C44.9,51.5,55.7,40.7,55.7,27.4C55.7,14.1,44.9,3.3,31.6,3.3z M24.9,21.3 c0-2.2,1.6-3.1,3.5-2l10.5,6.1c1.899,1.1,1.899,2.9,0,4l-10.5,6.1c-1.9,1.1-3.5,0.2-3.5-2V21.3z', // jshint ignore:line
-            stopIcon: 'path://M30.9,53.2C16.8,53.2,5.3,41.7,5.3,27.6S16.8,2,30.9,2C45,2,56.4,13.5,56.4,27.6S45,53.2,30.9,53.2z M30.9,3.5C17.6,3.5,6.8,14.4,6.8,27.6c0,13.3,10.8,24.1,24.101,24.1C44.2,51.7,55,40.9,55,27.6C54.9,14.4,44.1,3.5,30.9,3.5z M36.9,35.8c0,0.601-0.4,1-0.9,1h-1.3c-0.5,0-0.9-0.399-0.9-1V19.5c0-0.6,0.4-1,0.9-1H36c0.5,0,0.9,0.4,0.9,1V35.8z M27.8,35.8 c0,0.601-0.4,1-0.9,1h-1.3c-0.5,0-0.9-0.399-0.9-1V19.5c0-0.6,0.4-1,0.9-1H27c0.5,0,0.9,0.4,0.9,1L27.8,35.8L27.8,35.8z', // jshint ignore:line
+            playIcon: 'path://M15 0C23.2843 0 30 6.71573 30 15C30 23.2843 23.2843 30 15 30C6.71573 30 0 23.2843 0 15C0 6.71573 6.71573 0 15 0ZM15 3C8.37258 3 3 8.37258 3 15C3 21.6274 8.37258 27 15 27C21.6274 27 27 21.6274 27 15C27 8.37258 21.6274 3 15 3ZM11.5 10.6699C11.5 9.90014 12.3333 9.41887 13 9.80371L20.5 14.1338C21.1667 14.5187 21.1667 15.4813 20.5 15.8662L13 20.1963C12.3333 20.5811 11.5 20.0999 11.5 19.3301V10.6699Z', // jshint ignore:line
+            stopIcon: 'path://M15 0C23.2843 0 30 6.71573 30 15C30 23.2843 23.2843 30 15 30C6.71573 30 0 23.2843 0 15C0 6.71573 6.71573 0 15 0ZM15 3C8.37258 3 3 8.37258 3 15C3 21.6274 8.37258 27 15 27C21.6274 27 27 21.6274 27 15C27 8.37258 21.6274 3 15 3ZM11.5 10C12.3284 10 13 10.6716 13 11.5V18.5C13 19.3284 12.3284 20 11.5 20C10.6716 20 10 19.3284 10 18.5V11.5C10 10.6716 10.6716 10 11.5 10ZM18.5 10C19.3284 10 20 10.6716 20 11.5V18.5C20 19.3284 19.3284 20 18.5 20C17.6716 20 17 19.3284 17 18.5V11.5C17 10.6716 17.6716 10 18.5 10Z', // jshint ignore:line
             // eslint-disable-next-line max-len
-            nextIcon: 'M2,18.5A1.52,1.52,0,0,1,.92,18a1.49,1.49,0,0,1,0-2.12L7.81,9.36,1,3.11A1.5,1.5,0,1,1,3,.89l8,7.34a1.48,1.48,0,0,1,.49,1.09,1.51,1.51,0,0,1-.46,1.1L3,18.08A1.5,1.5,0,0,1,2,18.5Z', // jshint ignore:line
+            nextIcon: 'path://M0.838834 18.7383C0.253048 18.1525 0.253048 17.2028 0.838834 16.617L7.55635 9.89949L0.838834 3.18198C0.253048 2.59619 0.253048 1.64645 0.838834 1.06066C1.42462 0.474874 2.37437 0.474874 2.96015 1.06066L10.7383 8.83883L10.8412 8.95277C11.2897 9.50267 11.2897 10.2963 10.8412 10.8462L10.7383 10.9602L2.96015 18.7383C2.37437 19.3241 1.42462 19.3241 0.838834 18.7383Z', // jshint ignore:line
             // eslint-disable-next-line max-len
-            prevIcon: 'M10,.5A1.52,1.52,0,0,1,11.08,1a1.49,1.49,0,0,1,0,2.12L4.19,9.64,11,15.89a1.5,1.5,0,1,1-2,2.22L1,10.77A1.48,1.48,0,0,1,.5,9.68,1.51,1.51,0,0,1,1,8.58L9,.92A1.5,1.5,0,0,1,10,.5Z', // jshint ignore:line
+            prevIcon: 'path://M10.9602 1.06066C11.5459 1.64645 11.5459 2.59619 10.9602 3.18198L4.24264 9.89949L10.9602 16.617C11.5459 17.2028 11.5459 18.1525 10.9602 18.7383C10.3744 19.3241 9.42462 19.3241 8.83883 18.7383L1.06066 10.9602L0.957771 10.8462C0.509245 10.2963 0.509245 9.50267 0.957771 8.95277L1.06066 8.83883L8.83883 1.06066C9.42462 0.474874 10.3744 0.474874 10.9602 1.06066Z', // jshint ignore:line
 
             prevBtnSize: 18,
             nextBtnSize: 18,
 
-            color: '#A4B1D7',
-            borderColor: '#A4B1D7',
-            borderWidth: 1
+            color: tokens.color.accent50,
+            borderColor: tokens.color.accent50,
+            borderWidth: 0
         },
         emphasis: {
             label: {
                 show: true,
                 // 其余属性默认使用全局文本样式，详见TEXTSTYLE
-                color: '#6f778d'
+                color: tokens.color.accent60
             },
 
             itemStyle: {
-                color: '#316BF3'
+                color: tokens.color.accent60,
+                borderColor: tokens.color.accent60
             },
 
             controlStyle: {
-                color: '#316BF3',
-                borderColor: '#316BF3',
-                borderWidth: 2
-            }
+                color: tokens.color.accent70,
+                borderColor: tokens.color.accent70
+            },
         },
 
         progress: {
             lineStyle: {
-                color: '#316BF3'
+                color: tokens.color.accent30
             },
             itemStyle: {
-                color: '#316BF3'
-            },
-            label: {
-                color: '#6f778d'
+                color: tokens.color.accent40
             }
         },
 

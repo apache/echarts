@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main_spreadsheet_mimic"></div>
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                initChart();
+
+                function initChart() {
+
+                    const headerItemStyle = {
+                        borderWidth: 1,
+                        color: 'rgb(25,25,25)',
+                        borderColor: 'rgb(64,64,64)',
+                    };
+                    const cornerItemStyle = {
+                        // borderWidth: 1,
+                        color: 'rgb(25,25,25)',
+                        borderColor: 'rgb(25,25,25)',
+                    };
+                    const headerLabelOption = {
+                        color: '#eee',
+                    };
+                    const dividerLineStyle = {
+                        width: 0,
+                    };
+                    const bodyLabelOption = {
+                        // overflow: 'break',
+                        // width: 'auto',
+                    };
+
+                    const _matrixXYData = {
+                        x: [{
+                            value: 'R',
+                            children: ['R1', {value: 'R2'}]
+                        }, {
+                            value: 'S'
+                        }, {
+                            value: 'T',
+                            children: [{
+                                value: 'T1',
+                                children: ['T11']
+                            }]
+                        }, {
+                            value: 'U'
+                        }, {
+                            value: 'V'
+                        }, {
+                            value: 'W'
+                        }],
+
+                        y: [{
+                            value: 'LL',
+                            children: [{
+                                value: 'L',
+                                children: [{
+                                    value: 'A',
+                                    children: ['A1', 'A2', {
+                                        value: 'A3',
+                                        children: ['A31', 'A32']
+                                    }]
+                                }, {
+                                    value: 'B',
+                                    children: ['B1', 'B2', 'B3', 'B4']
+                                }, {
+                                    value: 'C',
+                                }, {
+                                    value: 'D',
+                                }]
+                            }, {
+                                value: 'E',
+                            }]
+                        }]
+                    };
+
+                    const _matrixBodyData = [
+                        {coord: [[1, 2], [4, 5]], mergeCells: true, value: 'Firecracker Chicken Bites'},
+                        {coord: [[2, 4], [1, 2]], mergeCells: true, value: 'Velvet Butter Curry'},
+                        {coord: [1, 7], value: 'Ginger Blaze Wings'},
+                        {coord: [3, [7, 8]], value: 'Sun-Dried Tomato Twists'},
+                    ];
+                    const _matrixCornerData = [
+                        {coord: [[-1, -5], -1], mergeCells: true, value: 'Y header'},
+                        {coord: [[-1, -3], [-2, -3]], mergeCells: true, value: 'X header'},
+                    ];
+
+                    const option = {
+                        backgroundColor: '#eee',
+                        title: {
+                            text: 'Double click to edit a cell',
+                            right: 10,
+                            textStyle: {
+                                fontSize: 12,
+                                // fontWeight: 'normal',
+                            }
+                        },
+                        tooltip: {},
+                        matrix: {
+                            left: 150,
+                            right: 30,
+                            x: {
+                                levelSize: 20,
+                                cursor: 's-resize',
+                                silent: false,
+                                itemStyle: headerItemStyle,
+                                label: headerLabelOption,
+                                dividerLineStyle,
+                                data: _matrixXYData.x,
+                            },
+                            y: {
+                                levelSize: 25,
+                                cursor: 'e-resize',
+                                silent: false,
+                                itemStyle: headerItemStyle,
+                                label: headerLabelOption,
+                                dividerLineStyle,
+                                data: _matrixXYData.y,
+                            },
+                            body: {
+                                cursor: 'cell',
+                                silent: false,
+                                itemStyle: {
+                                    color: '#fff',
+                                    borderColor: 'rgb(194,202,220)'
+                                },
+                                label: bodyLabelOption,
+                                data: _matrixBodyData,
+                            },
+                            corner: {
+                                cursor: 'cell',
+                                silent: false,
+                                itemStyle: cornerItemStyle,
+                                label: headerLabelOption,
+                                data: _matrixCornerData,
+                            },
+                            backgroundStyle: {
+                                borderWidth: 2,
+                            },
+                        },
+                        graphic: {
+                            z: 100,
+                            elements: [{
+                                type: 'rect',
+                                id: 'selection_rect',
+                                shape: {x: 0, y: 0, width: 0, height: 0},
+                                ignore: true,
+                                silent: true,
+                                style: {
+                                    lineWidth: 3,
+                                    fill: 'rgba(0,180,230,0.2)',
+                                    stroke: 'rgba(0,100,230,1)'
+                                }
+                            }, {
+                                type: 'text',
+                                left: 10,
+                                top: 10,
+                                id: 'selected_info',
+                                silent: true,
+                                style: {
+                                    text: '',
+                                    fontSize: 10,
+                                }
+                            }]
+                        },
+                    };
+
+                    var chart = testHelper.create(echarts, 'main_spreadsheet_mimic', {
+                        title: [
+                            'Mimic spreadsheet',
+                            'Test API: convertToLayout, convertToPixel, convertFromPixel',
+                            '**Brush** start from body and header to perform different types of rect-selection.',
+                            'Move outside the matrix area when brushing to test **clamp**',
+                            'Mouse cursor should be different on body and header.',
+                            'When brush start from body, selection rect should cover the entire merged cells.',
+                            'When brush start from header, non-leaf should cover the entire span.',
+                        ],
+                        height: 500,
+                        option: option,
+                        buttons: [
+                            {
+                                text: 'hide/show matrix.x',
+                                onclick() {
+                                    _ctx && _ctx.showHideXDimension();
+                                }
+                            },
+                            {
+                                text: 'hide/show matrix.y',
+                                onclick() {
+                                    _ctx && _ctx.showHideYDimension();
+                                }
+                            },
+                            {
+                                text: 'merge cells',
+                                onclick() {
+                                    _ctx && _ctx.mergeSelectedCells();
+                                }
+                            },
+                            {
+                                text: 'add a sample cartesian',
+                                onclick() {
+                                    _ctx && _ctx.addSampleCartesian();
+                                }
+                            }
+                        ]
+                    });
+
+                    const _ctx = miniSpreadsheet(chart, _matrixBodyData);
+
+                } // End of initChart
+
+
+                function miniSpreadsheet(chart, _rawMatrixBodyData) {
+                    if (!chart) {
+                        return;
+                    }
+
+                    const XY = ['x', 'y'];
+                    const WH = ['width', 'height'];
+                    const MatrixClampOption = {all: 1, body: 2, corner: 3};
+                    const MatrixBrushMode = {body: 2, corner: 3, header: 4};
+
+                    /**
+                     * @typedef {number[][]} MatrixXYLocatorRange
+                     * @typedef {
+                     *     {
+                     *         rawOption: MatrixOption['body']['data'][number];
+                     *         xyLocatorRange: MatrixXYLocatorRange;
+                     *     }
+                     * } ParsedMatrixBodyDataItem
+                     */
+
+
+                    function enableChangeNotify(instance) {
+                        const _listeners = [];
+                        instance.onChange = function (listener) {
+                            _listeners.push(listener);
+                        };
+                        instance._notifyChange = function () {
+                            for (let listener of _listeners) {
+                                listener();
+                            }
+                        }
+                    }
+
+
+                    class MatrixDataWrapper {
+                        constructor(chart, selection) {
+                            this._selection = selection;
+                            /**
+                             * @readonly
+                             * @type {MatrixXYLocatorRange}
+                             */
+                            this.overallLocatorRange = null;
+                            /**
+                             * @readonly
+                             * @type {ParsedMatrixBodyDataItem[]}
+                             */
+                            this.parsedBodyData = null;
+
+                            enableChangeNotify(this);
+
+                            selection.onChange(() => {
+                                this._updateSelected();
+                            });
+                        }
+
+                        init(rawMatrixBodyData) {
+                            const overallLocatorRange = chart.convertToLayout(
+                                {matrixIndex: 0}, [NaN, NaN], {clamp: MatrixClampOption.all}
+                            ).matrixXYLocatorRange;
+
+                            const parsedBodyData = [];
+                            rawMatrixBodyData.forEach(rawOption => {
+                                if (!rawOption || !rawOption.coord) {
+                                    return;
+                                }
+                                const layout = chart.convertToLayout({matrixIndex: 0}, rawOption.coord);
+                                const xyLocatorRange = layout.matrixXYLocatorRange;
+                                if (isFinite(xyLocatorRange[0][0]) && isFinite(xyLocatorRange[0][1])
+                                    && isFinite(xyLocatorRange[1][0]) && isFinite(xyLocatorRange[1][1])
+                                ) {
+                                    parsedBodyData.push({xyLocatorRange, rawOption});
+                                }
+                            });
+
+                            this.overallLocatorRange = overallLocatorRange;
+                            this.parsedBodyData = parsedBodyData;
+                        }
+
+                        addDataItem(xyLocatorRange, txt, mergeCells) {
+                            const coord = [xyLocatorRange[0].slice(), xyLocatorRange[1].slice()];
+                            this.parsedBodyData.push({
+                                xyLocatorRange: coord,
+                                rawOption: {coord, value: txt, mergeCells}
+                            });
+                        }
+
+                        _updateSelected() {
+                            const xyLocatorRange = this._selection.xyLocatorRange;
+                            if (!xyLocatorRange) {
+                                this.selectedBodyData = [];
+                                return;
+                            }
+                            this.selectedBodyData = this.parsedBodyData.filter(
+                                item => xyLocatorRangeIntersect(item.xyLocatorRange, xyLocatorRange)
+                            );
+
+                            this._notifyChange();
+                        }
+                    } // End of MatrixDataWrapper
+
+
+                    /**
+                     * @param {MatrixXYLocatorRange} locRange1
+                     * @param {MatrixXYLocatorRange} locRange2
+                     * @return boolean
+                     */
+                    function xyLocatorRangeIntersect(locRange1, locRange2) {
+                        return intersectOnOneDimension(locRange1[0], locRange2[0])
+                            && intersectOnOneDimension(locRange1[1], locRange2[1]);
+
+                        function intersectOnOneDimension(oneDimLocRange1, oneDimLocRange2) {
+                            return oneDimLocRange1[1] >= oneDimLocRange2[0]
+                                && oneDimLocRange1[0] <= oneDimLocRange2[1];
+                        }
+                    }
+
+                    class Selection {
+                        constructor(chart) {
+                            this._chart = chart;
+                            this._brushing = false;
+                            /**
+                             * @typedef {{
+                             *     clampOpt: {clamp: typeof MatrixClampOption};
+                             *     brushMode: typeof MatrixBrushMode;
+                             *     startXYLocator: null;
+                             *     endXYLocator: null;
+                             *     headerBrushDimIdx: 0 | 1; // x is 0, y is 1.
+                             * }} SelectionCtx
+                             *
+                             * If no selected, be null | undefined.
+                             * @type {SelectionCtx | null | undefined}
+                             */
+                            this._ctx = null;
+                            /**
+                             * If no selected, be null | undefined.
+                             * @type {RectLike | null | undefined}
+                             * @readonly
+                             */
+                            this.rect = null;
+                            /**
+                             * If no selected, be null | undefined.
+                             * @type {XYLocatorRange | null | undefined}
+                             * @readonly
+                             */
+                            this.xyLocatorRange = null;
+
+                            enableChangeNotify(this);
+                        }
+
+                        _calcSelectionRect() {
+                            if (!this._ctx) {
+                                return;
+                            }
+                            const {startXYLocator, endXYLocator, headerBrushDimIdx} = this._ctx;
+                            const otherDimIdx = 1 - headerBrushDimIdx;
+
+                            let locatorRangeInput;
+                            let ignoreMergeCells;
+                            if (this._ctx.brushMode === MatrixBrushMode.body
+                                || this._ctx.brushMode === MatrixBrushMode.corner
+                            ) {
+                                locatorRangeInput = [
+                                    [startXYLocator[0], endXYLocator[0]],
+                                    [startXYLocator[1], endXYLocator[1]]
+                                ];
+                                ignoreMergeCells = false;
+                            }
+                            else if (this._ctx.brushMode === MatrixBrushMode.header) {
+                                // Find the dimension header cell, may be non-leaf,
+                                // covering multiple rows/columns.
+                                locatorRangeInput = [[], []];
+                                locatorRangeInput[headerBrushDimIdx][0] = startXYLocator[headerBrushDimIdx];
+                                locatorRangeInput[headerBrushDimIdx][1] = endXYLocator[headerBrushDimIdx];
+                                locatorRangeInput[otherDimIdx][0] = _matrixDataWrapper.overallLocatorRange[otherDimIdx][0];
+                                locatorRangeInput[otherDimIdx][1] = _matrixDataWrapper.overallLocatorRange[otherDimIdx][1];
+                                ignoreMergeCells = true;
+                            }
+
+                            const layout = this._chart.convertToLayout(
+                                {matrixIndex: 0},
+                                locatorRangeInput,
+                                {clamp: this._ctx.clampOpt, ignoreMergeCells}
+                            );
+
+                            if (isFinite(layout.rect.x) && isFinite(layout.rect.y)
+                                && isFinite(layout.rect.width) && isFinite(layout.rect.height)
+                            ) {
+                                this.rect = layout.rect;
+                                this.xyLocatorRange = layout.matrixXYLocatorRange;
+                            }
+                            else {
+                                this.rect = this.xyLocatorRange = null;
+                            }
+                        }
+
+                        brushStart(point) {
+                            this.clearSelected();
+                            this._brushing = true;
+
+                            const startXYLocator = chart.convertFromPixel({matrixIndex: 0}, point);
+                            if (isNaN(startXYLocator[0]) || isNaN(startXYLocator[1])) {
+                                this._brushing = false;
+                                return; // Out of matrix area.
+                            }
+
+                            let clampOpt;
+                            let brushMode;
+                            let headerBrushDimIdx;
+
+                            if (startXYLocator[0] < 0 && startXYLocator[1] < 0) { // In corner area.
+                                clampOpt = {clamp: MatrixClampOption.corner};
+                                brushMode = MatrixBrushMode.corner;
+                            }
+                            else if (startXYLocator[0] >= 0 && startXYLocator[1] >= 0) { // In body area.
+                                clampOpt = {clamp: MatrixClampOption.body};
+                                brushMode = MatrixBrushMode.body;
+                            }
+                            else { // In dimension (header) area.
+                                clampOpt = {clamp: MatrixClampOption.body};
+                                brushMode = MatrixBrushMode.header;
+                                headerBrushDimIdx = startXYLocator[0] >= 0 ? 0 : 1;
+                            }
+
+                            this._ctx = {
+                                startXYLocator,
+                                clampOpt,
+                                brushMode,
+                                headerBrushDimIdx,
+                            };
+                        }
+
+                        brushUpdate(point) {
+                            if (!this._brushing) {
+                                return;
+                            }
+                            const xyLocator = chart.convertFromPixel({matrixIndex: 0}, point, this._ctx.clampOpt)
+                            this._ctx.endXYLocator = xyLocator;
+
+                            this._calcSelectionRect();
+
+                            this._notifyChange();
+                        }
+
+                        getBrushMode() {
+                            return this._ctx ? this._ctx.brushMode : null;
+                        }
+
+                        brushEnd() {
+                            this._brushing = false;
+                        }
+
+                        resize() {
+                            this._calcSelectionRect();
+
+                            this._notifyChange();
+                        }
+
+                        clearSelected() {
+                            this._ctx = null;
+                            this.xyLocatorRange = null;
+                            this.rect = null;
+                        }
+
+                    } // End of Selection
+
+
+                    class CellInput {
+                        constructor(chart, selection, matrixDataWrapper) {
+                            this._chart = chart;
+                            this._selection = selection;
+                            this._matrixDataWrapper = matrixDataWrapper;
+                        }
+
+                        init() {
+                            this._input = document.createElement('div');
+                            document.body.appendChild(this._input);
+                            this._input.style.cssText = [
+                                'display: none;',
+                                'position: absolute;',
+                                'border: 0 solid #fff;',
+                                'background: #fff;',
+                                'box-sizing: border-box;',
+                                'font-size: 12px;',
+                                'margin: 0;',
+                                'padding: 0 2px;',
+                                'white-space: nowrap;',
+                                'overflow-x: hidden;',
+                                'overflow-y: hidden;',
+                            ].join('');
+                            this._input.setAttribute('contenteditable', 'true');
+                            this._inputing = false;
+                        }
+
+                        start() {
+                            if (!this._selection.rect) {
+                                return;
+                            }
+                            const chartRect = chart.getDom().getBoundingClientRect();
+                            const x = chartRect.x + this._selection.rect.x + 2;
+                            const y = chartRect.y + this._selection.rect.y + 2;
+                            const width = this._selection.rect.width - 4;
+                            const height = this._selection.rect.height - 4;
+
+                            this._inputing = true;
+                            this._input.innerHTML = '';
+                            this._input.style.display = 'block';
+                            this._input.style.width = width + 'px';
+                            this._input.style.height = height + 'px';
+                            this._input.style.lineHeight = height + 'px';
+                            this._input.style.left = x + 'px';
+                            this._input.style.top = y + 'px';
+
+                            this._input.focus();
+                        }
+
+                        finish() {
+                            if (!this._inputing) {
+                                return;
+                            }
+                            this._inputing = false;
+                            const txt = this._input.innerText;
+                            this._input.style.display = 'none';
+
+                            const xyLocatorRange = this._selection.xyLocatorRange;
+                            if (!xyLocatorRange || !txt) {
+                                return;
+                            }
+                            this._matrixDataWrapper.addDataItem(xyLocatorRange, txt, false);
+
+                            this._chart.setOption({
+                                matrix: {
+                                    body: {
+                                        data: _matrixDataWrapper.parsedBodyData.map(
+                                            item => item.rawOption
+                                        )
+                                    }
+                                },
+                            });
+                        }
+                    } // End of CellInput
+
+
+                    class SelectionView {
+                        constructor(chart, matrixDataWrapper, selection) {
+                            this._chart = chart;
+                            this._viewDirty = false;
+                            this._matrixDataWrapper = matrixDataWrapper;
+                            this._selection = selection;
+
+                            const dirty = () => {
+                                this._viewDirty = true;
+                            }
+
+                            selection.onChange(dirty)
+                            matrixDataWrapper.onChange(dirty);
+                        }
+
+                        updateView() {
+                            if (!this._viewDirty) {
+                                return;
+                            }
+                            this._viewDirty = false;
+
+                            const selectionRect = _selection.rect;
+
+                            this._chart.setOption({
+                                graphic: {
+                                    elements: [{
+                                        id: 'selection_rect',
+                                        ignore: !selectionRect,
+                                        shape: selectionRect
+                                            ? {
+                                                x: selectionRect.x,
+                                                y: selectionRect.y,
+                                                width: selectionRect.width,
+                                                height: selectionRect.height,
+                                            }
+                                            : {x: 0, y: 0, width: 0, height: 0},
+                                    }, {
+                                        id: 'selected_info',
+                                        style: {
+                                            text: 'Selected values:\n'
+                                                + _matrixDataWrapper.selectedBodyData.map(
+                                                    item => item.rawOption.value
+                                                ).join('\n')
+                                        }
+                                    }]
+                                },
+                            });
+                        }
+                    } // End of SelectionView
+
+
+                    function showHideXDimension() {
+                        _xShowing = !_xShowing;
+                        // Render directly, since `chart.converToLayout` depends on this result.
+                        chart.setOption({
+                            matrix: {x: {show: _xShowing}},
+                        });
+
+                        _selection.resize();
+                        _selectionView.updateView();
+                    }
+
+                    function showHideYDimension() {
+                        _yShowing = !_yShowing;
+                        // Render directly, since `chart.converToLayout` depends on this result.
+                        chart.setOption({
+                            matrix: {y: {show: _yShowing}}
+                        });
+
+                        _selection.resize();
+                        _selectionView.updateView();
+                    }
+
+                    function prepareCoordForBodySelectionRect() {
+                        const xyLocatorRange = _selection.xyLocatorRange;
+                        if (!xyLocatorRange) {
+                            alert('Need to brush a rect first.');
+                            return;
+                        }
+                        const brushMode = _selection.getBrushMode();
+                        if (brushMode !== MatrixBrushMode.body && brushMode !== MatrixBrushMode.header) {
+                            alert('Only selected body cells can be merged.');
+                            return;
+                        }
+                        return [xyLocatorRange[0].slice(), xyLocatorRange[1].slice()];
+                    }
+
+                    function mergeSelectedCells() {
+                        const coord = prepareCoordForBodySelectionRect();
+                        if (!coord) {
+                            return;
+                        }
+                        _matrixDataWrapper.addDataItem(coord, undefined, true);
+                        chart.setOption({
+                            matrix: {
+                                body: {
+                                    data: _matrixDataWrapper.parsedBodyData.map(
+                                        item => item.rawOption
+                                    )
+                                }
+                            },
+                        });
+                    }
+
+                    function addSampleCartesian() {
+                        const coord = prepareCoordForBodySelectionRect();
+                        if (!coord) {
+                            return;
+                        }
+                        const id = _sampleCartesianIdBase++;
+                        const categoryData = ['Mon', 'Tue', 'Web', 'Thu', 'Fri'];
+                        const seriesData = categoryData.map(name => {
+                            return Math.round(Math.random() * 100);
+                        });
+                        const gridId = `grid_${id}`;
+                        const xAxisId = `xAxis_${id}`;
+                        const yAxisId = `yAxis_${id}`;
+                        const seriesId = `series.line_${id}`;
+                        chart.setOption({
+                            grid: {
+                                id: gridId,
+                                coordinateSystem: 'matrix',
+                                coord,
+                                top: 2,
+                                left: 2,
+                                right: 2,
+                                bottom: 2,
+                                containLabel: true,
+                            },
+                            xAxis: {
+                                id: xAxisId,
+                                gridId,
+                                data: ['Mon', 'Tue', 'Web', 'Thu', 'Fri']
+                            },
+                            yAxis: {
+                                id: yAxisId,
+                                gridId,
+                            },
+                            series: {
+                                type: 'line',
+                                id: seriesId,
+                                xAxisId,
+                                yAxisId,
+                                data: seriesData,
+                            }
+                        });
+                    }
+
+                    let _xShowing = true;
+                    let _yShowing = true;
+                    let _sampleCartesianIdBase = 100;
+
+                    const _zr = chart.getZr();
+
+                    const _selection = new Selection(chart);
+                    const _matrixDataWrapper = new MatrixDataWrapper(chart, _selection);
+                    const _cellInput = new CellInput(chart, _selection, _matrixDataWrapper);
+                    const _selectionView = new SelectionView(chart, _matrixDataWrapper, _selection);
+
+                    _matrixDataWrapper.init(_rawMatrixBodyData);
+                    _cellInput.init();
+
+
+                    _zr.on('mousedown', function (event) {
+                        _cellInput.finish();
+                        _selection.clearSelected();
+                        _selection.brushStart([event.offsetX, event.offsetY]);
+                        _selection.brushUpdate([event.offsetX, event.offsetY]);
+                        _selectionView.updateView();
+                    });
+                    _zr.on('mousemove', function (event) {
+                        _selection.brushUpdate([event.offsetX, event.offsetY]);
+                        _selectionView.updateView();
+                    });
+                    _zr.on('mouseup', function (event) {
+                        _selection.brushUpdate([event.offsetX, event.offsetY]);
+                        _selection.brushEnd();
+                        _selectionView.updateView();
+                    });
+                    _zr.on('dblclick', function (event) {
+                        _cellInput.start();
+                    });
+
+                    window.addEventListener('resize', function () {
+                        _selectionView.updateView();
+                    }, false);
+
+                    return {
+                        showHideXDimension,
+                        showHideYDimension,
+                        mergeSelectedCells,
+                        addSampleCartesian,
+                    };
+
+                } // End of miniSpreadsheet
+
+            });
+
+        </script>
+
+
+
+
+
+
+    </body>
+</html>
+

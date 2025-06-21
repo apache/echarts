@@ -349,8 +349,8 @@ class MarkLineView extends MarkerView {
 
         // Update visual and layout of line
         lineData.each(function (idx) {
-            const lineStyle = lineData.getItemModel<MarkLineMergedItemOption>(idx)
-                .getModel('lineStyle').getLineStyle();
+            const itemModel = lineData.getItemModel<MarkLineMergedItemOption>(idx);
+            const lineStyle = itemModel.getModel('lineStyle').getLineStyle();
             // lineData.setItemVisual(idx, {
             //     color: lineColor || fromData.getItemVisual(idx, 'color')
             // });
@@ -358,12 +358,14 @@ class MarkLineView extends MarkerView {
                 fromData.getItemLayout(idx),
                 toData.getItemLayout(idx)
             ]);
+            const z2 = itemModel.get('z2');
 
             if (lineStyle.stroke == null) {
                 lineStyle.stroke = fromData.getItemVisual(idx, 'style').fill;
             }
 
             lineData.setItemVisual(idx, {
+                z2: retrieve2(z2, 0),
                 fromSymbolKeepAspect: fromData.getItemVisual(idx, 'symbolKeepAspect'),
                 fromSymbolOffset: fromData.getItemVisual(idx, 'symbolOffset'),
                 fromSymbolRotate: fromData.getItemVisual(idx, 'symbolRotate'),

@@ -240,6 +240,9 @@ class BarView extends ChartView {
 
         function createBackground(dataIndex: number) {
             const bgLayout = getLayout[coord.type](data, dataIndex);
+            if (!bgLayout) {
+                return null;
+            }
             const bgEl = createBackgroundEl(coord, isHorizontalOrRadial, bgLayout);
             bgEl.useStyle(backgroundModel.getItemStyle());
             // Only cartesian2d support borderRadius.
@@ -256,6 +259,9 @@ class BarView extends ChartView {
             .add(function (dataIndex) {
                 const itemModel = data.getItemModel<BarDataItemOption>(dataIndex);
                 const layout = getLayout[coord.type](data, dataIndex, itemModel);
+                if (!layout) {
+                    return;
+                }
 
                 if (drawBackground) {
                     createBackground(dataIndex);
@@ -327,6 +333,9 @@ class BarView extends ChartView {
             .update(function (newIndex, oldIndex) {
                 const itemModel = data.getItemModel<BarDataItemOption>(newIndex);
                 const layout = getLayout[coord.type](data, newIndex, itemModel);
+                if (!layout) {
+                    return;
+                }
 
                 if (drawBackground) {
                     let bgEl: Rect | Sector;
@@ -364,6 +373,14 @@ class BarView extends ChartView {
                     }
                 }
 
+                const roundCapChanged = el && (el.type === 'sector' && roundCap || el.type === 'sausage' && !roundCap);
+                if (roundCapChanged) {
+                    // roundCap changed, there is no way to use animation from a `sector` to a `sausage` shape,
+                    // so remove the old one and create a new shape
+                    el && removeElementWithFadeOut(el, seriesModel, oldIndex);
+                    el = null;
+                }
+
                 if (!el) {
                     el = elementCreator[coord.type](
                         seriesModel,
@@ -373,7 +390,7 @@ class BarView extends ChartView {
                         isHorizontalOrRadial,
                         animationModel,
                         baseAxis.model,
-                        !!el,
+                        true,
                         roundCap
                     );
                 }
@@ -927,6 +944,10 @@ const getLayout: {
     // when calculating bar background layout.
     cartesian2d(data, dataIndex, itemModel?): RectLayout {
         const layout = data.getItemLayout(dataIndex) as RectLayout;
+        if (!layout) {
+            return null;
+        }
+
         const fixedLineWidth = itemModel ? getLineWidth(itemModel, layout) : 0;
 
         // fix layout with lineWidth
@@ -1176,7 +1197,8 @@ function createLarge(
     el.barWidth = barWidth;
     group.add(el);
     el.useStyle(data.getVisual('style'));
-
+    // Stroke is rendered first to avoid overlapping with fill
+    el.style.stroke = null;
     // Enable tooltip and user mouse/touch event handlers.
     getECData(el).seriesIndex = seriesModel.seriesIndex;
 

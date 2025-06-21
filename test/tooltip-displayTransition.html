@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <div id="main0"></div>
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+                var dataCount = 50;
+                var displayTransition = true;
+                var transitionDuration = 0.4;
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        appendTo: 'body',
+                        confine: true,
+                        displayTransition: displayTransition,
+                        transitionDuration: transitionDuration
+                    },
+                    title: {
+                        text: [
+                            'displayTransition: ' + displayTransition,
+                            'transitionDuration: ' + transitionDuration
+                        ].join('\n')
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: new Array(dataCount).fill(0).map(function (item, index) {
+                            return 'Category ' + index;
+                        })
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: new Array(dataCount).fill(0).map(function (item, index, arr) {
+                        return {
+                            type: 'line',
+                            name: 'Series ' + index,
+                            data: arr.map(function () {
+                                return Math.random() * 1000;
+                            }),
+                            showSymbol: false
+                        };
+                    }),
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'The scrollbar **SHOULD NOT** display when tooltip is hidden with **displayTransition** disabled or **transitionDuration: 0**.',
+                    ],
+                    option: option,
+                    buttons: [
+                        {
+                            text: 'Show Tooltip',
+                            onclick: function () {
+                                chart.dispatchAction({
+                                    type: 'showTip',
+                                    seriesIndex: 0,
+                                    dataIndex: 0
+                                });
+                            }
+                        },
+                        {
+                            text: 'Hide Tooltip',
+                            onclick: function () {
+                                chart.dispatchAction({
+                                    type: 'hideTip'
+                                });
+                            }
+                        },
+                        {
+                            text: 'Toggle displayTransition',
+                            onclick: function () {
+                                displayTransition = !displayTransition;
+                                chart.setOption({
+                                    tooltip: {
+                                        displayTransition: displayTransition
+                                    },
+                                    title: {
+                                        text: [
+                                            'displayTransition: ' + displayTransition,
+                                            'transitionDuration: ' + transitionDuration
+                                        ].join('\n')
+                                    }
+                                });
+                            }
+                        },
+                        {
+                            text: 'Toggle transitionDuration',
+                            onclick: function () {
+                                transitionDuration = transitionDuration ? 0 : 0.4;
+                                chart.setOption({
+                                    tooltip: {
+                                        transitionDuration: transitionDuration
+                                    },
+                                    title: {
+                                        text: [
+                                            'displayTransition: ' + displayTransition,
+                                            'transitionDuration: ' + transitionDuration
+                                        ].join('\n')
+                                    }
+                                });
+                            }
+                        }
+                    ]
+                });
+            });
+
+        </script>
+    </body>
+</html>

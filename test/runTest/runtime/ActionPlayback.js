@@ -37,6 +37,8 @@ export class ActionPlayback {
         this._currentOpIndex = 0;
 
         this._isLastOpMousewheel = false;
+
+        this._isMouseDown = false;
     }
 
     getContext() {
@@ -52,6 +54,7 @@ export class ActionPlayback {
         this._current = Date.now();
         this._elapsedTime = 0;
         this._isLastOpMousewheel = false;
+        this._isMouseDown = false;
     }
 
     _restoreContext(ctx) {
@@ -103,7 +106,7 @@ export class ActionPlayback {
                 try {
                     // Execute all if there are multiple ops in one frame.
                     do {
-                        const executed = await self._update(takeScreenshot);
+                        const executed = await self._update(takeScreenshot, action.name);
                         if (!executed) {
                             break;
                         }
@@ -117,6 +120,14 @@ export class ActionPlayback {
 
                 if (self._currentOpIndex >= self._ops.length) {
                     // Finished
+                    if (self._isMouseDown) {
+                        reject(new Error(
+                            action.name + ' has finished, but the page remains in mousedown state.'
+                            + ' A mouseup is needed; otherwise the subsequent test case may be affected.'
+                            + ' Please re-record this test case.'
+                        ));
+                        return;
+                    }
                     resolve();
                 }
                 else {
@@ -135,7 +146,7 @@ export class ActionPlayback {
         }
     }
 
-    async _update(takeScreenshot) {
+    async _update(takeScreenshot, actionName) {
         let op = this._ops[this._currentOpIndex];
 
         if (!op || (op.time > this._elapsedTime)) {
@@ -144,18 +155,23 @@ export class ActionPlayback {
         }
 
         let screenshotTaken = false;
+        let errMsgPart;
         switch (op.type) {
             case 'mousedown':
+                errMsgPart = actionName + ' ' + op.type + ' (' + op.x + ',' + op.y + ')';
                 // Pause timeline to avoid frame not sync.
                 timeline.pause();
                 await __VRT_MOUSE_MOVE__(op.x, op.y);
-                await __VRT_MOUSE_DOWN__();
+                await __VRT_MOUSE_DOWN__(errMsgPart);
+                this._isMouseDown = true;
                 timeline.resume();
                 break;
             case 'mouseup':
+                errMsgPart = actionName + ' ' + op.type + ' (' + op.x + ',' + op.y + ')';
                 timeline.pause();
                 await __VRT_MOUSE_MOVE__(op.x, op.y);
-                await __VRT_MOUSE_UP__();
+                await __VRT_MOUSE_UP__(errMsgPart);
+                this._isMouseDown = false;
                 if (window.__VRT_RELOAD_TRIGGERED__) {
                     return;
                 }
@@ -187,6 +203,12 @@ export class ActionPlayback {
                 break;
             case 'valuechange':
                 const selector = document.querySelector(op.selector);
+                if (!selector) {
+                    throw new Error(
+                        '[Test Case Error] (' + actionName + ') Selector not found: ' + op.selector
+                        + '. It may be caused by test case changes.'
+                    );
+                }
                 selector.value = op.value;
                 // changing value via js won't trigger `change` event, so trigger it manually
                 selector.dispatchEvent(new Event('change'));

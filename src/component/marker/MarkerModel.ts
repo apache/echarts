@@ -53,6 +53,7 @@ export interface MarkerPositionOption {
     // Absolute position, px or percent string
     x?: number | string
     y?: number | string
+    relativeTo?: 'container' | 'coordinate'
 
     /**
      * Coord on any coordinate system

@@ -128,12 +128,17 @@ class FunnelPiece extends graphic.Polygon {
             } }
         );
 
+        const labelModel = itemModel.getModel('label');
+        const labelColor = labelModel.get('color');
+        const overrideColor = labelColor === 'inherit'
+            ? visualColor
+            : null;
+
         polygon.setTextConfig({
             local: true,
             inside: !!labelLayout.inside,
-            insideStroke: visualColor,
-            // insideFill: 'auto',
-            outsideFill: visualColor
+            insideStroke: overrideColor,
+            outsideFill: overrideColor
         });
 
         const linePoints = labelLayout.linePoints;

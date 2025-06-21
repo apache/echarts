@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as layout from '../../util/layout';
 import * as zrUtil from 'zrender/src/core/util';
 import {groupData} from '../../util/model';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -25,6 +24,7 @@ import SankeySeriesModel, { SankeySeriesOption, SankeyNodeItemOption } from './S
 import { GraphNode, GraphEdge } from '../../data/Graph';
 import { LayoutOrient } from '../../util/types';
 import GlobalModel from '../../model/Global';
+import { createBoxLayoutReference, getLayoutRect } from '../../util/layout';
 
 export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
@@ -33,7 +33,8 @@ export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
         const nodeWidth = seriesModel.get('nodeWidth');
         const nodeGap = seriesModel.get('nodeGap');
 
-        const layoutInfo = getViewRect(seriesModel, api);
+        const refContainer = createBoxLayoutReference(seriesModel, api).refContainer;
+        const layoutInfo = getLayoutRect(seriesModel.getBoxLayoutParams(), refContainer);
 
         seriesModel.layoutInfo = layoutInfo;
 
@@ -59,18 +60,6 @@ export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
         layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations, orient, nodeAlign);
     });
-}
-
-/**
- * Get the layout position of the whole view
- */
-function getViewRect(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
-    return layout.getLayoutRect(
-        seriesModel.getBoxLayoutParams(), {
-            width: api.getWidth(),
-            height: api.getHeight()
-        }
-    );
 }
 
 function layoutSankey(

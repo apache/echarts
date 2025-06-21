@@ -25,6 +25,7 @@ export {
     getPrecisionSafe,
     getPixelPrecision,
     getPercentWithPrecision,
+    parsePercent,
     MAX_SAFE_INTEGER,
     remRadian,
     isRadianAroundZero,

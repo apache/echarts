@@ -119,7 +119,8 @@ describe('scale_interval', function () {
         }
 
         function doSingleTest(extent: [number, number], splitNumber: number): void {
-            const result = intervalScaleNiceTicks(extent, splitNumber);
+            const span = extent[1] - extent[0];
+            const result = intervalScaleNiceTicks(extent, span, splitNumber);
             const intervalPrecision = result.intervalPrecision;
             const resultInterval = result.interval;
             const niceTickExtent = result.niceTickExtent;

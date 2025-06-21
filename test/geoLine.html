@@ -56,8 +56,8 @@ under the License.
 
             require([
                 'echarts',
-                './data/map/json/china.json'
-            ], function (echarts, chinaJson) {
+                './data/map/js/china.js'
+            ], function (echarts) {
                 var geoCoordMap = {
                     '上海': [121.4648,31.2891],
                     '东莞': [113.8953,22.901],
@@ -233,8 +233,6 @@ under the License.
                     return res;
                 };
 
-                echarts.registerMap('china', chinaJson);
-
                 var myChart = echarts.init(document.getElementById('main'));
 
                 var color = ['#a6c84c', '#ffa022', '#46bee9'];
@@ -317,7 +315,7 @@ under the License.
 
                 myChart.setOption({
                     backgroundColor: '#404a59',
-                    title: {
+                    title: [{
                         text: '全国主要城市空气质量',
                         subtext: 'data from PM25.in',
                         sublink: 'http://www.pm25.in',
@@ -325,7 +323,21 @@ under the License.
                         textStyle: {
                             color: '#fff'
                         }
-                    },
+                    }, {
+                        text: '地图数据来源：天地图 cloudcenter.tianditu.gov.cn',
+                        subtext: '仅作为功能测试使用，线上产品应从天地图获取最新地图数据并申请审图号',
+                        link: 'https://cloudcenter.tianditu.gov.cn/',
+                        bottom: 15,
+                        left: 15,
+                        textStyle: {
+                            color: '#ccc',
+                            fontSize: 12
+                        },
+                        subtextStyle: {
+                            color: '#aaa',
+                            fontSize: 12
+                        }
+                    }],
                     tooltip : {
                         trigger: 'item'
                     },
@@ -342,31 +354,33 @@ under the License.
                     geo: {
                         map: 'china',
                         label: {
-                            normal: {
-                                show: true,
-                                formatter: '{a}',
-                                // position: 'inside',
-                                backgroundColor: '#fff',
-                                padding: [3, 5],
-                                borderRadius: 3,
-                                borderWidth: 1,
-                                borderColor: 'rgba(0,0,0,0.5)',
-                                color: '#777'
-                            },
-                            emphasis: {
-                            }
+                            show: true,
+                            formatter: '{a}',
+                            // position: 'inside',
+                            backgroundColor: '#fff',
+                            padding: [3, 5],
+                            borderRadius: 3,
+                            borderWidth: 1,
+                            borderColor: 'rgba(0,0,0,0.5)',
+                            color: '#777'
                         },
                         selectedMode: 'single',
                         roam: true,
                         itemStyle: {
-                            normal: {
-                                areaColor: '#323c48',
-                                borderColor: '#404a59'
-                            },
+                            areaColor: '#323c48',
+                            borderColor: '#111',
                             emphasis: {
                                 areaColor: '#2a333d'
                             }
-                        }
+                        },
+                        regions: [{
+                            name: '新疆维吾尔自治区附近境界线',
+                            itemStyle: {
+                                borderColor: '#404a59'
+                            }
+                        }],
+                        center: [104.2, 36],
+                        zoom: 1.4
                     },
                     series: series
                 });

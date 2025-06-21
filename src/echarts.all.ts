@@ -43,6 +43,7 @@ import {
     TreeChart,
     TreemapChart,
     GraphChart,
+    ChordChart,
     GaugeChart,
     FunnelChart,
     ParallelChart,
@@ -65,6 +66,7 @@ import {
     SingleAxisComponent,
     ParallelComponent,
     CalendarComponent,
+    MatrixComponent,
     GraphicComponent,
     ToolboxComponent,
     TooltipComponent,
@@ -82,6 +84,7 @@ import {
     VisualMapComponent,
     VisualMapContinuousComponent,
     VisualMapPiecewiseComponent,
+    ThumbnailComponent,
     AriaComponent,
     DatasetComponent,
     TransformComponent
@@ -89,7 +92,9 @@ import {
 
 import {
     UniversalTransition,
-    LabelLayout
+    LabelLayout,
+    AxisBreak,
+    ScatterJitter
 } from './export/features';
 
 
@@ -127,6 +132,7 @@ use([
     TreeChart,
     TreemapChart,
     GraphChart,
+    ChordChart,
     GaugeChart,
     FunnelChart,
     ParallelChart,
@@ -145,8 +151,6 @@ use([
 // -------------------
 // Coordinate systems
 // -------------------
-
-
 
 // All of the axis modules have been included in the
 // coordinate system module below, do not need to
@@ -209,7 +213,14 @@ use(ParallelComponent);
 // );
 use(CalendarComponent);
 
-
+// `matrix` coordinate system. for example,
+// chart.setOption({
+//     matrix: {...},
+//     series: [{
+//         coordinateSystem: 'matrix'
+//     }]
+// );
+use(MatrixComponent);
 
 // ------------------
 // Other components
@@ -322,6 +333,8 @@ use(VisualMapContinuousComponent);
 // });
 use(VisualMapPiecewiseComponent);
 
+use(ThumbnailComponent);
+
 // `aria` component providing aria, for example:
 // chart.setOption({
 //     aria: {...}
@@ -354,3 +367,7 @@ use(UniversalTransition);
 //     }
 // })
 use(LabelLayout);
+
+use(AxisBreak);
+
+use(ScatterJitter);

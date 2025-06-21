@@ -40,6 +40,8 @@ import { getUID } from '../../util/component';
 import Displayable from 'zrender/src/graphic/Displayable';
 import ZRText from 'zrender/src/graphic/Text';
 import { getFont } from '../../label/labelStyle';
+import { box, createBoxLayoutReference, getLayoutRect, positionElement } from '../../util/layout';
+import tokens from '../../visual/tokens';
 
 type IconPath = ToolboxFeatureModel['iconPaths'][string];
 
@@ -263,7 +265,7 @@ class ToolboxView extends ComponentView {
                           );
                     textContent.setStyle({
                         fill: (iconStyleEmphasisModel.get('textFill')
-                            || hoverStyle.fill || hoverStyle.stroke || '#000') as string,
+                            || hoverStyle.fill || hoverStyle.stroke || tokens.color.neutral99) as string,
                         backgroundColor: iconStyleEmphasisModel.get('textBackgroundColor')
                     });
                     path.setTextConfig({
@@ -292,7 +294,28 @@ class ToolboxView extends ComponentView {
             });
         }
 
-        listComponentHelper.layout(group, toolboxModel, api);
+        const refContainer = createBoxLayoutReference(toolboxModel, api).refContainer;
+        const boxLayoutParams = toolboxModel.getBoxLayoutParams();
+        const padding = toolboxModel.get('padding');
+        const viewRect = getLayoutRect(
+            boxLayoutParams,
+            refContainer,
+            padding
+        );
+        box(
+            toolboxModel.get('orient'),
+            group,
+            toolboxModel.get('itemGap'),
+            viewRect.width,
+            viewRect.height
+        );
+        positionElement(
+            group,
+            boxLayoutParams,
+            refContainer,
+            padding
+        );
+
         // Render background after group is layout
         // FIXME
         group.add(listComponentHelper.makeBackground(group.getBoundingRect(), toolboxModel));

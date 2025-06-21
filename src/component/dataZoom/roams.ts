@@ -23,10 +23,10 @@
 // pan or zoom, only dispatch one action for those data zoom
 // components.
 
-import RoamController, { RoamType } from '../../component/helper/RoamController';
+import RoamController, { RoamOption } from '../../component/helper/RoamController';
 import * as throttleUtil from '../../util/throttle';
 import { makeInner } from '../../util/model';
-import { Dictionary, ZRElementEvent } from '../../util/types';
+import { Dictionary, RoamOptionMixin, ZRElementEvent } from '../../util/types';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import InsideZoomModel from './InsideZoomModel';
 import { each, curry, Curry1, HashMap, createHashMap } from 'zrender/src/core/util';
@@ -179,8 +179,15 @@ function containsPoint(
 /**
  * Merge roamController settings when multiple dataZooms share one roamController.
  */
-function mergeControllerParams(dataZoomInfoMap: HashMap<{ model: InsideZoomModel }>) {
-    let controlType: RoamType;
+function mergeControllerParams(
+    dataZoomInfoMap: HashMap<{ model: InsideZoomModel }>,
+    coordSysRecord: CoordSysRecord,
+    api: ExtensionAPI
+): {
+    controlType: RoamOptionMixin['roam']
+    opt: RoamOption
+} {
+    let controlType: RoamOptionMixin['roam'];
     // DO NOT use reserved word (true, false, undefined) as key literally. Even if encapsulated
     // as string, it is probably revert to reserved word by compress tool. See #7411.
     const prefix = 'type_';
@@ -218,7 +225,15 @@ function mergeControllerParams(dataZoomInfoMap: HashMap<{ model: InsideZoomModel
             zoomOnMouseWheel: true,
             moveOnMouseMove: true,
             moveOnMouseWheel: true,
-            preventDefaultMouseMove: !!preventDefaultMouseMove
+            preventDefaultMouseMove: !!preventDefaultMouseMove,
+            api,
+            zInfo: {
+                component: coordSysRecord.model,
+            },
+            triggerInfo: {
+                roamTrigger: null,
+                isInSelf: coordSysRecord.containsPoint
+            },
         }
     };
 }
@@ -280,10 +295,8 @@ export function installDataZoomRoamProcessor(registers: EChartsExtensionInstallR
                     return;
                 }
 
-                const controllerParams = mergeControllerParams(dataZoomInfoMap);
+                const controllerParams = mergeControllerParams(dataZoomInfoMap, coordSysRecord, api);
                 controller.enable(controllerParams.controlType, controllerParams.opt);
-
-                controller.setPointerChecker(coordSysRecord.containsPoint);
 
                 throttleUtil.createOrUpdate(
                     coordSysRecord,

@@ -30,6 +30,7 @@ import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
 import { map, each, isString, isNumber } from 'zrender/src/core/util';
 import { alignScaleTicks } from '../axisAlignTicks';
+import { createBoxLayoutReference } from '../../util/layout';
 
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {
@@ -122,12 +123,12 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     }
 
     resize(radarModel: RadarModel, api: ExtensionAPI) {
+        const refContainer = createBoxLayoutReference(radarModel, api).refContainer;
+
         const center = radarModel.get('center');
-        const viewWidth = api.getWidth();
-        const viewHeight = api.getHeight();
-        const viewSize = Math.min(viewWidth, viewHeight) / 2;
-        this.cx = numberUtil.parsePercent(center[0], viewWidth);
-        this.cy = numberUtil.parsePercent(center[1], viewHeight);
+        const viewSize = Math.min(refContainer.width, refContainer.height) / 2;
+        this.cx = numberUtil.parsePercent(center[0], refContainer.width) + refContainer.x;
+        this.cy = numberUtil.parsePercent(center[1], refContainer.height) + refContainer.y;
 
         this.startAngle = radarModel.get('startAngle') * Math.PI / 180;
 

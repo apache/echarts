@@ -165,7 +165,6 @@
           node.y = parseFloat(getAttr(vizPosDom, 'y'));
           // z
         }
-
         if (vizColorDom) {
           node.itemStyle.normal.color = 'rgb(' + [getAttr(vizColorDom, 'r') | 0, getAttr(vizColorDom, 'g') | 0, getAttr(vizColorDom, 'b') | 0].join(',') + ')';
         }

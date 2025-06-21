@@ -44,6 +44,7 @@ interface LayoutSeriesInfo {
     barMaxWidth: number
     barMinWidth: number
     barGap: number | string
+    defaultBarGap?: number | string
     barCategoryGap: number | string
     axisKey: string
     stackId: string
@@ -236,6 +237,7 @@ export function makeColumnLayout(barSeries: BarSeriesModel[]) {
         );
         const barGap = seriesModel.get('barGap');
         const barCategoryGap = seriesModel.get('barCategoryGap');
+        const defaultBarGap = seriesModel.get('defaultBarGap');
 
         seriesInfoList.push({
             bandWidth: bandWidth,
@@ -244,6 +246,7 @@ export function makeColumnLayout(barSeries: BarSeriesModel[]) {
             barMinWidth: barMinWidth,
             barGap: barGap,
             barCategoryGap: barCategoryGap,
+            defaultBarGap: defaultBarGap,
             axisKey: getAxisKey(baseAxis),
             stackId: getSeriesStackId(seriesModel)
         });
@@ -273,7 +276,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             remainedWidth: bandWidth,
             autoWidthCount: 0,
             categoryGap: null,
-            gap: '20%',
+            gap: seriesInfo.defaultBarGap || 0,
             stacks: {}
         };
         const stacks = columnsOnAxis.stacks;

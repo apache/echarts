@@ -451,7 +451,7 @@ class GaugeView extends ChartView {
                     r: r
                 }
             });
-            isOverlap && (progress.z2 = maxVal - (data.get(valueDim, idx) as number) % maxVal);
+            isOverlap && (progress.z2 = linearMap(data.get(valueDim, idx) as number, [minVal, maxVal], [100, 0], true));
             return progress;
         }
 

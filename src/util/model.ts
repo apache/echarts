@@ -45,14 +45,16 @@ import {
     Payload,
     OptionId,
     OptionName,
-    InterpolatableValue
+    InterpolatableValue,
+    NullUndefined,
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
-import { warn } from './log';
+import { error, warn } from './log';
+import type Model from '../model/Model';
 
 function interpolateNumber(p0: number, p1: number, percent: number): number {
     return (p1 - p0) * percent + p0;
@@ -777,6 +779,7 @@ export type ModelFinderObject = {
     xAxisIndex?: ModelFinderIndexQuery, xAxisId?: ModelFinderIdQuery, xAxisName?: ModelFinderNameQuery
     yAxisIndex?: ModelFinderIndexQuery, yAxisId?: ModelFinderIdQuery, yAxisName?: ModelFinderNameQuery
     gridIndex?: ModelFinderIndexQuery, gridId?: ModelFinderIdQuery, gridName?: ModelFinderNameQuery
+    matrixIndex?: ModelFinderIndexQuery, matrixId?: ModelFinderIdQuery, matrixName?: ModelFinderNameQuery
     dataIndex?: number, dataIndexInside?: number
     // ... (can be extended)
 };
@@ -951,16 +954,32 @@ export function queryReferringComponents(
     }
 
     if (indexOption === 'none' || indexOption === false) {
-        assert(opt.enableNone, '`"none"` or `false` is not a valid value on index option.');
-        result.models = [];
-        return result;
+        if (opt.enableNone) {
+            result.models = [];
+            return result;
+        }
+        else {
+            // Do not throw; consider if some component previously does not use this method,
+            // and start to use it, need to be fault-tolerant for backward compatibility.
+            if (__DEV__) {
+                error('`"none"` or `false` is not a valid value on index option.');
+            }
+            indexOption = -1; // Can not query by index but may still query by id/name if specified.
+        }
     }
 
     // `queryComponents` will return all components if
     // both all of index/id/name are null/undefined.
     if (indexOption === 'all') {
-        assert(opt.enableAll, '`"all"` is not a valid value on index option.');
-        indexOption = idOption = nameOption = null;
+        if (opt.enableAll) {
+            indexOption = idOption = nameOption = null;
+        }
+        else {
+            if (__DEV__) {
+                error('`"all"` is not a valid value on index option.');
+            }
+            indexOption = -1;
+        }
     }
     result.models = ecModel.queryComponents({
         mainType: mainType,
@@ -1092,5 +1111,60 @@ export function interpolateRawValues(
             }
         }
         return interpolated;
+    }
+}
+
+/**
+ * Use an iterator to avoid exposing the internal list or duplicating it
+ * for the outside traveller, and no extra heap allocation.
+ * @usage
+ *  for (const it = resetIterator(); it.next();) {
+ *      const item = it.item;
+ *      const key = it.key;
+ *      const itIdx = it.itIdx;
+ *      // ...
+ *  }
+ * @usage
+ *  const it = resetIterator();
+ *  while (it.next()) { ... }
+ * @usage
+ *  for (resetIterator(it); it.next();) { ... }
+ */
+export class ListIterator<TItem> {
+
+    private _idx: number;
+    private _end: number;
+    private _list: TItem[];
+    private _step: number;
+
+    item: TItem | NullUndefined;
+    key: number;
+
+    /**
+     * The loop condition is `idx < end` if `step > 0`;
+     * The loop condition is `idx >= end` if `step < 0`.
+     *
+     * @param end By default `list.length` if `step > 0`; `0` if `step < 0`.
+     * @param step By default `1`.
+     */
+    reset(list: TItem[], start: number, end?: number, step?: number): ListIterator<TItem> {
+        this._list = list;
+        this._step = step = step || 1;
+        this._idx = start;
+        this._end = end != null ? end : step > 0 ? list.length : 0;
+
+        this.item = null;
+        this.key = NaN;
+
+        return this;
+    }
+
+    next(): boolean {
+        if (this._step > 0 ? this._idx < this._end : this._idx >= this._end) {
+            this.item = this._list[this._idx];
+            this.key = this._idx = this._idx + this._step;
+            return true;
+        }
+        return false;
     }
 }

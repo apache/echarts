@@ -27,6 +27,7 @@ import {
     CallbackDataParams,
     TooltipOrderMode
 } from '../../util/types';
+import tokens from '../../visual/tokens';
 import {AxisPointerOption} from '../axisPointer/AxisPointerModel';
 
 
@@ -50,8 +51,6 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      * Trigger only works on coordinate system.
      */
     trigger?: 'item' | 'axis' | 'none'
-
-    displayMode?: 'single' | 'multipleByCoordSys';
 
     /**
      * 'auto': use html by default, and use non-html if `document` is not defined
@@ -77,6 +76,11 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
      * Only available when renderMode is html
      */
     className?: string
+
+    /**
+     * Default border color to use when there are multiple series
+     */
+    defaultBorderColor?: string
 
     order?: TooltipOrderMode
 }
@@ -106,13 +110,11 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         alwaysShowContent: false,
 
-        displayMode: 'single', // 'single' | 'multipleByCoordSys'
-
         renderMode: 'auto', // 'auto' | 'html' | 'richText'
 
         // whether restraint content inside viewRect.
         // If renderMode: 'richText', default true.
-        // If renderMode: 'html', defaut false (for backward compat).
+        // If renderMode: 'html', defaults to `false` (for backward compat).
         confine: null,
 
         showDelay: 0,
@@ -122,9 +124,11 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         // Animation transition time, unit is second
         transitionDuration: 0.4,
 
+        displayTransition: true,
+
         enterable: false,
 
-        backgroundColor: '#fff',
+        backgroundColor: tokens.color.neutral00,
 
         // box shadow
         shadowBlur: 10,
@@ -137,6 +141,8 @@ class TooltipModel extends ComponentModel<TooltipOption> {
 
         // tooltip border width, unit is px, default is 0 (no border)
         borderWidth: 1,
+
+        defaultBorderColor: tokens.color.border,
 
         // Tooltip inside padding, default is 5 for all direction
         // Array is allowed to set up, right, bottom, left, same with css
@@ -163,7 +169,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
             animationEasingUpdate: 'exponentialOut',
 
             crossStyle: {
-                color: '#999',
+                color: tokens.color.borderShade,
                 width: 1,
                 type: 'dashed',
 
@@ -175,7 +181,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
             // otherwise it will always override those styles on option.axisPointer.
         },
         textStyle: {
-            color: '#666',
+            color: tokens.color.tertiary,
             fontSize: 14
         }
     };
