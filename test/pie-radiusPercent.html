@@ -1,0 +1,257 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #main {
+            width:  100%;
+            height: 92%;
+        }
+
+        p {
+            text-align: center;
+        }
+
+        button {
+            padding:    5px 15px;
+            background: lightgray;
+            cursor:     pointer;
+        }
+
+        button:hover {
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+<p>
+    <button type="button"
+            onclick="selectRandomValues()">
+        Random selection
+    </button>
+</p>
+<div id="main"></div>
+<script>
+    let dataset = {
+        dimensions: ['key', 'value', 'selected'],
+        source: [
+            ['A', 1092, 112],
+            ['B', 768, 499],
+            ['C', 604, 257],
+            ['D', 238, 180]
+        ],
+    };
+
+    function selectRandomValues() {
+        dataset.source.forEach(row => {
+            row[2] = row[1] * Math.random();
+        });
+        chart.setOption({dataset});
+    }
+
+
+    function itemScale(params) {
+        const {data = []} = params;
+        return data[2] / data[1];
+    }
+
+    function itemScaleQuadratic(params) {
+        const {value, encode} = params;
+        const val = value[encode.value?.[0]];
+        const selected = value[encode.value?.[1]];
+        const scale = selected / val;
+        return Math.pow(scale, 1 / 2);
+    }
+
+    function itemScaleCubic(params) {
+        const {value, encode} = params;
+        const val = value[encode.value?.[0]];
+        const selected = value[encode.value?.[1]];
+        const scale = selected / val;
+        return Math.pow(scale, 1 / 3);
+    }
+
+    let chart;
+
+    require([
+        'echarts'
+    ], function (echarts) {
+        chart = echarts.init(document.getElementById('main'), null, {});
+
+        chart.setOption({
+            legend: {
+                itemStyle: {
+                    opacity: 1
+                }
+            },
+            tooltip: {trigger: 'item'},
+            dataset: dataset,
+            title: [
+                createTitle([1, 1], 'default'),
+                createTitle([1, 2], 'optional background with solid color'),
+                createTitle([1, 3], 'donut style + background color inherited from items'),
+                createTitle([2, 1], 'cubic scale'),
+                createTitle([2, 2], 'quadratic scale'),
+                createTitle([2, 3], 'quadratic scale + donut style'),
+            ],
+            series: [
+                /** example #1: scaling based on a simple function */
+                createScaledSeries(
+                    [1, 1],
+                    {},
+                    itemScale
+                ),
+
+                /** example #2: pie with a solid semitransparent background */
+                createScaledSeries(
+                    [1, 2],
+                    {bg: {color: '#000', opacity: 0.05}},
+                    itemScale
+                ),
+
+                /** example #3: add donut with the same angles,
+                 * but background color was inherited from items */
+                createScaledSeries(
+                    [1, 3],
+                    {
+                        bg: {opacity: 0.25},
+                        radius: ['13%', '22%']
+                    },
+                    itemScale
+                ),
+
+                /** example #4: almost the same as examples #2,
+                 * but non-linear function used */
+                createScaledSeries(
+                    [2, 1],
+                    {
+                        bg: {opacity: 0.25},
+                        encode: ['value', 'selected']
+                    },
+                    itemScaleCubic
+                ),
+
+                /** example #5: almost the same as examples #2,
+                 * but non-linear function used */
+                createScaledSeries(
+                    [2, 2],
+                    {
+                        bg: {opacity: 0.25},
+                        encode: ['value', 'selected']
+                    },
+                    itemScaleQuadratic
+                ),
+
+                /** example #6: almost the same as examples #3,
+                 * but non-linear function used */
+                createScaledSeries(
+                    [2, 3],
+                    {
+                        bg: {opacity: 0.25},
+                        radius: ['13%', '22%'],
+                        encode: ['value', 'selected']
+                    },
+                    itemScaleQuadratic
+                ),
+            ]
+        });
+
+        function createTitle(pos, text) {
+            return {
+                subtext: text,
+                textAlign: 'center',
+                left: `${(pos[1] / 3 - 1 / 6) * 100}%`,
+                top: `${(pos[0] - 1) * 50 + 6}%`
+            };
+        }
+
+        /**
+         * @param pos {number[]}
+         * @param [radius] {string[]|number[]}
+         * @param [encode] {string|string[]}
+         * @param [bg] {{color?: string, opacity?: number}}
+         * @param radiusPercent {number|function}
+         * @return {*}
+         */
+        function createScaledSeries(pos, {radius, bg, encode = 'value'} = {}, radiusPercent) {
+            return {
+                name: `Selected ${encode instanceof Array ? encode[0] : encode}`,
+                type: 'pie',
+                center: [
+                    `${(pos[1] / 3 - 1 / 6) * 100}%`,
+                    `${(pos[0] - 1) * 50 + 25}%`,
+                ],
+                radius: radius || '22%',
+                encode: {
+                    itemName: 'key',
+                    value: encode,
+                },
+                itemStyle: {
+                    radiusPercent: radiusPercent,
+                },
+                showBackground: bg != null,
+                backgroundStyle: bg,
+                label: {
+                    formatter(params) {
+                        const {name, data = [], percent, sum} = params;
+                        const value = data[1];
+                        const selected = data[2];
+                        const selectedPercent = Math.floor(selected / sum * 10_000) / 100;
+
+                        let text = `{bold|${name}: ${Math.round(selected)} (${selectedPercent}%)}`;
+                        text += `\n{small|Total: ${value} (${percent}%)}`;
+                        return text;
+                    },
+                    rich: {
+                        bold: {
+                            fontWeight: 'bold',
+                            height: 21,
+                            fontSize: 14
+                        },
+                        small: {
+                            fontStyle: 'italic'
+                        }
+                    }
+                },
+                tooltip: {
+                    formatter(params) {
+                        const {seriesName, name, marker, data = [], sum} = params;
+                        const selected = data[2];
+                        const selectedPercent = Math.floor(selected / sum * 10_000) / 100;
+                        let text = `${seriesName}<br>`;
+                        text += `${marker} ${name}: `;
+                        text += `<strong>${Math.round(selected)} (${selectedPercent}%)</strong><br>`;
+                        return text;
+                    }
+                },
+            };
+        }
+    })
+
+</script>
+</body>
+</html>
