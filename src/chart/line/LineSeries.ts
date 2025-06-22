@@ -42,6 +42,7 @@ import type Polar from '../../coord/polar/Polar';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
 import {LegendIconParams} from '../../component/legend/LegendModel';
+import type { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -215,6 +216,15 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         triggerLineEvent: false
     };
+
+    brushSelector(dataIndex: number, data: SeriesData, selectors: BrushCommonSelectorsForSeries): boolean {
+        const points = data.getLayout('points');
+        const pointOffset = dataIndex * 2;
+        const x = points[pointOffset];
+        const y = points[pointOffset + 1];
+
+        return selectors.point([x, y]);
+    }
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
         const group = new Group();
