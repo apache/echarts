@@ -386,6 +386,7 @@ class TooltipView extends ComponentView {
         api: ExtensionAPI,
         payload: HideTipPayload
     ) {
+        clearTimeout(this._showTimout);
         const tooltipContent = this._tooltipContent;
 
         if (this._tooltipModel) {
