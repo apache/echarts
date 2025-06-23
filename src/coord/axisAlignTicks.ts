@@ -50,7 +50,7 @@ export function alignScaleTicks(
     const isMaxFixed = scaleExtent.fixMax;
 
     if (scale.type === 'log') {
-        rawExtent = logTransform((scale as LogScale).base, rawExtent);
+        rawExtent = logTransform((scale as LogScale).base, rawExtent, true);
     }
     scale.setBreaksFromOption(retrieveAxisBreaksOption(axisModel));
     scale.setExtent(rawExtent[0], rawExtent[1]);
