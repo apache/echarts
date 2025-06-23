@@ -1069,8 +1069,8 @@ class ECharts extends Eventful<ECEventDefinition> {
                 if (isGlobalOut) {
                     params = {} as ECElementEvent;
                 }
-                else {
-                    el && findEventDispatcher(el, (parent) => {
+                else if (el) {
+                    findEventDispatcher(el, (parent) => {
                         const ecData = getECData(parent);
                         if (ecData && ecData.dataIndex != null) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
