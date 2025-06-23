@@ -87,7 +87,7 @@ export interface CoordinateSystemMaster {
         finder: ParsedModelFinder,
         value: Parameters<CoordinateSystem['dataToLayout']>[0],
         opt?: unknown
-    ): ReturnType<CoordinateSystem['dataToLayout']> | NullUndefined;
+    ): (ReturnType<CoordinateSystem['dataToLayout']> | NullUndefined);
 
     // This methods is also responsible for determining whether this
     // coordinate system is applicable to the given `finder`.
@@ -98,7 +98,7 @@ export interface CoordinateSystemMaster {
         finder: ParsedModelFinder,
         pixelValue: Parameters<CoordinateSystem['pointToData']>[0],
         opt?: unknown
-    ): ReturnType<CoordinateSystem['pointToData']> | NullUndefined;
+    ): (ReturnType<CoordinateSystem['pointToData']> | NullUndefined);
 
     // @param point Point in global pixel coordinate system.
     // The signature of this method should be the same as `CoordinateSystemExecutive`
