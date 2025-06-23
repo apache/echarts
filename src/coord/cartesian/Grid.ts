@@ -24,12 +24,12 @@
  */
 
 import {isObject, each, indexOf, retrieve3, keys} from 'zrender/src/core/util';
-import {getLayoutRect, LayoutRect} from '../../util/layout';
+import {box, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
     ifAxisCrossZero,
     niceScaleExtent,
-    estimateLabelUnionRect,
+    estimateLabelRect,
     getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
@@ -53,6 +53,7 @@ import { isIntervalOrLogScale } from '../../scale/helper';
 import { alignScaleTicks } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
+import BoundingRect from 'zrender/src/core/BoundingRect';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -179,16 +180,14 @@ class Grid implements CoordinateSystemMaster {
             });
 
         this._rect = gridRect;
-
         const axesList = this._axesList;
-
         adjustAxes();
 
         // Minus label size
         if (isContainLabel) {
             each(axesList, function (axis) {
                 if (!axis.model.get(['axisLabel', 'inside'])) {
-                    const labelUnionRect = estimateLabelUnionRect(axis);
+                    const {labelUnionRect} = estimateLabelRect(axis);
                     if (labelUnionRect) {
                         const dim: 'height' | 'width' = axis.isHorizontal() ? 'height' : 'width';
                         const margin = axis.model.get(['axisLabel', 'margin']);
@@ -202,10 +201,37 @@ class Grid implements CoordinateSystemMaster {
                     }
                 }
             });
+            adjustAxes();
+            //Adjust grid.width to keep xAxis labels in dom
+            const xAxis = axesList[0].isHorizontal() ? axesList[0] : axesList[1];
+            const {labelRects} = estimateLabelRect(xAxis);
+            //Find all displayed labels and create the union rect of them
+            const labelViews = xAxis.getViewLabels();
+            let labelUnionRects: BoundingRect;
+            each(labelViews, function (label, index) {
+                //Only when axis type is 'category' or 'time' can 'tickValue'
+                //correctly point to the index of label.
+                //When axis type is 'value', tickValue is the exact value of that tick.
+                //In this case 'interval' would not work so 'index' is the correct index of label
+                const labelIdx = xAxis.type === 'category' ? label.tickValue : index;
+                const labelWidth = labelRects[labelIdx].width;
+                const labelX = xAxis.dataToCoord(label.tickValue) + gridRect.x - labelWidth / 2;
+                const labelrect = new BoundingRect(labelX, 0, labelWidth, 1);
+                labelUnionRects ? labelUnionRects.union(labelrect) : labelUnionRects = labelrect;
+            });
+            const leftExceed = labelUnionRects.x;
+            const rightExceed = labelUnionRects.x + labelUnionRects.width - api.getWidth();
 
+            //Check left margin
+            if (leftExceed < 0) {
+                gridRect.width -= -leftExceed;
+                gridRect.x += -leftExceed;
+            }
+            if (rightExceed > 0) {
+                gridRect.width -= rightExceed;
+            }
             adjustAxes();
         }
-
         each(this._coordsList, function (coord) {
             // Calculate affine matrix to accelerate the data to point transform.
             // If all the axes scales are time or value.

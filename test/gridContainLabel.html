@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0" style="width: 1000px"></div>
+        <div id="main1" style="width: 1000px"></div>
+        <div id="main2" style="width: 1000px"></div>
+        <div id="main3" style="width: 1000px"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                grid: {
+                    left: 15,
+                    right: 15,
+                    bottom: 30,
+                    top: 20,
+                    containLabel: true
+                },
+                tooltip: {
+                    trigger: "axis"
+                },
+                xAxis: {
+                    type: "category",
+                    axisTick: {
+                    show: true,
+                    alignWithLabel: true
+                    },
+                    axisLine:{
+                    onZero: false
+                    },
+                    axisLabel:{
+                        showMaxLabel:true,
+                        interval: 3
+                    },
+                    //position: 'top',
+                    data: [
+                    "2022-03-09",
+                    "2022-03-10",
+                    "2022-03-11",
+                    "2022-03-12",
+                    "2022-03-13",
+                    "2022-03-14",
+                    "2022-03-15",
+                    "2022-03-16",
+                    "2022-03-17",
+                    "2022-03-18",
+                    "2022-03-19",
+                    "2022-03-20",
+                    "2022-03-21",
+                    "2022-03-22",
+                    "2022-03-23",
+                    "2022-03-24",
+                    "2022-03-25",
+                    "2022-03-26",
+                    "2022-03-27",
+                    "2022-03-28",
+                    "2022-03-29",
+                    "2022-03-30",
+                    "2022-03-31",
+                    "2022-04-01",
+                    "2022-04-02",
+                    "2022-04-03",
+                    "2022-04-04",
+                    "2022-04-05",
+                    "2022-04-06",
+                    "2022-04-07",
+                    "2022-04-08-longlonglabeloverflow"
+                    ]
+                },
+                yAxis: {
+                    type: "value",
+                    //position: 'right'
+                },
+                series: [
+                    {
+                    name: "aa",
+                    type: "line",
+                    data: [
+                        "52873",
+                        "51987",
+                        "49246",
+                        "46211",
+                        "47696",
+                        "55347",
+                        "53337",
+                        "51211",
+                        "51777",
+                        "50161",
+                        "48815",
+                        "52286",
+                        "57520",
+                        "53866",
+                        "54941",
+                        "53757",
+                        "49987",
+                        "48466",
+                        "50253",
+                        "57594",
+                        "52546",
+                        "53485",
+                        "51454",
+                        "47983",
+                        "45871",
+                        "42043",
+                        "42086",
+                        "41258",
+                        "48014",
+                        "48813",
+                        "47137"
+                    ]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'yAxis: left',
+                    'long label overflow: right'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+    
+                option = {
+                    grid: {
+                        left: 15,
+                        right: 15,
+                        bottom: 30,
+                        top: 20,
+                        containLabel: true
+                    },
+                    tooltip: {
+                        trigger: "axis"
+                    },
+                    xAxis: {
+                        type: "category",
+                        axisTick: {
+                        show: true,
+                        alignWithLabel: true
+                        },
+                        axisLine:{
+                        onZero: false
+                        },
+                        //position: 'top',
+                        data: [
+                        "2022-03-09-longlonglabeloverflow",
+                        "2022-03-10",
+                        "2022-03-11",
+                        "2022-03-12",
+                        "2022-03-13",
+                        "2022-03-14",
+                        "2022-03-15",
+                        "2022-03-16",
+                        "2022-03-17",
+                        "2022-03-18",
+                        "2022-03-19",
+                        "2022-03-20",
+                        "2022-03-21",
+                        "2022-03-22",
+                        "2022-03-23",
+                        "2022-03-24",
+                        "2022-03-25",
+                        "2022-03-26",
+                        "2022-03-27",
+                        "2022-03-28",
+                        "2022-03-29",
+                        "2022-03-30",
+                        "2022-03-31",
+                        "2022-04-01",
+                        "2022-04-02",
+                        "2022-04-03",
+                        "2022-04-04",
+                        "2022-04-05",
+                        "2022-04-06",
+                        "2022-04-07",
+                        "2022-04-08"
+                        ]
+                    },
+                    yAxis: {
+                        type: "value",
+                        //position: 'right'
+                    },
+                    series: [
+                        {
+                        name: "aa",
+                        type: "line",
+                        data: [
+                            "52873",
+                            "51987",
+                            "49246",
+                            "46211",
+                            "47696",
+                            "55347",
+                            "53337",
+                            "51211",
+                            "51777",
+                            "50161",
+                            "48815",
+                            "52286",
+                            "57520",
+                            "53866",
+                            "54941",
+                            "53757",
+                            "49987",
+                            "48466",
+                            "50253",
+                            "57594",
+                            "52546",
+                            "53485",
+                            "51454",
+                            "47983",
+                            "45871",
+                            "42043",
+                            "42086",
+                            "41258",
+                            "48014",
+                            "48813",
+                            "47137"
+                        ]
+                        }
+                    ]
+                };
+    
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'yAxis: left',
+                        'long label overflow: left'
+                    ],
+                    option: option
+                    // height: 300,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+            });
+        </script>
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+    
+                option = {
+                    grid: {
+                        left: 15,
+                        right: 15,
+                        bottom: 30,
+                        top: 20,
+                        containLabel: true
+                    },
+                    tooltip: {
+                        trigger: "axis"
+                    },
+                    xAxis: {
+                        type: "category",
+                        axisTick: {
+                        show: true,
+                        alignWithLabel: true
+                        },
+                        axisLine:{
+                        onZero: false
+                        },
+                        axisLabel:{
+                        showMaxLabel:true,
+                        interval: 3
+                        },
+                        //position: 'top',
+                        data: [
+                        "2022-03-09",
+                        "2022-03-10",
+                        "2022-03-11",
+                        "2022-03-12",
+                        "2022-03-13",
+                        "2022-03-14",
+                        "2022-03-15",
+                        "2022-03-16",
+                        "2022-03-17",
+                        "2022-03-18",
+                        "2022-03-19",
+                        "2022-03-20",
+                        "2022-03-21",
+                        "2022-03-22",
+                        "2022-03-23",
+                        "2022-03-24",
+                        "2022-03-25",
+                        "2022-03-26",
+                        "2022-03-27",
+                        "2022-03-28",
+                        "2022-03-29",
+                        "2022-03-30",
+                        "2022-03-31",
+                        "2022-04-01",
+                        "2022-04-02",
+                        "2022-04-03",
+                        "2022-04-04",
+                        "2022-04-05",
+                        "2022-04-06",
+                        "2022-04-07",
+                        "2022-04-08-longlonglabeloverflow"
+                        ]
+                    },
+                    yAxis: {
+                        type: "value",
+                        position: 'right'
+                    },
+                    series: [
+                        {
+                        name: "aa",
+                        type: "line",
+                        data: [
+                            "52873",
+                            "51987",
+                            "49246",
+                            "46211",
+                            "47696",
+                            "55347",
+                            "53337",
+                            "51211",
+                            "51777",
+                            "50161",
+                            "48815",
+                            "52286",
+                            "57520",
+                            "53866",
+                            "54941",
+                            "53757",
+                            "49987",
+                            "48466",
+                            "50253",
+                            "57594",
+                            "52546",
+                            "53485",
+                            "51454",
+                            "47983",
+                            "45871",
+                            "42043",
+                            "42086",
+                            "41258",
+                            "48014",
+                            "48813",
+                            "47137"
+                        ]
+                        }
+                    ]
+                };
+    
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'yAxis: right',
+                        'long label overflow: right'
+                    ],
+                    option: option
+                    // height: 300,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+            });
+        </script>
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+    
+                option = {
+                    grid: {
+                        left: 15,
+                        right: 15,
+                        bottom: 30,
+                        top: 20,
+                        containLabel: true
+                    },
+                    tooltip: {
+                        trigger: "axis"
+                    },
+                    xAxis: {
+                        type: "category",
+                        axisTick: {
+                        show: true,
+                        alignWithLabel: true
+                        },
+                        axisLine:{
+                        onZero: false
+                        },
+                        //position: 'top',
+                        data: [
+                        "2022-03-09-longlonglabeloverflow",
+                        "2022-03-10",
+                        "2022-03-11",
+                        "2022-03-12",
+                        "2022-03-13",
+                        "2022-03-14",
+                        "2022-03-15",
+                        "2022-03-16",
+                        "2022-03-17",
+                        "2022-03-18",
+                        "2022-03-19",
+                        "2022-03-20",
+                        "2022-03-21",
+                        "2022-03-22",
+                        "2022-03-23",
+                        "2022-03-24",
+                        "2022-03-25",
+                        "2022-03-26",
+                        "2022-03-27",
+                        "2022-03-28",
+                        "2022-03-29",
+                        "2022-03-30",
+                        "2022-03-31",
+                        "2022-04-01",
+                        "2022-04-02",
+                        "2022-04-03",
+                        "2022-04-04",
+                        "2022-04-05",
+                        "2022-04-06",
+                        "2022-04-07",
+                        "2022-04-08"
+                        ]
+                    },
+                    yAxis: {
+                        type: "value",
+                        position: 'right'
+                    },
+                    series: [
+                        {
+                        name: "aa",
+                        type: "line",
+                        data: [
+                            "52873",
+                            "51987",
+                            "49246",
+                            "46211",
+                            "47696",
+                            "55347",
+                            "53337",
+                            "51211",
+                            "51777",
+                            "50161",
+                            "48815",
+                            "52286",
+                            "57520",
+                            "53866",
+                            "54941",
+                            "53757",
+                            "49987",
+                            "48466",
+                            "50253",
+                            "57594",
+                            "52546",
+                            "53485",
+                            "51454",
+                            "47983",
+                            "45871",
+                            "42043",
+                            "42086",
+                            "41258",
+                            "48014",
+                            "48813",
+                            "47137"
+                        ]
+                        }
+                    ]
+                };
+    
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'yAxis: right',
+                        'long label overflow: left'
+                    ],
+                    option: option
+                    // height: 300,
+                    // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                    // recordCanvas: true,
+                });
+            });
+        </script>
+
+
+    </body>
+</html>
+
