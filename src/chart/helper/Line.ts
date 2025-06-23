@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { isArray, each } from 'zrender/src/core/util';
+import { isArray, each, retrieve2 } from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
 import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
@@ -39,6 +39,7 @@ import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import Model from '../../model/Model';
+import tokens from '../../visual/tokens';
 
 const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
 
@@ -164,9 +165,11 @@ class Line extends graphic.Group {
     _createLine(lineData: LineList, idx: number, seriesScope?: LineDrawSeriesScope) {
         const seriesModel = lineData.hostModel;
         const linePoints = lineData.getItemLayout(idx);
+        const z2 = lineData.getItemVisual(idx, 'z2');
         const line = createLine(linePoints);
         line.shape.percent = 0;
         graphic.initProps(line, {
+            z2: retrieve2(z2, 0),
             shape: {
                 percent: 1
             }
@@ -295,7 +298,7 @@ class Line extends graphic.Group {
                     return seriesModel.getFormattedLabel(dataIndex, stateName, lineData.dataType);
                 }
             },
-            inheritColor: visualColor as ColorString || '#000',
+            inheritColor: visualColor as ColorString || tokens.color.neutral99,
             defaultOpacity: lineStyle.opacity,
             defaultText: (rawVal == null
                 ? lineData.getName(idx)

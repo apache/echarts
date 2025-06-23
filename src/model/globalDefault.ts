@@ -17,6 +17,8 @@
 * under the License.
 */
 
+import { modifyHSL } from 'zrender/src/tool/color';
+import tokens from '../visual/tokens';
 
 let platform = '';
 // Navigator not exists in node
@@ -27,6 +29,9 @@ if (typeof navigator !== 'undefined') {
 
 const decalColor = 'rgba(0, 0, 0, 0.2)';
 
+const themeColor = tokens.color.theme[0];
+const lightThemeColor = modifyHSL(themeColor, null, null, 0.9);
+
 export default {
 
     darkMode: 'auto',
@@ -34,19 +39,9 @@ export default {
 
     colorBy: 'series',
 
-    color: [
-        '#5470c6',
-        '#91cc75',
-        '#fac858',
-        '#ee6666',
-        '#73c0de',
-        '#3ba272',
-        '#fc8452',
-        '#9a60b4',
-        '#ea7ccc'
-    ],
+    color: tokens.color.theme,
 
-    gradientColor: ['#f6efa6', '#d88273', '#bf444c'],
+    gradientColor: [lightThemeColor, themeColor],
 
     aria: {
         decal: {

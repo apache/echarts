@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+
+
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+
+            var _ctx = {
+                center: null
+            };
+
+            var option;
+            option = {
+                series: {
+                    type: 'sankey',
+                    id: 'sankey0',
+                    layout: 'none',
+                    roam: true,
+                    scaleLimit: {
+                        min: 0.5,
+                        max: 1.5
+                    },
+                    emphasis: {
+                    focus: 'adjacency'
+                    },
+                    data: [
+                    {
+                        name: 'a'
+                    },
+                    {
+                        name: 'b'
+                    },
+                    {
+                        name: 'a1'
+                    },
+                    {
+                        name: 'a2'
+                    },
+                    {
+                        name: 'b1'
+                    },
+                    {
+                        name: 'c'
+                    }
+                    ],
+                    links: [
+                    {
+                        source: 'a',
+                        target: 'a1',
+                        value: 5
+                    },
+                    {
+                        source: 'a',
+                        target: 'a2',
+                        value: 3
+                    },
+                    {
+                        source: 'b',
+                        target: 'b1',
+                        value: 8
+                    },
+                    {
+                        source: 'a',
+                        target: 'b1',
+                        value: 3
+                    },
+                    {
+                        source: 'b1',
+                        target: 'a1',
+                        value: 1
+                    },
+                    {
+                        source: 'b1',
+                        target: 'c',
+                        value: 2
+                    }
+                    ]
+                }
+            };
+
+            function renderIndicatorRect() {
+
+            }
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Sankey Roam',
+                ],
+                option: option,
+                    inputsStyle: 'compact',
+                    inputs: [
+                        {
+                            text: 'Update',
+                            onclick() {
+                                option.series.links[0].value = Math.random() * 10;
+                                chart.setOption({
+                                    series: {
+                                        id: 'sankey0',
+                                        links: option.series.links,
+                                    }
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'box layout:',
+                            values: [
+                                'do_nothing',
+                                {
+                                    left: 50, top: 80, right: '20%', bottom: 20,
+                                },
+                                {
+                                    left: null, top: null, right: null, bottom: null,
+                                },
+                                {
+                                    left: 30, top: 30, right: null, bottom: '50%',
+                                },
+                            ],
+                            onchange: function () {
+                                var layoutParams = this.value;
+                                if (layoutParams == 'do_nothing') {
+                                    return;
+                                }
+                                chart.setOption({
+                                    series: {
+                                        id: 'sankey0',
+                                        ...layoutParams,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'orient:',
+                            values: ['horizontal', 'vertical'],
+                            onchange: function () {
+                                chart.setOption({
+                                    series: {
+                                        id: 'sankey0',
+                                        orient: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'roam:',
+                            values: [true, 'scale', 'move'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'sankey0',
+                                        roam: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'roamTrigger:',
+                            values: ['global', undefined],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'sankey0',
+                                        roamTrigger: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            text: 'zoom:',
+                            type: 'select',
+                            values: [undefined, 0.5, 1, 5],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'sankey0',
+                                        zoom: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'specify center:',
+                            values: [false, true],
+                            onchange() {
+                                chart.__testHelper.switchGroup(
+                                    this.value ? 'group_use_center' : 'group_no_center'
+                                )
+                                if (this.value) {
+                                    _ctx.center = _ctx.center || ['50%', '50%'];
+                                }
+                                else {
+                                    _ctx.center = null;
+                                }
+                                chart.setOption({
+                                    series: {
+                                        id: 'sankey0',
+                                        center: _ctx.center
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'label.show:',
+                            values: [true, false],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'sankey0',
+                                        label: {show: this.value},
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'groupset',
+                            inputsHeight: 40,
+                            groups: [{
+                                id: 'group_no_center',
+                                text: 'no center',
+                            }, {
+                                id: 'group_use_center',
+                                text: 'specify center',
+                                inputs: [
+                                    ...[0, 1].map(centerIdx => ({
+                                        type: 'select',
+                                        text: `center[${centerIdx}]:`,
+                                        options: [
+                                            {
+                                                id: 'percent',
+                                                text: 'percent',
+                                                input: {type: 'range', min: -50, max: 150, value: 50, suffix: '%'}
+                                            },
+                                            {
+                                                id: 'absolute',
+                                                text: 'absolute',
+                                                input: {type: 'range', min: -100, max: 800, value: 100}
+                                            },
+                                        ],
+                                        onchange() {
+                                            if (this.optionId === 'absolute') {
+                                                _ctx.center[centerIdx] = this.value;
+                                            }
+                                            else if (this.optionId === 'percent') {
+                                                _ctx.center[centerIdx] = this.value + '%';
+                                            }
+                                            chart.setOption({
+                                                series: {
+                                                    id: 'sankey0',
+                                                    center: _ctx.center
+                                                }
+                                            });
+                                            renderIndicatorRect();
+                                        }
+                                    }))
+                                ]
+                            }]
+                        }, // End of groupset
+                    ] // End of inputs
+                }); // End of testHelper.create
+
+                if (chart) {
+                    chart.on('sankeyRoam', e => {
+                        console.log('sankeyRoam');
+                        // renderIndicatorRect();
+                    });
+                }
+        });
+        </script>
+
+
+    </body>
+</html>
+

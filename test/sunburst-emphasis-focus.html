@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <script src="lib/dat.gui.min.js"></script>
+    <!-- <script src="ut/lib/canteen.js"></script> -->
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <style>
+    </style>
+
+
+
+    <div id="main0"></div>
+    <div id="main1"></div>
+    <div id="main2"></div>
+
+
+
+
+
+    <script>
+        var defaultDataForSunburst = [{
+                name: 'Grandpa',
+                children: [{
+                        name: 'Uncle Leo',
+                        value: 15,
+                        children: [{
+                                name: 'Cousin Jack',
+                                value: 2
+                            },
+                            {
+                                name: 'Cousin Mary',
+                                value: 5,
+                                children: [{
+                                    name: 'Jackson',
+                                    value: 2
+                                }]
+                            },
+                            {
+                                name: 'Cousin Ben',
+                                value: 4
+                            }
+                        ]
+                    },
+                    {
+                        name: 'Aunt Jane',
+                        children: [{
+                            name: 'Cousin Kate',
+                            value: 4
+                        }]
+                    },
+                    {
+                        name: 'Father',
+                        value: 10,
+                        children: [{
+                                name: 'Me',
+                                value: 5,
+                                itemStyle: {
+                                    color: 'red'
+                                }
+                            },
+                            {
+                                name: 'Brother Peter',
+                                value: 1
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: 'Mike',
+                children: [{
+                    name: 'Uncle Dan',
+                    children: [{
+                            name: 'Cousin Lucy',
+                            value: 3
+                        },
+                        {
+                            name: 'Cousin Luck',
+                            value: 4,
+                            children: [{
+                                name: 'Nephew',
+                                value: 2
+                            }]
+                        }
+                    ]
+                }]
+            },
+            {
+                name: 'Nancy',
+                children: [{
+                    name: 'Uncle Nike',
+                    children: [{
+                            name: 'Cousin Betty',
+                            value: 1
+                        },
+                        {
+                            name: 'Cousin Jenny',
+                            value: 2
+                        }
+                    ]
+                }]
+            }
+        ];
+
+    </script>
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                series: {
+                    radius: ['0%', '80%'],
+                    type: 'sunburst',
+                    sort: null,
+                    nodeClick: 'false',
+                    data: defaultDataForSunburst,
+                    emphasis: {
+                        focus: 'relative'
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'focus: **relative** '
+                ],
+                option: option
+            });
+        });
+
+    </script>
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                series: {
+                    radius: ['0%', '80%'],
+                    type: 'sunburst',
+                    sort: null,
+                    highlightPolicy: 'ancestor',
+                    nodeClick: 'false',
+                    emphasis: {
+                        focus: 'descendant'
+                    },
+                    data: defaultDataForSunburst
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: 'focus: **descendant** ',
+                option: option
+            });
+        });
+
+    </script>
+
+    <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                series: {
+                    radius: ['0%', '80%'],
+                    type: 'sunburst',
+                    emphasis: {
+                        focus: 'ancestor'
+                    },
+                    sort: null,
+                    highlightPolicy: 'ancestor',
+                    nodeClick: 'false',
+                    data: defaultDataForSunburst
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'focus: **ancestor**'
+                ],
+                option: option
+            });
+        });
+
+    </script>
+
+
+</body>
+
+</html>

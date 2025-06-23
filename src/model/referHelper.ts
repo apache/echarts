@@ -35,6 +35,10 @@ import { SINGLE_REFERRING } from '../util/model';
 import { ParallelSeriesOption } from '../chart/parallel/ParallelSeries';
 import ParallelModel from '../coord/parallel/ParallelModel';
 import ParallelAxisModel from '../coord/parallel/AxisModel';
+import MatrixModel from '../coord/matrix/MatrixModel';
+import type Model from './Model';
+import { AxisBaseOptionCommon } from '../coord/axisCommonTypes';
+import { AxisModelExtendedInCreator } from '../coord/axisModelCreator';
 
 /**
  * @class
@@ -74,12 +78,15 @@ class CoordSysInfo {
     }
 }
 
-type SupportedCoordSys = 'cartesian2d' | 'polar' | 'singleAxis' | 'geo' | 'parallel';
+type SupportedCoordSys = 'cartesian2d' | 'polar' | 'singleAxis' | 'geo' | 'parallel' | 'matrix';
+type FetcherAxisModel =
+    Model<Pick<AxisBaseOptionCommon, 'type'>>
+    & Pick<AxisModelExtendedInCreator, 'getOrdinalMeta'>;
 type Fetcher = (
     seriesModel: SeriesModel,
     result: CoordSysInfo,
-    axisMap: HashMap<AxisBaseModel>,
-    categoryAxisMap: HashMap<AxisBaseModel>
+    axisMap: HashMap<FetcherAxisModel>,
+    categoryAxisMap: HashMap<FetcherAxisModel>
 ) => void;
 
 export function getCoordSysInfoBySeries(seriesModel: SeriesModel) {
@@ -92,6 +99,7 @@ export function getCoordSysInfoBySeries(seriesModel: SeriesModel) {
     }
 }
 
+// TODO: refactor them to static member of each coord sys, rather than hard code here.
 const fetchers: Record<SupportedCoordSys, Fetcher> = {
 
     cartesian2d: function (
@@ -202,7 +210,27 @@ const fetchers: Record<SupportedCoordSys, Fetcher> = {
                 }
             }
         });
-    }
+    },
+
+    matrix: function (seriesModel, result, axisMap, categoryAxisMap) {
+        const matrixModel = seriesModel.getReferringComponents(
+            'matrix', SINGLE_REFERRING
+        ).models[0] as MatrixModel;
+
+        if (__DEV__) {
+            if (!matrixModel) {
+                throw new Error('matrix coordinate system should be specified.');
+            }
+        }
+
+        result.coordSysDims = ['x', 'y'];
+        const xModel = matrixModel.getDimensionModel('x');
+        const yModel = matrixModel.getDimensionModel('y');
+        axisMap.set('x', xModel);
+        axisMap.set('y', yModel);
+        categoryAxisMap.set('x', xModel);
+        categoryAxisMap.set('y', yModel);
+    },
 };
 
 function isCategory(axisModel: AxisBaseModel) {

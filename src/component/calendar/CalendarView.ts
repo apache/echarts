@@ -97,7 +97,7 @@ class CalendarView extends ComponentView {
             i = coordSys.getNextNDay(i, 1).time
         ) {
 
-            const point = coordSys.dataToRect([i], false).tl;
+            const point = coordSys.dataToCalendarLayout([i], false).tl;
 
             // every rect
             const rect = new graphic.Rect({
@@ -158,7 +158,7 @@ class CalendarView extends ComponentView {
         function addPoints(date: OptionDataValueDate) {
 
             self._firstDayOfMonth.push(coordSys.getDateInfo(date));
-            self._firstDayPoints.push(coordSys.dataToRect([date], false).tl);
+            self._firstDayPoints.push(coordSys.dataToCalendarLayout([date], false).tl);
 
             const points = self._getLinePointsOfOneWeek(calendarModel, date, orient);
 
@@ -214,7 +214,7 @@ class CalendarView extends ComponentView {
         for (let i = 0; i < 7; i++) {
 
             const tmpD = coordSys.getNextNDay(parsedDate.time, i);
-            const point = coordSys.dataToRect([tmpD.time], false);
+            const point = coordSys.dataToCalendarLayout([tmpD.time], false);
 
             points[2 * tmpD.day] = point.tl;
             points[2 * tmpD.day + 1] = point[orient === 'horizontal' ? 'bl' : 'tr'];
@@ -337,7 +337,8 @@ class CalendarView extends ComponentView {
             z2: 30,
             style: createTextStyle(yearLabel, {
                 text: content
-            })
+            }),
+            silent: yearLabel.get('silent')
         });
         yearText.attr(this._yearTextPositionControl(yearText, posPoints[pos], orient, pos, margin));
 
@@ -422,6 +423,8 @@ class CalendarView extends ComponentView {
         margin = pos === 'start' ? -margin : margin;
         const isCenter = (align === 'center');
 
+        const labelSilent = monthLabel.get('silent');
+
         for (let i = 0; i < termPoints[idx].length - 1; i++) {
 
             const tmp = termPoints[idx][i].slice();
@@ -449,7 +452,8 @@ class CalendarView extends ComponentView {
                 style: extend(
                     createTextStyle(monthLabel, {text: content}),
                     this._monthTextPositionControl(tmp, isCenter, orient, pos, margin)
-                )
+                ),
+                silent: labelSilent
             });
 
             group.add(monthText);
@@ -533,10 +537,12 @@ class CalendarView extends ComponentView {
             margin = -margin;
         }
 
+        const labelSilent = dayLabel.get('silent');
+
         for (let i = 0; i < 7; i++) {
 
             const tmpD = coordSys.getNextNDay(start, i);
-            const point = coordSys.dataToRect([tmpD.time], false).center;
+            const point = coordSys.dataToCalendarLayout([tmpD.time], false).center;
             let day = i;
             day = Math.abs((i + firstDayOfWeek) % 7);
             const weekText = new graphic.Text({
@@ -544,7 +550,8 @@ class CalendarView extends ComponentView {
                 style: extend(
                     createTextStyle(dayLabel, {text: nameMap[day]}),
                     this._weekTextPositionControl(point, orient, pos, margin, cellSize)
-                )
+                ),
+                silent: labelSilent
             });
 
             group.add(weekText);

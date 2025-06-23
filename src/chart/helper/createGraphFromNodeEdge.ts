@@ -69,7 +69,7 @@ export default function createGraphFromNodeEdge(
 
     const coordSys = seriesModel.get('coordinateSystem');
     let nodeData;
-    if (coordSys === 'cartesian2d' || coordSys === 'polar') {
+    if (coordSys === 'cartesian2d' || coordSys === 'polar' || coordSys === 'matrix') {
         nodeData = createSeriesData(nodes, seriesModel);
     }
     else {

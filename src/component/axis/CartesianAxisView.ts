@@ -29,12 +29,13 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
 import { isIntervalOrLogScale } from '../../scale/helper';
+import { getAxisBreakHelper } from './axisBreakHelper';
 
 const axisBuilderAttrs = [
     'axisLine', 'axisTickLabel', 'axisName'
 ] as const;
 const selfBuilderAttrs = [
-    'splitArea', 'splitLine', 'minorSplitLine'
+    'splitArea', 'splitLine', 'minorSplitLine', 'breakArea'
 ] as const;
 
 class CartesianAxisView extends AxisView {
@@ -66,11 +67,16 @@ class CartesianAxisView extends AxisView {
 
         const layout = cartesianAxisHelper.layout(gridModel, axisModel);
 
-        const axisBuilder = new AxisBuilder(axisModel, zrUtil.extend({
+        const axisBuilder = new AxisBuilder(axisModel, api, zrUtil.extend({
             handleAutoShown(elementType) {
                 const cartesians = gridModel.coordinateSystem.getCartesians();
                 for (let i = 0; i < cartesians.length; i++) {
                     if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {
+                        if (elementType === 'axisTick' && axisModel.axis.type === 'category'
+                            && axisModel.axis.onBand
+                        ) {
+                            return false;
+                        }
                         // Still show axis tick or axisLine if other axis is value / log
                         return true;
                     }
@@ -86,7 +92,7 @@ class CartesianAxisView extends AxisView {
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get([name, 'show'])) {
-                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel);
+                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel, api);
             }
         }, this);
 
@@ -108,12 +114,18 @@ class CartesianAxisView extends AxisView {
 }
 
 interface AxisElementBuilder {
-    (axisView: CartesianAxisView, axisGroup: graphic.Group, axisModel: CartesianAxisModel, gridModel: GridModel): void
+    (
+        axisView: CartesianAxisView,
+        axisGroup: graphic.Group,
+        axisModel: CartesianAxisModel,
+        gridModel: GridModel,
+        api: ExtensionAPI
+    ): void
 }
 
 const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBuilder> = {
 
-    splitLine(axisView, axisGroup, axisModel, gridModel) {
+    splitLine(axisView, axisGroup, axisModel, gridModel, api) {
         const axis = axisModel.axis;
 
         if (axis.scale.isBlank()) {
@@ -134,7 +146,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         let lineCount = 0;
 
         const ticksCoords = axis.getTicksCoords({
-            tickModel: splitLineModel
+            tickModel: splitLineModel,
+            breakTicks: 'none',
+            pruneByBreak: 'preserve_extent_bound',
         });
 
         const p1 = [];
@@ -183,7 +197,7 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         }
     },
 
-    minorSplitLine(axisView, axisGroup, axisModel, gridModel) {
+    minorSplitLine(axisView, axisGroup, axisModel, gridModel, api) {
         const axis = axisModel.axis;
 
         const minorSplitLineModel = axisModel.getModel('minorSplitLine');
@@ -236,8 +250,18 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         }
     },
 
-    splitArea(axisView, axisGroup, axisModel, gridModel) {
+    splitArea(axisView, axisGroup, axisModel, gridModel, api) {
         rectCoordAxisBuildSplitArea(axisView, axisGroup, axisModel, gridModel);
+    },
+
+    breakArea(axisView, axisGroup, axisModel, gridModel, api) {
+        const axisBreakHelper = getAxisBreakHelper();
+        const scale = axisModel.axis.scale;
+        if (axisBreakHelper && scale.type !== 'ordinal') {
+            axisBreakHelper.rectCoordBuildBreakAxis(
+                axisGroup, axisView, axisModel, gridModel.coordinateSystem.getRect(), api
+            );
+        }
     }
 };
 

@@ -28,12 +28,14 @@ import {
     LayoutOrient,
     ScaleDataValue,
     OptionDataValueDate,
-    SeriesOption,
-    SeriesOnCalendarOptionMixin
+    CoordinateSystemDataLayout,
 } from '../../util/types';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
-import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
-import SeriesModel from '../../model/Series';
+import {
+    CoordinateSystem, CoordinateSystemMaster,
+} from '../CoordinateSystem';
+import { expandOrShrinkRect } from '../../util/graphic';
+import { injectCoordSysByOption, simpleCoordSysInjectionProvider } from '../../core/CoordinateSystem';
 
 // (24*60*60*1000)
 const PROXIMATE_ONE_DAY = 86400000;
@@ -81,8 +83,7 @@ export interface CalendarParsedDateInfo {
     date: Date
 }
 
-export interface CalendarCellRect {
-    contentShape: RectLike
+interface CalendarCellRect {
     center: number[]
     tl: number[]
     tr: number[]
@@ -119,6 +120,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
 
     constructor(calendarModel: CalendarModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._model = calendarModel;
+        this._update(ecModel, api);
     }
     // Required in createListFromData
     getDimensionsInfo = Calendar.getDimensionsInfo;
@@ -203,7 +205,7 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
         return this.getDateInfo(date);
     }
 
-    update(ecModel: GlobalModel, api: ExtensionAPI) {
+    private _update(ecModel: GlobalModel, api: ExtensionAPI) {
 
         this._firstDayOfWeek = +this._model.getModel('dayLabel').get('firstDay');
         this._orient = this._model.get('orient');
@@ -250,7 +252,12 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
      */
     // TODO Clamp of calendar is not same with cartesian coordinate systems.
     // It will return NaN if data exceeds.
-    dataToPoint(data: OptionDataValueDate | OptionDataValueDate[], clamp?: boolean) {
+    dataToPoint(
+        data: OptionDataValueDate | OptionDataValueDate[],
+        clamp?: boolean,
+        out?: number[]
+    ): number[] {
+        out = out || [];
         zrUtil.isArray(data) && (data = data[0]);
         clamp == null && (clamp = true);
 
@@ -263,24 +270,22 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
             dayInfo.time >= range.start.time
             && dayInfo.time < range.end.time + PROXIMATE_ONE_DAY
         )) {
-            return [NaN, NaN];
+            out[0] = out[1] = NaN;
+            return out;
         }
 
         const week = dayInfo.day;
         const nthWeek = this._getRangeInfo([range.start.time, date]).nthWeek;
 
         if (this._orient === 'vertical') {
-            return [
-                this._rect.x + week * this._sw + this._sw / 2,
-                this._rect.y + nthWeek * this._sh + this._sh / 2
-            ];
-
+            out[0] = this._rect.x + week * this._sw + this._sw / 2;
+            out[1] = this._rect.y + nthWeek * this._sh + this._sh / 2;
         }
-
-        return [
-            this._rect.x + nthWeek * this._sw + this._sw / 2,
-            this._rect.y + week * this._sh + this._sh / 2
-        ];
+        else {
+            out[0] = this._rect.x + nthWeek * this._sw + this._sw / 2;
+            out[1] = this._rect.y + week * this._sh + this._sh / 2;
+        }
+        return out;
 
     }
 
@@ -294,42 +299,53 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
         return date && date.time;
     }
 
+    dataToLayout(
+        data: OptionDataValueDate | OptionDataValueDate[],
+        clamp?: boolean,
+        out?: CoordinateSystemDataLayout
+    ): CoordinateSystemDataLayout {
+        out = out || {} as CoordinateSystemDataLayout;
+        const rect = out.rect = out.rect || {} as RectLike;
+        const contentRect = out.contentRect = out.contentRect || {} as RectLike;
+        const point = this.dataToPoint(data, clamp);
+
+        rect.x = point[0] - (this._sw) / 2;
+        rect.y = point[1] - (this._sh) / 2;
+        rect.width = this._sw;
+        rect.height = this._sh;
+
+        BoundingRect.copy(contentRect, rect);
+        expandOrShrinkRect(contentRect, this._lineWidth / 2, true, true);
+
+        return out;
+    }
+
     /**
      * Convert a time date item to (x, y) four point.
      */
-    dataToRect(data: OptionDataValueDate | OptionDataValueDate[], clamp?: boolean): CalendarCellRect {
+    dataToCalendarLayout(
+        data: OptionDataValueDate | OptionDataValueDate[],
+        clamp?: boolean,
+    ): CalendarCellRect {
         const point = this.dataToPoint(data, clamp);
-
         return {
-            contentShape: {
-                x: point[0] - (this._sw - this._lineWidth) / 2,
-                y: point[1] - (this._sh - this._lineWidth) / 2,
-                width: this._sw - this._lineWidth,
-                height: this._sh - this._lineWidth
-            },
-
             center: point,
-
             tl: [
                 point[0] - this._sw / 2,
                 point[1] - this._sh / 2
             ],
-
             tr: [
                 point[0] + this._sw / 2,
                 point[1] - this._sh / 2
             ],
-
             br: [
                 point[0] + this._sw / 2,
                 point[1] + this._sh / 2
             ],
-
             bl: [
                 point[0] - this._sw / 2,
                 point[1] + this._sh / 2
-            ]
-
+            ],
         };
     }
 
@@ -351,9 +367,18 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
         return this._getDateByWeeksAndDay(nthX, nthY - 1, range);
     }
 
-    convertToPixel(ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]) {
+    convertToPixel(
+        ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]
+    ) {
         const coordSys = getCoordSys(finder);
         return coordSys === this ? coordSys.dataToPoint(value) : null;
+    }
+
+    convertToLayout(
+        ecModel: GlobalModel, finder: ParsedModelFinder, value: ScaleDataValue | ScaleDataValue[]
+    ) {
+        const coordSys = getCoordSys(finder);
+        return coordSys === this ? coordSys.dataToLayout(value) : null;
     }
 
     convertFromPixel(ecModel: GlobalModel, finder: ParsedModelFinder, pixel: number[]) {
@@ -525,11 +550,13 @@ class Calendar implements CoordinateSystem, CoordinateSystemMaster {
             calendarModel.coordinateSystem = calendar;
         });
 
-        ecModel.eachSeries(function (calendarSeries: SeriesModel<SeriesOption & SeriesOnCalendarOptionMixin>) {
-            if (calendarSeries.get('coordinateSystem') === 'calendar') {
-                // Inject coordinate system
-                calendarSeries.coordinateSystem = calendarList[calendarSeries.get('calendarIndex') || 0];
-            }
+        // Inject coordinate system
+        ecModel.eachComponent((mainType, componentModel) => {
+            injectCoordSysByOption({
+                targetModel: componentModel,
+                coordSysType: 'calendar',
+                coordSysProvider: simpleCoordSysInjectionProvider,
+            });
         });
         return calendarList;
     }

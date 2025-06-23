@@ -327,7 +327,7 @@ function constrainTextWidth(
 
         const newRect = label.getBoundingRect();
         textRect.width = newRect.width;
-        const margin = (label.style.margin || 0) + 2.1;
+        const margin = ((label.style.margin as number) || 0) + 2.1;
         textRect.height = newRect.height + margin;
         textRect.y -= (textRect.height - oldHeight) / 2;
     }
@@ -384,7 +384,11 @@ export default function pieLabelLayout(
         const labelDistance = labelModel.get('distanceToLabelLine');
         const labelAlignTo = labelModel.get('alignTo');
         const edgeDistance = parsePercent(labelModel.get('edgeDistance'), viewWidth);
-        const bleedMargin = labelModel.get('bleedMargin');
+        let bleedMargin = labelModel.get('bleedMargin');
+        if (bleedMargin == null) {
+            // An arbitrary strategy for small viewRect - especial pie is layout in calendar or matrix coord sys.
+            bleedMargin = Math.min(viewWidth, viewHeight) > 200 ? 10 : 2;
+        }
 
         const labelLineModel = itemModel.getModel('labelLine');
         let labelLineLen = labelLineModel.get('length');
@@ -501,7 +505,7 @@ export default function pieLabelLayout(
             const textRect = label.getBoundingRect().clone();
             textRect.applyTransform(label.getComputedTransform());
             // Text has a default 1px stroke. Exclude this.
-            const margin = (label.style.margin || 0) + 2.1;
+            const margin = ((label.style.margin as number) || 0) + 2.1;
             textRect.y -= margin / 2;
             textRect.height += margin;
 
