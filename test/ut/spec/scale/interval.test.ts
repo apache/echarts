@@ -22,9 +22,22 @@ import { createChart, getECModel } from '../../core/utHelper';
 import { EChartsType } from '@/src/echarts';
 import CartesianAxisModel from '@/src/coord/cartesian/AxisModel';
 import IntervalScale from '@/src/scale/Interval';
-import { intervalScaleNiceTicks } from '@/src/scale/helper';
+import { intervalScaleNiceTicks, absMathLog } from '@/src/scale/helper';
 import { getPrecisionSafe } from '@/src/util/number';
 
+
+describe('helpers', function () {
+    it('absMathLog', function () {
+        expect(absMathLog(10)).toEqual(1);
+        expect(absMathLog(-10)).toEqual(1);
+
+        expect(absMathLog(-1e-8)).toEqual(-8);
+        expect(absMathLog(1e8)).toEqual(8);
+
+        expect(absMathLog(0)).toEqual(0);
+        expect(absMathLog(8, 2)).toEqual(3);
+    });
+});
 
 describe('scale_interval', function () {
 

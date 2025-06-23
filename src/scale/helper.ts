@@ -28,6 +28,8 @@ type intervalScaleNiceTicksResult = {
     niceTickExtent: [number, number]
 };
 
+const mathLog = Math.log;
+
 export function isValueNice(val: number) {
     const exp10 = Math.pow(10, quantityExponent(Math.abs(val)));
     const f = Math.abs(val / exp10);
@@ -135,4 +137,21 @@ export function normalize(val: number, extent: [number, number]): number {
 
 export function scale(val: number, extent: [number, number]): number {
     return val * (extent[1] - extent[0]) + extent[0];
+}
+
+/**
+ * Calculates the absolute logarithm of a number with a specified base.
+ * Handles edge cases by:
+ * - Returning 0 for values very close to 0 (within Number.EPSILON)
+ * - Taking the absolute value of the input to handle negative numbers
+ *
+ * @param x - The number to calculate the logarithm of
+ * @param base - The base of the logarithm (defaults to 10)
+ * @returns The absolute logarithm value, or 0 if x is very close to 0
+ */
+export function absMathLog(x: number, base = 10): number {
+    if (Math.abs(x) < Number.EPSILON) {
+        return 0;
+    }
+    return mathLog(Math.abs(x)) / mathLog(base);
 }
