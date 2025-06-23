@@ -18,12 +18,12 @@
 */
 
 import { HashMap, createHashMap, each, extend, isArray, isObject } from 'zrender/src/core/util';
-import { NullUndefined } from '../../util/types';
+import type { NullUndefined } from '../../util/types';
 import type { MatrixXYLocator, MatrixDimPair, MatrixXYLocatorRange } from './MatrixDim';
 import { error } from '../../util/log';
 import Point from 'zrender/src/core/Point';
 import { RectLike } from 'zrender/src/core/BoundingRect';
-import { MatrixBodyCornerCellOption, MatrixBodyOption, MatrixCornerOption } from './MatrixModel';
+import type { MatrixBodyCornerCellOption, MatrixBodyOption, MatrixCornerOption } from './MatrixModel';
 import {
     resolveXYLocatorRangeByCellMerge,
     MatrixClampOption,
@@ -34,7 +34,7 @@ import {
     resetXYLocatorRange,
     cloneXYLocatorRange,
 } from './matrixCoordHelper';
-import Model from '../../model/Model';
+import type Model from '../../model/Model';
 
 
 /**

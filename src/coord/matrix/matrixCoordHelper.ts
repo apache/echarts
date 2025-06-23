@@ -18,21 +18,26 @@
 */
 
 import Point from 'zrender/src/core/Point';
-import {
-    MatrixCellLayoutInfoType,
+import type {
     MatrixCellLayoutInfo,
     MatrixDimensionCell,
     MatrixDimPair,
     MatrixXYLocator,
     MatrixXYLocatorRange,
 } from './MatrixDim';
-import { NullUndefined } from '../../util/types';
+import type { NullUndefined } from '../../util/types';
 import { eqNaN, isArray, isNumber } from 'zrender/src/core/util';
 import { WH, XY } from '../../util/graphic';
-import { MatrixCoordRangeOption, MatrixCoordValueOption } from './MatrixModel';
-import { RectLike } from 'zrender/src/core/BoundingRect';
+import type { MatrixCoordRangeOption, MatrixCoordValueOption } from './MatrixModel';
+import type { RectLike } from 'zrender/src/core/BoundingRect';
 import { mathMax, mathMin } from '../../util/number';
 
+export const MatrixCellLayoutInfoType = {
+    level: 1,
+    leaf: 2,
+    nonLeaf: 3,
+} as const;
+export type MatrixCellLayoutInfoType = (typeof MatrixCellLayoutInfoType)[keyof typeof MatrixCellLayoutInfoType];
 
 /**
  * @public Public to users in `chart.convertFromPixel`.

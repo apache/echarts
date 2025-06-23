@@ -34,19 +34,20 @@ import { eqNaN, isArray, retrieve2 } from 'zrender/src/core/util';
 import Point from 'zrender/src/core/Point';
 import { WH, XY } from '../../util/graphic';
 import Model from '../../model/Model';
-import {
-    MatrixCellLayoutInfo, MatrixCellLayoutInfoType,
+import type {
+    MatrixCellLayoutInfo,
     MatrixDimensionCell, MatrixDimPair, MatrixXYLocator
 } from './MatrixDim';
 import { mathMax, mathMin, parsePositionSizeOption } from '../../util/number';
 import {
     createNaNRectLike,
     MatrixClampOption,
+    MatrixCellLayoutInfoType,
     parseCoordRangeOption,
     resetXYLocatorRange,
     xyLocatorRangeToRectOneDim
 } from './matrixCoordHelper';
-import { MatrixBodyCorner, MatrixBodyOrCornerKind } from './MatrixBodyCorner';
+import type { MatrixBodyCorner, MatrixBodyOrCornerKind } from './MatrixBodyCorner';
 import { error } from '../../util/log';
 import { injectCoordSysByOption, simpleCoordSysInjectionProvider } from '../../core/CoordinateSystem';
 

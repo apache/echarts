@@ -1,8 +1,7 @@
 import {
     createHashMap,
     defaults,
-    each, eqNaN, isArray, isObject, isString,
-    retrieve2,
+    each, eqNaN, isArray, isObject, isString
 } from 'zrender/src/core/util';
 import Point from 'zrender/src/core/Point';
 import OrdinalMeta from '../../data/OrdinalMeta';
@@ -17,7 +16,7 @@ import { WH, XY } from '../../util/graphic';
 import { ListIterator } from '../../util/model';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import {
-    createNaNRectLike, setDimXYValue
+    createNaNRectLike, setDimXYValue, MatrixCellLayoutInfoType
 } from './matrixCoordHelper';
 import { error } from '../../util/log';
 import { mathMax } from '../../util/number';
@@ -43,12 +42,6 @@ export interface MatrixCellLayoutInfo {
     dim: MatrixDim;
 }
 
-export const MatrixCellLayoutInfoType = {
-    level: 1,
-    leaf: 2,
-    nonLeaf: 3,
-} as const;
-export type MatrixCellLayoutInfoType = (typeof MatrixCellLayoutInfoType)[keyof typeof MatrixCellLayoutInfoType];
 
 export type MatrixXYLocator = MatrixCellLayoutInfo['id']['x'] | MatrixCellLayoutInfo['id']['y'];
 /**
