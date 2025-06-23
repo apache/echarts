@@ -1,8 +1,7 @@
 import {
     createHashMap,
     defaults,
-    each, eqNaN, isArray, isObject, isString,
-    retrieve2,
+    each, eqNaN, isArray, isObject, isString
 } from 'zrender/src/core/util';
 import Point from 'zrender/src/core/Point';
 import OrdinalMeta from '../../data/OrdinalMeta';
