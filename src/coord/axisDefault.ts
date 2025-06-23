@@ -39,7 +39,9 @@ const defaultOption: AxisBaseOption = {
         placeholder: '.'
     },
     // Use global text style by default.
-    nameTextStyle: {},
+    nameTextStyle: {
+        // textMargin: never, // The default value will be specified based on `nameLocation`.
+    },
     // The gap between axisName and axisLine.
     nameGap: 15,
 

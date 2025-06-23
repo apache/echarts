@@ -29,10 +29,6 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload } from '../../util/types';
 import { getAxisBreakHelper } from './axisBreakHelper';
 
-const axisBuilderAttrs = {
-    axisLine: true, axisTickLabel: true, axisName: true
- } as const;
-
 const selfBuilderAttrs = ['splitArea', 'splitLine', 'breakArea'] as const;
 
 class SingleAxisView extends AxisView {
@@ -57,10 +53,10 @@ class SingleAxisView extends AxisView {
 
         const axisBuilder = new AxisBuilder(axisModel, api, layout);
 
-        axisBuilder.build(axisBuilderAttrs);
+        axisBuilder.build();
 
         group.add(this._axisGroup);
-        group.add(axisBuilder.getGroup());
+        group.add(axisBuilder.group);
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get([name, 'show'])) {

@@ -579,32 +579,44 @@ function serializeAxisBreakIdentifier(identifier: AxisBreakOptionIdentifierInAxi
  * - A break pair represents `[vmin, vmax]`,
  * - Only both vmin and vmax item exist, they are counted as a pair.
  */
-function retrieveAxisBreakPairs<TItem>(
+function retrieveAxisBreakPairs<TItem, TReturnIdx extends boolean>(
     itemList: TItem[],
-    getVisualAxisBreak: (item: TItem) => VisualAxisBreak
-): TItem[][] {
-    const breakLabelPairs: TItem[][] = [];
-    each(itemList, el => {
+    getVisualAxisBreak: (item: TItem) => VisualAxisBreak | NullUndefined,
+    returnIdx: TReturnIdx
+): (
+    TReturnIdx extends false ? TItem[][] : number[][]
+) {
+    const idxPairList: number[][] = [];
+    each(itemList, (el, idx) => {
         const vBreak = getVisualAxisBreak(el);
         if (vBreak && vBreak.type === 'vmin') {
-            breakLabelPairs.push([el]);
+            idxPairList.push([idx]);
         }
     });
-    each(itemList, el => {
+    each(itemList, (el, idx) => {
         const vBreak = getVisualAxisBreak(el);
         if (vBreak && vBreak.type === 'vmax') {
-            const pair = find(
-                breakLabelPairs,
+            const idxPair = find(
+                idxPairList,
                 // parsedBreak may be changed, can only use breakOption to match them.
                 pr => identifyAxisBreak(
-                    getVisualAxisBreak(pr[0]).parsedBreak.breakOption,
+                    getVisualAxisBreak(itemList[pr[0]]).parsedBreak.breakOption,
                     vBreak.parsedBreak.breakOption
                 )
             );
-            pair && pair.push(el);
+            idxPair && idxPair.push(idx);
         }
     });
-    return breakLabelPairs;
+    const result = [] as (TReturnIdx extends false ? TItem[][] : number[][]);
+    each(idxPairList, idxPair => {
+        if (idxPair.length === 2) {
+            result.push(returnIdx
+                ? (idxPair as any)
+                : ([itemList[idxPair[0]] as any, itemList[idxPair[1]] as any])
+            );
+        }
+    });
+    return result;
 }
 
 function getTicksLogTransformBreak(

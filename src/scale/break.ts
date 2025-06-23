@@ -107,10 +107,13 @@ export type ScaleBreakHelper = {
     serializeAxisBreakIdentifier(
         identifier: AxisBreakOptionIdentifierInAxis
     ): string;
-    retrieveAxisBreakPairs<TItem>(
+    retrieveAxisBreakPairs<TItem, TReturnIdx extends boolean>(
         itemList: TItem[],
-        getVisualAxisBreak: (item: TItem) => VisualAxisBreak
-    ): TItem[][];
+        getVisualAxisBreak: (item: TItem) => VisualAxisBreak | NullUndefined,
+        returnIdx: TReturnIdx
+    ): (
+        TReturnIdx extends false ? TItem[][] : number[][]
+    );
     getTicksLogTransformBreak(
         tick: ScaleTick,
         logBase: number,

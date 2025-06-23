@@ -26,10 +26,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ZRColor } from '../../util/types';
 
-const axisBuilderAttrs = {
-    axisLine: true, axisTickLabel: true, axisName: true
-} as const;
-
 class RadarView extends ComponentView {
 
     static type = 'radar';
@@ -62,8 +58,8 @@ class RadarView extends ComponentView {
         });
 
         zrUtil.each(axisBuilders, function (axisBuilder) {
-            axisBuilder.build(axisBuilderAttrs);
-            this.group.add(axisBuilder.getGroup());
+            axisBuilder.build();
+            this.group.add(axisBuilder.group);
         }, this);
     }
 

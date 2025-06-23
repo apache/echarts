@@ -811,7 +811,7 @@
         function findInputCreatedAndCheck(inputId, errorHandling) {
             var inputCreated = _inputsDict[inputId];
             if (!inputCreated) {
-                var errMsg = errMsgPrefix + ' No input found by id: ' + id + '. May caused by test case change.';
+                var errMsg = errMsgPrefix + ' No input found by id: ' + inputId + '. May caused by test case change.';
                 if (errorHandling.log) {
                     console.error(errMsg);
                 }

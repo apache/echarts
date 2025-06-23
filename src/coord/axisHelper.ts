@@ -47,7 +47,6 @@ import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
 import { Dictionary, DimensionName, ScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
-import BoundingRect from 'zrender/src/core/BoundingRect';
 import { parseTimeAxisLabelFormatter } from '../util/time';
 import { getScaleBreakHelper } from '../scale/break';
 import { error } from '../util/log';
@@ -303,74 +302,12 @@ export function getAxisRawValue<TIsCategory extends boolean>(axis: Axis, tick: S
 }
 
 /**
- * @deprecated
- * @return Be null/undefined if no labels.
- */
-export function legacyEstimateLabelUnionRect(axis: Axis) {
-    const axisModel = axis.model;
-    const scale = axis.scale;
-
-    if (!axisModel.get(['axisLabel', 'show']) || scale.isBlank()) {
-        return;
-    }
-
-    let realNumberScaleTicks: ScaleTick[];
-    let tickCount;
-    const categoryScaleExtent = scale.getExtent();
-
-    // Optimize for large category data, avoid call `getTicks()`.
-    if (scale instanceof OrdinalScale) {
-        tickCount = scale.count();
-    }
-    else {
-        realNumberScaleTicks = scale.getTicks();
-        tickCount = realNumberScaleTicks.length;
-    }
-
-    const axisLabelModel = axis.getLabelModel();
-    const labelFormatter = makeLabelFormatter(axis);
-
-    let rect;
-    let step = 1;
-    // Simple optimization for large amount of category labels
-    if (tickCount > 40) {
-        step = Math.ceil(tickCount / 40);
-    }
-    for (let i = 0; i < tickCount; i += step) {
-        const tick = realNumberScaleTicks
-            ? realNumberScaleTicks[i]
-            : {
-                value: categoryScaleExtent[0] + i
-            };
-        const label = labelFormatter(tick, i);
-        const unrotatedSingleRect = axisLabelModel.getTextRect(label);
-        const singleRect = rotateTextRect(unrotatedSingleRect, axisLabelModel.get('rotate') || 0);
-
-        rect ? rect.union(singleRect) : (rect = singleRect);
-    }
-
-    return rect;
-
-    function rotateTextRect(textRect: BoundingRect, rotate: number) {
-        const rotateRadians = rotate * Math.PI / 180;
-        const beforeWidth = textRect.width;
-        const beforeHeight = textRect.height;
-        const afterWidth = beforeWidth * Math.abs(Math.cos(rotateRadians))
-            + Math.abs(beforeHeight * Math.sin(rotateRadians));
-        const afterHeight = beforeWidth * Math.abs(Math.sin(rotateRadians))
-            + Math.abs(beforeHeight * Math.cos(rotateRadians));
-        const rotatedRect = new BoundingRect(textRect.x, textRect.y, afterWidth, afterHeight);
-
-        return rotatedRect;
-    }
-}
-
-
-/**
  * @param model axisLabelModel or axisTickModel
  * @return {number|String} Can be null|'auto'|number|function
  */
-export function getOptionCategoryInterval(model: Model<AxisBaseOption['axisLabel']>) {
+export function getOptionCategoryInterval(
+    model: Model<AxisBaseOption['axisLabel']>
+): CategoryAxisBaseOption['axisLabel']['interval'] {
     const interval = (model as Model<CategoryAxisBaseOption['axisLabel']>).get('interval');
     return interval == null ? 'auto' : interval;
 }
@@ -415,6 +352,10 @@ export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, 
 
 export function isNameLocationCenter(nameLocation: AxisBaseOptionCommon['nameLocation']) {
     return nameLocation === 'middle' || nameLocation === 'center';
+}
+
+export function shouldAxisShow(axisModel: AxisBaseModel): boolean {
+    return axisModel.getShallow('show');
 }
 
 export function retrieveAxisBreaksOption(model: AxisBaseModel): AxisBaseOptionCommon['breaks'] {

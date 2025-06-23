@@ -46,7 +46,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * - 'start': place name based on axis.extent[0].
      * - 'end': place name based on axis.extent[1].
      * - 'middle': place name based on the center of the axis.
-     * - 'center' has been deprecated, ='middle'.
+     * - 'center': ='middle'.
      */
     nameLocation?: 'start' | 'middle' | 'center' | 'end';
     // By degree.
@@ -69,9 +69,11 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * Whether to auto move axis name to avoid overlap with axis labels.
      * The procedure of axis name layout:
      * 1. Firstly apply `nameRotate`, `nameTruncate`, `nameLocation`, `nameGap`.
-     *  Note that if `nameGap` is applied after the overlap handling, it may still cause overlap.
-     * 2. If `nameMoveOverlap: true`, move the name util it does not overlap with axis lables.
-     *  `nameTextStyle.textMargin` can be used to adjust its gap from others in this case.
+     *  Note that if `nameGap` is applied after the overlap handling, it may still
+     *  cause overlap and confuse users.
+     * 2. If `nameMoveOverlap: true`, move the name util it does not overlap with
+     *  axis lables. `nameTextStyle.textMargin` can be used to adjust its gap from
+     *  others in this case.
      */
     nameMoveOverlap?: boolean;
 
@@ -202,7 +204,7 @@ export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'time';
     axisLabel?: AxisLabelOption<'time'>;
 }
-interface AxisNameTextStyleOption extends TextCommonOption {
+interface AxisNameTextStyleOption extends LabelCommonOption {
     rich?: RichTextOption
 }
 
@@ -305,6 +307,7 @@ interface AxisLabelBaseOption extends LabelCommonOption<AxisLabelBaseOptionNuanc
     // 'top' | 'middle' | 'bottom' | null/undefined (auto)
     verticalAlignMaxLabel?: TextVerticalAlign,
     // The space between the axis and `[label.x, label.y]`.
+    // See more about some related margin props in `LabelCommonOption['textMargin']`.
     margin?: number,
     /**
      * If hide overlapping labels.

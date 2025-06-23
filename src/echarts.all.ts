@@ -91,7 +91,8 @@ import {
 import {
     UniversalTransition,
     LabelLayout,
-    AxisBreak
+    AxisBreak,
+    LegacyGridContainLabel,
 } from './export/features';
 
 
@@ -357,3 +358,4 @@ use(UniversalTransition);
 use(LabelLayout);
 
 use(AxisBreak);
+use(LegacyGridContainLabel);

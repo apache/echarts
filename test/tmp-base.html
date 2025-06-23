@@ -49,11 +49,11 @@ under the License.
 
         <script>
 
-            require(['echarts'], function (echarts) {
-
-                // // Data can be fetched by:
-                // $.getJSON('./data/nutrients.json', function (data) {
-                // });
+            require([
+                'echarts',
+                // 'data/life-expectancy-table.json'
+                // 'theme/dark.js', // auto register if load.
+            ], function (echarts /*, data */) {
 
                 var option = {
                     xAxis: {},

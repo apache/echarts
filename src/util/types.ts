@@ -1163,7 +1163,7 @@ export interface TextCommonOption<
     padding?: number | number[]
     /**
      * Currently margin related options are not declared here. They are not supported in rich text.
-     * @see {MarginOption}
+     * @see {LabelCommonOption}
      */
 
     width?: number | string// Percent
@@ -1220,30 +1220,39 @@ export interface LabelOption extends LabelCommonOption {
 }
 
 /**
- * Common options for both `axisLabel` and other `label`.
+ * Common options for both `axis.axisLabel`, `axis.nameTextStyle and other `label`s.
  * Historically, they have had some nuances in options.
  */
 export interface LabelCommonOption<
     TNuanceOption extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
 > extends TextCommonOption<TNuanceOption> {
+
     /**
      * Min margin between labels. Used when label has layout.
      * PENDING: @see {LabelMarginType}
+     * It's `minMargin` instead of `margin` is for not breaking the previous code using `margin`.
+     * See the summary in `textMargin`.
      */
-    // It's minMargin instead of margin is for not breaking the previous code using margin.
     minMargin?: number
     /**
-     * The space around the axis label to escape from overlapping.
+     * The space around the label to escape from overlapping.
      * Applied on the label local rect (rather than rotated enlarged rect)
      * Follow the format defined by `format.ts#normalizeCssArray`.
+     *
      * Introduce the name `textMargin` rather than reuse the existing names to avoid breaking change:
-     *  - `axisLabel.margin` historically has been used to indicate the gap between the axis and label.x/.y.
-     *  - `label.minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
-     *      it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
-     *      and is applied on the rotated bounding rect rather than the original local rect.
-     * @see {LabelMarginType}
+     *  - `margin` historically have been used to indicate the distance from `label.x/.y` to something:
+     *      - `axisLabel.margin` & `axisPointer.label.margin`: to the axis line.
+     *      - `calendar.dayLabel/monthLabel/yearLabel.margin`:
+     *      - `series-pie.label.margin`: to pie body (deprecated, replaced by `edgeDistance`)
+     *      - `series-themeRiver.label.margin`: to the shape edge
+     *  - `minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
+     *    it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
+     *    and `minMargin` applied on the global bounding rect (parallel to screen x and y) rather
+     *    than the original local bounding rect (can be rotated, smaller and more presice).
+     * PENDING: @see {LabelMarginType}
      */
-    textMargin?: number | number[],
+    textMargin?: number | number[]
+
     overflow?: TextStyleProps['overflow']
     ellipsis?: TextStyleProps['ellipsis']
     rich?: RichTextOption
@@ -1251,30 +1260,17 @@ export interface LabelCommonOption<
 
 /**
  * PENDING: Temporary impl. unify them?
- * @see {AxisLabelBaseOption['textMargin']}
- * @see {LabelOption['minMargin']}
+ * @see {LabelCommonOption['textMargin']}
+ * @see {LabelCommonOption['minMargin']}
  */
 export const LabelMarginType = {
     minMargin: 0,
     textMargin: 1,
 } as const;
-export interface LabelExtendedText extends ZRText {
+export interface LabelExtendedTextStyle extends TextStyleProps {
     __marginType?: (typeof LabelMarginType)[keyof typeof LabelMarginType]
 }
-export interface MarginOption {
-    /**
-     * The space around the axis label to escape from overlapping.
-     * Applied on the label local rect (rather than rotated enlarged rect)
-     * Follow the format defined by `format.ts#normalizeCssArray`.
-     * Introduce the name `textMargin` rather than reuse the existing names to avoid breaking change:
-     *  - `axisLabel.margin` historically has been used to indicate the gap between the axis and label.x/.y.
-     *  - `label.minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
-     *      it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
-     *      and is applied on the rotated bounding rect rather than the original local rect.
-     * @see {LabelMarginType}
-     */
-    textMargin?: number | number[],
-}
+
 
 export interface SeriesLabelOption<T extends CallbackDataParams = CallbackDataParams> extends LabelOption {
     formatter?: string | LabelFormatterCallback<T>

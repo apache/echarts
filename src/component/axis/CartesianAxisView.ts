@@ -28,6 +28,7 @@ import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
 import { getAxisBreakHelper } from './axisBreakHelper';
+import { shouldAxisShow } from '../../coord/axisHelper';
 
 const axisBuilderAttrs = {
     axisLine: true,
@@ -59,24 +60,15 @@ class CartesianAxisView extends AxisView {
 
         this.group.add(this._axisGroup);
 
-        if (!axisModel.get('show')) {
+        if (!shouldAxisShow(axisModel)) {
             return;
         }
 
-        const gridModel = axisModel.getCoordSysModel();
-
-        const grid = gridModel.coordinateSystem;
-        this._axisGroup.add(cartesianAxisHelper.buildCartesianAxisViewCommonPart(
-            axisBuilderAttrs,
-            grid.getRect(),
-            grid.getCartesians(),
-            axisModel,
-            api
-        ));
+        this._axisGroup.add(axisModel.axis.axisBuilder.group);
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get([name, 'show'])) {
-                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel, api);
+                axisElementBuilders[name](this, this._axisGroup, axisModel, axisModel.getCoordSysModel(), api);
             }
         }, this);
 

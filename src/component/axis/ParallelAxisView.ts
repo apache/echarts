@@ -34,8 +34,6 @@ import ParallelModel from '../../coord/parallel/ParallelModel';
 import { ParallelAxisLayoutInfo } from '../../coord/parallel/Parallel';
 
 
-const axisBuilderAxisPartMap = {axisLine: true, axisTickLabel: true, axisName: true};
-
 class ParallelAxisView extends ComponentView {
 
     static type = 'parallelAxis';
@@ -94,9 +92,9 @@ class ParallelAxisView extends ComponentView {
 
         const axisBuilder = new AxisBuilder(axisModel, api, builderOpt);
 
-        axisBuilder.build(axisBuilderAxisPartMap);
+        axisBuilder.build();
 
-        this._axisGroup.add(axisBuilder.getGroup());
+        this._axisGroup.add(axisBuilder.group);
 
         this._refreshBrushController(
             builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api

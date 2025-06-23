@@ -34,10 +34,12 @@ import {
     GlobalTextStyleOption,
     LabelCommonOption,
     TextCommonOptionNuanceBase,
-    TextCommonOptionNuanceDefault
+    TextCommonOptionNuanceDefault,
+    LabelMarginType,
+    LabelExtendedTextStyle
 } from '../util/types';
 import GlobalModel from '../model/Global';
-import { isFunction, retrieve2, extend, keys, trim } from 'zrender/src/core/util';
+import { isFunction, retrieve2, extend, keys, trim, clone } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
@@ -68,6 +70,8 @@ type TextCommonParams = {
     // supportLegacyAuto?: boolean
 
     textStyle?: ZRStyleProps
+
+    defaultTextMargin?: number | number[]
 };
 const EMPTY_OBJ = {};
 
@@ -190,14 +194,12 @@ function getLabelText<TLabelDataIndex>(
  * NOTICE: Because the style on ZRText will be replaced with new(only x, y are keeped).
  * So please update the style on ZRText after use this method.
  */
-// eslint-disable-next-line
 function setLabelStyle<TLabelDataIndex>(
     targetEl: ZRText,
     labelStatesModels: LabelStatesModels<LabelModelForText>,
     opt?: SetLabelStyleOpt<TLabelDataIndex>,
     stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
 ): void;
-// eslint-disable-next-line
 function setLabelStyle<TLabelDataIndex>(
     targetEl: Element,
     labelStatesModels: LabelStatesModels<LabelModel>,
@@ -322,7 +324,7 @@ export function createTextStyle<
 >(
     textStyleModel: LabelCommonModel<TNuance>,
     specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'disableBox'>,
+    opt?: Parameters<typeof setTextStyleCommon>[2],
     isNotNormal?: boolean,
     isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
 ): TextStyleProps {
@@ -381,7 +383,10 @@ function setTextStyleCommon<
 >(
     textStyle: TextStyleProps,
     textStyleModel: LabelCommonModel<TNuance>,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
+    opt?: Pick<
+        TextCommonParams,
+        'inheritColor' | 'defaultOpacity' | 'disableBox' | 'defaultTextMargin'
+    >,
     isNotNormal?: boolean,
     isAttached?: boolean
 ) {
@@ -429,9 +434,19 @@ function setTextStyleCommon<
     if (overflow) {
         textStyle.overflow = overflow;
     }
-    const margin = textStyleModel.get('minMargin');
-    if (margin != null) {
-        textStyle.margin = margin;
+    const minMargin = textStyleModel.get('minMargin');
+    if (minMargin != null) {
+        textStyle.margin = minMargin;
+        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.minMargin;
+    }
+    const textMargin = textStyleModel.get('textMargin');
+    if (textMargin != null) {
+        textStyle.margin = clone(textMargin);
+        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.textMargin;
+    }
+    else if (opt.defaultTextMargin != null) {
+        textStyle.margin = clone(opt.defaultTextMargin);
+        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.textMargin;
     }
     setTokenTextStyle<TNuance>(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
 }

@@ -23,24 +23,32 @@ import CartesianAxisModel from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SINGLE_REFERRING } from '../../util/model';
 import { LayoutRect } from '../../util/layout';
-import Group from 'zrender/src/graphic/Group';
-import AxisBuilder, { AxisBuilderAxisPartMap, AxisBuilderCfg } from '../../component/axis/AxisBuilder';
+import AxisBuilder, {
+    AxisBuilderCfg,
+    AxisBuilderSharedContext
+} from '../../component/axis/AxisBuilder';
 import { isIntervalOrLogScale } from '../../scale/helper';
 import type Cartesian2D from './Cartesian2D';
 import ExtensionAPI from '../../core/ExtensionAPI';
 
 interface CartesianAxisLayout {
-    position: [number, number];
-    rotation: number;
-    labelOffset: number;
-    labelDirection: -1 | 1;
-    tickDirection: -1 | 1;
-    nameDirection: -1 | 1;
-    labelRotate: number;
+    position: AxisBuilderCfg['position'];
+    rotation: AxisBuilderCfg['rotation'];
+    labelOffset: AxisBuilderCfg['labelOffset'];
+    labelDirection: AxisBuilderCfg['labelDirection'];
+    tickDirection: AxisBuilderCfg['tickDirection'];
+    nameDirection: AxisBuilderCfg['nameDirection'];
+    labelRotate: AxisBuilderCfg['labelRotate'];
     z2: number;
 }
 
 /**
+ * [__CAUTION__]
+ *  MUST guarantee: if only the input `rect` and `axis.extent` changed,
+ *  only `layout.position` changes.
+ *  This character is replied on `grid.contain` calculation in `AxisBuilder`.
+ *  @see updateCartesianAxisViewCommonPartBuilder
+ *
  * Can only be called after coordinate system creation stage.
  * (Can be called before coordinate system update stage).
  */
@@ -53,7 +61,7 @@ export function layout(
     const otherAxisOnZeroOf = axis.getAxesOnZeroOf()[0];
 
     const rawAxisPosition = axis.position;
-    const axisPosition: 'onZero' | typeof axis.position = otherAxisOnZeroOf ? 'onZero' : rawAxisPosition;
+    const axisPosition: ('onZero' | typeof axis.position) = otherAxisOnZeroOf ? 'onZero' : rawAxisPosition;
     const axisDim = axis.dim;
 
     const rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
@@ -135,29 +143,48 @@ export function findAxisModels(seriesModel: SeriesModel): {
     return axisModelMap;
 }
 
-export function buildCartesianAxisViewCommonPart(
-    axisBuilderAxisPartMap: AxisBuilderAxisPartMap,
+export function createCartesianAxisViewCommonPartBuilder(
     gridRect: LayoutRect,
     cartesians: Cartesian2D[],
     axisModel: CartesianAxisModel,
-    api: ExtensionAPI
-): Group {
-    const layoutResult = layout(gridRect, axisModel);
+    api: ExtensionAPI,
+    ctx?: AxisBuilderSharedContext
+): AxisBuilder {
+    const layoutResult: AxisBuilderCfg = layout(gridRect, axisModel);
 
-    const axisBuilder = new AxisBuilder(axisModel, api, zrUtil.extend({
-        handleAutoShown(elementType) {
-            for (let i = 0; i < cartesians.length; i++) {
-                if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {
-                    // Still show axis tick or axisLine if other axis is value / log
-                    return true;
-                }
+    let axisLineAutoShow = false;
+    let axisTickAutoShow = false;
+    // Not show axisTick or axisLine if other axis is category / time
+    for (let i = 0; i < cartesians.length; i++) {
+        if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {
+            // Still show axis tick or axisLine if other axis is value / log
+            axisLineAutoShow = axisTickAutoShow = true;
+            if (axisModel.axis.type === 'category' && axisModel.axis.onBand) {
+                axisTickAutoShow = false;
             }
-            // Not show axisTick or axisLine if other axis is category / time
-            return false;
         }
-    } as AxisBuilderCfg, layoutResult));
+    }
+    layoutResult.axisLineAutoShow = axisLineAutoShow;
+    layoutResult.axisTickAutoShow = axisTickAutoShow;
 
-    axisBuilder.build(axisBuilderAxisPartMap);
+    return new AxisBuilder(axisModel, api, layoutResult, ctx);
+}
 
-    return axisBuilder.group;
+export function updateCartesianAxisViewCommonPartBuilder(
+    axisBuilder: AxisBuilder,
+    gridRect: LayoutRect,
+    axisModel: CartesianAxisModel,
+): void {
+    const newRaw: AxisBuilderCfg = layout(gridRect, axisModel);
+
+    if (__DEV__) {
+        const oldRaw = axisBuilder.__getRawCfg();
+        zrUtil.each(zrUtil.keys(newRaw), prop => {
+            if (prop !== 'position' && prop !== 'labelOffset') {
+                zrUtil.assert(newRaw[prop] === oldRaw[prop]);
+            }
+        });
+    }
+
+    axisBuilder.updateCfg(newRaw);
 }
