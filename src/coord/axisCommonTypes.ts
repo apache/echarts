@@ -21,7 +21,7 @@ import { TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import {
     TextCommonOption, LineStyleOption, OrdinalRawValue, ZRColor,
     AreaStyleOption, ComponentOption, ColorString,
-    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption
+    AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption, LabelOption
 } from '../util/types';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 
@@ -217,7 +217,7 @@ type LabelFormatters = {
     time: TimeAxisLabelFormatterOption
 };
 
-interface AxisLabelBaseOption extends Omit<TextCommonOption, 'color'> {
+interface AxisLabelBaseOption extends Omit<LabelOption, 'color'> {
     show?: boolean,
     // Whether axisLabel is inside the grid or outside the grid.
     inside?: boolean,

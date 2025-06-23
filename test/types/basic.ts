@@ -35,3 +35,30 @@ const option: echarts.EChartsOption = {
     }]
 };
 chart.setOption(option);
+
+/**
+ * See https://github.com/apache/echarts/issues/16833
+ */
+const option2: echarts.EChartsOption = {
+    title: { text: 'World Population' },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: {},
+    grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+    xAxis: { type: 'value', boundaryGap: [0, 0.01] },
+    yAxis: {
+        axisLabel: { width: 40, overflow: 'break' },
+        data: ['Brazil', 'Indonesia', 'USA', 'India', 'China', 'World']
+    },
+    series: [
+        {
+        name: '2011',
+        type: 'bar',
+        data: [18203, 23489, 29034, 104970, 131744, 630230]
+        },
+        {
+        name: '2012',
+        type: 'bar',
+        data: [19325, 23438, 31000, 121594, 134141, 681807]
+        }
+    ]
+};
