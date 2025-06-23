@@ -22,7 +22,9 @@ import {linearMap, getPixelPrecision, round} from '../util/number';
 import {
     createAxisTicks,
     createAxisLabels,
-    calculateCategoryInterval
+    calculateCategoryInterval,
+    calculateCategoryAutoLayout,
+    getAxisNameGap
 } from './axisTickLabelBuilder';
 import Scale from '../scale/Scale';
 import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
@@ -224,6 +226,14 @@ class Axis {
         return createAxisLabels(this).labels;
     }
 
+    getViewLabelsAndRotation(): ReturnType<typeof createAxisLabels> {
+        return createAxisLabels(this);
+    }
+
+    getNameGap(): ReturnType<typeof getAxisNameGap> {
+        return getAxisNameGap(this);
+    }
+
     getLabelModel(): Model<AxisBaseOption['axisLabel']> {
         return this.model.getModel('axisLabel');
     }
@@ -269,6 +279,14 @@ class Axis {
         return calculateCategoryInterval(this);
     }
 
+    /**
+     * Only be called in category axis.
+     * Can be overridden, consider other axes like in 3D.
+     * @return Auto layout properties (interval, rotation) for cateogry axis tick and label
+     */
+    calculateCategoryAutoLayout(interval?: number): ReturnType<typeof calculateCategoryAutoLayout> {
+        return calculateCategoryAutoLayout(this, interval);
+    }
 }
 
 function fixExtentWithBands(extent: [number, number], nTick: number): void {
