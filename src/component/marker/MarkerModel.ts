@@ -90,7 +90,7 @@ export interface MarkerOption extends ComponentOption, AnimationOptionMixin {
     data?: unknown[]
 
     tooltip?: CommonTooltipOption<unknown> & {
-        trigger?: 'item' | 'axis' | boolean | 'none'
+        trigger?: 'item' | 'activeItem' | 'axis' | boolean | 'none'
     }
 }
 

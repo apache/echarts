@@ -49,7 +49,7 @@ export interface TooltipOption extends CommonTooltipOption<TopLevelFormatterPara
     /**
      * Trigger only works on coordinate system.
      */
-    trigger?: 'item' | 'axis' | 'none'
+    trigger?: 'item' | 'activeItem' | 'axis' | 'none'
 
     /**
      * 'auto': use html by default, and use non-html if `document` is not defined
@@ -96,7 +96,7 @@ class TooltipModel extends ComponentModel<TooltipOption> {
         showContent: true,
 
         // 'trigger' only works on coordinate system.
-        // 'item' | 'axis' | 'none'
+        // 'item' | 'activeItem' | 'axis' | 'none'
         trigger: 'item',
 
         // 'click' | 'mousemove' | 'none'
