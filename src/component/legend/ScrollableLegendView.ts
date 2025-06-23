@@ -114,13 +114,12 @@ class ScrollableLegendView extends LegendView {
         api: ExtensionAPI,
         selector: LegendSelectorButtonOption[],
         orient: ScrollableLegendOption['orient'],
-        selectorPosition: ScrollableLegendOption['selectorPosition'],
-        maxSize: layoutUtil.LayoutRect,
+        selectorPosition: ScrollableLegendOption['selectorPosition']
     ) {
         const self = this;
 
         // Render content items.
-        super.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition, maxSize);
+        super.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
 
         const controllerGroup = this._controllerGroup;
 

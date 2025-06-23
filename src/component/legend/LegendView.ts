@@ -132,14 +132,14 @@ class LegendView extends ComponentView {
             selectorPosition = orient === 'horizontal' ? 'end' : 'start';
         }
 
+        this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition);
+
         // Perform layout.
         const refContainer = layoutUtil.createBoxLayoutReference(legendModel, api).refContainer;
         const positionInfo = legendModel.getBoxLayoutParams();
         const padding = legendModel.get('padding');
 
         const maxSize = layoutUtil.getLayoutRect(positionInfo, refContainer, padding);
-
-        this.renderInner(itemAlign, legendModel, ecModel, api, selector, orient, selectorPosition, maxSize);
 
         const mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
 
@@ -179,8 +179,7 @@ class LegendView extends ComponentView {
         api: ExtensionAPI,
         selector: LegendSelectorButtonOption[],
         orient: LegendOption['orient'],
-        selectorPosition: LegendOption['selectorPosition'],
-        maxSize: layoutUtil.LayoutRect,
+        selectorPosition: LegendOption['selectorPosition']
     ) {
         const contentGroup = this.getContentGroup();
         const legendDrawnMap = zrUtil.createHashMap();
@@ -228,8 +227,7 @@ class LegendView extends ComponentView {
                 const itemGroup = this._createItem(
                     seriesModel, name, dataIndex,
                     legendItemModel, legendModel, itemAlign,
-                    lineVisualStyle, style, legendIcon, selectMode, api,
-                    maxSize,
+                    lineVisualStyle, style, legendIcon, selectMode, api
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, name, null, api, excludeSeriesId))
@@ -284,8 +282,7 @@ class LegendView extends ComponentView {
                         const itemGroup = this._createItem(
                             seriesModel, name, dataIndex,
                             legendItemModel, legendModel, itemAlign,
-                            {}, style, legendIcon, selectMode, api,
-                            maxSize,
+                            {}, style, legendIcon, selectMode, api
                         );
 
                         // FIXME: consider different series has items with the same name.
@@ -396,8 +393,7 @@ class LegendView extends ComponentView {
         itemVisualStyle: PathStyleProps,
         legendIcon: string,
         selectMode: LegendOption['selectedMode'],
-        api: ExtensionAPI,
-        maxSize: layoutUtil.LayoutRect,
+        api: ExtensionAPI
     ) {
         const drawType = seriesModel.visualDrawType;
         const itemWidth = legendModel.get('itemWidth');
@@ -479,8 +475,7 @@ class LegendView extends ComponentView {
                 y: itemHeight / 2,
                 fill: textColor,
                 align: textAlign,
-                verticalAlign: 'middle',
-                width: maxSize.width - textX,
+                verticalAlign: 'middle'
             }, {inheritColor: textColor})
         }));
 
