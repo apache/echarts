@@ -23,7 +23,7 @@
  * TODO Default cartesian
  */
 
-import {isObject, each, indexOf, retrieve3, keys, assert} from 'zrender/src/core/util';
+import {isObject, each, indexOf, retrieve3, keys, assert, eqNaN, find} from 'zrender/src/core/util';
 import {BoxLayoutReferenceResult, createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
@@ -64,10 +64,12 @@ import {
     AxisBuilderSharedContext,
     resolveAxisNameOverlapDefault,
     moveIfOverlapByLinearLabels,
+    getLabelInner,
 } from '../../component/axis/AxisBuilder';
 import { error, log } from '../../util/log';
 import { AxisTickLabelComputingKind } from '../axisTickLabelBuilder';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
+import { mathMax } from '../../util/number';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -79,6 +81,12 @@ type AxesMap = {
 };
 
 type ParsedOuterBoundsContain = 'all' | 'axisLabel';
+
+// margin is [top, right, bottom, left]
+const XY_TO_MARGIN_IDX = [
+    [3, 1], // xyIdx 0 => 'x'
+    [0, 2]  // xyIdx 1 => 'y'
+] as const;
 
 class Grid implements CoordinateSystemMaster {
 
@@ -212,7 +220,7 @@ class Grid implements CoordinateSystemMaster {
         updateAllAxisExtentTransByGridRect(axesMap, gridRect);
 
         if (!beforeDataProcessing) {
-            createAxisBiulders(gridRect, coordsList, axesMap, api);
+            const axisBuilderSharedCtx = createAxisBiulders(gridRect, coordsList, axesMap, api);
 
             let noPxChange: boolean;
             if (optionContainLabel) {
@@ -229,16 +237,20 @@ class Grid implements CoordinateSystemMaster {
                             true
                         );
                     }
-                    noPxChange = layOutGridByOuterBounds(gridRect.clone(), 'axisLabel', gridRect, axesMap);
+                    noPxChange = layOutGridByOuterBounds(
+                        gridRect.clone(), 'axisLabel', gridRect, axesMap, axisBuilderSharedCtx
+                    );
                 }
             }
             else {
                 const {outerBoundsRect, parsedOuterBoundsContain} = prepareOuterBounds(
-                    gridModel, gridRect, layoutRef, api
+                    gridModel, gridRect, layoutRef
                 );
                 if (outerBoundsRect) {
                     // console.time('layOutGridByOuterBounds');
-                    noPxChange = layOutGridByOuterBounds(outerBoundsRect, parsedOuterBoundsContain, gridRect, axesMap);
+                    noPxChange = layOutGridByOuterBounds(
+                        outerBoundsRect, parsedOuterBoundsContain, gridRect, axesMap, axisBuilderSharedCtx
+                    );
                     // console.timeEnd('layOutGridByOuterBounds');
                 }
             }
@@ -730,6 +742,7 @@ function layOutGridByOuterBounds(
     outerBoundsContain: ParsedOuterBoundsContain,
     gridRect: LayoutRect,
     axesMap: AxesMap,
+    axisBuilderSharedCtx: AxisBuilderSharedContext
 ): boolean {
     if (__DEV__) {
         assert(outerBoundsContain === 'all' || outerBoundsContain === 'axisLabel');
@@ -742,7 +755,6 @@ function layOutGridByOuterBounds(
     // - The final `gridRect` might be slightly smaller than the ideally expected result if labels are giant and
     //  get hidden due to overlapping. More iterations could improve precision, but not performant. We consider
     //  the current result acceptable, since no alignment among charts can be guaranteed when using this feature.
-    const unionRect = BoundingRect.create(gridRect);
     createOrUpdateAxesView(
         gridRect,
         axesMap,
@@ -750,40 +762,82 @@ function layOutGridByOuterBounds(
         outerBoundsContain,
         false
     );
-    each(axesMap, axisList => each(axisList, axis => {
-        if (shouldAxisShow(axis.model)) {
-            unionRect.union(axis.axisBuilder.group.getBoundingRect());
-        }
-    }));
 
-    // Note:
-    // - Considered axis may be blank or no labels and the returned rect size is 0.
-    // - The final rect must not be greater than the original input `gridRect`. That is, event if
-    //  labels/ticks/lines/names are all hide or inside, other parts not addressed here, such as
-    //  splitLine and tooltip trigger area, still need to be displayed within the gridRect.
-    //
-    // PENDING: the currently way is not strictly accurate when the outermost label is ignored
-    //  and the secondary label is very long and contribute to the union extension:
-    //      -|---|---|---|
-    //         1,000,000,000
-    //  A precise approach could be to calculate the shrinking space for each label by its proportional
-    //  position along with its axis extent, and then find a max one.
-    //  But bad case in the current way is insignificant.
-    const margin: number[] = [];
-    let noPxChange = true;
-    fillMargin(0, 3, 1);
-    fillMargin(1, 0, 2);
-    function fillMargin(xyIdx: number, minIdx: 0 | 3, maxIdx: 1 | 2): void {
-        margin[minIdx] = outerBoundsRect[XY[xyIdx]] - unionRect[XY[xyIdx]];
-        margin[maxIdx] = (unionRect[WH[xyIdx]] + unionRect[XY[xyIdx]])
-            - (outerBoundsRect[WH[xyIdx]] + outerBoundsRect[XY[xyIdx]]);
-        noPxChange = noPxChange && margin[minIdx] <= 0 && margin[maxIdx] <= 0;
-    }
+    const margin = [0, 0, 0, 0];
+
+    fillLabelNameOverflowOnOneDimension(0);
+    fillLabelNameOverflowOnOneDimension(1);
+    // If axis is blank, no label can be used to detect overflow.
+    // gridRect itself should not overflow.
+    fillMarginOnOneDimension(gridRect, 0, NaN);
+    fillMarginOnOneDimension(gridRect, 1, NaN);
+
+    const noPxChange = find(margin, item => item > 0) == null;
     expandOrShrinkRect(gridRect, margin, true, true);
 
     updateAllAxisExtentTransByGridRect(axesMap, gridRect);
 
     return noPxChange;
+
+    function fillLabelNameOverflowOnOneDimension(xyIdx: number): void {
+        each(axesMap[XY[xyIdx]], axis => {
+            if (!shouldAxisShow(axis.model)) {
+                return;
+            }
+            // FIXME: zr Group.union may wrongly union (0, 0, 0, 0) and not performant.
+            // unionRect.union(axis.axisBuilder.group.getBoundingRect());
+
+            // If ussing Group.getBoundingRect to calculate shrink space, it is not strictly accurate when
+            // the outermost label is ignored and the secondary label is very long and contribute to the
+            // union extension:
+            //      -|---|---|---|
+            //         1,000,000,000
+            // Therefore we calculate them one by one.
+            // Also considered axis may be blank or no labels.
+            const sharedRecord = axisBuilderSharedCtx.ensureRecord(axis.model);
+            const labelInfoList = sharedRecord.labelInfoList;
+            if (labelInfoList) {
+                for (let idx = 0; idx < labelInfoList.length; idx++) {
+                    const labelInfo = labelInfoList[idx];
+                    let proportion = axis.scale.normalize(getLabelInner(labelInfo.label).tickValue);
+                    proportion = xyIdx === 1 ? 1 - proportion : proportion;
+                    // xAxis use proportion on x, yAxis use proprotion on y, otherwise not.
+                    fillMarginOnOneDimension(labelInfo.rect, xyIdx, proportion);
+                    fillMarginOnOneDimension(labelInfo.rect, 1 - xyIdx, NaN);
+                }
+            }
+            const nameLayout = sharedRecord.nameLayout;
+            if (nameLayout) {
+                const proportion = isNameLocationCenter(sharedRecord.nameLocation) ? 0.5 : NaN;
+                fillMarginOnOneDimension(nameLayout.rect, xyIdx, proportion);
+                fillMarginOnOneDimension(nameLayout.rect, 1 - xyIdx, NaN);
+            }
+        });
+    }
+
+    function fillMarginOnOneDimension(
+        itemRect: BoundingRect,
+        xyIdx: number,
+        proportion: number // NaN mean no use proportion
+    ): void {
+        let overflow1 = outerBoundsRect[XY[xyIdx]] - itemRect[XY[xyIdx]];
+        let overflow2 = (itemRect[WH[xyIdx]] + itemRect[XY[xyIdx]])
+            - (outerBoundsRect[WH[xyIdx]] + outerBoundsRect[XY[xyIdx]]);
+        overflow1 = applyProportion(overflow1, 1 - proportion);
+        overflow2 = applyProportion(overflow2, proportion);
+        const minIdx = XY_TO_MARGIN_IDX[xyIdx][0];
+        const maxIdx = XY_TO_MARGIN_IDX[xyIdx][1];
+        margin[minIdx] = mathMax(margin[minIdx], overflow1);
+        margin[maxIdx] = mathMax(margin[maxIdx], overflow2);
+    }
+
+    function applyProportion(overflow: number, proportion: number): number {
+        // proportion is not likely to near zero. If so, give up shrink
+        if (overflow > 0 && !eqNaN(proportion) && proportion > 1e-4) {
+            overflow /= proportion;
+        }
+        return overflow;
+    }
 }
 
 function createAxisBiulders(
@@ -791,7 +845,7 @@ function createAxisBiulders(
     cartesians: Cartesian2D[],
     axesMap: AxesMap,
     api: ExtensionAPI,
-) {
+): AxisBuilderSharedContext {
     const axisBuilderSharedCtx = new AxisBuilderSharedContext(resolveAxisNameOverlapForGrid);
     each(axesMap, axisList => each(axisList, axis => {
         if (shouldAxisShow(axis.model)) {
@@ -800,6 +854,7 @@ function createAxisBiulders(
             );
         }
     }));
+    return axisBuilderSharedCtx;
 }
 
 /**
@@ -848,7 +903,6 @@ function prepareOuterBounds(
     gridModel: GridModel,
     gridRect: BoundingRect,
     layoutRef: BoxLayoutReferenceResult,
-    api: ExtensionAPI
 ): {
     outerBoundsRect: BoundingRect | NullUndefined
     parsedOuterBoundsContain: ParsedOuterBoundsContain

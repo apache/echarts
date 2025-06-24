@@ -146,22 +146,17 @@ under the License.
                 }
 
                 function updateIndicatorShapeOptions() {
-                    let parsedOuterBounds = _currOuterBoundsMode;
-                    if (parsedOuterBounds == null || parsedOuterBounds === true || parsedOuterBounds === 'auto') {
-                        if (_currContainLabel) {
-                            parsedOuterBounds = 'same';
-                        }
+                    let parsedOuterBoundsMode = _currOuterBoundsMode;
+                    if (_currContainLabel) {
+                        parsedOuterBoundsMode = 'same';
                     }
-                    if (parsedOuterBounds == null) {
-                        resetGridOuterBoundsIndicatorShapeOptions();
-                    }
-                    else if (parsedOuterBounds === false) {
+                    if (parsedOuterBoundsMode === 'none') {
                         _gridOuterBoundsIndicatorShapeOptions.left = -1000;
                         _gridOuterBoundsIndicatorShapeOptions.top = -1000;
                         _gridOuterBoundsIndicatorShapeOptions.right = -1000;
                         _gridOuterBoundsIndicatorShapeOptions.bottom = -1000;
                     }
-                    else if (parsedOuterBounds == 'same') {
+                    else if (parsedOuterBoundsMode == 'same') {
                         _gridOuterBoundsIndicatorShapeOptions.left = _gridBoxIndicatorShapeOptions.left;
                         _gridOuterBoundsIndicatorShapeOptions.top = _gridBoxIndicatorShapeOptions.top;
                         _gridOuterBoundsIndicatorShapeOptions.right = _gridBoxIndicatorShapeOptions.right;
@@ -190,7 +185,21 @@ under the License.
                         style: {
                             fill: 'rgba(0,0,100,0.1)'
                         },
-                        silent: true
+                        silent: true,
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'grid.t/r/b/l/w/h rect',
+                                stroke: '#fff',
+                                lineWidth: 2,
+                                fill: '#555',
+                                fontSize: 10,
+                            }
+                        },
+                        textConfig: {
+                            position: 'insideTopRight',
+                            distance: 0,
+                        },
                     }
                 }
                 function makeGridOuterBoundsIndicatorOption() {
@@ -207,7 +216,21 @@ under the License.
                         style: {
                             fill: 'rgba(0,80,0,0.1)'
                         },
-                        silent: true
+                        silent: true,
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'grid.outerBounds.t/r/b/l/w/h rect',
+                                stroke: '#fff',
+                                lineWidth: 2,
+                                fill: '#555',
+                                fontSize: 10,
+                            }
+                        },
+                        textConfig: {
+                            position: 'insideTopRight',
+                            distance: 0,
+                        },
                     }
                 }
 
@@ -444,8 +467,9 @@ under the License.
                 const chart = testHelper.create(echarts, 'main_all', {
                     title: [
                         'Axis and grid layout tests.',
-                        'The lighter gray background is the chart canvas.',
-                        'The darker gray background represents grid.top/right/bottom/left rect.',
+                        'The **gray** background is the chart canvas.',
+                        'The **purple background** represents grid.top/right/bottom/left rect.',
+                        'The **green background** represents grid.outerBounds.top/right/bottom/left rect.',
                         'Need to check the case that **legend disable all series**',
                         'Click **stop recording input and copy to clipboard** for saving case to axis-layout-0-quick-cases.js',
                     ],
@@ -701,7 +725,7 @@ under the License.
                                 ...['xAxis', 'yAxis'].map(xyAxisProp => {
                                     return {
                                         type: 'select',
-                                        text: `${xyAxisProp}[${controllingAxisIndex}].show`,
+                                        text: `${xyAxisProp}[${controllingAxisIndex}].show:`,
                                         values: [true, false],
                                         onchange() {
                                             chartSetOption(chart, {
@@ -749,7 +773,7 @@ under the License.
                                 },
                                 {
                                     type: 'select',
-                                    text: `xAxis[${controllingAxisIndex}].position`,
+                                    text: `xAxis[${controllingAxisIndex}].position:`,
                                     values: _initValues.xAxis.position,
                                     onchange() {
                                         chartSetOption(chart, {xAxis: {
@@ -760,7 +784,7 @@ under the License.
                                 },
                                 {
                                     type: 'select',
-                                    text: `yAxis[${controllingAxisIndex}].position`,
+                                    text: `yAxis[${controllingAxisIndex}].position:`,
                                     values: _initValues.yAxis.position,
                                     onchange() {
                                         chartSetOption(chart, {yAxis: {
@@ -791,7 +815,7 @@ under the License.
                                 },
                                 ...(['xAxis', 'yAxis'].map(prop => ({
                                     type: 'select',
-                                    text: `${prop}[${controllingAxisIndex}].offset`,
+                                    text: `${prop}[${controllingAxisIndex}].offset:`,
                                     options: [
                                         {value: NOT_SET},
                                         {input: {
@@ -817,7 +841,7 @@ under the License.
                                 },
                                 {
                                     type: 'select',
-                                    text: `x/yAxis[${controllingAxisIndex}].axisTick.length`,
+                                    text: `x/yAxis[${controllingAxisIndex}].axisTick.length:`,
                                     values: [5, 0, 30, -30],
                                     onchange() {
                                         chartSetOption(chart, {
@@ -855,7 +879,7 @@ under the License.
                                 },
                                 ...(['xAxis', 'yAxis'].map(prop => ({
                                     type: 'select',
-                                    text: `${prop}[${controllingAxisIndex}].axisLabel.rotate`,
+                                    text: `${prop}[${controllingAxisIndex}].axisLabel.rotate:`,
                                     options: [
                                         {value: NOT_SET},
                                         {input: {
@@ -878,7 +902,7 @@ under the License.
                                 },
                                 ...(['xAxis', 'yAxis'].map(prop => ({
                                     type: 'select',
-                                    text: `${prop}[${controllingAxisIndex}].axisLabel.margin`,
+                                    text: `${prop}[${controllingAxisIndex}].axisLabel.margin:`,
                                     options: [
                                         {value: NOT_SET},
                                         {value: 0},
@@ -1043,7 +1067,7 @@ under the License.
                                 },
                                 ...(['xAxis', 'yAxis'].map(prop => ({
                                     type: 'select',
-                                    text: `${prop}[${controllingAxisIndex}].nameRotate`,
+                                    text: `${prop}[${controllingAxisIndex}].nameRotate:`,
                                     options: [
                                         {value: NOT_SET},
                                         {input: {
@@ -1068,7 +1092,7 @@ under the License.
                                 },
                                 ...(['xAxis', 'yAxis'].map(prop => ({
                                     type: 'select',
-                                    text: `${prop}[${controllingAxisIndex}].nameGap`,
+                                    text: `${prop}[${controllingAxisIndex}].nameGap:`,
                                     options: [
                                         {value: NOT_SET},
                                         {value: 0},
@@ -1092,7 +1116,7 @@ under the License.
                                 },
                                 {
                                     type: 'select',
-                                    text: `xAxis[${controllingAxisIndex}].nameMoveOverlap`,
+                                    text: `xAxis[${controllingAxisIndex}].nameMoveOverlap:`,
                                     values: [true, false],
                                     onchange() {
                                         chartSetOption(chart, {
@@ -1105,7 +1129,7 @@ under the License.
                                 },
                                 {
                                     type: 'select',
-                                    text: `yAxis[${controllingAxisIndex}].nameMoveOverlap`,
+                                    text: `yAxis[${controllingAxisIndex}].nameMoveOverlap:`,
                                     values: [true, false],
                                     onchange() {
                                         chartSetOption(chart, {
@@ -1118,7 +1142,7 @@ under the License.
                                 },
                                 {
                                     type: 'select',
-                                    text: `xAxis[${controllingAxisIndex}].nameLocation`,
+                                    text: `xAxis[${controllingAxisIndex}].nameLocation:`,
                                     values: _initValues.allAxis.nameLocation,
                                     onchange() {
                                         chartSetOption(chart, {
@@ -1131,7 +1155,7 @@ under the License.
                                 },
                                 {
                                     type: 'select',
-                                    text: `yAxis[${controllingAxisIndex}].nameLocation`,
+                                    text: `yAxis[${controllingAxisIndex}].nameLocation:`,
                                     values: _initValues.allAxis.nameLocation,
                                     onchange() {
                                         chartSetOption(chart, {

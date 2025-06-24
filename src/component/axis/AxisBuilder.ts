@@ -22,6 +22,7 @@ import {
     assert,
     map,
     retrieve3,
+    filter,
 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
@@ -60,6 +61,7 @@ import {
     LABEL_LAYOUT_INFO_KIND_RAW,
     rollbackToLabelLayoutInfoRaw,
     LABEL_LAYOUT_INFO_KIND_COMPUTED,
+    createSingleLayoutInfoComputed,
 } from '../../label/labelLayoutHelper';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { makeInner } from '../../util/model';
@@ -102,7 +104,7 @@ type AxisLabelText = graphic.Text & {
     __truncatedText: string
 } & ECElement;
 
-const getLabelInner = makeInner<{
+export const getLabelInner = makeInner<{
     break: VisualAxisBreak;
     tickValue: number;
     layoutRotation: number;
@@ -219,9 +221,10 @@ export type AxisBuilderSharedContextRecord = {
     // Represents axis rotation. The magnitude is 1.
     dirVec?: Point,
     transGroup?: AxisBuilder['_transformGroup'],
-    // Used for overlap detection for both self and other axes.
-    // Sorted in ascending order of the distance to transformGroup.x/y.
-    // This sorting is for OBB intersection checking.
+    // - Used for overlap detection for both self and other axes.
+    // - Sorted in ascending order of the distance to transformGroup.x/y.
+    //  This sorting is for OBB intersection checking.
+    // - No NullUndefined item, and ignored items has been removed.
     labelInfoList?: LabelLayoutInfoComputed[]
     // `stOccupiedRect` is based on the "standard axis".
     // If no label, be `NullUndefined`.
@@ -245,6 +248,8 @@ export type AxisBuilderSharedContextRecord = {
     //          ----|------------|  A axis name
     //          1,000,000   300,000,000
     stOccupiedRect?: BoundingRect | NullUndefined;
+    nameLayout?: LabelLayoutInfoComputed | NullUndefined;
+    nameLocation?: AxisBaseOption['nameLocation'];
     // Only used in __DEV__ mode.
     ready: Partial<Record<AxisBuilderAxisPartName, boolean>>
 };
@@ -798,8 +803,9 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
      *  in size measurement. Thus this method should be idempotent, and should be performant.
      */
     axisName(cfg, local, shared, axisModel, group, transformGroup, api) {
+        const sharedRecord = shared.ensureRecord(axisModel);
         if (__DEV__) {
-            const ready = shared.ensureRecord(axisModel).ready;
+            const ready = sharedRecord.ready;
             assert(ready.axisTickLabelEstimate || ready.axisTickLabelDetermine);
             ready.axisName = true;
         }
@@ -807,7 +813,7 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         // PENDING: need optimize for repeatedly estimate?
         if (local.nameEl) {
             group.remove(local.nameEl);
-            local.nameEl = null;
+            local.nameEl = sharedRecord.nameLayout = sharedRecord.nameLocation = null;
         }
 
         const name = cfg.axisName;
@@ -926,24 +932,18 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         textEl.updateTransform();
 
         local.nameEl = textEl;
+        const nameLayout = sharedRecord.nameLayout = createSingleLayoutInfoComputed(textEl);
+        sharedRecord.nameLocation = nameLocation;
         group.add(textEl);
 
         textEl.decomposeTransform();
 
-        if (cfg.shouldNameMoveOverlap) {
-            const nameLayoutInfo = ensureLabelLayoutInfoComputed({
-                kind: LABEL_LAYOUT_INFO_KIND_RAW,
-                label: textEl,
-                priority: textEl.z2,
-                defaultAttr: {ignore: textEl.ignore}
-            });
-            if (nameLayoutInfo) {
-                const record = shared.ensureRecord(axisModel);
-                if (__DEV__) {
-                    assert(record.labelInfoList);
-                }
-                shared.resolveAxisNameOverlap(cfg, shared, axisModel, nameLayoutInfo, nameMoveDirVec, record);
+        if (cfg.shouldNameMoveOverlap && nameLayout) {
+            const record = shared.ensureRecord(axisModel);
+            if (__DEV__) {
+                assert(record.labelInfoList);
             }
+            shared.resolveAxisNameOverlap(cfg, shared, axisModel, nameLayout, nameMoveDirVec, record);
         }
     }
 
@@ -976,10 +976,14 @@ function axisTickLabelLayout(
     if (optionHideOverlap) {
         // This bit fixes the label overlap issue for the time chart.
         // See https://github.com/apache/echarts/issues/14266 for more.
-        hideOverlap(labelLayoutList);
+        hideOverlap(
+            // Filter the already ignored labels by the previous overlap resolving methods.
+            filter(labelLayoutList, layout => (layout && !layout.label.ignore))
+        );
     }
 
-    // Always call it even this axis has no name, since it serves in overlapping detection on other axis.
+    // Always call it even this axis has no name, since it serves in overlapping detection
+    // and grid outerBounds on other axis.
     resetOverlapRecordToShared(cfg, shared, axisModel, labelLayoutList);
 };
 

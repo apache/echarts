@@ -212,6 +212,15 @@ export function prepareIntersectionCheckInfo(
     };
 }
 
+export function createSingleLayoutInfoComputed(el: ZRText): LabelLayoutInfoComputed | NullUndefined {
+    return ensureLabelLayoutInfoComputed({
+        kind: LABEL_LAYOUT_INFO_KIND_RAW,
+        label: el,
+        priority: el.z2,
+        defaultAttr: {ignore: el.ignore}
+    });
+}
+
 /**
  * Create obb if no one, can cache it.
  */
@@ -435,13 +444,19 @@ export function shiftLayoutOnY(
 }
 
 /**
- * Note: the `label.ignore` in the input is not necessarily falsy.
+ * [CAUTION]: the `label.ignore` in the input is not necessarily falsy.
+ *  this method checks intersection regardless of current `ignore`,
+ *  if no intersection, restore the `ignore` to `defaultAttr.ignore`.
+ *  And `labelList` will be modified.
+ *  Therefore, if some other overlap resolving strategy has ignored some elements,
+ *  do not input them to this method.
+ * PENDING: review the diff between the requirements from LabelManager and AxisBuilder,
+ *  and uniform the behavior?
  */
 export function hideOverlap(labelList: LabelLayoutInfoAll[]): void {
     const displayedLabels: LabelLayoutInfoComputed[] = [];
 
     // TODO, render overflow visible first, put in the displayedLabels.
-    labelList = labelList.slice();
     labelList.sort(function (a, b) {
         return ((b.suggestIgnore ? 1 : 0) - (a.suggestIgnore ? 1 : 0))
             || (b.priority - a.priority);
@@ -462,7 +477,7 @@ export function hideOverlap(labelList: LabelLayoutInfoAll[]): void {
     for (let i = 0; i < labelList.length; i++) {
         const labelItem = ensureLabelLayoutInfoComputed(labelList[i]);
 
-        if (!labelItem) {
+        if (!labelItem || labelItem.label.ignore) {
             continue;
         }
 
@@ -488,7 +503,6 @@ export function hideOverlap(labelList: LabelLayoutInfoAll[]): void {
             labelLine && hideEl(labelLine);
         }
         else {
-            // PENDING: necessary?
             label.attr('ignore', labelItem.defaultAttr.ignore);
             labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
 
