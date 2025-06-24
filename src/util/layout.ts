@@ -444,7 +444,7 @@ export const BoxLayoutReferenceType = {
 } as const;
 export type BoxLayoutReferenceType = (typeof BoxLayoutReferenceType)[keyof typeof BoxLayoutReferenceType];
 
-type BoxLayoutReferenceResult<TEnableByCenter> = TEnableByCenter extends true
+export type BoxLayoutReferenceResult<TEnableByCenter extends boolean = false> = TEnableByCenter extends true
     ? (BoxLayoutReferenceRectResult | BoxLayoutReferencePointResult)
     : BoxLayoutReferenceRectResult;
 type BoxLayoutReferenceRectResult = {

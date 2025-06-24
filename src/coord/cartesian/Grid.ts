@@ -24,7 +24,7 @@
  */
 
 import {isObject, each, indexOf, retrieve3, keys, assert} from 'zrender/src/core/util';
-import {createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
+import {BoxLayoutReferenceResult, createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
     ifAxisCrossZero,
@@ -233,7 +233,9 @@ class Grid implements CoordinateSystemMaster {
                 }
             }
             else {
-                const {outerBoundsRect, parsedOuterBoundsContain} = prepareOuterBounds(gridModel, gridRect, api);
+                const {outerBoundsRect, parsedOuterBoundsContain} = prepareOuterBounds(
+                    gridModel, gridRect, layoutRef, api
+                );
                 if (outerBoundsRect) {
                     // console.time('layOutGridByOuterBounds');
                     noPxChange = layOutGridByOuterBounds(outerBoundsRect, parsedOuterBoundsContain, gridRect, axesMap);
@@ -845,6 +847,7 @@ function createOrUpdateAxesView(
 function prepareOuterBounds(
     gridModel: GridModel,
     gridRect: BoundingRect,
+    layoutRef: BoxLayoutReferenceResult,
     api: ExtensionAPI
 ): {
     outerBoundsRect: BoundingRect | NullUndefined
@@ -856,8 +859,9 @@ function prepareOuterBounds(
         outerBoundsRect = gridRect.clone();
     }
     else if (optionOuterBoundsMode == null || optionOuterBoundsMode === 'auto') {
-        const refContainer = {width: api.getWidth(), height: api.getHeight()};
-        outerBoundsRect = getLayoutRect(gridModel.get('outerBounds', true) || OUTER_BOUNDS_DEFAULT, refContainer);
+        outerBoundsRect = getLayoutRect(
+            gridModel.get('outerBounds', true) || OUTER_BOUNDS_DEFAULT, layoutRef.refContainer
+        );
     }
     else if (optionOuterBoundsMode !== 'none') {
         if (__DEV__) {

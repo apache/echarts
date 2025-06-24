@@ -21,6 +21,7 @@ import {
     retrieve, defaults, extend, each, isObject, isString, isNumber, isFunction, retrieve2,
     assert,
     map,
+    retrieve3,
 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
@@ -484,7 +485,14 @@ class AxisBuilder {
 
     private _resetCfgDetermined(raw: AxisBuilderCfg): void {
         const axisModel = this._axisModel;
-        const axisModelDefaultOption = axisModel.getDefaultOption();
+
+        // FIXME:
+        //  Currently there is no uniformed way to set default values if an option
+        //  is specified null/undefined by user (intentionally or unintentionally),
+        //  e.g. null/undefined is not a illegal value for `nameLocation`.
+        //  Try to use `getDefaultOption` to address it. But radar has no `getDefaultOption`.
+        const axisModelDefaultOption = axisModel.getDefaultOption ? axisModel.getDefaultOption() : {};
+
         // Default value
         const axisName = retrieve2(raw.axisName, axisModel.get('name'));
         const cfg = {
@@ -501,7 +509,7 @@ class AxisBuilder {
             silent: retrieve2(raw.silent, true),
 
             axisName: axisName,
-            nameLocation: retrieve2(axisModel.get('nameLocation'), axisModelDefaultOption.nameLocation),
+            nameLocation: retrieve3(axisModel.get('nameLocation'), axisModelDefaultOption.nameLocation, 'end'),
             shouldNameMoveOverlap: hasAxisName(axisName) && !!axisModel.get('nameMoveOverlap'),
             optionHideOverlap: axisModel.get(['axisLabel', 'hideOverlap']),
         };
