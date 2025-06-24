@@ -19,9 +19,9 @@
             }
         </style>
         <div id="main0"></div>
-        <div id="main1"></div>
         <div id="main2"></div>
         <div id="main3"></div>
+        <div id="main_in_matrix"></div>
     </body>
 
     <script>
@@ -154,8 +154,7 @@
     <script>
         require(['echarts'], function (echarts) {
             var option = createBaseGraphOption();
-            option.series[0].thumbnail = {
-                show: true
+            option.thumbnail = {
             };
 
             var chart = testHelper.create(echarts, 'main0', {
@@ -167,8 +166,63 @@
                     '- thumbnail content should show the entire graph',
                     '- widdth and height should be 1/4 of canvas',
                     '- Should has white bg',
-                    '- drag on thumbnail box, the graph should be able to "pen"',
-                    '- mousewheel on thumbnail box, the graph should be able to "zoom"',
+                    '- "pen" and "zoom" should be fine',
+                ],
+                inputsStyle: 'compact',
+                inputs: [
+                    {
+                        type: 'select',
+                        text: 'thumbnail.show:',
+                        values: [true, false],
+                        onchange() {
+                            chart.setOption({
+                                thumbnail: {
+                                    show: this.value,
+                                }
+                            });
+                        }
+                    },
+                    {
+                        type: 'select',
+                        text: 'roam:',
+                        values: [true, false, 'scale', 'move'],
+                        onchange() {
+                            chart.setOption({
+                                series: {
+                                    roam: this.value,
+                                }
+                            });
+                        }
+                    },
+                    {
+                        type: 'select',
+                        text: 'series:',
+                        values: ['graph', 'no_graph'],
+                        onchange() {
+                            var newSeries;
+                            if (this.value === 'graph') {
+                                newSeries = createBaseGraphOption().series;
+                            }
+                            chart.setOption({
+                                series: newSeries
+                            }, {
+                                replaceMerge: ['series']
+                            })
+                        },
+                    },
+                    {
+                        type: 'select',
+                        text: 'graph layout:',
+                        values: ['circular', 'force'],
+                        onchange() {
+                            var layout = this.value;
+                            chart.setOption({
+                                series: {
+                                    layout: layout,
+                                }
+                            });
+                        }
+                    }
                 ]
             });
         });
@@ -177,31 +231,11 @@
     <script>
         require(['echarts'], function (echarts) {
             var option = createBaseGraphOption();
-            option.series[0].thumbnail = {
-                show: false
-            };
-
-            var chart = testHelper.create(echarts, 'main1', {
-                option: option,
-                width: 600,
-                title: [
-                    'thumbnail.show: false',
-                    '- thumbnail should not be displayed.',
-                    '- graph should be roam as normal.'
-                ]
-            });
-        });
-    </script>
-
-    <script>
-        require(['echarts'], function (echarts) {
-            var option = createBaseGraphOption();
-            option.series[0].thumbnail = {
-                show: true,
+            option.thumbnail = {
                 width: 100,
-                height: 200,
-                right: 0,
-                top: 0,
+                right: 10,
+                top: 10,
+                bottom: 10,
                 itemStyle: {
                     borderWidth: 20,
                     borderColor: 'rgba(0,0,0,0.4)'
@@ -219,7 +253,7 @@
                 width: 600,
                 height: 200,
                 title: [
-                    'Like CSS border-box (height should be just fit the canvas height)',
+                    'style:',
                     '- borderWidth: 10, width: 100, height: 180, right: 10, top: 10',
                     '- windowStyle: {color: "yellow", borderWidth: 3, borderColor: "blue", shadowBlur: 5}'
                 ]
@@ -233,8 +267,12 @@
             var option = createBaseGraphOption();
             option.backgroundColor = 'rgba(222, 200, 100, 0.5)';
             option.series[0].zoom = 5;
-            option.series[0].thumbnail = {
-                show: true,
+            option.series[0].scaleLimit = {
+                max: 6,
+                min: 0.8,
+            };
+
+            option.thumbnail = {
                 left: 10,
                 top: 'center',
                 width: '10%',
@@ -253,7 +291,7 @@
                     'Should have border-radius in both box and window rect',
                     'Should auto use chart bg, should be opacity bg',
                     'left: 10, top: "center", width: "10%", height: "30%"',
-                    'init zoom: 5'
+                    'init zoom: 5, **scaleLimit: exists**'
                 ],
                 option: option,
                 height: 300,
@@ -261,4 +299,70 @@
             });
         });
     </script>
+
+
+
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = createBaseGraphOption();
+            var colCount = 5;
+            var rowCount = 5;
+            var shouldShow = false;
+
+            var itemStyle = shouldShow ? {borderWidth: 1} : {borderWidth: 0};
+            option.matrix = {
+                x: {data: Array(colCount).fill(null), show: shouldShow, itemStyle},
+                y: {data: Array(rowCount).fill(null), show: shouldShow, itemStyle},
+                body: {itemStyle},
+                backgroundStyle: {borderWidth: 0},
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+            };
+            option.series[0].coordinateSystem = 'matrix';
+            option.series[0].coordinateSystemUsage = 'box';
+            option.series[0].coord = [[0, 1], [0, colCount - 1]];
+
+            option.thumbnail = {
+                left: 2,
+                top: 2,
+                right: 2,
+                bottom: 2,
+                coordinateSystem: 'matrix',
+                coord: [4, [3, 4]],
+                itemStyle: {
+                },
+            };
+
+            var chart = testHelper.create(echarts, 'main_in_matrix', {
+                title: [
+                    'In matrix layout'
+                ],
+                option: option,
+                width: 600,
+                inputsStyle: 'compact',
+                inputs: [
+                    {
+                        type: 'select',
+                        text: 'matix grid show:',
+                        values: [false, true],
+                        onchange() {
+                            var shouldShow = this.value;
+                            var itemStyle = shouldShow ? {borderWidth: 1} : {borderWidth: 0};
+                            chart.setOption({
+                                matrix: {
+                                    x: {show: shouldShow, itemStyle},
+                                    y: {show: shouldShow, itemStyle},
+                                    body: {itemStyle},
+                                },
+                            });
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+
 </html>

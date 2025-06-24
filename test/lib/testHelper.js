@@ -66,6 +66,7 @@
      * @param {boolean} [opt.notMerge] Optional. `chart.setOption(option, {norMerge});`
      * @param {boolean} [opt.lazyUpdate] Optional. `chart.setOption(option, {lazyUpdate});`
      * @param {boolean} [opt.autoResize=true] Optional. Enable chart auto response to window resize.
+     * @param {Function} [opt.onResize] Optional. Available when `opt.autoResize` or `opt.draggable` is true.
      * @param {string} [opt.renderer] Optional. 'canvas' or 'svg'. DO NOT set it in formmal test cases;
      *  leave it controlled by __ECHARTS__DEFAULT__RENDERER__ for visual testing.
      *
@@ -108,6 +109,7 @@
      *          max: 100,        // Optional
      *          value: 30,       // Optional. Must be a number.
      *          step: 1,         // Optional
+     *          suffix: '%',     // Optional. e.g., '%' means the number is displayed as '33%'
      *          disabled: false, // Optional.
      *          prevent: {       // Optional.
      *              recordInputs: false, // Optional.
@@ -138,7 +140,10 @@
      *                  type: 'range',
      *                  // ... Other properties of `range` input except `onchange` and `text`.
      *                  // When this option is not selected, the range input will be disabled.
-     *              }}
+     *              }},
+     *              // If more than one options have internal `input`, `id` (option id) must be specified.
+     *              // It can be visited by `onchange() { if (this.optionId) {...} }`.
+     *              {text: 'd', id: 'some_option_id', input: {...}}
      *          ],
      *          optionIndex: 0,          // Optional. Or `valueIndex`. The initial value index.
      *                                   // By default, the first option.
@@ -154,7 +159,7 @@
      *          // They are the same: `oninput` `input`
      *          //                    `onchange` `change` `onchanged` `changed`
      *          //                    `onselect` `select` (capital insensitive)
-     *          onchange: function () { console.log(this.value); }
+     *          onchange: function () { console.log(this.value, this.optionId); }
      *      },
      *      {
      *          // Group inputs. Only one group can be displayed at a time with in a group set.
@@ -573,7 +578,7 @@
                 if (listenerDefine.prepareReplay) {
                     prepared = listenerDefine.prepareReplay(opItem.args);
                     assert(
-                        isObject(prepared) 
+                        isObject(prepared)
                             && prepared.hasOwnProperty('this')
                             && getType(prepared.arguments) === 'array',
                         '`prepareReplay` must return an object: {this: any, arguments: []}.'
@@ -904,6 +909,7 @@
             var _rangeInputListener;
             var _rangeInputEl;
             var _rangeInputValueEl;
+            var _opSuffix = internallyForceDef && internallyForceDef.id || '';
 
             dealInitRangeInput();
 
@@ -948,7 +954,7 @@
                             updateRangeInputViewValue(_currVal);
                             dispatchRangeInputChangedEvent();
                         },
-                        op: btnName
+                        op: btnName + _opSuffix
                     }));
                 }
                 createRangeInputDeltaBtn('decrease', -_step);
@@ -964,7 +970,7 @@
                         updateRangeInputViewValue(_currVal);
                         dispatchRangeInputChangedEvent();
                     },
-                    op: 'slide',
+                    op: 'slide' + _opSuffix,
                     createRecordArgs: function () {
                         return [+this.value];
                     },
@@ -992,7 +998,7 @@
 
             function updateRangeInputViewValue(newVal) {
                 _rangeInputEl.value = +newVal;
-                _rangeInputValueEl.innerHTML = encodeHTML(newVal + '');
+                _rangeInputValueEl.innerHTML = encodeHTML(newVal + '' + (inputDefine.suffix || ''));
             }
             function resetRangeInputWrapperCSS(wrapperEl, disabled) {
                 wrapperEl.className = 'test-inputs-slider'
@@ -1055,6 +1061,7 @@
                 '    options: [',
                 '        {text?: string, value: any},',
                 '        {text?: string, input: {type: "range", ...}},',
+                '        {text?: string, id: "some_option_id", input: {type: "range", ...}},',
                 '        ...,',
                 '    ],',
                 '    onchange() { ... },',
@@ -1131,6 +1138,7 @@
                 //  (value can be null/undefined/array/object/... everything).
                 // Convinient but might cause ambiguity when a value happens to be {text, value}, but rarely happen.
                 if (inputDefine.options) {
+                    var innerInputCount = 0;
                     for (var optionIdx = 0; optionIdx < inputDefine.options.length; optionIdx++) {
                         var optionDef = inputDefine.options[optionIdx];
                         assert(isObject(optionDef), [
@@ -1148,8 +1156,17 @@
                         selectCtx._optionList.push({
                             value: optionDef.value,
                             input: optionDef.input,
+                            id: optionDef.id,
                             text: text
                         });
+                        if (optionDef.input) {
+                            innerInputCount++;
+                        }
+                        assert(innerInputCount < 2 || optionDef.id != null, [
+                            errMsgPrefix + ' If more than one inner input in a select,'
+                                + ' option id must be specified. ',
+                            _SAMPLE_SELECT_DEFINITION
+                        ].join('\n'));
                     }
                 }
                 else if (inputDefine.values) {
@@ -1182,6 +1199,7 @@
                         }
                         var rangeInputCreated = createRangeInput(optionDef.input, {
                             text: '',
+                            id: optionDef.id,
                             onchange: function () {
                                 if (selectCtx._disabled) { return; }
                                 triggerUserSelectChangedEvent();
@@ -1281,7 +1299,9 @@
                 else if (inputDefine.hasOwnProperty('value')) {
                     var found = false;
                     for (var idx = 0; idx < selectCtx._optionList.length; idx++) {
-                        if (!selectCtx._optionList[idx].input && selectCtx._optionList[idx].value === inputDefine.value) {
+                        if (!selectCtx._optionList[idx].input
+                            && selectCtx._optionList[idx].value === inputDefine.value
+                        ) {
                             found = true;
                             initOptionIdx = idx;
                         }
@@ -1311,7 +1331,8 @@
             function triggerUserSelectChangedEvent() {
                 var optionIdx = getSelectInputOptionIndex();
                 var value = getSelectInputValueByOptionIndex(optionIdx);
-                var target = {value: value};
+                var optionId = selectCtx._optionList[optionIdx].id;
+                var target = {value: value, optionId: optionId};
                 _selectListener.call(target, {target: target});
             }
 
@@ -1785,7 +1806,15 @@
                 dom.style.height = opt.height + 'px';
             }
 
-            var chart = echarts.init(dom, null, {
+            var theme = opt.theme && opt.theme !== 'none' ? opt.theme : null;
+            if (theme == null && window.__ECHARTS__DEFAULT__THEME__) {
+                theme = window.__ECHARTS__DEFAULT__THEME__;
+            }
+            if (theme) {
+                require(['theme/' + theme]);
+            }
+
+            var chart = echarts.init(dom, theme, {
                 renderer: opt.renderer,
                 useCoarsePointer: opt.useCoarsePointer,
                 pointerSize: opt.pointerSize
@@ -1798,7 +1827,7 @@
                         + '<script src="lib/draggable.js"></script>'
                     );
                 }
-                window.draggable.init(dom, chart, {throttle: 70});
+                window.draggable.init(dom, chart, {throttle: 70, onResize: opt.onResize});
             }
 
             option && chart.setOption(option, {
@@ -1808,7 +1837,7 @@
 
             var isAutoResize = opt.autoResize == null ? true : opt.autoResize;
             if (isAutoResize) {
-                testHelper.resizable(chart);
+                testHelper.resizable(chart, {onResize: opt.onResize});
             }
 
             return chart;
@@ -1982,7 +2011,8 @@
         }
     }
 
-    testHelper.resizable = function (chart) {
+    testHelper.resizable = function (chart, opt) {
+        opt = opt || {};
         var dom = chart.getDom();
         var width = dom.clientWidth;
         var height = dom.clientHeight;
@@ -1996,6 +2026,10 @@
                 }
                 width = newWidth;
                 height = newHeight;
+
+                if (opt.onResize) {
+                    opt.onResize();
+                }
             }
         }
         if (window.attachEvent) {

@@ -51,6 +51,7 @@ import prepareGeo from '../../coord/geo/prepareCustom';
 import prepareSingleAxis from '../../coord/single/prepareCustom';
 import preparePolar from '../../coord/polar/prepareCustom';
 import prepareCalendar from '../../coord/calendar/prepareCustom';
+import prepareMatrix from '../../coord/matrix/prepareCustom';
 import SeriesData, { DefaultDataVisual } from '../../data/SeriesData';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -103,6 +104,7 @@ import {
 } from '../../animation/customGraphicKeyframeAnimation';
 import type SeriesModel from '../../model/Series';
 import { getCustomSeries } from './customSeriesRegister';
+import tokens from '../../visual/tokens';
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -154,6 +156,8 @@ const attachedTxInfoTmp = {
 
 
 /**
+ * FIXME: register rather than import directly, for size.
+ *
  * To reduce total package size of each coordinate systems, the modules `prepareCustom`
  * of each coordinate systems are not required by each coordinate systems directly, but
  * required by the module `custom`.
@@ -169,7 +173,8 @@ const prepareCustoms: Dictionary<PrepareCustomInfo> = {
     geo: prepareGeo,
     single: prepareSingleAxis,
     polar: preparePolar,
-    calendar: prepareCalendar
+    calendar: prepareCalendar,
+    matrix: prepareMatrix
 };
 
 
@@ -368,9 +373,6 @@ function createEl(elOption: CustomElementOption): Element {
             }
             const Clz = graphicUtil.getShapeClass(path.type);
             if (!Clz) {
-                if (typeof path.buildPath === 'function') {
-                    return path;
-                }
                 let errMsg = '';
                 if (__DEV__) {
                     errMsg = 'graphic type "' + graphicType + '" can not be found.';
@@ -809,7 +811,7 @@ function makeRenderItem(
         visualColor != null && (itemStyle.fill = visualColor);
         opacity != null && (itemStyle.opacity = opacity);
 
-        const opt = {inheritColor: isString(visualColor) ? visualColor : '#000'};
+        const opt = {inheritColor: isString(visualColor) ? visualColor : tokens.color.neutral99};
         const labelModel = getLabelModel(dataIndexInside, NORMAL);
         // Now that the feature of "auto adjust text fill/stroke" has been migrated to zrender
         // since ec5, we should set `isAttached` as `false` here and make compat in
@@ -1040,6 +1042,9 @@ function doCreateOrUpdateEl(
     }
     else if ((el as ECElement).disableMorphing) {
         (el as ECElement).disableMorphing = false;
+    }
+    if (elOption.tooltipDisabled) {
+        (el as ECElement).tooltipDisabled = true;
     }
 
     attachedTxInfoTmp.normal.cfg = attachedTxInfoTmp.normal.conOpt =

@@ -27,10 +27,10 @@ import type { PathProps } from 'zrender/src/graphic/Path';
 import type SingleAxisView from './SingleAxisView';
 import type { AxisBuilderCfg } from './AxisBuilder';
 import type { BaseAxisBreakPayload } from './axisAction';
-import type { ComponentModel } from '../../echarts.all';
 import type { AxisBaseOption } from '../../coord/axisCommonTypes';
 import type { AxisBreakOptionIdentifierInAxis, NullUndefined } from '../../util/types';
 import { LabelLayoutInfoComputed } from '../../label/labelLayoutHelper';
+import type ComponentModel from '../../model/Component';
 
 /**
  * @file The fasade of axis break view and mode.

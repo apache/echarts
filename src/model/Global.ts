@@ -87,6 +87,7 @@ const BUITIN_COMPONENTS_MAP = {
     singleAxis: 'SingleAxisComponent',
     parallel: 'ParallelComponent',
     calendar: 'CalendarComponent',
+    matrix: 'MatrixComponent',
     graphic: 'GraphicComponent',
     toolbox: 'ToolboxComponent',
     tooltip: 'TooltipComponent',
@@ -1016,7 +1017,9 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
     const notMergeColorLayer = option.color && !option.colorLayer;
 
     each(theme, function (themeItem, name) {
-        if (name === 'colorLayer' && notMergeColorLayer) {
+        if (name === 'colorLayer' && notMergeColorLayer
+            || name === 'color' && option.color
+        ) {
             return;
         }
 

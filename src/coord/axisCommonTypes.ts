@@ -110,6 +110,10 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
     startValue?: number;
 
+    jitter?: number;
+    jitterOverlap?: boolean;
+    jitterMargin?: number;
+
     breaks?: AxisBreakOption[];
     breakArea?: {
         show?: boolean;

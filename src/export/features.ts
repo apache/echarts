@@ -23,3 +23,4 @@ export {installUniversalTransition as UniversalTransition} from '../animation/un
 export {installLabelLayout as LabelLayout} from '../label/installLabelLayout';
 export {installAxisBreak as AxisBreak} from '../component/axis/installBreak';
 export {installLegacyGridContainLabel as LegacyGridContainLabel} from '../coord/cartesian/legacyContainLabel';
+export {installScatterJitter as ScatterJitter} from '../chart/scatter/install';

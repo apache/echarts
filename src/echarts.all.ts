@@ -66,6 +66,7 @@ import {
     SingleAxisComponent,
     ParallelComponent,
     CalendarComponent,
+    MatrixComponent,
     GraphicComponent,
     ToolboxComponent,
     TooltipComponent,
@@ -83,6 +84,7 @@ import {
     VisualMapComponent,
     VisualMapContinuousComponent,
     VisualMapPiecewiseComponent,
+    ThumbnailComponent,
     AriaComponent,
     DatasetComponent,
     TransformComponent
@@ -93,6 +95,7 @@ import {
     LabelLayout,
     AxisBreak,
     LegacyGridContainLabel,
+    ScatterJitter
 } from './export/features';
 
 
@@ -211,7 +214,14 @@ use(ParallelComponent);
 // );
 use(CalendarComponent);
 
-
+// `matrix` coordinate system. for example,
+// chart.setOption({
+//     matrix: {...},
+//     series: [{
+//         coordinateSystem: 'matrix'
+//     }]
+// );
+use(MatrixComponent);
 
 // ------------------
 // Other components
@@ -324,6 +334,8 @@ use(VisualMapContinuousComponent);
 // });
 use(VisualMapPiecewiseComponent);
 
+use(ThumbnailComponent);
+
 // `aria` component providing aria, for example:
 // chart.setOption({
 //     aria: {...}
@@ -359,3 +371,4 @@ use(LabelLayout);
 
 use(AxisBreak);
 use(LegacyGridContainLabel);
+use(ScatterJitter);

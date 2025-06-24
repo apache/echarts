@@ -113,7 +113,7 @@ export interface DefaultDataVisual {
     symbolRotate?: number
     symbolKeepAspect?: boolean
     symbolOffset?: string | number | (string | number)[]
-
+    z2: number,
     liftZ?: number
     // For legend.
     legendIcon?: string
@@ -316,11 +316,16 @@ class SeriesData<
             if (dimensionInfo.createInvertedIndices) {
                 invertedIndicesMap[dimensionName] = [];
             }
+
+            let dimIdx = i;
+            if (zrUtil.isNumber(dimensionInfo.storeDimIndex)) {
+                dimIdx = dimensionInfo.storeDimIndex;
+            }
             if (otherDims.itemName === 0) {
-                this._nameDimIdx = i;
+                this._nameDimIdx = dimIdx;
             }
             if (otherDims.itemId === 0) {
-                this._idDimIdx = i;
+                this._idDimIdx = dimIdx;
             }
 
             if (__DEV__) {

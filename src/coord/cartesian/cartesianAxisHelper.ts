@@ -109,8 +109,19 @@ export function layout(
     return layout;
 }
 
-export function isCartesian2DSeries(seriesModel: SeriesModel): boolean {
+export function isCartesian2DDeclaredSeries(seriesModel: SeriesModel): boolean {
     return seriesModel.get('coordinateSystem') === 'cartesian2d';
+}
+
+/**
+ * Note: If pie (or other similar series) use cartesian2d, here
+ *  option `seriesModel.get('coordinateSystem') === 'cartesian2d'`
+ *  and `seriesModel.coordinateSystem !== cartesian2dCoordSysInstance`
+ *  and `seriesModel.boxCoordinateSystem === cartesian2dCoordSysInstance`,
+ *  the logic below is probably wrong, therefore skip it temporarily.
+ */
+export function isCartesian2DInjectedAsDataCoordSys(seriesModel: SeriesModel): boolean {
+    return seriesModel.coordinateSystem && seriesModel.coordinateSystem.type === 'cartesian2d';
 }
 
 export function findAxisModels(seriesModel: SeriesModel): {

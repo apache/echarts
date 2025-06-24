@@ -32,6 +32,7 @@ import { AxisBaseOption, CategoryAxisBaseOption, ValueAxisBaseOption } from '../
 import { AxisBaseModel } from '../AxisBaseModel';
 import Radar from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
+import tokens from '../../visual/tokens';
 
 const valueAxisDefault = axisDefault.value;
 
@@ -182,12 +183,13 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
         center: ['50%', '50%'],
 
-        radius: '75%',
+        radius: '50%',
 
         startAngle: 90,
 
         axisName: {
-            show: true
+            show: true,
+            color: tokens.color.axisLabel
             // formatter: null
             // textStyle: {}
         },
@@ -206,7 +208,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
         axisLine: zrUtil.merge(
             {
                 lineStyle: {
-                    color: '#bbb'
+                    color: tokens.color.neutral20
                 }
             },
             valueAxisDefault.axisLine

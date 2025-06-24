@@ -39,12 +39,18 @@
          * @param {boolean} [opt.lockY=false]
          * @param {number} [opt.throttle=false]
          * @param {Function} [opt.onDrag]
+         * @param {Function} [opt.onResize]
          * @return {type}  description
          */
         init: function (mainEl, chart, opt) {
             opt = opt || {};
 
-            var onDrag = opt.onDrag || $.proxy(chart.resize, chart);
+            var onDrag = opt.onDrag || function () {
+                chart.resize();
+                if (opt.onResize) {
+                    opt.onResize();
+                }
+            }
 
             var onDragThrottled = chart ? onDrag : function () {};
             if (opt.throttle) {

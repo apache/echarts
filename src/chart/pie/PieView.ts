@@ -19,14 +19,13 @@
 */
 
 
-import { extend, retrieve3 } from 'zrender/src/core/util';
+import { clone, extend, retrieve3 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Payload, ColorString, CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
-import SeriesModel from '../../model/Series';
 import SeriesData from '../../data/SeriesData';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
@@ -35,7 +34,7 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 import { saveOldStyle } from '../../animation/basicTransition';
 import { getSeriesLayoutData } from './pieLayout';
-import { getCircleLayout } from '../../util/layout';
+
 
 /**
  * Piece of pie including Sector, Label, LabelLine
@@ -207,7 +206,7 @@ class PiePiece extends graphic.Sector {
             z2: 10
         });
 
-        const labelPosition = seriesModel.get(['label', 'position']);
+        const labelPosition = itemModel.get(['label', 'position']);
         if (labelPosition !== 'outside' && labelPosition !== 'outer') {
             sector.removeTextGuideLine();
         }
@@ -264,12 +263,7 @@ class PieView extends ChartView {
         if (data.count() === 0 && seriesModel.get('showEmptyCircle')) {
             const layoutData = getSeriesLayoutData(seriesModel);
             const sector = new graphic.Sector({
-                shape: extend(
-                    getCircleLayout(
-                        seriesModel as unknown as SeriesModel<CircleLayoutOptionMixin & SeriesOption<unknown>>, api
-                    ),
-                    layoutData
-                )
+                shape: clone(layoutData)
             });
             sector.useStyle(seriesModel.getModel('emptyCircleStyle').getItemStyle());
             this._emptyCircleSector = sector;

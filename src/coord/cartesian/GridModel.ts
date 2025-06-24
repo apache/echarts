@@ -24,10 +24,13 @@ import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 import type GlobalModel from '../../model/Global';
 import { getLayoutParams, mergeLayoutParam } from '../../util/layout';
+import tokens from '../../visual/tokens';
 
 export const OUTER_BOUNDS_DEFAULT = {left: 5, right: 5, top: 5, bottom: 5};
 
-export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+export interface GridOption
+    extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+
     mainType?: 'grid';
 
     show?: boolean;
@@ -107,11 +110,11 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         show: false,
         // zlevel: 0,
         z: 0,
-        left: '10%',
-        top: 60,
+        left: '15%',
+        top: 65,
         right: '10%',
-        bottom: 70,
-
+        bottom: 80,
+        // If grid size contain label
         containLabel: false,
         outerBoundsMode: 'auto',
         outerBounds: OUTER_BOUNDS_DEFAULT,
@@ -119,9 +122,9 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
 
         // width: {totalWidth} - left - right,
         // height: {totalHeight} - top - bottom,
-        backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: tokens.color.transparent,
         borderWidth: 1,
-        borderColor: '#ccc'
+        borderColor: tokens.color.neutral30
     };
 }
 

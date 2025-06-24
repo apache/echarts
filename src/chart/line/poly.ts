@@ -22,6 +22,7 @@
 import Path, { PathProps } from 'zrender/src/graphic/Path';
 import PathProxy from 'zrender/src/core/PathProxy';
 import { cubicRootAt, cubicAt } from 'zrender/src/core/curve';
+import tokens from '../../visual/tokens';
 
 const mathMin = Math.min;
 const mathMax = Math.max;
@@ -235,7 +236,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
 
     getDefaultStyle() {
         return {
-            stroke: '#000',
+            stroke: tokens.color.neutral99,
             fill: null as string
         };
     }

@@ -28,6 +28,7 @@ import { StageHandlerProgressParams, LineStyleOption, ColorString } from '../../
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
 import Element from 'zrender/src/Element';
+import tokens from '../../visual/tokens';
 
 class LargeLinesPathShape {
     polyline = false;
@@ -74,7 +75,7 @@ class LargeLinesPath extends graphic.Path {
 
     getDefaultStyle() {
         return {
-            stroke: '#000',
+            stroke: tokens.color.neutral99,
             fill: null as ColorString
         };
     }

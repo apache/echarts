@@ -36,6 +36,7 @@ import {
 interface MarkPointStateOption {
     itemStyle?: ItemStyleOption
     label?: SeriesLabelOption
+    z2?: number
 }
 export interface MarkPointDataItemOption extends
     MarkPointStateOption, StatesOptionMixin<MarkPointStateOption, StatesMixinBase>,

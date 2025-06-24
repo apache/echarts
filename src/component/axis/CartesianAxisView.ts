@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import AxisView from './AxisView';
-import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -30,11 +29,6 @@ import { Payload } from '../../util/types';
 import { getAxisBreakHelper } from './axisBreakHelper';
 import { shouldAxisShow } from '../../coord/axisHelper';
 
-const axisBuilderAttrs = {
-    axisLine: true,
-    axisTickLabel: true,
-    axisName: true,
-} as const;
 const selfBuilderAttrs = [
     'splitArea', 'splitLine', 'minorSplitLine', 'breakArea'
 ] as const;

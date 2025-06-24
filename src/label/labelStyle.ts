@@ -36,10 +36,11 @@ import {
     TextCommonOptionNuanceBase,
     TextCommonOptionNuanceDefault,
     LabelMarginType,
-    LabelExtendedTextStyle
+    LabelExtendedTextStyle,
+    NullUndefined
 } from '../util/types';
 import GlobalModel from '../model/Global';
-import { isFunction, retrieve2, extend, keys, trim, clone } from 'zrender/src/core/util';
+import { isFunction, retrieve2, extend, keys, trim, clone, retrieve3 } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
@@ -72,6 +73,8 @@ type TextCommonParams = {
     textStyle?: ZRStyleProps
 
     defaultTextMargin?: number | number[]
+    autoOverflowArea?: ElementTextConfig['autoOverflowArea'],
+    layoutRect?: ElementTextConfig['layoutRect'],
 };
 const EMPTY_OBJ = {};
 
@@ -335,8 +338,11 @@ export function createTextStyle<
     return textStyle;
 }
 export function createTextConfig(
-    textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'defaultOutsidePosition' | 'inheritColor'>,
+    textStyleModel: Model<LabelOption<{positionExtra: 'outside'}>>,
+    opt?: Pick<
+        TextCommonParams,
+        'defaultOutsidePosition' | 'inheritColor' | 'autoOverflowArea' | 'layoutRect'
+    >,
     isNotNormal?: boolean
 ) {
     opt = opt || {};
@@ -348,7 +354,7 @@ export function createTextConfig(
     labelPosition = textStyleModel.getShallow('position')
         || (isNotNormal ? null : 'inside');
     // 'outside' is not a valid zr textPostion value, but used
-    // in bar series, and magric type should be considered.
+    // in bar series, and magic type should be considered.
     labelPosition === 'outside' && (labelPosition = opt.defaultOutsidePosition || 'top');
     if (labelPosition != null) {
         textConfig.position = labelPosition;
@@ -367,8 +373,15 @@ export function createTextConfig(
     textConfig.outsideFill = textStyleModel.get('color') === 'inherit'
         ? (opt.inheritColor || null)
         : 'auto';
+    if (opt.autoOverflowArea != null) {
+        textConfig.autoOverflowArea = opt.autoOverflowArea;
+    }
+    if (opt.layoutRect != null) {
+        textConfig.layoutRect = opt.layoutRect;
+    }
     return textConfig;
 }
+
 /**
  * The uniform entry of set text style, that is, retrieve style definitions
  * from `model` and set to `textStyle` object.
@@ -412,17 +425,25 @@ function setTextStyleCommon<
     let richResult: TextStyleProps['rich'];
     if (richItemNames) {
         richResult = {};
+        const richInheritPlainLabelOptionName = 'richInheritPlainLabel' as const;
+        const richInheritPlainLabel: boolean = retrieve2(
+            textStyleModel.get(richInheritPlainLabelOptionName as any),
+            ecModel ? ecModel.get(richInheritPlainLabelOptionName) : undefined
+        );
         for (const name in richItemNames) {
             if (richItemNames.hasOwnProperty(name)) {
                 // Cascade is supported in rich.
-                const richTextStyle = textStyleModel.getModel(['rich', name]);
+                const richTextStyle = textStyleModel.getModel(['rich', name]) as LabelCommonModel<TNuance>;
                 // In rich, never `disableBox`.
-                // FIXME: consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
+                // consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
                 // That might confuses users. So probably we should put `textStyleModel` as the
                 // root ancestor of the `richTextStyle`. But that would be a break change.
-                setTokenTextStyle(
-                    richResult[name] = {}, richTextStyle, globalTextStyle, opt, isNotNormal, isAttached, false, true
+                // Since v6, the rich style inherits plain label by default
+                // but this behavior can be disabled by setting `richInheritPlainLabel` to `false`.
+                setTokenTextStyle<TNuance>(
+                    richResult[name] = {}, richTextStyle, globalTextStyle, textStyleModel, richInheritPlainLabel,
+                    opt, isNotNormal, isAttached, false, true
                 );
             }
         }
@@ -448,7 +469,13 @@ function setTextStyleCommon<
         textStyle.margin = clone(opt.defaultTextMargin);
         (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.textMargin;
     }
-    setTokenTextStyle<TNuance>(textStyle, textStyleModel, globalTextStyle, opt, isNotNormal, isAttached, true, false);
+    const lineOverflow = textStyleModel.get('lineOverflow');
+    if (lineOverflow) {
+        textStyle.lineOverflow = lineOverflow;
+    }
+    setTokenTextStyle<TNuance>(
+        textStyle, textStyleModel, globalTextStyle, null, null, opt, isNotNormal, isAttached, true, false
+    );
 }
 // Consider case:
 // {
@@ -502,6 +529,8 @@ function setTokenTextStyle<TNuance extends TextCommonOptionNuanceBase>(
     // FIXME: check/refactor for ellipsis handling of rich text.
     textStyleModel: Model<TextCommonOption<TNuance> & Pick<LabelCommonOption, 'ellipsis'>>,
     globalTextStyle: GlobalTextStyleOption,
+    plainTextModel: LabelCommonModel<TNuance>,
+    richInheritPlainLabel: boolean,
     opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
     isAttached?: boolean,
@@ -588,7 +617,17 @@ function setTokenTextStyle<TNuance extends TextCommonOptionNuanceBase>(
     // others should remain their original value got from normal style.
     for (let i = 0; i < TEXT_PROPS_WITH_GLOBAL.length; i++) {
         const key = TEXT_PROPS_WITH_GLOBAL[i];
-        const val = retrieve2(textStyleModel.getShallow(key), globalTextStyle[key]);
+        // props width, height, padding, margin, tag, backgroundColor, borderColor,
+        // borderWidth, borderRadius, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY
+        // may inappropriate to inherit from plainTextStyle.
+        // And if some props is specified in default options, users may have to reset them one by one.
+        // Therefore, we only allow these props to inherit from plainTextStyle.
+        // `richInheritPlainLabel` is switch for backward compatibility
+        const val = (richInheritPlainLabel !== false && plainTextModel)
+            ? retrieve3(
+                textStyleModel.getShallow(key), plainTextModel.getShallow(key), globalTextStyle[key]
+            )
+            : retrieve2(textStyleModel.getShallow(key), globalTextStyle[key]);
         if (val != null) {
             (textStyle as any)[key] = val;
         }

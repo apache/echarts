@@ -18,6 +18,7 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
+import tokens from '../visual/tokens';
 import { AxisBaseOption } from './axisCommonTypes';
 
 const defaultOption: AxisBaseOption = {
@@ -61,7 +62,7 @@ const defaultOption: AxisBaseOption = {
         onZero: true,
         onZeroAxisIndex: null,
         lineStyle: {
-            color: '#6E7079',
+            color: tokens.color.axisLine,
             width: 1,
             type: 'solid'
         },
@@ -92,6 +93,7 @@ const defaultOption: AxisBaseOption = {
         margin: 8,
         // formatter: null,
         fontSize: 12,
+        color: tokens.color.axisLabel,
         // In scenarios like axis labels, when labels text's progression direction matches the label
         // layout direction (e.g., when all letters are in a single line), extra start/end margin is
         // needed to prevent the text from appearing visually joined. In the other case, when lables
@@ -104,7 +106,7 @@ const defaultOption: AxisBaseOption = {
         showMinLine: true,
         showMaxLine: true,
         lineStyle: {
-            color: ['#E0E6F1'],
+            color: tokens.color.axisSplitLine,
             width: 1,
             type: 'solid'
         }
@@ -112,16 +114,19 @@ const defaultOption: AxisBaseOption = {
     splitArea: {
         show: false,
         areaStyle: {
-            color: ['rgba(250,250,250,0.2)', 'rgba(210,219,238,0.2)']
+            color: [
+                tokens.color.backgroundTint,
+                tokens.color.backgroundTransparent
+            ]
         }
     },
     breakArea: {
         show: true,
         itemStyle: {
-            color: '#fff',
+            color: tokens.color.neutral00,
             // Break border color should be darker than the splitLine
             // because it has opacity and should be more prominent
-            borderColor: '#C2CADA',
+            borderColor: tokens.color.border,
             borderWidth: 1,
             borderType: [3, 3],
             opacity: 0.6
@@ -143,6 +148,9 @@ const categoryAxis: AxisBaseOption = zrUtil.merge({
     boundaryGap: true,
     // Set false to faster category collection.
     deduplication: null,
+    jitter: 0,
+    jitterOverlap: true,
+    jitterMargin: 2,
     // splitArea: {
         // show: false
     // },
@@ -152,7 +160,8 @@ const categoryAxis: AxisBaseOption = zrUtil.merge({
     axisTick: {
         // If tick is align with label when boundaryGap is true
         alignWithLabel: false,
-        interval: 'auto'
+        interval: 'auto',
+        show: 'auto'
     },
     axisLabel: {
         interval: 'auto'
@@ -194,7 +203,7 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
         show: false,
 
         lineStyle: {
-            color: '#F4F7FD',
+            color: tokens.color.axisMinorSplitLine,
             width: 1
         }
     }

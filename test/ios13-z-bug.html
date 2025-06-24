@@ -23,6 +23,8 @@ under the License.
     <title>css</title>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width,minimum-scale=1,maximum-scale=1,user-scalable=no">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
 
     <style>
         #main {
@@ -156,9 +158,9 @@ under the License.
     </div>
 
 
-    <script src="../dist/echarts.js?_v_=123"></script>
 
     <script>
+    require(['echarts'], function (echarts) {
     var option = {
         "legend": {
             "left": "right",
@@ -342,7 +344,7 @@ under the License.
 
     var chart = echarts.init(document.getElementById('aaa'));
     chart.setOption(option);
-
+});
     </script>
 
 

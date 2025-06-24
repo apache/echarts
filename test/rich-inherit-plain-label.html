@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var state = {
+                    ecModel: {richInheritPlainLabel: void 0},
+                };
+                var option = {
+                    title: {
+                        text: getStateText(),
+                        textStyle: {fontSize: 14},
+                    },
+                    tooltip: {},
+                    grid: {
+                        left: 150,
+                    },
+                    xAxis: {
+                        type: 'time',
+                        axisLabel: {
+                            fontFamily: 'monospace',
+                            fontSize: 20
+                        }
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            fontFamily: 'monospace',
+                            fontSize: 20,
+                            color: 'blue',
+                            formatter: '{a|{value} is rich text}',
+                            rich: {
+                                a: {
+                                    fontWeight: 'bold',
+                                    color: 'red',
+                                }
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            type: 'line',
+                            areaStyle: {},
+                            data: [
+                                ['2019-10-10', 200],
+                                ['2019-11-11', 560],
+                                ['2019-12-12', 750],
+                                ['2020-01-13', 580],
+                                ['2020-02-14', 250],
+                                ['2020-03-15', 300],
+                                ['2020-04-16', 450],
+                                ['2020-05-17', 300],
+                                ['2020-06-18', 100]
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'When **`ecModel.richInheritPlainLabel`** is **true**:',
+                        '1. Both x-axis label font of **2020** and y-axis label font should be **`monospace`**',
+                        '2. Both x-axis label font size of **2020** and y-axis label should be **20**',
+                    ],
+                    option: option,
+                    buttons: [{
+                        text: 'Toggle RichInheritPlainLabel on ecModel',
+                        onclick: toggleRichInheritPlainLabel.bind(null, 'ecModel')
+                    }]
+                });
+
+                function getStateText() {
+                    return `ecModel.richInheritPlainLabel: ${state.ecModel.richInheritPlainLabel}\n`;
+                }
+
+                function toggleRichInheritPlainLabel(prop) {
+                    state[prop].richInheritPlainLabel = !state[prop].richInheritPlainLabel;
+                    chart.setOption({
+                        richInheritPlainLabel: state.ecModel.richInheritPlainLabel,
+                        title: {
+                            text: getStateText()
+                        },
+                    });
+                }
+            });
+        </script>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var state = {
+                    axisLabel: {richInheritPlainLabel: void 0},
+                };
+                var option = {
+                    title: {
+                        text: getStateText(),
+                        textStyle: {fontSize: 14},
+                    },
+                    tooltip: {},
+                    grid: {
+                        left: 150,
+                    },
+                    xAxis: {
+                        type: 'time',
+                        axisLabel: {
+                            fontFamily: 'monospace',
+                            fontSize: 20
+                        }
+                    },
+                    yAxis: {
+                        axisLabel: {
+                            fontFamily: 'monospace',
+                            fontSize: 20,
+                            color: 'blue',
+                            formatter: '{a|{value} is rich text}',
+                            rich: {
+                                a: {
+                                    fontWeight: 'bold',
+                                    color: 'red',
+                                }
+                            }
+                        }
+                    },
+                    series: [
+                        {
+                            type: 'line',
+                            areaStyle: {},
+                            data: [
+                                ['2019-10-10', 200],
+                                ['2019-11-11', 560],
+                                ['2019-12-12', 750],
+                                ['2020-01-13', 580],
+                                ['2020-02-14', 250],
+                                ['2020-03-15', 300],
+                                ['2020-04-16', 450],
+                                ['2020-05-17', 300],
+                                ['2020-06-18', 100]
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'When **`axisLabel.richInheritPlainLabel`** is **true**:',
+                        '1. Both x-axis label font of **2020** and y-axis label font should be **`monospace`**',
+                        '2. Both x-axis label font size of **2020** and y-axis label should be **20**',
+                    ],
+                    option: option,
+                    buttons: [{
+                        text: 'Toggle RichInheritPlainLabel on axisLabel',
+                        onclick: toggleRichInheritPlainLabel.bind(null, 'axisLabel')
+                    }]
+                });
+
+                function getStateText() {
+                    return `axisLabel.richInheritPlainLabel: ${state.axisLabel.richInheritPlainLabel}`;
+                }
+
+                function toggleRichInheritPlainLabel(prop) {
+                    state[prop].richInheritPlainLabel = !state[prop].richInheritPlainLabel;
+                    chart.setOption({
+                        title: {
+                            text: getStateText()
+                        },
+                        xAxis: {
+                            axisLabel: {
+                                richInheritPlainLabel: state.axisLabel.richInheritPlainLabel,
+                            }
+                        },
+                        yAxis: {
+                            axisLabel: {
+                                richInheritPlainLabel: state.axisLabel.richInheritPlainLabel,
+                            }
+                        }
+                    });
+                }
+            });
+        </script>
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var state = {
+                    ecModel: {richInheritPlainLabel: void 0},
+                };
+                var option = {
+                    title: {
+                        text: getStateText(),
+                        textStyle: {fontSize: 14},
+                    },
+                    tooltip: {},
+                    series: [
+                        {
+                            type: 'pie',
+                            areaStyle: {},
+                            label: {
+                                fontFamily: 'monospace',
+                                fontSize: 20,
+                                color: 'blue',
+                                formatter: '{a|label.fontSize:20}',
+                                rich: {
+                                    a: {
+                                        fontWeight: 'bold',
+                                        color: 'red',
+                                    }
+                                }
+                            },
+                            data: [
+                                {name: 'aaa', value: 123},
+                                {name: 'bbb', value: 123},
+                                {name: 'ccc', value: 123},
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'ecModel.richInheritPlainLabel for pie',
+                    ],
+                    option: option,
+                    buttons: [{
+                        text: 'Toggle RichInheritPlainLabel on ecModel',
+                        onclick: toggleRichInheritPlainLabel.bind(null, 'ecModel')
+                    }]
+                });
+
+                function getStateText() {
+                    return `ecModel.richInheritPlainLabel: ${state.ecModel.richInheritPlainLabel}\n`;
+                }
+
+                function toggleRichInheritPlainLabel(prop) {
+                    state[prop].richInheritPlainLabel = !state[prop].richInheritPlainLabel;
+                    chart.setOption({
+                        richInheritPlainLabel: state.ecModel.richInheritPlainLabel,
+                        title: {
+                            text: getStateText()
+                        },
+                    });
+                }
+            });
+        </script>
+
+    </body>
+</html>
+
