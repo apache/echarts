@@ -39,6 +39,7 @@ function _trim(str: string): string {
 
 export const mathMin = Math.min;
 export const mathMax = Math.max;
+export const mathAbs = Math.abs;
 
 /**
  * Linear mapping a value from domain to range
@@ -229,7 +230,7 @@ export function getPixelPrecision(dataExtent: [number, number], pixelExtent: [nu
     const log = Math.log;
     const LN10 = Math.LN10;
     const dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
-    const sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
+    const sizeQuantity = Math.round(log(mathAbs(pixelExtent[1] - pixelExtent[0])) / LN10);
     // toFixed() digits argument must be between 0 and 20.
     const precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
     return !isFinite(precision) ? 20 : precision;

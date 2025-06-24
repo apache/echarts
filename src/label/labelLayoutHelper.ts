@@ -141,7 +141,7 @@ function prepareLabelLayoutInfo(
     if (!ignoreMargin && (label.style as LabelExtendedTextStyle).__marginType === LabelMarginType.minMargin) {
         // `minMargin` only support number value.
         const halfMinMargin = ((label.style.margin as number) || 0) / 2;
-        expandOrShrinkRect(globalRect, halfMinMargin, true, true);
+        expandOrShrinkRect(globalRect, halfMinMargin, false, false);
     }
 
     const computed = layoutInfo as LabelLayoutInfoComputed;

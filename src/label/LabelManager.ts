@@ -71,6 +71,7 @@ interface LabelDesc extends LabelLayoutInfoRaw {
     dataType?: SeriesDataType
 
     layoutOptionOrCb: LabelLayoutOptionCallback | LabelLayoutOption
+    // Computed (cb called) layout option.
     layoutOption: LabelLayoutOption
 
     hostRect: RectLike
