@@ -189,9 +189,12 @@ class CalendarModel extends ComponentModel<CalendarOption> implements Coordinate
 
     static defaultOption: CalendarOption = {
         // zlevel: 0,
-        // As a most basic coord sys, `z` should be lower than
-        // other series and coord sys, such as, grid.
-        z: -50,
+        // TODO: theoretically, the z of the calendar should be lower
+        // than series, but we don't want the series to be displayed
+        // on top of the borders like month split line. To align with
+        // the effect of previous versions, we set the z to 2 for now
+        // until better solution is found.
+        z: 2,
         left: 80,
         top: 60,
 

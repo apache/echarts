@@ -794,16 +794,18 @@ export function traverseUpdateZ(
     z: number,
     zlevel: number,
 ): void {
-    doUpdateZ(el, z, zlevel);
+    doUpdateZ(el, z, zlevel, -Infinity);
 }
 
 function doUpdateZ(
     el: Element,
     z: number,
-    zlevel: number
+    zlevel: number,
+    // FIXME: ideally all the labels shold be above all the glyphs by default,
+    //  e.g. in graph, edge labels should be above node elements.
+    //  currenly impl does not garaentee that.
+    maxZ2: number,
 ): number {
-    let maxZ2 = -Infinity;
-
     // `ignoreModelZ` is used to intentionally lift elements to cover other elements,
     // where maxZ2 (for label.z2) should also not be counted for its parents.
     if ((el as ExtendedElement).ignoreModelZ) {
@@ -824,6 +826,7 @@ function doUpdateZ(
                     children[i],
                     z,
                     zlevel,
+                    maxZ2
                 ),
                 maxZ2
             );
