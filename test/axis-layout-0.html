@@ -58,7 +58,7 @@ under the License.
                 let _useLazyUpdate;
                 let _currNameTextMargin;
                 let _currAxisLabelTextMargin;
-                let _currOuterBounds;
+                let _currOuterBoundsMode;
                 let _currXAxisType;
                 let _currYAxisType;
                 let _currContainLabel;
@@ -68,7 +68,7 @@ under the License.
                     _useLazyUpdate = false;
                     _currNameTextMargin = [3, 5, 3, 5];
                     _currAxisLabelTextMargin = [0, 3, 0, 3];
-                    _currOuterBounds = undefined;
+                    _currOuterBoundsMode = undefined;
                     _currXAxisType = 'value';
                     _currYAxisType = 'log';
                     _currContainLabel = false;
@@ -146,7 +146,7 @@ under the License.
                 }
 
                 function updateIndicatorShapeOptions() {
-                    let parsedOuterBounds = _currOuterBounds;
+                    let parsedOuterBounds = _currOuterBoundsMode;
                     if (parsedOuterBounds == null || parsedOuterBounds === true || parsedOuterBounds === 'auto') {
                         if (_currContainLabel) {
                             parsedOuterBounds = 'same';
@@ -564,13 +564,13 @@ under the License.
                         },
                         {
                             type: 'select',
-                            text: 'grid.outerBounds:',
-                            values: [undefined, {}, 'same', false, true, 'auto'],
+                            text: 'grid.outerBoundsMode:',
+                            values: [undefined, 'same', 'none', 'auto'],
                             onchange() {
-                                _currOuterBounds = this.value;
+                                _currOuterBoundsMode = this.value;
                                 updateIndicatorShapeOptions();
                                 chartSetOption(chart, {
-                                    grid: {outerBounds: _currOuterBounds},
+                                    grid: {outerBoundsMode: _currOuterBoundsMode},
                                     graphic: {
                                         elements: [
                                             makeGridBoxIndicatorOption(),
@@ -587,10 +587,6 @@ under the License.
                             max: 500,
                             value: _initValues.grid[prop],
                             onchange() {
-                                if (testHelper.getType(_currOuterBounds) !== 'object') {
-                                    console.error('should set grid.outerBounds to object first');
-                                    return;
-                                }
                                 const newVal = this.value;
                                 _gridOuterBoundsIndicatorShapeOptions[prop] = newVal;
                                 updateIndicatorShapeOptions();

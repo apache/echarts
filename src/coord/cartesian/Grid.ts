@@ -38,7 +38,7 @@ import Axis2D from './Axis2D';
 import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
-import GridModel from './GridModel';
+import GridModel, { OUTER_BOUNDS_DEFAULT } from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -222,10 +222,10 @@ class Grid implements CoordinateSystemMaster {
             let noPxChange: boolean;
             if (optionContainLabel) {
                 if (legacyLayOutGridByContainLabel) {
-                    console.time('legacyLayOutGridByContainLabel');
+                    // console.time('legacyLayOutGridByContainLabel');
                     legacyLayOutGridByContainLabel(this._axesList, gridRect);
                     updateAllAxisExtentTransByGridRect(axesMap, gridRect);
-                    console.timeEnd('legacyLayOutGridByContainLabel');
+                    // console.timeEnd('legacyLayOutGridByContainLabel');
                 }
                 else {
                     if (__DEV__) {
@@ -240,13 +240,13 @@ class Grid implements CoordinateSystemMaster {
             else {
                 const {outerBoundsRect, parsedOuterBoundsContain} = prepareOuterBounds(gridModel, gridRect, api);
                 if (outerBoundsRect) {
-                    console.time('layOutGridByOuterBounds');
+                    // console.time('layOutGridByOuterBounds');
                     noPxChange = layOutGridByOuterBounds(outerBoundsRect, parsedOuterBoundsContain, gridRect, axesMap);
-                    console.timeEnd('layOutGridByOuterBounds');
+                    // console.timeEnd('layOutGridByOuterBounds');
                 }
             }
 
-            console.time('buildAxesView_determine');
+            // console.time('buildAxesView_determine');
             createOrUpdateAxesView(
                 gridRect,
                 axesMap,
@@ -254,7 +254,7 @@ class Grid implements CoordinateSystemMaster {
                 null,
                 noPxChange
             );
-            console.timeEnd('buildAxesView_determine');
+            // console.timeEnd('buildAxesView_determine');
         } // End of beforeDataProcessing
 
         each(this._coordsList, function (coord) {
@@ -848,25 +848,21 @@ function prepareOuterBounds(
     outerBoundsRect: BoundingRect | NullUndefined
     parsedOuterBoundsContain: ParsedOuterBoundsContain
 } {
-    let optionOuterBounds = gridModel.get('outerBounds', true);
     let outerBoundsRect: BoundingRect | NullUndefined;
-    if (optionOuterBounds !== false) {
-        if (optionOuterBounds == null || optionOuterBounds === true || optionOuterBounds === 'auto') {
-            optionOuterBounds = {left: 5, right: 5, top: 5, bottom: 5};
-        }
-        if (optionOuterBounds === 'same') {
-            outerBoundsRect = gridRect.clone();
-        }
-        else if (isObject(optionOuterBounds)) {
-            const refContainer = {width: api.getWidth(), height: api.getHeight()};
-            outerBoundsRect = getLayoutRect(optionOuterBounds, refContainer);
-        }
-        else {
-            if (__DEV__) {
-                error(`Invalid grid[${gridModel.componentIndex}].outerBounds.`);
-            }
+    const optionOuterBoundsMode = gridModel.get('outerBoundsMode', true);
+    if (optionOuterBoundsMode === 'same') {
+        outerBoundsRect = gridRect.clone();
+    }
+    else if (optionOuterBoundsMode == null || optionOuterBoundsMode === 'auto') {
+        const refContainer = {width: api.getWidth(), height: api.getHeight()};
+        outerBoundsRect = getLayoutRect(gridModel.get('outerBounds', true) || OUTER_BOUNDS_DEFAULT, refContainer);
+    }
+    else if (optionOuterBoundsMode !== 'none') {
+        if (__DEV__) {
+            error(`Invalid grid[${gridModel.componentIndex}].outerBoundsMode.`);
         }
     }
+
     const optionOuterBoundsContain = gridModel.get('outerBoundsContain', true);
     let parsedOuterBoundsContain: ParsedOuterBoundsContain;
     if (optionOuterBoundsContain == null || optionOuterBoundsContain === 'auto') {

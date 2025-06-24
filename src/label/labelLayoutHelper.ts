@@ -90,6 +90,21 @@ export interface LabelIntersectionCheckInfo {
     transform: number[] | NullUndefined
 }
 
+export function createLabelLayoutList(
+    rawList: LabelLayoutInfoRaw[]
+): LabelLayoutInfoComputed[] {
+    const resultList: LabelLayoutInfoComputed[] = [];
+    each(rawList, raw => {
+        // PENDING: necessary?
+        raw = extend({}, raw);
+        const layoutInfo = prepareLabelLayoutInfo(raw);
+        if (layoutInfo) {
+            resultList.push(layoutInfo);
+        }
+    });
+    return resultList;
+}
+
 /**
  * If `defaultAttr.ignore: true`, return `NullUndefined`.
  *  (the caller is reponsible for ensuring the label is always `ignore: true`.)
@@ -153,21 +168,6 @@ export function rollbackToLabelLayoutInfoRaw(
     const raw = labelLayoutInfo as unknown as LabelLayoutInfoRaw;
     raw.kind = LABEL_LAYOUT_INFO_KIND_RAW;
     return raw;
-}
-
-export function createLabelLayoutList(
-    rawList: LabelLayoutInfoRaw[]
-): LabelLayoutInfoComputed[] {
-    const resultList: LabelLayoutInfoComputed[] = [];
-    each(rawList, raw => {
-        // PENDING: necessary?
-        raw = extend({}, raw);
-        const layoutInfo = prepareLabelLayoutInfo(raw);
-        if (layoutInfo) {
-            resultList.push(layoutInfo);
-        }
-    });
-    return resultList;
 }
 
 /**

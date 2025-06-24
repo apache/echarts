@@ -22,6 +22,10 @@ import ComponentModel from '../../model/Component';
 import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin, NullUndefined } from '../../util/types';
 import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
+import type GlobalModel from '../../model/Global';
+import { getLayoutParams, mergeLayoutParam } from '../../util/layout';
+
+export const OUTER_BOUNDS_DEFAULT = {left: 5, right: 5, top: 5, bottom: 5};
 
 export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
     mainType?: 'grid';
@@ -41,18 +45,21 @@ export interface GridOption extends ComponentOption, BoxLayoutOptionMixin, Shado
      * But if axisLabel and/or axisName overflow the outerBounds, shrink the layout to avoid that overflow.
      *
      * Options:
-     *  - `false`: outerBounds is infinity.
+     *  - 'none': outerBounds is infinity.
      *  - 'same': outerBounds is the same as the layout rect defined by `grid.left/right/top/bottom/width/height`.
-     *  - {left, right, top, bottom, width, height}: Define a outerBounds rect, based on:
-     *      - the canvas by default.
-     *      - or the `dataToLayout` result if a `boxCoordinateSystem` is specified.
-     *  - 'auto'/null/undefined/true: Default. be 'same' if `containLabel:true`,
-     *      otherwises `{left: 5, right: 5, top: 5, bottom: 5}`.
+     *  - 'auto'/null/undefined: Default. Use `outerBounds`, or 'same' if `containLabel:true`.
      *
      * Note:
-     *  `grid.containLabel` is equivalent to `{outerBounds: 'same', outerBoundsContain: 'axisLabel'}`.
+     *  `grid.containLabel` is equivalent to `{outerBoundsMode: 'same', outerBoundsContain: 'axisLabel'}`.
      */
-    outerBounds?: boolean | 'same' | 'auto' | BoxLayoutOptionMixin | NullUndefined;
+    outerBoundsMode?: 'auto' | NullUndefined | 'same' | 'none';
+    /**
+     * {left, right, top, bottom, width, height}: Define a outerBounds rect, based on:
+     *  - the canvas by default.
+     *  - or the `dataToLayout` result if a `boxCoordinateSystem` is specified.
+     * By default {left: 5, right: 5, top: 5, bottom: 5}.
+     */
+    outerBounds?: BoxLayoutOptionMixin;
     /**
      * - 'all': Default. Contains the cartesian rect and axis labels and axis name.
      * - 'axisLabel': Contains the cartesian rect and axis labels. This effect differs slightly from the
@@ -78,6 +85,24 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
 
     coordinateSystem: Grid;
 
+    mergeDefaultAndTheme(option: GridOption, ecModel: GlobalModel): void {
+        const outerBoundsCp = getLayoutParams(option.outerBounds);
+
+        super.mergeDefaultAndTheme.apply(this, arguments as any);
+
+        if (outerBoundsCp && option.outerBounds) {
+            mergeLayoutParam(option.outerBounds, outerBoundsCp);
+        }
+    }
+
+    mergeOption(newOption: GridOption, ecModel: GlobalModel) {
+        super.mergeOption.apply(this, arguments as any);
+
+        if (this.option.outerBounds && newOption.outerBounds) {
+            mergeLayoutParam(this.option.outerBounds, newOption.outerBounds);
+        }
+    }
+
     static defaultOption: GridOption = {
         show: false,
         // zlevel: 0,
@@ -88,7 +113,8 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         bottom: 70,
 
         containLabel: false,
-        outerBounds: 'auto',
+        outerBoundsMode: 'auto',
+        outerBounds: OUTER_BOUNDS_DEFAULT,
         outerBoundsContain: 'all',
 
         // width: {totalWidth} - left - right,

@@ -549,7 +549,7 @@ export function mergeLayoutParam<T extends BoxLayoutOptionMixin>(
         each(names, function (name: BoxLayoutKeys) {
             // Consider case: newOption.width is null, which is
             // set by user for removing width setting.
-            hasProp(newOption, name) && (newParams[name] = merged[name] = newOption[name]);
+            zrUtil.hasOwn(newOption, name) && (newParams[name] = merged[name] = newOption[name]);
             hasValue(newParams, name) && newValueCount++;
             hasValue(merged, name) && mergedValueCount++;
         });
@@ -582,17 +582,13 @@ export function mergeLayoutParam<T extends BoxLayoutOptionMixin>(
             // Chose another param from targetOption by priority.
             for (let i = 0; i < names.length; i++) {
                 const name = names[i];
-                if (!hasProp(newParams, name) && hasProp(targetOption, name)) {
+                if (!zrUtil.hasOwn(newParams, name) && zrUtil.hasOwn(targetOption, name)) {
                     newParams[name] = targetOption[name];
                     break;
                 }
             }
             return newParams;
         }
-    }
-
-    function hasProp(obj: object, name: string): boolean {
-        return obj.hasOwnProperty(name);
     }
 
     function hasValue(obj: Dictionary<any>, name: string): boolean {
@@ -620,7 +616,7 @@ export function getLayoutParams(source: BoxLayoutOptionMixin): BoxLayoutOptionMi
  */
 export function copyLayoutParams(target: BoxLayoutOptionMixin, source: BoxLayoutOptionMixin): BoxLayoutOptionMixin {
     source && target && each(LOCATION_PARAMS, function (name: BoxLayoutKeys) {
-        source.hasOwnProperty(name) && (target[name] = source[name]);
+        zrUtil.hasOwn(source, name) && (target[name] = source[name]);
     });
     return target;
 }

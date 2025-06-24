@@ -376,7 +376,7 @@ export const resolveAxisNameOverlapDefault: AxisBuilderSharedContext['resolveAxi
 
 function moveIfOverlap(
     basedLayoutInfo: LabelIntersectionCheckInfo,
-    movableLayoutInfo: LabelIntersectionCheckInfo & Pick<LabelLayoutInfoComputed, 'label'>,
+    movableLayoutInfo: LabelLayoutInfoComputed,
     moveDirVec: Point
 ): void {
     const mtv = new Point();
@@ -386,13 +386,14 @@ function moveIfOverlap(
         touchThreshold: 0.05,
     })) {
         Point.add(movableLayoutInfo.label, movableLayoutInfo.label, mtv);
+        ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(movableLayoutInfo));
     }
 }
 
 export function moveIfOverlapByLinearLabels(
     baseLayoutInfoList: (LabelIntersectionCheckInfo)[],
     baseDirVec: Point,
-    movableLayoutInfo: (LabelIntersectionCheckInfo & Pick<LabelLayoutInfoComputed, 'label'>),
+    movableLayoutInfo: LabelLayoutInfoComputed,
     moveDirVec: Point,
 ): void {
     // Detect and move from far to close.
@@ -1040,11 +1041,11 @@ function fixMinMaxLabelShow(
         if (showMinMaxLabel === false) {
             ignoreEl(outmostLabelLayout.label);
         }
-        // If `optionHideOverlap === false`, do not hide anything.
-        // e.g., in category axis, hide some label is not reasonable.
-        // And currently the bounding rect of text might not accurate enough,
-        // might slightly bigger, which causes false positive.
-        else if (optionHideOverlap !== false) {
+        // PENDING: Originally we thougth `optionHideOverlap === false` means do not hide anything,
+        //  since currently the bounding rect of text might not accurate enough and might slightly bigger,
+        //  which causes false positive. But `optionHideOverlap: null/undfined` is falsy and likely
+        //  be treated as false.
+        else {
             // In most fonts the glyph does not reach the boundary of the bouding rect.
             // This is needed to avoid too aggressive to hide two elements that meet at the edge
             // due to compact layout by the same bounding rect or OBB.
