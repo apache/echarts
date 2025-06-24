@@ -26,7 +26,9 @@ import type GlobalModel from '../../model/Global';
 import { getLayoutParams, mergeLayoutParam } from '../../util/layout';
 import tokens from '../../visual/tokens';
 
-export const OUTER_BOUNDS_DEFAULT = {left: 5, right: 5, top: 5, bottom: 5};
+// For backward compatibility, do not use a margin. Although the labels might touch the edge of
+// the canvas, the chart canvas probably does not have an border or a different background color within a page.
+export const OUTER_BOUNDS_DEFAULT = {left: 0, right: 0, top: 0, bottom: 0};
 
 export interface GridOption
     extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
@@ -60,7 +62,6 @@ export interface GridOption
      * {left, right, top, bottom, width, height}: Define a outerBounds rect, based on:
      *  - the canvas by default.
      *  - or the `dataToLayout` result if a `boxCoordinateSystem` is specified.
-     * By default {left: 5, right: 5, top: 5, bottom: 5}.
      */
     outerBounds?: BoxLayoutOptionMixin;
     /**

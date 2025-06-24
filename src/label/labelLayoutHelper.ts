@@ -160,7 +160,7 @@ function prepareLabelLayoutInfo(
  * The reverse operation of `ensureLabelLayoutInfoComputedv`.
  */
 export function rollbackToLabelLayoutInfoRaw(
-    labelLayoutInfo: LabelLayoutInfoComputed
+    labelLayoutInfo: LabelLayoutInfoAll
 ): LabelLayoutInfoRaw {
     if (labelLayoutInfo == null) {
         return;
@@ -175,25 +175,23 @@ export function rollbackToLabelLayoutInfoRaw(
  * for performance consideration.
  *
  * [CAUTION]
- *  - If the raw label is changed, `rollbackToLabelLayoutInfoRaw` must be called,
- *    and call this method again.
+ *  - If the raw label is changed, must call
+ *    `ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(layoutInfo))`
+ *    to recreate the layout info.
  *  - Null checking is needed for the result. @see prepareLabelLayoutInfo
+ *
+ * Usage:
+ *  To make a copy of labelLayoutInfo, simply:
+ *      const layoutInfoCopy = rollbackToLabelLayoutInfoRaw(extends({}, someLabelLayoutInfo));
  */
 export function ensureLabelLayoutInfoComputed(
-    labelLayoutInfo: LabelLayoutInfoAll,
-    opt?: {
-        // Modify some original props, and no save.
-        variantCopy?: Partial<LabelLayoutInfoBase>
-    }
+    labelLayoutInfo: LabelLayoutInfoAll
 ): LabelLayoutInfoComputed | NullUndefined {
     if (!labelLayoutInfo) {
         return;
     }
-    const variantCopy = opt && opt.variantCopy;
-    if (labelLayoutInfo.kind !== LABEL_LAYOUT_INFO_KIND_COMPUTED || variantCopy) {
-        labelLayoutInfo = prepareLabelLayoutInfo(
-            variantCopy ? extend(extend({}, labelLayoutInfo), variantCopy) : labelLayoutInfo
-        );
+    if (labelLayoutInfo.kind !== LABEL_LAYOUT_INFO_KIND_COMPUTED) {
+        labelLayoutInfo = prepareLabelLayoutInfo(labelLayoutInfo);
     }
     return labelLayoutInfo;
 }

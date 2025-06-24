@@ -203,6 +203,7 @@ interface AxisBuilderCfgDetermined {
     axisName: AxisBaseOptionCommon['name'];
     nameLocation: AxisBaseOption['nameLocation']
     shouldNameMoveOverlap: boolean
+    showMinorTicks: boolean
     optionHideOverlap: AxisBaseOption['axisLabel']['hideOverlap']
 }
 
@@ -257,6 +258,10 @@ export type AxisBuilderSharedContextRecord = {
 /**
  * A context shared by difference axisBuilder instances.
  * For cross-axes overlap resolving.
+ *
+ * Lifecycle constrait: should not over a pass of ec main process.
+ *  If model is changed, the context must be disposed.
+ *
  * @see AxisBuilderLocalContext
  */
 export class AxisBuilderSharedContext {
@@ -517,6 +522,7 @@ class AxisBuilder {
             nameLocation: retrieve3(axisModel.get('nameLocation'), axisModelDefaultOption.nameLocation, 'end'),
             shouldNameMoveOverlap: hasAxisName(axisName) && !!axisModel.get('nameMoveOverlap'),
             optionHideOverlap: axisModel.get(['axisLabel', 'hideOverlap']),
+            showMinorTicks: axisModel.get(['minorTick', 'show']),
         };
         if (__DEV__) {
             assert(cfg.position != null);
@@ -793,9 +799,9 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
             );
         }
         const ticksEls = buildAxisMajorTicks(cfg, group, transformGroup, axisModel);
-        syncLabelIgnoreToTicks(local.labelLayoutList, ticksEls);
+        syncLabelIgnoreToMajorTicks(cfg, local.labelLayoutList, ticksEls);
 
-        buildAxisMinorTicks(group, transformGroup, axisModel, cfg.tickDirection);
+        buildAxisMinorTicks(cfg, group, transformGroup, axisModel, cfg.tickDirection);
     },
 
     /**
@@ -810,7 +816,7 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
             ready.axisName = true;
         }
 
-        // PENDING: need optimize for repeatedly estimate?
+        // Remove the existing name result created in estimation phase.
         if (local.nameEl) {
             group.remove(local.nameEl);
             local.nameEl = sharedRecord.nameLayout = sharedRecord.nameLocation = null;
@@ -1044,8 +1050,8 @@ function fixMinMaxLabelShow(
         outmostLabelIdx: number,
         innerLabelIdx: number,
     ) {
-        const outmostLabelLayout = labelLayoutList[outmostLabelIdx];
-        const innerLabelLayout = labelLayoutList[innerLabelIdx];
+        let outmostLabelLayout = labelLayoutList[outmostLabelIdx];
+        let innerLabelLayout = labelLayoutList[innerLabelIdx];
         if (!outmostLabelLayout || !innerLabelLayout) {
             return;
         }
@@ -1066,7 +1072,11 @@ function fixMinMaxLabelShow(
             // the user accepts the visual touch between adjacent labels, thus "hide min/max label"
             // should be conservative, since the space might be sufficient in this case.
             const ignoreMargin = !optionHideOverlap;
-            const ensureOpt = ignoreMargin ? {variantCopy: {ignoreMargin}} : null;
+            if (ignoreMargin) {
+                // Make a copy to apply `ignoreMargin`.
+                outmostLabelLayout = rollbackToLabelLayoutInfoRaw(defaults({ignoreMargin}, outmostLabelLayout));
+                innerLabelLayout = rollbackToLabelLayoutInfoRaw(defaults({ignoreMargin}, innerLabelLayout));
+            }
 
             let anyIgnored = false;
             if (outmostLabelLayout.suggestIgnore) {
@@ -1079,8 +1089,8 @@ function fixMinMaxLabelShow(
             }
 
             if (!anyIgnored && labelIntersect(
-                ensureLabelLayoutInfoComputed(outmostLabelLayout, ensureOpt),
-                ensureLabelLayoutInfoComputed(innerLabelLayout, ensureOpt),
+                ensureLabelLayoutInfoComputed(outmostLabelLayout),
+                ensureLabelLayoutInfoComputed(innerLabelLayout),
                 null,
                 {touchThreshold}
             )) {
@@ -1105,10 +1115,15 @@ function fixMinMaxLabelShow(
 }
 
 // PENDING: is it necessary to display a tick while the cooresponding label is ignored?
-function syncLabelIgnoreToTicks(
+function syncLabelIgnoreToMajorTicks(
+    cfg: AxisBuilderCfgDetermined,
     labelLayoutList: LabelLayoutInfoAll[],
     tickEls: graphic.Line[],
 ) {
+    if (cfg.showMinorTicks) {
+        // It probably unreaasonable to hide major ticks when show minor ticks.
+        return;
+    }
     each(labelLayoutList, labelLayout => {
         if (labelLayout && labelLayout.label.ignore) {
             for (let idx = 0; idx < tickEls.length; idx++) {
@@ -1220,6 +1235,7 @@ function buildAxisMajorTicks(
 }
 
 function buildAxisMinorTicks(
+    cfg: AxisBuilderCfgDetermined,
     group: graphic.Group,
     transformGroup: AxisBuilder['_transformGroup'],
     axisModel: AxisBaseModel,
@@ -1229,7 +1245,7 @@ function buildAxisMinorTicks(
 
     const minorTickModel = axisModel.getModel('minorTick');
 
-    if (!minorTickModel.get('show') || axis.scale.isBlank()) {
+    if (!cfg.showMinorTicks || axis.scale.isBlank()) {
         return;
     }
 
