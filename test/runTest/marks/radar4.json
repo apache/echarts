@@ -1,0 +1,10 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/20865/files#diff-ded55953b512fc90c5e0752fe28ae682eea0f03559982b361a8183aa7bfcbea0R192",
+    "comment": "6.0 theme uses different axisName.color than axisLine.lineStyle.color because axisLine.lineStyle.color is too light.",
+    "type": "New Feature",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1750325333262
+  }
+]

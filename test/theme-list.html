@@ -109,17 +109,13 @@ under the License.
         ], function (echarts, geojson) {
           const charts = [];
 
-          let wasDarkMode = false;
+          const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
           function updateDarkMode() {
-            const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (isDarkMode !== wasDarkMode) {
-              for (const chart of charts) {
-                chart.setTheme(isDarkMode ? 'dark' : 'default');
-              }
-              wasDarkMode = isDarkMode;
+            const isDarkMode = darkModeMediaQuery.matches;
+            for (const chart of charts) {
+              chart.setTheme(isDarkMode ? 'dark' : 'default');
             }
           }
-          const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
           darkModeMediaQuery.addEventListener('change', () => {
             updateDarkMode();
           });
