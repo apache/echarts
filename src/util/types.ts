@@ -967,6 +967,7 @@ export interface VisualOptionUnit {
     colorSaturation?: number
     colorHue?: number
     decal?: DecalObject
+    cursor?: string,
 
     // Not exposed?
     liftZ?: number
