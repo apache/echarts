@@ -597,7 +597,25 @@ class TooltipView extends ComponentView {
                             [series as Model<TooltipableOption>],
                             globalTooltipModel
                         ).get('valueFormatter');
-                        axisSectionMarkup.blocks.push(valueFormatter ? extend({ valueFormatter }, frag) : frag);
+                        const nameFormatter = buildTooltipModel(
+                            [series as Model<TooltipableOption>],
+                            globalTooltipModel
+                        ).get('nameFormatter');
+                        const headerFormatter = buildTooltipModel(
+                            [series as Model<TooltipableOption>],
+                            globalTooltipModel
+                        ).get('headerFormatter');
+                        const newFrag = extend({}, frag);
+                        valueFormatter && extend(newFrag, {
+                            valueFormatter: valueFormatter
+                        });
+                        nameFormatter && extend(newFrag, {
+                            nameFormatter: nameFormatter
+                        });
+                        headerFormatter && extend(newFrag, {
+                            headerFormatter: headerFormatter
+                        });
+                        axisSectionMarkup.blocks.push(newFrag);
                     }
                     if (seriesTooltipResult.text) {
                         markupTextArrLegacy.push(seriesTooltipResult.text);
@@ -694,17 +712,24 @@ class TooltipView extends ComponentView {
         );
         const orderMode = tooltipModel.get('order');
         const valueFormatter = tooltipModel.get('valueFormatter');
+        const nameFormatter = tooltipModel.get('nameFormatter');
+        const headerFormatter = tooltipModel.get('headerFormatter');
         const frag = seriesTooltipResult.frag;
-        const markupText = frag ? buildTooltipMarkup(
-                valueFormatter ? extend({ valueFormatter }, frag) : frag,
+        let markupText = seriesTooltipResult.text;
+        if (frag) {
+            const newFrag = extend({}, frag);
+            valueFormatter && extend(newFrag, {valueFormatter: valueFormatter});
+            nameFormatter && extend(newFrag, {nameFormatter: nameFormatter});
+            headerFormatter && extend(newFrag, {headerFormatter: headerFormatter});
+            markupText = buildTooltipMarkup(
+                newFrag,
                 markupStyleCreator,
                 renderMode,
                 orderMode,
                 ecModel.get('useUTC'),
                 tooltipModel.get('textStyle')
-            )
-            : seriesTooltipResult.text;
-
+            );
+        }
         const asyncTicket = 'item_' + dataModel.name + '_' + dataIndex;
 
         this._showOrMove(tooltipModel, function (this: TooltipView) {

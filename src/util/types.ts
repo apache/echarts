@@ -1556,6 +1556,18 @@ export interface CommonTooltipOption<FormatterParams> {
      */
     valueFormatter?: (value: OptionDataValue | OptionDataValue[], dataIndex: number) => string
     /**
+     * Formatter of value.
+     *
+     * Will be ignored if tooltip.formatter is specified.
+     */
+     nameFormatter?: (value: OptionDataValue | OptionDataValue[]) => string
+     /**
+     * Formatter of value.
+     *
+     * Will be ignored if tooltip.formatter is specified.
+     */
+    headerFormatter?: (value: OptionDataValue | OptionDataValue[]) => string
+    /**
      * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
      * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',
      * which is relative to the hovered element.
