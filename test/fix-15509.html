@@ -1,0 +1,58 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css">
+</head>
+
+<body>
+    <div id="main" style="width: 300px;height:300px;"></div>
+</body>
+
+</html>
+
+<script>
+
+    require(['echarts'], function (echarts) {
+        var myChart = echarts.init(document.getElementById('main'));
+        myChart.setOption({
+            xAxis: { type: 'value' },
+            yAxis: { type: 'value' },
+            dataset: {
+                dimensions: ['xVal', 'yVal'],
+                source: [
+                    { xVal: 1, yVal: 11.5, label: 'Node 1' },
+                    { xVal: 2.5, yVal: 12, label: 'Node 2' },
+                    { xVal: 1.5, yVal: 9, label: 'Node 3' },
+                    { xVal: 6, yVal: 34, label: 'Node 4' },
+                    { xVal: 2, yVal: 12, label: 'Node 5' },
+                    { xVal: 3, yVal: 32, label: 'Node 6' },
+                    { xVal: 2, yVal: 23, label: 'Node 7' },
+                    { xVal: 6, yVal: 21, label: 'Node 8' }
+                ]
+            },
+            series: [{
+                symbolSize: 15,
+                dimensions: ['xVal', 'yVal'],
+                type: 'scatter',
+                label: {
+                    formatter: (params) => {
+                        return params.value.label;
+                    },
+                    position: 'top',
+                    show: true
+                },
+                labelLayout: {
+                    //hideOverlap:true
+                    moveOverlap: 'repel',
+                }
+            }]
+        });
+    })
+</script>

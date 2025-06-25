@@ -1393,6 +1393,8 @@ export interface LabelLayoutOption {
         | 'shiftY'
         | 'shuffleX'
         | 'shuffleY'
+        | 'force'
+        | true
     /**
      * If hide the overlapped label. It will be handled after move.
      * @default 'none'
