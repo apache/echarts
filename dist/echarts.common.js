@@ -27161,7 +27161,7 @@
       return implsStore[name];
     }
 
-    var version$1 = '6.0.0-rc.1';
+    var version$1 = '6.0.0-beta.1';
     var dependencies = {
       zrender: '6.0.0-rc.1'
     };
