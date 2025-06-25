@@ -215,7 +215,7 @@ export function createSingleLayoutInfoComputed(el: ZRText): LabelLayoutInfoCompu
         kind: LABEL_LAYOUT_INFO_KIND_RAW,
         label: el,
         priority: el.z2,
-        defaultAttr: {ignore: el.ignore}
+        defaultAttr: {ignore: el.ignore},
     });
 }
 

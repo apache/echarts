@@ -79,6 +79,13 @@ import { AxisTickCoord } from '../../coord/Axis';
 
 const PI = Math.PI;
 
+// This tune is also for backward compat, since nameMoveOverlap is set as default,
+// in compact layout (multiple charts in one canvas), name should be more close to the axis line and labels.
+const DEFAULT_CENTER_NAME_MARGIN_LEVELS: Record<AxisBuilderBuildExtraParams['nameMarginLevel'], [number, number]> =
+    [[1, 2], [5, 3], [8, 3]];
+const DEFAULT_ENDS_NAME_MARGIN_LEVELS: Record<AxisBuilderBuildExtraParams['nameMarginLevel'], [number, number]> =
+    [[0, 1], [0, 3], [0, 3]];
+
 type AxisIndexKey = 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex'
     | 'angleAxisIndex' | 'singleAxisIndex';
 
@@ -181,6 +188,8 @@ export interface AxisBuilderCfg {
     nameTruncateMaxWidth?: number
 
     silent?: boolean
+
+    defaultNameMoveOverlap?: boolean
 }
 
 /**
@@ -385,6 +394,7 @@ export const resolveAxisNameOverlapDefault: AxisBuilderSharedContext['resolveAxi
     }
 };
 
+// [NOTICE] not consider ignore.
 function moveIfOverlap(
     basedLayoutInfo: LabelIntersectionCheckInfo,
     movableLayoutInfo: LabelLayoutInfoComputed,
@@ -402,7 +412,7 @@ function moveIfOverlap(
 }
 
 export function moveIfOverlapByLinearLabels(
-    baseLayoutInfoList: (LabelIntersectionCheckInfo)[],
+    baseLayoutInfoList: LabelLayoutInfoComputed[],
     baseDirVec: Point,
     movableLayoutInfo: LabelLayoutInfoComputed,
     moveDirVec: Point,
@@ -411,7 +421,9 @@ export function moveIfOverlapByLinearLabels(
     const sameDir = Point.dot(moveDirVec, baseDirVec) >= 0;
     for (let idx = 0, len = baseLayoutInfoList.length; idx < len; idx++) {
         const labelInfo = baseLayoutInfoList[sameDir ? idx : len - 1 - idx];
-        moveIfOverlap(labelInfo, movableLayoutInfo, moveDirVec);
+        if (!labelInfo.label.ignore) {
+            moveIfOverlap(labelInfo, movableLayoutInfo, moveDirVec);
+        }
     }
 }
 
@@ -505,6 +517,12 @@ class AxisBuilder {
 
         // Default value
         const axisName = retrieve2(raw.axisName, axisModel.get('name'));
+
+        let nameMoveOverlapOption = axisModel.get('nameMoveOverlap');
+        if (nameMoveOverlapOption == null || nameMoveOverlapOption === 'auto') {
+            nameMoveOverlapOption = retrieve2(raw.defaultNameMoveOverlap, true);
+        }
+
         const cfg = {
             raw: raw,
 
@@ -520,7 +538,7 @@ class AxisBuilder {
 
             axisName: axisName,
             nameLocation: retrieve3(axisModel.get('nameLocation'), axisModelDefaultOption.nameLocation, 'end'),
-            shouldNameMoveOverlap: hasAxisName(axisName) && !!axisModel.get('nameMoveOverlap'),
+            shouldNameMoveOverlap: hasAxisName(axisName) && nameMoveOverlapOption,
             optionHideOverlap: axisModel.get(['axisLabel', 'hideOverlap']),
             showMinorTicks: axisModel.get(['minorTick', 'show']),
         };
@@ -635,6 +653,7 @@ interface AxisElementsBuilder {
 
 interface AxisBuilderBuildExtraParams {
     noPxChange?: boolean
+    nameMarginLevel?: 0 | 1 | 2
 }
 
 // Sorted by dependency order.
@@ -808,7 +827,7 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
      * [CAUTION] This method can be called multiple times, following the change due to `resetCfg` called
      *  in size measurement. Thus this method should be idempotent, and should be performant.
      */
-    axisName(cfg, local, shared, axisModel, group, transformGroup, api) {
+    axisName(cfg, local, shared, axisModel, group, transformGroup, api, extraParams) {
         const sharedRecord = shared.ensureRecord(axisModel);
         if (__DEV__) {
             const ready = sharedRecord.ready;
@@ -889,6 +908,8 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
             cfg.raw.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
         );
 
+        const nameMarginLevel = extraParams.nameMarginLevel || 0;
+
         const textEl = new graphic.Text({
             x: pos.x,
             y: pos.y,
@@ -909,10 +930,11 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
             }, {
                 defaultTextMargin: isNameLocationCenter(nameLocation)
                     // Make axis name visually far from axis labels.
-                    ? [8, 5]
+                    // (but not too aggressive, consider multiple small charts)
+                    ? (DEFAULT_CENTER_NAME_MARGIN_LEVELS[nameMarginLevel])
                     // top/button margin is set to `0` to inserted the xAxis name into the indention
                     // above the axis labels to save space. (see example below.)
-                    : [0, 5],
+                    : (DEFAULT_ENDS_NAME_MARGIN_LEVELS[nameMarginLevel]),
             }),
             z2: 1
         }) as AxisLabelText;

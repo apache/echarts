@@ -30,6 +30,7 @@ import AxisBuilder, {
 import { isIntervalOrLogScale } from '../../scale/helper';
 import type Cartesian2D from './Cartesian2D';
 import ExtensionAPI from '../../core/ExtensionAPI';
+import { NullUndefined } from 'zrender/src/core/types';
 
 interface CartesianAxisLayout {
     position: AxisBuilderCfg['position'];
@@ -159,7 +160,8 @@ export function createCartesianAxisViewCommonPartBuilder(
     cartesians: Cartesian2D[],
     axisModel: CartesianAxisModel,
     api: ExtensionAPI,
-    ctx?: AxisBuilderSharedContext
+    ctx: AxisBuilderSharedContext | NullUndefined,
+    defaultNameMoveOverlap: boolean | NullUndefined,
 ): AxisBuilder {
     const layoutResult: AxisBuilderCfg = layout(gridRect, axisModel);
 
@@ -177,6 +179,7 @@ export function createCartesianAxisViewCommonPartBuilder(
     }
     layoutResult.axisLineAutoShow = axisLineAutoShow;
     layoutResult.axisTickAutoShow = axisTickAutoShow;
+    layoutResult.defaultNameMoveOverlap = defaultNameMoveOverlap;
 
     return new AxisBuilder(axisModel, api, layoutResult, ctx);
 }

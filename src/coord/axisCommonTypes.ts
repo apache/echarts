@@ -74,8 +74,10 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * 2. If `nameMoveOverlap: true`, move the name util it does not overlap with
      *  axis lables. `nameTextStyle.textMargin` can be used to adjust its gap from
      *  others in this case.
+     * - If 'auto'/null/undefined, use `nameMoveOverlap`, except when `grid.containLabel` is
+     *  true. This is for backward compat - users have tuned the position based on no name moved.
      */
-    nameMoveOverlap?: boolean;
+    nameMoveOverlap?: boolean | 'auto' | NullUndefined;
 
     silent?: boolean;
     triggerEvent?: boolean;

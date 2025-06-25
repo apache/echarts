@@ -38,7 +38,7 @@ import Axis2D from './Axis2D';
 import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
-import GridModel, { OUTER_BOUNDS_DEFAULT } from './GridModel';
+import GridModel, { GridOption, OUTER_BOUNDS_DEFAULT } from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -70,7 +70,6 @@ import { error, log } from '../../util/log';
 import { AxisTickLabelComputingKind } from '../axisTickLabelBuilder';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
 import { mathMax } from '../../util/number';
-
 
 type Cartesian2DDimensionName = 'x' | 'y';
 
@@ -220,7 +219,7 @@ class Grid implements CoordinateSystemMaster {
         updateAllAxisExtentTransByGridRect(axesMap, gridRect);
 
         if (!beforeDataProcessing) {
-            const axisBuilderSharedCtx = createAxisBiulders(gridRect, coordsList, axesMap, api);
+            const axisBuilderSharedCtx = createAxisBiulders(gridRect, coordsList, axesMap, optionContainLabel, api);
 
             let noPxChange: boolean;
             if (optionContainLabel) {
@@ -238,7 +237,7 @@ class Grid implements CoordinateSystemMaster {
                         );
                     }
                     noPxChange = layOutGridByOuterBounds(
-                        gridRect.clone(), 'axisLabel', gridRect, axesMap, axisBuilderSharedCtx
+                        gridRect.clone(), 'axisLabel', gridRect, axesMap, axisBuilderSharedCtx, layoutRef
                     );
                 }
             }
@@ -249,7 +248,7 @@ class Grid implements CoordinateSystemMaster {
                 if (outerBoundsRect) {
                     // console.time('layOutGridByOuterBounds');
                     noPxChange = layOutGridByOuterBounds(
-                        outerBoundsRect, parsedOuterBoundsContain, gridRect, axesMap, axisBuilderSharedCtx
+                        outerBoundsRect, parsedOuterBoundsContain, gridRect, axesMap, axisBuilderSharedCtx, layoutRef
                     );
                     // console.timeEnd('layOutGridByOuterBounds');
                 }
@@ -261,7 +260,8 @@ class Grid implements CoordinateSystemMaster {
                 axesMap,
                 AxisTickLabelComputingKind.determine,
                 null,
-                noPxChange
+                noPxChange,
+                layoutRef
             );
             // console.timeEnd('buildAxesView_determine');
         } // End of beforeDataProcessing
@@ -742,7 +742,8 @@ function layOutGridByOuterBounds(
     outerBoundsContain: ParsedOuterBoundsContain,
     gridRect: LayoutRect,
     axesMap: AxesMap,
-    axisBuilderSharedCtx: AxisBuilderSharedContext
+    axisBuilderSharedCtx: AxisBuilderSharedContext,
+    layoutRef: BoxLayoutReferenceResult
 ): boolean {
     if (__DEV__) {
         assert(outerBoundsContain === 'all' || outerBoundsContain === 'axisLabel');
@@ -760,7 +761,8 @@ function layOutGridByOuterBounds(
         axesMap,
         AxisTickLabelComputingKind.estimate,
         outerBoundsContain,
-        false
+        false,
+        layoutRef
     );
 
     const margin = [0, 0, 0, 0];
@@ -844,13 +846,16 @@ function createAxisBiulders(
     gridRect: LayoutRect,
     cartesians: Cartesian2D[],
     axesMap: AxesMap,
+    optionContainLabel: GridOption['containLabel'],
     api: ExtensionAPI,
 ): AxisBuilderSharedContext {
     const axisBuilderSharedCtx = new AxisBuilderSharedContext(resolveAxisNameOverlapForGrid);
     each(axesMap, axisList => each(axisList, axis => {
         if (shouldAxisShow(axis.model)) {
+            // See `AxisBaseOptionCommon['nameMoveOverlap']`.
+            const defaultNameMoveOverlap = !optionContainLabel;
             axis.axisBuilder = createCartesianAxisViewCommonPartBuilder(
-                gridRect, cartesians, axis.model, api, axisBuilderSharedCtx
+                gridRect, cartesians, axis.model, api, axisBuilderSharedCtx, defaultNameMoveOverlap
             );
         }
     }));
@@ -870,7 +875,8 @@ function createOrUpdateAxesView(
     axesMap: AxesMap,
     kind: AxisTickLabelComputingKind,
     outerBoundsContain: ParsedOuterBoundsContain | NullUndefined,
-    noPxChange: boolean
+    noPxChange: boolean,
+    layoutRef: BoxLayoutReferenceResult
 ): void {
     const isDetermine = kind === AxisTickLabelComputingKind.determine;
     each(axesMap, axisList => each(axisList, axis => {
@@ -885,12 +891,20 @@ function createOrUpdateAxesView(
         }
     }));
 
-    each(axesMap, axisList => each(axisList, axis => {
+    const nameMarginLevelMap = {x: 0, y: 0};
+    calcNameMarginLevel(0);
+    calcNameMarginLevel(1);
+    function calcNameMarginLevel(xyIdx: number): void {
+        nameMarginLevelMap[XY[1 - xyIdx]] = gridRect[WH[xyIdx]] <= layoutRef.refContainer[WH[xyIdx]] * 0.5
+            ? 0 : ((1 - xyIdx) === 1 ? 2 : 1);
+    }
+
+    each(axesMap, (axisList, xy) => each(axisList, axis => {
         if (shouldAxisShow(axis.model)) {
             if (outerBoundsContain === 'all' || isDetermine) {
                 // To resolve overlap, `axisName` layout depends on `axisTickLabel` layout result
                 // (all of the axes of the same `grid`; consider multiple x or y axes).
-                axis.axisBuilder.build({axisName: true});
+                axis.axisBuilder.build({axisName: true}, {nameMarginLevel: nameMarginLevelMap[xy]});
             }
             if (isDetermine) {
                 axis.axisBuilder.build({axisLine: true});
