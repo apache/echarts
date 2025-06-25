@@ -23,7 +23,7 @@
  * TODO Default cartesian
  */
 
-import {isObject, each, indexOf, retrieve3, keys, assert, eqNaN, find} from 'zrender/src/core/util';
+import {isObject, each, indexOf, retrieve3, keys, assert, eqNaN, find, retrieve2} from 'zrender/src/core/util';
 import {BoxLayoutReferenceResult, createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
@@ -38,7 +38,7 @@ import Axis2D from './Axis2D';
 import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
-import GridModel, { GridOption, OUTER_BOUNDS_DEFAULT } from './GridModel';
+import GridModel, { GridOption, OUTER_BOUNDS_CLAMP_DEFAULT, OUTER_BOUNDS_DEFAULT } from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -69,7 +69,7 @@ import {
 import { error, log } from '../../util/log';
 import { AxisTickLabelComputingKind } from '../axisTickLabelBuilder';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
-import { mathMax } from '../../util/number';
+import { mathMax, parsePositionSizeOption } from '../../util/number';
 
 type Cartesian2DDimensionName = 'x' | 'y';
 
@@ -237,18 +237,19 @@ class Grid implements CoordinateSystemMaster {
                         );
                     }
                     noPxChange = layOutGridByOuterBounds(
-                        gridRect.clone(), 'axisLabel', gridRect, axesMap, axisBuilderSharedCtx, layoutRef
+                        gridRect.clone(), 'axisLabel', null, gridRect, axesMap, axisBuilderSharedCtx, layoutRef
                     );
                 }
             }
             else {
-                const {outerBoundsRect, parsedOuterBoundsContain} = prepareOuterBounds(
+                const {outerBoundsRect, parsedOuterBoundsContain, outerBoundsClamp} = prepareOuterBounds(
                     gridModel, gridRect, layoutRef
                 );
                 if (outerBoundsRect) {
                     // console.time('layOutGridByOuterBounds');
                     noPxChange = layOutGridByOuterBounds(
-                        outerBoundsRect, parsedOuterBoundsContain, gridRect, axesMap, axisBuilderSharedCtx, layoutRef
+                        outerBoundsRect, parsedOuterBoundsContain, outerBoundsClamp,
+                        gridRect, axesMap, axisBuilderSharedCtx, layoutRef
                     );
                     // console.timeEnd('layOutGridByOuterBounds');
                 }
@@ -740,6 +741,7 @@ export function registerLegacyGridContainLabelImpl(impl: LegacyLayOutGridByConta
 function layOutGridByOuterBounds(
     outerBoundsRect: BoundingRect,
     outerBoundsContain: ParsedOuterBoundsContain,
+    outerBoundsClamp: number[] | NullUndefined,
     gridRect: LayoutRect,
     axesMap: AxesMap,
     axisBuilderSharedCtx: AxisBuilderSharedContext,
@@ -775,7 +777,7 @@ function layOutGridByOuterBounds(
     fillMarginOnOneDimension(gridRect, 1, NaN);
 
     const noPxChange = find(margin, item => item > 0) == null;
-    expandOrShrinkRect(gridRect, margin, true, true);
+    expandOrShrinkRect(gridRect, margin, true, true, outerBoundsClamp);
 
     updateAllAxisExtentTransByGridRect(axesMap, gridRect);
 
@@ -915,16 +917,17 @@ function createOrUpdateAxesView(
 
 function prepareOuterBounds(
     gridModel: GridModel,
-    gridRect: BoundingRect,
+    rawRridRect: BoundingRect,
     layoutRef: BoxLayoutReferenceResult,
 ): {
     outerBoundsRect: BoundingRect | NullUndefined
     parsedOuterBoundsContain: ParsedOuterBoundsContain
+    outerBoundsClamp: number[]
 } {
     let outerBoundsRect: BoundingRect | NullUndefined;
     const optionOuterBoundsMode = gridModel.get('outerBoundsMode', true);
     if (optionOuterBoundsMode === 'same') {
-        outerBoundsRect = gridRect.clone();
+        outerBoundsRect = rawRridRect.clone();
     }
     else if (optionOuterBoundsMode == null || optionOuterBoundsMode === 'auto') {
         outerBoundsRect = getLayoutRect(
@@ -952,7 +955,16 @@ function prepareOuterBounds(
         parsedOuterBoundsContain = optionOuterBoundsContain;
     }
 
-    return {outerBoundsRect, parsedOuterBoundsContain};
+    const outerBoundsClamp = [
+        parsePositionSizeOption(
+            retrieve2(gridModel.get('outerBoundsClampWidth', true), OUTER_BOUNDS_CLAMP_DEFAULT[0]), rawRridRect.width
+        ),
+        parsePositionSizeOption(
+            retrieve2(gridModel.get('outerBoundsClampHeight', true), OUTER_BOUNDS_CLAMP_DEFAULT[1]), rawRridRect.height
+        )
+    ];
+
+    return {outerBoundsRect, parsedOuterBoundsContain, outerBoundsClamp};
 }
 
 const resolveAxisNameOverlapForGrid: AxisBuilderSharedContext['resolveAxisNameOverlap'] = (

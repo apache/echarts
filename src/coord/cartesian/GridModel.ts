@@ -29,6 +29,7 @@ import tokens from '../../visual/tokens';
 // For backward compatibility, do not use a margin. Although the labels might touch the edge of
 // the canvas, the chart canvas probably does not have an border or a different background color within a page.
 export const OUTER_BOUNDS_DEFAULT = {left: 0, right: 0, top: 0, bottom: 0};
+export const OUTER_BOUNDS_CLAMP_DEFAULT = ['25%', '25%'];
 
 export interface GridOption
     extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
@@ -71,6 +72,15 @@ export interface GridOption
      * - 'auto'/null/undefined: Default. be 'axisLabel' if `containLabel:true`, otherwise 'all'.
      */
     outerBoundsContain?: 'all' | 'axisLabel' | 'auto' | NullUndefined;
+
+    /**
+     * Available only when `outerBoundsMode` is not 'none'.
+     * Offer a constraint to not to shrink the grid rect causing smaller that width/height.
+     * A string means percent, like '30%', based on the original rect size
+     *  determined by `grid.top/right/bottom/left/width/height`.
+     */
+    outerBoundsClampWidth?: number | string;
+    outerBoundsClampHeight?: number | string;
 
     backgroundColor?: ZRColor;
     borderWidth?: number;
@@ -120,6 +130,8 @@ class GridModel extends ComponentModel<GridOption> implements CoordinateSystemHo
         outerBoundsMode: 'auto',
         outerBounds: OUTER_BOUNDS_DEFAULT,
         outerBoundsContain: 'all',
+        outerBoundsClampWidth: OUTER_BOUNDS_CLAMP_DEFAULT[0],
+        outerBoundsClampHeight: OUTER_BOUNDS_CLAMP_DEFAULT[1],
 
         // width: {totalWidth} - left - right,
         // height: {totalHeight} - top - bottom,

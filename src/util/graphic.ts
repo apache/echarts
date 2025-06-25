@@ -597,7 +597,8 @@ export function expandOrShrinkRect<TRect extends RectLike>(
     rect: TRect,
     delta: number[] | number | NullUndefined,
     shrinkOrExpand: boolean,
-    noNegative: boolean
+    noNegative: boolean,
+    minSize?: number[] // by default [0, 0].
 ): TRect {
     if (delta == null) {
         return rect;
@@ -623,25 +624,31 @@ export function expandOrShrinkRect<TRect extends RectLike>(
         _tmpExpandRectDelta[2] = -_tmpExpandRectDelta[2];
         _tmpExpandRectDelta[3] = -_tmpExpandRectDelta[3];
     }
-    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'x', 'width', 3, 1);
-    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'y', 'height', 0, 2);
+    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'x', 'width', 3, 1, minSize && minSize[0] || 0);
+    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'y', 'height', 0, 2, minSize && minSize[1] || 0);
 
     return rect;
 }
 const _tmpExpandRectDelta = [0, 0, 0, 0];
 function expandRectOnOneDimension(
-    rect: RectLike, delta: number[], xy: 'x' | 'y', wh: 'width' | 'height', ltIdx: 3 | 0, rbIdx: 1 | 2
+    rect: RectLike,
+    delta: number[],
+    xy: 'x' | 'y',
+    wh: 'width' | 'height',
+    ltIdx: 3 | 0, rbIdx: 1 | 2,
+    minSize: number
 ): void {
     const deltaSum = delta[rbIdx] + delta[ltIdx];
     const oldSize = rect[wh];
     rect[wh] += deltaSum;
-    if (rect[wh] < 0) {
-        rect[wh] = 0;
+    minSize = mathMax(0, mathMin(minSize, oldSize));
+    if (rect[wh] < minSize) {
+        rect[wh] = minSize;
         // Try to make the position of the zero rect reasonable in most visual cases.
         rect[xy] += (
             delta[ltIdx] >= 0 ? -delta[ltIdx]
             : delta[rbIdx] >= 0 ? oldSize + delta[rbIdx]
-            : mathAbs(deltaSum) > 1e-8 ? oldSize * delta[ltIdx] / deltaSum
+            : mathAbs(deltaSum) > 1e-8 ? (oldSize - minSize) * delta[ltIdx] / deltaSum
             : 0
         );
     }

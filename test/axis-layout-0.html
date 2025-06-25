@@ -623,6 +623,28 @@ under the License.
                                 });
                             }
                         },
+                        ...['Width', 'Height'].map(prop => {
+                            return {
+                                type: 'select',
+                                text: `grid.outerBoundsClamp${prop}:`,
+                                options: [
+                                    {value: undefined},
+                                    {id: 'absolute', input: {type: 'range', min: -10, max: 500}, text: 'absolute'},
+                                    {id: 'percent', input: {type: 'range', min: -10, max: 100, suffix: '%'}, text: 'percent'},
+                                ],
+                                onchange() {
+                                    let val = this.value;
+                                    if (this.optionId === 'percent') {
+                                        val += '%'
+                                    }
+                                    chartSetOption(chart, {
+                                        grid: {
+                                            [`outerBoundsClamp${prop}`]: val
+                                        }
+                                    });
+                                }
+                            };
+                        }),
                         {
                             type: 'select',
                             text: 'grid.containLabel(deprecated):',
