@@ -22,27 +22,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('echarts')) :
   typeof define === 'function' && define.amd ? define(['exports', 'echarts'], factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.bmap = {}, global.echarts));
-})(this, (function (exports, echarts) { 'use strict';
-
-  function _interopNamespace(e) {
-    if (e && e.__esModule) return e;
-    var n = Object.create(null);
-    if (e) {
-      Object.keys(e).forEach(function (k) {
-        if (k !== 'default') {
-          var d = Object.getOwnPropertyDescriptor(e, k);
-          Object.defineProperty(n, k, d.get ? d : {
-            enumerable: true,
-            get: function () { return e[k]; }
-          });
-        }
-      });
-    }
-    n["default"] = e;
-    return Object.freeze(n);
-  }
-
-  var echarts__namespace = /*#__PURE__*/_interopNamespace(echarts);
+}(this, (function (exports, echarts) { 'use strict';
 
   function BMapCoordSys(bmap, api) {
     this._bmap = bmap;
@@ -236,7 +216,7 @@
   function v2Equal(a, b) {
     return a && b && a[0] === b[0] && a[1] === b[1];
   }
-  echarts__namespace.extendComponentModel({
+  echarts.extendComponentModel({
     type: 'bmap',
     getBMap: function () {
       // __bmap is injected when creating BMapCoordSys
@@ -271,7 +251,7 @@
     }
     return true;
   }
-  echarts__namespace.extendComponentView({
+  echarts.extendComponentView({
     type: 'bmap',
     render: function (bMapModel, ecModel, api) {
       var rendering = true;
@@ -345,7 +325,7 @@
       if (JSON.stringify(originalStyle) !== mapStyleStr) {
         // FIXME May have blank tile when dragging if setMapStyle
         if (!isEmptyObject(newMapStyle)) {
-          bmap.setMapStyle(echarts__namespace.util.clone(newMapStyle));
+          bmap.setMapStyle(echarts.util.clone(newMapStyle));
         }
         bMapModel.__mapStyle = JSON.parse(mapStyleStr);
       }
@@ -357,7 +337,7 @@
       if (JSON.stringify(originalStyle2) !== mapStyleStr2) {
         // FIXME May have blank tile when dragging if setMapStyle
         if (!isEmptyObject(newMapStyle2)) {
-          bmap.setMapStyleV2(echarts__namespace.util.clone(newMapStyle2));
+          bmap.setMapStyleV2(echarts.util.clone(newMapStyle2));
         }
         bMapModel.__mapStyle2 = JSON.parse(mapStyleStr2);
       }
@@ -365,9 +345,9 @@
     }
   });
 
-  echarts__namespace.registerCoordinateSystem('bmap', BMapCoordSys);
+  echarts.registerCoordinateSystem('bmap', BMapCoordSys);
   // Action
-  echarts__namespace.registerAction({
+  echarts.registerAction({
     type: 'bmapRoam',
     event: 'bmapRoam',
     update: 'updateLayout'
@@ -384,5 +364,5 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));
 //# sourceMappingURL=bmap.js.map
