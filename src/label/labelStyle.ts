@@ -36,8 +36,7 @@ import {
     TextCommonOptionNuanceBase,
     TextCommonOptionNuanceDefault,
     LabelMarginType,
-    LabelExtendedTextStyle,
-    NullUndefined
+    LabelExtendedTextStyle
 } from '../util/types';
 import GlobalModel from '../model/Global';
 import { isFunction, retrieve2, extend, keys, trim, clone, retrieve3 } from 'zrender/src/core/util';
