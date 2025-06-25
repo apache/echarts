@@ -332,12 +332,11 @@ describe('api/converter', function () {
 
         const width = chart.getWidth();
         const height = chart.getHeight();
-
         expect(
-            pointEquals(chart.convertToPixel({seriesIndex: 1}, [-500, 6000]), [10, height - 40])
+            pointEquals(chart.convertToPixel({seriesIndex: 1}, [-500, 6000]), [16, height - 40])
         ).toEqual(true);
         expect(
-            pointEquals(chart.convertFromPixel({seriesIndex: 1}, [10, height - 40]), [-500, 6000])
+            pointEquals(chart.convertFromPixel({seriesIndex: 1}, [16, height - 40]), [-500, 6000])
         ).toEqual(true);
 
         expect(
