@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="axis-layout-0-quick-cases.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .test-inputs-slider, .test-inputs-select {
+                font-size: 12px;
+            }
+        </style>
+
+
+        <div id="main_all"></div>
+
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                const _XY_PAIR_INDICES = [0, 1, 2];
+                const _XY_AXIS_PAIR_COUNT_LIST = [1, 2, 3];
+                const NOT_SET = 'not set';
+
+                // --- option states start ---------------
+                let _xyAxisPairCount;
+                let _timeStart;
+                let _useLazyUpdate;
+                let _currNameTextMargin;
+                let _currAxisLabelTextMargin;
+                let _currOuterBoundsMode;
+                let _currXAxisType;
+                let _currYAxisType;
+                let _currContainLabel;
+                function resetOptionStates() {
+                    _xyAxisPairCount = 1;
+                    _timeStart = Date.now();
+                    _useLazyUpdate = false;
+                    _currNameTextMargin = [3, 5, 3, 5];
+                    _currAxisLabelTextMargin = [0, 3, 0, 3];
+                    _currOuterBoundsMode = undefined;
+                    _currXAxisType = 'value';
+                    _currYAxisType = 'log';
+                    _currContainLabel = false;
+                }
+                resetOptionStates();
+                // --- option states end -----------------
+
+                const _initValues = {
+                    width: 750,
+                    height: 300,
+                    allAxis: {
+                        axisLine: {
+                            onZero: [false, true],
+                        },
+                        axisLabel: {
+                        },
+                        nameLocation: ['middle', 'end', 'start'],
+                        plainBorderedStyle: {
+                            borderWidth: 2,
+                            borderColor: 'rgba(0,0,180,0.5)',
+                            backgroundColor: 'rgba(0,0,150,0.5)',
+                            fontSize: 30,
+                            // padding: [10, 20, 30, 40],
+                            padding: [10, 20],
+                        },
+                        plainNormalStyle: {
+                            borderWidth: 0,
+                            backgroundColor: 'transparent',
+                            fontSize: 12,
+                            padding: 0,
+                        },
+                    },
+                    xAxis: {
+                        position: ['bottom', 'top'],
+                        nameRotate: 0,
+                        axisLabel: {
+                        },
+                    },
+                    yAxis: {
+                        position: ['left', 'right'],
+                        nameRotate: 0,
+                        axisLabel: {
+                        },
+                    },
+                    grid: {
+                        left: 10,
+                        right: 10,
+                        top: 30,
+                        bottom: 10,
+                        outerBounds: {
+                            left: 5,
+                            right: 5,
+                            top: 5,
+                            bottom: 5,
+                        },
+                    }
+                };
+
+                const _gridBoxIndicatorShapeOptions = {};
+                const _gridOuterBoundsIndicatorShapeOptions = {};
+                resetGridBoxIndicatorShapeOptions();
+                resetGridOuterBoundsIndicatorShapeOptions();
+
+                function resetGridBoxIndicatorShapeOptions() {
+                    _gridBoxIndicatorShapeOptions.left = _initValues.grid.left;
+                    _gridBoxIndicatorShapeOptions.top = _initValues.grid.top;
+                    _gridBoxIndicatorShapeOptions.right = _initValues.grid.right;
+                    _gridBoxIndicatorShapeOptions.bottom = _initValues.grid.bottom;
+                }
+                function resetGridOuterBoundsIndicatorShapeOptions() {
+                    _gridOuterBoundsIndicatorShapeOptions.left = _initValues.grid.outerBounds.left;
+                    _gridOuterBoundsIndicatorShapeOptions.top = _initValues.grid.outerBounds.top;
+                    _gridOuterBoundsIndicatorShapeOptions.right = _initValues.grid.outerBounds.right;
+                    _gridOuterBoundsIndicatorShapeOptions.bottom = _initValues.grid.outerBounds.bottom;
+                }
+
+                function updateIndicatorShapeOptions() {
+                    let parsedOuterBoundsMode = _currOuterBoundsMode;
+                    if (_currContainLabel) {
+                        parsedOuterBoundsMode = 'same';
+                    }
+                    if (parsedOuterBoundsMode === 'none') {
+                        _gridOuterBoundsIndicatorShapeOptions.left = -1000;
+                        _gridOuterBoundsIndicatorShapeOptions.top = -1000;
+                        _gridOuterBoundsIndicatorShapeOptions.right = -1000;
+                        _gridOuterBoundsIndicatorShapeOptions.bottom = -1000;
+                    }
+                    else if (parsedOuterBoundsMode == 'same') {
+                        _gridOuterBoundsIndicatorShapeOptions.left = _gridBoxIndicatorShapeOptions.left;
+                        _gridOuterBoundsIndicatorShapeOptions.top = _gridBoxIndicatorShapeOptions.top;
+                        _gridOuterBoundsIndicatorShapeOptions.right = _gridBoxIndicatorShapeOptions.right;
+                        _gridOuterBoundsIndicatorShapeOptions.bottom = _gridBoxIndicatorShapeOptions.bottom;
+                    }
+                }
+
+                function makeAxisName({xy, idx, richTag}) {
+                    const txt = `${xy}Axis_${idx} long name`;
+                    return richTag
+                        ? `{name_big_1|${txt}}`
+                        : txt;
+                }
+
+                function makeGridBoxIndicatorOption() {
+                    var shapeOpt = _gridBoxIndicatorShapeOptions;
+                    return {
+                        type: 'rect',
+                        id: 'grid_box_indicator',
+                        shape: {
+                            x: shapeOpt.left,
+                            y: shapeOpt.top,
+                            width: _initValues.width - shapeOpt.left - shapeOpt.right,
+                            height: _initValues.height - shapeOpt.top - shapeOpt.bottom,
+                        },
+                        style: {
+                            fill: 'rgba(0,0,100,0.1)'
+                        },
+                        silent: true,
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'grid.t/r/b/l/w/h rect',
+                                stroke: '#fff',
+                                lineWidth: 2,
+                                fill: '#555',
+                                fontSize: 10,
+                            }
+                        },
+                        textConfig: {
+                            position: 'insideTopRight',
+                            distance: 0,
+                        },
+                    }
+                }
+                function makeGridOuterBoundsIndicatorOption() {
+                    var shapeOpt = _gridOuterBoundsIndicatorShapeOptions;
+                    return {
+                        type: 'rect',
+                        id: 'grid_outerBounds_indicator',
+                        shape: {
+                            x: shapeOpt.left,
+                            y: shapeOpt.top,
+                            width: _initValues.width - shapeOpt.left - shapeOpt.right,
+                            height: _initValues.height - shapeOpt.top - shapeOpt.bottom,
+                        },
+                        style: {
+                            fill: 'rgba(0,80,0,0.1)'
+                        },
+                        silent: true,
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'grid.outerBounds.t/r/b/l/w/h rect',
+                                stroke: '#fff',
+                                lineWidth: 2,
+                                fill: '#555',
+                                fontSize: 10,
+                            }
+                        },
+                        textConfig: {
+                            position: 'insideTopRight',
+                            distance: 0,
+                        },
+                    }
+                }
+
+                function makeSeries(axisCountArr, seriesDataKind) {
+                    function makeSeriesData(seriesDataKind, idx) {
+                        if (seriesDataKind === 'small_amount') {
+                            return {
+                                series0: [
+                                    [-50, 12 + idx],
+                                    [33, 32 + idx],
+                                    [55, 31 + idx]
+                                ],
+                                series1: [
+                                    _currYAxisType === 'log'
+                                        ? [9000000000, 832 + idx * 100]
+                                        : [9000000000, -832 + idx * 100],
+                                    [10000000000, 899983232 + idx * 100],
+                                    [33333330000, 32323233232 + idx * 100],
+                                    [55555550000, 31133232233 + idx * 100]
+                                ]
+                            };
+                        }
+                        else if (seriesDataKind === 'big_amount') {
+                            const result = {
+                                series0: [],
+                                series1: [],
+                            };
+                            for (let idx = 0; idx < 10000; idx++) {
+                                result.series0.push(
+                                    Math.random() * 100, Math.random() * 100000
+                                );
+                                result.series1.push(
+                                    Math.random() * 10000, Math.random() * 1000
+                                );
+                            }
+                            return result;
+                        }
+                        else {
+                            throw new Error();
+                        }
+                    }
+
+                    const list = [];
+                    axisCountArr.forEach((_, idx) => {
+                        const seriesData = makeSeriesData(seriesDataKind, idx);
+                        list.push({
+                            xAxisIndex: idx,
+                            yAxisIndex: idx,
+                            symbolSize: 10,
+                            name: `series_small_${idx}`,
+                            data: seriesData.series0,
+                            type: 'scatter'
+                        }, {
+                            xAxisIndex: idx,
+                            yAxisIndex: idx,
+                            symbolSize: 10,
+                            name: `series_big_${idx}`,
+                            data: seriesData.series1,
+                            type: 'scatter'
+                        });
+                    });
+                    return list;
+                }
+
+                function makeAxisCountArr() {
+                    return (new Array(_xyAxisPairCount)).fill(1);
+                }
+
+                function makeXYAxisNameStyles() {
+                    const richStyle = {
+                        borderWidth: 4,
+                        borderColor: 'rgba(0,180,0,0.5)',
+                        backgroundColor: 'rgba(0,150,0,0.5)',
+                        // padding: [10, 20, 30, 40],
+                        padding: [10, 20],
+                        color: '#000',
+                        fontSize: 20,
+                    };
+                    const nameRichStyle = {
+                        name_big_1: richStyle
+                    };
+                    const labelRichStyle = {
+                        label_big_1: richStyle
+                    };
+                    return {nameRichStyle, labelRichStyle};
+                }
+
+                function makeXAxisOption() {
+                    const {nameRichStyle, labelRichStyle} = makeXYAxisNameStyles();
+                    return makeAxisCountArr().map((_, idx) => ({
+                        id: idx,
+                        type: _currXAxisType,
+                        name: makeAxisName({xy: 'x', idx}),
+                        nameTextStyle: {
+                            rich: nameRichStyle,
+                            color: '#555',
+                        },
+                        nameMoveOverlap: true,
+                        nameLocation: _initValues.allAxis.nameLocation[0],
+                        axisLabel: {
+                            textStyle: {
+                                rich: labelRichStyle,
+                                color: '#555',
+                            }
+                        },
+                        axisLine: {
+                            show: true,
+                        },
+                        axisLine: {
+                            onZero: _initValues.allAxis.axisLine.onZero[0],
+                        },
+                        position: _initValues.xAxis.position,
+                    }));
+                }
+
+                function makeYAxisOption() {
+                    const {nameRichStyle, labelRichStyle} = makeXYAxisNameStyles();
+                    return makeAxisCountArr().map((_, idx) => ({
+                        id: idx,
+                        name: makeAxisName({xy: 'y', idx}),
+                        type: _currYAxisType,
+                        nameTextStyle: {
+                            rich: nameRichStyle,
+                            color: '#555',
+                        },
+                        nameMoveOverlap: true,
+                        nameLocation: _initValues.allAxis.nameLocation[0],
+                        axisLabel: {
+                            textStyle: {
+                                rich: labelRichStyle,
+                                color: '#555',
+                            }
+                        },
+                        axisLine: {
+                            onZero: _initValues.allAxis.axisLine.onZero[0],
+                        },
+                        position: _initValues.yAxis.position,
+                    }));
+                }
+
+                function createOption() {
+                    const axisCountArr = makeAxisCountArr();
+
+                    return {
+                        // animation: false,
+                        backgroundColor: 'rgba(0,0,0,0.1)',
+                        legend: {
+                            top: 3,
+                            backgroundColor: 'rgba(250,0,0,0.4)',
+                            borderRadius: 3,
+                            borderWidth: 2,
+                            borderColor: 'rgba(150,0,0,0.7)',
+                        },
+                        graphic: {
+                            elements: [
+                                makeGridBoxIndicatorOption(),
+                                makeGridOuterBoundsIndicatorOption()
+                            ]
+                        },
+                        tooltip: {},
+                        xAxis: makeXAxisOption(),
+                        yAxis: makeYAxisOption(),
+                        grid: [{
+                            left: _initValues.grid.left,
+                            right: _initValues.grid.right,
+                            top: _initValues.grid.top,
+                            bottom: _initValues.grid.bottom,
+                            show: true,
+                            backgroundColor: 'rgba(150,0,0,0.2)',
+                        }],
+                        series: makeSeries(axisCountArr, 'small_amount')
+                    };
+                }
+
+                function isXYPairDisabled(xyPairIndex) {
+                    return xyPairIndex >= _xyAxisPairCount;
+                }
+
+                function resetToInitialState() {
+                    // Reset to the initial state.
+                    chart.__testHelper.restoreInputsToInitialState();
+                    resetOptionStates();
+                    resetGridBoxIndicatorShapeOptions();
+                    resetGridOuterBoundsIndicatorShapeOptions();
+                    _xyAxisPairCount = 1;
+                    chartSetOption(chart, createOption(), {notMerge: true});
+                }
+
+                window.__ec_debug = (function () {
+                    const ec_debug = {
+                        applied_opt_idx: 0,
+                        option_arr: [],
+                        save_option(option, ecSetOptionOpt) {
+                            ec_debug.option_arr.push({option, ecSetOptionOpt});
+                        },
+                        set_next_option(count) {
+                            count = Math.min(count || 1, ec_debug.option_arr.length - ec_debug.applied_opt_idx);
+                            for (let idx = 0; idx < count; idx++) {
+                                const {option, ecSetOptionOpt} = ec_debug.option_arr[ec_debug.applied_opt_idx++];
+                                chart.setOption(option, ecSetOptionOpt);
+                            }
+                        },
+                    };
+                    return ec_debug;
+                })();
+
+                function chartSetOption(chart, option, ecSetOptionOpt) {
+                    _timeStart = Date.now();
+                    ecSetOptionOpt = Object.assign({}, ecSetOptionOpt || {});
+                    ecSetOptionOpt.lazyUpdate = _useLazyUpdate;
+                    console.log('--- chart.setOption ---');
+                    chart.setOption(option, ecSetOptionOpt);
+                    // window.__ec_debug.save_option(option, ecSetOptionOpt);
+                    // console.log(testHelper.printObject(option));
+                }
+
+                // console.log(testHelper.printObject(createOption()));
+
+                const chart = testHelper.create(echarts, 'main_all', {
+                    title: [
+                        'Axis and grid layout tests.',
+                        'The **gray** background is the chart canvas.',
+                        'The **purple background** represents grid.top/right/bottom/left rect.',
+                        'The **green background** represents grid.outerBounds.top/right/bottom/left rect.',
+                        'Need to check the case that **legend disable all series**',
+                        'Click **stop recording input and copy to clipboard** for saving case to axis-layout-0-quick-cases.js',
+                    ],
+                    option: createOption(),
+                    width: _initValues.width,
+                    height: _initValues.height,
+                    saveInputsInitialState: true,
+                    inputsStyle: 'compact',
+                    // boundingRect: {
+                    //     silent: false
+                    // },
+                    inputs: [
+                        {
+                            type: 'select',
+                            text: 'quick test cases:',
+                            prevent: {
+                                recordInputs: true,
+                                inputsState: true
+                            },
+                            options: __AXIS_LAYOUT_0_TEST_CASE_LIST,
+                            onchange() {
+                                _useLazyUpdate = true;
+                                resetToInitialState();
+                                var record = this.value;
+                                if (record) {
+                                    chart.__testHelper.replayInputs(this.value);
+                                }
+                                _useLazyUpdate = false;
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            text: 'stop recording inputs and copy to clipboard',
+                            prevent: {
+                                recordInputs: true,
+                                inputsState: true
+                            },
+                            onclick() {
+                                chart.__testHelper.recordInputs({
+                                    action: 'stop',
+                                    printObjectOpt: {
+                                        marginLeft: 8,
+                                        lineBreakMaxColumn: 100
+                                    }
+                                });
+                                resetToInitialState();
+                                chart.__testHelper.recordInputs({
+                                    action: 'start',
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'boundingRect:',
+                            values: ['hide', 'show'],
+                            prevent: {
+                                recordInputs: true,
+                                inputsState: true
+                            },
+                            onchange() {
+                                var opt = this.value === 'show' ? {color: 'rgba(255,0,0,0.5)'} : false;
+                                chart.__testHelper.boundingRect(opt);
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'x/yAxis pair count',
+                            values: _XY_AXIS_PAIR_COUNT_LIST,
+                            value: _xyAxisPairCount,
+                            onchange() {
+                                _xyAxisPairCount = this.value;
+                                const disabledGroupIds = [];
+                                const enabledGroupIds = [];
+                                _XY_PAIR_INDICES.forEach(xyPairIndex => {
+                                    if (isXYPairDisabled(xyPairIndex)) {
+                                        disabledGroupIds.push(xyPairIndex);
+                                    }
+                                    else {
+                                        enabledGroupIds.push(xyPairIndex);
+                                    }
+                                });
+                                chart.__testHelper.disableInputs({groupId: enabledGroupIds, disabled: false});
+                                chart.__testHelper.disableInputs({groupId: disabledGroupIds, disabled: true});
+                                const option = createOption();
+                                chartSetOption(chart, option, {notMerge: true});
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        ...(['top', 'right', 'bottom', 'left'].map(prop => ({
+                            type: 'range',
+                            text: `grid.${prop}:`,
+                            min: -200,
+                            max: 500,
+                            value: _initValues.grid[prop],
+                            onchange() {
+                                const newVal = this.value;
+                                _gridBoxIndicatorShapeOptions[prop] = newVal;
+                                updateIndicatorShapeOptions();
+                                chartSetOption(chart, {
+                                    grid: {[prop]: newVal},
+                                    graphic: {
+                                        elements: [
+                                            makeGridBoxIndicatorOption(),
+                                            makeGridOuterBoundsIndicatorOption()
+                                        ]
+                                    },
+                                });
+                            }
+                        }))),
+                        {
+                            type: 'br'
+                        },
+                        {
+                            type: 'select',
+                            text: 'grid.outerBoundsMode:',
+                            values: [undefined, 'same', 'none', 'auto'],
+                            onchange() {
+                                _currOuterBoundsMode = this.value;
+                                updateIndicatorShapeOptions();
+                                chartSetOption(chart, {
+                                    grid: {outerBoundsMode: _currOuterBoundsMode},
+                                    graphic: {
+                                        elements: [
+                                            makeGridBoxIndicatorOption(),
+                                            makeGridOuterBoundsIndicatorOption()
+                                        ]
+                                    },
+                                });
+                            }
+                        },
+                        ...(['top', 'right', 'bottom', 'left'].map(prop => ({
+                            type: 'range',
+                            text: `grid.outerBounds.${prop}:`,
+                            min: -200,
+                            max: 500,
+                            value: _initValues.grid[prop],
+                            onchange() {
+                                const newVal = this.value;
+                                _gridOuterBoundsIndicatorShapeOptions[prop] = newVal;
+                                updateIndicatorShapeOptions();
+                                chartSetOption(chart, {
+                                    grid: {outerBounds: {[prop]: newVal}},
+                                    graphic: {
+                                        elements: [
+                                            makeGridBoxIndicatorOption(),
+                                            makeGridOuterBoundsIndicatorOption()
+                                        ]
+                                    },
+                                });
+                            }
+                        }))),
+                        {
+                            type: 'br'
+                        },
+                        {
+                            type: 'select',
+                            text: 'grid.outerBoundsContain:',
+                            values: [undefined, 'all', 'axisLabel', 'auto'],
+                            onchange() {
+                                chartSetOption(chart, {
+                                    grid: {outerBoundsContain: this.value}
+                                });
+                            }
+                        },
+                        ...['Width', 'Height'].map(prop => {
+                            return {
+                                type: 'select',
+                                text: `grid.outerBoundsClamp${prop}:`,
+                                options: [
+                                    {value: undefined},
+                                    {id: 'absolute', input: {type: 'range', min: -10, max: 500}, text: 'absolute'},
+                                    {id: 'percent', input: {type: 'range', min: -10, max: 100, suffix: '%'}, text: 'percent'},
+                                ],
+                                onchange() {
+                                    let val = this.value;
+                                    if (this.optionId === 'percent') {
+                                        val += '%'
+                                    }
+                                    chartSetOption(chart, {
+                                        grid: {
+                                            [`outerBoundsClamp${prop}`]: val
+                                        }
+                                    });
+                                }
+                            };
+                        }),
+                        {
+                            type: 'select',
+                            text: 'grid.containLabel(deprecated):',
+                            values: [false, true],
+                            onchange() {
+                                _currContainLabel = this.value;
+                                updateIndicatorShapeOptions();
+                                chartSetOption(chart, {
+                                    grid: {containLabel: this.value},
+                                    graphic: {
+                                        elements: [
+                                            makeGridBoxIndicatorOption(),
+                                            makeGridOuterBoundsIndicatorOption()
+                                        ]
+                                    },
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'series.data:',
+                            values: ['small_amount', 'big_amount'],
+                            onchange() {
+                                const dataKind = this.value;
+
+                                const axisCountArr = makeAxisCountArr();
+                                const series = makeSeries(axisCountArr, dataKind);
+                                chartSetOption(chart, {
+                                    series: series,
+                                }, {
+                                    replaceMerge: ['series']
+                                });
+                                // makeSeriesData
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'select',
+                            text: `xAxis.type:`,
+                            values: ['value', 'category', 'time'],
+                            onchange() {
+                                _currXAxisType = this.value;
+                                chartSetOption(chart, {
+                                    xAxis: makeXAxisOption(),
+                                }, {
+                                    replaceMerge: ['xAxis']
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: `yAxis.type:`,
+                            values: ['log', 'category', 'value', 'time'],
+                            onchange() {
+                                _currYAxisType = this.value;
+                                chartSetOption(chart, {
+                                    yAxis: makeYAxisOption(),
+                                }, {
+                                    replaceMerge: ['yAxis']
+                                });
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'inputs below control xyAxis pair index:',
+                            values: _XY_PAIR_INDICES,
+                            onchange() {
+                                chart.__testHelper.switchGroup(this.value);
+                            },
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'groupset',
+                            id: 'groupset0',
+                            inputsHeight: 130,
+                            groups: _XY_PAIR_INDICES.map(controllingAxisIndex => ({
+                                id: controllingAxisIndex,
+                                text: 'settings of axisIndex: ' + controllingAxisIndex,
+                                disabled: isXYPairDisabled(controllingAxisIndex),
+                                inputs: [
+                                ...['xAxis', 'yAxis'].map(xyAxisProp => {
+                                    return {
+                                        type: 'select',
+                                        text: `${xyAxisProp}[${controllingAxisIndex}].show:`,
+                                        values: [true, false],
+                                        onchange() {
+                                            chartSetOption(chart, {
+                                                [xyAxisProp]: {id: controllingAxisIndex, show: this.value}
+                                            });
+                                        },
+                                    }
+                                }),
+                                ...['xAxis', 'yAxis'].map(xyAxisProp => {
+                                    return {
+                                        type: 'select',
+                                        text: `${xyAxisProp}[${controllingAxisIndex}].inverse:`,
+                                        values: [false, true],
+                                        onchange() {
+                                            chartSetOption(chart, {
+                                                [xyAxisProp]: {
+                                                    inverse: this.value,
+                                                    id: controllingAxisIndex,
+                                                },
+                                            });
+                                        }
+                                    };
+                                }),
+                                {
+                                    type: 'br',
+                                },
+                                ...['xAxis', 'yAxis'].map(xyAxisProp => {
+                                    return {
+                                        type: 'select',
+                                        text: `${xyAxisProp}[${controllingAxisIndex}].boundaryGap:`,
+                                        values: [true, false],
+                                        onchange() {
+                                            chartSetOption(chart, {
+                                                [xyAxisProp]: {
+                                                    boundaryGap: this.value,
+                                                    id: controllingAxisIndex,
+                                                },
+                                            });
+                                        }
+                                    };
+                                }),
+                                {
+                                    type: 'hr',
+                                    text: 'axisLine',
+                                },
+                                {
+                                    type: 'select',
+                                    text: `xAxis[${controllingAxisIndex}].position:`,
+                                    values: _initValues.xAxis.position,
+                                    onchange() {
+                                        chartSetOption(chart, {xAxis: {
+                                            position: this.value,
+                                            id: controllingAxisIndex,
+                                        }});
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `yAxis[${controllingAxisIndex}].position:`,
+                                    values: _initValues.yAxis.position,
+                                    onchange() {
+                                        chartSetOption(chart, {yAxis: {
+                                            position: this.value,
+                                            id: controllingAxisIndex,
+                                        }});
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].onZero:`,
+                                    values: _initValues.allAxis.axisLine.onZero,
+                                    onchange() {
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                axisLine: {onZero: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                            yAxis: {
+                                                axisLine: {onZero: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'br',
+                                },
+                                ...(['xAxis', 'yAxis'].map(prop => ({
+                                    type: 'select',
+                                    text: `${prop}[${controllingAxisIndex}].offset:`,
+                                    options: [
+                                        {value: NOT_SET},
+                                        {input: {
+                                            type: 'range',
+                                            value: 0,
+                                            min: -200,
+                                            max: 200,
+                                        }, text: 'range'}
+                                    ],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        chartSetOption(chart, {
+                                            [prop]: {
+                                                offset: this.value,
+                                                id: controllingAxisIndex,
+                                            }
+                                        });
+                                    }
+                                }))),
+                                {
+                                    type: 'hr',
+                                    text: 'axis tick',
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].axisTick.length:`,
+                                    values: [5, 0, 30, -30],
+                                    onchange() {
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                axisTick: {length: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                            yAxis: {
+                                                axisTick: {length: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].axisTick.inside`,
+                                    values: [false, true],
+                                    onchange() {
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                axisTick: {inside: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                            yAxis: {
+                                                axisTick: {inside: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'hr',
+                                    text: 'axis label',
+                                },
+                                ...(['xAxis', 'yAxis'].map(prop => ({
+                                    type: 'select',
+                                    text: `${prop}[${controllingAxisIndex}].axisLabel.rotate:`,
+                                    options: [
+                                        {value: NOT_SET},
+                                        {input: {
+                                            type: 'range',
+                                            value: 0,
+                                            min: -100,
+                                            max: 100,
+                                        }, text: 'range'}
+                                    ],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        chartSetOption(chart, {[prop]: {
+                                            axisLabel: {rotate: this.value},
+                                            id: controllingAxisIndex,
+                                        },});
+                                    }
+                                }))),
+                                {
+                                    type: 'br',
+                                },
+                                ...(['xAxis', 'yAxis'].map(prop => ({
+                                    type: 'select',
+                                    text: `${prop}[${controllingAxisIndex}].axisLabel.margin:`,
+                                    options: [
+                                        {value: NOT_SET},
+                                        {value: 0},
+                                        {value: 8},
+                                        {input: {
+                                            type: 'range',
+                                            value: 8, // The default value in echarts
+                                            step: 1, // 0.1
+                                            min: -100,
+                                            max: 100,
+                                        }, text: 'range'}
+                                    ],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        chartSetOption(chart, {
+                                            [prop]: {
+                                                axisLabel: {margin: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                }))),
+                                {
+                                    type: 'br',
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].axisLable.inside:`,
+                                    values: [false, true],
+                                    onchange() {
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                axisLabel: {inside: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                            yAxis: {
+                                                axisLabel: {inside: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].showMin&MaxLabel:`,
+                                    values: [NOT_SET, null, true, false],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                axisLabel: {showMinLabel: this.value, showMaxLabel: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                            yAxis: {
+                                                axisLabel: {showMinLabel: this.value, showMaxLabel: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}] label style:`,
+                                    values: ['no', 'plain', 'rich'],
+                                    onchange() {
+                                        const opt = this.value;
+                                        const formatter = opt === 'rich'
+                                            ? `{label_big_1|{value}}`
+                                            : null;
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                axisLabel: {
+                                                    ...opt === 'plain'
+                                                        ? _initValues.allAxis.plainBorderedStyle
+                                                        : _initValues.allAxis.plainNormalStyle,
+                                                    formatter,
+                                                },
+                                                id: controllingAxisIndex,
+                                            },
+                                            yAxis: {
+                                                axisLabel: {
+                                                    ...opt === 'plain'
+                                                        ? _initValues.allAxis.plainBorderedStyle
+                                                        : _initValues.allAxis.plainNormalStyle,
+                                                    formatter,
+                                                },
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'br',
+                                },
+                                ...([
+                                    {desc: 'left/right', idx: [1, 3]},
+                                    {desc: 'top/bottom', idx: [0, 2]}
+                                ].map(({desc, idx}) => ({
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].axisLabel.textMargin.${desc}:`,
+                                    options: [
+                                        {value: NOT_SET},
+                                        {value: undefined},
+                                        {input: {type: 'range', min: -50, max: 100, value: 5}, text: 'range'}
+                                    ],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        let textMargin;
+                                        if (this.value == null) {
+                                            textMargin = undefined;
+                                        }
+                                        else {
+                                            _currAxisLabelTextMargin[idx[0]] = _currAxisLabelTextMargin[idx[1]] = this.value;
+                                            textMargin = _currAxisLabelTextMargin;
+                                        }
+                                        chartSetOption(chart, {
+                                            xAxis: {id: controllingAxisIndex, axisLabel: {textMargin}},
+                                            yAxis: {id: controllingAxisIndex, axisLabel: {textMargin}},
+                                        });
+                                    }
+                                }))),
+                                {
+                                    type: 'br',
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].axisLabel.hideOverlap:`,
+                                    options: [
+                                        {value: undefined},
+                                        {value: true},
+                                        {value: false},
+                                    ],
+                                    onchange() {
+                                        const hideOverlap = this.value;
+                                        chartSetOption(chart, {
+                                            xAxis: {id: controllingAxisIndex, axisLabel: {hideOverlap}},
+                                            yAxis: {id: controllingAxisIndex, axisLabel: {hideOverlap}},
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].axisLabel.interval:`,
+                                    options: [
+                                        {value: undefined},
+                                        {value: 'auto'},
+                                        {value: 0},
+                                        {value: 1},
+                                        {value: 2},
+                                    ],
+                                    onchange() {
+                                        const interval = this.value;
+                                        chartSetOption(chart, {
+                                            xAxis: {id: controllingAxisIndex, axisLabel: {interval}},
+                                            yAxis: {id: controllingAxisIndex, axisLabel: {interval}},
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'hr',
+                                    text: 'axis name',
+                                },
+                                ...(['xAxis', 'yAxis'].map(prop => ({
+                                    type: 'select',
+                                    text: `${prop}[${controllingAxisIndex}].nameRotate:`,
+                                    options: [
+                                        {value: NOT_SET},
+                                        {input: {
+                                            type: 'range',
+                                            value: 0,
+                                            min: -100,
+                                            max: 100,
+                                        }, text: 'range'},
+                                    ],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        chartSetOption(chart, {
+                                            [prop]: {
+                                                nameRotate: this.value,
+                                                id: controllingAxisIndex,
+                                            }
+                                        });
+                                    }
+                                }))),
+                                {
+                                    type: 'br'
+                                },
+                                ...(['xAxis', 'yAxis'].map(prop => ({
+                                    type: 'select',
+                                    text: `${prop}[${controllingAxisIndex}].nameGap:`,
+                                    options: [
+                                        {value: NOT_SET},
+                                        {value: 0},
+                                        {input: {
+                                            type: 'range',
+                                            value: 15,
+                                            min: -100,
+                                            max: 100,
+                                        }, text: 'range'}
+                                    ],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        chartSetOption(chart, {[prop]: {
+                                            nameGap: this.value,
+                                            id: controllingAxisIndex,
+                                        }});
+                                    }
+                                }))),
+                                {
+                                    type: 'br'
+                                },
+                                {
+                                    type: 'select',
+                                    text: `xAxis[${controllingAxisIndex}].nameMoveOverlap:`,
+                                    values: [true, false],
+                                    onchange() {
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                nameMoveOverlap: this.value,
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `yAxis[${controllingAxisIndex}].nameMoveOverlap:`,
+                                    values: [true, false],
+                                    onchange() {
+                                        chartSetOption(chart, {
+                                            yAxis: {
+                                                nameMoveOverlap: this.value,
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `xAxis[${controllingAxisIndex}].nameLocation:`,
+                                    values: _initValues.allAxis.nameLocation,
+                                    onchange() {
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                nameLocation: this.value,
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `yAxis[${controllingAxisIndex}].nameLocation:`,
+                                    values: _initValues.allAxis.nameLocation,
+                                    onchange() {
+                                        chartSetOption(chart, {
+                                            yAxis: {
+                                                nameLocation: this.value,
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                {
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].nameTrancate:`,
+                                    values: [NOT_SET, undefined, 20],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        chartSetOption(chart, {
+                                            xAxis: {
+                                                nameTruncate: {maxWidth: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                            yAxis: {
+                                                nameTruncate: {maxWidth: this.value},
+                                                id: controllingAxisIndex,
+                                            },
+                                        });
+                                    }
+                                },
+                                ...['x', 'y'].map(xy => {
+                                    return {
+                                        type: 'select',
+                                        text: `${xy}Axis[${controllingAxisIndex}] name style:`,
+                                        values: ['no', 'plain', 'rich', 'no_name'],
+                                        onchange() {
+                                            const opt = this.value;
+                                            const richTag = opt === 'rich' ? 'name_big_1' : undefined;
+                                            let name;
+                                            if (opt !== 'no_name') {
+                                                name = makeAxisName(
+                                                    {xy: xy, idx: controllingAxisIndex, richTag}
+                                                );
+                                            }
+                                            chartSetOption(chart, {
+                                                [`${xy}Axis`]: {
+                                                    name: name,
+                                                    nameTextStyle: opt === 'plain'
+                                                        ? _initValues.allAxis.plainBorderedStyle
+                                                        : _initValues.allAxis.plainNormalStyle,
+                                                    id: controllingAxisIndex,
+                                                },
+                                            });
+                                        }
+                                    }
+                                }),
+                                ...([
+                                    {desc: 'left/right', idx: [1, 3]},
+                                    {desc: 'top/bottom', idx: [0, 2]}
+                                ].map(({desc, idx}) => ({
+                                    type: 'select',
+                                    text: `x/yAxis[${controllingAxisIndex}].nameTextStyle.textMargin.${desc}:`,
+                                    options: [
+                                        {value: NOT_SET},
+                                        {value: undefined},
+                                        {input: {type: 'range', min: -50, max: 100, value: 5}, text: 'range'}
+                                    ],
+                                    onchange() {
+                                        if (this.value === NOT_SET) { return; }
+                                        let textMargin;
+                                        if (this.value == null) {
+                                            textMargin = undefined;
+                                        }
+                                        else {
+                                            _currNameTextMargin[idx[0]] = _currNameTextMargin[idx[1]] = this.value;
+                                            textMargin = _currNameTextMargin;
+                                        }
+                                        chartSetOption(chart, {
+                                            xAxis: {id: controllingAxisIndex, nameTextStyle: {textMargin}},
+                                            yAxis: {id: controllingAxisIndex, nameTextStyle: {textMargin}},
+                                        });
+                                    }
+                                }))),
+                                ] // End of group-set.groups.inputs
+                            })) // End of group-set.groups
+                        }, // End of group-set
+                    ] // End of `inputs`
+                }); // End of `testHelper.create(...)`
+
+                window.__ec_chart = chart;
+                window.__ec_graphic = echarts.graphic;
+
+                if (chart) {
+                    chart.on('rendered', function () {
+                        if (_timeStart) {
+                            console.log('cost time', Date.now() - _timeStart, 'ms');
+                            _timeStart = null;
+                        }
+                    });
+                    chart.__testHelper.recordInputs({
+                        action: 'start',
+                    });
+                }
+
+            });
+
+
+
+        </script>
+
+
+    </body>
+</html>

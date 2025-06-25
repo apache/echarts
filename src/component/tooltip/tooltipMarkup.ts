@@ -31,6 +31,7 @@ import SeriesModel from '../../model/Series';
 import { getRandomIdBase } from '../../util/number';
 import Model from '../../model/Model';
 import { TooltipOption } from './TooltipModel';
+import tokens from '../../visual/tokens';
 
 type RichTextStyle = {
     fontSize: number | string,
@@ -61,10 +62,10 @@ function getTooltipTextStyle(
     nameStyle: TextStyle
     valueStyle: TextStyle
 } {
-    const nameFontColor = textStyle.color || '#6e7079';
+    const nameFontColor = textStyle.color || tokens.color.tertiary;
     const nameFontSize = textStyle.fontSize || 12;
     const nameFontWeight = textStyle.fontWeight || '400';
-    const valueFontColor = textStyle.color || '#464646';
+    const valueFontColor = textStyle.color || tokens.color.secondary;
     const valueFontSize = textStyle.fontSize || 14;
     const valueFontWeight = textStyle.fontWeight || '900';
 
@@ -338,7 +339,7 @@ function buildNameValue(
         ? ''
         : ctx.markupStyleCreator.makeTooltipMarker(
             fragment.markerType,
-            fragment.markerColor || '#333',
+            fragment.markerColor || tokens.color.secondary,
             renderMode
         );
     const readableName = noName

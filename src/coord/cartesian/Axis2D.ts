@@ -24,6 +24,7 @@ import CartesianAxisModel, { CartesianAxisPosition } from './AxisModel';
 import Grid from './Grid';
 import { OptionAxisType } from '../axisCommonTypes';
 import OrdinalScale from '../../scale/Ordinal';
+import type AxisBuilder from '../../component/axis/AxisBuilder';
 
 
 interface Axis2D {
@@ -65,6 +66,11 @@ class Axis2D extends Axis {
      * Injected outside.
      */
     grid: Grid;
+
+    /**
+     * Injected outside.
+     */
+    axisBuilder: AxisBuilder;
 
 
     constructor(

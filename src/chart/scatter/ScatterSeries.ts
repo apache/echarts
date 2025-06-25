@@ -41,6 +41,7 @@ import {
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
+import tokens from '../../visual/tokens';
 
 interface ScatterStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
@@ -82,7 +83,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
     static readonly type = 'series.scatter';
     type = ScatterSeriesModel.type;
 
-    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
+    static readonly dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar', 'matrix'];
 
     hasSymbolVisual = true;
 
@@ -151,7 +152,7 @@ class ScatterSeriesModel extends SeriesModel<ScatterSeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         },
 

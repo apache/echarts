@@ -34,8 +34,6 @@ import ParallelModel from '../../coord/parallel/ParallelModel';
 import { ParallelAxisLayoutInfo } from '../../coord/parallel/Parallel';
 
 
-const elementList = ['axisLine', 'axisTickLabel', 'axisName'];
-
 class ParallelAxisView extends ComponentView {
 
     static type = 'parallelAxis';
@@ -92,11 +90,11 @@ class ParallelAxisView extends ComponentView {
             axisLayout
         );
 
-        const axisBuilder = new AxisBuilder(axisModel, builderOpt);
+        const axisBuilder = new AxisBuilder(axisModel, api, builderOpt);
 
-        zrUtil.each(elementList, axisBuilder.add, axisBuilder);
+        axisBuilder.build();
 
-        this._axisGroup.add(axisBuilder.getGroup());
+        this._axisGroup.add(axisBuilder.group);
 
         this._refreshBrushController(
             builderOpt, areaSelectStyle, axisModel, coordSysModel, areaWidth, api

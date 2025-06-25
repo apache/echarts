@@ -20,18 +20,16 @@
 import { NumericAxisBaseOptionCommon } from './axisCommonTypes';
 import { getPrecisionSafe, round } from '../util/number';
 import IntervalScale from '../scale/Interval';
-import { getScaleExtent } from './axisHelper';
+import { getScaleExtent, retrieveAxisBreaksOption } from './axisHelper';
 import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
 import { warn } from '../util/log';
-import { increaseInterval, isValueNice } from '../scale/helper';
-
-const mathLog = Math.log;
+import { logTransform, increaseInterval, isValueNice } from '../scale/helper';
 
 
 export function alignScaleTicks(
     scale: IntervalScale | LogScale,
-    axisModel: AxisBaseModel<Pick<NumericAxisBaseOptionCommon, 'min' | 'max'>>,
+    axisModel: AxisBaseModel<Pick<NumericAxisBaseOptionCommon, 'min' | 'max' | 'breaks'>>,
     alignToScale: IntervalScale | LogScale
 ) {
 
@@ -42,7 +40,7 @@ export function alignScaleTicks(
     // So if we use the method of InternalScale to set/get these data.
     // It process the exponent value, which is linear and what we want here.
     const alignToTicks = intervalScaleProto.getTicks.call(alignToScale);
-    const alignToNicedTicks = intervalScaleProto.getTicks.call(alignToScale, true);
+    const alignToNicedTicks = intervalScaleProto.getTicks.call(alignToScale, {expandToNicedExtent: true});
     const alignToSplitNumber = alignToTicks.length - 1;
     const alignToInterval = intervalScaleProto.getInterval.call(alignToScale);
 
@@ -52,10 +50,9 @@ export function alignScaleTicks(
     const isMaxFixed = scaleExtent.fixMax;
 
     if (scale.type === 'log') {
-        const logBase = mathLog((scale as LogScale).base);
-        rawExtent = [mathLog(rawExtent[0]) / logBase, mathLog(rawExtent[1]) / logBase];
+        rawExtent = logTransform((scale as LogScale).base, rawExtent, true);
     }
-
+    scale.setBreaksFromOption(retrieveAxisBreaksOption(axisModel));
     scale.setExtent(rawExtent[0], rawExtent[1]);
     scale.calcNiceExtent({
         splitNumber: alignToSplitNumber,
@@ -134,8 +131,9 @@ export function alignScaleTicks(
         if (ticks[1]
             && (!isValueNice(interval) || getPrecisionSafe(ticks[1].value) > getPrecisionSafe(interval))) {
             warn(
-                // eslint-disable-next-line
-                `The ticks may be not readable when set min: ${axisModel.get('min')}, max: ${axisModel.get('max')} and alignTicks: true`
+                `The ticks may be not readable when set min: ${axisModel.get('min')}, max: ${axisModel.get('max')}`
+                + ` and alignTicks: true. (${axisModel.axis?.dim}AxisIndex: ${axisModel.componentIndex})`,
+                true
             );
         }
     }

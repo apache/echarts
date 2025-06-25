@@ -20,7 +20,9 @@
 import {getPrecision, round, nice, quantityExponent} from '../util/number';
 import IntervalScale from './Interval';
 import LogScale from './Log';
-import Scale from './Scale';
+import type Scale from './Scale';
+import { bind } from 'zrender/src/core/util';
+import type { ScaleBreakContext } from './break';
 
 type intervalScaleNiceTicksResult = {
     interval: number,
@@ -48,6 +50,7 @@ export function isIntervalOrLogScale(scale: Scale): scale is LogScale | Interval
  */
 export function intervalScaleNiceTicks(
     extent: [number, number],
+    spanWithBreaks: number,
     splitNumber: number,
     minInterval?: number,
     maxInterval?: number
@@ -55,8 +58,7 @@ export function intervalScaleNiceTicks(
 
     const result = {} as intervalScaleNiceTicksResult;
 
-    const span = extent[1] - extent[0];
-    let interval = result.interval = nice(span / splitNumber, true);
+    let interval = result.interval = nice(spanWithBreaks / splitNumber, true);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
     }
@@ -126,13 +128,48 @@ export function contain(val: number, extent: [number, number]): boolean {
     return val >= extent[0] && val <= extent[1];
 }
 
-export function normalize(val: number, extent: [number, number]): number {
+export class ScaleCalculator {
+
+    normalize: (val: number, extent: [number, number]) => number = normalize;
+    scale: (val: number, extent: [number, number]) => number = scale;
+
+    updateMethods(brkCtx: ScaleBreakContext) {
+        if (brkCtx.hasBreaks()) {
+            this.normalize = bind(brkCtx.normalize, brkCtx);
+            this.scale = bind(brkCtx.scale, brkCtx);
+        }
+        else {
+            this.normalize = normalize;
+            this.scale = scale;
+        }
+    }
+}
+
+function normalize(
+    val: number,
+    extent: [number, number],
+    // Dont use optional arguments for performance consideration here.
+): number {
     if (extent[1] === extent[0]) {
         return 0.5;
     }
     return (val - extent[0]) / (extent[1] - extent[0]);
 }
 
-export function scale(val: number, extent: [number, number]): number {
+function scale(
+    val: number,
+    extent: [number, number],
+): number {
     return val * (extent[1] - extent[0]) + extent[0];
+}
+
+export function logTransform(base: number, extent: number[], noClampNegative?: boolean): [number, number] {
+    const loggedBase = Math.log(base);
+    return [
+        // log(negative) is NaN, so safe guard here.
+        // PENDING: But even getting a -Infinity still does not make sense in extent.
+        //  Just keep it as is, getting a NaN to make some previous cases works by coincidence.
+        Math.log(noClampNegative ? extent[0] : Math.max(0, extent[0])) / loggedBase,
+        Math.log(noClampNegative ? extent[1] : Math.max(0, extent[1])) / loggedBase
+    ];
 }

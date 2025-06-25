@@ -51,11 +51,16 @@ import { makeInner } from '../util/model';
 import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/core/util';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
-import { prepareLayoutList, hideOverlap, shiftLayoutOnX, shiftLayoutOnY } from './labelLayoutHelper';
+import {
+    hideOverlap, shiftLayoutOnX, shiftLayoutOnY,
+    createLabelLayoutList,
+    LabelLayoutInfoRaw,
+    LABEL_LAYOUT_INFO_KIND_RAW,
+} from './labelLayoutHelper';
 import { labelInner, animateLabelValue } from './labelStyle';
 import { normalizeRadian } from 'zrender/src/contain/util';
 
-interface LabelDesc {
+interface LabelDesc extends LabelLayoutInfoRaw {
     label: ZRText
     labelLine: Polyline
 
@@ -65,8 +70,9 @@ interface LabelDesc {
     // Can be null if label doesn't represent any data.
     dataType?: SeriesDataType
 
-    layoutOption: LabelLayoutOptionCallback | LabelLayoutOption
-    computedLayoutOption: LabelLayoutOption
+    layoutOptionOrCb: LabelLayoutOptionCallback | LabelLayoutOption
+    // Computed (cb called) layout option.
+    layoutOption: LabelLayoutOption
 
     hostRect: RectLike
     rect: RectLike
@@ -199,7 +205,7 @@ class LabelManager {
         dataType: SeriesDataType | null | undefined,
         seriesModel: SeriesModel,
         label: ZRText,
-        layoutOption: LabelDesc['layoutOption']
+        layoutOptionOrCb: LabelDesc['layoutOptionOrCb']
     ) {
         const labelStyle = label.style;
         const hostEl = label.__hostTarget;
@@ -233,6 +239,7 @@ class LabelManager {
         const labelGuide = hostRect && host.getTextGuideLine();
 
         this._labelList.push({
+            kind: LABEL_LAYOUT_INFO_KIND_RAW,
             label,
             labelLine: labelGuide,
 
@@ -240,8 +247,8 @@ class LabelManager {
             dataIndex,
             dataType,
 
-            layoutOption,
-            computedLayoutOption: null,
+            layoutOptionOrCb,
+            layoutOption: null,
 
             rect: labelRect,
 
@@ -328,17 +335,17 @@ class LabelManager {
             const defaultLabelAttr = labelItem.defaultAttr;
             let layoutOption;
             // TODO A global layout option?
-            if (isFunction(labelItem.layoutOption)) {
-                layoutOption = labelItem.layoutOption(
+            if (isFunction(labelItem.layoutOptionOrCb)) {
+                layoutOption = labelItem.layoutOptionOrCb(
                     prepareLayoutCallbackParams(labelItem, hostEl)
                 );
             }
             else {
-                layoutOption = labelItem.layoutOption;
+                layoutOption = labelItem.layoutOptionOrCb;
             }
 
             layoutOption = layoutOption || {};
-            labelItem.computedLayoutOption = layoutOption;
+            labelItem.layoutOption = layoutOption;
 
             const degreeToRadian = Math.PI / 180;
             // TODO hostEl should always exists.
@@ -428,7 +435,7 @@ class LabelManager {
         const width = api.getWidth();
         const height = api.getHeight();
 
-        const labelList = prepareLayoutList(this._labelList);
+        const labelList = createLabelLayoutList(this._labelList);
         const labelsNeedsAdjustOnX = filter(labelList, function (item) {
             return item.layoutOption.moveOverlap === 'shiftX';
         });

@@ -90,26 +90,19 @@ export default {
     ) {
         // Layout result in each node:
         // {x, y, width, height, area, borderWidth}
-        const ecWidth = api.getWidth();
-        const ecHeight = api.getHeight();
         const seriesOption = seriesModel.option;
 
-        const layoutInfo = layout.getLayoutRect(
-            seriesModel.getBoxLayoutParams(),
-            {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }
-        );
+        const refContainer = layout.createBoxLayoutReference(seriesModel, api).refContainer;
+        const layoutInfo = layout.getLayoutRect(seriesModel.getBoxLayoutParams(), refContainer);
 
         const size = seriesOption.size || []; // Compatible with ec2.
         const containerWidth = parsePercent(
             retrieveValue(layoutInfo.width, size[0]),
-            ecWidth
+            refContainer.width
         );
         const containerHeight = parsePercent(
             retrieveValue(layoutInfo.height, size[1]),
-            ecHeight
+            refContainer.height
         );
 
         // Fetch payload info.
@@ -184,12 +177,12 @@ export default {
 
         seriesModel.setLayoutInfo(layoutInfo);
 
-        // FIXME
-        // 现在没有clip功能，暂时取ec高宽。
+        // FIXME: narrow down pruning boungding rect.
+        // Currently ec width/height is used becuases clip is not supported.
         prunning(
             treeRoot,
             // Transform to base element coordinate system.
-            new BoundingRect(-layoutInfo.x, -layoutInfo.y, ecWidth, ecHeight),
+            new BoundingRect(-layoutInfo.x, -layoutInfo.y, api.getWidth(), api.getHeight()),
             viewAbovePath,
             viewRoot,
             0

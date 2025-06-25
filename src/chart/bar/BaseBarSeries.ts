@@ -68,6 +68,11 @@ export interface BaseBarSeriesOption<StateOption, ExtraStateOption extends State
     barGap?: string | number
 
     /**
+     * @private
+     */
+    defaultBarGap?: string | number
+
+    /**
      * Gap between each category. Default to be 20%. can be an absolute pixel value.
      */
     barCategoryGap?: string | number
@@ -199,7 +204,9 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
         large: false,
         largeThreshold: 400,
         progressive: 3e3,
-        progressiveChunkMode: 'mod'
+        progressiveChunkMode: 'mod',
+
+        defaultBarGap: '10%'
     };
 }
 
