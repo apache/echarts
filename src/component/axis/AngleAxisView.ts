@@ -30,6 +30,7 @@ import AngleAxis from '../../coord/polar/AngleAxis';
 import { ZRTextAlign, ZRTextVerticalAlign, ColorString } from '../../util/types';
 import { getECData } from '../../util/innerStore';
 import OrdinalScale from '../../scale/Ordinal';
+import { AxisLabelBaseOptionNuance } from '../../coord/axisCommonTypes';
 
 const elementList = [
     'axisLine',
@@ -93,7 +94,7 @@ class AngleAxisView extends AxisView {
         const polar = angleAxis.polar;
         const radiusExtent = polar.getRadiusAxis().getExtent();
 
-        const ticksAngles = angleAxis.getTicksCoords();
+        const ticksAngles = angleAxis.getTicksCoords({breakTicks: 'none'});
         const minorTickAngles = angleAxis.getMinorTicksCoords();
 
         const labels = zrUtil.map(angleAxis.getViewLabels(), function (labelItem: TickLabel) {
@@ -267,12 +268,12 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                     labelModel = new Model(
                         rawCategoryItem.textStyle, commonLabelModel, commonLabelModel.ecModel
                     );
-                    }
+                }
             }
 
             const textEl = new graphic.Text({
                 silent: AxisBuilder.isLabelSilent(angleAxisModel),
-                style: createTextStyle(labelModel, {
+                style: createTextStyle<AxisLabelBaseOptionNuance>(labelModel, {
                     x: p[0],
                     y: p[1],
                     fill: labelModel.getTextColor()
@@ -283,6 +284,17 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 })
             });
             group.add(textEl);
+
+            graphic.setTooltipConfig({
+                el: textEl,
+                componentModel: angleAxisModel,
+                itemName: labelItem.formattedLabel,
+                formatterParamsExtra: {
+                    isTruncated: () => textEl.isTruncated,
+                    value: labelItem.rawLabel,
+                    tickIndex: idx
+                }
+            });
 
             // Pack data for mouse event
             if (triggerEvent) {

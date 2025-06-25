@@ -21,10 +21,16 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="lib/reset.css">
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+
     </head>
     <body>
         <style>
@@ -48,8 +54,7 @@ under the License.
         <h2>value axis | series.data: [x, x, ...]</h2>
         <div class="chart" id="main1"></div>
 
-        <h2>category axis | series.data: [y, y, ...]</h2>
-        <div class="chart" id="main2"></div>
+        <div id="main2"></div>
 
 
 
@@ -204,7 +209,7 @@ under the License.
                     data1.push(random(5));
                 }
 
-                chart.setOption({
+                var option = {
                     tooltip: {
                         trigger: 'axis'
                     },
@@ -233,7 +238,30 @@ under the License.
                         },
                         data: data1
                     }]
+                }
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'category axis | series.data: [y, y, ...]'
+                    ],
+                    option: option,
+                    inputs: [{
+                        type: 'select',
+                        text: 'singleAxis.axisLabel.rotate:',
+                        options: [
+                            {value: undefined},
+                            {input: {type: 'range', min: -100, max: 100, value: 0}}
+                        ],
+                        onchange: function () {
+                            chart.setOption({
+                                singleAxis: {
+                                    axisLabel: {rotate: this.value}
+                                }
+                            });
+                        }
+                    }]
                 });
+
             });
 
         </script>

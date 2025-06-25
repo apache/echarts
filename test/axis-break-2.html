@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main_gap_percent_break_1"></div>
+        <div id="main_gap_percent_break_2"></div>
+
+        <div id="main_xNumber_yNumber_axis"></div>
+        <div id="main_xTime_yNumber_axis"></div>
+        <div id="main_xCategory_yNumber_axis"></div>
+        <div id="main_xNumber_yCategory_axis"></div>
+
+        <div id="main_break_line_style"></div>
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+            var XAXIS_NAME_GAP = -190;
+            var caseList = [{
+                xAxisName: 'Brk area should be 50% of yAxis',
+                breaks: [{start: 0, end: 300, gap: '50%'}],
+            }, {
+                xAxisName: 'Brk area should be 50% of yAxis',
+                breaks: [{start: 10000, end: 10300, gap: '50%'}],
+            }, {
+                xAxisName: 'Brk area should be 80% of yAxis',
+                breaks: [{start: 0, end: 300, gap: '80%'}],
+            }, {
+                xAxisName: 'Brk gap should be 0, as a polyline',
+                breaks: [{start: 10000, end: 10300, gap: '0%'}],
+            }, {
+                xAxisName: 'Brk areas should be 30%, 20%',
+                breaks: [
+                    {start: 18000, end: 19000, gap: '30%'},
+                    {start: 19000, end: 20000, gap: '20%'},
+                ],
+            }, {
+                xAxisName: 'Brk areas should be 40%, 10000, 10%',
+                breaks: [
+                    {start: 17000, end: 18000, gap: '40%'},
+                    {start: 18000, end: 19000, gap: 10000},
+                    {start: 19000, end: 20000, gap: '10%'},
+                ],
+            }];
+
+            option = {
+                tooltip: {
+                },
+                xAxis: (function createXAxis() {
+                    var xAxisOptionList = [];
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        xAxisOptionList.push({
+                            gridIndex: idx,
+                            data: ['a', 'b'],
+                            nameGap: XAXIS_NAME_GAP,
+                            nameLocation: 'center',
+                            name: caseList[idx].xAxisName,
+                        });
+                    }
+                    return xAxisOptionList;
+                })(),
+                yAxis: (function createYAxis() {
+                    var yAxisOptionList = [];
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        yAxisOptionList.push({
+                            gridIndex: idx,
+                            axisTick: {show: true},
+                            breaks: caseList[idx].breaks,
+                        });
+                    }
+                    return yAxisOptionList;
+                })(),
+                grid: (function createGridOption() {
+                    var gridOptionList = []
+                    var gridColMax = 3;
+                    var gridWidth = '20%';
+                    var gridHGap = '8%';
+                    var gridTopBase = 90;
+                    var gridLineHeight = 240;
+                    var gridLeftBase = '8%';
+                    var gridHeight = 150;
+                    var gridMaxInOneLine = 3;
+
+                    var currGridLineNumber = 0;
+                    var currGridLeft = gridLeftBase;
+
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        gridOptionList.push({
+                            left: currGridLeft,
+                            top: gridTopBase + gridLineHeight * currGridLineNumber,
+                            width: gridWidth,
+                            height: gridHeight,
+                            show: true,
+                            backgroundColor: 'rgba(0,0,0,0.1)'
+                        });
+                        currGridLeft = (parseFloat(currGridLeft) + parseFloat(gridHGap) + parseFloat(gridWidth)) + '%';
+                        if ((idx + 1) % gridMaxInOneLine === 0) {
+                            currGridLineNumber++;
+                            currGridLeft = gridLeftBase;
+                        }
+                    }
+                    return gridOptionList;
+                })(),
+                legend: {
+                    data: ['s2']
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                series: (function makeSeries() {
+                    function create() {
+                        return {
+                            type: 'bar',
+                            name: 's2',
+                            data: [300, 20000],
+                            label: { show: true, position: 'top' }
+                        };
+                    }
+                    var seriesOptionList = [];
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        var seriesOption = create();
+                        seriesOption.xAxisIndex = idx;
+                        seriesOption.yAxisIndex = idx;
+                        seriesOptionList.push(seriesOption);
+                    }
+                    return seriesOptionList;
+                })()
+            };
+
+            var chart = testHelper.create(echarts, 'main_gap_percent_break_1', {
+                title: [
+                    'break gap is percent',
+                ],
+                option: option,
+                height: 550
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var option;
+            var XAXIS_NAME_GAP = -190;
+            var caseList = [{
+                xAxisName: [
+                    'Brk area should be 50% of yAxis',
+                    'dataZoom hide break smoothly'
+                ].join('\n'),
+                breaks: [{start: 10000, end: 10300, gap: '50%'}],
+                dataZoomStartValue: 5400,
+                dataZoomEndValue: 12800,
+            }, {
+                xAxisName: [
+                    'Brk area should be 10%, 40% of yAxis',
+                    'dataZoom gap width should be consistent',
+                ].join('\n'),
+                breaks: [
+                    {start: 4234, end: 7000, gap: '10%'},
+                    {start: 11234, end: 13000, gap: '40%'},
+                ],
+                dataZoomStart: 0,
+                dataZoomEnd: 50,
+            }, {
+                xAxisName: [
+                    'Brk area should be 10%, 5000, 10% of yAxis',
+                    'dataZoom percent gap width should be consistent',
+                ].join('\n'),
+                breaks: [
+                    {start: 4234, end: 7000, gap: '10%'},
+                    {start: 8234, end: 10000, gap: 10000},
+                    {start: 11234, end: 13000, gap: '10%'},
+                ],
+                dataZoomStart: 0,
+                dataZoomEnd: 50,
+            }];
+
+            var gridColMax = 3;
+            var gridWidth = '30%';
+            var gridHGap = '18%';
+            var gridTopBase = 90;
+            var gridLineHeight = 240;
+            var gridLeftBase = '8%';
+            var gridHeight = 150;
+            var gridMaxInOneLine = 2;
+
+            option = {
+                tooltip: {
+                },
+                xAxis: (function createXAxis() {
+                    var xAxisOptionList = [];
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        xAxisOptionList.push({
+                            gridIndex: idx,
+                            data: ['a', 'b', 'c'],
+                            nameGap: XAXIS_NAME_GAP,
+                            nameLocation: 'center',
+                            name: caseList[idx].xAxisName,
+                        });
+                    }
+                    return xAxisOptionList;
+                })(),
+                yAxis: (function createYAxis() {
+                    var yAxisOptionList = [];
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        yAxisOptionList.push({
+                            gridIndex: idx,
+                            axisTick: {show: true},
+                            breaks: caseList[idx].breaks,
+                            breakArea: {
+                                zigzagAmplitude: 2,
+                                itemStyle: {color: 'red', opacity: 0.1}
+                            }
+                        });
+                    }
+                    return yAxisOptionList;
+                })(),
+                grid: (function createGridOption() {
+                    var gridOptionList = []
+                    var currGridLineNumber = 0;
+                    var currGridLeft = gridLeftBase;
+
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        gridOptionList.push({
+                            left: currGridLeft,
+                            top: gridTopBase + gridLineHeight * currGridLineNumber,
+                            width: gridWidth,
+                            height: gridHeight,
+                            show: true,
+                            backgroundColor: 'rgba(0,0,0,0.1)'
+                        });
+                        currGridLeft = (
+                            parseFloat(currGridLeft) + parseFloat(gridHGap) + parseFloat(gridWidth)
+                        ) + '%';
+                        if ((idx + 1) % gridMaxInOneLine === 0) {
+                            currGridLineNumber++;
+                            currGridLeft = gridLeftBase;
+                        }
+                    }
+                    return gridOptionList;
+                })(),
+                dataZoom: (function createDataZoom() {
+                    var dataZoomOptionList = [];
+                    var currGridLineNumber = 0;
+                    var currGridLeft = gridLeftBase;
+
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        dataZoomOptionList.push({
+                            type: 'slider',
+                            yAxisIndex: idx,
+                            startValue: caseList[idx].dataZoomStartValue,
+                            endValue: caseList[idx].dataZoomEndValue,
+                            left: (parseFloat(currGridLeft) + parseFloat(gridWidth)) + '%'
+                        });
+                        currGridLeft = (
+                            parseFloat(currGridLeft) + parseFloat(gridHGap) + parseFloat(gridWidth)
+                        ) + '%';
+                        if ((idx + 1) % gridMaxInOneLine === 0) {
+                            currGridLineNumber++;
+                            currGridLeft = gridLeftBase;
+                        }
+                    }
+                    return dataZoomOptionList;
+                })(),
+                legend: {
+                    data: ['s1', 's2']
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                series: (function makeSeries() {
+                    var seriesOptionList = [];
+                    for (var idx = 0; idx < caseList.length; idx++) {
+                        var seriesOpts = [{
+                            type: 'bar',
+                            name: 's1',
+                            data: [300, 12000, 40000],
+                            label: { show: true, position: 'top' }
+                        }, {
+                            type: 'scatter',
+                            name: 's2',
+                            data: [7000, 15000, 9000],
+                            label: { show: true, position: 'top' }
+                        }];
+                        for (var jdx = 0; jdx < seriesOpts.length; jdx++) {
+                            seriesOpts[jdx].xAxisIndex = idx;
+                            seriesOpts[jdx].yAxisIndex = idx;
+                            seriesOptionList.push(seriesOpts[jdx]);
+                        }
+                    }
+                    return seriesOptionList;
+                })()
+            };
+
+            var chart = testHelper.create(echarts, 'main_gap_percent_break_2', {
+                title: [
+                    'break gap is percent',
+                    'Use legend to hide s1, break height should be consistent'
+                ],
+                option: option,
+                height: 900
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var _gridShow = [true, true, true];
+            // var _gridShow = [true, false, false];
+
+            function xMakeBreaks() {
+                return [{
+                    end: 34209000 + BASE_DATE,
+                    start: 35801000 + BASE_DATE,
+                    gap: 0
+                }, {
+                    end: 3123456 + BASE_DATE,
+                    start: 3023456 + BASE_DATE,
+                    // gap: 50000000
+                    gap: '5%'
+                }];
+            }
+            function yMakeBreaks() {
+                return [{
+                    end: 1800,
+                    start: 1500,
+                    gap: 0
+                }, {
+                    end: 900,
+                    start: 600,
+                    gap: '5%'
+                }];
+            }
+
+            var BASE_DATE = 1740824305347;
+            var X_LABEL_ROTATE = 50;
+            var Y_LABEL_ROTATE = 0;
+            var XAXIS_NAME_GAP = -190;
+
+            var FORMATTER_ONE_LINE = (value, idx, params) => {
+                var dateStr = echarts.time.format(value, '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss}');
+                if (params && params.break) {
+                    return `${dateStr} (${params.break.type})`;
+                }
+                return `${dateStr}`;
+            };
+
+            var option = {
+                tooltip: {
+                },
+                yAxis: (function () {
+                    var list = [];
+                    var idx = 0;
+                    var gridIndex = 0;
+                    _gridShow[idx++] && list.push({
+                        gridIndex: gridIndex++,
+                        axisLine: {
+                            show: true,
+                        },
+                        axisLabel: {
+                            rotate: Y_LABEL_ROTATE,
+                        },
+                        breaks: yMakeBreaks(),
+                        breakArea: {
+                            itemStyle: {
+                                borderType: 'solid',
+                            }
+                        },
+                    });
+                    _gridShow[idx++] && list.push({
+                        gridIndex: gridIndex++,
+                        axisLine: {
+                            show: true,
+                            lineStyle: {
+                                color: 'blue'
+                            }
+                        },
+                        axisTick: {
+                            show: true,
+                        },
+                        axisLabel: {
+                            rotate: Y_LABEL_ROTATE,
+                        },
+                        breaks: yMakeBreaks(),
+                    });
+                    _gridShow[idx++] && list.push({
+                        gridIndex: gridIndex++,
+                        axisLine: {
+                            show: true,
+                            breakLine: false,
+                        },
+                        axisLabel: {
+                            rotate: Y_LABEL_ROTATE,
+                        },
+                        breaks: yMakeBreaks(),
+                    });
+                    return list;
+                })(),
+                xAxis: (function () {
+                    var list = [];
+                    var idx = 0;
+                    var gridIndex = 0;
+                    _gridShow[idx++] && list.push({
+                        id: 'x0',
+                        type: 'time',
+                        gridIndex: gridIndex++,
+                        name: [
+                            'axisTick.show: false',
+                            'axis line should break'
+                        ].join('\n'),
+                        nameLocation: 'center',
+                        nameGap: XAXIS_NAME_GAP,
+                        breaks: xMakeBreaks(),
+                        splitLine: {
+                            show: true,
+                        },
+                        axisTick: {
+                            show: false,
+                        },
+                        breakArea: {
+                            zigzagAmplitude: 2,
+                        },
+                        axisLabel: {
+                            // hideOverlap: true,
+                            showMaxLabel: true,
+                            showMinLabel: true,
+                            rotate: X_LABEL_ROTATE
+                        }
+                    });
+                    _gridShow[idx++] && list.push({
+                        id: 'x1',
+                        type: 'time',
+                        gridIndex: gridIndex++,
+                        name: [
+                            'axisTick: show true',
+                            'axis line should break, colored. Break tick should display'
+                        ].join('\n'),
+                        nameLocation: 'center',
+                        nameGap: XAXIS_NAME_GAP,
+                        splitLine: {
+                            show: true,
+                        },
+                        axisTick: {
+                            show: true,
+                        },
+                        axisLine: {
+                            lineStyle: {
+                                color: 'red'
+                            }
+                        },
+                        breaks: xMakeBreaks(),
+                        breakArea: {
+                            zigzagAmplitude: 2,
+                            itemStyle: {
+                                borderType: 'solid',
+                            }
+                        },
+                        axisLabel: {
+                            // hideOverlap: true,
+                            showMaxLabel: true,
+                            showMinLabel: true,
+                            rotate: X_LABEL_ROTATE,
+                            formatter: FORMATTER_ONE_LINE
+                        }
+                    });
+                    _gridShow[idx++] && list.push({
+                        id: 'x2',
+                        type: 'time',
+                        gridIndex: gridIndex++,
+                        name: 'axisLine.breakLine: false',
+                        nameLocation: 'center',
+                        nameGap: XAXIS_NAME_GAP,
+                        splitLine: {
+                            show: true,
+                        },
+                        axisTick: {
+                            show: true,
+                        },
+                        axisLabel: {
+                            // hideOverlap: true,
+                            showMaxLabel: true,
+                            showMinLabel: true,
+                            rotate: X_LABEL_ROTATE,
+                        },
+                        breaks: xMakeBreaks(),
+                        breakLine: {
+                            show: false,
+                        }
+                    });
+                    return list;
+                })(),
+                dataZoom: (function () {
+                    var indexList = [];
+                    var idx = 0;
+                    _gridShow.forEach(function (show) { indexList.push(idx++); });
+                    return [{
+                        type: 'slider',
+                        xAxisIndex: indexList.slice(),
+                    }, {
+                        type: 'slider',
+                        right: 20,
+                        yAxisIndex: indexList.slice(),
+                    }];
+                })(),
+                legend: {
+                    data: ['s2', 's3', 's4'],
+                    selected: {
+                        // 's2': false,
+                        's4': false,
+                    },
+                },
+                grid: (function () {
+                    var list = [];
+                    var idx = 0;
+                    _gridShow[idx++] && list.push({
+                        top: 50,
+                        left: 50,
+                        width: '35%',
+                        height: '25%',
+                        borderWidth: 0,
+                    });
+                    _gridShow[idx++] && list.push({
+                        top: 50,
+                        right: 70,
+                        width: '35%',
+                        height: '25%',
+                        borderWidth: 0,
+                    });
+                    _gridShow[idx++] && list.push({
+                        left: 50,
+                        width: '35%',
+                        height: '25%',
+                        bottom: 120,
+                        borderWidth: 0,
+                    });
+                    return list;
+                })(),
+                tooltip: {
+                    trigger: 'axis'
+                },
+                series: (function makeSeries() {
+                    const createSeries = () => [{
+                        type: 'scatter',
+                        name: 's2',
+                        data: [
+                            [-80002000 + BASE_DATE, 1300],
+                            [100003000 + BASE_DATE, 2000]
+                        ],
+                        label: {
+                            show: true
+                        }
+                    }, {
+                        type: 'scatter',
+                        name: 's3',
+                        data: [
+                            [2004000 + BASE_DATE, 1300],
+                            [5005000 + BASE_DATE, 2000]
+                        ],
+                        label: {
+                            show: true
+                        }
+                    }, {
+                        type: 'scatter',
+                        name: 's4',
+                        data: [
+                            [-189106000 + BASE_DATE, 1300],
+                            [312307000 + BASE_DATE, 2000]
+                        ],
+                        label: {
+                            show: true
+                        }
+                    }];
+                    const list = [];
+                    var gridIndex = 0;
+                    _gridShow.forEach((show) => {
+                        show && (createSeries().forEach(seriesOption => {
+                            seriesOption.xAxisIndex = gridIndex;
+                            seriesOption.yAxisIndex = gridIndex;
+                            list.push(seriesOption);
+                        }), gridIndex++);
+                    })
+                    return list;
+                })()
+            };
+
+            var chart = testHelper.create(echarts, 'main_break_line_style', {
+                title: [
+                    'axis break line style.',
+                    'axis break tick animation should be smooth.',
+                ],
+                option: option,
+                height: 600,
+                buttons: [{
+                    text: 'hideOverlap:',
+                    type: 'select',
+                    values: [true, false],
+                    onchange: function () {
+                        var value = this.value;
+                        var list = [];
+                        _gridShow.forEach(show => {
+                            show && list.push({ axisLabel: {hideOverlap: value} });
+                        });
+                        chart.setOption({
+                            xAxis: list
+                        });
+                    }
+                }]
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var GRID_SIZE = {
+                left: 80,
+                right: 80,
+                top: 50,
+                bottom: 110,
+            };
+
+            var option;
+            function makeXBreaks(isExpanded) {
+                return [{
+                    start: 200,
+                    end: 230000,
+                    gap: 1000,
+                    isExpanded: isExpanded,
+                }];
+            }
+            function makeYBreaks(isExpanded) {
+                return [{
+                    start: 200,
+                    end: 280000,
+                    gap: 100,
+                    isExpanded: isExpanded,
+                }];
+            }
+
+            option = {
+                tooltip: {
+                },
+                yAxis: {
+                    axisLine: {
+                        show: true,
+                        onZero: false,
+                    },
+                    axisTick: {
+                        show: true
+                    },
+                    axisLabel: {
+                        hideOverlap: false,
+                    },
+                    breaks: makeYBreaks(false),
+                    breakArea: {
+                        itemStyle: {borderType: 'solid'}
+                    },
+                },
+                xAxis: {
+                    triggerEvent: true,
+                    axisTick: {
+                        show: true
+                    },
+                    axisLabel: {
+                        hideOverlap: false,
+                        show: true,
+                    },
+                    axisLine: {
+                        show: true,
+                        onZero: false,
+                    },
+                    breaks: makeXBreaks(false),
+                    breakArea: {
+                        itemStyle: {borderType: 'solid'}
+                    },
+                },
+                grid: {
+                    left: GRID_SIZE.left,
+                    right: GRID_SIZE.right,
+                    top: GRID_SIZE.top,
+                    bottom: GRID_SIZE.bottom,
+                },
+                dataZoom: [{
+                    type: 'slider',
+                    xAxisIndex: 0,
+                    bottom: 20,
+                }, {
+                    type: 'inside',
+                    xAxisIndex: 0,
+                }, {
+                    type: 'slider',
+                    yAxisIndex: 0,
+                    right: 20,
+                }],
+                legend: {
+                    data: ['s2']
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                series: [{
+                    type: 'scatter',
+                    name: 's2',
+                    symbolSize: 20,
+                    data: [
+                        [-1500, 10000],
+                        [-200000, 290000],
+                        [8008, 20000],
+                        [-30000, -50000],
+                        [100200, 3000],
+                        [700435, 300000],
+                        [700800, 4000]
+                    ],
+                    label: {
+                        show: true,
+                        position: 'top',
+                        textStyle: {
+                            fontSize: 10,
+                        },
+                    },
+                }]
+            };
+
+            function brkStr(breakOptionList, idx) {
+                var txt = [];
+                breakOptionList.forEach(function (item) {
+                    txt.push(item.start + '~' + item.end);
+                });
+                return txt.length ? txt.join(',') : 'none';
+            }
+
+            var chart = testHelper.create(echarts, 'main_xNumber_yNumber_axis', {
+                title: [
+                    '- xAxis with breaks: ' + brkStr(makeXBreaks()),
+                    '- yAxis with breaks: ' + brkStr(makeYBreaks()),
+                    '- break pair should be centered to break ticks when **labels length differ significantly**.',
+                    '- break labels should neight overlap nor join (**test different gap size**)',
+                    '- Negative breaks should work correctly.',
+                    '- **rotate Y labels to 90**, should be correct.',
+                    '- rotate X labels, should be correct.',
+                    '- **Inverse axis**, should be correct.',
+                    '- Click the legend to remove all series, expect only axis drawn.'
+                ],
+                option: option,
+                width: 700,
+                height: 400,
+                draggable: true,
+                inputsHeight: 119.5,
+                inputs: [{
+                    text: 'reset X breaks',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'collapseAxisBreak',
+                            xAxisIndex: 0,
+                            breaks: makeXBreaks(false)
+                        });
+                    }
+                }, {
+                    text: 'reset Y breaks',
+                    onclick: function () {
+                        chart.dispatchAction({
+                            type: 'collapseAxisBreak',
+                            yAxisIndex: 0,
+                            breaks: makeYBreaks(false)
+                        });
+                    }
+                }, {
+                    text: 'x inverse:',
+                    type: 'select',
+                    values: [false, true],
+                    onchange: function () {
+                        chart.setOption({xAxis: {inverse: this.value}});
+                    }
+                }, {
+                    text: 'y inverse:',
+                    type: 'select',
+                    values: [false, true],
+                    onchange: function () {
+                        chart.setOption({yAxis: {inverse: this.value}});
+                    }
+                }, {
+                    text: 'axisLabel.hideOverlap:',
+                    type: 'select',
+                    values: [false, true],
+                    onchange: function () {
+                        var value = this.value;
+                        chart.setOption({
+                            xAxis: {axisLabel: {hideOverlap: value}},
+                            yAxis: {axisLabel: {hideOverlap: value}},
+                        });
+                    }
+                }, {
+                    type: 'br'
+                }, {
+                    text: 'xAxis.axisLabel.rotate',
+                    type: 'select',
+                    options: [
+                        {value: undefined},
+                        {text: 'range', input: {
+                            type: 'range',
+                            noDeltaButtons: true,
+                            value: 0,
+                            min: -100,
+                            max: 100,
+                        }}
+                    ],
+                    onchange: function () {
+                        chart.setOption({xAxis: {axisLabel: {rotate: this.value}}});
+                    }
+                }, {
+                    text: 'yAxis.axisLabel.rotate',
+                    type: 'select',
+                    options: [
+                        {value: undefined},
+                        {text: 'range', input: {
+                            type: 'range',
+                            noDeltaButtons: true,
+                            value: 0,
+                            min: -100,
+                            max: 100,
+                        }}
+                    ],
+                    onchange: function () {
+                        chart.setOption({yAxis: {axisLabel: {rotate: this.value}}});
+                    }
+                }, {
+                    type: 'br'
+                }, {
+                    text: 'containLabel:',
+                    type: 'select',
+                    options: [
+                        {text: 'false', value: false},
+                        {text: 'true(should in green rect)', value: true}
+                    ],
+                    onchange: function () {
+                        if (!chart.__containLabelRect) {
+                            chart.__containLabelRect = new echarts.graphic.Rect({
+                                style: {
+                                    fill: 'green',
+                                    opacity: 0.1,
+                                },
+                                z: -10000,
+                            });
+                            chart.getZr().add(chart.__containLabelRect);
+                        }
+                        updateContainLabelCriterion(chart);
+
+                        chart.__containLabelRect.ignore = !this.value;
+
+                        chart.setOption({
+                            grid: {containLabel: this.value},
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'label margin:',
+                    values: [undefined, 30, [2, 20]],
+                    onchange: function () {
+                        chart.setOption({
+                            xAxis: {axisLabel: {textMargin: this.value}},
+                            yAxis: {axisLabel: {textMargin: this.value}},
+                        });
+                    }
+                }]
+            });
+
+            function updateContainLabelCriterion(chart) {
+                if (chart.__containLabelRect) {
+                    var width = chart.getWidth();
+                    var height = chart.getHeight();
+                    chart.__containLabelRect.setShape({
+                        x: GRID_SIZE.left,
+                        width: width - GRID_SIZE.left - GRID_SIZE.right,
+                        y: GRID_SIZE.top,
+                        height: height - GRID_SIZE.top - GRID_SIZE.bottom,
+                    });
+                }
+            }
+
+            if (chart) {
+                chart.on('resize', function () {
+                    updateContainLabelCriterion(chart);
+                });
+                chart.on('axisbreakchanged', function (params) {
+                    console.log('axisbreakchanged', params);
+                });
+            }
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var _gridShow = [true, true];
+            // var _gridShow = [true, false];
+
+            var BASE_DATE = 1740824305347;
+            var ROUND_LEVELS = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond'];
+            var X_LABEL_ROTATE = 30;
+            var Y_LABEL_ROTATE = 0;
+            var XAXIS_NAME_GAP = -130;
+            var useUTC = false;
+
+            var _curr = {
+                roundLevel: {
+                    breakStart: 'millisecond',
+                    breakEnd: 'second',
+                },
+                timeDataRange: 'hour',
+            };
+
+            function xMakeBreaksAndData() {
+                if (ROUND_LEVELS.indexOf(_curr.roundLevel.breakStart) < 0
+                    || ROUND_LEVELS.indexOf(_curr.roundLevel.breakEnd) < 0
+                ) {
+                    throw new Error();
+                }
+                var timeDataRange = _curr.timeDataRange;
+
+                function roundTimeStart(val) {
+                    return echarts.time.roundTime(new Date(val), _curr.roundLevel.breakStart, useUTC).getTime();
+                }
+                function roundTimeEnd(val) {
+                    return echarts.time.roundTime(new Date(val), _curr.roundLevel.breakEnd, useUTC).getTime();
+                }
+                function make(brkEndStartSpan) {
+                    var start0seed = 35801123 + BASE_DATE;
+                    var breaks = [];
+                    breaks[0] = {
+                        start: roundTimeStart(start0seed),
+                        end: roundTimeEnd(start0seed + brkEndStartSpan),
+                        gap: brkEndStartSpan / 8,
+                    };
+                    var brk1StartSeed = start0seed + 5.6 * brkEndStartSpan;
+                    breaks[1] = {
+                        start: roundTimeStart(brk1StartSeed),
+                        end: roundTimeEnd(brk1StartSeed + 50 * brkEndStartSpan),
+                        gap: '5%'
+                    };
+                    var brkMin = Math.min(breaks[0].start, breaks[1].start);
+                    var brkMax = Math.max(breaks[0].end, breaks[1].end);
+                    var seriesData = [[
+                        [brkMin - brkEndStartSpan * 5, 1000],
+                        [(brkMin + brkMax) / 2, 1500],
+                        [brkMax + brkEndStartSpan * 10, 2000]
+                    ], [
+                        [breaks[0].start, 1000],
+                        [breaks[0].end, 1500],
+                        [breaks[1].start, 1000],
+                        [breaks[1].end, 1500]
+                    ], [
+                        [brkMin - brkEndStartSpan * 55, 1000],
+                        [brkMax + brkEndStartSpan * 55, 2000]
+                    ]];
+                    return {breaks: breaks, seriesData: seriesData};
+                }
+
+                if (timeDataRange === 'ms') {
+                    return make(84080);
+                }
+                if (timeDataRange === 'second') {
+                    return make(8408000);
+                }
+                else if (timeDataRange === 'hour') {
+                    return make(4765432);
+                }
+                else if (timeDataRange === 'day') {
+                    return make(98408123);
+                }
+                else if (timeDataRange === 'month') {
+                    return make(3196800000);
+                }
+                else if (timeDataRange === 'year') {
+                    return make(32140800000);
+                }
+                else {
+                    throw new Error('illegal range');
+                }
+            }
+
+            function yMakeBreaks() {
+                return [{
+                    end: 1800,
+                    start: 1500,
+                    gap: 0
+                }, {
+                    end: 900,
+                    start: 600,
+                    gap: '5%'
+                }];
+            }
+
+            var FORMATTER_ONE_LINE = (value, idx, params) => {
+                var dateStr = echarts.time.format(value, '{yyyy}-{MM}-{dd} {hh}:{mm}:{ss}');
+                if (params && params.break) {
+                    return `${dateStr} (${params.break.type})`;
+                }
+                return `${dateStr}`;
+            };
+            var FORMATTER_TWO_LINE = (value, idx, params) => {
+                var dateStr = echarts.time.format(value, '{yyyy}-{MM}-{dd}\n{hh}:{mm}:{ss}');
+                if (params && params.break) {
+                    return `(${params.break.type}) ${dateStr}`;
+                }
+                return `${dateStr}`;
+            };
+
+            var generatedData = xMakeBreaksAndData();
+            var option = {
+                yAxis: (function () {
+                    var list = [];
+                    var idx = 0;
+                    var gridIndex = 0;
+                    _gridShow[idx++] && list.push({
+                        id: 'y_number_breaks',
+                        gridIndex: gridIndex++,
+                        axisLabel: {
+                            rotate: Y_LABEL_ROTATE,
+                        },
+                        breaks: yMakeBreaks()
+                    });
+                    _gridShow[idx++] && list.push({
+                        gridIndex: gridIndex++,
+                        axisLabel: {
+                            rotate: Y_LABEL_ROTATE,
+                        },
+                    });
+                    return list;
+                })(),
+                xAxis: (function () {
+                    var list = [];
+                    var idx = 0;
+                    var gridIndex = 0;
+                    _gridShow[idx++] && list.push({
+                        id: 'x_time_breaks',
+                        type: 'time',
+                        gridIndex: gridIndex++,
+                        name: 'Has axisLabel.formatter',
+                        nameLocation: 'center',
+                        nameGap: XAXIS_NAME_GAP,
+                        splitLine: {
+                            show: true,
+                        },
+                        axisTick: {
+                            show: true,
+                        },
+                        breaks: generatedData.breaks,
+                        breakArea: {
+                            zigzagAmplitude: 2,
+                            itemStyle: {
+                                borderType: 'solid',
+                                color: '#ccc',
+                            }
+                        },
+                        axisLabel: {
+                            rotate: X_LABEL_ROTATE,
+                            hideOverlap: false,
+                        },
+                    });
+                    _gridShow[idx++] && list.push({
+                        id: 'x_criterion',
+                        type: 'time',
+                        gridIndex: gridIndex++,
+                        name: 'No breaks (criterion)',
+                        nameLocation: 'center',
+                        nameGap: XAXIS_NAME_GAP,
+                        splitLine: {
+                            show: true,
+                        },
+                        axisTick: {
+                            show: true,
+                        },
+                        axisLabel: {
+                            rotate: X_LABEL_ROTATE,
+                            hideOverlap: false,
+                        }
+                    });
+                    return list;
+                })(),
+                dataZoom: (function () {
+                    var indexList = [];
+                    var idx = 0;
+                    _gridShow.forEach(function (show) { indexList.push(idx++); });
+                    return [{
+                        type: 'slider',
+                        xAxisIndex: indexList.slice(),
+                    }, {
+                        type: 'slider',
+                        right: 20,
+                        yAxisIndex: indexList.slice(),
+                    }, {
+                        type: 'inside',
+                        xAxisIndex: indexList.slice(),
+                    }];
+                })(),
+                legend: {
+                    left: 20,
+                    selected: {
+                        's2': false,
+                    },
+                },
+                grid: (function () {
+                    var list = [];
+                    var idx = 0;
+                    _gridShow[idx++] && list.push({
+                        left: 90,
+                        top: 50,
+                        right: 70,
+                        height: '20%',
+                        borderWidth: 0,
+                    });
+                    _gridShow[idx++] && list.push({
+                        left: 90,
+                        right: 70,
+                        height: '20%',
+                        bottom: 120,
+                        borderWidth: 0,
+                    });
+                    return list;
+                })(),
+                tooltip: {
+                    trigger: 'axis',
+                },
+                series: (function makeSeries() {
+                    const createSeries = () => generatedData.seriesData.map((data, idx) => ({
+                        type: 'scatter',
+                        name: 's' + idx,
+                        data: data,
+                        label: {
+                            show: true
+                        }
+                    }));
+                    let list = [];
+                    var gridIndex = 0;
+                    _gridShow.forEach((show) => {
+                        if (!show) { return; }
+                        var seriesOptionList = generatedData.seriesData.map((data, idx) => ({
+                            type: 'scatter',
+                            name: 's' + idx,
+                            data: data,
+                            xAxisIndex: gridIndex,
+                            yAxisIndex: gridIndex,
+                            label: {
+                                show: true
+                            }
+                        }));
+                        gridIndex++;
+                        list = list.concat(seriesOptionList);
+                    });
+                    return list;
+                })()
+            };
+
+            var chart = testHelper.create(echarts, 'main_xTime_yNumber_axis', {
+                title: [
+                    'x: time axis, y: number axis.',
+                    '- The default formatter should:',
+                    '   - be consistent between break and normal labels.',
+                    '   - **have adequate time info**(change time level by select & zoom).',
+                    '- Should not overlap as much as possible.',
+                    '   - **rotate axis labels**, check break ends label overlap adjusting.',
+                    '   - test **axisLable.rotate is 0**.',
+                    '- **inverse axis** should be correct.'
+                ],
+                option: option,
+                width: 700,
+                height: 450,
+                draggable: true,
+                buttons: function (chart) {
+                    var charOption = chart.getOption();
+
+                    function updateDataAndXBreaks() {
+                        var generatedData = xMakeBreaksAndData();
+                        chart.setOption({
+                            xAxis: {
+                                id: 'x_time_breaks',
+                                breaks: generatedData.breaks,
+                            },
+                            series: _gridShow.reduce((list, show) => {
+                                if (show) {
+                                    list = list.concat(generatedData.seriesData.map(data => ({data: data})));
+                                }
+                                return list;
+                            }, [])
+                        });
+                    }
+
+                    return [{
+                        text: 'reset breaks expand',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'collapseAxisBreak',
+                                batch: [{
+                                    xAxisId: 'x_time_breaks',
+                                    breaks: xMakeBreaksAndData().breaks,
+                                }, {
+                                    yAxisId: 'y_number_breaks',
+                                    breaks: yMakeBreaks()
+                                }],
+                            });
+                        }
+                    }, {
+                        text: 'axis.inverse:',
+                        type: 'select',
+                        values: [false, true],
+                        onchange: function () {
+                            var value = this.value;
+                            var xAxis = [];
+                            var yAxis = [];
+                            _gridShow.forEach(show => {
+                                if (show) {
+                                    xAxis.push({ inverse: value });
+                                    yAxis.push({ inverse: value });
+                                }
+                            });
+                            chart.setOption({
+                                xAxis: xAxis,
+                                yAxis: yAxis,
+                            });
+                        }
+                    }, {
+                        text: 'axis formatter:',
+                        type: 'select',
+                        options: [
+                            {text: 'none', value: undefined},
+                            {text: 'one line', value: FORMATTER_ONE_LINE},
+                            {text: 'two line', value: FORMATTER_TWO_LINE}
+                        ],
+                        onchange: function () {
+                            chart.setOption({
+                                xAxis: [
+                                    { id: 'x_time_breaks', axisLabel: {formatter: this.value} },
+                                ]
+                            });
+                        }
+                    }, {
+                        type: 'br'
+                    }, {
+                        type: 'select',
+                        text: 'time range:',
+                        values: ['ms', 'second', 'hour', 'day', 'month', 'year'],
+                        value: _curr.timeDataRange,
+                        onchange: function () {
+                            _curr.timeDataRange = this.value;
+                            updateDataAndXBreaks();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'break.start rounded to:',
+                        values: ROUND_LEVELS,
+                        value: _curr.roundLevel.breakStart,
+                        onchange: function () {
+                            _curr.roundLevel.breakStart = this.value;
+                            updateDataAndXBreaks();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'break.end rounded to:',
+                        values: ROUND_LEVELS,
+                        value: _curr.roundLevel.breakEnd,
+                        onchange: function () {
+                            _curr.roundLevel.breakEnd = this.value;
+                            updateDataAndXBreaks();
+                        }
+                    }, {
+                        type: 'br'
+                    }, {
+                        text: 'hideOverlap:',
+                        type: 'select',
+                        values: [false, true],
+                        onchange: function () {
+                            var value = this.value;
+                            var list = [];
+                            _gridShow.forEach(show => {
+                                show && list.push({ axisLabel: {hideOverlap: value} });
+                            });
+                            chart.setOption({
+                                xAxis: list
+                            });
+                        }
+                    }, {
+                        text: 'showMinLabel',
+                        type: 'select',
+                        values: [undefined, false, true],
+                        onchange: function () {
+                            var value = this.value;
+                            var list = [];
+                            _gridShow.forEach(show => {
+                                show && list.push({ axisLabel: {showMinLabel: value} });
+                            });
+                            chart.setOption({
+                                xAxis: list
+                            });
+                        }
+                    }, {
+                        text: 'showMaxLabel',
+                        type: 'select',
+                        values: [undefined, false, true],
+                        onchange: function () {
+                            var value = this.value;
+                            var list = [];
+                            _gridShow.forEach(show => {
+                                show && list.push({ axisLabel: {showMaxLabel: value} });
+                            });
+                            chart.setOption({
+                                xAxis: list
+                            });
+                        }
+                    }, {
+                        type: 'br'
+                    }, {
+                        type: 'range',
+                        noDeltaButtons: true,
+                        text: 'xAxisLable.rotate',
+                        value: X_LABEL_ROTATE,
+                        min: -50,
+                        max: 100,
+                        oninput: function () {
+                            var value = this.value;
+                            var list = [];
+                            _gridShow.forEach(show => {
+                                show && list.push({ axisLabel: {rotate: value} });
+                            });
+                            chart.setOption({
+                                xAxis: list
+                            });
+                        }
+                    }, {
+                        type: 'range',
+                        noDeltaButtons: true,
+                        text: 'yAxisLable.rotate',
+                        value: Y_LABEL_ROTATE,
+                        min: -50,
+                        max: 100,
+                        oninput: function () {
+                            var value = this.value;
+                            var list = [];
+                            _gridShow.forEach(show => {
+                                show && list.push({ axisLabel: {rotate: value} });
+                            });
+                            chart.setOption({
+                                yAxis: list
+                            });
+                        }
+                    }];
+                }
+            });
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            function makeBreaks() {
+                return [{
+                    end: 23000,
+                    start: 5000,
+                    gap: 200
+                }, {
+                    end: -800,
+                    start: -15000,
+                    gap: 2000
+                }, {
+                    end: 3420,
+                    start: 3580,
+                    gap: 0
+                }];
+            }
+
+            var option = {
+                tooltip: {
+                },
+                xAxis: [{
+                    data: ['p1', 'p2'],
+                    gridIndex: 0,
+                    name: '(A) No axisLabel.formatter',
+                    nameLocation: 'center',
+                    nameGap: 25,
+                }, {
+                    data: ['p1', 'p2'],
+                    gridIndex: 1,
+                    name: '(B) Has axisLabel.formatter',
+                    nameLocation: 'center',
+                    nameGap: 25,
+                }, {
+                    data: ['p1', 'p2'],
+                    gridIndex: 2,
+                    name: '(C) No breaks (criterion)',
+                    nameLocation: 'center',
+                    nameGap: 25,
+                }],
+                yAxis: [{
+                    gridIndex: 0,
+                    breaks: makeBreaks(),
+                    breakArea: {
+                        zigzagAmplitude: 2,
+                        itemStyle: {
+                            color: '#ccc',
+                        }
+                    }
+                }, {
+                    gridIndex: 1,
+                    breaks: makeBreaks(),
+                    breakArea: {
+                        zigzagAmplitude: 2,
+                        itemStyle: {
+                            borderType: 'solid',
+                            color: '#ccc',
+                        }
+                    },
+                    axisLabel: {
+                        formatter: (value, idx, params) => {
+                            if (params && params.break) {
+                                return `${value} (${params.break.type})`;
+                            }
+                            return `${value}`;
+                        }
+                    }
+                }, {
+                    gridIndex: 2,
+                }],
+                legend: {
+                    data: ['s2', 's3', 's4'],
+                    selected: {
+                        // 's2': false,
+                        's4': false,
+                    },
+                },
+                grid: [{
+                    top: 50,
+                    left: 50,
+                    right: '73%',
+                    borderWidth: 0,
+                }, {
+                    top: 50,
+                    left: '40%',
+                    right: '35%',
+                    borderWidth: 0,
+                }, {
+                    top: 50,
+                    left: '75%',
+                    right: 20,
+                    borderWidth: 0,
+                }],
+                tooltip: {
+                    trigger: 'axis'
+                },
+                series: (function makeSeries() {
+                    const createSeries = () => [{
+                        type: 'bar',
+                        name: 's2',
+                        data: [-8000, 10000],
+                        label: {
+                            show: true
+                        }
+                    }, {
+                        type: 'bar',
+                        name: 's3',
+                        data: [200, 500],
+                        label: {
+                            show: true
+                        }
+                    }, {
+                        type: 'bar',
+                        name: 's4',
+                        data: [-18910, 31230],
+                        label: {
+                            show: true
+                        }
+                    }];
+                    const seriesOptionList = [];
+                    for (axisIndex = 0; axisIndex < 3; axisIndex++) {
+                        createSeries().forEach(seriesOption => {
+                            seriesOption.xAxisIndex = axisIndex;
+                            seriesOption.yAxisIndex = axisIndex;
+                            seriesOptionList.push(seriesOption);
+                        });
+                    }
+                    return seriesOptionList;
+                })()
+            };
+
+            var chart = testHelper.create(echarts, 'main_xCategory_yNumber_axis', {
+                title: [
+                    'x: category axis, y: number axis.',
+                    '- The default formatter should be correct and consistent.',
+                    '- Should not overlap.',
+                    '- If a break is displayed, all ends of it should be displayed.',
+                ],
+                option: option,
+                height: 300,
+                buttons: function (chart) {
+                    var option = chart.getOption();
+                    return [{
+                        text: 'hideOverlap:',
+                        type: 'select',
+                        values: [true, false],
+                        value: !!(option.yAxis[0].axisLabel || {}).hideOverlap,
+                        onchange: function () {
+                            var value = this.value;
+                            chart.setOption({
+                                yAxis: [{
+                                    axisLabel: {hideOverlap: value}
+                                }, {
+                                    axisLabel: {hideOverlap: value}
+                                }, {
+                                    axisLabel: {hideOverlap: value}
+                                }]
+                            });
+                        }
+                    }, {
+                        type: 'range',
+                        noDeltaButtons: true,
+                        text: 'yAxisLable.rotate',
+                        value: 0,
+                        min: -50,
+                        max: 100,
+                        oninput: function () {
+                            var value = this.value;
+                            chart.setOption({
+                                yAxis: [
+                                    { axisLabel: {rotate: value} },
+                                    { axisLabel: {rotate: value} },
+                                    { axisLabel: {rotate: value} },
+                                ]
+                            });
+                        }
+                    }]
+                }
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var X_NAME_GAP = -240;
+
+            function makeBreaks() {
+                return [{
+                    end: 230000,
+                    start: 50000,
+                    gap: 5000
+                }, {
+                    end: -8000,
+                    start: -150000,
+                    gap: 20000
+                }, {
+                    end: 34200,
+                    start: 35800,
+                    gap: 0
+                }];
+            }
+
+            var option = {
+                tooltip: {
+                },
+                yAxis: [{
+                    data: ['p1', 'p2'],
+                    gridIndex: 0,
+                }, {
+                    data: ['p1', 'p2'],
+                    gridIndex: 1,
+                }, {
+                    data: ['p1', 'p2'],
+                    gridIndex: 2,
+                }],
+                xAxis: [{
+                    id: 'x0',
+                    gridIndex: 0,
+                    name: '(A) No axisLabel.formatter',
+                    nameLocation: 'center',
+                    nameGap: X_NAME_GAP,
+                    breaks: makeBreaks(),
+                    breakArea: {
+                        zigzagAmplitude: 2,
+                        itemStyle: {
+                            color: '#ccc',
+                        }
+                    },
+                    axisLabel: {
+                        hideOverlap: true,
+                    }
+                }, {
+                    id: 'x1',
+                    gridIndex: 1,
+                    name: '(B) Has axisLabel.formatter',
+                    nameLocation: 'center',
+                    nameGap: X_NAME_GAP,
+                    breaks: makeBreaks(),
+                    breakArea: {
+                        zigzagAmplitude: 2,
+                        itemStyle: {
+                            borderType: 'solid',
+                            color: '#ccc',
+                        }
+                    },
+                    axisLabel: {
+                        hideOverlap: true,
+                        formatter: (value, idx, params) => {
+                            if (params && params.break) {
+                                return `${value}\n(${params.break.type})`;
+                            }
+                            return `${value}`;
+                        }
+                    }
+                }, {
+                    id: 'x2',
+                    gridIndex: 2,
+                    name: '(C) No breaks (criterion)',
+                    nameLocation: 'center',
+                    nameGap: X_NAME_GAP,
+                    axisLabel: {
+                        hideOverlap: true,
+                    }
+                }],
+                legend: {
+                    data: ['s2', 's3', 's4'],
+                    selected: {
+                        // 's2': false,
+                        's4': false,
+                    },
+                },
+                grid: [{
+                    top: 50,
+                    left: 50,
+                    width: '35%',
+                    height: '35%',
+                    borderWidth: 0,
+                }, {
+                    top: 50,
+                    right: 70,
+                    width: '35%',
+                    height: '35%',
+                    borderWidth: 0,
+                }, {
+                    left: 50,
+                    right: 20,
+                    width: '35%',
+                    height: '35%',
+                    bottom: 60,
+                    borderWidth: 0,
+                }],
+                tooltip: {
+                    trigger: 'axis'
+                },
+                series: (function makeSeries() {
+                    const createSeries = () => [{
+                        type: 'bar',
+                        name: 's2',
+                        data: [-80000, 100000],
+                        label: {
+                            show: true
+                        }
+                    }, {
+                        type: 'bar',
+                        name: 's3',
+                        data: [2000, 5000],
+                        label: {
+                            show: true
+                        }
+                    }, {
+                        type: 'bar',
+                        name: 's4',
+                        data: [-189100, 312300],
+                        label: {
+                            show: true
+                        }
+                    }];
+                    const seriesOptionList = [];
+                    for (axisIndex = 0; axisIndex < 3; axisIndex++) {
+                        createSeries().forEach(seriesOption => {
+                            seriesOption.xAxisIndex = axisIndex;
+                            seriesOption.yAxisIndex = axisIndex;
+                            seriesOptionList.push(seriesOption);
+                        });
+                    }
+                    return seriesOptionList;
+                })()
+            };
+
+            var chart = testHelper.create(echarts, 'main_xNumber_yCategory_axis', {
+                title: [
+                    'x: number axis, y: category axis',
+                    '- xAxis should be horizontal.',
+                    '- The default formatter should be correct and consistent.',
+                    '- Should not overlap.',
+                    '- some break ends can be hide since hideOverlap: true.',
+                ],
+                option: option,
+                height: 600,
+                buttons: function (chart) {
+                    var option = chart.getOption();
+                    return [{
+                        text: 'hideOverlap:',
+                        type: 'select',
+                        value: !!(option.xAxis[0].axisLabel || {}).hideOverlap,
+                        values: [false, true],
+                        onchange: function () {
+                            var value = this.value;
+                            chart.setOption({
+                                xAxis: [{
+                                    id: 'x0',
+                                    axisLabel: {hideOverlap: value}
+                                }, {
+                                    id: 'x1',
+                                    axisLabel: {hideOverlap: value}
+                                }, {
+                                    id: 'x2',
+                                    axisLabel: {hideOverlap: value}
+                                }]
+                            });
+                        }
+                    }, {
+                        type: 'range',
+                        noDeltaButtons: true,
+                        text: 'xAxisLable.rotate',
+                        value: 0,
+                        min: -50,
+                        max: 100,
+                        oninput: function () {
+                            var value = this.value;
+                            var list = [];
+                            [1, 1, 1].forEach(_ => {
+                                list.push({ axisLabel: {rotate: value} });
+                            });
+                            chart.setOption({
+                                xAxis: list
+                            });
+                        }
+                    }];
+                }
+            });
+        });
+        </script>
+
+
+
+
+    </body>
+
+</html>
+

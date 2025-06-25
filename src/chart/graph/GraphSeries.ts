@@ -43,7 +43,8 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    PreserveAspectMixin
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -54,6 +55,7 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
+import tokens from '../../visual/tokens';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -66,7 +68,6 @@ export interface GraphNodeStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
-
 
 interface ExtraEmphasisState {
     focus?: DefaultEmphasisFocus | 'adjacency'
@@ -143,7 +144,8 @@ export interface GraphSeriesOption
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin<CallbackDataParams>,
     RoamOptionMixin,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin,
+    PreserveAspectMixin {
 
     type?: 'graph'
 
@@ -494,7 +496,8 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         itemStyle: {},
 
         lineStyle: {
-            color: '#aaa',
+            // Don't use tokens.color.border because of the opacity
+            color: tokens.color.neutral50,
             width: 1,
             opacity: 0.5
         },
@@ -507,9 +510,9 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
-        }
+        },
     };
 }
 

@@ -87,6 +87,7 @@ const BUITIN_COMPONENTS_MAP = {
     singleAxis: 'SingleAxisComponent',
     parallel: 'ParallelComponent',
     calendar: 'CalendarComponent',
+    matrix: 'MatrixComponent',
     graphic: 'GraphicComponent',
     toolbox: 'ToolboxComponent',
     tooltip: 'TooltipComponent',
@@ -120,6 +121,7 @@ const BUILTIN_CHARTS_MAP = {
     tree: 'TreeChart',
     treemap: 'TreemapChart',
     graph: 'GraphChart',
+    chord: 'ChordChart',
     gauge: 'GaugeChart',
     funnel: 'FunnelChart',
     parallel: 'ParallelChart',
@@ -411,7 +413,8 @@ class GlobalModel extends Model<ECUnitOption> {
                 else {
                     const isSeriesType = mainType === 'series';
                     const ComponentModelClass = (ComponentModel as ComponentModelConstructor).getClass(
-                        mainType, resultItem.keyInfo.subType,
+                        mainType,
+                        resultItem.keyInfo.subType,
                         !isSeriesType // Give a more detailed warn later if series don't exists
                     );
 
@@ -540,6 +543,11 @@ echarts.use([${seriesImportName}]);`);
         delete option[OPTION_INNER_KEY];
 
         return option;
+    }
+
+    setTheme(theme: object) {
+        this._theme = new Model(theme);
+        this._resetOption('recreate', null);
     }
 
     getTheme(): Model {
@@ -1009,7 +1017,9 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
     const notMergeColorLayer = option.color && !option.colorLayer;
 
     each(theme, function (themeItem, name) {
-        if (name === 'colorLayer' && notMergeColorLayer) {
+        if (name === 'colorLayer' && notMergeColorLayer
+            || name === 'color' && option.color
+        ) {
             return;
         }
 

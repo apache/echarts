@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <!-- <script src="lib/testHelper.js"></script> -->
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+          h1, h2, h3, p {
+            margin-left: 15px;
+          }
+
+          #main0 {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            width: 100%;
+          }
+
+          .section {
+            width: 500px;
+            flex-shrink: 0;
+            margin-right: 30px;
+            padding-bottom: 30px;
+          }
+
+          .chart-item {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ccc;
+            margin: 10px;
+            flex-shrink: 0;
+          }
+
+          #main1, #main0 {
+            width: 4800px;
+          }
+
+          .chart-item-h {
+            width: 500px;
+            height: 400px;
+            border: 1px solid #ccc;
+            margin: 10px 20px 10px 10px;
+            display: inline-block;
+          }
+
+          @media (prefers-color-scheme: dark) {
+            body {
+              background-color: #000;
+              color: #ccc;
+            }
+            h1, h2, h3 {
+              color: #fff;
+            }
+
+            .chart-item-h, .chart-item {
+              border-color: #444;
+            }
+          }
+        </style>
+          <p>Set system dark mode to see dark mode charts.</p>
+
+          <h2>Typical charts of different series count</h2>
+          <div id="main0"></div>
+
+          <h2>Components</h2>
+          <div id="main1">
+          </div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            './data/usa.json'
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts, geojson) {
+          const charts = [];
+
+          const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+          function updateDarkMode() {
+            const isDarkMode = darkModeMediaQuery.matches;
+            for (const chart of charts) {
+              chart.setTheme(isDarkMode ? 'dark' : 'default');
+            }
+          }
+          darkModeMediaQuery.addEventListener('change', () => {
+            updateDarkMode();
+          });
+
+          echarts.registerMap('USA', geojson, {
+            Alaska: {
+              left: -131,
+              top: 25,
+              width: 15
+            },
+            Hawaii: {
+              left: -110,
+              top: 28,
+              width: 5
+            },
+            'Puerto Rico': {
+              left: -76,
+              top: 26,
+              width: 2
+            }
+          });
+
+          for (let maxSeriesCount = 1; maxSeriesCount <= 9; maxSeriesCount++) {
+
+            const cases = [
+              {
+                type: 'bar',
+                data: 'data2d'
+              },
+              {
+                type: 'line',
+                data: 'data2d'
+              },
+              {
+                type: 'pie',
+                data: 'data1d'
+              },
+              {
+                type: 'scatter',
+                data: 'data2d'
+              },
+              {
+                type: 'funnel',
+                data: 'data1d'
+              },
+              {
+                type: 'radar',
+                data: 'data1d'
+              },
+              {
+                type: 'treemap',
+                data: 'dataTree'
+              },
+              {
+                type: 'sunburst',
+                data: 'dataTree'
+              },
+              {
+                type: 'themeRiver',
+                data: 'data3d'
+              }
+            ];
+
+            function getData3d() {
+              const data = [];
+              for (let s = 0; s < maxSeriesCount; s++) {
+                for (let i = 0; i < 5; ++i) {
+                  data.push([i, Math.random() * 100, 'S' + s]);
+                }
+              }
+              return data;
+            }
+
+            function getData2d(base) {
+              return [
+                ['Q1', Math.random() * 100 + base],
+                ['Q2', Math.random() * 100 + base],
+                ['Q3', Math.random() * 100 + base],
+                ['Q4', Math.random() * 100 + base]
+              ];
+            }
+
+            function getData1d() {
+              const data = [];
+              for (let i = 0; i < maxSeriesCount; i++) {
+                data.push({
+                  name: `Data ${i + 1}`,
+                  value: (Math.random() + maxSeriesCount - i) * 100,
+                });
+              }
+              return data;
+            }
+
+            function getNodesData() {
+              const data = [];
+              // 2 levels
+              for (let i = 0; i < maxSeriesCount; i++) {
+                const children = [];
+                for (let j = 0; j < 3; j++) {
+                  const grandChildren = [];
+                  for (let k = 0; k < 3; k++) {
+                    grandChildren.push({
+                      name: `Data ${i + 1}-${j + 1}-${k + 1}`,
+                      value: Math.random() * 100,
+                    });
+                  }
+                  children.push({
+                    name: `Data ${i + 1}-${j + 1}`,
+                    children: grandChildren,
+                  });
+                }
+                data.push({
+                  name: `Data ${i + 1}`,
+                  children
+                });
+              }
+              return data;
+            }
+
+            const section = document.createElement('div');
+            section.className = 'section';
+            document.getElementById('main0').appendChild(section);
+            const sectionTitle = document.createElement('h3');
+            sectionTitle.textContent = `Count: ${maxSeriesCount}`;
+            section.appendChild(sectionTitle);
+
+            for (const c of cases) {
+              const div = document.createElement('div');
+              div.className = 'chart-item';
+              section.appendChild(div);
+
+              const chart = echarts.init(div, null, {
+                // renderer: 'svg'
+              });
+              charts.push(chart);
+
+              const series = [];
+              switch (c.data) {
+                case 'data1d':
+                  series.push({
+                    type: c.type,
+                    data: getData1d(),
+                  });
+                  break;
+
+                case 'data2d':
+                  for (let i = 0; i < maxSeriesCount; i++) {
+                    series.push({
+                      type: c.type,
+                      data: getData2d((maxSeriesCount - i) * 100),
+                      name: `Series ${i + 1}`,
+                    });
+                  }
+                  break;
+
+                case 'data3d':
+                  series.push({
+                    type: c.type,
+                    data: getData3d()
+                  });
+                  break;
+
+                case 'dataTree':
+                  series.push({
+                    type: c.type,
+                    data: getNodesData()
+                  });
+                  break;
+              }
+
+              const option = {
+                title: {
+                  text: `A ${c.type} chart`,
+                },
+                series: series,
+                legend: {
+                  show: true
+                }
+              };
+
+              if (['line', 'bar', 'scatter'].includes(c.type)) {
+                option.xAxis = {
+                  type: 'category'
+                };
+                option.yAxis = {
+                  type: 'value'
+                };
+                option.tooltip = {
+                  trigger: 'axis',
+                };
+              }
+              else if (['sunburst'].includes(c.type)) {
+                option.series[0].label = {
+                  show: false
+                };
+              }
+              else if (['themeRiver'].includes(c.type)) {
+                option.singleAxis = {
+                  type: 'value',
+                  axisLine: {
+                    show: false
+                  },
+                  axisTick: {
+                    show: false
+                  },
+                  axisLabel: {
+                    show: false
+                  }
+                };
+              }
+              else if (['radar'].includes(c.type)) {
+                const indicators = 6;
+                const indicator = [];
+                for (let i = 0; i < indicators; i++) {
+                  indicator.push({
+                    name: `Indicator ${i + 1}`,
+                    max: 100
+                  });
+                }
+                option.radar = {
+                  indicator: indicator
+                };
+
+                const data = [];
+                for (let i = 0; i < maxSeriesCount; i++) {
+                  const value = [];
+                  for (let j = 0; j < indicators; j++) {
+                    value.push(Math.min(Math.round(Math.random() * 50 + i * 10), 100));
+                  }
+                  data.push({
+                    name: `Series ${i + 1}`,
+                    value: value
+                  });
+                }
+                option.series = [{
+                  type: 'radar',
+                  data: data
+                }]
+              }
+
+              chart.setOption(option);
+            }
+          }
+
+          // Components
+          const options = [
+          {
+              title: {
+                text: 'timeline'
+              },
+              xAxis: {
+                type: 'category',
+                data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+              },
+              yAxis: {
+                type: 'value',
+                splitArea: {
+                  show: true
+                }
+              },
+              options: [
+              {
+                series: [{
+                  data: [130, 200, 150, 80, 70, 110, 130],
+                  type: 'bar',
+                  label: {
+                    show: true,
+                    position: 'inside'
+                  }
+                }],
+              }, {
+                series: [{
+                  data: [140, 200, 150, 80, 70, 110, 130],
+                  type: 'bar'
+                }],
+              }, {
+                series: [{
+                  data: [90, 200, 150, 80, 70, 110, 130],
+                  type: 'bar'
+                }],
+              }, {
+                series: [{
+                  data: [50, 200, 150, 80, 70, 110, 130],
+                  type: 'bar'
+                }],
+              }],
+              timeline: {
+                data: ['2010', '2011', '2012', '2013'],
+              }
+            },
+            {
+              title: {
+                text: 'dataZoom & toolbox',
+              },
+              toolbox: {
+                feature: {
+                  dataZoom: {
+                    yAxisIndex: 'none'
+                  },
+                  restore: {},
+                  saveAsImage: {}
+                },
+              },
+              tooltip: {
+                trigger: 'axis',
+              },
+              dataZoom: [
+                {
+                  show: true,
+                  realtime: true,
+                  start: 30,
+                  end: 70
+                }
+              ],
+              xAxis: {
+                type: 'time',
+              },
+              yAxis: {
+                type: 'value'
+              },
+              series: [{
+                name: 'data',
+                type: 'line',
+                data: (function () {
+                  const data = [];
+                  const date = new Date();
+                  for (let i = 0; i < 100; i++) {
+                    date.setHours(date.getHours() + 1);
+                    data.push([date.toLocaleString(), Math.sin(i / 5) * 100 + 200]);
+                  }
+                  return data;
+                })()
+              }]
+            },
+            {
+              title: {
+                text: 'dataZoom & legend (right/bottom)'
+              },
+              legend: {
+                show: true
+              },
+              tooltip: {
+                trigger: 'axis',
+              },
+              dataZoom: [
+                {
+                  show: true,
+                  realtime: true,
+                  start: 30,
+                  end: 70
+                },
+                {
+                  show: true,
+                  realtime: true,
+                  yAxisIndex: 0
+                },
+                {
+                  type: 'inside'
+                }
+              ],
+              xAxis: {
+                type: 'time',
+              },
+              yAxis: {
+                type: 'value'
+              },
+              series: [{
+                name: 'data',
+                type: 'line',
+                data: (function () {
+                  const data = [];
+                  const date = new Date();
+                  for (let i = 0; i < 100; i++) {
+                    date.setHours(date.getHours() + 1);
+                    data.push([date.toLocaleString(), Math.sin(i / 5) * 100 + 200]);
+                  }
+                  return data;
+                })()
+              }]
+            },
+            {
+              title: {
+                text: 'dataZoom & legend (left/top)'
+              },
+              legend: {
+                show: true
+              },
+              tooltip: {
+                trigger: 'axis',
+              },
+              dataZoom: [
+                {
+                  show: true,
+                  realtime: true,
+                  start: 30,
+                  end: 70,
+                  top: 50
+                },
+                {
+                  show: true,
+                  realtime: true,
+                  yAxisIndex: 0,
+                  left: 25
+                },
+                {
+                  type: 'inside'
+                }
+              ],
+              xAxis: {
+                type: 'time',
+              },
+              yAxis: {
+                type: 'value'
+              },
+              series: [{
+                name: 'data',
+                type: 'line',
+                data: (function () {
+                  const data = [];
+                  const date = new Date();
+                  for (let i = 0; i < 100; i++) {
+                    date.setHours(date.getHours() + 1);
+                    data.push([date.toLocaleString(), Math.sin(i / 5) * 100 + 200]);
+                  }
+                  return data;
+                })()
+              }]
+            },
+            {
+              title: {
+                text: 'visualMap & calendar',
+              },
+              calendar: {
+                orient: 'vertical',
+                range: ['2025-01', '2025-03'],
+                cellSize: 25,
+                top: 120,
+                left: 'center'
+              },
+              visualMap: {
+                min: 0,
+                max: 1000,
+                calculable: true
+              },
+              series: [{
+                type: 'heatmap',
+                coordinateSystem: 'calendar',
+                data: (function () {
+                  const date = +echarts.time.parse('2025-01-06');
+                  const end = +echarts.time.parse('2025-02-20');
+                  const dayTime = 3600 * 24 * 1000;
+                  const data = [];
+                  for (let time = date; time < end; time += dayTime) {
+                    data.push([
+                      echarts.time.format(time, '{yyyy}-{MM}-{dd}', false),
+                      Math.floor(Math.random() * 1000)
+                    ]);
+                  }
+                  return data;
+                })()
+              }]
+            }, {
+              title: {
+                text: 'map'
+              },
+              series: [{
+                type: 'map',
+                mapType: 'USA',
+                data: [],
+                label: {
+                  show: true
+                }
+              }],
+            }, {
+              title: {
+                text: 'geo'
+              },
+              geo: [{
+                map: 'test1',
+                zoom: 1,
+                roam: true
+              }],
+              series: [{
+                type: 'scatter',
+                coordinateSystem: 'geo',
+                symbol: 'roundRect',
+                symbolSize: 30,
+                data: (() => {
+                  const data = [];
+                  const step = 500;
+                  const lngStart = 1000;
+                  const latStart = 2000;
+                  for (let i = 0; i < 10; i++) {
+                    for (let j = 0; j < 10; j++) {
+                      data.push({
+                        value: [lngStart + j * step, latStart + i * step],
+                        symbolSize: 5 + j * 5
+                      });
+                    }
+                  }
+                  return data;
+                })()
+              }]
+            }
+          ];
+
+          const testGeoJson1 = {
+            type: 'FeatureCollection',
+            features: [{
+              geometry: {
+                type: 'Polygon',
+                coordinates: [
+                  [[2000, 3000], [5000, 3000], [5000, 8000], [2000, 8000]]
+                ]
+              },
+              properties: {
+                name: 'Some Area',
+                childNum: 1
+              }
+            }]
+          };
+          echarts.registerMap('test1', testGeoJson1);
+
+          const main1 = document.getElementById('main1');
+          for (const option of options) {
+            const div = document.createElement('div');
+            div.className = 'chart-item-h';
+            main1.appendChild(div);
+
+            const chart = echarts.init(div, null, {
+              // renderer: 'svg'
+            });
+            charts.push(chart);
+
+            chart.setOption(option);
+          }
+
+          updateDarkMode();
+        });
+        </script>
+    </body>
+</html>
+

@@ -93,14 +93,19 @@ under the License.
                             {min: 10, max: 200, label: '10 到 200（自定义label）'},
                             {value: 123, label: '123（自定义特殊颜色）', color: 'grey'},
                             {min: 5, max: 5, label: '5（自定义特殊颜色）', color: 'black'},
-                            {max: 5}
+                            {max: 5, label: '< 5 （测试文本溢出测试文本溢出测试文本溢出）'}
                         ],
                         color: ['#E0022B', '#E09107', '#A3E00B'],
                         textStyle: {
                             textShadowColor: "rgba(255, 0, 255, 1)",
                             textShadowBlur: 5,
                             textShadowOffsetX: 5,
-                            textShadowOffsetY: 5
+                            textShadowOffsetY: 5,
+                            width: 200,
+                            overflow: 'truncate',
+                            // opacity: 0,
+                            // align: 'left',
+                            // verticalAlign: 'top'
                         }
                     },
                     toolbox: {

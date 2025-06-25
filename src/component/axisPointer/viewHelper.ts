@@ -35,19 +35,17 @@ import Axis2D from '../../coord/cartesian/Axis2D';
 import { AxisPointerElementOptions } from './BaseAxisPointer';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import Model from '../../model/Model';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { createTextStyle } from '../../label/labelStyle';
+import type SingleAxisModel from '../../coord/single/AxisModel';
 
-interface LayoutInfo {
+export interface AxisTransformedPositionLayoutInfo {
     position: VectorArray
     rotation: number
     labelOffset?: number
-    /**
-     * 1 | -1
-     */
-    labelDirection?: number
+    labelDirection?: -1 | 1
     labelMargin?: number
 }
 
@@ -194,7 +192,7 @@ export function getValueLabel(
 export function getTransformedPosition(
     axis: Axis,
     value: ScaleDataValue,
-    layoutInfo: LayoutInfo
+    layoutInfo: AxisTransformedPositionLayoutInfo
 ): number[] {
     const transform = matrix.create();
     matrix.rotate(transform, transform, layoutInfo.rotation);
@@ -210,12 +208,11 @@ export function getTransformedPosition(
 export function buildCartesianSingleLabelElOption(
     value: ScaleDataValue,
     elOption: AxisPointerElementOptions,
-    layoutInfo: LayoutInfo,
-    axisModel: CartesianAxisModel,
+    layoutInfo: AxisTransformedPositionLayoutInfo,
+    axisModel: CartesianAxisModel | SingleAxisModel,
     axisPointerModel: AxisPointerModel,
     api: ExtensionAPI
 ) {
-    // @ts-ignore
     const textLayout = AxisBuilder.innerTextLayout(
         layoutInfo.rotation, 0, layoutInfo.labelDirection
     );

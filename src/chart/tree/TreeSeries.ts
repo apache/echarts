@@ -39,6 +39,7 @@ import { LayoutRect } from '../../util/layout';
 import Model from '../../model/Model';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { wrapTreePathInfo } from '../helper/treeHelper';
+import tokens from '../../visual/tokens';
 
 interface CurveLineStyleOption extends LineStyleOption{
     curveness?: number
@@ -249,7 +250,10 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     static defaultOption: TreeSeriesOption = {
         // zlevel: 0,
         z: 2,
-        coordinateSystem: 'view',
+
+        // `coordinateSystem` can be declared as 'matrix', 'calendar',
+        //  which provides box layout container.
+        coordinateSystemUsage: 'box',
 
         // the position of the whole view
         left: '12%',
@@ -267,6 +271,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
 
         // true | false | 'move' | 'scale', see module:component/helper/RoamController.
         roam: false,
+        roamTrigger: 'global',
 
         // Symbol size scale ratio in roam
         nodeScaleRatio: 0.4,
@@ -287,7 +292,7 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         initialTreeDepth: 2,
 
         lineStyle: {
-            color: '#ccc',
+            color: tokens.color.borderTint,
             width: 1.5,
             curveness: 0.5
         },

@@ -31,6 +31,9 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import { isString, retrieve3 } from 'zrender/src/core/util';
 import type { GraphEdge } from '../../data/Graph';
+import RoamController from '../../component/helper/RoamController';
+import * as roamHelper from '../../component/helper/roamHelper';
+import View from '../../coord/View';
 
 class SankeyPathShape {
     x1 = 0;
@@ -106,15 +109,28 @@ class SankeyView extends ChartView {
     readonly type = SankeyView.type;
 
     private _model: SankeySeriesModel;
-
+    private _mainGroup = new graphic.Group();
     private _focusAdjacencyDisabled = false;
 
     private _data: SeriesData;
 
+    private _controller: RoamController;
+    private _controllerHost: roamHelper.RoamControllerHost;
+
+    init(ecModel: GlobalModel, api: ExtensionAPI): void {
+        this._controller = new RoamController(api.getZr());
+
+        this._controllerHost = {
+            target: this.group
+        } as roamHelper.RoamControllerHost;
+
+        this.group.add(this._mainGroup);
+    }
+
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const sankeyView = this;
         const graph = seriesModel.getGraph();
-        const group = this.group;
+        const mainGroup = this._mainGroup;
         const layoutInfo = seriesModel.layoutInfo;
         // view width
         const width = layoutInfo.width;
@@ -126,10 +142,13 @@ class SankeyView extends ChartView {
 
         this._model = seriesModel;
 
-        group.removeAll();
+        mainGroup.removeAll();
 
-        group.x = layoutInfo.x;
-        group.y = layoutInfo.y;
+        mainGroup.x = layoutInfo.x;
+        mainGroup.y = layoutInfo.y;
+
+        this._updateViewCoordSys(seriesModel, api);
+        roamHelper.updateController(seriesModel, api, mainGroup, this._controller, this._controllerHost, null);
 
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
@@ -237,7 +256,7 @@ class SankeyView extends ChartView {
                 return style;
             });
 
-            group.add(curve);
+            mainGroup.add(curve);
 
             edgeData.setItemGraphicEl(edge.dataIndex, curve);
 
@@ -293,7 +312,7 @@ class SankeyView extends ChartView {
 
             setStatesStylesFromModel(rect, itemModel);
 
-            group.add(rect);
+            mainGroup.add(rect);
 
             nodeData.setItemGraphicEl(node.dataIndex, rect);
 
@@ -337,8 +356,8 @@ class SankeyView extends ChartView {
         });
 
         if (!this._data && seriesModel.isAnimationEnabled()) {
-            group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
-                group.removeClipPath();
+            mainGroup.setClipPath(createGridClipShape(mainGroup.getBoundingRect(), seriesModel, function () {
+                mainGroup.removeClipPath();
             }));
         }
 
@@ -346,6 +365,29 @@ class SankeyView extends ChartView {
     }
 
     dispose() {
+        this._controller && this._controller.dispose();
+        this._controllerHost = null;
+    }
+
+    private _updateViewCoordSys(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
+        const layoutInfo = seriesModel.layoutInfo;
+        const width = layoutInfo.width;
+        const height = layoutInfo.height;
+
+        const viewCoordSys = seriesModel.coordinateSystem = new View(null, {api, ecModel: seriesModel.ecModel});
+        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
+
+        viewCoordSys.setBoundingRect(0, 0, width, height);
+
+        viewCoordSys.setCenter(seriesModel.get('center'));
+        viewCoordSys.setZoom(seriesModel.get('zoom'));
+
+        this._controllerHost.target.attr({
+            x: viewCoordSys.x,
+            y: viewCoordSys.y,
+            scaleX: viewCoordSys.scaleX,
+            scaleY: viewCoordSys.scaleY
+        });
     }
 }
 

@@ -48,7 +48,10 @@ const {
     getAllTestsRuns,
     delTestsRun,
     RESULTS_ROOT_DIR,
-    checkStoreVersion
+    checkStoreVersion,
+    clearStaledResults,
+    getUserMeta,
+    saveUserMeta
 } = require('./store');
 const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
 const fse = require('fs-extra');
@@ -62,6 +65,8 @@ console.info(chalk.green('useCNMirror:'), useCNMirror);
 const CLI_FIXED_THREADS_COUNT = 1;
 
 function serve() {
+    clearStaledResults();
+
     const server = http.createServer((request, response) => {
         return handler(request, response, {
             cleanUrls: false,
@@ -144,10 +149,13 @@ function startTests(testsNameList, socket, {
     noHeadless,
     threadsCount,
     replaySpeed,
+    actualSource,
     actualVersion,
+    expectedSource,
     expectedVersion,
     renderer,
     useCoarsePointer,
+    theme,
     noSave
 }) {
     console.log('Received: ', testsNameList.join(','));
@@ -206,8 +214,11 @@ function startTests(testsNameList, socket, {
                 '--speed', replaySpeed || 5,
                 '--actual', actualVersion,
                 '--expected', expectedVersion,
+                '--actual-source', actualSource,
+                '--expected-source', expectedSource,
                 '--renderer', renderer || '',
                 '--use-coarse-pointer', useCoarsePointer,
+                '--theme', theme || 'none',
                 '--threads', Math.min(threadsCount, CLI_FIXED_THREADS_COUNT),
                 '--dir', getResultBaseDir(),
                 ...(noHeadless ? ['--no-headless'] : []),
@@ -230,8 +241,11 @@ function checkPuppeteer() {
 
 
 async function start() {
+    // Clean PR directories before starting
+    const {cleanPRDirectories} = require('./util');
+    cleanPRDirectories();
+
     if (!checkPuppeteer()) {
-        // TODO Check version.
         console.error(`Can't find puppeteer >= 9.0.0, run 'npm install' to update in the 'test/runTest' folder`);
         return;
     }
@@ -241,8 +255,6 @@ async function start() {
     try {
         stableVersions = await fetchVersions(false, useCNMirror);
         nightlyVersions = (await fetchVersions(true, useCNMirror)).slice(0, 100);
-        stableVersions.unshift('local');
-        nightlyVersions.unshift('local');
     } catch (e) {
         console.error('Failed to fetch version list:', e);
         console.log(`Try again later or try the CN mirror with: ${chalk.yellow('npm run test:visual -- -- --useCNMirror')}`)
@@ -283,20 +295,10 @@ async function start() {
                 return;
             }
 
-            const expectedVersionsList = _currentRunConfig.isExpectedNightly ? nightlyVersions : stableVersions;
-            const actualVersionsList = _currentRunConfig.isActualNightly ? nightlyVersions : stableVersions;
-            if (!expectedVersionsList.includes(_currentRunConfig.expectedVersion)) {
-                // Pick first version not local
-                _currentRunConfig.expectedVersion = expectedVersionsList[1];
-            }
-            if (!actualVersionsList.includes(_currentRunConfig.actualVersion)) {
-                _currentRunConfig.actualVersion = 'local';
-            }
-
             socket.emit('syncRunConfig_return', {
                 runConfig: _currentRunConfig,
-                expectedVersionsList,
-                actualVersionsList
+                versions: stableVersions,
+                nightlyVersions: nightlyVersions
             });
 
             if (_currentTestHash !== getRunHash(_currentRunConfig)) {
@@ -320,6 +322,7 @@ async function start() {
         });
 
         socket.on('genTestsRunReport', async (params) => {
+            console.log('genTestsRunReport', params);
             const absPath = await genReport(
                 path.join(RESULTS_ROOT_DIR, getRunHash(params))
             );
@@ -340,8 +343,18 @@ async function start() {
 
             let startTime = Date.now();
 
-            await prepareEChartsLib(data.expectedVersion, useCNMirror); // Expected version.
-            await prepareEChartsLib(data.actualVersion, useCNMirror); // Version to test
+            try {
+                await prepareEChartsLib(data.expectedSource, data.expectedVersion, useCNMirror);
+                await prepareEChartsLib(data.actualSource, data.actualVersion, useCNMirror);
+            }
+            catch (e) {
+                console.error(e);
+                // Send error to client
+                socket.emit('run_error', {
+                    message: e.toString()
+                });
+                return;
+            }
 
             // If aborted in the time downloading lib.
             if (isAborted) {
@@ -349,29 +362,27 @@ async function start() {
             }
 
             // TODO Should broadcast to all sockets.
-            try {
-                if (!checkStoreVersion(data)) {
-                    throw new Error('Unmatched store version and run version.');
-                }
+            if (!checkStoreVersion(data)) {
+                throw new Error('Unmatched store version and run version.');
+            }
 
-                await startTests(
-                    data.tests,
-                    io.of('/client'),
-                    {
-                        noHeadless: data.noHeadless,
-                        threadsCount: data.threads,
-                        replaySpeed: data.replaySpeed,
-                        actualVersion: data.actualVersion,
-                        expectedVersion: data.expectedVersion,
-                        renderer: data.renderer,
-                        useCoarsePointer: data.useCoarsePointer,
-                        noSave: false
-                    }
-                );
-            }
-            catch (e) {
-                console.error(e);
-            }
+            await startTests(
+                data.tests,
+                io.of('/client'),
+                {
+                    noHeadless: data.noHeadless,
+                    threadsCount: data.threads,
+                    replaySpeed: data.replaySpeed,
+                    actualSource: data.actualSource,
+                    actualVersion: data.actualVersion,
+                    expectedSource: data.expectedSource,
+                    expectedVersion: data.expectedVersion,
+                    renderer: data.renderer,
+                    useCoarsePointer: data.useCoarsePointer,
+                    theme: data.theme,
+                    noSave: false
+                }
+            );
 
             if (!isAborted) {
                 const deltaTime = Date.now() - startTime;
@@ -388,6 +399,120 @@ async function start() {
         });
 
         socket.on('stop', abortTests);
+
+        socket.on('markAsExpected', function(data, callback) {
+            console.log('Mark as expected:', data.testName, data.type);
+            const store = require('./store');
+            try {
+                store.markTestAsExpected({
+                    testName: data.testName,
+                    link: data.link || '',
+                    comment: data.comment || '',
+                    type: data.type,
+                    markedBy: data.markedBy || '',
+                    lastVersion: data.lastVersion || '',
+                    markTime: data.markTime
+                });
+                // Send the updated list
+                socket.emit('updateTestsList', store.getTestsList());
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }
+            catch (e) {
+                console.error(e);
+                if (typeof callback === 'function') {
+                    callback(e.toString());
+                }
+            }
+        });
+
+        socket.on('saveUserMeta', function(data) {
+            saveUserMeta(data);
+        });
+
+        socket.on('getUserMeta', function() {
+            const userMeta = getUserMeta();
+            socket.emit('userMeta', userMeta);
+        });
+
+        socket.on('deleteMarks', function(data, callback) {
+            try {
+                const { testName } = data;
+                if (!testName) {
+                    throw new Error('Test name is required');
+                }
+
+                console.log(`Deleting all marks for test "${testName}"`);
+
+                // 使用 getMarkedAsExpectedFullPath 获取标记文件路径
+                const store = require('./store');
+                const util = require('./util');
+                const fs = require('fs');
+                const marksFilePath = util.getMarkedAsExpectedFullPath(testName);
+
+                // 检查文件是否存在
+                if (fs.existsSync(marksFilePath)) {
+                    // 删除文件
+                    fs.unlinkSync(marksFilePath);
+                    console.log(`Deleted marks file for test "${testName}"`);
+
+                    // 更新内存中的测试对象
+                    const test = store.getTestsList().find(test => test.name === testName);
+                    if (test) {
+                        test.markedAsExpected = null;
+                    }
+
+                    // 更新客户端的测试列表
+                    socket.emit('updateTestsList', store.getTestsList());
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                } else {
+                    console.log(`No marks file found for test "${testName}"`);
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                }
+            }
+            catch (e) {
+                console.error('Failed to delete marks:', e);
+                if (typeof callback === 'function') {
+                    callback(e.toString());
+                }
+            }
+        });
+
+        socket.on('deleteMark', function(data, callback) {
+            try {
+                const { testName, markTime } = data;
+                if (!testName) {
+                    throw new Error('Test name is required');
+                }
+                if (!markTime) {
+                    throw new Error('Mark time is required');
+                }
+
+                console.log(`Deleting mark for test "${testName}" at time ${markTime}`);
+                const success = require('./store').deleteMark(testName, markTime);
+
+                if (success) {
+                    // 更新客户端的测试列表
+                    socket.emit('updateTestsList', require('./store').getTestsList());
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                } else {
+                    throw new Error(`Failed to delete mark for test "${testName}" at time ${markTime}`);
+                }
+            }
+            catch (e) {
+                console.error('Failed to delete mark:', e);
+                if (typeof callback === 'function') {
+                    callback(e.toString());
+                }
+            }
+        });
     });
 
     io.of('/recorder').on('connect', async socket => {
@@ -426,6 +551,7 @@ async function start() {
                     expectedVersion: data.expectedVersion,
                     renderer: data.renderer || '',
                     useCoarsePointer: data.useCoarsePointer,
+                    theme: data.theme || 'none',
                     noSave: true
                 });
             }

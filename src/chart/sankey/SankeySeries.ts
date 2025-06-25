@@ -34,12 +34,15 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     DefaultEmphasisFocus,
-    CallbackDataParams
+    CallbackDataParams,
+    RoamOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import type View from '../../coord/View';
+import tokens from '../../visual/tokens';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
@@ -95,7 +98,8 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
 export interface SankeySeriesOption
     extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
     SankeyBothStateOption<CallbackDataParams>,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin,
+    RoamOptionMixin {
     type?: 'sankey'
 
     /**
@@ -147,6 +151,10 @@ export interface SankeySeriesOption
 class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     static readonly type = 'series.sankey';
     readonly type = SankeySeriesModel.type;
+
+    static layoutMode = 'box' as const;
+
+    coordinateSystem: View;
 
     levelModels: Model<SankeyLevelOption>[];
 
@@ -211,6 +219,14 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         const dataItem = nodes[dataIndex];
         dataItem.localX = localPosition[0];
         dataItem.localY = localPosition[1];
+    }
+
+    setCenter(center: number[]) {
+        this.option.center = center;
+    }
+
+    setZoom(zoom: number) {
+        this.option.zoom = zoom;
     }
 
     /**
@@ -281,7 +297,9 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         // zlevel: 0,
         z: 2,
 
-        coordinateSystem: 'view',
+        // `coordinateSystem` can be declared as 'matrix', 'calendar',
+        //  which provides box layout container.
+        coordinateSystemUsage: 'box',
 
         left: '5%',
         top: '5%',
@@ -296,6 +314,12 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         draggable: true,
 
         layoutIterations: 32,
+
+        // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        roam: false,
+        roamTrigger: 'global',
+        center: null,
+        zoom: 1,
 
         label: {
             show: true,
@@ -313,7 +337,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         nodeAlign: 'justify',
 
         lineStyle: {
-            color: '#314656',
+            color: tokens.color.neutral50,
             opacity: 0.2,
             curveness: 0.5
         },
@@ -329,7 +353,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         },
 

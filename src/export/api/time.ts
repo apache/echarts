@@ -19,4 +19,4 @@
 
 export {parseDate as parse} from '../../util/number';
 
-export {format} from '../../util/time';
+export {format, roundTime} from '../../util/time';
