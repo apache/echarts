@@ -38,6 +38,7 @@ import {
     CategoryAxisBaseOption,
     LogAxisBaseOption,
     TimeAxisLabelFormatterOption,
+    TimeAxisLabelOption,
     ValueAxisBaseOption
 } from './axisCommonTypes';
 import type CartesianAxisModel from './cartesian/AxisModel';
@@ -201,9 +202,11 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
                     extent: [Infinity, -Infinity]
                 });
             case 'time':
+                const axisLabel = model.getModel('axisLabel') as Model<TimeAxisLabelOption>;
                 return new TimeScale({
                     locale: model.ecModel.getLocaleModel(),
-                    useUTC: model.ecModel.get('useUTC')
+                    useUTC: model.ecModel.get('useUTC'),
+                    formatterMinUnit: axisLabel.get('formatterMinUnit')
                 });
             default:
                 // case 'value'/'interval', 'log', or others.

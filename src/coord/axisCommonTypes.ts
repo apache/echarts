@@ -23,6 +23,7 @@ import {
     AreaStyleOption, ComponentOption, ColorString,
     AnimationOptionMixin, Dictionary, ScaleDataValue, CommonAxisPointerOption
 } from '../util/types';
+import { PrimaryTimeUnit } from '../util/time';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
 
 
@@ -161,9 +162,13 @@ export interface LogAxisBaseOption extends NumericAxisBaseOptionCommon {
     axisLabel?: AxisLabelOption<'log'>;
     logBase?: number;
 }
+
+export interface TimeAxisLabelOption extends AxisLabelOption<'time'> {
+    formatterMinUnit?: PrimaryTimeUnit
+}
 export interface TimeAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'time';
-    axisLabel?: AxisLabelOption<'time'>;
+    axisLabel?: TimeAxisLabelOption;
 }
 interface AxisNameTextStyleOption extends TextCommonOption {
     rich?: Dictionary<TextCommonOption>
