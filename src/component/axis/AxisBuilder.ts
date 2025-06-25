@@ -18,7 +18,11 @@
 */
 
 import {
-    retrieve, defaults, extend, each, isObject, map, isString, isNumber, isFunction, retrieve2,
+    retrieve, defaults, extend, each, isObject, isString, isNumber, isFunction, retrieve2,
+    assert,
+    map,
+    retrieve3,
+    filter,
 } from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
@@ -28,30 +32,59 @@ import {isRadianAroundZero, remRadian} from '../../util/number';
 import {createSymbol, normalizeSymbolOffset} from '../../util/symbol';
 import * as matrixUtil from 'zrender/src/core/matrix';
 import {applyTransform as v2ApplyTransform} from 'zrender/src/core/vector';
-import {isNameLocationCenter, shouldShowAllLabels} from '../../coord/axisHelper';
+import {
+    isNameLocationCenter, shouldShowAllLabels,
+} from '../../coord/axisHelper';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import {
     ZRTextVerticalAlign, ZRTextAlign, ECElement, ColorString,
     VisualAxisBreak,
     ParsedAxisBreak,
-    LabelMarginType,
-    LabelExtendedText,
+    NullUndefined,
+    DimensionName,
 } from '../../util/types';
-import { AxisBaseOption } from '../../coord/axisCommonTypes';
+import {
+    AxisBaseOption, AxisBaseOptionCommon, AxisLabelBaseOptionNuance
+} from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
 import {
-    prepareLayoutList, hideOverlap, detectAxisLabelPairIntersection,
+    hideOverlap,
+    LabelLayoutInfoComputed,
+    labelIntersect,
+    LabelIntersectionCheckInfo,
+    prepareIntersectionCheckInfo,
+    LabelLayoutInfoAll,
+    ensureLabelLayoutInfoComputed,
+    LabelLayoutInfoRaw,
+    LABEL_LAYOUT_INFO_KIND_RAW,
+    rollbackToLabelLayoutInfoRaw,
+    LABEL_LAYOUT_INFO_KIND_COMPUTED,
+    createSingleLayoutInfoComputed,
 } from '../../label/labelLayoutHelper';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import { makeInner } from '../../util/model';
 import { getAxisBreakHelper } from './axisBreakHelper';
 import { AXIS_BREAK_EXPAND_ACTION_TYPE, BaseAxisBreakPayload } from './axisAction';
 import { getScaleBreakHelper } from '../../scale/break';
+import BoundingRect from 'zrender/src/core/BoundingRect';
+import Point from 'zrender/src/core/Point';
+import { copyTransform } from 'zrender/src/core/Transformable';
+import {
+    AxisLabelsComputingContext, AxisTickLabelComputingKind, createAxisLabelsComputingContext
+} from '../../coord/axisTickLabelBuilder';
+import { AxisTickCoord } from '../../coord/Axis';
+
 
 const PI = Math.PI;
+
+// This tune is also for backward compat, since nameMoveOverlap is set as default,
+// in compact layout (multiple charts in one canvas), name should be more close to the axis line and labels.
+const DEFAULT_CENTER_NAME_MARGIN_LEVELS: Record<AxisBuilderBuildExtraParams['nameMarginLevel'], [number, number]> =
+    [[1, 2], [5, 3], [8, 3]];
+const DEFAULT_ENDS_NAME_MARGIN_LEVELS: Record<AxisBuilderBuildExtraParams['nameMarginLevel'], [number, number]> =
+    [[0, 1], [0, 3], [0, 3]];
 
 type AxisIndexKey = 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex'
     | 'angleAxisIndex' | 'singleAxisIndex';
@@ -78,34 +111,67 @@ type AxisLabelText = graphic.Text & {
     __truncatedText: string
 } & ECElement;
 
-const getLabelInner = makeInner<{
+export const getLabelInner = makeInner<{
     break: VisualAxisBreak;
+    tickValue: number;
+    layoutRotation: number;
 }, graphic.Text>();
 
+const getTickInner = makeInner<{
+    onBand: AxisTickCoord['onBand']
+    tickValue: AxisTickCoord['tickValue']
+}, graphic.Line>();
 
+
+/**
+ * @see {AxisBuilder}
+ */
 export interface AxisBuilderCfg {
-    position?: number[]
     /**
-     * In radian. This is to be applied to axis transitionGroup directly.
+     * @mandatory
+     * The origin of the axis, in the global pixel coords.
+     */
+    position: number[]
+    /**
+     * @mandatory
+     * The rotation of the axis from the "standard axis" ([0, 0]-->[abs(axisExtent[1]-axisExtent[0]), 0]).
+     * In radian.
+     * Like always, a positive rotation represents rotating anticlockwisely from
+     * the "standard axis" , and a negative rotation represents clockwise.
+     * e.g.,
      * rotation 0 means an axis towards screen-right.
      * rotation Math.PI/4 means an axis towards screen-top-right.
      */
-    rotation?: number
+    rotation: number
     /**
-     * Used when nameLocation is 'middle' or 'center'.
-     * 1 | -1
+     * `nameDirection` or `tickDirection` or `labelDirection` are used when
+     * `nameLocation` is 'middle' or 'center'.
+     * values:
+     *  - `1` means ticks or labels are below the "standard axis" ([0, 0]-->[abs(axisExtent[1]-axisExtent[0]), 0]).
+     *  - `-1` means they are above the "standard axis".
      */
-    nameDirection?: number
-    tickDirection?: number
-    labelDirection?: number
+    nameDirection?: -1 | 1
+    tickDirection?: -1 | 1
+    labelDirection?: -1 | 1
     /**
-     * Useful when onZero.
+     * `labelOffset` means the offset between labels and the axis line, which is
+     * useful when 'onZero: true', where the axis line is in the grid rect and
+     * labels are outside the grid rect.
      */
     labelOffset?: number
     /**
-     * default get from axisModel.
+     * If not specified, get from axisModel.
      */
     axisLabelShow?: boolean
+    /**
+     * Works on axisLine.show: 'auto'. true by default.
+     */
+    axisLineAutoShow?: boolean;
+    /**
+     * Works on axisTick.show: 'auto'. true by default.
+     */
+    axisTickAutoShow?: boolean;
+
     /**
      * default get from axisModel.
      */
@@ -123,98 +189,405 @@ export interface AxisBuilderCfg {
 
     silent?: boolean
 
-    handleAutoShown?(elementType: 'axisLine' | 'axisTick'): boolean
-}
-
-interface TickCoord {
-    coord: number
-    tickValue?: number
+    defaultNameMoveOverlap?: boolean
 }
 
 /**
+ * Use it prior to `AxisBuilderCfg`. If settings in `AxisBuilderCfg` need to be preprocessed
+ * and shared by different methods, put them here.
+ */
+interface AxisBuilderCfgDetermined {
+    raw: AxisBuilderCfg,
+
+    position: AxisBuilderCfg['position']
+    rotation: AxisBuilderCfg['rotation']
+
+    nameDirection: AxisBuilderCfg['nameDirection']
+    tickDirection: AxisBuilderCfg['tickDirection']
+    labelDirection: AxisBuilderCfg['labelDirection']
+
+    silent: AxisBuilderCfg['silent']
+    labelOffset: AxisBuilderCfg['labelOffset']
+
+    axisName: AxisBaseOptionCommon['name'];
+    nameLocation: AxisBaseOption['nameLocation']
+    shouldNameMoveOverlap: boolean
+    showMinorTicks: boolean
+    optionHideOverlap: AxisBaseOption['axisLabel']['hideOverlap']
+}
+
+/**
+ * The context of this axisBuilder instance, never shared between axisBuilder instances.
+ * @see AxisBuilderSharedContext
+ */
+interface AxisBuilderLocalContext {
+    labelLayoutList?: LabelLayoutInfoAll[] | NullUndefined
+    labelGroup?: graphic.Group
+    axisLabelsCreationContext?: AxisLabelsComputingContext
+    nameEl?: graphic.Text | NullUndefined
+}
+
+export type AxisBuilderSharedContextRecord = {
+    // Represents axis rotation. The magnitude is 1.
+    dirVec?: Point,
+    transGroup?: AxisBuilder['_transformGroup'],
+    // - Used for overlap detection for both self and other axes.
+    // - Sorted in ascending order of the distance to transformGroup.x/y.
+    //  This sorting is for OBB intersection checking.
+    // - No NullUndefined item, and ignored items has been removed.
+    labelInfoList?: LabelLayoutInfoComputed[]
+    // `stOccupiedRect` is based on the "standard axis".
+    // If no label, be `NullUndefined`.
+    // - When `nameLocation` is 'center', `stOccupiedRect` is the unoin of labels, and is used for the case
+    //   below, where even if the `name` does not intersect with `1,000,000`, it is still pulled left to avoid
+    //   the overlap with `stOccupiedRect`.
+    //        1,000,000 -
+    //      n           |
+    //      a     1,000 -
+    //      m           |
+    //      e         0 -----------
+    // - When `nameLocaiton` is 'start'/'end', `stOccupiedRect` is not used, becuase they are not likely to overlap.
+    //   Additionally, these cases need to be considered:
+    //      If axis labels rotating, axis names should not be pulled by the union rect of labels.
+    //          ----|-----|   axis name with
+    //              1     5   big height
+    //                0     0
+    //                  0     0
+    //      Axis line and axis labels should not be unoined to one rect for overlap detection, because of
+    //      the most common case below (The axis name is inserted into the indention to save space):
+    //          ----|------------|  A axis name
+    //          1,000,000   300,000,000
+    stOccupiedRect?: BoundingRect | NullUndefined;
+    nameLayout?: LabelLayoutInfoComputed | NullUndefined;
+    nameLocation?: AxisBaseOption['nameLocation'];
+    // Only used in __DEV__ mode.
+    ready: Partial<Record<AxisBuilderAxisPartName, boolean>>
+};
+
+/**
+ * A context shared by difference axisBuilder instances.
+ * For cross-axes overlap resolving.
+ *
+ * Lifecycle constrait: should not over a pass of ec main process.
+ *  If model is changed, the context must be disposed.
+ *
+ * @see AxisBuilderLocalContext
+ */
+export class AxisBuilderSharedContext {
+    /**
+     * [CAUTION] Do not modify this data structure outside this class.
+     */
+    recordMap: {
+        [axisDimension: DimensionName]: AxisBuilderSharedContextRecord[] // List index: axisIndex
+    } = {};
+
+    constructor(resolveAxisNameOverlap: AxisBuilderSharedContext['resolveAxisNameOverlap']) {
+        this.resolveAxisNameOverlap = resolveAxisNameOverlap;
+    }
+
+    ensureRecord(axisModel: AxisBaseModel): AxisBuilderSharedContextRecord {
+        const dim = axisModel.axis.dim;
+        const idx = axisModel.componentIndex;
+        const recordMap = this.recordMap;
+        const records = recordMap[dim] || (recordMap[dim] = []);
+        return (records[idx] || (records[idx] = {ready: {}}));
+    }
+
+    /**
+     * Overlap resolution strategy. May vary for different coordinate systems.
+     */
+    readonly resolveAxisNameOverlap: (
+        cfg: AxisBuilderCfgDetermined,
+        ctx: AxisBuilderSharedContext | NullUndefined,
+        axisModel: AxisBaseModel,
+        nameLayoutInfo: LabelLayoutInfoComputed, // The existing has been ensured.
+        nameMoveDirVec: Point,
+        thisRecord: AxisBuilderSharedContextRecord // The existing has been ensured.
+    ) => void;
+};
+
+/**
+ * [CAUTION]
+ *  1. The call of this function must be after axisLabel overlap handlings
+ *     (such as `hideOverlap`, `fixMinMaxLabelShow`) and after transform calculating.
+ *  2. Can be called multiple times and should be idempotent.
+ */
+function resetOverlapRecordToShared(
+    cfg: AxisBuilderCfgDetermined,
+    shared: AxisBuilderSharedContext,
+    axisModel: AxisBaseModel,
+    labelLayoutInfoList: LabelLayoutInfoAll[]
+): void {
+    const axis = axisModel.axis;
+    const record = shared.ensureRecord(axisModel);
+    const labelInfoList: AxisBuilderSharedContextRecord['labelInfoList'] = [];
+    let stOccupiedRect: AxisBuilderSharedContextRecord['stOccupiedRect'];
+    const useStOccupiedRect = hasAxisName(cfg.axisName) && isNameLocationCenter(cfg.nameLocation);
+
+    each(labelLayoutInfoList, layout => {
+        const layoutInfo = ensureLabelLayoutInfoComputed(layout);
+        if (!layoutInfo || layoutInfo.label.ignore) {
+            return;
+        }
+        labelInfoList.push(layoutInfo);
+
+        const transGroup = record.transGroup;
+        if (useStOccupiedRect) {
+            // Transform to "standard axis" for creating stOccupiedRect (the label rects union).
+            transGroup.transform
+                ? matrixUtil.invert(_stTransTmp, transGroup.transform)
+                : matrixUtil.identity(_stTransTmp);
+            if (layoutInfo.transform) {
+                matrixUtil.mul(_stTransTmp, _stTransTmp, layoutInfo.transform);
+            }
+            BoundingRect.copy(_stLabelRectTmp, layoutInfo.localRect);
+            _stLabelRectTmp.applyTransform(_stTransTmp);
+            stOccupiedRect
+                ? stOccupiedRect.union(_stLabelRectTmp)
+                : BoundingRect.copy(stOccupiedRect = new BoundingRect(0, 0, 0, 0), _stLabelRectTmp);
+        }
+    });
+
+    const sortByDim = Math.abs(record.dirVec.x) > 0.1 ? 'x' : 'y';
+    const sortByValue = record.transGroup[sortByDim];
+    labelInfoList.sort((info1, info2) => (
+        Math.abs(info1.label[sortByDim] - sortByValue) - Math.abs(info2.label[sortByDim] - sortByValue)
+    ));
+
+    if (useStOccupiedRect && stOccupiedRect) {
+        const extent = axis.getExtent();
+        const axisLineX = Math.min(extent[0], extent[1]);
+        const axisLineWidth = Math.max(extent[0], extent[1]) - axisLineX;
+        // If `nameLocation` is 'middle', enlarge axis labels boundingRect to axisLine to avoid bad
+        //  case like that axis name is placed in the gap between axis labels and axis line.
+        // If only one label exists, the entire band should be occupied for
+        // visual consistency, so extent it to [0, canvas width].
+        stOccupiedRect.union(new BoundingRect(axisLineX, 0, axisLineWidth, 1));
+    }
+
+    record.stOccupiedRect = stOccupiedRect;
+    record.labelInfoList = labelInfoList;
+}
+const _stTransTmp = matrixUtil.create();
+const _stLabelRectTmp = new BoundingRect(0, 0, 0, 0);
+
+/**
+ * The default resolver does not involve other axes within the same coordinate system.
+ */
+export const resolveAxisNameOverlapDefault: AxisBuilderSharedContext['resolveAxisNameOverlap'] = (
+    cfg, ctx, axisModel, nameLayoutInfo, nameMoveDirVec, thisRecord
+): void => {
+    if (isNameLocationCenter(cfg.nameLocation)) {
+        const stOccupiedRect = thisRecord.stOccupiedRect;
+        if (stOccupiedRect) {
+            moveIfOverlap(
+                prepareIntersectionCheckInfo(stOccupiedRect, thisRecord.transGroup.transform),
+                nameLayoutInfo,
+                nameMoveDirVec
+            );
+        }
+    }
+    else {
+        moveIfOverlapByLinearLabels(
+            thisRecord.labelInfoList, thisRecord.dirVec, nameLayoutInfo, nameMoveDirVec
+        );
+    }
+};
+
+// [NOTICE] not consider ignore.
+function moveIfOverlap(
+    basedLayoutInfo: LabelIntersectionCheckInfo,
+    movableLayoutInfo: LabelLayoutInfoComputed,
+    moveDirVec: Point
+): void {
+    const mtv = new Point();
+    if (labelIntersect(basedLayoutInfo, movableLayoutInfo, mtv, {
+        direction: Math.atan2(moveDirVec.y, moveDirVec.x),
+        bidirectional: false,
+        touchThreshold: 0.05,
+    })) {
+        Point.add(movableLayoutInfo.label, movableLayoutInfo.label, mtv);
+        ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(movableLayoutInfo));
+    }
+}
+
+export function moveIfOverlapByLinearLabels(
+    baseLayoutInfoList: LabelLayoutInfoComputed[],
+    baseDirVec: Point,
+    movableLayoutInfo: LabelLayoutInfoComputed,
+    moveDirVec: Point,
+): void {
+    // Detect and move from far to close.
+    const sameDir = Point.dot(moveDirVec, baseDirVec) >= 0;
+    for (let idx = 0, len = baseLayoutInfoList.length; idx < len; idx++) {
+        const labelInfo = baseLayoutInfoList[sameDir ? idx : len - 1 - idx];
+        if (!labelInfo.label.ignore) {
+            moveIfOverlap(labelInfo, movableLayoutInfo, moveDirVec);
+        }
+    }
+}
+
+/**
+ * @caution
+ * - Ensure it is called after the data processing stage finished.
+ * - It might be called before `CahrtView#render`, sush as called at `CoordinateSystem#update`,
+ *  thus ensure the result the same whenever it is called.
+ *
+ * A builder for a straight-line axis.
+ *
  * A final axis is translated and rotated from a "standard axis".
  * So opt.position and opt.rotation is required.
  *
- * A standard axis is and axis from [0, 0] to [0, axisExtent[1]],
- * for example: (0, 0) ------------> (0, 50)
- *
- * nameDirection or tickDirection or labelDirection is 1 means tick
- * or label is below the standard axis, whereas is -1 means above
- * the standard axis. labelOffset means offset between label and axis,
- * which is useful when 'onZero', where axisLabel is in the grid and
- * label in outside grid.
- *
- * Tips: like always,
- * positive rotation represents anticlockwise, and negative rotation
- * represents clockwise.
- * The direction of position coordinate is the same as the direction
- * of screen coordinate.
- *
- * Do not need to consider axis 'inverse', which is auto processed by
- * axis extent.
+ * A "standard axis" is the axis [0,0]-->[abs(axisExtent[1]-axisExtent[0]),0]
+ * for example: [0,0]-->[50,0]
  */
 class AxisBuilder {
 
-    axisModel: AxisBaseModel;
+    private _axisModel: AxisBaseModel;
 
-    opt: AxisBuilderCfg;
+    private _cfg: AxisBuilderCfgDetermined;
+    private _local: AxisBuilderLocalContext;
+    private _shared: AxisBuilderSharedContext;
 
     readonly group = new graphic.Group();
 
+    /**
+     * `_transformGroup.transform` is ready to visit. (but be `NullUndefined` if no tranform.)
+     */
     private _transformGroup: graphic.Group;
     private _api: ExtensionAPI;
 
+    /**
+     * [CAUTION]: axisModel.axis.extent/scale must be ready to use.
+     */
     constructor(
         axisModel: AxisBaseModel,
         api: ExtensionAPI,
-        opt?: AxisBuilderCfg
+        opt: AxisBuilderCfg,
+        shared?: AxisBuilderSharedContext,
     ) {
+        this._axisModel = axisModel;
         this._api = api;
-        this.opt = opt;
+        this._local = {};
+        this._shared = shared || new AxisBuilderSharedContext(resolveAxisNameOverlapDefault);
 
-        this.axisModel = axisModel;
+        this._resetCfgDetermined(opt);
+    }
+
+    /**
+     * Regarding axis label related configurations, only the change of label.x/y is supported; other
+     * changes are not necessary and not performant. To be specific, only `axis.position`
+     * (and consequently `labelOffset`) and `axis.extent` can be changed, and assume everything in
+     * `axisModel` are not changed.
+     * Axis line related configurations can be changed since this method can only be called
+     * before they are created.
+     */
+    updateCfg(opt: Pick<AxisBuilderCfg, 'position' | 'labelOffset'>): void {
+        if (__DEV__) {
+            const ready = this._shared.ensureRecord(this._axisModel).ready;
+            // After that, changing cfg is not supported; avoid unnecessary complexity.
+            assert(!ready.axisLine && !ready.axisTickLabelDetermine);
+            // Have to be called again if cfg changed.
+            ready.axisName = ready.axisTickLabelEstimate = false;
+        }
+
+        const raw = this._cfg.raw;
+        raw.position = opt.position;
+        raw.labelOffset = opt.labelOffset;
+
+        this._resetCfgDetermined(raw);
+    }
+
+    /**
+     * [CAUTION] For debug usage. Never change it outside!
+     */
+    __getRawCfg() {
+        return this._cfg.raw;
+    }
+
+    private _resetCfgDetermined(raw: AxisBuilderCfg): void {
+        const axisModel = this._axisModel;
+
+        // FIXME:
+        //  Currently there is no uniformed way to set default values if an option
+        //  is specified null/undefined by user (intentionally or unintentionally),
+        //  e.g. null/undefined is not a illegal value for `nameLocation`.
+        //  Try to use `getDefaultOption` to address it. But radar has no `getDefaultOption`.
+        const axisModelDefaultOption = axisModel.getDefaultOption ? axisModel.getDefaultOption() : {};
 
         // Default value
-        defaults(
-            opt,
-            {
-                labelOffset: 0,
-                nameDirection: 1,
-                tickDirection: 1,
-                labelDirection: 1,
-                silent: true,
-                handleAutoShown: () => true
-            } as AxisBuilderCfg
-        );
+        const axisName = retrieve2(raw.axisName, axisModel.get('name'));
 
+        let nameMoveOverlapOption = axisModel.get('nameMoveOverlap');
+        if (nameMoveOverlapOption == null || nameMoveOverlapOption === 'auto') {
+            nameMoveOverlapOption = retrieve2(raw.defaultNameMoveOverlap, true);
+        }
+
+        const cfg = {
+            raw: raw,
+
+            position: raw.position,
+            rotation: raw.rotation,
+
+            nameDirection: retrieve2(raw.nameDirection, 1),
+            tickDirection: retrieve2(raw.tickDirection, 1),
+            labelDirection: retrieve2(raw.labelDirection, 1),
+
+            labelOffset: retrieve2(raw.labelOffset, 0),
+            silent: retrieve2(raw.silent, true),
+
+            axisName: axisName,
+            nameLocation: retrieve3(axisModel.get('nameLocation'), axisModelDefaultOption.nameLocation, 'end'),
+            shouldNameMoveOverlap: hasAxisName(axisName) && nameMoveOverlapOption,
+            optionHideOverlap: axisModel.get(['axisLabel', 'hideOverlap']),
+            showMinorTicks: axisModel.get(['minorTick', 'show']),
+        };
+        if (__DEV__) {
+            assert(cfg.position != null);
+            assert(cfg.rotation != null);
+        }
+        this._cfg = cfg;
 
         // FIXME Not use a separate text group?
         const transformGroup = new graphic.Group({
-            x: opt.position[0],
-            y: opt.position[1],
-            rotation: opt.rotation
+            x: cfg.position[0],
+            y: cfg.position[1],
+            rotation: cfg.rotation
         });
-
-        // this.group.add(transformGroup);
-        // this._transformGroup = transformGroup;
-
         transformGroup.updateTransform();
-
         this._transformGroup = transformGroup;
+
+        const record = this._shared.ensureRecord(axisModel);
+        record.transGroup = this._transformGroup;
+        record.dirVec = new Point(Math.cos(-cfg.rotation), Math.sin(-cfg.rotation));
     }
 
-    hasBuilder(name: keyof typeof builders) {
-        return !!builders[name];
+    build(axisPartNameMap?: AxisBuilderAxisPartMap, extraParams?: {}): AxisBuilder {
+        if (!axisPartNameMap) {
+            axisPartNameMap = {
+                axisLine: true,
+                axisTickLabelEstimate: false,
+                axisTickLabelDetermine: true,
+                axisName: true
+            };
+        }
+
+        each(AXIS_BUILDER_AXIS_PART_NAMES, partName => {
+            if (axisPartNameMap[partName]) {
+                builders[partName](
+                    this._cfg, this._local, this._shared,
+                    this._axisModel, this.group, this._transformGroup, this._api,
+                    extraParams || {}
+                );
+            }
+        });
+        return this;
     }
 
-    add(name: keyof typeof builders) {
-        builders[name](this.opt, this.axisModel, this.group, this._transformGroup, this._api);
-    }
-
-    getGroup() {
-        return this.group;
-    }
-
+    /**
+     * Currently only get text align/verticalAlign by rotation.
+     * NO `position` is involved, otherwise it have to be performed for each `updateAxisLabelChangableProps`.
+     */
     static innerTextLayout(axisRotation: number, textRotation: number, direction: number) {
         const rotationDiff = remRadian(textRotation - axisRotation);
         let textAlign;
@@ -267,21 +640,47 @@ class AxisBuilder {
 
 interface AxisElementsBuilder {
     (
-        opt: AxisBuilderCfg,
+        cfg: AxisBuilderCfgDetermined,
+        local: AxisBuilderLocalContext,
+        shared: AxisBuilderSharedContext,
         axisModel: AxisBaseModel,
         group: graphic.Group,
-        transformGroup: graphic.Group,
-        api: ExtensionAPI
-    ):void
+        transformGroup: AxisBuilder['_transformGroup'],
+        api: ExtensionAPI,
+        extraParams: AxisBuilderBuildExtraParams
+    ): void
 }
 
-const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBuilder> = {
+interface AxisBuilderBuildExtraParams {
+    noPxChange?: boolean
+    nameMarginLevel?: 0 | 1 | 2
+}
 
-    axisLine(opt, axisModel, group, transformGroup, api) {
+// Sorted by dependency order.
+const AXIS_BUILDER_AXIS_PART_NAMES = [
+    'axisLine',
+    'axisTickLabelEstimate',
+    'axisTickLabelDetermine',
+    'axisName'
+] as const;
+type AxisBuilderAxisPartName = typeof AXIS_BUILDER_AXIS_PART_NAMES[number];
+export type AxisBuilderAxisPartMap = {[axisPartName in AxisBuilderAxisPartName]?: boolean};
+
+const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
+
+    axisLine(cfg, local, shared, axisModel, group, transformGroup, api) {
+        if (__DEV__) {
+            const ready = shared.ensureRecord(axisModel).ready;
+            assert(!ready.axisLine);
+            ready.axisLine = true;
+        }
 
         let shown = axisModel.get(['axisLine', 'show']);
-        if (shown === 'auto' && opt.handleAutoShown) {
-            shown = opt.handleAutoShown('axisLine');
+        if (shown === 'auto') {
+            shown = true;
+            if (cfg.raw.axisLineAutoShow != null) {
+                shown = !!cfg.raw.axisLineAutoShow;
+            }
         }
         if (!shown) {
             return;
@@ -305,7 +704,7 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             axisModel.getModel(['axisLine', 'lineStyle']).getLineStyle()
         );
         const pathBaseProp: PathProps = {
-            strokeContainThreshold: opt.strokeContainThreshold || 5,
+            strokeContainThreshold: cfg.raw.strokeContainThreshold || 5,
             silent: true,
             z2: 1,
             style: lineStyle,
@@ -348,11 +747,11 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             const symbolHeight = arrowSize[1];
 
             each([{
-                rotate: opt.rotation + Math.PI / 2,
+                rotate: cfg.rotation + Math.PI / 2,
                 offset: arrowOffset[0],
                 r: 0
             }, {
-                rotate: opt.rotation - Math.PI / 2,
+                rotate: cfg.rotation - Math.PI / 2,
                 offset: arrowOffset[1],
                 r: Math.sqrt((pt1[0] - pt2[0]) * (pt1[0] - pt2[0])
                     + (pt1[1] - pt2[1]) * (pt1[1] - pt2[1]))
@@ -374,8 +773,8 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                     const pt = inverse ? pt2 : pt1;
                     symbol.attr({
                         rotation: point.rotate,
-                        x: pt[0] + r * Math.cos(opt.rotation),
-                        y: pt[1] - r * Math.sin(opt.rotation),
+                        x: pt[0] + r * Math.cos(cfg.rotation),
+                        y: pt[1] - r * Math.sin(cfg.rotation),
                         silent: true,
                         z2: 11
                     });
@@ -385,91 +784,114 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         }
     },
 
-    axisTickLabel(opt, axisModel, group, transformGroup, api) {
-        const ticksEls = buildAxisMajorTicks(group, transformGroup, axisModel, opt);
-        const labelEls = buildAxisLabel(group, transformGroup, axisModel, opt, api);
-
-        adjustBreakLabels(axisModel, opt.rotation, labelEls);
-
-        const shouldHideOverlap = axisModel.get(['axisLabel', 'hideOverlap']);
-
-        fixMinMaxLabelShow(opt, axisModel, labelEls, ticksEls, shouldHideOverlap);
-
-        buildAxisMinorTicks(group, transformGroup, axisModel, opt.tickDirection);
-
-        // This bit fixes the label overlap issue for the time chart.
-        // See https://github.com/apache/echarts/issues/14266 for more.
-        if (shouldHideOverlap) {
-            let priorityBoundary = 0;
-            each(labelEls, label => {
-                label.z2 > priorityBoundary && (priorityBoundary = label.z2);
-            });
-            const labelList = prepareLayoutList(map(labelEls, label => {
-                let priority = label.z2;
-                if (getLabelInner(label).break) {
-                    // Make break labels be highest priority.
-                    priority += priorityBoundary;
-                }
-                return {
-                    label,
-                    priority,
-                    defaultAttr: {
-                        ignore: label.ignore
-                    },
-                };
-            }));
-
-            hideOverlap(labelList);
+    /**
+     * [CAUTION] This method can be called multiple times, following the change due to `resetCfg` called
+     *  in size measurement. Thus this method should be idempotent, and should be performant.
+     */
+    axisTickLabelEstimate(cfg, local, shared, axisModel, group, transformGroup, api, extraParams) {
+        if (__DEV__) {
+            const ready = shared.ensureRecord(axisModel).ready;
+            assert(!ready.axisTickLabelDetermine);
+            ready.axisTickLabelEstimate = true;
+        }
+        const needCallLayout = dealLastTickLabelResultReusable(local, group, extraParams);
+        if (needCallLayout) {
+            axisTickLabelLayout(
+                cfg, local, shared, axisModel, group, transformGroup, api, AxisTickLabelComputingKind.estimate
+            );
         }
     },
 
-    axisName(opt, axisModel, group, transformGroup, api) {
-        const name = retrieve(opt.axisName, axisModel.get('name'));
+    /**
+     * Finish axis tick label build.
+     * Can be only called once.
+     */
+    axisTickLabelDetermine(cfg, local, shared, axisModel, group, transformGroup, api, extraParams) {
+        if (__DEV__) {
+            const ready = shared.ensureRecord(axisModel).ready;
+            ready.axisTickLabelDetermine = true;
+        }
+        const needCallLayout = dealLastTickLabelResultReusable(local, group, extraParams);
+        if (needCallLayout) {
+            axisTickLabelLayout(
+                cfg, local, shared, axisModel, group, transformGroup, api, AxisTickLabelComputingKind.determine
+            );
+        }
+        const ticksEls = buildAxisMajorTicks(cfg, group, transformGroup, axisModel);
+        syncLabelIgnoreToMajorTicks(cfg, local.labelLayoutList, ticksEls);
 
-        if (!name) {
+        buildAxisMinorTicks(cfg, group, transformGroup, axisModel, cfg.tickDirection);
+    },
+
+    /**
+     * [CAUTION] This method can be called multiple times, following the change due to `resetCfg` called
+     *  in size measurement. Thus this method should be idempotent, and should be performant.
+     */
+    axisName(cfg, local, shared, axisModel, group, transformGroup, api, extraParams) {
+        const sharedRecord = shared.ensureRecord(axisModel);
+        if (__DEV__) {
+            const ready = sharedRecord.ready;
+            assert(ready.axisTickLabelEstimate || ready.axisTickLabelDetermine);
+            ready.axisName = true;
+        }
+
+        // Remove the existing name result created in estimation phase.
+        if (local.nameEl) {
+            group.remove(local.nameEl);
+            local.nameEl = sharedRecord.nameLayout = sharedRecord.nameLocation = null;
+        }
+
+        const name = cfg.axisName;
+        if (!hasAxisName(name)) {
             return;
         }
 
-        const nameLocation = axisModel.get('nameLocation');
-        const nameDirection = opt.nameDirection;
+        const nameLocation = cfg.nameLocation;
+        const nameDirection = cfg.nameDirection;
         const textStyleModel = axisModel.getModel('nameTextStyle');
-        const axisToNameGapStartGap = axisModel instanceof CartesianAxisModel ? axisModel.axisToNameGapStartGap : 0;
-        const gap = (axisModel.get('nameGap') || 0) + axisToNameGapStartGap;
+        const gap = (axisModel.get('nameGap') || 0);
 
         const extent = axisModel.axis.getExtent();
-        const gapSignal = extent[0] > extent[1] ? -1 : 1;
-        const pos = [
-            nameLocation === 'start'
-                ? extent[0] - gapSignal * gap
-                : nameLocation === 'end'
-                ? extent[1] + gapSignal * gap
-                : (extent[0] + extent[1]) / 2, // 'middle'
-            // Reuse labelOffset.
-            isNameLocationCenter(nameLocation) ? opt.labelOffset + nameDirection * gap : 0
-        ];
-
-        let labelLayout;
+        const gapStartEndSignal = axisModel.axis.inverse ? -1 : 1;
+        const pos = new Point(0, 0);
+        const nameMoveDirVec = new Point(0, 0);
+        if (nameLocation === 'start') {
+            pos.x = extent[0] - gapStartEndSignal * gap;
+            nameMoveDirVec.x = -gapStartEndSignal;
+        }
+        else if (nameLocation === 'end') {
+            pos.x = extent[1] + gapStartEndSignal * gap;
+            nameMoveDirVec.x = gapStartEndSignal;
+        }
+        else { // 'middle' or 'center'
+            pos.x = (extent[0] + extent[1]) / 2;
+            pos.y = cfg.labelOffset + nameDirection * gap;
+            nameMoveDirVec.y = nameDirection;
+        }
+        const mt = matrixUtil.create();
+        nameMoveDirVec.transform(matrixUtil.rotate(mt, mt, cfg.rotation));
 
         let nameRotation = axisModel.get('nameRotate');
         if (nameRotation != null) {
             nameRotation = nameRotation * PI / 180; // To radian.
         }
 
+        let labelLayout;
         let axisNameAvailableWidth;
 
         if (isNameLocationCenter(nameLocation)) {
             labelLayout = AxisBuilder.innerTextLayout(
-                opt.rotation,
-                nameRotation != null ? nameRotation : opt.rotation, // Adapt to axis.
+                cfg.rotation,
+                nameRotation != null ? nameRotation : cfg.rotation, // Adapt to axis.
                 nameDirection
             );
         }
         else {
             labelLayout = endTextLayout(
-                opt.rotation, nameLocation, nameRotation || 0, extent
+                cfg.rotation, nameLocation, nameRotation || 0, extent
             );
 
-            axisNameAvailableWidth = opt.axisNameAvailableWidth;
+            axisNameAvailableWidth = cfg.raw.axisNameAvailableWidth;
             if (axisNameAvailableWidth != null) {
                 axisNameAvailableWidth = Math.abs(
                     axisNameAvailableWidth / Math.sin(labelLayout.rotation)
@@ -483,12 +905,14 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
         const truncateOpt = axisModel.get('nameTruncate', true) || {};
         const ellipsis = truncateOpt.ellipsis;
         const maxWidth = retrieve(
-            opt.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
+            cfg.raw.nameTruncateMaxWidth, truncateOpt.maxWidth, axisNameAvailableWidth
         );
 
+        const nameMarginLevel = extraParams.nameMarginLevel || 0;
+
         const textEl = new graphic.Text({
-            x: pos[0],
-            y: pos[1],
+            x: pos.x,
+            y: pos.y,
             rotation: labelLayout.rotation,
             silent: AxisBuilder.isLabelSilent(axisModel),
             style: createTextStyle(textStyleModel, {
@@ -503,6 +927,14 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
                     || labelLayout.textAlign,
                 verticalAlign: textStyleModel.get('verticalAlign')
                     || labelLayout.textVerticalAlign
+            }, {
+                defaultTextMargin: isNameLocationCenter(nameLocation)
+                    // Make axis name visually far from axis labels.
+                    // (but not too aggressive, consider multiple small charts)
+                    ? (DEFAULT_CENTER_NAME_MARGIN_LEVELS[nameMarginLevel])
+                    // top/button margin is set to `0` to inserted the xAxis name into the indention
+                    // above the axis labels to save space. (see example below.)
+                    : (DEFAULT_ENDS_NAME_MARGIN_LEVELS[nameMarginLevel]),
             }),
             z2: 1
         }) as AxisLabelText;
@@ -524,19 +956,67 @@ const builders: Record<'axisLine' | 'axisTickLabel' | 'axisName', AxisElementsBu
             getECData(textEl).eventData = eventData;
         }
 
-        // FIXME
         transformGroup.add(textEl);
         textEl.updateTransform();
 
+        local.nameEl = textEl;
+        const nameLayout = sharedRecord.nameLayout = createSingleLayoutInfoComputed(textEl);
+        sharedRecord.nameLocation = nameLocation;
         group.add(textEl);
 
         textEl.decomposeTransform();
+
+        if (cfg.shouldNameMoveOverlap && nameLayout) {
+            const record = shared.ensureRecord(axisModel);
+            if (__DEV__) {
+                assert(record.labelInfoList);
+            }
+            shared.resolveAxisNameOverlap(cfg, shared, axisModel, nameLayout, nameMoveDirVec, record);
+        }
     }
 
 };
 
+function axisTickLabelLayout(
+    cfg: AxisBuilderCfgDetermined,
+    local: AxisBuilderLocalContext,
+    shared: AxisBuilderSharedContext,
+    axisModel: AxisBaseModel,
+    group: graphic.Group,
+    transformGroup: AxisBuilder['_transformGroup'],
+    api: ExtensionAPI,
+    kind: AxisTickLabelComputingKind
+): void {
+    if (!axisLabelBuildResultExists(local)) {
+        buildAxisLabel(cfg, local, group, kind, axisModel, api);
+    }
+
+    const labelLayoutList = local.labelLayoutList;
+
+    updateAxisLabelChangableProps(cfg, axisModel, labelLayoutList, transformGroup);
+
+    adjustBreakLabels(axisModel, cfg.rotation, labelLayoutList);
+
+    const optionHideOverlap = cfg.optionHideOverlap;
+
+    fixMinMaxLabelShow(axisModel, labelLayoutList, optionHideOverlap);
+
+    if (optionHideOverlap) {
+        // This bit fixes the label overlap issue for the time chart.
+        // See https://github.com/apache/echarts/issues/14266 for more.
+        hideOverlap(
+            // Filter the already ignored labels by the previous overlap resolving methods.
+            filter(labelLayoutList, layout => (layout && !layout.label.ignore))
+        );
+    }
+
+    // Always call it even this axis has no name, since it serves in overlapping detection
+    // and grid outerBounds on other axis.
+    resetOverlapRecordToShared(cfg, shared, axisModel, labelLayoutList);
+};
+
 function endTextLayout(
-    rotation: number, textPosition: 'start' | 'middle' | 'end', textRotate: number, extent: number[]
+    rotation: number, textPosition: AxisBaseOptionCommon['nameLocation'], textRotate: number, extent: number[]
 ) {
     const rotationDiff = remRadian(textRotate - rotation);
     let textAlign: ZRTextAlign;
@@ -570,15 +1050,80 @@ function endTextLayout(
     };
 }
 
+/**
+ * Assume `labelLayoutList` has no `label.ignore: true`.
+ * Assume `labelLayoutList` have been sorted by value ascending order.
+ */
 function fixMinMaxLabelShow(
-    opt: AxisBuilderCfg,
     axisModel: AxisBaseModel,
-    labelEls: graphic.Text[],
-    tickEls: graphic.Line[],
-    shouldHideOverlap: boolean
+    labelLayoutList: LabelLayoutInfoAll[],
+    optionHideOverlap: AxisBaseOption['axisLabel']['hideOverlap']
 ) {
     if (shouldShowAllLabels(axisModel.axis)) {
         return;
+    }
+
+    // FIXME
+    // Have not consider onBand yet, where tick els is more than label els.
+    // Assert no ignore in labels.
+
+    function deal(
+        showMinMaxLabel: boolean,
+        outmostLabelIdx: number,
+        innerLabelIdx: number,
+    ) {
+        let outmostLabelLayout = labelLayoutList[outmostLabelIdx];
+        let innerLabelLayout = labelLayoutList[innerLabelIdx];
+        if (!outmostLabelLayout || !innerLabelLayout) {
+            return;
+        }
+
+        if (showMinMaxLabel === false) {
+            ignoreEl(outmostLabelLayout.label);
+        }
+        // PENDING: Originally we thougth `optionHideOverlap === false` means do not hide anything,
+        //  since currently the bounding rect of text might not accurate enough and might slightly bigger,
+        //  which causes false positive. But `optionHideOverlap: null/undfined` is falsy and likely
+        //  be treated as false.
+        else {
+            // In most fonts the glyph does not reach the boundary of the bouding rect.
+            // This is needed to avoid too aggressive to hide two elements that meet at the edge
+            // due to compact layout by the same bounding rect or OBB.
+            const touchThreshold = 0.1;
+            // This treatment is for backward compatibility. And `!optionHideOverlap` implies that
+            // the user accepts the visual touch between adjacent labels, thus "hide min/max label"
+            // should be conservative, since the space might be sufficient in this case.
+            const ignoreMargin = !optionHideOverlap;
+            if (ignoreMargin) {
+                // Make a copy to apply `ignoreMargin`.
+                outmostLabelLayout = rollbackToLabelLayoutInfoRaw(defaults({ignoreMargin}, outmostLabelLayout));
+                innerLabelLayout = rollbackToLabelLayoutInfoRaw(defaults({ignoreMargin}, innerLabelLayout));
+            }
+
+            let anyIgnored = false;
+            if (outmostLabelLayout.suggestIgnore) {
+                ignoreEl(outmostLabelLayout.label);
+                anyIgnored = true;
+            }
+            if (innerLabelLayout.suggestIgnore) {
+                ignoreEl(innerLabelLayout.label);
+                anyIgnored = true;
+            }
+
+            if (!anyIgnored && labelIntersect(
+                ensureLabelLayoutInfoComputed(outmostLabelLayout),
+                ensureLabelLayoutInfoComputed(innerLabelLayout),
+                null,
+                {touchThreshold}
+            )) {
+                if (showMinMaxLabel) {
+                    ignoreEl(innerLabelLayout.label);
+                }
+                else {
+                    ignoreEl(outmostLabelLayout.label);
+                }
+            }
+        }
     }
 
     // If min or max are user set, we need to check
@@ -586,65 +1131,39 @@ function fixMinMaxLabelShow(
     // If they are overlapped, we need to hide the min(max) tick label
     const showMinLabel = axisModel.get(['axisLabel', 'showMinLabel']);
     const showMaxLabel = axisModel.get(['axisLabel', 'showMaxLabel']);
+    const labelsLen = labelLayoutList.length;
+    deal(showMinLabel, 0, 1);
+    deal(showMaxLabel, labelsLen - 1, labelsLen - 2);
+}
 
-    // FIXME
-    // Have not consider onBand yet, where tick els is more than label els.
-
-    labelEls = labelEls || [];
-    tickEls = tickEls || [];
-
-    const firstLabel = labelEls[0];
-    const nextLabel = labelEls[1];
-    const lastLabel = labelEls[labelEls.length - 1];
-    const prevLabel = labelEls[labelEls.length - 2];
-
-    const firstTick = tickEls[0];
-    const nextTick = tickEls[1];
-    const lastTick = tickEls[tickEls.length - 1];
-    const prevTick = tickEls[tickEls.length - 2];
-
-    // In most fonts the glyph does not reach the boundary of the bouding rect.
-    // This is needed to avoid too aggressive to hide two elements that meet at the edge
-    // due to compact layout by the same bounding rect or OBB.
-    const touchThreshold = 0.05;
-    // `!hideOverlap` means the visual touch between adjacent labels are accepted,
-    // thus the "hide min/max label" should be conservative, since the space is sufficient
-    // in this case. And this strategy is also for backward compatibility.
-    const ignoreTextMargin = !shouldHideOverlap;
-
-    if (showMinLabel === false) {
-        ignoreEl(firstLabel);
-        ignoreEl(firstTick);
+// PENDING: is it necessary to display a tick while the cooresponding label is ignored?
+function syncLabelIgnoreToMajorTicks(
+    cfg: AxisBuilderCfgDetermined,
+    labelLayoutList: LabelLayoutInfoAll[],
+    tickEls: graphic.Line[],
+) {
+    if (cfg.showMinorTicks) {
+        // It probably unreaasonable to hide major ticks when show minor ticks.
+        return;
     }
-    else if (detectAxisLabelPairIntersection(
-        opt.rotation, [firstLabel, nextLabel], touchThreshold, ignoreTextMargin
-    )) {
-        if (showMinLabel) {
-            ignoreEl(nextLabel);
-            ignoreEl(nextTick);
+    each(labelLayoutList, labelLayout => {
+        if (labelLayout && labelLayout.label.ignore) {
+            for (let idx = 0; idx < tickEls.length; idx++) {
+                const tickEl = tickEls[idx];
+                // Assume small array, linear search is fine for performance.
+                // PENDING: measure?
+                const tickInner = getTickInner(tickEl);
+                const labelInner = getLabelInner(labelLayout.label);
+                if (tickInner.tickValue != null
+                    && !tickInner.onBand
+                    && tickInner.tickValue === labelInner.tickValue
+                ) {
+                    ignoreEl(tickEl);
+                    return;
+                }
+            }
         }
-        else {
-            ignoreEl(firstLabel);
-            ignoreEl(firstTick);
-        }
-    }
-
-    if (showMaxLabel === false) {
-        ignoreEl(lastLabel);
-        ignoreEl(lastTick);
-    }
-    else if (detectAxisLabelPairIntersection(
-        opt.rotation, [prevLabel, lastLabel], touchThreshold, ignoreTextMargin
-    )) {
-        if (showMaxLabel) {
-            ignoreEl(prevLabel);
-            ignoreEl(prevTick);
-        }
-        else {
-            ignoreEl(lastLabel);
-            ignoreEl(lastTick);
-        }
-    }
+    });
 }
 
 function ignoreEl(el: Element) {
@@ -652,12 +1171,12 @@ function ignoreEl(el: Element) {
 }
 
 function createTicks(
-    ticksCoords: TickCoord[],
+    ticksCoords: AxisTickCoord[],
     tickTransform: matrixUtil.MatrixArray,
     tickEndCoord: number,
     tickLineStyle: PathStyleProps,
     anidPrefix: string
-) {
+): graphic.Line[] {
     const tickEls = [];
     const pt1: number[] = [];
     const pt2: number[] = [];
@@ -689,30 +1208,37 @@ function createTicks(
         graphic.subPixelOptimizeLine(tickEl.shape, tickEl.style.lineWidth);
         tickEl.anid = anidPrefix + '_' + ticksCoords[i].tickValue;
         tickEls.push(tickEl);
+
+        const inner = getTickInner(tickEl);
+        inner.onBand = !!ticksCoords[i].onBand;
+        inner.tickValue = ticksCoords[i].tickValue;
     }
     return tickEls;
 }
 
 function buildAxisMajorTicks(
+    cfg: AxisBuilderCfgDetermined,
     group: graphic.Group,
-    transformGroup: graphic.Group,
-    axisModel: AxisBaseModel,
-    opt: AxisBuilderCfg
-) {
+    transformGroup: AxisBuilder['_transformGroup'],
+    axisModel: AxisBaseModel
+): graphic.Line[] {
     const axis = axisModel.axis;
 
     const tickModel = axisModel.getModel('axisTick');
 
     let shown = tickModel.get('show');
-    if (shown === 'auto' && opt.handleAutoShown) {
-        shown = opt.handleAutoShown('axisTick');
+    if (shown === 'auto') {
+        shown = true;
+        if (cfg.raw.axisTickAutoShow != null) {
+            shown = !!cfg.raw.axisTickAutoShow;
+        }
     }
     if (!shown || axis.scale.isBlank()) {
-        return;
+        return [];
     }
 
     const lineStyleModel = tickModel.getModel('lineStyle');
-    const tickEndCoord = opt.tickDirection * tickModel.get('length');
+    const tickEndCoord = cfg.tickDirection * tickModel.get('length');
 
     const ticksCoords = axis.getTicksCoords();
 
@@ -731,8 +1257,9 @@ function buildAxisMajorTicks(
 }
 
 function buildAxisMinorTicks(
+    cfg: AxisBuilderCfgDetermined,
     group: graphic.Group,
-    transformGroup: graphic.Group,
+    transformGroup: AxisBuilder['_transformGroup'],
     axisModel: AxisBaseModel,
     tickDirection: number
 ) {
@@ -740,7 +1267,7 @@ function buildAxisMinorTicks(
 
     const minorTickModel = axisModel.getModel('minorTick');
 
-    if (!minorTickModel.get('show') || axis.scale.isBlank()) {
+    if (!cfg.showMinorTicks || axis.scale.isBlank()) {
         return;
     }
 
@@ -772,35 +1299,70 @@ function buildAxisMinorTicks(
     }
 }
 
-function buildAxisLabel(
+// Return whether need to call `axisTickLabelLayout` again.
+function dealLastTickLabelResultReusable(
+    local: AxisBuilderLocalContext,
     group: graphic.Group,
-    transformGroup: graphic.Group,
+    extraParams: AxisBuilderBuildExtraParams
+): boolean {
+    if (axisLabelBuildResultExists(local)) {
+        const axisLabelsCreationContext = local.axisLabelsCreationContext;
+        if (__DEV__) {
+            assert(local.labelGroup && axisLabelsCreationContext);
+        }
+        const noPxChangeTryDetermine = axisLabelsCreationContext.out.noPxChangeTryDetermine;
+        if (extraParams.noPxChange) {
+            let canDetermine = true;
+            for (let idx = 0; idx < noPxChangeTryDetermine.length; idx++) {
+                canDetermine = canDetermine && noPxChangeTryDetermine[idx]();
+            }
+            if (canDetermine) {
+                return false;
+            }
+        }
+        if (noPxChangeTryDetermine.length) {
+            // Remove the result of `buildAxisLabel`
+            group.remove(local.labelGroup);
+            axisLabelBuildResultSet(local, null, null, null);
+        }
+    }
+    return true;
+}
+
+function buildAxisLabel(
+    cfg: AxisBuilderCfgDetermined,
+    local: AxisBuilderLocalContext,
+    group: graphic.Group,
+    kind: AxisTickLabelComputingKind,
     axisModel: AxisBaseModel,
-    opt: AxisBuilderCfg,
     api: ExtensionAPI
-): graphic.Text[] {
+): void {
     const axis = axisModel.axis;
-    const show = retrieve(opt.axisLabelShow, axisModel.get(['axisLabel', 'show']));
+    const show = retrieve(cfg.raw.axisLabelShow, axisModel.get(['axisLabel', 'show']));
+    const labelGroup = new graphic.Group();
+    group.add(labelGroup);
+    const axisLabelCreationCtx = createAxisLabelsComputingContext(kind);
 
     if (!show || axis.scale.isBlank()) {
-        return [];
+        axisLabelBuildResultSet(local, [], labelGroup, axisLabelCreationCtx);
+        return;
     }
 
     const labelModel = axisModel.getModel('axisLabel');
-    const labelMargin = labelModel.get('margin');
-    const labels = axis.getViewLabels();
+    const labels = axis.getViewLabels(axisLabelCreationCtx);
 
     // Special label rotate.
     const labelRotation = (
-        retrieve(opt.labelRotate, labelModel.get('rotate')) || 0
+        retrieve(cfg.raw.labelRotate, labelModel.get('rotate')) || 0
     ) * PI / 180;
 
-    const labelLayout = AxisBuilder.innerTextLayout(opt.rotation, labelRotation, opt.labelDirection);
+    const labelLayout = AxisBuilder.innerTextLayout(cfg.rotation, labelRotation, cfg.labelDirection);
     const rawCategoryData = axisModel.getCategories && axisModel.getCategories(true);
 
     const labelEls: graphic.Text[] = [];
-    const silent = AxisBuilder.isLabelSilent(axisModel);
     const triggerEvent = axisModel.get('triggerEvent');
+    let z2Min = Infinity;
+    let z2Max = -Infinity;
 
     each(labels, function (labelItem, index) {
         const tickValue = axis.scale.type === 'ordinal'
@@ -821,8 +1383,6 @@ function buildAxisLabel(
 
         const textColor = itemLabelModel.getTextColor() as AxisBaseOption['axisLabel']['color']
             || axisModel.get(['axisLine', 'lineStyle', 'color']);
-
-        const tickCoord = axis.dataToCoord(tickValue);
 
         const align = itemLabelModel.getShallow('align', true)
             || labelLayout.textAlign;
@@ -846,14 +1406,23 @@ function buildAxisLabel(
             itemLabelModel.getShallow('verticalAlignMaxLabel', true),
             verticalAlign
         );
+        const z2 = 10 + (labelItem.time?.level || 0);
+        z2Min = Math.min(z2Min, z2);
+        z2Max = Math.max(z2Max, z2);
 
         const textEl = new graphic.Text({
-            x: tickCoord,
-            y: opt.labelOffset + opt.labelDirection * labelMargin,
-            rotation: labelLayout.rotation,
-            silent: silent,
-            z2: 10 + (labelItem.time?.level || 0),
-            style: createTextStyle(itemLabelModel, {
+            // --- transform props start ---
+            // All of the transform props MUST not be set here, but should be set in
+            // `updateAxisLabelChangableProps`, because they may change in estimation,
+            // and need to calculate based on global coord sys by `decomposeTransform`.
+            x: 0,
+            y: 0,
+            rotation: 0,
+            // --- transform props end ---
+
+            silent: AxisBuilder.isLabelSilent(axisModel),
+            z2: z2,
+            style: createTextStyle<AxisLabelBaseOptionNuance>(itemLabelModel, {
                 text: formattedLabel,
                 align: index === 0
                     ? alignMin
@@ -878,14 +1447,15 @@ function buildAxisLabel(
                         index
                     )
                     : textColor as string,
-                margin: itemLabelModel.get('textMargin', true),
             })
         });
-        (textEl as LabelExtendedText).__marginType = LabelMarginType.textMargin;
 
         textEl.anid = 'label_' + tickValue;
 
-        getLabelInner(textEl).break = labelItem.break;
+        const inner = getLabelInner(textEl);
+        inner.break = labelItem.break;
+        inner.tickValue = tickValue;
+        inner.layoutRotation = labelLayout.rotation;
 
         graphic.setTooltipConfig({
             el: textEl,
@@ -922,18 +1492,84 @@ function buildAxisLabel(
             }
         }
 
-        // FIXME
-        transformGroup.add(textEl);
-        textEl.updateTransform();
-
         labelEls.push(textEl);
-        group.add(textEl);
-
-        textEl.decomposeTransform();
-
+        labelGroup.add(textEl);
     });
 
-    return labelEls;
+    const labelLayoutList: LabelLayoutInfoRaw[] = map(labelEls, label => ({
+        kind: LABEL_LAYOUT_INFO_KIND_RAW,
+        label,
+        priority: getLabelInner(label).break
+            ? label.z2 + (z2Max - z2Min + 1) // Make break labels be highest priority.
+            : label.z2,
+        defaultAttr: {
+            ignore: label.ignore
+        },
+    }));
+
+    axisLabelBuildResultSet(local, labelLayoutList, labelGroup, axisLabelCreationCtx);
+}
+
+// Indicate that `axisTickLabelLayout` has been called.
+function axisLabelBuildResultExists(local: AxisBuilderLocalContext) {
+    return !!local.labelLayoutList;
+}
+function axisLabelBuildResultSet(
+    local: AxisBuilderLocalContext,
+    labelLayoutList: AxisBuilderLocalContext['labelLayoutList'],
+    labelGroup: AxisBuilderLocalContext['labelGroup'],
+    axisLabelsCreationContext: AxisBuilderLocalContext['axisLabelsCreationContext']
+): void {
+    // Ensure the same lifetime.
+    local.labelLayoutList = labelLayoutList;
+    local.labelGroup = labelGroup;
+    local.axisLabelsCreationContext = axisLabelsCreationContext;
+}
+
+function updateAxisLabelChangableProps(
+    cfg: AxisBuilderCfgDetermined,
+    axisModel: AxisBaseModel,
+    labelLayoutList: LabelLayoutInfoAll[],
+    transformGroup: graphic.Group,
+): void {
+    const labelMargin = axisModel.get(['axisLabel', 'margin']);
+    each(labelLayoutList, (layoutInfo, idx) => {
+        if (!layoutInfo) {
+            return;
+        }
+
+        const labelEl = layoutInfo.label;
+        const inner = getLabelInner(labelEl);
+
+        // See the comment in `suggestIgnore`.
+        layoutInfo.suggestIgnore = labelEl.ignore;
+        // Currently no `ignore:true` is set in `buildAxisLabel`
+        // But `ignore:true` may be set subsequently for overlap handling, thus reset it here.
+        labelEl.ignore = false;
+
+        copyTransform(_tmpLayoutEl, _tmpLayoutElReset);
+        _tmpLayoutEl.x = axisModel.axis.dataToCoord(inner.tickValue);
+        _tmpLayoutEl.y = cfg.labelOffset + cfg.labelDirection * labelMargin;
+        _tmpLayoutEl.rotation = inner.layoutRotation;
+
+        transformGroup.add(_tmpLayoutEl);
+        _tmpLayoutEl.updateTransform();
+        transformGroup.remove(_tmpLayoutEl);
+        _tmpLayoutEl.decomposeTransform();
+
+        copyTransform(labelEl, _tmpLayoutEl);
+        labelEl.markRedraw();
+
+        if (layoutInfo.kind === LABEL_LAYOUT_INFO_KIND_COMPUTED) {
+            rollbackToLabelLayoutInfoRaw(layoutInfo);
+        }
+    });
+}
+const _tmpLayoutEl = new graphic.Rect();
+const _tmpLayoutElReset = new graphic.Rect();
+
+function hasAxisName(axisName: AxisBuilderCfgDetermined['axisName']): boolean {
+    return !!axisName;
 }
 
 function addBreakEventHandler(
@@ -957,19 +1593,26 @@ function addBreakEventHandler(
 
 function adjustBreakLabels(
     axisModel: AxisBaseModel,
-    axisRotation: AxisBuilderCfg['rotation'],
-    labelEls: graphic.Text[]
+    axisRotation: AxisBuilderCfgDetermined['rotation'],
+    labelLayoutList: LabelLayoutInfoAll[]
 ): void {
     const scaleBreakHelper = getScaleBreakHelper();
     if (!scaleBreakHelper) {
         return;
     }
-    const breakLabelPairs = scaleBreakHelper.retrieveAxisBreakPairs(labelEls, el => getLabelInner(el).break);
+    const breakLabelIndexPairs = scaleBreakHelper.retrieveAxisBreakPairs(
+        labelLayoutList,
+        layoutInfo => layoutInfo && getLabelInner(layoutInfo.label).break,
+        true
+    );
     const moveOverlap = axisModel.get(['breakLabelLayout', 'moveOverlap'], true);
     if (moveOverlap === true || moveOverlap === 'auto') {
-        each(breakLabelPairs, pair =>
-            getAxisBreakHelper()!.adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, pair)
-        );
+        each(breakLabelIndexPairs, idxPair => {
+            getAxisBreakHelper()!.adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, [
+                ensureLabelLayoutInfoComputed(labelLayoutList[idxPair[0]]),
+                ensureLabelLayoutInfoComputed(labelLayoutList[idxPair[1]])
+            ]);
+        });
     }
 }
 

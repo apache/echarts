@@ -163,11 +163,13 @@ function scale(
     return val * (extent[1] - extent[0]) + extent[0];
 }
 
-export function logTransform(base: number, extent: number[]): [number, number] {
+export function logTransform(base: number, extent: number[], noClampNegative?: boolean): [number, number] {
     const loggedBase = Math.log(base);
     return [
-        // log(negative) is NaN, so safe guard here
-        Math.log(Math.max(0, extent[0])) / loggedBase,
-        Math.log(Math.max(0, extent[1])) / loggedBase
+        // log(negative) is NaN, so safe guard here.
+        // PENDING: But even getting a -Infinity still does not make sense in extent.
+        //  Just keep it as is, getting a NaN to make some previous cases works by coincidence.
+        Math.log(noClampNegative ? extent[0] : Math.max(0, extent[0])) / loggedBase,
+        Math.log(noClampNegative ? extent[1] : Math.max(0, extent[1])) / loggedBase
     ];
 }

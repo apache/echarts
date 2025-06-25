@@ -80,15 +80,13 @@ import {
     isElementRemoved
 } from '../animation/basicTransition';
 import { ExtendedElement } from '../core/ExtendedElement';
+import { mathMin, mathMax, mathAbs } from './number';
 
 /**
  * @deprecated export for compatitable reason
  */
 export {updateProps, initProps, removeElement, removeElementWithFadeOut, isElementRemoved};
 
-
-const mathMax = Math.max;
-const mathMin = Math.min;
 
 const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
@@ -367,9 +365,9 @@ export function transformDirection(
 
     // Pick a base, ensure that transform result will not be (0, 0).
     const hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
-        ? 1 : Math.abs(2 * transform[4] / transform[0]);
+        ? 1 : mathAbs(2 * transform[4] / transform[0]);
     const vBase = (transform[4] === 0 || transform[5] === 0 || transform[2] === 0)
-        ? 1 : Math.abs(2 * transform[4] / transform[2]);
+        ? 1 : mathAbs(2 * transform[4] / transform[2]);
 
     let vertex: vector.VectorArray = [
         direction === 'left' ? -hBase : direction === 'right' ? hBase : 0,
@@ -378,7 +376,7 @@ export function transformDirection(
 
     vertex = applyTransform(vertex, transform, invert);
 
-    return Math.abs(vertex[0]) > Math.abs(vertex[1])
+    return mathAbs(vertex[0]) > mathAbs(vertex[1])
         ? (vertex[0] > 0 ? 'right' : 'left')
         : (vertex[1] > 0 ? 'bottom' : 'top');
 }
@@ -599,7 +597,8 @@ export function expandOrShrinkRect<TRect extends RectLike>(
     rect: TRect,
     delta: number[] | number | NullUndefined,
     shrinkOrExpand: boolean,
-    noNegative: boolean
+    noNegative: boolean,
+    minSize?: number[] // by default [0, 0].
 ): TRect {
     if (delta == null) {
         return rect;
@@ -614,10 +613,10 @@ export function expandOrShrinkRect<TRect extends RectLike>(
         _tmpExpandRectDelta[3] = delta[3];
     }
     if (noNegative) {
-        _tmpExpandRectDelta[0] = Math.max(0, _tmpExpandRectDelta[0]);
-        _tmpExpandRectDelta[1] = Math.max(0, _tmpExpandRectDelta[1]);
-        _tmpExpandRectDelta[2] = Math.max(0, _tmpExpandRectDelta[2]);
-        _tmpExpandRectDelta[3] = Math.max(0, _tmpExpandRectDelta[3]);
+        _tmpExpandRectDelta[0] = mathMax(0, _tmpExpandRectDelta[0]);
+        _tmpExpandRectDelta[1] = mathMax(0, _tmpExpandRectDelta[1]);
+        _tmpExpandRectDelta[2] = mathMax(0, _tmpExpandRectDelta[2]);
+        _tmpExpandRectDelta[3] = mathMax(0, _tmpExpandRectDelta[3]);
     }
     if (shrinkOrExpand) {
         _tmpExpandRectDelta[0] = -_tmpExpandRectDelta[0];
@@ -625,25 +624,31 @@ export function expandOrShrinkRect<TRect extends RectLike>(
         _tmpExpandRectDelta[2] = -_tmpExpandRectDelta[2];
         _tmpExpandRectDelta[3] = -_tmpExpandRectDelta[3];
     }
-    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'x', 'width', 3, 1);
-    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'y', 'height', 0, 2);
+    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'x', 'width', 3, 1, minSize && minSize[0] || 0);
+    expandRectOnOneDimension(rect, _tmpExpandRectDelta, 'y', 'height', 0, 2, minSize && minSize[1] || 0);
 
     return rect;
 }
 const _tmpExpandRectDelta = [0, 0, 0, 0];
 function expandRectOnOneDimension(
-    rect: RectLike, delta: number[], xy: 'x' | 'y', wh: 'width' | 'height', ltIdx: 3 | 0, rbIdx: 1 | 2
+    rect: RectLike,
+    delta: number[],
+    xy: 'x' | 'y',
+    wh: 'width' | 'height',
+    ltIdx: 3 | 0, rbIdx: 1 | 2,
+    minSize: number
 ): void {
     const deltaSum = delta[rbIdx] + delta[ltIdx];
     const oldSize = rect[wh];
     rect[wh] += deltaSum;
-    if (rect[wh] < 0) {
-        rect[wh] = 0;
+    minSize = mathMax(0, mathMin(minSize, oldSize));
+    if (rect[wh] < minSize) {
+        rect[wh] = minSize;
         // Try to make the position of the zero rect reasonable in most visual cases.
         rect[xy] += (
             delta[ltIdx] >= 0 ? -delta[ltIdx]
             : delta[rbIdx] >= 0 ? oldSize + delta[rbIdx]
-            : Math.abs(deltaSum) > 1e-8 ? oldSize * delta[ltIdx] / deltaSum
+            : mathAbs(deltaSum) > 1e-8 ? (oldSize - minSize) * delta[ltIdx] / deltaSum
             : 0
         );
     }
@@ -723,6 +728,17 @@ export function traverseElements(els: Element | Element[] | undefined | null, cb
         }
     }
 }
+
+/**
+ * After a boundingRect applying a `transform`, whether to be still parallel screen X and Y.
+ */
+export function isBoundingRectAxisAligned(transform: matrix.MatrixArray | NullUndefined): boolean {
+    return !transform
+        || (mathAbs(transform[1]) < AXIS_ALIGN_EPSILON && mathAbs(transform[2]) < AXIS_ALIGN_EPSILON)
+        || (mathAbs(transform[0]) < AXIS_ALIGN_EPSILON && mathAbs(transform[3]) < AXIS_ALIGN_EPSILON);
+}
+const AXIS_ALIGN_EPSILON = 1e-5;
+
 
 export function retrieveZInfo(
     model: Model<Partial<Pick<ComponentOption, 'z' | 'zlevel'>>>,
@@ -812,7 +828,7 @@ function doUpdateZ(
         // set z & zlevel of children elements of Group
         const children = (el as Group).childrenRef();
         for (let i = 0; i < children.length; i++) {
-            maxZ2 = Math.max(
+            maxZ2 = mathMax(
                 doUpdateZ(
                     children[i],
                     z,
@@ -828,7 +844,7 @@ function doUpdateZ(
         (el as Displayable).z = z;
         (el as Displayable).zlevel = zlevel;
 
-        maxZ2 = Math.max((el as Displayable).z2 || 0, maxZ2);
+        maxZ2 = mathMax((el as Displayable).z2 || 0, maxZ2);
     }
 
     // always set z and zlevel if label/labelLine exists

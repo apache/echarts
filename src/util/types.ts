@@ -52,7 +52,6 @@ import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
 import { PrimaryTimeUnit } from './time';
 
 
-
 // ---------------------------
 // Common types and constants
 // ---------------------------
@@ -704,7 +703,7 @@ export type ECUnitOption = {
     timeline?: ComponentOption | ComponentOption[]
     backgroundColor?: ZRColor
     darkMode?: boolean | 'auto'
-    textStyle?: Pick<LabelOption, 'color' | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'>
+    textStyle?: GlobalTextStyleOption
     useUTC?: boolean
     hoverLayerThreshold?: number
 
@@ -1214,8 +1213,14 @@ export type VisualOptionCategory = Arrayable<VisualOptionUnit> | Dictionaryable<
  */
 export type BuiltinVisualProperty = keyof VisualOptionUnit;
 
-export interface TextCommonOption extends ShadowOptionMixin {
-    color?: string
+export type TextCommonOptionNuanceBase = Record<string, unknown>;
+export type TextCommonOptionNuanceDefault = {};
+// 'auto' has been deprecated.
+type LabelStyleColorString = ColorString | 'inherit' | 'auto'; // Nominal as a comment.
+export interface TextCommonOption<
+    TNuance extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+> extends ShadowOptionMixin {
+    color?: 'color' extends keyof TNuance ? (TNuance['color'] | LabelStyleColorString) : LabelStyleColorString
     fontStyle?: ZRFontStyle
     fontWeight?: ZRFontWeight
     fontFamily?: string
@@ -1237,6 +1242,10 @@ export interface TextCommonOption extends ShadowOptionMixin {
     borderDashOffset?: number
     borderRadius?: number | number[]
     padding?: number | number[]
+    /**
+     * Currently margin related options are not declared here. They are not supported in rich text.
+     * @see {LabelCommonOption}
+     */
 
     width?: number | string // Percent
     height?: number
@@ -1253,6 +1262,17 @@ export interface TextCommonOption extends ShadowOptionMixin {
     tag?: string
 }
 
+export type GlobalTextStyleOption = Pick<
+    TextCommonOption,
+    'color' | 'opacity'
+    | 'fontStyle' | 'fontWeight' | 'fontSize' | 'fontFamily'
+    | 'textShadowColor' | 'textShadowBlur' | 'textShadowOffsetX' | 'textShadowOffsetY'
+    | 'textBorderColor' | 'textBorderWidth' | 'textBorderType' | 'textBorderDashOffset'
+>;
+
+export interface RichTextOption extends Dictionary<TextCommonOption> {
+}
+
 export interface LabelFormatterCallback<T = CallbackDataParams> {
     (params: T): string
 }
@@ -1262,7 +1282,7 @@ export interface LabelFormatterCallback<T = CallbackDataParams> {
  */
 export interface LabelOption<
     TNuance extends {positionExtra: unknown} = {positionExtra: never}
-> extends TextCommonOption {
+> extends LabelCommonOption {
     /**
      * If show label
      */
@@ -1274,37 +1294,64 @@ export interface LabelOption<
     rotate?: number
     offset?: number[]
 
-    /**
-     * Min margin between labels. Used when label has layout.
-     * PENDING: @see {LabelMarginType}
-     */
-    // It's minMargin instead of margin is for not breaking the previous code using margin.
-    minMargin?: number
-
-    overflow?: TextStyleProps['overflow']
-    ellipsis?: TextStyleProps['ellipsis']
-    lineOverflow?: TextStyleProps['lineOverflow']
-
     silent?: boolean
     precision?: number | 'auto'
     valueAnimation?: boolean
 
     // TODO: TYPE not all label support formatter
     // formatter?: string | ((params: CallbackDataParams) => string)
+}
 
-    rich?: Dictionary<TextCommonOption>
+/**
+ * Common options for both `axis.axisLabel`, `axis.nameTextStyle and other `label`s.
+ * Historically, they have had some nuances in options.
+ */
+export interface LabelCommonOption<
+    TNuanceOption extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+> extends TextCommonOption<TNuanceOption> {
+
+    /**
+     * Min margin between labels. Used when label has layout.
+     * PENDING: @see {LabelMarginType}
+     * It's `minMargin` instead of `margin` is for not breaking the previous code using `margin`.
+     * See the summary in `textMargin`.
+     */
+    minMargin?: number
+    /**
+     * The space around the label to escape from overlapping.
+     * Applied on the label local rect (rather than rotated enlarged rect)
+     * Follow the format defined by `format.ts#normalizeCssArray`.
+     *
+     * Introduce the name `textMargin` rather than reuse the existing names to avoid breaking change:
+     *  - `margin` historically have been used to indicate the distance from `label.x/.y` to something:
+     *      - `axisLabel.margin` & `axisPointer.label.margin`: to the axis line.
+     *      - `calendar.dayLabel/monthLabel/yearLabel.margin`:
+     *      - `series-pie.label.margin`: to pie body (deprecated, replaced by `edgeDistance`)
+     *      - `series-themeRiver.label.margin`: to the shape edge
+     *  - `minMargin` conveys the same meaning as this `textMargin` but has a different nuance,
+     *    it works like CSS margin collapse (gap = label1.minMargin/2 + label2.minMargin/2),
+     *    and `minMargin` applied on the global bounding rect (parallel to screen x and y) rather
+     *    than the original local bounding rect (can be rotated, smaller and more presice).
+     * PENDING: @see {LabelMarginType}
+     */
+    textMargin?: number | number[]
+
+    overflow?: TextStyleProps['overflow']
+    lineOverflow?: TextStyleProps['lineOverflow']
+    ellipsis?: TextStyleProps['ellipsis']
+    rich?: RichTextOption
 }
 
 /**
  * PENDING: Temporary impl. unify them?
- * @see {AxisLabelBaseOption['textMargin']}
- * @see {LabelOption['minMargin']}
+ * @see {LabelCommonOption['textMargin']}
+ * @see {LabelCommonOption['minMargin']}
  */
 export const LabelMarginType = {
     minMargin: 0,
     textMargin: 1,
 } as const;
-export interface LabelExtendedText extends ZRText {
+export interface LabelExtendedTextStyle extends TextStyleProps {
     __marginType?: (typeof LabelMarginType)[keyof typeof LabelMarginType]
 }
 

@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as graphic from '../../util/graphic';
 import type SingleAxisModel from '../../coord/single/AxisModel';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import type { AxisBaseModel } from '../../coord/AxisBaseModel';
@@ -38,13 +37,17 @@ import {
     AXIS_BREAK_TOGGLE_ACTION_TYPE,
     BaseAxisBreakPayload
 } from './axisAction';
-import { detectAxisLabelPairIntersection } from '../../label/labelLayoutHelper';
+import {
+    LabelLayoutInfoComputed,
+    labelIntersect
+} from '../../label/labelLayoutHelper';
 import type SingleAxisView from './SingleAxisView';
 import type { AxisBuilderCfg } from './AxisBuilder';
 import { AxisBreakUpdateResult, registerAxisBreakHelperImpl } from './axisBreakHelper';
 import { warn } from '../../util/log';
 import ComponentModel from '../../model/Component';
 import { AxisBaseOption } from '../../coord/axisCommonTypes';
+import { BoundingRect, Group, Line, Point, Polygon, Polyline, WH, XY } from '../../util/graphic';
 
 /**
  * @caution
@@ -96,10 +99,10 @@ function removeUnusedCacheVisual(visualList: CacheBreakVisual[]): void {
 }
 
 function rectCoordBuildBreakAxis(
-    axisGroup: graphic.Group,
+    axisGroup: Group,
     axisView: CartesianAxisView | SingleAxisView,
     axisModel: CartesianAxisModel | SingleAxisModel,
-    coordSysRect: graphic.BoundingRect,
+    coordSysRect: BoundingRect,
     api: ExtensionAPI
 ): void {
     const axis = axisModel.axis;
@@ -110,7 +113,8 @@ function rectCoordBuildBreakAxis(
 
     const breakPairs = getScaleBreakHelper()!.retrieveAxisBreakPairs(
         axis.scale.getTicks({breakTicks: 'only_break'}),
-        tick => tick.break
+        tick => tick.break,
+        false
     );
     if (!breakPairs.length) {
         return;
@@ -133,7 +137,7 @@ function rectCoordBuildBreakAxis(
     const borderType = itemStyle.lineDash;
     const color = itemStyle.fill;
 
-    const group = new graphic.Group({
+    const group = new Group({
         ignoreModelZ: true
     } as ExtendedElementProps);
 
@@ -156,7 +160,7 @@ function rectCoordBuildBreakAxis(
 
         const cachedVisual = ensureVisualInCache(cachedVisualList, parsedBreak);
         cachedVisual.shouldRemove = false;
-        const breakGroup = new graphic.Group();
+        const breakGroup = new Group();
 
         addZigzagShapes(
             cachedVisual.zigzagRandomList,
@@ -190,7 +194,7 @@ function rectCoordBuildBreakAxis(
 
     function addZigzagShapes(
         zigzagRandomList: number[],
-        breakGroup: graphic.Group,
+        breakGroup: Group,
         startCoord: number,
         endCoord: number,
         isAxisHorizontal: boolean,
@@ -202,9 +206,6 @@ function rectCoordBuildBreakAxis(
             lineDash: borderType,
             fill: 'none'
         };
-
-        const XY = ['x', 'y'] as const;
-        const WH = ['width', 'height'] as const;
 
         const dimBrk = isAxisHorizontal ? 0 : 1;
         const dimZigzag = 1 - dimBrk;
@@ -272,7 +273,7 @@ function rectCoordBuildBreakAxis(
         const anidSuffix = getScaleBreakHelper()!.serializeAxisBreakIdentifier(trimmedBreak.breakOption);
 
         // Create two polylines and add them to the breakGroup
-        breakGroup.add(new graphic.Polyline({
+        breakGroup.add(new Polyline({
             anid: `break_a_${anidSuffix}`,
             shape: {
                 points: pointsA
@@ -285,7 +286,7 @@ function rectCoordBuildBreakAxis(
          * Otherwise if the polyline is with dashed line or being opaque,
          * it may not be constant with breaks with non-zero gaps. */
         if (trimmedBreak.gapReal !== 0) {
-            breakGroup.add(new graphic.Polyline({
+            breakGroup.add(new Polyline({
                 anid: `break_b_${anidSuffix}`,
                 shape: {
                     // Not reverse to keep the dash stable when dragging resizing.
@@ -300,7 +301,7 @@ function rectCoordBuildBreakAxis(
             const pointsB2 = pointsB.slice();
             pointsB2.reverse();
             const polygonPoints = pointsA.concat(pointsB2);
-            breakGroup.add(new graphic.Polygon({
+            breakGroup.add(new Polygon({
                 anid: `break_c_${anidSuffix}`,
                 shape: {
                     points: polygonPoints
@@ -317,8 +318,8 @@ function rectCoordBuildBreakAxis(
 
 function buildAxisBreakLine(
     axisModel: AxisBaseModel,
-    group: graphic.Group,
-    transformGroup: graphic.Group,
+    group: Group,
+    transformGroup: Group,
     pathBaseProp: PathProps,
 ): void {
     const axis = axisModel.axis;
@@ -333,7 +334,8 @@ function buildAxisBreakLine(
 
     const breakPairs = getScaleBreakHelper()!.retrieveAxisBreakPairs(
         axis.scale.getTicks({breakTicks: 'only_break'}),
-        tick => tick.break
+        tick => tick.break,
+        false
     );
     const brkLayoutList = map(breakPairs, breakPair => {
         const parsedBreak = breakPair[0].break.parsedBreak;
@@ -401,7 +403,7 @@ function buildAxisBreakLine(
         // Apply it keeping the same as the normal axis line.
         subPixelOptimizePP(lineP1, lineP2);
 
-        const seg = new graphic.Line(extend({shape: {
+        const seg = new Line(extend({shape: {
             x1: lineP1[0],
             y1: lineP1[1],
             x2: lineP2[0],
@@ -416,29 +418,32 @@ function buildAxisBreakLine(
 
 /**
  * Resolve the overlap of a pair of labels.
+ *
+ * [CAUTION] Only label.x/y are allowed to change.
  */
 function adjustBreakLabelPair(
     axisInverse: boolean,
     axisRotation: AxisBuilderCfg['rotation'],
-    labelPair: graphic.Text[], // Means [brk_min_label, brk_max_label]
+    layoutPair: (LabelLayoutInfoComputed | NullUndefined)[], // Means [brk_min_label, brk_max_label]
 ): void {
 
-    const intersection = detectAxisLabelPairIntersection(
-        // Assert `labelPair` is `[break_min, break_max]`.
-        // `axis.inverse: true` means a smaller scale value corresponds to a bigger value in axis.extent.
-        // The axisRotation indicates mtv direction of OBB intersecting.
-        axisInverse ? axisRotation + Math.PI : axisRotation,
-        labelPair,
-        0,
-        false
-    );
-    if (!intersection) {
+    if (find(layoutPair, item => !item)) {
         return;
     }
 
-    const WH = ['width', 'height'] as const;
-    const layoutPair = intersection.layoutPair;
-    const mtv = new graphic.Point(intersection.mtv.x, intersection.mtv.y);
+    const mtv = new Point();
+    if (!labelIntersect(layoutPair[0], layoutPair[1], mtv, {
+        // Assert `labelPair` is `[break_min, break_max]`.
+        // `axis.inverse: true` means a smaller scale value corresponds to a bigger value in axis.extent.
+        // The axisRotation indicates mtv direction of OBB intersecting.
+        direction: -(axisInverse ? axisRotation + Math.PI : axisRotation),
+        touchThreshold: 0,
+        // If need to resovle intersection align axis by moving labels according to MTV,
+        // the direction must not be opposite, otherwise cause misleading.
+        bidirectional: false,
+    })) {
+        return;
+    }
 
     // Rotate axis back to (1, 0) direction, to be a standard axis.
     const axisStTrans = matrixUtil.create();
@@ -446,13 +451,16 @@ function adjustBreakLabelPair(
 
     const labelPairStTrans = map(
         layoutPair,
-        layout => matrixUtil.mul(matrixUtil.create(), axisStTrans, layout.transform)
+        layout => (layout.transform
+            ? matrixUtil.mul(matrixUtil.create(), axisStTrans, layout.transform)
+            : axisStTrans
+        )
     );
 
     function isParallelToAxis(whIdx: number): boolean {
         // Assert label[0] and lable[1] has the same rotation, so only use [0].
         const localRect = layoutPair[0].localRect;
-        const labelVec0 = new graphic.Point(
+        const labelVec0 = new Point(
             localRect[WH[whIdx]] * labelPairStTrans[0][0],
             localRect[WH[whIdx]] * labelPairStTrans[0][1]
         );
@@ -487,8 +495,8 @@ function adjustBreakLabelPair(
             return rect;
         });
 
-        const brkCenterSt = new graphic.Point();
-        brkCenterSt.copy(labelPair[0]).add(labelPair[1]).scale(0.5);
+        const brkCenterSt = new Point();
+        brkCenterSt.copy(layoutPair[0].label).add(layoutPair[1].label).scale(0.5);
         brkCenterSt.transform(axisStTrans);
 
         const mtvSt = mtv.clone().transform(axisStTrans);
@@ -504,8 +512,8 @@ function adjustBreakLabelPair(
         k = (qval - uval) / mtvSt.x;
     }
 
-    graphic.Point.scaleAndAdd(labelPair[0], labelPair[0], mtv, -k);
-    graphic.Point.scaleAndAdd(labelPair[1], labelPair[1], mtv, 1 - k);
+    Point.scaleAndAdd(layoutPair[0].label, layoutPair[0].label, mtv, -k);
+    Point.scaleAndAdd(layoutPair[1].label, layoutPair[1].label, mtv, 1 - k);
 }
 
 function updateModelAxisBreak(

@@ -59,6 +59,7 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     private _setting: SETTING;
 
     // [CAVEAT]: Should update only by `_innerSetExtent`!
+    // Make sure that extent[0] always <= extent[1].
     protected _extent: [number, number];
 
     // FIXME: Effectively, both logorithmic scale and break scale are numeric axis transformation

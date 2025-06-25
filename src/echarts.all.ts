@@ -94,6 +94,7 @@ import {
     UniversalTransition,
     LabelLayout,
     AxisBreak,
+    LegacyGridContainLabel,
     ScatterJitter
 } from './export/features';
 
@@ -369,5 +370,5 @@ use(UniversalTransition);
 use(LabelLayout);
 
 use(AxisBreak);
-
+use(LegacyGridContainLabel);
 use(ScatterJitter);

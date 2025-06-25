@@ -129,7 +129,7 @@ class LogScale extends IntervalScale {
 
     unionExtentFromData(data: SeriesData, dim: DimensionName | DimensionLoose): void {
         this._originalScale.unionExtentFromData(data, dim);
-        const loggedOther = logTransform(this.base, data.getApproximateExtent(dim));
+        const loggedOther = logTransform(this.base, data.getApproximateExtent(dim), true);
         this._innerUnionExtent(loggedOther);
     }
 

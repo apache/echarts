@@ -27,9 +27,6 @@ import RadiusAxis from '../../coord/polar/RadiusAxis';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 
-const axisBuilderAttrs = [
-    'axisLine', 'axisTickLabel', 'axisName'
-] as const;
 const selfBuilderAttrs = [
     'splitLine', 'splitArea', 'minorSplitLine'
 ] as const;
@@ -65,8 +62,8 @@ class RadiusAxisView extends AxisView {
 
         const layout = layoutAxis(polar, radiusAxisModel, axisAngle);
         const axisBuilder = new AxisBuilder(radiusAxisModel, api, layout);
-        zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
-        newAxisGroup.add(axisBuilder.getGroup());
+        axisBuilder.build();
+        newAxisGroup.add(axisBuilder.group);
 
         graphic.groupTransition(oldAxisGroup, newAxisGroup, radiusAxisModel);
 

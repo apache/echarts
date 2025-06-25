@@ -31,10 +31,16 @@ import {
     ZRStyleProps,
     AnimationOptionMixin,
     InterpolatableValue,
+    GlobalTextStyleOption,
+    LabelCommonOption,
+    TextCommonOptionNuanceBase,
+    TextCommonOptionNuanceDefault,
+    LabelMarginType,
+    LabelExtendedTextStyle,
     NullUndefined
 } from '../util/types';
 import GlobalModel from '../model/Global';
-import { isFunction, retrieve2, extend, keys, trim, retrieve3 } from 'zrender/src/core/util';
+import { isFunction, retrieve2, extend, keys, trim, clone, retrieve3 } from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
@@ -66,6 +72,7 @@ type TextCommonParams = {
 
     textStyle?: ZRStyleProps
 
+    defaultTextMargin?: number | number[]
     autoOverflowArea?: ElementTextConfig['autoOverflowArea'],
     layoutRect?: ElementTextConfig['layoutRect'],
 };
@@ -115,6 +122,10 @@ type LabelModelForText = Model<Omit<
     }>;
 
 type LabelStatesModels<LabelModel> = Partial<Record<DisplayStateNonNormal, LabelModel>> & {normal: LabelModel};
+
+type LabelCommonModel<
+    TNuance extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+> = Model<LabelCommonOption<TNuance>>;
 
 export function setLabelText(label: ZRText, labelTexts: Record<DisplayState, string>) {
     for (let i = 0; i < SPECIAL_STATES.length; i++) {
@@ -186,14 +197,12 @@ function getLabelText<TLabelDataIndex>(
  * NOTICE: Because the style on ZRText will be replaced with new(only x, y are keeped).
  * So please update the style on ZRText after use this method.
  */
-// eslint-disable-next-line
 function setLabelStyle<TLabelDataIndex>(
     targetEl: ZRText,
     labelStatesModels: LabelStatesModels<LabelModelForText>,
     opt?: SetLabelStyleOpt<TLabelDataIndex>,
     stateSpecified?: Partial<Record<DisplayState, TextStyleProps>>
 ): void;
-// eslint-disable-next-line
 function setLabelStyle<TLabelDataIndex>(
     targetEl: Element,
     labelStatesModels: LabelStatesModels<LabelModel>,
@@ -313,13 +322,15 @@ export function getLabelStatesModels<LabelName extends string = 'label'>(
 /**
  * Set basic textStyle properties.
  */
-export function createTextStyle(
-    textStyleModel: Model,
+export function createTextStyle<
+    TNuance extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+>(
+    textStyleModel: LabelCommonModel<TNuance>,
     specifiedTextStyle?: TextStyleProps, // Fixed style in the code. Can't be set by model.
     opt?: Parameters<typeof setTextStyleCommon>[2],
     isNotNormal?: boolean,
     isAttached?: boolean // If text is attached on an element. If so, auto color will handling in zrender.
-) {
+): TextStyleProps {
     const textStyle: TextStyleProps = {};
     setTextStyleCommon(textStyle, textStyleModel, opt, isNotNormal, isAttached);
     specifiedTextStyle && extend(textStyle, specifiedTextStyle);
@@ -380,10 +391,15 @@ export function createTextConfig(
  * default value can be adopted, merge would make the logic too complicated
  * to manage.)
  */
-function setTextStyleCommon(
+function setTextStyleCommon<
+    TNuance extends TextCommonOptionNuanceBase = TextCommonOptionNuanceDefault
+>(
     textStyle: TextStyleProps,
-    textStyleModel: Model,
-    opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
+    textStyleModel: LabelCommonModel<TNuance>,
+    opt?: Pick<
+        TextCommonParams,
+        'inheritColor' | 'defaultOpacity' | 'disableBox' | 'defaultTextMargin'
+    >,
     isNotNormal?: boolean,
     isAttached?: boolean
 ) {
@@ -405,19 +421,19 @@ function setTextStyleCommon(
     //         a: { ... }
     //     }
     // }
-    const richItemNames = getRichItemNames(textStyleModel);
+    const richItemNames = getRichItemNames<TNuance>(textStyleModel);
     let richResult: TextStyleProps['rich'];
     if (richItemNames) {
         richResult = {};
         const richInheritPlainLabelOptionName = 'richInheritPlainLabel' as const;
-        const richInheritPlainLabel = retrieve2(
-            textStyleModel.get(richInheritPlainLabelOptionName),
+        const richInheritPlainLabel: boolean = retrieve2(
+            textStyleModel.get(richInheritPlainLabelOptionName as any),
             ecModel ? ecModel.get(richInheritPlainLabelOptionName) : undefined
         );
         for (const name in richItemNames) {
             if (richItemNames.hasOwnProperty(name)) {
                 // Cascade is supported in rich.
-                const richTextStyle = textStyleModel.getModel(['rich', name]);
+                const richTextStyle = textStyleModel.getModel(['rich', name]) as LabelCommonModel<TNuance>;
                 // In rich, never `disableBox`.
                 // consider `label: {formatter: '{a|xx}', color: 'blue', rich: {a: {}}}`,
                 // the default color `'blue'` will not be adopted if no color declared in `rich`.
@@ -425,7 +441,7 @@ function setTextStyleCommon(
                 // root ancestor of the `richTextStyle`. But that would be a break change.
                 // Since v6, the rich style inherits plain label by default
                 // but this behavior can be disabled by setting `richInheritPlainLabel` to `false`.
-                setTokenTextStyle(
+                setTokenTextStyle<TNuance>(
                     richResult[name] = {}, richTextStyle, globalTextStyle, textStyleModel, richInheritPlainLabel,
                     opt, isNotNormal, isAttached, false, true
                 );
@@ -439,15 +455,25 @@ function setTextStyleCommon(
     if (overflow) {
         textStyle.overflow = overflow;
     }
+    const minMargin = textStyleModel.get('minMargin');
+    if (minMargin != null) {
+        textStyle.margin = minMargin;
+        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.minMargin;
+    }
+    const textMargin = textStyleModel.get('textMargin');
+    if (textMargin != null) {
+        textStyle.margin = clone(textMargin);
+        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.textMargin;
+    }
+    else if (opt.defaultTextMargin != null) {
+        textStyle.margin = clone(opt.defaultTextMargin);
+        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.textMargin;
+    }
     const lineOverflow = textStyleModel.get('lineOverflow');
     if (lineOverflow) {
         textStyle.lineOverflow = lineOverflow;
     }
-    const margin = textStyleModel.get('minMargin');
-    if (margin != null) {
-        textStyle.margin = margin;
-    }
-    setTokenTextStyle(
+    setTokenTextStyle<TNuance>(
         textStyle, textStyleModel, globalTextStyle, null, null, opt, isNotNormal, isAttached, true, false
     );
 }
@@ -466,7 +492,9 @@ function setTextStyleCommon(
 //     }
 // }
 // TODO TextStyleModel
-function getRichItemNames(textStyleModel: Model<LabelOption>) {
+function getRichItemNames<
+    TNuance extends TextCommonOptionNuanceBase
+>(textStyleModel: Model<LabelCommonOption<TNuance>>) {
     // Use object to remove duplicated names.
     let richItemNameMap: Dictionary<number>;
     while (textStyleModel && textStyleModel !== textStyleModel.ecModel) {
@@ -496,11 +524,12 @@ const TEXT_PROPS_BOX = [
     'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY'
 ] as const;
 
-function setTokenTextStyle(
+function setTokenTextStyle<TNuance extends TextCommonOptionNuanceBase>(
     textStyle: TextStyleProps['rich'][string],
-    textStyleModel: Model<LabelOption>,
-    globalTextStyle: LabelOption,
-    plainTextModel: Model<LabelOption> | NullUndefined,
+    // FIXME: check/refactor for ellipsis handling of rich text.
+    textStyleModel: Model<TextCommonOption<TNuance> & Pick<LabelCommonOption, 'ellipsis'>>,
+    globalTextStyle: GlobalTextStyleOption,
+    plainTextModel: LabelCommonModel<TNuance>,
     richInheritPlainLabel: boolean,
     opt?: Pick<TextCommonParams, 'inheritColor' | 'defaultOpacity' | 'disableBox'>,
     isNotNormal?: boolean,
@@ -547,7 +576,9 @@ function setTokenTextStyle(
         strokeColor = strokeColor || globalTextStyle.textBorderColor;
     }
     if (fillColor != null) {
-        textStyle.fill = fillColor;
+        // Might not be a string, e.g, it's a function in axisLabel case; but assume that it will
+        // be erased by a correct value outside.
+        textStyle.fill = fillColor as string;
     }
     if (strokeColor != null) {
         textStyle.stroke = strokeColor;

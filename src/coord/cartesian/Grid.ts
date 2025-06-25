@@ -23,43 +23,53 @@
  * TODO Default cartesian
  */
 
-import {isObject, each, indexOf, retrieve3, keys, map} from 'zrender/src/core/util';
-import {createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
+import {isObject, each, indexOf, retrieve3, keys, assert, eqNaN, find, retrieve2} from 'zrender/src/core/util';
+import {BoxLayoutReferenceResult, createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
     ifAxisCrossZero,
     niceScaleExtent,
-    estimateLabelUnionRect,
     getDataDimensionsOnAxis,
-    computeNameBoundingRect,
-    computeReservedSpace,
-    ReservedSpace,
-    CartesianAxisPositionMargins
+    isNameLocationCenter,
+    shouldAxisShow,
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
-import GridModel from './GridModel';
-import CartesianAxisModel, { CartesianAxisPosition } from './AxisModel';
+import GridModel, { GridOption, OUTER_BOUNDS_CLAMP_DEFAULT, OUTER_BOUNDS_DEFAULT } from './GridModel';
+import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
-import { ScaleDataValue } from '../../util/types';
+import { NullUndefined, ScaleDataValue } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import OrdinalScale from '../../scale/Ordinal';
-import { findAxisModels, isCartesian2DInjectedAsDataCoordSys } from './cartesianAxisHelper';
+import {
+    findAxisModels,
+    createCartesianAxisViewCommonPartBuilder,
+    updateCartesianAxisViewCommonPartBuilder,
+    isCartesian2DInjectedAsDataCoordSys
+} from './cartesianAxisHelper';
 import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { isIntervalOrLogScale } from '../../scale/helper';
 import { alignScaleTicks } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
+import { BoundingRect, expandOrShrinkRect, WH, XY } from '../../util/graphic';
+import {
+    AxisBuilderSharedContext,
+    resolveAxisNameOverlapDefault,
+    moveIfOverlapByLinearLabels,
+    getLabelInner,
+} from '../../component/axis/AxisBuilder';
+import { error, log } from '../../util/log';
+import { AxisTickLabelComputingKind } from '../axisTickLabelBuilder';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
-import { BoundingRect } from 'zrender';
-
+import { mathMax, parsePositionSizeOption } from '../../util/number';
 
 type Cartesian2DDimensionName = 'x' | 'y';
 
@@ -68,6 +78,14 @@ type AxesMap = {
     x: Axis2D[],
     y: Axis2D[]
 };
+
+type ParsedOuterBoundsContain = 'all' | 'axisLabel';
+
+// margin is [top, right, bottom, left]
+const XY_TO_MARGIN_IDX = [
+    [3, 1], // xyIdx 0 => 'x'
+    [0, 2]  // xyIdx 1 => 'y'
+] as const;
 
 class Grid implements CoordinateSystemMaster {
 
@@ -171,76 +189,89 @@ class Grid implements CoordinateSystemMaster {
     }
 
     /**
-     * Resize the grid
+     * Resize the grid.
+     *
+     * [NOTE]
+     * If both "grid.containLabel/grid.contain" and pixel-required-data-processing (such as, "dataSampling")
+     * exist, circular dependency occurs in logic.
+     * The final compromised sequence is:
+     *  1. Calculate "axis.extent" (pixel extent) and AffineTransform based on only "grid layout options".
+     *      Not accurate if "grid.containLabel/grid.contain" is required, but it is a compromise to avoid
+     *      circular dependency.
+     *  2. Perform "series data processing" (where "dataSampling" requires "axis.extent").
+     *  3. Calculate "scale.extent" (data extent) based on "processed series data".
+     *  4. Modify "axis.extent" for "grid.containLabel/grid.contain":
+     *      4.1. Calculate "axis labels" based on "scale.extent".
+     *      4.2. Modify "axis.extent" by the bounding rects of "axis labels and names".
      */
-    resize(gridModel: GridModel, api: ExtensionAPI, ignoreContainLabel?: boolean): void {
-
-        const isContainLabel = !ignoreContainLabel && gridModel.get('containLabel');
+    resize(gridModel: GridModel, api: ExtensionAPI, beforeDataProcessing?: boolean): void {
 
         const layoutRef = createBoxLayoutReference(gridModel, api);
         const gridRect = this._rect = getLayoutRect(gridModel.getBoxLayoutParams(), layoutRef.refContainer);
         // PENDING: whether to support that if the input `coord` is out of the base coord sys,
         //  do not render anything. At present, the behavior is undefined.
 
-        const axesList = this._axesList;
+        const axesMap = this._axesMap;
+        const coordsList = this._coordsList;
 
-        adjustAxes();
+        const optionContainLabel = gridModel.get('containLabel'); // No `.get(, true)` for backward compat.
 
-        // Minus label, name, and nameGap size
-        if (isContainLabel) {
-            const reservedSpacePerAxis: ReservedSpace[] = [];
-            each(axesList, function (axis) {
-                const nameBoundingRect = computeNameBoundingRect(axis);
+        updateAllAxisExtentTransByGridRect(axesMap, gridRect);
 
-                let labelUnionRect: BoundingRect;
-                if (!axis.model.get(['axisLabel', 'inside'])) {
-                    labelUnionRect = estimateLabelUnionRect(axis);
+        if (!beforeDataProcessing) {
+            const axisBuilderSharedCtx = createAxisBiulders(gridRect, coordsList, axesMap, optionContainLabel, api);
+
+            let noPxChange: boolean;
+            if (optionContainLabel) {
+                if (legacyLayOutGridByContainLabel) {
+                    // console.time('legacyLayOutGridByContainLabel');
+                    legacyLayOutGridByContainLabel(this._axesList, gridRect);
+                    updateAllAxisExtentTransByGridRect(axesMap, gridRect);
+                    // console.timeEnd('legacyLayOutGridByContainLabel');
                 }
+                else {
+                    if (__DEV__) {
+                        log('Specified `grid.containLabel` but no `use(LegacyGridContainLabel)`;'
+                            + 'use `grid.outerBounds` instead.',
+                            true
+                        );
+                    }
+                    noPxChange = layOutGridByOuterBounds(
+                        gridRect.clone(), 'axisLabel', null, gridRect, axesMap, axisBuilderSharedCtx, layoutRef
+                    );
+                }
+            }
+            else {
+                const {outerBoundsRect, parsedOuterBoundsContain, outerBoundsClamp} = prepareOuterBounds(
+                    gridModel, gridRect, layoutRef
+                );
+                if (outerBoundsRect) {
+                    // console.time('layOutGridByOuterBounds');
+                    noPxChange = layOutGridByOuterBounds(
+                        outerBoundsRect, parsedOuterBoundsContain, outerBoundsClamp,
+                        gridRect, axesMap, axisBuilderSharedCtx, layoutRef
+                    );
+                    // console.timeEnd('layOutGridByOuterBounds');
+                }
+            }
 
-                reservedSpacePerAxis.push(computeReservedSpace(axis, labelUnionRect, nameBoundingRect));
-            });
-
-            const maxLabelSpace: CartesianAxisPositionMargins = { left: 0, top: 0, right: 0, bottom: 0};
-            const maxNameAndNameGapSpace: CartesianAxisPositionMargins = { left: 0, top: 0, right: 0, bottom: 0};
-            const cartesianAxisPositions: CartesianAxisPosition[] = ['left', 'top', 'right', 'bottom'];
-
-            each(cartesianAxisPositions, (position) => {
-                maxLabelSpace[position] = Math.max(...map(reservedSpacePerAxis, ({ labels }) => labels[position]));
-                maxNameAndNameGapSpace[position] =
-                    Math.max(...map(reservedSpacePerAxis, ({ name, nameGap }) => name[position] + nameGap[position]));
-            });
-
-            axesList.forEach((axis, axisIndex) => {
-                axis.model.axisToNameGapStartGap =
-                    maxLabelSpace[reservedSpacePerAxis[axisIndex].namePositionCurrAxis];
-            });
-
-            const maxReservedSpaceLeft = maxLabelSpace.left + maxNameAndNameGapSpace.left;
-            const maxReservedSpaceTop = maxLabelSpace.top + maxNameAndNameGapSpace.top;
-
-            gridRect.x += maxReservedSpaceLeft;
-            gridRect.y += maxReservedSpaceTop;
-            gridRect.width -= maxReservedSpaceLeft + maxLabelSpace.right + maxNameAndNameGapSpace.right;
-            gridRect.height -= maxReservedSpaceTop + maxLabelSpace.bottom + maxNameAndNameGapSpace.bottom;
-
-            adjustAxes();
-        }
+            // console.time('buildAxesView_determine');
+            createOrUpdateAxesView(
+                gridRect,
+                axesMap,
+                AxisTickLabelComputingKind.determine,
+                null,
+                noPxChange,
+                layoutRef
+            );
+            // console.timeEnd('buildAxesView_determine');
+        } // End of beforeDataProcessing
 
         each(this._coordsList, function (coord) {
             // Calculate affine matrix to accelerate the data to point transform.
             // If all the axes scales are time or value.
             coord.calcAffineTransform();
         });
-
-        function adjustAxes() {
-            each(axesList, function (axis) {
-                const isHorizontal = axis.isHorizontal();
-                const extent = isHorizontal ? [0, gridRect.width] : [0, gridRect.height];
-                const idx = axis.inverse ? 1 : 0;
-                axis.setExtent(extent[idx], extent[1 - idx]);
-                updateAxisTransform(axis, isHorizontal ? gridRect.x : gridRect.y);
-            });
-        }
     }
 
     getAxis(dim: Cartesian2DDimensionName, axisIndex?: number): Axis2D {
@@ -687,5 +718,278 @@ function updateAxisTransform(axis: Axis2D, coordBase: number) {
             return axisExtentSum - coord + coordBase;
         };
 }
+
+function updateAllAxisExtentTransByGridRect(axesMap: AxesMap, gridRect: LayoutRect) {
+    each(axesMap.x, axis => updateAxisExtentTransByGridRect(axis, gridRect.x, gridRect.width));
+    each(axesMap.y, axis => updateAxisExtentTransByGridRect(axis, gridRect.y, gridRect.height));
+}
+
+function updateAxisExtentTransByGridRect(axis: Axis2D, gridXY: number, gridWH: number): void {
+    const extent = [0, gridWH];
+    const idx = axis.inverse ? 1 : 0;
+    axis.setExtent(extent[idx], extent[1 - idx]);
+    updateAxisTransform(axis, gridXY);
+}
+
+export type LegacyLayOutGridByContainLabel = (axesList: Axis2D[], gridRect: LayoutRect) => void;
+let legacyLayOutGridByContainLabel: LegacyLayOutGridByContainLabel | NullUndefined;
+export function registerLegacyGridContainLabelImpl(impl: LegacyLayOutGridByContainLabel): void {
+    legacyLayOutGridByContainLabel = impl;
+}
+
+// Return noPxChange.
+function layOutGridByOuterBounds(
+    outerBoundsRect: BoundingRect,
+    outerBoundsContain: ParsedOuterBoundsContain,
+    outerBoundsClamp: number[] | NullUndefined,
+    gridRect: LayoutRect,
+    axesMap: AxesMap,
+    axisBuilderSharedCtx: AxisBuilderSharedContext,
+    layoutRef: BoxLayoutReferenceResult
+): boolean {
+    if (__DEV__) {
+        assert(outerBoundsContain === 'all' || outerBoundsContain === 'axisLabel');
+    }
+    // Assume `updateAllAxisExtentTransByGridRect` has been performed once before this call.
+
+    // [NOTE]:
+    // - The bounding rect of the axis elements might be sensitve to variations in `axis.extent` due to strategies
+    //  like hideOverlap/moveOverlap. @see the comment in `LabelLayoutInfoBase['suggestIgnore']`.
+    // - The final `gridRect` might be slightly smaller than the ideally expected result if labels are giant and
+    //  get hidden due to overlapping. More iterations could improve precision, but not performant. We consider
+    //  the current result acceptable, since no alignment among charts can be guaranteed when using this feature.
+    createOrUpdateAxesView(
+        gridRect,
+        axesMap,
+        AxisTickLabelComputingKind.estimate,
+        outerBoundsContain,
+        false,
+        layoutRef
+    );
+
+    const margin = [0, 0, 0, 0];
+
+    fillLabelNameOverflowOnOneDimension(0);
+    fillLabelNameOverflowOnOneDimension(1);
+    // If axis is blank, no label can be used to detect overflow.
+    // gridRect itself should not overflow.
+    fillMarginOnOneDimension(gridRect, 0, NaN);
+    fillMarginOnOneDimension(gridRect, 1, NaN);
+
+    const noPxChange = find(margin, item => item > 0) == null;
+    expandOrShrinkRect(gridRect, margin, true, true, outerBoundsClamp);
+
+    updateAllAxisExtentTransByGridRect(axesMap, gridRect);
+
+    return noPxChange;
+
+    function fillLabelNameOverflowOnOneDimension(xyIdx: number): void {
+        each(axesMap[XY[xyIdx]], axis => {
+            if (!shouldAxisShow(axis.model)) {
+                return;
+            }
+            // FIXME: zr Group.union may wrongly union (0, 0, 0, 0) and not performant.
+            // unionRect.union(axis.axisBuilder.group.getBoundingRect());
+
+            // If ussing Group.getBoundingRect to calculate shrink space, it is not strictly accurate when
+            // the outermost label is ignored and the secondary label is very long and contribute to the
+            // union extension:
+            //      -|---|---|---|
+            //         1,000,000,000
+            // Therefore we calculate them one by one.
+            // Also considered axis may be blank or no labels.
+            const sharedRecord = axisBuilderSharedCtx.ensureRecord(axis.model);
+            const labelInfoList = sharedRecord.labelInfoList;
+            if (labelInfoList) {
+                for (let idx = 0; idx < labelInfoList.length; idx++) {
+                    const labelInfo = labelInfoList[idx];
+                    let proportion = axis.scale.normalize(getLabelInner(labelInfo.label).tickValue);
+                    proportion = xyIdx === 1 ? 1 - proportion : proportion;
+                    // xAxis use proportion on x, yAxis use proprotion on y, otherwise not.
+                    fillMarginOnOneDimension(labelInfo.rect, xyIdx, proportion);
+                    fillMarginOnOneDimension(labelInfo.rect, 1 - xyIdx, NaN);
+                }
+            }
+            const nameLayout = sharedRecord.nameLayout;
+            if (nameLayout) {
+                const proportion = isNameLocationCenter(sharedRecord.nameLocation) ? 0.5 : NaN;
+                fillMarginOnOneDimension(nameLayout.rect, xyIdx, proportion);
+                fillMarginOnOneDimension(nameLayout.rect, 1 - xyIdx, NaN);
+            }
+        });
+    }
+
+    function fillMarginOnOneDimension(
+        itemRect: BoundingRect,
+        xyIdx: number,
+        proportion: number // NaN mean no use proportion
+    ): void {
+        let overflow1 = outerBoundsRect[XY[xyIdx]] - itemRect[XY[xyIdx]];
+        let overflow2 = (itemRect[WH[xyIdx]] + itemRect[XY[xyIdx]])
+            - (outerBoundsRect[WH[xyIdx]] + outerBoundsRect[XY[xyIdx]]);
+        overflow1 = applyProportion(overflow1, 1 - proportion);
+        overflow2 = applyProportion(overflow2, proportion);
+        const minIdx = XY_TO_MARGIN_IDX[xyIdx][0];
+        const maxIdx = XY_TO_MARGIN_IDX[xyIdx][1];
+        margin[minIdx] = mathMax(margin[minIdx], overflow1);
+        margin[maxIdx] = mathMax(margin[maxIdx], overflow2);
+    }
+
+    function applyProportion(overflow: number, proportion: number): number {
+        // proportion is not likely to near zero. If so, give up shrink
+        if (overflow > 0 && !eqNaN(proportion) && proportion > 1e-4) {
+            overflow /= proportion;
+        }
+        return overflow;
+    }
+}
+
+function createAxisBiulders(
+    gridRect: LayoutRect,
+    cartesians: Cartesian2D[],
+    axesMap: AxesMap,
+    optionContainLabel: GridOption['containLabel'],
+    api: ExtensionAPI,
+): AxisBuilderSharedContext {
+    const axisBuilderSharedCtx = new AxisBuilderSharedContext(resolveAxisNameOverlapForGrid);
+    each(axesMap, axisList => each(axisList, axis => {
+        if (shouldAxisShow(axis.model)) {
+            // See `AxisBaseOptionCommon['nameMoveOverlap']`.
+            const defaultNameMoveOverlap = !optionContainLabel;
+            axis.axisBuilder = createCartesianAxisViewCommonPartBuilder(
+                gridRect, cartesians, axis.model, api, axisBuilderSharedCtx, defaultNameMoveOverlap
+            );
+        }
+    }));
+    return axisBuilderSharedCtx;
+}
+
+/**
+ * Promote the axis-elements-building from "view render" stage to "coordinate system resize" stage.
+ * This is aimed to resovle overlap across multiple axes, since currently it's hard to reconcile
+ * multiple axes in "view render" stage.
+ *
+ * [CAUTION] But this promotion assumes that the subsequent "visual mapping" stage does not affect
+ * this axis-elements-building; otherwise we have to refactor it again.
+ */
+function createOrUpdateAxesView(
+    gridRect: LayoutRect,
+    axesMap: AxesMap,
+    kind: AxisTickLabelComputingKind,
+    outerBoundsContain: ParsedOuterBoundsContain | NullUndefined,
+    noPxChange: boolean,
+    layoutRef: BoxLayoutReferenceResult
+): void {
+    const isDetermine = kind === AxisTickLabelComputingKind.determine;
+    each(axesMap, axisList => each(axisList, axis => {
+        if (shouldAxisShow(axis.model)) {
+            updateCartesianAxisViewCommonPartBuilder(axis.axisBuilder, gridRect, axis.model);
+            axis.axisBuilder.build(
+                isDetermine
+                    ? {axisTickLabelDetermine: true}
+                    : {axisTickLabelEstimate: true},
+                {noPxChange}
+            );
+        }
+    }));
+
+    const nameMarginLevelMap = {x: 0, y: 0};
+    calcNameMarginLevel(0);
+    calcNameMarginLevel(1);
+    function calcNameMarginLevel(xyIdx: number): void {
+        nameMarginLevelMap[XY[1 - xyIdx]] = gridRect[WH[xyIdx]] <= layoutRef.refContainer[WH[xyIdx]] * 0.5
+            ? 0 : ((1 - xyIdx) === 1 ? 2 : 1);
+    }
+
+    each(axesMap, (axisList, xy) => each(axisList, axis => {
+        if (shouldAxisShow(axis.model)) {
+            if (outerBoundsContain === 'all' || isDetermine) {
+                // To resolve overlap, `axisName` layout depends on `axisTickLabel` layout result
+                // (all of the axes of the same `grid`; consider multiple x or y axes).
+                axis.axisBuilder.build({axisName: true}, {nameMarginLevel: nameMarginLevelMap[xy]});
+            }
+            if (isDetermine) {
+                axis.axisBuilder.build({axisLine: true});
+            }
+        }
+    }));
+}
+
+function prepareOuterBounds(
+    gridModel: GridModel,
+    rawRridRect: BoundingRect,
+    layoutRef: BoxLayoutReferenceResult,
+): {
+    outerBoundsRect: BoundingRect | NullUndefined
+    parsedOuterBoundsContain: ParsedOuterBoundsContain
+    outerBoundsClamp: number[]
+} {
+    let outerBoundsRect: BoundingRect | NullUndefined;
+    const optionOuterBoundsMode = gridModel.get('outerBoundsMode', true);
+    if (optionOuterBoundsMode === 'same') {
+        outerBoundsRect = rawRridRect.clone();
+    }
+    else if (optionOuterBoundsMode == null || optionOuterBoundsMode === 'auto') {
+        outerBoundsRect = getLayoutRect(
+            gridModel.get('outerBounds', true) || OUTER_BOUNDS_DEFAULT, layoutRef.refContainer
+        );
+    }
+    else if (optionOuterBoundsMode !== 'none') {
+        if (__DEV__) {
+            error(`Invalid grid[${gridModel.componentIndex}].outerBoundsMode.`);
+        }
+    }
+
+    const optionOuterBoundsContain = gridModel.get('outerBoundsContain', true);
+    let parsedOuterBoundsContain: ParsedOuterBoundsContain;
+    if (optionOuterBoundsContain == null || optionOuterBoundsContain === 'auto') {
+        parsedOuterBoundsContain = 'all';
+    }
+    else if (indexOf(['all', 'axisLabel'], optionOuterBoundsContain) < 0) {
+        if (__DEV__) {
+            error(`Invalid grid[${gridModel.componentIndex}].outerBoundsContain.`);
+        }
+        parsedOuterBoundsContain = 'all';
+    }
+    else {
+        parsedOuterBoundsContain = optionOuterBoundsContain;
+    }
+
+    const outerBoundsClamp = [
+        parsePositionSizeOption(
+            retrieve2(gridModel.get('outerBoundsClampWidth', true), OUTER_BOUNDS_CLAMP_DEFAULT[0]), rawRridRect.width
+        ),
+        parsePositionSizeOption(
+            retrieve2(gridModel.get('outerBoundsClampHeight', true), OUTER_BOUNDS_CLAMP_DEFAULT[1]), rawRridRect.height
+        )
+    ];
+
+    return {outerBoundsRect, parsedOuterBoundsContain, outerBoundsClamp};
+}
+
+const resolveAxisNameOverlapForGrid: AxisBuilderSharedContext['resolveAxisNameOverlap'] = (
+    cfg, ctx, axisModel, nameLayoutInfo, nameMoveDirVec, thisRecord
+) => {
+    const perpendicularDim = axisModel.axis.dim === 'x' ? 'y' : 'x';
+
+    resolveAxisNameOverlapDefault(cfg, ctx, axisModel, nameLayoutInfo, nameMoveDirVec, thisRecord);
+
+    // If nameLocation 'center', and there are multiple axes parallel to this axis, do not adjust by
+    //  other axes, because the axis name should be close to its axis line as much as possible even
+    //  if overlapping; otherwise it might cause misleading.
+    // If nameLocation 'center', do not adjust by perpendicular axes, since they are not likely to overlap.
+    // If nameLocation 'start'/'end', move name within the same direction to escape overlap with the
+    //  perpendicular axes.
+    if (!isNameLocationCenter(cfg.nameLocation)) {
+        each(ctx.recordMap[perpendicularDim], perpenRecord => {
+            // perpendicular axis may be no name.
+            if (perpenRecord && perpenRecord.labelInfoList && perpenRecord.dirVec) {
+                moveIfOverlapByLinearLabels(
+                    perpenRecord.labelInfoList, perpenRecord.dirVec, nameLayoutInfo, nameMoveDirVec
+                );
+            }
+        });
+    }
+};
 
 export default Grid;

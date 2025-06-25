@@ -29,6 +29,7 @@ import type { AxisBuilderCfg } from './AxisBuilder';
 import type { BaseAxisBreakPayload } from './axisAction';
 import type { AxisBaseOption } from '../../coord/axisCommonTypes';
 import type { AxisBreakOptionIdentifierInAxis, NullUndefined } from '../../util/types';
+import { LabelLayoutInfoComputed } from '../../label/labelLayoutHelper';
 import type ComponentModel from '../../model/Component';
 
 /**
@@ -44,7 +45,7 @@ export type AxisBreakHelper = {
     adjustBreakLabelPair(
         axisInverse: boolean,
         axisRotation: AxisBuilderCfg['rotation'],
-        labelPair: graphic.Text[],
+        layoutPair: (LabelLayoutInfoComputed | NullUndefined)[],
     ): void;
     buildAxisBreakLine(
         axisModel: AxisBaseModel,

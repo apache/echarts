@@ -19,21 +19,16 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
-import AxisBuilder, {AxisBuilderCfg} from './AxisBuilder';
 import AxisView from './AxisView';
-import * as cartesianAxisHelper from '../../coord/cartesian/cartesianAxisHelper';
 import {rectCoordAxisBuildSplitArea, rectCoordAxisHandleRemove} from './axisSplitHelper';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import GridModel from '../../coord/cartesian/GridModel';
 import { Payload } from '../../util/types';
-import { isIntervalOrLogScale } from '../../scale/helper';
 import { getAxisBreakHelper } from './axisBreakHelper';
+import { shouldAxisShow } from '../../coord/axisHelper';
 
-const axisBuilderAttrs = [
-    'axisLine', 'axisTickLabel', 'axisName'
-] as const;
 const selfBuilderAttrs = [
     'splitArea', 'splitLine', 'minorSplitLine', 'breakArea'
 ] as const;
@@ -59,40 +54,15 @@ class CartesianAxisView extends AxisView {
 
         this.group.add(this._axisGroup);
 
-        if (!axisModel.get('show')) {
+        if (!shouldAxisShow(axisModel)) {
             return;
         }
 
-        const gridModel = axisModel.getCoordSysModel();
-
-        const layout = cartesianAxisHelper.layout(gridModel, axisModel);
-
-        const axisBuilder = new AxisBuilder(axisModel, api, zrUtil.extend({
-            handleAutoShown(elementType) {
-                const cartesians = gridModel.coordinateSystem.getCartesians();
-                for (let i = 0; i < cartesians.length; i++) {
-                    if (isIntervalOrLogScale(cartesians[i].getOtherAxis(axisModel.axis).scale)) {
-                        if (elementType === 'axisTick' && axisModel.axis.type === 'category'
-                            && axisModel.axis.onBand
-                        ) {
-                            return false;
-                        }
-                        // Still show axis tick or axisLine if other axis is value / log
-                        return true;
-                    }
-                }
-                // Not show axisTick or axisLine if other axis is category / time
-                return false;
-            }
-        } as AxisBuilderCfg, layout));
-
-        zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
-
-        this._axisGroup.add(axisBuilder.getGroup());
+        this._axisGroup.add(axisModel.axis.axisBuilder.group);
 
         zrUtil.each(selfBuilderAttrs, function (name) {
             if (axisModel.get([name, 'show'])) {
-                axisElementBuilders[name](this, this._axisGroup, axisModel, gridModel, api);
+                axisElementBuilders[name](this, this._axisGroup, axisModel, axisModel.getCoordSysModel(), api);
             }
         }, this);
 

@@ -22,7 +22,10 @@ import {linearMap, getPixelPrecision, round} from '../util/number';
 import {
     createAxisTicks,
     createAxisLabels,
-    calculateCategoryInterval
+    calculateCategoryInterval,
+    AxisLabelsComputingContext,
+    AxisTickLabelComputingKind,
+    createAxisLabelsComputingContext,
 } from './axisTickLabelBuilder';
 import Scale, { ScaleGetTicksOpt } from '../scale/Scale';
 import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
@@ -33,14 +36,20 @@ import { AxisBaseModel } from './AxisBaseModel';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
-interface TickCoord {
+export interface AxisTickCoord {
     coord: number;
     // That is `scaleTick.value`.
     tickValue?: ScaleTick['value'];
+    // `true` if onBand fixed.
+    onBand?: boolean;
 }
 
 /**
  * Base class of Axis.
+ *
+ * Lifetime: recreate for each main process.
+ * [NOTICE]: Some caches is stored on the axis instance (see `axisTickLabelBuilder.ts`)
+ *  which is based on this lifetime.
  */
 class Axis {
 
@@ -59,11 +68,16 @@ class Axis {
     // Axis scale
     scale: Scale;
 
+    // Make sure that `extent[0] > extent[1]` only if `inverse: true`.
+    // The unit is pixel, but not necessarily the global pixel,
+    //  probably need to transform (usually rotate) to global pixel.
     private _extent: [number, number];
 
     // Injected outside
     model: AxisBaseModel;
     onBand: CategoryAxisBaseOption['boundaryGap'] = false;
+    // Make sure that `extent[0] > extent[1]` only if `inverse: true`.
+    // `inverse` can be inferred by `extent` unless `extent[0] === extent[1]`.
     inverse: AxisBaseOption['inverse'] = false;
 
 
@@ -171,7 +185,7 @@ class Axis {
         clamp?: boolean,
         breakTicks?: ScaleGetTicksOpt['breakTicks'],
         pruneByBreak?: ScaleGetTicksOpt['pruneByBreak']
-    }): TickCoord[] {
+    }): AxisTickCoord[] {
         opt = opt || {};
 
         const tickModel = opt.tickModel || this.getTickModel();
@@ -201,7 +215,7 @@ class Axis {
         return ticksCoords;
     }
 
-    getMinorTicksCoords(): TickCoord[][] {
+    getMinorTicksCoords(): AxisTickCoord[][] {
         if (this.scale.type === 'ordinal') {
             // Category axis doesn't support minor ticks
             return [];
@@ -225,8 +239,11 @@ class Axis {
         return minorTicksCoords;
     }
 
-    getViewLabels(): ReturnType<typeof createAxisLabels>['labels'] {
-        return createAxisLabels(this).labels;
+    getViewLabels(
+        ctx?: AxisLabelsComputingContext
+    ): ReturnType<typeof createAxisLabels>['labels'] {
+        ctx = ctx || createAxisLabelsComputingContext(AxisTickLabelComputingKind.determine);
+        return createAxisLabels(this, ctx).labels;
     }
 
     getLabelModel(): Model<AxisBaseOption['axisLabel']> {
@@ -270,8 +287,9 @@ class Axis {
      * Can be overridden, consider other axes like in 3D.
      * @return Auto interval for cateogry axis tick and label
      */
-    calculateCategoryInterval(): ReturnType<typeof calculateCategoryInterval> {
-        return calculateCategoryInterval(this);
+    calculateCategoryInterval(ctx?: AxisLabelsComputingContext): number {
+        ctx = ctx || createAxisLabelsComputingContext(AxisTickLabelComputingKind.determine);
+        return calculateCategoryInterval(this, ctx);
     }
 
 }
@@ -295,7 +313,7 @@ function fixExtentWithBands(extent: [number, number], nTick: number): void {
 // case).
 function fixOnBandTicksCoords(
     axis: Axis,
-    ticksCoords: TickCoord[],
+    ticksCoords: AxisTickCoord[],
     alignWithLabel: boolean,
     clamp: boolean
 ) {
@@ -310,7 +328,8 @@ function fixOnBandTicksCoords(
     let diffSize;
     if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
-        last = ticksCoords[1] = {coord: axisExtent[1], tickValue: ticksCoords[0].tickValue};
+        ticksCoords[0].onBand = true;
+        last = ticksCoords[1] = {coord: axisExtent[1], tickValue: ticksCoords[0].tickValue, onBand: true};
     }
     else {
         const crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
@@ -318,12 +337,13 @@ function fixOnBandTicksCoords(
 
         each(ticksCoords, function (ticksItem) {
             ticksItem.coord -= shift / 2;
+            ticksItem.onBand = true;
         });
 
         const dataExtent = axis.scale.getExtent();
         diffSize = 1 + dataExtent[1] - ticksCoords[ticksLen - 1].tickValue;
 
-        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize, tickValue: dataExtent[1] + 1};
+        last = {coord: ticksCoords[ticksLen - 1].coord + shift * diffSize, tickValue: dataExtent[1] + 1, onBand: true};
 
         ticksCoords.push(last);
     }
@@ -335,13 +355,13 @@ function fixOnBandTicksCoords(
         clamp ? (ticksCoords[0].coord = axisExtent[0]) : ticksCoords.shift();
     }
     if (clamp && littleThan(axisExtent[0], ticksCoords[0].coord)) {
-        ticksCoords.unshift({coord: axisExtent[0]});
+        ticksCoords.unshift({coord: axisExtent[0], onBand: true});
     }
     if (littleThan(axisExtent[1], last.coord)) {
         clamp ? (last.coord = axisExtent[1]) : ticksCoords.pop();
     }
     if (clamp && littleThan(last.coord, axisExtent[1])) {
-        ticksCoords.push({coord: axisExtent[1]});
+        ticksCoords.push({coord: axisExtent[1], onBand: true});
     }
 
     function littleThan(a: number, b: number): boolean {

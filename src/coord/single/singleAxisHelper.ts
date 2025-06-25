@@ -19,20 +19,20 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import SingleAxisModel from './AxisModel';
+import { AxisBuilderCfg } from '../../component/axis/AxisBuilder';
 
 interface LayoutResult {
-    position: [number, number],
-    rotation: number
-    labelRotation: number
-    labelDirection: number  // 1 | -1
-    tickDirection: number
-    nameDirection: number
+    position: AxisBuilderCfg['position'],
+    rotation: AxisBuilderCfg['rotation']
+    labelRotate: AxisBuilderCfg['labelRotate']
+    labelDirection: AxisBuilderCfg['labelDirection']
+    tickDirection: AxisBuilderCfg['tickDirection']
+    nameDirection: AxisBuilderCfg['nameDirection']
     z2: number
 }
 
 export function layout(axisModel: SingleAxisModel, opt?: {
     labelInside?: boolean
-    rotate?: number
 }) {
     opt = opt || {};
     const single = axisModel.coordinateSystem;
@@ -68,16 +68,15 @@ export function layout(axisModel: SingleAxisModel, opt?: {
         layout.nameDirection = directionMap[axisPosition];
 
     if (axisModel.get(['axisTick', 'inside'])) {
-        layout.tickDirection = -layout.tickDirection;
+        layout.tickDirection = -layout.tickDirection as LayoutResult['tickDirection'];
     }
 
     if (zrUtil.retrieve(opt.labelInside, axisModel.get(['axisLabel', 'inside']))) {
-        layout.labelDirection = -layout.labelDirection;
+        layout.labelDirection = -layout.labelDirection as LayoutResult['tickDirection'];
     }
 
-    let labelRotation = opt.rotate;
-    labelRotation == null && (labelRotation = axisModel.get(['axisLabel', 'rotate']));
-    layout.labelRotation = axisPosition === 'top' ? -labelRotation : labelRotation;
+    const labelRotate = axisModel.get(['axisLabel', 'rotate']);
+    layout.labelRotate = axisPosition === 'top' ? -labelRotate : labelRotate;
 
     layout.z2 = 1;
 

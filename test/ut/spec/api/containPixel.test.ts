@@ -210,7 +210,8 @@ describe('api/containPixel', function () {
                     right: '50%',
                     top: 30,
                     bottom: 40,
-                    containLabel: false
+                    containLabel: false,
+                    outerBoundsMode: 'none',
                 },
                 {
                     id: 'g1',
@@ -218,7 +219,8 @@ describe('api/containPixel', function () {
                     right: 20,
                     top: 30,
                     bottom: 40,
-                    containLabel: false
+                    containLabel: false,
+                    outerBoundsMode: 'none',
                 }
             ],
             xAxis: [

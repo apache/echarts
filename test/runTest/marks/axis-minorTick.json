@@ -1,0 +1,10 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/21059",
+    "comment": "This is some edge cases that detect the overlap between  the min/maxLabel the secondary label. #21059 changes the \"margin\" of text and affects the result slightly, but acceptable.",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "5.6.0",
+    "markTime": 1750767910276
+  }
+]
