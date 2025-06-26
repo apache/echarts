@@ -920,14 +920,14 @@ class LineView extends ChartView {
         this._step = step;
         this._valueOrigin = valueOrigin;
 
-        if (seriesModel.get('triggerLineEvent')) {
-            this.packEventData(seriesModel, polyline);
-            polygon && this.packEventData(seriesModel, polygon);
-        }
+        const triggerEvent = seriesModel.get('triggerEvent');
+        const triggerLineEvent = seriesModel.get('triggerLineEvent');
 
-        if (seriesModel.get('triggerLineOnlyEvent')) {
-            this.packEventData(seriesModel, polyline);
-        }
+        const shouldTriggerLineEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'line';
+        const shouldTriggerAreaEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'area';
+
+        shouldTriggerLineEvent && this.packEventData(seriesModel, polyline);
+        shouldTriggerAreaEvent && polygon && this.packEventData(seriesModel, polygon);
     }
 
     private packEventData(seriesModel: LineSeriesModel, el: Element) {

@@ -78,12 +78,15 @@ under the License.
                             name: 'line2',
                             type: 'line',
                             stack: 'a',
+                            lineStyle: {
+                                width: 3
+                            },
                             areaStyle: {},
                             data: data.map(function (d) {
                                 return d * 0.5;
                             }),
                             // Only trigger event when hovering over line, not area under curve.
-                            triggerLineOnlyEvent: true
+                            triggerEvent: 'line'
                         },
                     ]
                 });

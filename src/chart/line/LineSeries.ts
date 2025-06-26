@@ -119,9 +119,16 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
 
     data?: (LineDataValue | LineDataItemOption)[]
 
+    /**
+     * @deprecated Use `triggerEvent: 'line'` for only line event or `triggerEvent: true` for both line and area event.
+     */
     triggerLineEvent?: boolean
 
-    triggerLineOnlyEvent?: boolean
+    /**
+    * Whether to trigger event when hovering on the line or the area
+    * @since v6.0.0
+    */
+    triggerEvent?: boolean | 'line' | 'area'
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -215,11 +222,12 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             divideShape: 'clone'
         },
 
-        // Whether to trigger event when hovering on either line or area.
+        /**
+         * @deprecated
+         */
         triggerLineEvent: false,
 
-        // Whether to trigger event when hovering only on line.
-        triggerLineOnlyEvent: false
+        triggerEvent: false
     };
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
