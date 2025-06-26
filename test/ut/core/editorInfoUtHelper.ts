@@ -8,19 +8,24 @@ export const isHaveEditorInfo =
         graphic: Displayable | Group, findParent = false, editorInfo: EditorInfo
     ): boolean {
         const { component, element, componentIndex, subType, dataIndex } = editorInfo;
-        if (graphic?.__editorInfo?.component === component && graphic?.__editorInfo?.element === element) {
-            if (componentIndex !== undefined && componentIndex !== graphic?.__editorInfo?.componentIndex) {
+        if (
+            graphic &&
+            graphic.__editorInfo &&
+            graphic.__editorInfo.component === component &&
+            graphic.__editorInfo.element === element
+        ) {
+            if (componentIndex !== undefined && componentIndex !== graphic.__editorInfo.componentIndex) {
                 return false;
             }
-            if (subType !== undefined && subType !== graphic?.__editorInfo?.subType) {
+            if (subType !== undefined && subType !== graphic.__editorInfo.subType) {
                 return false;
             }
-            if (dataIndex !== undefined && dataIndex !== graphic?.__editorInfo?.dataIndex) {
+            if (dataIndex !== undefined && dataIndex !== graphic.__editorInfo.dataIndex) {
                 return false;
             }
             return true;
         }
-        if (findParent && graphic.parent) {
+        if (findParent && graphic && graphic.parent) {
             return isHaveEditorInfo(graphic.parent, true, editorInfo);
         }
         else {
