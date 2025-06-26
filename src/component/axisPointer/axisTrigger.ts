@@ -164,10 +164,13 @@ export default function axisTrigger(
         const coordSysContainsPoint = isIllegalPoint || coordSys.containPoint(point);
 
         each(coordSysAxesInfo.coordSysAxesInfo[coordSysKey], function (axisInfo, key) {
+            // Allow connected charts to bypass illegalPoint check and always show shared
+            // axisPointer regardless of series data.
+            const isAlwaysShow = axisInfo.axisPointerModel.get('show') === 'always';
             const axis = axisInfo.axis;
             const inputAxisInfo = findInputAxisInfo(inputAxesInfo, axisInfo);
             // If no inputAxesInfo, no axis is restricted.
-            if (!shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
+            if (isAlwaysShow || !shouldHide && coordSysContainsPoint && (!inputAxesInfo || inputAxisInfo)) {
                 let val = inputAxisInfo && inputAxisInfo.value;
                 if (val == null && !isIllegalPoint) {
                     val = axis.pointToData(point);
