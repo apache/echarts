@@ -87,6 +87,7 @@ import { mathMin, mathMax, mathAbs } from './number';
  */
 export {updateProps, initProps, removeElement, removeElementWithFadeOut, isElementRemoved};
 
+/* global Image */
 
 const _customShapeMap: Dictionary<{ new(): Path }> = {};
 
@@ -197,6 +198,10 @@ export function makeImage(
     rect: ZRRectLike,
     layout?: 'center' | 'cover'
 ) {
+    const resizeZRImg = (width: number, height:number) => {
+        const boundingRect = { width, height };
+        zrImg.setStyle(centerGraphic(rect, boundingRect));
+    };
     const zrImg = new ZRImage({
         style: {
             image: imageUrl,
@@ -207,14 +212,16 @@ export function makeImage(
         },
         onload(img) {
             if (layout === 'center') {
-                const boundingRect = {
-                    width: img.width,
-                    height: img.height
-                };
-                zrImg.setStyle(centerGraphic(rect, boundingRect));
+                resizeZRImg(img.width, img.height);
             }
         }
     });
+    if (layout === 'center') {
+        const img = new Image();
+        img.onload = () => resizeZRImg(img.width, img.height);
+        img.src = imageUrl;
+        resizeZRImg(img.width, img.height);
+    }
     return zrImg;
 }
 
