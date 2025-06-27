@@ -33,7 +33,7 @@ import { LabelLayoutInfoComputed } from '../../label/labelLayoutHelper';
 import type ComponentModel from '../../model/Component';
 
 /**
- * @file The fasade of axis break view and mode.
+ * @file The facade of axis break view and mode.
  *  Separate the impl to reduce code size.
  *
  * @caution
