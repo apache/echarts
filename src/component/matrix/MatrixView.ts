@@ -265,7 +265,7 @@ function createMatrixCell(
     _tmpCellModel.option = cellOption;
     _tmpCellModel.parentModel = parentCellModel;
 
-    // Use different z2 becuase special border may be defined in itemStyle.
+    // Use different z2 because special border may be defined in itemStyle.
     const z2 = retrieve2(
         _tmpCellModel.getShallow('z2'),
         (cellOption && cellOption.itemStyle) ? zrCellDefault.special : zrCellDefault.normal
