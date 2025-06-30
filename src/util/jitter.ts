@@ -20,12 +20,10 @@ export function needFixJitter(seriesModel: SeriesModel, axis: Axis): boolean {
 export type JitterData = {
     fixedCoord: number,
     floatCoord: number,
-    r: number,
-    next: JitterData | null,
-    prev: JitterData | null
+    r: number
 };
 
-const inner = makeInner<{ items: JitterData }, Axis2D | SingleAxis>();
+const inner = makeInner<{ items: JitterData[] }, Axis2D | SingleAxis>();
 
 /**
  * Fix jitter for overlapping data points.
@@ -92,94 +90,68 @@ function fixJitterAvoidOverlaps(
 ): number {
     const store = inner(fixedAxis);
     if (!store.items) {
-        store.items = {
-            fixedCoord: -1,
-            floatCoord: -1,
-            r: -1,
-            next: null,
-            prev: null
-        };
-        store.items.next = store.items;
-        store.items.prev = store.items;
+        store.items = [];
     }
     const items = store.items;
 
+    // Try both positive and negative directions, choose the one with smaller movement
     const overlapA = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, 1);
     const overlapB = placeJitterOnDirection(items, fixedCoord, floatCoord, radius, jitter, margin, -1);
-    const overlapResult = Math.abs(overlapA.resultCoord - floatCoord) < Math.abs(overlapB.resultCoord - floatCoord)
-        ? overlapA : overlapB;
-    let minFloat = overlapResult.resultCoord;
+    const minFloat = Math.abs(overlapA - floatCoord) < Math.abs(overlapB - floatCoord) ? overlapA : overlapB;
+
     // Clamp only category axis
     const bandWidth = fixedAxis.scale.type === 'ordinal'
         ? fixedAxis.getBandWidth()
         : null;
     const distance = Math.abs(minFloat - floatCoord);
-    if (distance > jitter / 2
-        || (bandWidth && distance > bandWidth / 2 - radius)
-    ) {
+
+    if (distance > jitter / 2 || (bandWidth && distance > bandWidth / 2 - radius)) {
         // If the new item is moved too far, then give up.
         // Fall back to random jitter.
-        minFloat = fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
+        return fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
     }
 
-    // Insert to store
-    const insertBy = overlapResult.insertBy;
-    const resultDirection = overlapResult.direction;
-    const pointer1 = resultDirection > 0 ? 'next' : 'prev';
-    const pointer2 = resultDirection > 0 ? 'prev' : 'next';
-    const newItem: JitterData = {
+    // Add new point to array
+    items.push({
         fixedCoord: fixedCoord,
-        floatCoord: overlapResult.resultCoord,
-        r: radius,
-        next: null,
-        prev: null
-    };
-    newItem[pointer1] = insertBy[pointer1];
-    newItem[pointer2] = insertBy;
-    insertBy[pointer1][pointer2] = newItem;
-    insertBy[pointer1] = newItem;
+        floatCoord: minFloat,
+        r: radius
+    });
 
     return minFloat;
 }
 
 function placeJitterOnDirection(
-    items: JitterData,
+    items: JitterData[],
     fixedCoord: number,
     floatCoord: number,
     radius: number,
     jitter: number,
     margin: number,
     direction: 1 | -1
-): {
-    resultCoord: number;
-    insertBy: JitterData;
-    direction: 1 | -1;
-} {
-    // Check for overlap with previous items.
+): number {
     let y = floatCoord;
-    const pointer1 = direction > 0 ? 'next' : 'prev';
-    let insertBy = items;
-    let item = items[pointer1];
 
-    while (item !== items) {
+    // Check all existing items for overlap and find the maximum adjustment needed
+    for (const item of items) {
         const dx = fixedCoord - item.fixedCoord;
         const dy = y - item.floatCoord;
         const d2 = dx * dx + dy * dy;
         const r = radius + item.r + margin;
+
         if (d2 < r * r) {
-            // Overlap. Try to move the new item along otherCoord direction.
-            y = item.floatCoord + Math.sqrt(r * r - dx * dx) * direction;
-            insertBy = item;
+            // Has overlap, calculate required adjustment
+            const requiredY = item.floatCoord + Math.sqrt(r * r - dx * dx) * direction;
 
-            if (Math.abs(y - floatCoord) > jitter / 2) {
-                // If the new item is moved too far, then give up.
-                // Fall back to random jitter.
-                return {resultCoord: Number.MAX_VALUE, insertBy, direction};
+            // Check if this adjustment would move too far
+            if (Math.abs(requiredY - floatCoord) > jitter / 2) {
+                return Number.MAX_VALUE; // Give up
             }
-        }
 
-        item = item[pointer1];
+            // Update y to the required position
+            y = requiredY;
+        }
     }
 
-    return {resultCoord: y, insertBy, direction};
+    return y;
 }
