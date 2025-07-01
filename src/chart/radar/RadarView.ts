@@ -218,7 +218,6 @@ class RadarView extends ChartView {
                     areaStyleModel.getAreaStyle(),
                     {
                         fill: color,
-                        opacity: 0.7,
                         decal: itemStyle.decal
                     }
                 )
@@ -226,13 +225,19 @@ class RadarView extends ChartView {
             const emphasisModel = itemModel.getModel('emphasis');
             const itemHoverStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
+                zrUtil.each(['select', 'blur'] as const, stateName => {
+                    const stateItemModel = itemModel.getModel([stateName, 'itemStyle']);
+                    const stateStyle = stateItemModel.getItemStyle();
+                    const state = symbolPath.ensureState(stateName);
+                    state.style = zrUtil.clone(stateStyle);
+                });
                 if (symbolPath instanceof ZRImage) {
                     const pathStyle = symbolPath.style;
                     symbolPath.useStyle(zrUtil.extend({
                         // TODO other properties like x, y ?
                         image: pathStyle.image,
                         x: pathStyle.x, y: pathStyle.y,
-                        width: pathStyle.width, height: pathStyle.height
+                        width: pathStyle.width, height: pathStyle.height,
                     }, itemStyle));
                 }
                 else {
