@@ -554,6 +554,9 @@ class TooltipHTMLContent {
         transformLocalCoordClear(zr && zr.painter && zr.painter.getViewportRoot(), this._container);
 
         if (this.el) {
+            this.el.onmouseenter = null;
+            this.el.onmousemove = null;
+            this.el.onmouseleave = null;
             const parentNode = this.el.parentNode;
             parentNode && parentNode.removeChild(this.el);
         }
