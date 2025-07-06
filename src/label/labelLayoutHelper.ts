@@ -20,7 +20,7 @@
 import ZRText from 'zrender/src/graphic/Text';
 import { LabelExtendedTextStyle, LabelLayoutOption, LabelMarginType, NullUndefined } from '../util/types';
 import {
-    BoundingRect, OrientedBoundingRect, Polyline, expandOrShrinkRect,
+    BoundingRect, OrientedBoundingRect, Polyline, WH, XY, expandOrShrinkRect,
     isBoundingRectAxisAligned
 } from '../util/graphic';
 import type Element from 'zrender/src/Element';
@@ -157,7 +157,38 @@ function prepareLabelLayoutInfo(
 }
 
 /**
- * The reverse operation of `ensureLabelLayoutInfoComputedv`.
+ * This is a shortcut of
+ *   ```js
+ *   layoutInfo.label.x = newX;
+ *   layoutInfo.label.y = newY;
+ *   ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(layoutInfo));
+ *   ```
+ * and provide better performance in this common case.
+ */
+export function applyTranslationOnLabelLayoutInfo(
+    layoutInfo: LabelLayoutInfoAll,
+    offset: PointLike, // [offsetX, offsetY]
+): void {
+    layoutInfo.label.x += offset.x;
+    layoutInfo.label.y += offset.y;
+    if (layoutInfo.kind === LABEL_LAYOUT_INFO_KIND_COMPUTED) {
+        const transform = layoutInfo.transform;
+        if (transform) {
+            transform[4] += offset.x;
+            transform[5] += offset.y;
+        }
+        const globalRect = layoutInfo.rect;
+        globalRect.x += offset.x;
+        globalRect.y += offset.y;
+        const obb = layoutInfo.obb;
+        if (obb) {
+            obb.fromBoundingRect(layoutInfo.localRect, transform);
+        }
+    }
+}
+
+/**
+ * The reverse operation of `ensureLabelLayoutInfoComputed`.
  */
 export function rollbackToLabelLayoutInfoRaw(
     labelLayoutInfo: LabelLayoutInfoAll
@@ -177,7 +208,8 @@ export function rollbackToLabelLayoutInfoRaw(
  * [CAUTION]
  *  - If the raw label is changed, must call
  *    `ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(layoutInfo))`
- *    to recreate the layout info.
+ *    to recreate the layout info,
+ *    or call `applyTranslationOnLabelLayoutInfo(layoutInfo)` is only translation is performed.
  *  - Null checking is needed for the result. @see prepareLabelLayoutInfo
  *
  * Usage:
@@ -245,18 +277,37 @@ export function applyTextMarginToLocalRect(
     return localRect;
 }
 
-function shiftLayout(
+/**
+ * Adjust labels on x/y direction to avoid overlap.
+ *
+ * PENDING: the current implementation is based on the global bounding rect rather than the local rect,
+ *  which may be not preferable in some edge cases when the label has rotation, but works for most cases,
+ *  since rotation is unnecessary when there is sufficient space, while squeezing is applied regardless
+ *  of overlapping when there is no enough space.
+ *
+ * NOTICE:
+ *  The input `list` and its content will be modified (sort, label.x/y, rect).
+ *  The caller should sync the modifications to the other parts by `rollbackToLabelLayoutInfoRaw` if needed.
+ *
+ * @return adjusted
+ */
+export function shiftLayoutOnXY(
     list: Pick<LabelLayoutInfoComputed, 'rect' | 'label'>[],
-    xyDim: 'x' | 'y',
-    sizeDim: 'width' | 'height',
-    minBound: number,
-    maxBound: number,
-    balanceShift: boolean
-) {
+    xyDimIdx: 0 | 1, // 0 for x, 1 for y
+    minBound: number, // for x, leftBound; for y, topBound
+    maxBound: number, // for x, rightBound; for y, bottomBound
+    // If average the shifts on all labels and add them to 0
+    // TODO: Not sure if should enable it.
+    // Pros: The angle of lines will distribute more equally
+    // Cons: In some layout. It may not what user wanted. like in pie. the label of last sector is usually changed unexpectedly.
+    balanceShift?: boolean
+): boolean {
     const len = list.length;
+    const xyDim = XY[xyDimIdx];
+    const sizeDim = WH[xyDimIdx];
 
     if (len < 2) {
-        return;
+        return false;
     }
 
     list.sort(function (a, b) {
@@ -267,7 +318,7 @@ function shiftLayout(
     let delta;
     let adjusted = false;
 
-    const shifts = [];
+    // const shifts = [];
     let totalShifts = 0;
     for (let i = 0; i < len; i++) {
         const item = list[i];
@@ -280,7 +331,7 @@ function shiftLayout(
             adjusted = true;
         }
         const shift = Math.max(-delta, 0);
-        shifts.push(shift);
+        // shifts.push(shift);
         totalShifts += shift;
 
         lastPos = rect[xyDim] + rect[sizeDim];
@@ -410,35 +461,6 @@ function shiftLayout(
     }
 
     return adjusted;
-}
-
-/**
- * Adjust labels on x direction to avoid overlap.
- */
-export function shiftLayoutOnX(
-    list: Pick<LabelLayoutInfoComputed, 'rect' | 'label'>[],
-    leftBound: number,
-    rightBound: number,
-    // If average the shifts on all labels and add them to 0
-    // TODO: Not sure if should enable it.
-    // Pros: The angle of lines will distribute more equally
-    // Cons: In some layout. It may not what user wanted. like in pie. the label of last sector is usually changed unexpectedly.
-    balanceShift?: boolean
-): boolean {
-    return shiftLayout(list, 'x', 'width', leftBound, rightBound, balanceShift);
-}
-
-/**
- * Adjust labels on y direction to avoid overlap.
- */
-export function shiftLayoutOnY(
-    list: Pick<LabelLayoutInfoComputed, 'rect' | 'label'>[],
-    topBound: number,
-    bottomBound: number,
-    // If average the shifts on all labels and add them to 0
-    balanceShift?: boolean
-): boolean {
-    return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
 }
 
 /**

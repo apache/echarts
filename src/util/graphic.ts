@@ -68,6 +68,7 @@ import {
     isArray,
     isNumber,
     clone,
+    assert,
 } from 'zrender/src/core/util';
 import { getECData } from './innerStore';
 import ComponentModel from '../model/Component';
@@ -607,6 +608,9 @@ export function expandOrShrinkRect<TRect extends RectLike>(
         _tmpExpandRectDelta[0] = _tmpExpandRectDelta[1] = _tmpExpandRectDelta[2] = _tmpExpandRectDelta[3] = delta;
     }
     else {
+        if (__DEV__) {
+            assert(delta.length === 4);
+        }
         _tmpExpandRectDelta[0] = delta[0];
         _tmpExpandRectDelta[1] = delta[1];
         _tmpExpandRectDelta[2] = delta[2];

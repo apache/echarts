@@ -62,6 +62,7 @@ import {
     rollbackToLabelLayoutInfoRaw,
     LABEL_LAYOUT_INFO_KIND_COMPUTED,
     createSingleLayoutInfoComputed,
+    applyTranslationOnLabelLayoutInfo,
 } from '../../label/labelLayoutHelper';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { makeInner } from '../../util/model';
@@ -406,8 +407,7 @@ function moveIfOverlap(
         bidirectional: false,
         touchThreshold: 0.05,
     })) {
-        Point.add(movableLayoutInfo.label, movableLayoutInfo.label, mtv);
-        ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(movableLayoutInfo));
+        applyTranslationOnLabelLayoutInfo(movableLayoutInfo, mtv);
     }
 }
 

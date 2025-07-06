@@ -52,7 +52,7 @@ import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import {
-    hideOverlap, shiftLayoutOnX, shiftLayoutOnY,
+    hideOverlap, shiftLayoutOnXY,
     createLabelLayoutList,
     LabelLayoutInfoRaw,
     LABEL_LAYOUT_INFO_KIND_RAW,
@@ -443,8 +443,8 @@ class LabelManager {
             return item.layoutOption.moveOverlap === 'shiftY';
         });
 
-        shiftLayoutOnX(labelsNeedsAdjustOnX, 0, width);
-        shiftLayoutOnY(labelsNeedsAdjustOnY, 0, height);
+        shiftLayoutOnXY(labelsNeedsAdjustOnX, 0, 0, width);
+        shiftLayoutOnXY(labelsNeedsAdjustOnY, 1, 0, height);
 
         const labelsNeedsHideOverlap = filter(labelList, function (item) {
             return item.layoutOption.hideOverlap;

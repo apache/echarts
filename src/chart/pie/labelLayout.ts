@@ -27,7 +27,7 @@ import ZRText from 'zrender/src/graphic/Text';
 import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import { each, isNumber } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
-import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
+import { shiftLayoutOnXY } from '../../label/labelLayoutHelper';
 
 const RADIAN = Math.PI / 180;
 
@@ -139,7 +139,7 @@ function adjustSingleSide(
         }
     }
 
-    if (shiftLayoutOnY(list, viewTop, viewTop + viewHeight)) {
+    if (shiftLayoutOnXY(list, 1, viewTop, viewTop + viewHeight)) {
         recalculateX(list);
     }
 }
