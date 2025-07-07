@@ -1798,7 +1798,7 @@ export interface DefaultStatesMixin {
     blur?: any
 }
 
-export type DefaultEmphasisFocus = 'none' | 'self' | 'series';
+export type DefaultEmphasisFocus = 'none' | 'self' | 'series' | 'stack' | 'stackSeries' | 'dataIndex';
 
 export interface DefaultStatesMixinEmphasis {
     /**

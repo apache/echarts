@@ -58,6 +58,7 @@ import ExtensionAPI from '../core/ExtensionAPI';
 import ComponentModel from '../model/Component';
 import { error } from './log';
 import type ComponentView from '../view/Component';
+import { BarSeriesOption } from '../chart/bar/BarSeries';
 
 // Reserve 0 as default.
 let _highlightNextDigit = 1;
@@ -428,6 +429,7 @@ export function allLeaveBlur(api: ExtensionAPI) {
 
 export function blurSeries(
     targetSeriesIndex: number,
+    targetDataIndex: number,
     focus: InnerFocus,
     blurScope: BlurScope,
     api: ExtensionAPI
@@ -451,6 +453,7 @@ export function blurSeries(
     }
 
     const targetSeriesModel = ecModel.getSeriesByIndex(targetSeriesIndex);
+    const targetStack = targetSeriesModel.option.type === 'bar' && (targetSeriesModel.option as BarSeriesOption).stack;
     let targetCoordSys: CoordinateSystemMaster | CoordinateSystem = targetSeriesModel.coordinateSystem;
     if (targetCoordSys && (targetCoordSys as CoordinateSystem).master) {
         targetCoordSys = (targetCoordSys as CoordinateSystem).master;
@@ -461,6 +464,9 @@ export function blurSeries(
     ecModel.eachSeries(function (seriesModel) {
 
         const sameSeries = targetSeriesModel === seriesModel;
+        const sameStack = targetStack && seriesModel.option.type === 'bar'
+            && (seriesModel.option as BarSeriesOption).stack === targetStack;
+
         let coordSys: CoordinateSystemMaster | CoordinateSystem = seriesModel.coordinateSystem;
         if (coordSys && (coordSys as CoordinateSystem).master) {
             coordSys = (coordSys as CoordinateSystem).master;
@@ -479,11 +485,21 @@ export function blurSeries(
         )) {
             const view = api.getViewOfSeriesModel(seriesModel);
             view.group.traverse(function (child) {
+                const sameDataIndex = (child as any).__dataIndex === targetDataIndex;
                 // For the elements that have been triggered by other components,
                 // and are still required to be highlighted,
                 // because the current is directly forced to blur the element,
                 // it will cause the focus self to be unable to highlight, so skip the blur of this element.
                 if ((child as ExtendedElement).__highByOuter && sameSeries && focus === 'self') {
+                    return;
+                }
+                if (sameDataIndex && focus === 'dataIndex') {
+                    return;
+                }
+                if (sameStack && focus === 'stackSeries') {
+                    return;
+                }
+                if (sameStack && sameDataIndex && focus === 'stack') {
                     return;
                 }
                 singleEnterBlur(child);
@@ -571,7 +587,7 @@ export function blurSeriesFromHighlightPayload(
     if (el) {
         const ecData = getECData(el);
         blurSeries(
-            seriesIndex, ecData.focus, ecData.blurScope, api
+            seriesIndex, ecData.dataIndex, ecData.focus, ecData.blurScope, api
         );
     }
     else {
@@ -580,7 +596,7 @@ export function blurSeriesFromHighlightPayload(
         const focus = seriesModel.get(['emphasis', 'focus']);
         const blurScope = seriesModel.get(['emphasis', 'blurScope']);
         if (focus != null) {
-            blurSeries(seriesIndex, focus, blurScope, api);
+            blurSeries(seriesIndex, dataIndex, focus, blurScope, api);
         }
     }
 }
@@ -660,7 +676,7 @@ export function handleGlobalMouseOverForHighDown(
     else {
         // Try blur all in the related series. Then emphasis the hoverred.
         // TODO. progressive mode.
-        blurSeries(ecData.seriesIndex, ecData.focus, ecData.blurScope, api);
+        blurSeries(ecData.seriesIndex, ecData.dataIndex, ecData.focus, ecData.blurScope, api);
         if (ecData.focus === 'self') {
             blurComponent(ecData.componentMainType, ecData.componentIndex, api);
         }
