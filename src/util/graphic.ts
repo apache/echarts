@@ -590,7 +590,7 @@ function nearZero(val: number) {
  *  `false` - expand if `delta[i]` is positive, commmonly used in `margin` case. (default)
  * @param noNegative
  *  `true` - negative `delta[i]` will be clampped to 0.
- *  `false` - No clamp to `delta`. (defualt).
+ *  `false` - No clamp to `delta`. (default).
  * @return The input `rect`.
  */
 export function expandOrShrinkRect<TRect extends RectLike>(
@@ -808,9 +808,9 @@ function doUpdateZ(
     el: Element,
     z: number,
     zlevel: number,
-    // FIXME: ideally all the labels shold be above all the glyphs by default,
+    // FIXME: Ideally all the labels should be above all the glyphs by default,
     //  e.g. in graph, edge labels should be above node elements.
-    //  currenly impl does not garaentee that.
+    //  Currently impl does not guarantee that.
     maxZ2: number,
 ): number {
     // `ignoreModelZ` is used to intentionally lift elements to cover other elements,

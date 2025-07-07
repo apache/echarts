@@ -238,7 +238,7 @@ export type AxisBuilderSharedContextRecord = {
     labelInfoList?: LabelLayoutInfoComputed[]
     // `stOccupiedRect` is based on the "standard axis".
     // If no label, be `NullUndefined`.
-    // - When `nameLocation` is 'center', `stOccupiedRect` is the unoin of labels, and is used for the case
+    // - When `nameLocation` is 'center', `stOccupiedRect` is the union of labels, and is used for the case
     //   below, where even if the `name` does not intersect with `1,000,000`, it is still pulled left to avoid
     //   the overlap with `stOccupiedRect`.
     //        1,000,000 -
@@ -246,15 +246,15 @@ export type AxisBuilderSharedContextRecord = {
     //      a     1,000 -
     //      m           |
     //      e         0 -----------
-    // - When `nameLocaiton` is 'start'/'end', `stOccupiedRect` is not used, becuase they are not likely to overlap.
+    // - When `nameLocaiton` is 'start'/'end', `stOccupiedRect` is not used, because they are not likely to overlap.
     //   Additionally, these cases need to be considered:
     //      If axis labels rotating, axis names should not be pulled by the union rect of labels.
     //          ----|-----|   axis name with
     //              1     5   big height
     //                0     0
     //                  0     0
-    //      Axis line and axis labels should not be unoined to one rect for overlap detection, because of
-    //      the most common case below (The axis name is inserted into the indention to save space):
+    //      Axis line and axis labels should not be unioned to one rect for overlap detection, because of
+    //      the most common case below (The axis name is inserted into the indentation to save space):
     //          ----|------------|  A axis name
     //          1,000,000   300,000,000
     stOccupiedRect?: BoundingRect | NullUndefined;
@@ -268,7 +268,7 @@ export type AxisBuilderSharedContextRecord = {
  * A context shared by difference axisBuilder instances.
  * For cross-axes overlap resolving.
  *
- * Lifecycle constrait: should not over a pass of ec main process.
+ * Lifecycle constraint: should not over a pass of ec main process.
  *  If model is changed, the context must be disposed.
  *
  * @see AxisBuilderLocalContext
@@ -452,7 +452,7 @@ class AxisBuilder {
     readonly group = new graphic.Group();
 
     /**
-     * `_transformGroup.transform` is ready to visit. (but be `NullUndefined` if no tranform.)
+     * `_transformGroup.transform` is ready to visit. (but be `NullUndefined` if no transform.)
      */
     private _transformGroup: graphic.Group;
     private _api: ExtensionAPI;
@@ -1081,12 +1081,12 @@ function fixMinMaxLabelShow(
         if (showMinMaxLabel === false) {
             ignoreEl(outmostLabelLayout.label);
         }
-        // PENDING: Originally we thougth `optionHideOverlap === false` means do not hide anything,
+        // PENDING: Originally we thought `optionHideOverlap === false` means do not hide anything,
         //  since currently the bounding rect of text might not accurate enough and might slightly bigger,
         //  which causes false positive. But `optionHideOverlap: null/undfined` is falsy and likely
         //  be treated as false.
         else {
-            // In most fonts the glyph does not reach the boundary of the bouding rect.
+            // In most fonts the glyph does not reach the boundary of the bounding rect.
             // This is needed to avoid too aggressive to hide two elements that meet at the edge
             // due to compact layout by the same bounding rect or OBB.
             const touchThreshold = 0.1;
@@ -1136,7 +1136,7 @@ function fixMinMaxLabelShow(
     deal(showMaxLabel, labelsLen - 1, labelsLen - 2);
 }
 
-// PENDING: is it necessary to display a tick while the cooresponding label is ignored?
+// PENDING: Is it necessary to display a tick while the corresponding label is ignored?
 function syncLabelIgnoreToMajorTicks(
     cfg: AxisBuilderCfgDetermined,
     labelLayoutList: LabelLayoutInfoAll[],

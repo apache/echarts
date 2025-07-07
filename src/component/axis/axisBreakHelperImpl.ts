@@ -458,7 +458,7 @@ function adjustBreakLabelPair(
     );
 
     function isParallelToAxis(whIdx: number): boolean {
-        // Assert label[0] and lable[1] has the same rotation, so only use [0].
+        // Assert label[0] and label[1] has the same rotation, so only use [0].
         const localRect = layoutPair[0].localRect;
         const labelVec0 = new Point(
             localRect[WH[whIdx]] * labelPairStTrans[0][0],

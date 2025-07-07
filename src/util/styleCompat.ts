@@ -46,7 +46,7 @@ export function isEC4CompatibleStyle(
     // `legacy: false`, force do not compat.
     // `legacy` not set: auto detect whether legacy.
     //     But in this case we do not compat (difficult to detect and rare case):
-    //     Becuse custom series and graphic component support "merge", users may firstly
+    //     Because custom series and graphic component support "merge", users may firstly
     //     only set `textStrokeWidth` style or secondly only set `text`.
     return style && (
         style.legacy

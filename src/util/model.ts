@@ -876,7 +876,7 @@ export function preParseFinder(
     let mainTypeSpecified = false;
 
     each(finder, function (value, key) {
-        // Exclude 'dataIndex' and other illgal keys.
+        // Exclude 'dataIndex' and other illegal keys.
         if (key === 'dataIndex' || key === 'dataIndexInside') {
             others[key] = value as number;
             return;
