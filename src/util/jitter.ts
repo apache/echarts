@@ -133,7 +133,8 @@ function placeJitterOnDirection(
     let y = floatCoord;
 
     // Check all existing items for overlap and find the maximum adjustment needed
-    for (const item of items) {
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
         const dx = fixedCoord - item.fixedCoord;
         const dy = y - item.floatCoord;
         const d2 = dx * dx + dy * dy;
@@ -148,8 +149,13 @@ function placeJitterOnDirection(
                 return Number.MAX_VALUE; // Give up
             }
 
-            // Update y to the required position
-            y = requiredY;
+            // Update y only when it's larger to the center
+            if (direction === 1 && requiredY > y || direction === -1 && requiredY < y) {
+                y = requiredY;
+                // Loop from the start again
+                i = -1; // Reset index to recheck all items
+                continue; // Recalculate with the new y position
+            }
         }
     }
 
