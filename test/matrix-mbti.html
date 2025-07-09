@@ -363,6 +363,8 @@ under the License.
                     }
                 }
 
+                const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+
                 const option = {
                     matrix: {
                     x: {
@@ -379,9 +381,9 @@ under the License.
                         borderWidth: 0
                         }
                     },
-                    width: 720,
-                    height: 720,
-                    left: (window.innerWidth - 720) / 2,
+                    width: size,
+                    height: size,
+                    left: (window.innerWidth - size) / 2,
                     backgroundStyle: {
                         color: 'transparent',
                         borderColor: 'transparent',
