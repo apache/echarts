@@ -40,6 +40,7 @@ under the License.
         <div id="main0"></div>
         <div id="main0-1"></div>
         <div id="main0-2"></div>
+        <div id="main-dark"></div>
         <div id="main1"></div>
         <div id="main2"></div>
         <div id="main4"></div>
@@ -217,6 +218,60 @@ under the License.
                     'Heatmap with Matrix (dataset)'
                 ],
                 option: option
+            });
+        });
+        </script>
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                dataset: {
+                    source: []
+                },
+                matrix: {
+                    x: {
+                        data: [{
+                            value: 'A',
+                            children: ['A1', 'A2', {
+                                value: 'A3',
+                                children: ['A31', 'A32']
+                            }]
+                        }]
+                    },
+                    y: {
+                        data: ['U', 'V']
+                    }
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 80,
+                    top: 'middle',
+                    dimension: 2,
+                    calculable: true
+                },
+                series: {
+                    type: 'heatmap',
+                    coordinateSystem: 'matrix',
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main-dark', {
+                title: [
+                    'Matrix with darkMode'
+                ],
+                option: option,
+                theme: 'dark'
             });
         });
         </script>
