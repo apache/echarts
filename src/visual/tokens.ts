@@ -194,7 +194,7 @@ for (const key in color) {
         }
         else {
             tokens.darkColor[key as keyof Omit<ColorToken, 'theme'>] =
-                modifyHSL(hex as string, null, s => s * 0.9, l => 1 - l);
+                modifyHSL(hex as string, null, s => s * 0.9, l => 1 - Math.pow(l, 1.5));
         }
     }
 }
