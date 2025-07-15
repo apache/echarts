@@ -743,6 +743,34 @@ export function isBoundingRectAxisAligned(transform: matrix.MatrixArray | NullUn
 }
 const AXIS_ALIGN_EPSILON = 1e-5;
 
+/**
+ * Create or copy to the existing bounding rect to avoid modifying `source`.
+ *
+ * @usage
+ *  out.rect = ensureCopyRect(out.rect, sourceRect);
+ */
+export function ensureCopyRect(
+    target: BoundingRect | NullUndefined,
+    source: BoundingRect
+): BoundingRect {
+    return target ? BoundingRect.copy(target, source) : source.clone();
+}
+
+/**
+ * Create or copy to the existing transform to avoid modifying `source`.
+ *
+ * [CAUTION]: transform is `NullUndefined` if no transform, following convention of zrender,
+ *  and enable to bypass some unnecessary calculation, since in most cases there is no transform.
+ *
+ * @usage
+ *  out.transform = ensureCopyTransform(out.transform, sourceTransform);
+ */
+export function ensureCopyTransform(
+    target: matrix.MatrixArray | NullUndefined,
+    source: matrix.MatrixArray | NullUndefined
+): matrix.MatrixArray | NullUndefined {
+    return source ? matrix.copy(target || matrix.create(), source) : undefined;
+}
 
 export function retrieveZInfo(
     model: Model<Partial<Pick<ComponentOption, 'z' | 'zlevel'>>>,

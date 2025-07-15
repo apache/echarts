@@ -1315,6 +1315,9 @@ export interface LabelCommonOption<
      * PENDING: @see {LabelMarginType}
      * It's `minMargin` instead of `margin` is for not breaking the previous code using `margin`.
      * See the summary in `textMargin`.
+     *
+     * [CAUTION]: do not set `minMargin` in `defaultOption`, otherwise users have to explicitly
+     *  clear the `minMargin` to use `textMargin`.
      */
     minMargin?: number
     /**
@@ -1340,19 +1343,6 @@ export interface LabelCommonOption<
     lineOverflow?: TextStyleProps['lineOverflow']
     ellipsis?: TextStyleProps['ellipsis']
     rich?: RichTextOption
-}
-
-/**
- * PENDING: Temporary impl. unify them?
- * @see {LabelCommonOption['textMargin']}
- * @see {LabelCommonOption['minMargin']}
- */
-export const LabelMarginType = {
-    minMargin: 0,
-    textMargin: 1,
-} as const;
-export interface LabelExtendedTextStyle extends TextStyleProps {
-    __marginType?: (typeof LabelMarginType)[keyof typeof LabelMarginType]
 }
 
 export interface SeriesLabelOption<

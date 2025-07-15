@@ -51,18 +51,15 @@ import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import OrdinalScale from '../../scale/Ordinal';
 import {
     hideOverlap,
-    LabelLayoutInfoComputed,
+    LabelLayoutWithGeometry,
     labelIntersect,
-    LabelIntersectionCheckInfo,
-    prepareIntersectionCheckInfo,
-    LabelLayoutInfoAll,
-    ensureLabelLayoutInfoComputed,
-    LabelLayoutInfoRaw,
-    LABEL_LAYOUT_INFO_KIND_RAW,
-    rollbackToLabelLayoutInfoRaw,
-    LABEL_LAYOUT_INFO_KIND_COMPUTED,
-    createSingleLayoutInfoComputed,
-    applyTranslationOnLabelLayoutInfo,
+    LabelGeometry,
+    computeLabelGeometry2,
+    ensureLabelLayoutWithGeometry,
+    labelLayoutApplyTranslation,
+    setLabelLayoutDirty,
+    newLabelLayoutWithGeometry,
+    LabelLayoutData,
 } from '../../label/labelLayoutHelper';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { makeInner } from '../../util/model';
@@ -82,10 +79,12 @@ const PI = Math.PI;
 
 // This tune is also for backward compat, since nameMoveOverlap is set as default,
 // in compact layout (multiple charts in one canvas), name should be more close to the axis line and labels.
-const DEFAULT_CENTER_NAME_MARGIN_LEVELS: Record<AxisBuilderBuildExtraParams['nameMarginLevel'], [number, number]> =
-    [[1, 2], [5, 3], [8, 3]];
-const DEFAULT_ENDS_NAME_MARGIN_LEVELS: Record<AxisBuilderBuildExtraParams['nameMarginLevel'], [number, number]> =
-    [[0, 1], [0, 3], [0, 3]];
+type DefaultCenterAxisNameMarginLevels =
+    Record<AxisBuilderBuildExtraParams['nameMarginLevel'], [number, number, number, number]>;
+const DEFAULT_CENTER_NAME_MARGIN_LEVELS: DefaultCenterAxisNameMarginLevels =
+    [[1, 2, 1, 2], [5, 3, 5, 3], [8, 3, 8, 3]];
+const DEFAULT_ENDS_NAME_MARGIN_LEVELS: DefaultCenterAxisNameMarginLevels =
+    [[0, 1, 0, 1], [0, 3, 0, 3], [0, 3, 0, 3]];
 
 type AxisIndexKey = 'xAxisIndex' | 'yAxisIndex' | 'radiusAxisIndex'
     | 'angleAxisIndex' | 'singleAxisIndex';
@@ -222,7 +221,7 @@ interface AxisBuilderCfgDetermined {
  * @see AxisBuilderSharedContext
  */
 interface AxisBuilderLocalContext {
-    labelLayoutList?: LabelLayoutInfoAll[] | NullUndefined
+    labelLayoutList?: LabelLayoutData[] | NullUndefined
     labelGroup?: graphic.Group
     axisLabelsCreationContext?: AxisLabelsComputingContext
     nameEl?: graphic.Text | NullUndefined
@@ -236,7 +235,7 @@ export type AxisBuilderSharedContextRecord = {
     // - Sorted in ascending order of the distance to transformGroup.x/y.
     //  This sorting is for OBB intersection checking.
     // - No NullUndefined item, and ignored items has been removed.
-    labelInfoList?: LabelLayoutInfoComputed[]
+    labelInfoList?: LabelLayoutWithGeometry[]
     // `stOccupiedRect` is based on the "standard axis".
     // If no label, be `NullUndefined`.
     // - When `nameLocation` is 'center', `stOccupiedRect` is the union of labels, and is used for the case
@@ -259,7 +258,7 @@ export type AxisBuilderSharedContextRecord = {
     //          ----|------------|  A axis name
     //          1,000,000   300,000,000
     stOccupiedRect?: BoundingRect | NullUndefined;
-    nameLayout?: LabelLayoutInfoComputed | NullUndefined;
+    nameLayout?: LabelLayoutWithGeometry | NullUndefined;
     nameLocation?: AxisBaseOption['nameLocation'];
     // Only used in __DEV__ mode.
     ready: Partial<Record<AxisBuilderAxisPartName, boolean>>
@@ -301,7 +300,7 @@ export class AxisBuilderSharedContext {
         cfg: AxisBuilderCfgDetermined,
         ctx: AxisBuilderSharedContext | NullUndefined,
         axisModel: AxisBaseModel,
-        nameLayoutInfo: LabelLayoutInfoComputed, // The existing has been ensured.
+        nameLayoutInfo: LabelLayoutWithGeometry, // The existing has been ensured.
         nameMoveDirVec: Point,
         thisRecord: AxisBuilderSharedContextRecord // The existing has been ensured.
     ) => void;
@@ -317,7 +316,7 @@ function resetOverlapRecordToShared(
     cfg: AxisBuilderCfgDetermined,
     shared: AxisBuilderSharedContext,
     axisModel: AxisBaseModel,
-    labelLayoutInfoList: LabelLayoutInfoAll[]
+    labelLayoutList: LabelLayoutData[]
 ): void {
     const axis = axisModel.axis;
     const record = shared.ensureRecord(axisModel);
@@ -325,8 +324,8 @@ function resetOverlapRecordToShared(
     let stOccupiedRect: AxisBuilderSharedContextRecord['stOccupiedRect'];
     const useStOccupiedRect = hasAxisName(cfg.axisName) && isNameLocationCenter(cfg.nameLocation);
 
-    each(labelLayoutInfoList, layout => {
-        const layoutInfo = ensureLabelLayoutInfoComputed(layout);
+    each(labelLayoutList, layout => {
+        const layoutInfo = ensureLabelLayoutWithGeometry(layout);
         if (!layoutInfo || layoutInfo.label.ignore) {
             return;
         }
@@ -382,7 +381,7 @@ export const resolveAxisNameOverlapDefault: AxisBuilderSharedContext['resolveAxi
         const stOccupiedRect = thisRecord.stOccupiedRect;
         if (stOccupiedRect) {
             moveIfOverlap(
-                prepareIntersectionCheckInfo(stOccupiedRect, thisRecord.transGroup.transform),
+                computeLabelGeometry2({}, stOccupiedRect, thisRecord.transGroup.transform),
                 nameLayoutInfo,
                 nameMoveDirVec
             );
@@ -397,8 +396,8 @@ export const resolveAxisNameOverlapDefault: AxisBuilderSharedContext['resolveAxi
 
 // [NOTICE] not consider ignore.
 function moveIfOverlap(
-    basedLayoutInfo: LabelIntersectionCheckInfo,
-    movableLayoutInfo: LabelLayoutInfoComputed,
+    basedLayoutInfo: LabelGeometry,
+    movableLayoutInfo: LabelLayoutWithGeometry,
     moveDirVec: Point
 ): void {
     const mtv = new Point();
@@ -407,14 +406,14 @@ function moveIfOverlap(
         bidirectional: false,
         touchThreshold: 0.05,
     })) {
-        applyTranslationOnLabelLayoutInfo(movableLayoutInfo, mtv);
+        labelLayoutApplyTranslation(movableLayoutInfo, mtv);
     }
 }
 
 export function moveIfOverlapByLinearLabels(
-    baseLayoutInfoList: LabelLayoutInfoComputed[],
+    baseLayoutInfoList: LabelLayoutWithGeometry[],
     baseDirVec: Point,
-    movableLayoutInfo: LabelLayoutInfoComputed,
+    movableLayoutInfo: LabelLayoutWithGeometry,
     moveDirVec: Point,
 ): void {
     // Detect and move from far to close.
@@ -796,7 +795,7 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         }
         const needCallLayout = dealLastTickLabelResultReusable(local, group, extraParams);
         if (needCallLayout) {
-            axisTickLabelLayout(
+            layOutAxisTickLabel(
                 cfg, local, shared, axisModel, group, transformGroup, api, AxisTickLabelComputingKind.estimate
             );
         }
@@ -813,7 +812,7 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         }
         const needCallLayout = dealLastTickLabelResultReusable(local, group, extraParams);
         if (needCallLayout) {
-            axisTickLabelLayout(
+            layOutAxisTickLabel(
                 cfg, local, shared, axisModel, group, transformGroup, api, AxisTickLabelComputingKind.determine
             );
         }
@@ -927,14 +926,6 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
                     || labelLayout.textAlign,
                 verticalAlign: textStyleModel.get('verticalAlign')
                     || labelLayout.textVerticalAlign
-            }, {
-                defaultTextMargin: isNameLocationCenter(nameLocation)
-                    // Make axis name visually far from axis labels.
-                    // (but not too aggressive, consider multiple small charts)
-                    ? (DEFAULT_CENTER_NAME_MARGIN_LEVELS[nameMarginLevel])
-                    // top/button margin is set to `0` to inserted the xAxis name into the indention
-                    // above the axis labels to save space. (see example below.)
-                    : (DEFAULT_ENDS_NAME_MARGIN_LEVELS[nameMarginLevel]),
             }),
             z2: 1
         }) as AxisLabelText;
@@ -960,7 +951,18 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
         textEl.updateTransform();
 
         local.nameEl = textEl;
-        const nameLayout = sharedRecord.nameLayout = createSingleLayoutInfoComputed(textEl);
+        const nameLayout = sharedRecord.nameLayout = ensureLabelLayoutWithGeometry({
+            label: textEl,
+            priority: textEl.z2,
+            defaultAttr: {ignore: textEl.ignore},
+            marginDefault: isNameLocationCenter(nameLocation)
+                // Make axis name visually far from axis labels.
+                // (but not too aggressive, consider multiple small charts)
+                ? (DEFAULT_CENTER_NAME_MARGIN_LEVELS[nameMarginLevel])
+                // top/button margin is set to `0` to inserted the xAxis name into the indention
+                // above the axis labels to save space. (see example below.)
+                : (DEFAULT_ENDS_NAME_MARGIN_LEVELS[nameMarginLevel]),
+        });
         sharedRecord.nameLocation = nameLocation;
         group.add(textEl);
 
@@ -977,7 +979,7 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
 
 };
 
-function axisTickLabelLayout(
+function layOutAxisTickLabel(
     cfg: AxisBuilderCfgDetermined,
     local: AxisBuilderLocalContext,
     shared: AxisBuilderSharedContext,
@@ -1056,7 +1058,7 @@ function endTextLayout(
  */
 function fixMinMaxLabelShow(
     axisModel: AxisBaseModel,
-    labelLayoutList: LabelLayoutInfoAll[],
+    labelLayoutList: LabelLayoutData[],
     optionHideOverlap: AxisBaseOption['axisLabel']['hideOverlap']
 ) {
     if (shouldShowAllLabels(axisModel.axis)) {
@@ -1072,56 +1074,44 @@ function fixMinMaxLabelShow(
         outmostLabelIdx: number,
         innerLabelIdx: number,
     ) {
-        let outmostLabelLayout = labelLayoutList[outmostLabelIdx];
-        let innerLabelLayout = labelLayoutList[innerLabelIdx];
+        let outmostLabelLayout = ensureLabelLayoutWithGeometry(labelLayoutList[outmostLabelIdx]);
+        let innerLabelLayout = ensureLabelLayoutWithGeometry(labelLayoutList[innerLabelIdx]);
         if (!outmostLabelLayout || !innerLabelLayout) {
             return;
         }
 
-        if (showMinMaxLabel === false) {
+        if (showMinMaxLabel === false || outmostLabelLayout.suggestIgnore) {
             ignoreEl(outmostLabelLayout.label);
+            return;
+        }
+        if (innerLabelLayout.suggestIgnore) {
+            ignoreEl(innerLabelLayout.label);
+            return;
         }
         // PENDING: Originally we thought `optionHideOverlap === false` means do not hide anything,
         //  since currently the bounding rect of text might not accurate enough and might slightly bigger,
         //  which causes false positive. But `optionHideOverlap: null/undfined` is falsy and likely
         //  be treated as false.
-        else {
-            // In most fonts the glyph does not reach the boundary of the bounding rect.
-            // This is needed to avoid too aggressive to hide two elements that meet at the edge
-            // due to compact layout by the same bounding rect or OBB.
-            const touchThreshold = 0.1;
-            // This treatment is for backward compatibility. And `!optionHideOverlap` implies that
-            // the user accepts the visual touch between adjacent labels, thus "hide min/max label"
-            // should be conservative, since the space might be sufficient in this case.
-            const ignoreMargin = !optionHideOverlap;
-            if (ignoreMargin) {
-                // Make a copy to apply `ignoreMargin`.
-                outmostLabelLayout = rollbackToLabelLayoutInfoRaw(defaults({ignoreMargin}, outmostLabelLayout));
-                innerLabelLayout = rollbackToLabelLayoutInfoRaw(defaults({ignoreMargin}, innerLabelLayout));
-            }
 
-            let anyIgnored = false;
-            if (outmostLabelLayout.suggestIgnore) {
-                ignoreEl(outmostLabelLayout.label);
-                anyIgnored = true;
-            }
-            if (innerLabelLayout.suggestIgnore) {
+        // In most fonts the glyph does not reach the boundary of the bounding rect.
+        // This is needed to avoid too aggressive to hide two elements that meet at the edge
+        // due to compact layout by the same bounding rect or OBB.
+        const touchThreshold = 0.1;
+        // This treatment is for backward compatibility. And `!optionHideOverlap` implies that
+        // the user accepts the visual touch between adjacent labels, thus "hide min/max label"
+        // should be conservative, since the space might be sufficient in this case.
+        if (!optionHideOverlap) {
+            const marginForce = [0, 0, 0, 0];
+            // Make a copy to apply `ignoreMargin`.
+            outmostLabelLayout = newLabelLayoutWithGeometry({marginForce}, outmostLabelLayout);
+            innerLabelLayout = newLabelLayoutWithGeometry({marginForce}, innerLabelLayout);
+        }
+        if (labelIntersect(outmostLabelLayout, innerLabelLayout, null, {touchThreshold})) {
+            if (showMinMaxLabel) {
                 ignoreEl(innerLabelLayout.label);
-                anyIgnored = true;
             }
-
-            if (!anyIgnored && labelIntersect(
-                ensureLabelLayoutInfoComputed(outmostLabelLayout),
-                ensureLabelLayoutInfoComputed(innerLabelLayout),
-                null,
-                {touchThreshold}
-            )) {
-                if (showMinMaxLabel) {
-                    ignoreEl(innerLabelLayout.label);
-                }
-                else {
-                    ignoreEl(outmostLabelLayout.label);
-                }
+            else {
+                ignoreEl(outmostLabelLayout.label);
             }
         }
     }
@@ -1139,7 +1129,7 @@ function fixMinMaxLabelShow(
 // PENDING: Is it necessary to display a tick while the corresponding label is ignored?
 function syncLabelIgnoreToMajorTicks(
     cfg: AxisBuilderCfgDetermined,
-    labelLayoutList: LabelLayoutInfoAll[],
+    labelLayoutList: LabelLayoutData[],
     tickEls: graphic.Line[],
 ) {
     if (cfg.showMinorTicks) {
@@ -1299,7 +1289,7 @@ function buildAxisMinorTicks(
     }
 }
 
-// Return whether need to call `axisTickLabelLayout` again.
+// Return whether need to call `layOutAxisTickLabel` again.
 function dealLastTickLabelResultReusable(
     local: AxisBuilderLocalContext,
     group: graphic.Group,
@@ -1496,8 +1486,7 @@ function buildAxisLabel(
         labelGroup.add(textEl);
     });
 
-    const labelLayoutList: LabelLayoutInfoRaw[] = map(labelEls, label => ({
-        kind: LABEL_LAYOUT_INFO_KIND_RAW,
+    const labelLayoutList = map(labelEls, label => ({
         label,
         priority: getLabelInner(label).break
             ? label.z2 + (z2Max - z2Min + 1) // Make break labels be highest priority.
@@ -1510,7 +1499,7 @@ function buildAxisLabel(
     axisLabelBuildResultSet(local, labelLayoutList, labelGroup, axisLabelCreationCtx);
 }
 
-// Indicate that `axisTickLabelLayout` has been called.
+// Indicate that `layOutAxisTickLabel` has been called.
 function axisLabelBuildResultExists(local: AxisBuilderLocalContext) {
     return !!local.labelLayoutList;
 }
@@ -1529,20 +1518,20 @@ function axisLabelBuildResultSet(
 function updateAxisLabelChangableProps(
     cfg: AxisBuilderCfgDetermined,
     axisModel: AxisBaseModel,
-    labelLayoutList: LabelLayoutInfoAll[],
+    labelLayoutList: LabelLayoutData[],
     transformGroup: graphic.Group,
 ): void {
     const labelMargin = axisModel.get(['axisLabel', 'margin']);
-    each(labelLayoutList, (layoutInfo, idx) => {
-        if (!layoutInfo) {
+    each(labelLayoutList, (layout, idx) => {
+        const geometry = ensureLabelLayoutWithGeometry(layout);
+        if (!geometry) {
             return;
         }
-
-        const labelEl = layoutInfo.label;
+        const labelEl = geometry.label;
         const inner = getLabelInner(labelEl);
 
         // See the comment in `suggestIgnore`.
-        layoutInfo.suggestIgnore = labelEl.ignore;
+        geometry.suggestIgnore = labelEl.ignore;
         // Currently no `ignore:true` is set in `buildAxisLabel`
         // But `ignore:true` may be set subsequently for overlap handling, thus reset it here.
         labelEl.ignore = false;
@@ -1560,9 +1549,8 @@ function updateAxisLabelChangableProps(
         copyTransform(labelEl, _tmpLayoutEl);
         labelEl.markRedraw();
 
-        if (layoutInfo.kind === LABEL_LAYOUT_INFO_KIND_COMPUTED) {
-            rollbackToLabelLayoutInfoRaw(layoutInfo);
-        }
+        setLabelLayoutDirty(geometry, true);
+        ensureLabelLayoutWithGeometry(geometry);
     });
 }
 const _tmpLayoutEl = new graphic.Rect();
@@ -1594,7 +1582,7 @@ function addBreakEventHandler(
 function adjustBreakLabels(
     axisModel: AxisBaseModel,
     axisRotation: AxisBuilderCfgDetermined['rotation'],
-    labelLayoutList: LabelLayoutInfoAll[]
+    labelLayoutList: LabelLayoutData[]
 ): void {
     const scaleBreakHelper = getScaleBreakHelper();
     if (!scaleBreakHelper) {
@@ -1609,8 +1597,8 @@ function adjustBreakLabels(
     if (moveOverlap === true || moveOverlap === 'auto') {
         each(breakLabelIndexPairs, idxPair => {
             getAxisBreakHelper()!.adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, [
-                ensureLabelLayoutInfoComputed(labelLayoutList[idxPair[0]]),
-                ensureLabelLayoutInfoComputed(labelLayoutList[idxPair[1]])
+                ensureLabelLayoutWithGeometry(labelLayoutList[idxPair[0]]),
+                ensureLabelLayoutWithGeometry(labelLayoutList[idxPair[1]])
             ]);
         });
     }
