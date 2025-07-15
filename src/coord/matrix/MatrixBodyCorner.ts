@@ -141,7 +141,8 @@ export class MatrixBodyCorner<TKind extends MatrixBodyOrCornerKind> {
                     reasonArr = [];
                 }
                 parseCoordRangeOption(
-                    locatorRange, reasonArr, option.coord, self._dims, MatrixClampOption[self._kind]
+                    locatorRange, reasonArr, option.coord, self._dims,
+                    option.clamp ? MatrixClampOption[self._kind] : MatrixClampOption.none
                 );
                 if (isXYLocatorRangeInvalidOnDim(locatorRange, 0) || isXYLocatorRangeInvalidOnDim(locatorRange, 1)) {
                     if (__DEV__) {
@@ -262,8 +263,8 @@ export class MatrixBodyCorner<TKind extends MatrixBodyOrCornerKind> {
      */
     expandRangeByCellMerge(locatorRange: MatrixXYLocatorRange): void {
         if (
-            isXYLocatorRangeInvalidOnDim(locatorRange, 0)
-            && isXYLocatorRangeInvalidOnDim(locatorRange, 1)
+            !isXYLocatorRangeInvalidOnDim(locatorRange, 0)
+            && !isXYLocatorRangeInvalidOnDim(locatorRange, 1)
             && locatorRange[0][0] === locatorRange[0][1]
             && locatorRange[1][0] === locatorRange[1][1]
         ) {
@@ -272,7 +273,7 @@ export class MatrixBodyCorner<TKind extends MatrixBodyOrCornerKind> {
             _tmpERBCMLocator[0] = locatorRange[0][0];
             _tmpERBCMLocator[1] = locatorRange[1][0];
             const cell = this.getCell(_tmpERBCMLocator);
-            const inSpanOf = cell.inSpanOf;
+            const inSpanOf = cell && cell.inSpanOf;
             if (inSpanOf) {
                 cloneXYLocatorRange(locatorRange, inSpanOf.locatorRange);
                 return;
