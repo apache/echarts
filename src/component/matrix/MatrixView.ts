@@ -30,11 +30,12 @@ import { LineStyleProps } from '../../model/mixin/lineStyle';
 import { LineShape } from 'zrender/src/graphic/shape/Line';
 import { subPixelOptimize } from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Group, Text, Rect, Line, XY, setTooltipConfig, expandOrShrinkRect } from '../../util/graphic';
-import { ListIterator } from '../../util/model';
+import { clearTmpModel, ListIterator } from '../../util/model';
 import { clone, retrieve2 } from 'zrender/src/core/util';
 import { invert } from 'zrender/src/core/matrix';
 import { MatrixBodyCorner, MatrixBodyOrCornerKind } from '../../coord/matrix/MatrixBodyCorner';
 import { setLabelStyle } from '../../label/labelStyle';
+import GlobalModel from '../../model/Global';
 
 const round = Math.round;
 
@@ -51,7 +52,7 @@ class MatrixView extends ComponentView {
     static type = 'matrix';
     type = MatrixView.type;
 
-    render(matrixModel: MatrixModel) {
+    render(matrixModel: MatrixModel, ecModel: GlobalModel) {
 
         this.group.removeAll();
 
@@ -68,14 +69,16 @@ class MatrixView extends ComponentView {
 
         renderDimensionCells(
             group,
-            matrixModel
+            matrixModel,
+            ecModel
         );
 
         createBodyAndCorner(
             group,
             matrixModel,
             xDim,
-            yDim
+            yDim,
+            ecModel
         );
 
         const borderZ2Option = matrixModel.getShallow('borderZ2', true);
@@ -134,7 +137,7 @@ class MatrixView extends ComponentView {
     }
 }
 
-function renderDimensionCells(group: Group, matrixModel: MatrixModel) {
+function renderDimensionCells(group: Group, matrixModel: MatrixModel, ecModel: GlobalModel): void {
 
     renderOnDimension(0);
     renderOnDimension(1);
@@ -163,6 +166,7 @@ function renderDimensionCells(group: Group, matrixModel: MatrixModel) {
                 xyLocator,
                 matrixModel,
                 group,
+                ecModel,
                 dimCell.option,
                 thisDimBgStyleModel,
                 thisDimLabelModel,
@@ -180,7 +184,8 @@ function createBodyAndCorner(
     group: Group,
     matrixModel: MatrixModel,
     xDim: MatrixDim,
-    yDim: MatrixDim
+    yDim: MatrixDim,
+    ecModel: GlobalModel
 ): void {
 
     createBodyOrCornerCells('body', matrixModel.getBody(), xDim, yDim);
@@ -232,6 +237,7 @@ function createBodyAndCorner(
                     xyLocator,
                     matrixModel,
                     group,
+                    ecModel,
                     bodyCornerCellOption,
                     parentItemStyleModel,
                     parentLabelModel,
@@ -250,6 +256,7 @@ function createMatrixCell(
     xyLocator: MatrixXYLocator[],
     matrixModel: MatrixModel,
     group: Group,
+    ecModel: GlobalModel,
     cellOption: MatrixBaseCellOption | NullUndefined,
     parentItemStyleModel: Model<MatrixCellStyleOption['itemStyle']>,
     parentLabelModel: Model<MatrixCellStyleOption['label']>,
@@ -285,6 +292,8 @@ function createMatrixCell(
         const text = textValue + '';
         _tmpCellLabelModel.option = cellOption ? cellOption.label : null;
         _tmpCellLabelModel.parentModel = parentLabelModel;
+        // This is to accept `option.textStyle` as the default.
+        _tmpCellLabelModel.ecModel = ecModel;
 
         setLabelStyle(
             cellRect,
@@ -349,6 +358,10 @@ function createMatrixCell(
         );
     }
     cellRect.silent = rectSilent;
+
+    clearTmpModel(_tmpCellModel);
+    clearTmpModel(_tmpCellItemStyleModel);
+    clearTmpModel(_tmpCellLabelModel);
 }
 const _tmpCellModel = new Model<MatrixCellStyleOption>();
 const _tmpCellItemStyleModel = new Model<MatrixCellStyleOption['itemStyle']>();
