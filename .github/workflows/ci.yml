@@ -4,7 +4,6 @@ on:
   push:
   pull_request:
     types: [opened, reopened, synchronize]
-  workflow_dispatch:
 
 concurrency:
   # Note that the `teardown-pr-preview` workflow needs the same group name
