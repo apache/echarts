@@ -116,10 +116,10 @@ export interface MatrixCornerOption extends MatrixBodyCornerBaseOption {
  * Commonly used as `MatrixCoordRangeOption[]`
  * Can locate a cell or a rect range of cells.
  * `[2, 8]` indicates a cell.
- * `[2, null/undefined/NaN]` means y is the entire column.
- * `[null/undefined/NaN, 8]` is the opposite.
+ * `[2, null/undefined/NaN]` means y is not relevant.
+ * `[null/undefined/NaN, 8]` means x is not relevant.
  * `[[2, 5], 8]` indicates a rect of cells in x range of `2~5` and y `8`.
- * `[[2, 5], null/undefined/NaN]` indicates a x range of `2~5` and y is the entire column.
+ * `[[2, 5], null/undefined/NaN]` indicates a x range of `2~5` and y is not relevant.
  * `[[2, 5], [7, 8]]` indicates a rect of cells in x range of `2~5` and y range of `7~8`.
  * `['aNonLeaf', 8]` indicates a rect of cells in x range of `aNonLeaf` and y `8`.
  * @see {parseCoordRangeOption}
@@ -140,6 +140,16 @@ export interface MatrixBodyCornerCellOption extends MatrixBaseCellOption {
     value?: string;
     // Use it to reference a coord in matrix.
     coord?: MatrixCoordRangeOption[];
+    // If true, null/undefined/NaN/invalid_coord_part in `coord` means the entire column/row.
+    // `false` by default, because:
+    //  - Pros:
+    //    - If the `coord` is incorrect and unintentional, the entire column/row will be referred,
+    //      and no error message.
+    //    - Inconsistent with `dataToLayout`, which is no clamp by default.
+    //  - Cons:
+    //    - `coord: ['x1', null]` or `coord: ['x1', ['y1', 'y999_may_out_of_range']]` is supported
+    //      to refer to a entire column, which brings convenience to users and may intuitive.
+    coordClamp?: boolean;
     // Merge cells determined by `coord`.
     mergeCells?: boolean;
 }

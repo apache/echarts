@@ -66,16 +66,28 @@ under the License.
                                 value: 'A3',
                                 children: ['A31', 'A32']
                             }]
-                        }]
+                        }],
                     },
                     y: {
-                        data: ['U', 'V']
+                        data: ['U', 'V', 'W']
                     },
                     body: {
                         itemStyle: {
                             // borderColor: '#333',
                         },
+                        data: [{
+                            coord: [['A2', 'A31', 'A32'], 'V'],
+                            mergeCells: true,
+                        }, {
+                            coord: [null, 'W'],
+                            clamp: true,
+                            mergeCells: true,
+                        }]
                     }
+                },
+                textStyle: {
+                    fontSize: 25,
+                    color: 'red'
                 },
                 visualMap: {
                     type: 'continuous',
@@ -94,7 +106,7 @@ under the License.
                     },
                     data: [
                         ['A1', 'U', 10], ['A1', 'V', 200], ['A2', 'U', 300],
-                        ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
+                        ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60], ['A1', 'W', 80]
                     ],
                     label: {
                         show: true

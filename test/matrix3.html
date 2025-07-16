@@ -185,6 +185,7 @@ under the License.
                                 mergeCells: true,
                             }, {
                                 coord: [null, 'D'],
+                                coordClamp: true,
                                 mergeCells: true,
                             }, {
                                 coord: [['P', 'Q'], 'A1'],
@@ -973,7 +974,7 @@ under the License.
                     y: {data: ['r', 's', 't']},
                     body: {
                         data: [
-                            {coord: [null, 's'], mergeCells: true}
+                            {coord: [null, 's'], coordClamp: true, mergeCells: true}
                         ]
                     }
                 },

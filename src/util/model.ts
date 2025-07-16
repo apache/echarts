@@ -54,6 +54,7 @@ import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
 import { error, warn } from './log';
+import type Model from '../model/Model';
 
 function interpolateNumber(p0: number, p1: number, percent: number): number {
     return (p1 - p0) * percent + p0;
@@ -1166,4 +1167,9 @@ export class ListIterator<TItem> {
         }
         return false;
     }
+}
+
+export function clearTmpModel(model: Model): void {
+    // Clear to avoid memory leak.
+    model.option = model.parentModel = model.ecModel = null;
 }
