@@ -64,8 +64,43 @@ class LogScale extends IntervalScale {
 
         return zrUtil.map(ticks, function (tick) {
             const val = tick.value;
-            let powVal = fixRound(mathPow(base, val));
+            const rawVal = mathPow(base, val);
             let roundingCriterion = null;
+            // Fix #21099
+            function calculatePrecision(value: number): number {
+                if (!isFinite(value) || value === 0) {
+                    return 0;
+                }
+
+                const str = value.toString();
+
+                // Decimals using scientific notation
+                if (str.includes('e')) {
+                    const [coefficient, exponent] = str.split('e');
+                    const coefficientDecimals = coefficient.includes('.')
+                        ? coefficient.split('.')[1].length
+                        : 0;
+                    const exp = parseInt(exponent, 10);
+                    return exp < 0 ? Math.abs(exp) + coefficientDecimals : coefficientDecimals;
+                }
+                // Normal decimals
+                const decimalPart = str.split('.')[1];
+                return decimalPart ? decimalPart.length : 0;
+            }
+
+            const precision = calculatePrecision(rawVal);
+            const precisionThreshold = 10;
+
+            let powVal: number;
+            if (precision <= precisionThreshold) {
+                // precision is lower than the limitation of 'fixRound'
+                powVal = fixRound(rawVal);
+            }
+            else {
+                // precision is highter than the limitation of 'fixRound'
+                const safePrecision = Math.max(precision + 2, 12);
+                powVal = parseFloat(fixRound(rawVal, safePrecision as number, true));
+            }
 
             // Fix #4158
             if (val === extent[0] && this._fixMin) {
@@ -202,7 +237,7 @@ class LogScale extends IntervalScale {
         if (!scaleBreakHelper) {
             return;
         }
-        const {parsedOriginal, parsedLogged} = scaleBreakHelper.logarithmicParseBreaksFromOption(
+        const { parsedOriginal, parsedLogged } = scaleBreakHelper.logarithmicParseBreaksFromOption(
             breakOptionList,
             this.base,
             zrUtil.bind(this.parse, this)
