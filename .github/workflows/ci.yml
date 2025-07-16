@@ -14,6 +14,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [18.x]
+
     steps:
       - name: Fetch commit count
         env:
@@ -25,10 +29,10 @@ jobs:
         with:
           fetch-depth: ${{ env.FETCH_DEPTH }}
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
         id: cache-dep
@@ -56,13 +60,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [18.x]
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
         id: cache-dep
