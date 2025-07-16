@@ -14,10 +14,6 @@ jobs:
   lint:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
       - name: Fetch commit count
         env:
@@ -29,19 +25,17 @@ jobs:
         with:
           fetch-depth: ${{ env.FETCH_DEPTH }}
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18.x
 
       - name: Cache node modules
         id: cache-dep
         uses: actions/cache@v4
-        env:
-          cache-name: cache-node-modules
         with:
           path: node_modules
-          key: ${{ runner.os }}-lint-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-dep.outputs.cache-hit != 'true'
@@ -62,26 +56,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18.x
 
       - name: Cache node modules
         id: cache-dep
         uses: actions/cache@v4
-        env:
-          cache-name: cache-node-modules
         with:
           path: node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-dep.outputs.cache-hit != 'true'
@@ -102,7 +90,7 @@ jobs:
         run: |
           export PR_PREVIEW_DIR='echarts-pr-preview'
           mkdir -p $PR_PREVIEW_DIR
-          npm pack -pack-destination $PR_PREVIEW_DIR
+          npm pack --pack-destination $PR_PREVIEW_DIR
           echo "PR_PREVIEW_DIR=$PR_PREVIEW_DIR" >> $GITHUB_ENV
 
       - name: Save PR metadata and dist files
