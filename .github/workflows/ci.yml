@@ -1,7 +1,6 @@
 name: Node CI
 
 on:
-  workflow_dispatch:
   push:
   pull_request:
     types: [opened, reopened, synchronize]
