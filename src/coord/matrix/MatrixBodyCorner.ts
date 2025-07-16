@@ -142,7 +142,7 @@ export class MatrixBodyCorner<TKind extends MatrixBodyOrCornerKind> {
                 }
                 parseCoordRangeOption(
                     locatorRange, reasonArr, option.coord, self._dims,
-                    option.clamp ? MatrixClampOption[self._kind] : MatrixClampOption.none
+                    option.coordClamp ? MatrixClampOption[self._kind] : MatrixClampOption.none
                 );
                 if (isXYLocatorRangeInvalidOnDim(locatorRange, 0) || isXYLocatorRangeInvalidOnDim(locatorRange, 1)) {
                     if (__DEV__) {

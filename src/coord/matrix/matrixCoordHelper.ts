@@ -86,7 +86,7 @@ export function resetXYLocatorRange(out: unknown[] | NullUndefined): MatrixXYLoc
 }
 
 /**
- * If illegal or out of boundary, set NaN to `locOut`. (See `isLocatorRangeInvalidOnDim`)
+ * If illegal or out of boundary, set NaN to `locOut`. See `isXYLocatorRangeInvalidOnDim`.
  * x dimension and y dimension are calculated separately.
  */
 export function parseCoordRangeOption(
@@ -120,15 +120,23 @@ function parseCoordRangeOptionOnOneDim(
     const len = coordValArr.length;
     const hasClamp = !!clamp;
 
-    if (len === 1 || len === 2) {
-        parseCoordRangeOptionOnOneDimOnePart(locDimOut, reasonOut, coordValArr, hasClamp, dims, dimIdx, 0);
+    if (len >= 1) {
+        parseCoordRangeOptionOnOneDimOnePart(
+            locDimOut, reasonOut, coordValArr, hasClamp, dims, dimIdx, 0
+        );
         if (len > 1) {
-            parseCoordRangeOptionOnOneDimOnePart(locDimOut, reasonOut, coordValArr, hasClamp, dims, dimIdx, 1);
+            // Users may intuitively input the coords like `[[x1, x2, x3], ...]`;
+            // consider the range as `[x1, x3]` in this case.
+            parseCoordRangeOptionOnOneDimOnePart(
+                locDimOut, reasonOut, coordValArr, hasClamp, dims, dimIdx, len - 1
+            );
         }
     }
     else {
-        if (reasonOut) {
-            reasonOut.push(`Can only contain 1 or 2 coords, rather than ${len}.`);
+        if (__DEV__) {
+            if (reasonOut) {
+                reasonOut.push('Should be like [["x1", "x2"], ["y1", "y2"]], or ["x1", "y1"], rather than empty.');
+            }
         }
         locDimOut[0] = locDimOut[1] = NaN;
     }
@@ -173,8 +181,10 @@ function parseCoordRangeOptionOnOneDimOnePart(
 ): void {
     const layout = coordDataToAllCellLevelLayout(coordValArr[partIdx], dims, dimIdx);
     if (!layout) {
-        if (!hasClamp && reasonOut) {
-            reasonOut.push(`Can not find layout by coord[${dimIdx}][${partIdx}].`);
+        if (__DEV__) {
+            if (!hasClamp && reasonOut) {
+                reasonOut.push(`Can not find cell by coord[${dimIdx}][${partIdx}].`);
+            }
         }
         locDimOut[0] = locDimOut[1] = NaN;
         return;
