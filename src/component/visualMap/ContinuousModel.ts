@@ -183,14 +183,8 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
      */
     getValueState(value: number): VisualState {
         const range = this.option.range;
-        const dataExtent = this.getExtent();
 
-        // When range[0] === dataExtent[0], any value larger than dataExtent[0] maps to 'inRange'.
-        // range[1] is processed likewise.
-        return (
-            (range[0] <= dataExtent[0] || range[0] <= value)
-            && (range[1] >= dataExtent[1] || value <= range[1])
-        ) ? 'inRange' : 'outOfRange';
+        return range[0] <= value && value <= range[1] ? 'inRange' : 'outOfRange';
     }
 
     findTargetDataIndices(range: number[]) {
