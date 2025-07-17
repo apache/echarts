@@ -48,7 +48,7 @@ export interface ContinousVisualMapOption extends VisualMapOption {
      * selected range. In default case `range` is `[min, max]`
      * and can auto change along with user interaction or action "selectDataRange",
      * until user specified a range.
-     * @see strictRange for the special case when `range[0]` or `range[1]` touch `min` or `max`.
+     * @see unboundedRange for the special case when `range[0]` or `range[1]` touch `min` or `max`.
      */
     range?: number[]
     /**
