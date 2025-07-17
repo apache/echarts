@@ -153,9 +153,6 @@ const theme = {
         textStyle: {
             color: color.secondary
         },
-        inRange: {
-            color: [color.neutral10, color.theme[0]]
-        },
         handleStyle: {
             borderColor: color.neutral30
         }
