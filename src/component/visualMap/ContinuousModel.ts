@@ -45,11 +45,29 @@ export interface ContinousVisualMapOption extends VisualMapOption {
     calculable?: boolean
 
     /**
-     * selected range. In default case `range` is [min, max]
-     * and can auto change along with modification of min max,
+     * selected range. In default case `range` is `[min, max]`
+     * and can auto change along with user interaction or action "selectDataRange",
      * until user specified a range.
+     * @see unboundedRange for the special case when `range[0]` or `range[1]` touch `min` or `max`.
      */
     range?: number[]
+    /**
+     * Whether to treat the range as unbounded when `range` touches `min` or `max`.
+     * - `true`:
+     *   when `range[0]` <= `min`, the actual range becomes `[-Infinity, range[1]]`;
+     *   when `range[1]` >= `max`, the actual range becomes `[range[0], Infinity]`.
+     *   NOTE:
+     *     - This provides a way to ensure all data can be considered in-range when `min`/`max`
+     *       are not precisely known.
+     *     - Default is `true` for backward compatibility.
+     *     - Piecewise VisualMap does not need it, since it can define unbounded range in each piece,
+     *       such as "< 12", ">= 300".
+     * - `false`:
+     *   Disable the unbounded range behavior.
+     *   Use case: `min`/`max` reflect the normal data range, and some outlier data should always be
+     *   treated as out of range.
+     */
+    unboundedRange?: boolean
     /**
      * Whether to enable hover highlight.
      */
@@ -183,8 +201,13 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
      */
     getValueState(value: number): VisualState {
         const range = this.option.range;
+        const dataExtent = this.getExtent();
+        const unboundedRange = zrUtil.retrieve2(this.option.unboundedRange, true);
 
-        return range[0] <= value && value <= range[1] ? 'inRange' : 'outOfRange';
+        return (
+            ((unboundedRange && range[0] <= dataExtent[0]) || range[0] <= value)
+            && ((unboundedRange && range[1] >= dataExtent[1]) || value <= range[1])
+        ) ? 'inRange' : 'outOfRange';
     }
 
     findTargetDataIndices(range: number[]) {
@@ -198,7 +221,7 @@ class ContinuousModel extends VisualMapModel<ContinousVisualMapOption> {
             const dataIndices: number[] = [];
             const data = seriesModel.getData();
 
-            data.each(this.getDataDimensionIndex(data), function (value, dataIndex) {
+            data.each(this.getDataDimensionIndex(data), function (value: number, dataIndex) {
                 range[0] <= value && value <= range[1] && dataIndices.push(dataIndex);
             }, this);
 
