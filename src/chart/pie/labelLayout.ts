@@ -24,7 +24,6 @@ import { VectorArray } from 'zrender/src/core/vector';
 import { HorizontalAlign, ZRTextAlign } from '../../util/types';
 import { Sector, Polyline, Point } from '../../util/graphic';
 import ZRText from 'zrender/src/graphic/Text';
-import TSpan from 'zrender/src/graphic/TSpan';
 import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import { each, isNumber } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
