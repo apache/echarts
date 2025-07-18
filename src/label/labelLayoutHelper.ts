@@ -18,245 +18,326 @@
 */
 
 import ZRText from 'zrender/src/graphic/Text';
-import { LabelExtendedTextStyle, LabelLayoutOption, LabelMarginType, NullUndefined } from '../util/types';
+import { LabelLayoutOption, NullUndefined } from '../util/types';
 import {
-    BoundingRect, OrientedBoundingRect, Polyline, expandOrShrinkRect,
+    BoundingRect, OrientedBoundingRect, Polyline, WH, XY, ensureCopyRect, ensureCopyTransform, expandOrShrinkRect,
     isBoundingRectAxisAligned
 } from '../util/graphic';
 import type Element from 'zrender/src/Element';
 import { PointLike } from 'zrender/src/core/Point';
-import { each, extend, retrieve2 } from 'zrender/src/core/util';
-import { normalizeCssArray } from '../util/format';
 import { BoundingRectIntersectOpt } from 'zrender/src/core/BoundingRect';
 import { MatrixArray } from 'zrender/src/core/matrix';
+import { LabelExtendedTextStyle, LabelMarginType } from './labelStyle';
 
-// Also prevent duck typing.
-export const LABEL_LAYOUT_INFO_KIND_RAW = 1 as const;
-export const LABEL_LAYOUT_INFO_KIND_COMPUTED = 2 as const;
-
-// PENDING: a LabelLayoutInfoRaw with `defaultAttr.ignore: false` will become a NullUndefined,
-//  rather than a LabelLayoutInfoComputed.
-export type LabelLayoutInfoAll = LabelLayoutInfoRaw | LabelLayoutInfoComputed | NullUndefined;
-
-interface LabelLayoutInfoBase {
+/**
+ * This is the input for label layout and overlap resolving.
+ */
+interface LabelLayoutBase {
     label: ZRText
     labelLine?: Polyline | NullUndefined
     layoutOption?: LabelLayoutOption | NullUndefined
     priority: number
-    // Save the original value that may be modified in overlap resolving.
+    // @see `SavedLabelAttr` in `LabelManager.ts`
     defaultAttr: {
         ignore?: boolean
         labelGuideIgnore?: boolean
     }
-    ignoreMargin?: boolean; // For backward compatibility.
+    // To replace user specified `textMargin` or `minMargin`.
+    // Format: `[top, right, bottom, left]`
+    // e.g., `[0, null, 0, null]` means that the top and bottom margin is replaced as `0`,
+    //  and use the original settings of left and right margin.
+    marginForce?: (number | NullUndefined)[] | NullUndefined;
+    // For backward compatibility for `minMargin`. `minMargin` can only be a number rather than number[],
+    // some series only apply `minMargin` on top/bottom but disregard left/right.
+    minMarginForce?: (number | NullUndefined)[] | NullUndefined;
+    // If no `textMargin` and `minMargin` is specified, use this as default.
+    // Format: `[top, right, bottom, left]`
+    marginDefault?: number[] | NullUndefined;
 
-    // In grid (cartesian) estimation process (for `grid.containLabel` and related overflow resolving handlings),
+    // In grid (Cartesian) estimation process (for `grid.containLabel` and related overflow resolving handlings),
     // the `gridRect` is shrunk gradually according to the last union boundingRect of the axis labels and names.
-    // But the `ignore` stretegy (such as in `hideOverlap` and `fixMinMaxLabelShow`) affects this process
+    // But the `ignore` strategy (such as in `hideOverlap` and `fixMinMaxLabelShow`) affects this process
     // significantly - the outermost labels might be determined `ignore:true` in a big `gridRect`, but be determined
     // `ignore:false` in a shrunk `gridRect`. (e.g., if the third label touches the outermost label in a shrunk
-    // `gridRect`.) That probably causes the result overflowing unexpectedly. Therefore, `suggestIgnore` is
-    // introduced to ensure the `ignore` consistent during that estimation process.
+    // `gridRect`.) That probably causes the result overflowing unexpectedly.
+    // Therefore, `suggestIgnore` is introduced to ensure the `ignore` consistent during that estimation process.
+    // It suggests that this label has the lowest priority in ignore-if-overlap strategy.
     suggestIgnore?: boolean;
 }
+const LABEL_LAYOUT_BASE_PROPS = [
+    'label', 'labelLine', 'layoutOption', 'priority', 'defaultAttr',
+    'marginForce', 'minMarginForce', 'marginDefault', 'suggestIgnore'
+] as const;
 
-export interface LabelLayoutInfoRaw extends LabelLayoutInfoBase {
-    kind: typeof LABEL_LAYOUT_INFO_KIND_RAW
-    // Should no other properties - ensure to be a subset of LabelLayoutInfoComputed.
-}
-
-export interface LabelLayoutInfoComputed extends LabelLayoutInfoBase, LabelIntersectionCheckInfo {
-    kind: typeof LABEL_LAYOUT_INFO_KIND_COMPUTED
-    // The original props in `LabelLayoutInfoBase` are preserved.
-
-    // ------ Computed properites ------
-    // All of the members in `LabelIntersectionCheckInfo`.
-}
-
-export interface LabelIntersectionCheckInfo {
+/**
+ * [CAUTION]
+ *  - These props will be created and cached.
+ *  - The created props may be modified directly (rather than recreate) for performance consideration,
+ *      therefore, do not use the internal data structure of the el.
+ */
+export interface LabelGeometry {
+    // Only ignore is necessary in intersection check.
+    label: Pick<ZRText, 'ignore'>
+    // `NullUndefined` means dirty, as that is a uninitialized value.
+    dirty: (typeof LABEL_LAYOUT_DIRTY_ALL) | NullUndefined
     // Global rect from `localRect`
     rect: BoundingRect
     // Weither the localRect aligns to screen-pixel x or y axis.
     axisAligned: boolean
     // Considering performance, obb is not created until it is really needed.
-    // Use `ensureOBB(labelLayoutInfo)` to create and cache obb before using it,
+    // Use `ensureOBB(labelLayout)` to create and cache obb before using it,
     // created by `localRect`&`transform`.
     obb: OrientedBoundingRect | NullUndefined
     // localRect of the label.
-    // [CAUTION] do not modify it, since it may be the internal data structure of the el.
     localRect: BoundingRect
-    // transform of `label`. If `label` has no `transform`, this prop is `NullUndefined`.
-    // [CAUTION] do not modify it, since it may be the internal data structure of the el.
+    // The transform of `label`. Be `NullUndefined` if no `transform`, which follows
+    // the rule of `Element['transform']`, and bypass some unnecessary calculation.
     transform: number[] | NullUndefined
 }
 
-export function createLabelLayoutList(
-    rawList: LabelLayoutInfoRaw[]
-): LabelLayoutInfoComputed[] {
-    const resultList: LabelLayoutInfoComputed[] = [];
-    each(rawList, raw => {
-        // PENDING: necessary?
-        raw = extend({}, raw);
-        const layoutInfo = prepareLabelLayoutInfo(raw);
-        if (layoutInfo) {
-            resultList.push(layoutInfo);
-        }
-    });
-    return resultList;
+// A `LabelLayoutData` indicates that the props of `LabelGeometry` are not necessarily computed.
+// Use `Partial<LabelGeometry>` to check prop name conflicts with `LabelGeometry`.
+export type LabelLayoutData = LabelLayoutBase & Partial<LabelGeometry>;
+// A `LabelLayoutWithGeometry` indicates that `ensureLabelLayoutWithGeometry` has been performed.
+export type LabelLayoutWithGeometry = LabelLayoutBase & LabelGeometry;
+
+
+const LABEL_LAYOUT_DIRTY_BIT_OTHERS = 1 as const;
+const LABEL_LAYOUT_DIRTY_BIT_OBB = 2 as const;
+const LABEL_LAYOUT_DIRTY_ALL = LABEL_LAYOUT_DIRTY_BIT_OTHERS | LABEL_LAYOUT_DIRTY_BIT_OBB;
+
+export function setLabelLayoutDirty(
+    labelGeometry: Partial<LabelGeometry>, dirtyOrClear: boolean, dirtyBits?: number
+): void {
+    dirtyBits = dirtyBits || LABEL_LAYOUT_DIRTY_ALL;
+    dirtyOrClear
+        ? (labelGeometry.dirty |= dirtyBits)
+        : (labelGeometry.dirty &= ~dirtyBits);
+}
+
+function isLabelLayoutDirty(
+    labelGeometry: Partial<LabelGeometry>, dirtyBits?: number
+): boolean {
+    dirtyBits = dirtyBits || LABEL_LAYOUT_DIRTY_ALL;
+    return labelGeometry.dirty == null || !!(labelGeometry.dirty & dirtyBits);
 }
 
 /**
- * If `defaultAttr.ignore: true`, return `NullUndefined`.
- *  (the caller is reponsible for ensuring the label is always `ignore: true`.)
- * Otherwise the `layoutInfo` will be modified and returned.
- * `label.ignore` is not necessarily falsy, since it might be modified by some overlap resolving handling.
+ * [CAUTION]
+ *  - No auto dirty propagation mechanism yet. If the transform of the raw label or any of its ancestors is
+ *    changed, must sync the changes to the props of `LabelGeometry` by:
+ *    either explicitly call:
+ *      `setLabelLayoutDirty(labelLayout, true); ensureLabelLayoutWithGeometry(labelLayout);`
+ *    or call (if only translation is performed):
+ *      `labelLayoutApplyTranslation(labelLayout);`
+ *  - `label.ignore` is not necessarily falsy, and not considered in computing `LabelGeometry`,
+ *    since it might be modified by some overlap resolving handling.
+ *  - To duplicate or make a variation:
+ *    use `newLabelLayoutWithGeometry`.
  *
  * The result can also be the input of this method.
- *
- * @see ensureLabelLayoutInfoComputed
+ * @return `NullUndefined` if and only if `labelLayout` is `NullUndefined`.
  */
-function prepareLabelLayoutInfo(
-    layoutInfo: LabelLayoutInfoAll
-): LabelLayoutInfoComputed | NullUndefined {
-
-    if (!layoutInfo || layoutInfo.defaultAttr.ignore) {
+export function ensureLabelLayoutWithGeometry(
+    labelLayout: LabelLayoutData | NullUndefined
+): LabelLayoutWithGeometry | NullUndefined {
+    if (!labelLayout) {
         return;
     }
-
-    const label = layoutInfo.label;
-    const ignoreMargin = layoutInfo.ignoreMargin;
-
-    const transform = label.getComputedTransform();
-    // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
-    let localRect = label.getBoundingRect();
-    const axisAligned = isBoundingRectAxisAligned(transform);
-
-    if (!ignoreMargin) {
-        localRect = applyTextMarginToLocalRect(label, localRect);
+    if (isLabelLayoutDirty(labelLayout)) {
+        computeLabelGeometry(labelLayout, labelLayout.label, labelLayout);
     }
-
-    const globalRect = localRect.clone();
-    globalRect.applyTransform(transform);
-
-    if (!ignoreMargin && (label.style as LabelExtendedTextStyle).__marginType === LabelMarginType.minMargin) {
-        // `minMargin` only support number value.
-        const halfMinMargin = ((label.style.margin as number) || 0) / 2;
-        expandOrShrinkRect(globalRect, halfMinMargin, false, false);
-    }
-
-    const computed = layoutInfo as LabelLayoutInfoComputed;
-    computed.kind = LABEL_LAYOUT_INFO_KIND_COMPUTED,
-    // --- computed properties ---
-    computed.rect = globalRect;
-    computed.localRect = localRect;
-    computed.obb = null, // will be created by `ensureOBB` when using.
-    computed.axisAligned = axisAligned;
-    computed.transform = transform;
-
-    return computed;
+    return labelLayout as LabelLayoutWithGeometry;
 }
 
 /**
- * The reverse operation of `ensureLabelLayoutInfoComputedv`.
+ * The props in `out` will be filled if existing, or created.
  */
-export function rollbackToLabelLayoutInfoRaw(
-    labelLayoutInfo: LabelLayoutInfoAll
-): LabelLayoutInfoRaw {
-    if (labelLayoutInfo == null) {
-        return;
+export function computeLabelGeometry<TOut extends LabelGeometry>(
+    out: Partial<TOut>,
+    label: ZRText,
+    opt?: Pick<LabelLayoutData, 'marginForce' | 'minMarginForce' | 'marginDefault'>
+): TOut {
+    // [CAUTION] These props may be modified directly for performance consideration,
+    //  therefore, do not output the internal data structure of zrender Element.
+
+    const rawTransform = label.getComputedTransform();
+    out.transform = ensureCopyTransform(out.transform, rawTransform);
+
+    // NOTE: should call `getBoundingRect` after `getComputedTransform`, or may get an inaccurate bounding rect.
+    //  The reason is that `getComputedTransform` calls `__host.updateInnerText()` internally, which updates the label
+    //  by `textConfig` mounted on the host.
+    // PENDING: add a dirty bit for that in zrender?
+    const outLocalRect = out.localRect = ensureCopyRect(out.localRect, label.getBoundingRect());
+
+    const labelStyleExt = label.style as LabelExtendedTextStyle;
+    let margin = labelStyleExt.margin;
+    const marginForce = opt && opt.marginForce;
+    const minMarginForce = opt && opt.minMarginForce;
+    const marginDefault = opt && opt.marginDefault;
+    let marginType = labelStyleExt.__marginType;
+    if (marginType == null && marginDefault) {
+        margin = marginDefault;
+        marginType = LabelMarginType.textMargin;
     }
-    const raw = labelLayoutInfo as unknown as LabelLayoutInfoRaw;
-    raw.kind = LABEL_LAYOUT_INFO_KIND_RAW;
-    return raw;
+    // `textMargin` and `minMargin` can not exist both.
+    for (let i = 0; i < 4; i++) {
+        _tmpLabelMargin[i] =
+            (marginType === LabelMarginType.minMargin && minMarginForce && minMarginForce[i] != null)
+            ? minMarginForce[i]
+            : (marginForce && marginForce[i] != null)
+            ? marginForce[i]
+            : (margin ? margin[i] : 0);
+    }
+    if (marginType === LabelMarginType.textMargin) {
+        expandOrShrinkRect(outLocalRect, _tmpLabelMargin, false, false);
+    }
+
+    const outGlobalRect = out.rect = ensureCopyRect(out.rect, outLocalRect);
+    if (rawTransform) {
+        outGlobalRect.applyTransform(rawTransform);
+    }
+
+    // Notice: label.style.margin is actually `minMargin / 2`, handled by `setTextStyleCommon`.
+    if (marginType === LabelMarginType.minMargin) {
+        expandOrShrinkRect(outGlobalRect, _tmpLabelMargin, false, false);
+    }
+
+    out.axisAligned = isBoundingRectAxisAligned(rawTransform);
+
+    (out.label = out.label || {} as TOut['label']).ignore = label.ignore;
+
+    setLabelLayoutDirty(out as TOut, false);
+    setLabelLayoutDirty(out as TOut, true, LABEL_LAYOUT_DIRTY_BIT_OBB);
+    // Do not remove `obb` (if existing) for reuse, just reset the dirty bit.
+
+    return out as TOut;
+}
+const _tmpLabelMargin: number[] = [0, 0, 0, 0];
+
+/**
+ * The props in `out` will be filled if existing, or created.
+ */
+export function computeLabelGeometry2<TOut extends LabelGeometry>(
+    out: Partial<TOut>,
+    rawLocalRect: BoundingRect,
+    rawTransform: MatrixArray | NullUndefined
+): TOut {
+    out.transform = ensureCopyTransform(out.transform, rawTransform);
+    out.localRect = ensureCopyRect(out.localRect, rawLocalRect);
+    out.rect = ensureCopyRect(out.rect, rawLocalRect);
+    if (rawTransform) {
+        out.rect.applyTransform(rawTransform);
+    }
+    out.axisAligned = isBoundingRectAxisAligned(rawTransform);
+    out.obb = undefined; // Reset to undefined, will be created by `ensureOBB` when using.
+    (out.label = out.label || {} as TOut['label']).ignore = false;
+
+    return out as TOut;
 }
 
 /**
- * This method supports that the label layout info is not computed until needed,
- * for performance consideration.
- *
- * [CAUTION]
- *  - If the raw label is changed, must call
- *    `ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(layoutInfo))`
- *    to recreate the layout info.
- *  - Null checking is needed for the result. @see prepareLabelLayoutInfo
- *
- * Usage:
- *  To make a copy of labelLayoutInfo, simply:
- *      const layoutInfoCopy = rollbackToLabelLayoutInfoRaw(extends({}, someLabelLayoutInfo));
+ * This is a shortcut of
+ *   ```js
+ *   labelLayout.label.x = newX;
+ *   labelLayout.label.y = newY;
+ *   setLabelLayoutDirty(labelLayout, true);
+ *   ensureLabelLayoutWithGeometry(labelLayout);
+ *   ```
+ * and provide better performance in this common case.
  */
-export function ensureLabelLayoutInfoComputed(
-    labelLayoutInfo: LabelLayoutInfoAll
-): LabelLayoutInfoComputed | NullUndefined {
-    if (!labelLayoutInfo) {
+export function labelLayoutApplyTranslation(
+    labelLayout: LabelLayoutData,
+    offset: PointLike,
+): void {
+    if (!labelLayout) {
         return;
     }
-    if (labelLayoutInfo.kind !== LABEL_LAYOUT_INFO_KIND_COMPUTED) {
-        labelLayoutInfo = prepareLabelLayoutInfo(labelLayoutInfo);
+
+    labelLayout.label.x += offset.x;
+    labelLayout.label.y += offset.y;
+    labelLayout.label.markRedraw();
+
+    const transform = labelLayout.transform;
+    if (transform) {
+        transform[4] += offset.x;
+        transform[5] += offset.y;
     }
-    return labelLayoutInfo;
+
+    const globalRect = labelLayout.rect;
+    if (globalRect) {
+        globalRect.x += offset.x;
+        globalRect.y += offset.y;
+    }
+
+    const obb = labelLayout.obb;
+    if (obb) {
+        obb.fromBoundingRect(labelLayout.localRect, transform);
+    }
 }
 
-export function prepareIntersectionCheckInfo(
-    localRect: BoundingRect, transform: MatrixArray | NullUndefined
-): LabelIntersectionCheckInfo {
-    const globalRect = localRect.clone();
-    globalRect.applyTransform(transform);
-    return {
-        obb: null,
-        rect: globalRect,
-        localRect,
-        axisAligned: isBoundingRectAxisAligned(transform),
-        transform,
-    };
-}
-
-export function createSingleLayoutInfoComputed(el: ZRText): LabelLayoutInfoComputed | NullUndefined {
-    return ensureLabelLayoutInfoComputed({
-        kind: LABEL_LAYOUT_INFO_KIND_RAW,
-        label: el,
-        priority: el.z2,
-        defaultAttr: {ignore: el.ignore},
-    });
+/**
+ * To duplicate or make a variation of a label layout.
+ * Copy the only relevant properties to avoid the conflict or wrongly reuse of the props of `LabelLayoutWithGeometry`.
+ */
+export function newLabelLayoutWithGeometry(
+    newBaseWithDefaults: Partial<LabelLayoutData>,
+    source: LabelLayoutBase
+): LabelLayoutWithGeometry {
+    for (let i = 0; i < LABEL_LAYOUT_BASE_PROPS.length; i++) {
+        const prop = LABEL_LAYOUT_BASE_PROPS[i];
+        if (newBaseWithDefaults[prop] == null) {
+            (newBaseWithDefaults[prop] as any) = source[prop];
+        }
+    }
+    return ensureLabelLayoutWithGeometry(newBaseWithDefaults as LabelLayoutData);
 }
 
 /**
  * Create obb if no one, can cache it.
  */
-function ensureOBB(layoutInfo: LabelIntersectionCheckInfo): OrientedBoundingRect {
-    return layoutInfo.obb || (
-        layoutInfo.obb = new OrientedBoundingRect(layoutInfo.localRect, layoutInfo.transform)
-    );
+function ensureOBB(labelGeometry: LabelGeometry): OrientedBoundingRect {
+    let obb = labelGeometry.obb;
+    if (!obb || isLabelLayoutDirty(labelGeometry, LABEL_LAYOUT_DIRTY_BIT_OBB)) {
+        labelGeometry.obb = obb = obb || new OrientedBoundingRect();
+        obb.fromBoundingRect(labelGeometry.localRect, labelGeometry.transform);
+        setLabelLayoutDirty(labelGeometry, false, LABEL_LAYOUT_DIRTY_BIT_OBB);
+    }
+    return obb;
 }
 
 /**
- * The input localRect is never modified.
- * The returned localRect maybe the input localRect.
+ * Adjust labels on x/y direction to avoid overlap.
+ *
+ * PENDING: the current implementation is based on the global bounding rect rather than the local rect,
+ *  which may be not preferable in some edge cases when the label has rotation, but works for most cases,
+ *  since rotation is unnecessary when there is sufficient space, while squeezing is applied regardless
+ *  of overlapping when there is no enough space.
+ *
+ * NOTICE:
+ *  - The input `list` and its content will be modified (sort, label.x/y, rect).
+ *  - The caller should sync the modifications to the other parts by
+ *    `setLabelLayoutDirty` and `ensureLabelLayoutWithGeometry` if needed.
+ *
+ * @return adjusted
  */
-export function applyTextMarginToLocalRect(
-    label: ZRText,
-    localRect: BoundingRect,
-): BoundingRect {
-    if ((label.style as LabelExtendedTextStyle).__marginType !== LabelMarginType.textMargin) {
-        return localRect;
-    }
-    const textMargin = normalizeCssArray(retrieve2(label.style.margin, [0, 0]));
-    localRect = localRect.clone();
-    expandOrShrinkRect(localRect, textMargin, false, false);
-    return localRect;
-}
-
-function shiftLayout(
-    list: Pick<LabelLayoutInfoComputed, 'rect' | 'label'>[],
-    xyDim: 'x' | 'y',
-    sizeDim: 'width' | 'height',
-    minBound: number,
-    maxBound: number,
-    balanceShift: boolean
-) {
+export function shiftLayoutOnXY(
+    list: Pick<LabelLayoutWithGeometry, 'rect' | 'label'>[],
+    xyDimIdx: 0 | 1, // 0 for x, 1 for y
+    minBound: number, // for x, leftBound; for y, topBound
+    maxBound: number, // for x, rightBound; for y, bottomBound
+    // If average the shifts on all labels and add them to 0
+    // TODO: Not sure if should enable it.
+    // Pros: The angle of lines will distribute more equally
+    // Cons: In some layout. It may not what user wanted. like in pie. the label of last sector is usually changed unexpectedly.
+    balanceShift?: boolean
+): boolean {
     const len = list.length;
+    const xyDim = XY[xyDimIdx];
+    const sizeDim = WH[xyDimIdx];
 
     if (len < 2) {
-        return;
+        return false;
     }
 
     list.sort(function (a, b) {
@@ -267,7 +348,7 @@ function shiftLayout(
     let delta;
     let adjusted = false;
 
-    const shifts = [];
+    // const shifts = [];
     let totalShifts = 0;
     for (let i = 0; i < len; i++) {
         const item = list[i];
@@ -280,7 +361,7 @@ function shiftLayout(
             adjusted = true;
         }
         const shift = Math.max(-delta, 0);
-        shifts.push(shift);
+        // shifts.push(shift);
         totalShifts += shift;
 
         lastPos = rect[xyDim] + rect[sizeDim];
@@ -413,46 +494,33 @@ function shiftLayout(
 }
 
 /**
- * Adjust labels on x direction to avoid overlap.
+ * @see `SavedLabelAttr` in `LabelManager.ts`
+ * @see `hideOverlap`
  */
-export function shiftLayoutOnX(
-    list: Pick<LabelLayoutInfoComputed, 'rect' | 'label'>[],
-    leftBound: number,
-    rightBound: number,
-    // If average the shifts on all labels and add them to 0
-    // TODO: Not sure if should enable it.
-    // Pros: The angle of lines will distribute more equally
-    // Cons: In some layout. It may not what user wanted. like in pie. the label of last sector is usually changed unexpectedly.
-    balanceShift?: boolean
-): boolean {
-    return shiftLayout(list, 'x', 'width', leftBound, rightBound, balanceShift);
+export function restoreIgnore(labelList: LabelLayoutData[]): void {
+    for (let i = 0; i < labelList.length; i++) {
+        const labelItem = labelList[i];
+        const defaultAttr = labelItem.defaultAttr;
+        const labelLine = labelItem.labelLine;
+        labelItem.label.attr('ignore', defaultAttr.ignore);
+        labelLine && labelLine.attr('ignore', defaultAttr.labelGuideIgnore);
+    }
 }
 
 /**
- * Adjust labels on y direction to avoid overlap.
+ * [NOTICE - restore]:
+ *  'series:layoutlabels' may be triggered during some shortcut passes, such as zooming in series.graph/geo
+ *  (`updateLabelLayout`), where the modified `Element` props should be restorable from `defaultAttr`.
+ *  @see `SavedLabelAttr` in `LabelManager.ts`
+ *  `restoreIgnore` can be called to perform the restore, if needed.
+ *
+ * [NOTICE - state]:
+ *  Regarding Element's states, this method is only designed for the normal state.
+ *  PENDING: although currently this method is effectively called in other states in `updateLabelLayout` case,
+ *      the bad case is not noticeable in the zooming scenario.
  */
-export function shiftLayoutOnY(
-    list: Pick<LabelLayoutInfoComputed, 'rect' | 'label'>[],
-    topBound: number,
-    bottomBound: number,
-    // If average the shifts on all labels and add them to 0
-    balanceShift?: boolean
-): boolean {
-    return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
-}
-
-/**
- * [CAUTION]: the `label.ignore` in the input is not necessarily falsy.
- *  this method checks intersection regardless of current `ignore`,
- *  if no intersection, restore the `ignore` to `defaultAttr.ignore`.
- *  And `labelList` will be modified.
- *  Therefore, if some other overlap resolving strategy has ignored some elements,
- *  do not input them to this method.
- * PENDING: review the diff between the requirements from LabelManager and AxisBuilder,
- *  and uniform the behavior?
- */
-export function hideOverlap(labelList: LabelLayoutInfoAll[]): void {
-    const displayedLabels: LabelLayoutInfoComputed[] = [];
+export function hideOverlap(labelList: LabelLayoutData[]): void {
+    const displayedLabels: LabelLayoutWithGeometry[] = [];
 
     // TODO, render overflow visible first, put in the displayedLabels.
     labelList.sort(function (a, b) {
@@ -473,9 +541,11 @@ export function hideOverlap(labelList: LabelLayoutInfoAll[]): void {
     }
 
     for (let i = 0; i < labelList.length; i++) {
-        const labelItem = ensureLabelLayoutInfoComputed(labelList[i]);
+        const labelItem = ensureLabelLayoutWithGeometry(labelList[i]);
 
-        if (!labelItem || labelItem.label.ignore) {
+        // The current `el.ignore` is involved, since some previous overlap
+        // resolving strategies may have set `el.ignore` to true.
+        if (labelItem.label.ignore) {
             continue;
         }
 
@@ -501,29 +571,30 @@ export function hideOverlap(labelList: LabelLayoutInfoAll[]): void {
             labelLine && hideEl(labelLine);
         }
         else {
-            label.attr('ignore', labelItem.defaultAttr.ignore);
-            labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
-
             displayedLabels.push(labelItem);
         }
     }
 }
 
 /**
- * [NOTICE]:
- *  - `label.ignore` is not considered - no requirement so far.
- *  - `baseLayoutInfo` and `targetLayoutInfo` may be modified - obb may be created and saved.
- *
  * Enable fast check for performance; use obb if inevitable.
  * If `mtv` is used, `targetLayoutInfo` can be moved based on the values filled into `mtv`.
+ *
+ * This method is based only on the current `Element` states (regardless of other states).
+ * Typically this method (and the entire layout process) is performed in normal state.
  */
 export function labelIntersect(
-    baseLayoutInfo: LabelIntersectionCheckInfo | NullUndefined,
-    targetLayoutInfo: LabelIntersectionCheckInfo | NullUndefined,
+    baseLayoutInfo: LabelGeometry | NullUndefined,
+    targetLayoutInfo: LabelGeometry | NullUndefined,
     mtv?: PointLike,
     intersectOpt?: BoundingRectIntersectOpt
 ): boolean {
     if (!baseLayoutInfo || !targetLayoutInfo) {
+        return false;
+    }
+    if ((baseLayoutInfo.label && baseLayoutInfo.label.ignore)
+        || (targetLayoutInfo.label && targetLayoutInfo.label.ignore)
+    ) {
         return false;
     }
     // Fast rejection.

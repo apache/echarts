@@ -754,7 +754,7 @@ function layOutGridByOuterBounds(
 
     // [NOTE]:
     // - The bounding rect of the axis elements might be sensitve to variations in `axis.extent` due to strategies
-    //  like hideOverlap/moveOverlap. @see the comment in `LabelLayoutInfoBase['suggestIgnore']`.
+    //  like hideOverlap/moveOverlap. @see the comment in `LabelLayoutBase['suggestIgnore']`.
     // - The final `gridRect` might be slightly smaller than the ideally expected result if labels are giant and
     //  get hidden due to overlapping. More iterations could improve precision, but not performant. We consider
     //  the current result acceptable, since no alignment among charts can be guaranteed when using this feature.

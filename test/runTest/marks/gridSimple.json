@@ -1,0 +1,10 @@
+[
+  {
+    "link": "",
+    "comment": "The pie label diff results from the fix of the margin. Systematically remove \"auto stroke\" make the text boundingRect smaller (2px) and bring more compact layout without triggering \"hideOverlap\" while no overlap  visually.",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1752513723877
+  }
+]

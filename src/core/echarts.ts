@@ -1826,18 +1826,17 @@ class ECharts extends Eventful<ECEventDefinition> {
                 clearColorPalette(ecModel);
                 scheduler.performVisualTasks(ecModel, payload);
 
-                render(this, ecModel, api, payload, updateParams);
-
-                // Set background
+                // Set background and dark mode before rendering, because they affect auto-color-determination
+                // in zrender Text, and consequently affect the bounding rect if stroke is added.
                 const backgroundColor = ecModel.get('backgroundColor') || 'transparent';
-                const darkMode = ecModel.get('darkMode');
-
                 zr.setBackgroundColor(backgroundColor);
-
                 // Force set dark mode.
+                const darkMode = ecModel.get('darkMode');
                 if (darkMode != null && darkMode !== 'auto') {
                     zr.setDarkMode(darkMode);
                 }
+
+                render(this, ecModel, api, payload, updateParams);
 
                 lifecycle.trigger('afterupdate', ecModel, api);
             },

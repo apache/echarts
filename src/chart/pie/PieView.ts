@@ -25,7 +25,7 @@ import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { Payload, ColorString, CircleLayoutOptionMixin, SeriesOption } from '../../util/types';
+import { Payload, ColorString } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import PieSeriesModel, {PieDataItemOption} from './PieSeries';
 import labelLayout from './labelLayout';
@@ -197,7 +197,7 @@ class PiePiece extends graphic.Sector {
         sector.setTextConfig({
             // reset position, rotation
             position: null,
-            rotation: null
+            rotation: null,
         });
 
         // Make sure update style on labelText after setLabelStyle.

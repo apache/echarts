@@ -1697,23 +1697,32 @@
 
             return;
 
-            function travelGroupAndBuildRects(group, visualRectGroupParent) {
-                var visualRectGroup = createVisualRectGroup(group, visualRectGroupParent)
-                group.eachChild(function (child) {
-                    if (child.isGroup) {
+            function travelGroupAndBuildRects(el, visualRectGroupParent) {
+                if (el.childrenRef) { // group or text
+                    var visualRectGroup = createVisualRectGroup(el, visualRectGroupParent)
+                    var children = el.childrenRef();
+                    for (var idx = 0; idx < children.length; idx++) {
+                        var child = children[idx];
                         travelGroupAndBuildRects(child, visualRectGroup);
-                        return;
                     }
+                }
+                // Both display ZRText and TSpan bounding rect for debuging.
+                if (!el.isGroup) {
+                    createVisualRectForEl(el, visualRectGroupParent);
+                }
 
-                    createRectForDisplayable(child, visualRectGroup);
-
-                    var textContent = child.getTextContent();
-                    var textGuildLine = child.getTextGuideLine();
+                function createVisualRectForEl(el, visualRectGroup) {
+                    createRectForDisplayable(el, visualRectGroup);
+                    var textContent = el.getTextContent();
+                    var textGuildLine = el.getTextGuideLine();
+                    var textConfig = el.textConfig;
                     if (textContent || textGuildLine) {
-                        textContent && createRectForDisplayable(textContent, _bRectGroup, true);
-                        textGuildLine && createRectForDisplayable(textGuildLine, _bRectGroup, true);
+                        var isLocal = textConfig && textConfig.local;
+                        var targetVisualGroup = isLocal ? visualRectGroup : _bRectGroup;
+                        textContent && createRectForDisplayable(textContent, targetVisualGroup, true);
+                        textGuildLine && createRectForDisplayable(textGuildLine, targetVisualGroup, true);
                     }
-                });
+                }
 
                 function createVisualRectGroup(fromEl, visualRectGroupParent) {
                     var visualRectGroup = new echarts.graphic.Group();

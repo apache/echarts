@@ -1,0 +1,10 @@
+[
+  {
+    "link": "",
+    "comment": "The pie label diff results from the fix of the margin. Indiscernible to naked eye. Previously add extra 2.1px margin event users already set minMargin 5. This PR use the 2.1px as the default margin (if users are not specify the margin).",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1752568235798
+  }
+]

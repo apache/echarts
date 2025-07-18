@@ -35,11 +35,12 @@ import {
     LabelCommonOption,
     TextCommonOptionNuanceBase,
     TextCommonOptionNuanceDefault,
-    LabelMarginType,
-    LabelExtendedTextStyle
+    NullUndefined,
 } from '../util/types';
 import GlobalModel from '../model/Global';
-import { isFunction, retrieve2, extend, keys, trim, clone, retrieve3 } from 'zrender/src/core/util';
+import {
+    isFunction, retrieve2, extend, keys, trim, retrieve3, isNumber, normalizeCssArray
+} from 'zrender/src/core/util';
 import { SPECIAL_STATES, DISPLAY_STATES } from '../util/states';
 import { deprecateReplaceLog } from '../util/log';
 import { makeInner, interpolateRawValues } from '../util/model';
@@ -450,28 +451,34 @@ function setTextStyleCommon<
     if (richResult) {
         textStyle.rich = richResult;
     }
+
     const overflow = textStyleModel.get('overflow');
     if (overflow) {
         textStyle.overflow = overflow;
-    }
-    const minMargin = textStyleModel.get('minMargin');
-    if (minMargin != null) {
-        textStyle.margin = minMargin;
-        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.minMargin;
-    }
-    const textMargin = textStyleModel.get('textMargin');
-    if (textMargin != null) {
-        textStyle.margin = clone(textMargin);
-        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.textMargin;
-    }
-    else if (opt.defaultTextMargin != null) {
-        textStyle.margin = clone(opt.defaultTextMargin);
-        (textStyle as LabelExtendedTextStyle).__marginType = LabelMarginType.textMargin;
     }
     const lineOverflow = textStyleModel.get('lineOverflow');
     if (lineOverflow) {
         textStyle.lineOverflow = lineOverflow;
     }
+
+    const labelTextStyle = textStyle as LabelExtendedTextStyle;
+    // `minMargin` has a higher precedence than `textMargin`, because `textMargin` is allowed
+    // to be set in `defaultOption`.
+    let minMargin = textStyleModel.get('minMargin');
+    if (minMargin != null) {
+        // `minMargin` only support number value.
+        minMargin = !isNumber(minMargin) ? 0 : minMargin / 2;
+        labelTextStyle.margin = [minMargin, minMargin, minMargin, minMargin];
+        labelTextStyle.__marginType = LabelMarginType.minMargin;
+    }
+    else {
+        const textMargin = textStyleModel.get('textMargin');
+        if (textMargin != null) {
+            labelTextStyle.margin = normalizeCssArray(textMargin);
+            labelTextStyle.__marginType = LabelMarginType.textMargin;
+        }
+    }
+
     setTokenTextStyle<TNuance>(
         textStyle, textStyleModel, globalTextStyle, null, null, opt, isNotNormal, isAttached, true, false
     );
@@ -802,4 +809,22 @@ export function animateLabelValue(
         // percent is used to prevent animation from being aborted #15916
         percent: 1
     }, animatableModel, dataIndex, null, during);
+}
+
+/**
+ * PENDING: Temporary impl. unify them?
+ * @see {LabelCommonOption['textMargin']}
+ * @see {LabelCommonOption['minMargin']}
+ */
+export const LabelMarginType = {
+    minMargin: 1,
+    textMargin: 2,
+} as const;
+export type LabelMarginType = (typeof LabelMarginType)[keyof typeof LabelMarginType];
+
+export interface LabelExtendedTextStyle extends TextStyleProps {
+    // `margin` must exist if `__marginType` exists
+    //  and length 4, as the return of `normalizeCssArray`.
+    margin: number[] | NullUndefined
+    __marginType?: LabelMarginType | NullUndefined
 }

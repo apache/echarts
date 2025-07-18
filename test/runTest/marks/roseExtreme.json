@@ -1,0 +1,10 @@
+[
+  {
+    "link": "",
+    "comment": "Fix that previously in pie/labelLayout.ts, call label.getBoundingRect before label.getComputedTransform(), causing that label is not updated by the host el. \nAnd the diff is indiscernible to the naked eye.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1752157557889
+  }
+]
