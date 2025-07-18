@@ -26,6 +26,7 @@ import { makeInner } from '../../util/model';
 import SeriesModel from '../../model/Series';
 import Group from 'zrender/src/graphic/Group';
 import { enterBlur, leaveBlur } from '../../util/states';
+import { traverseUpdateZ, retrieveZInfo } from '../../util/graphic';
 
 const inner = makeInner<{
     keep: boolean
@@ -65,6 +66,8 @@ abstract class MarkerView extends ComponentView {
         markerGroupMap.each(item => {
             !inner(item).keep && this.group.remove(item.group);
         });
+
+        this.updateZ(ecModel, markerGroupMap);
     }
 
     markKeep(drawGroup: MarkerDraw) {
@@ -85,6 +88,21 @@ abstract class MarkerView extends ComponentView {
                     }
                 });
             }
+        });
+    }
+    updateZ(ecModel: GlobalModel, markerGroupMap: HashMap<MarkerDraw>): void {
+        ecModel.eachSeries(seriesModel => {
+
+            const markerModel = MarkerModel.getMarkerModelFromSeries(
+                seriesModel,
+                this.type as 'markPoint' | 'markLine' | 'markArea'
+            );
+
+            if (markerModel) {
+                const { z, zlevel } = retrieveZInfo(markerModel);
+                traverseUpdateZ(markerGroupMap.get(seriesModel.id)?.group, z, zlevel);
+            }
+
         });
     }
 
