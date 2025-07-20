@@ -64,12 +64,9 @@ class LogScale extends IntervalScale {
 
         return zrUtil.map(ticks, function (tick) {
             const val = tick.value;
-            const rawVal = mathPow(base, val);
             let roundingCriterion = null;
 
-            // Fix #21099
-            const precision = numberUtil.getPrecisionSafe(rawVal) || 0;
-            let powVal = parseFloat(fixRound(rawVal, precision as number, true));
+            let powVal = mathPow(base, val);
 
             // Fix #4158
             if (val === extent[0] && this._fixMin) {
