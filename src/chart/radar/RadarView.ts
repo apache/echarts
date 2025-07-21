@@ -184,7 +184,7 @@ class RadarView extends ChartView {
             const symbolGroup = itemGroup.childAt(2) as graphic.Group;
             // Radar uses the visual encoded from itemStyle.
             const itemStyle = data.getItemVisual(idx, 'style');
-            const color = itemStyle.fill as ColorString;
+            const color = itemStyle.fill;
 
             group.add(itemGroup);
 
@@ -211,6 +211,14 @@ class RadarView extends ChartView {
                 const stateIgnore = stateModel.isEmpty() && stateModel.parentModel.isEmpty();
                 // Won't be ignore if normal state is not ignore.
                 polygon.ensureState(stateName).ignore = stateIgnore && polygonIgnore;
+                const lineStyle = itemModel.getModel([stateName, 'lineStyle']).getLineStyle();
+                polyline.ensureState(stateName).style = lineStyle;
+                const areaStyle = stateModel.getAreaStyle();
+                polygon.ensureState(stateName).style = areaStyle;
+                const itemStateStyle = itemModel.getModel([stateName, 'itemStyle']).getItemStyle();
+                symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
+                    symbolPath.ensureState(stateName).style = zrUtil.clone(itemStateStyle);
+                });
             });
 
             polygon.useStyle(
@@ -218,76 +226,50 @@ class RadarView extends ChartView {
                     itemModel.getModel('areaStyle').getAreaStyle(),
                     {
                         fill: color,
+                        opacity: 0.7,
                         decal: itemStyle.decal
                     }
                 )
             );
-            symbolGroup.eachChild(function(symbolPath: RadarSymbol)  {
+            const emphasisModel = itemModel.getModel('emphasis');
+            const itemHoverStyle = emphasisModel.getModel('itemStyle').getItemStyle();
+            symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
                 if (symbolPath instanceof ZRImage) {
-                    const ps = symbolPath.style
-                    symbolPath.useStyle(
-                    zrUtil.extend(
-                      {
-                        image: ps.image,
-                        x: ps.x,
-                        y: ps.y,
-                        width: ps.width,
-                        height: ps.height,
-                      },
-                      itemStyle,
-                    ),
-                  )
-                } else {
-                  symbolPath.useStyle(itemStyle)
-                  symbolPath.setColor(color)
-                  symbolPath.style.strokeNoScale = true
+                    const pathStyle = symbolPath.style;
+                    symbolPath.useStyle(zrUtil.extend({
+                        // TODO other properties like x, y ?
+                        image: pathStyle.image,
+                        x: pathStyle.x, y: pathStyle.y,
+                        width: pathStyle.width, height: pathStyle.height
+                    }, itemStyle));
                 }
-                const emphasisModel = itemModel.getModel('emphasis')
-                const hoverStyle = emphasisModel.getModel('itemStyle').getItemStyle()
-                symbolPath.ensureState('emphasis').style = zrUtil.clone(hoverStyle)
-                let txt = data.getStore().get(data.getDimensionIndex(symbolPath.__dimIdx), idx)
-                if (txt == null || isNaN(txt as number)) {
-                  txt = ''
+                else {
+                    symbolPath.useStyle(itemStyle);
+                    symbolPath.setColor(color);
+                    symbolPath.style.strokeNoScale = true;
                 }
+
+                const pathEmphasisState = symbolPath.ensureState('emphasis');
+                pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
+                let defaultText = data.getStore().get(data.getDimensionIndex(symbolPath.__dimIdx), idx);
+                (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
+
                 setLabelStyle(
                     symbolPath, getLabelStatesModels(itemModel),
                     {
                         labelFetcher: data.hostModel,
                         labelDataIndex: idx,
                         labelDimIndex: symbolPath.__dimIdx,
-                        defaultText: txt as string,
-                        inheritColor: color,
-                        defaultOpacity: itemStyle.opacity,
+                        defaultText: defaultText as string,
+                        inheritColor: color as ColorString,
+                        defaultOpacity: itemStyle.opacity
                     }
-                )
-            })
+                );
+            });
 
-            function bindStateStyles(state: 'emphasis' | 'select' | 'blur') {
-                const ls = itemModel.getModel([state, 'lineStyle']).getLineStyle()
-        
-                const as_ = itemModel.getModel([state, 'areaStyle']).getAreaStyle()
-        
-                const is_ = itemModel.getModel([state, 'itemStyle']).getItemStyle()
-        
-                polyline.ensureState(state).style = ls
-                polygon.ensureState(state).style = as_
-                symbolGroup.eachChild(function(symbolPath: RadarSymbol)  {
-                  symbolPath.ensureState(state).style = zrUtil.clone(is_)
-                })
-            }
-
-            bindStateStyles('emphasis')
-            bindStateStyles('select')
-            bindStateStyles('blur')
-
-            const emphasisModel = itemModel.getModel('emphasis')
-            
             toggleHoverEmphasis(
-                itemGroup,
-                emphasisModel.get('focus'),
-                emphasisModel.get('blurScope'),
-                emphasisModel.get('disabled'),
-            )
+                itemGroup, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled')
+            );
         });
 
         this._data = data;
