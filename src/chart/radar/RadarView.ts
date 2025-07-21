@@ -216,18 +216,16 @@ class RadarView extends ChartView {
             polygon.useStyle(
                 zrUtil.defaults(
                     itemModel.getModel('areaStyle').getAreaStyle(),
-                     { 
-                        fill: color, 
-                        decal: itemStyle.decal 
+                    {
+                        fill: color,
+                        decal: itemStyle.decal
                     }
                 )
             );
-            
-            symbolGroup.eachChild((symbolPath: RadarSymbol) => {
+            symbolGroup.eachChild(function(symbolPath: RadarSymbol)  {
                 if (symbolPath instanceof ZRImage) {
-                  const ps = symbolPath.style
-        
-                  symbolPath.useStyle(
+                    const ps = symbolPath.style
+                    symbolPath.useStyle(
                     zrUtil.extend(
                       {
                         image: ps.image,
@@ -244,30 +242,27 @@ class RadarView extends ChartView {
                   symbolPath.setColor(color)
                   symbolPath.style.strokeNoScale = true
                 }
-        
                 const emphasisModel = itemModel.getModel('emphasis')
-        
                 const hoverStyle = emphasisModel.getModel('itemStyle').getItemStyle()
-        
                 symbolPath.ensureState('emphasis').style = zrUtil.clone(hoverStyle)
-        
                 let txt = data.getStore().get(data.getDimensionIndex(symbolPath.__dimIdx), idx)
-        
                 if (txt == null || isNaN(txt as number)) {
                   txt = ''
                 }
-        
-                setLabelStyle(symbolPath, getLabelStatesModels(itemModel), {
-                  labelFetcher: data.hostModel,
-                  labelDataIndex: idx,
-                  labelDimIndex: symbolPath.__dimIdx,
-                  defaultText: txt as string,
-                  inheritColor: color,
-                  defaultOpacity: itemStyle.opacity,
-                })
+                setLabelStyle(
+                    symbolPath, getLabelStatesModels(itemModel),
+                    {
+                        labelFetcher: data.hostModel,
+                        labelDataIndex: idx,
+                        labelDimIndex: symbolPath.__dimIdx,
+                        defaultText: txt as string,
+                        inheritColor: color,
+                        defaultOpacity: itemStyle.opacity,
+                    }
+                )
             })
-        
-              function applyStateOpacity(state: 'emphasis' | 'select' | 'blur') {
+
+            function bindStateStyles(state: 'emphasis' | 'select' | 'blur') {
                 const ls = itemModel.getModel([state, 'lineStyle']).getLineStyle()
         
                 const as_ = itemModel.getModel([state, 'areaStyle']).getAreaStyle()
@@ -276,18 +271,18 @@ class RadarView extends ChartView {
         
                 polyline.ensureState(state).style = ls
                 polygon.ensureState(state).style = as_
-                symbolGroup.eachChild((symbolPath: RadarSymbol) => {
+                symbolGroup.eachChild(function(symbolPath: RadarSymbol)  {
                   symbolPath.ensureState(state).style = zrUtil.clone(is_)
                 })
             }
-        
-              applyStateOpacity('emphasis')
-              applyStateOpacity('select')
-              applyStateOpacity('blur')
-        
-              const emphasisModel = itemModel.getModel('emphasis')
-        
-              toggleHoverEmphasis(
+
+            bindStateStyles('emphasis')
+            bindStateStyles('select')
+            bindStateStyles('blur')
+
+            const emphasisModel = itemModel.getModel('emphasis')
+            
+            toggleHoverEmphasis(
                 itemGroup,
                 emphasisModel.get('focus'),
                 emphasisModel.get('blurScope'),
