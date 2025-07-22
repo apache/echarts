@@ -95,6 +95,26 @@ under the License.
                                 name: '第一个元素是 null'
                             }
                         ],
+                        emphasis: { 
+                            focus: 'self',
+                            lineStyle: {
+                                width: 4,
+                            },
+                            itemStyle: {
+                                borderColor: null,
+                                borderWidth: 2,
+                                opacity: 0.4,
+                            },
+                        },
+                        blur: {
+                            lineStyle: {
+                                opacity: 0.3,
+                            },
+                            itemStyle: {
+                                opacity: 0.2,
+                                shadowBlur: 5,
+                            },
+                        },
                         symbol: 'triangle',
                         symbolSize: 20,
                         symbolRotate: function(value, params) {
