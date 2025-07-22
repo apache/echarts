@@ -108,6 +108,8 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
      */
     createdBySelf = false;
 
+    preventAutoZ = true;
+
     static readonly dependencies = ['series', 'grid', 'polar', 'geo'];
 
     __hostSeries: SeriesModel;
