@@ -157,8 +157,9 @@ export function round(x: number | string, precision: number, returnStr: false): 
 export function round(x: number | string, precision: number, returnStr: true): string;
 export function round(x: number | string, precision?: number, returnStr?: boolean): string | number {
     if (precision == null) {
-        const expStr = (x + '').split('e')[1];
-        precision = expStr ? -expStr + 1 : 10;
+        // FIXME: the default precision should not be provided, since there is no universally adaptable
+        //  precision. The caller need to input a precision according to the scenarios.
+        precision = 10;
     }
     // Avoid range error
     precision = Math.min(Math.max(0, precision), ROUND_SUPPORTED_PRECISION_MAX);

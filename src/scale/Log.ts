@@ -27,7 +27,7 @@ import {
     DimensionLoose, DimensionName, ParsedAxisBreakList, AxisBreakOption,
     ScaleTick
 } from '../util/types';
-import { logTransform } from './helper';
+import { getIntervalPrecision, logTransform } from './helper';
 import SeriesData from '../data/SeriesData';
 import { getScaleBreakHelper } from './break';
 
@@ -165,6 +165,7 @@ class LogScale extends IntervalScale {
         ] as [number, number];
 
         this._interval = interval;
+        this._intervalPrecision = getIntervalPrecision(interval);
         this._niceExtent = niceExtent;
     }
 
