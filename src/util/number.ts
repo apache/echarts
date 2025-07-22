@@ -157,6 +157,8 @@ export function round(x: number | string, precision: number, returnStr: false): 
 export function round(x: number | string, precision: number, returnStr: true): string;
 export function round(x: number | string, precision?: number, returnStr?: boolean): string | number {
     if (precision == null) {
+        // FIXME: the default precision should not be provided, since there is no universally adaptable
+        //  precision. The caller need to input a precision according to the scenarios.
         precision = 10;
     }
     // Avoid range error

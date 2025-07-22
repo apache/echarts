@@ -297,6 +297,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
 
         // Interval that can be used to calculate ticks
         this._interval = scaleIntervals[idx][1];
+        this._intervalPrecision = scaleHelper.getIntervalPrecision(this._interval);
         // Min level used when picking ticks from top down.
         // We check one more level to avoid the ticks are to sparse in some case.
         this._minLevelUnit = scaleIntervals[Math.max(idx - 1, 0)][0];
