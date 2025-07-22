@@ -52,15 +52,15 @@ import { retrieve2, each, keys, isFunction, filter, indexOf } from 'zrender/src/
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import Model from '../model/Model';
 import {
-    hideOverlap, shiftLayoutOnX, shiftLayoutOnY,
-    createLabelLayoutList,
-    LabelLayoutInfoRaw,
-    LABEL_LAYOUT_INFO_KIND_RAW,
+    hideOverlap, shiftLayoutOnXY,
+    restoreIgnore,
+    LabelLayoutWithGeometry,
+    newLabelLayoutWithGeometry,
 } from './labelLayoutHelper';
 import { labelInner, animateLabelValue } from './labelStyle';
 import { normalizeRadian } from 'zrender/src/contain/util';
 
-interface LabelDesc extends LabelLayoutInfoRaw {
+interface LabelDesc {
     label: ZRText
     labelLine: Polyline
 
@@ -82,6 +82,15 @@ interface LabelDesc extends LabelLayoutInfoRaw {
     defaultAttr: SavedLabelAttr
 }
 
+/**
+ * Save the original value determined in a pass of echarts main process. That refers to the values
+ * rendered by `SeriesView`, before `series:layoutlabels` is triggered in `renderSeries`.
+ *
+ * 'series:layoutlabels' may be triggered during some shortcut passes, such as zooming in series.graph/geo
+ * (`updateLabelLayout`), where the modified `Element` props should be restorable by the original value here.
+ *
+ * Regarding `Element` state, simply consider the values here as the normal state values.
+ */
 interface SavedLabelAttr {
     ignore: boolean
     labelGuideIgnore: boolean
@@ -239,7 +248,6 @@ class LabelManager {
         const labelGuide = hostRect && host.getTextGuideLine();
 
         this._labelList.push({
-            kind: LABEL_LAYOUT_INFO_KIND_RAW,
             label,
             labelLine: labelGuide,
 
@@ -435,7 +443,13 @@ class LabelManager {
         const width = api.getWidth();
         const height = api.getHeight();
 
-        const labelList = createLabelLayoutList(this._labelList);
+        const labelList: LabelLayoutWithGeometry[] = [];
+        each(this._labelList, inputItem => {
+            if (!inputItem.defaultAttr.ignore) {
+                labelList.push(newLabelLayoutWithGeometry({}, inputItem));
+            }
+        });
+
         const labelsNeedsAdjustOnX = filter(labelList, function (item) {
             return item.layoutOption.moveOverlap === 'shiftX';
         });
@@ -443,13 +457,14 @@ class LabelManager {
             return item.layoutOption.moveOverlap === 'shiftY';
         });
 
-        shiftLayoutOnX(labelsNeedsAdjustOnX, 0, width);
-        shiftLayoutOnY(labelsNeedsAdjustOnY, 0, height);
+        shiftLayoutOnXY(labelsNeedsAdjustOnX, 0, 0, width);
+        shiftLayoutOnXY(labelsNeedsAdjustOnY, 1, 0, height);
 
         const labelsNeedsHideOverlap = filter(labelList, function (item) {
             return item.layoutOption.hideOverlap;
         });
 
+        restoreIgnore(labelsNeedsHideOverlap);
         hideOverlap(labelsNeedsHideOverlap);
     }
 

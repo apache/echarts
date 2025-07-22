@@ -58,7 +58,10 @@ const matrixAxis = {
         color: color.secondary
     },
     itemStyle: {
-        borderColor: color.neutral20
+        borderColor: color.borderTint
+    },
+    dividerLineStyle: {
+        color: color.border
     }
 };
 
@@ -150,9 +153,6 @@ const theme = {
         textStyle: {
             color: color.secondary
         },
-        inRange: {
-            color: [color.neutral10, color.theme[0]]
-        },
         handleStyle: {
             borderColor: color.neutral30
         }
@@ -188,10 +188,12 @@ const theme = {
         x: matrixAxis,
         y: matrixAxis,
         backgroundColor: {
-            borderColor: '#817f91'
+            borderColor: color.axisLine
         },
-        innerBackgroundStyle: {
-            borderColor: '#484753'
+        body: {
+            itemStyle: {
+                borderColor: color.borderTint
+            }
         }
     },
     timeAxis: axisCommon(),

@@ -462,7 +462,7 @@ export type ScaleDataValue = ParsedValueNumeric | OrdinalRawValue | Date;
 
 /**
  * - `ScaleDataValue`:
- *   e.g. geo accept that primative input, like `convertToPixel('some_place')`;
+ *   e.g. geo accept that primitive input, like `convertToPixel('some_place')`;
  *   Some coord sys, such as 'cartesian2d', also supports that for only query only a single axis.
  * - `ScaleDataValue[]`:
  *   This is the most common case, each array item represent each data in
@@ -485,7 +485,7 @@ export type AxisBreakOption = {
     //     - Like '35%'. A percent over the axis extent. Useful for keeping the pixel size of break areas
     //       consistent despite variations in `series.data`, which cannot be achieved by `number`.
     //     - Also support numeric string like `'123'`, means `123`, following convention.
-    // - If ommitted, means 0.
+    // - If omitted, means 0.
     gap?: number | string,
     // undefined means false
     isExpanded?: boolean
@@ -963,7 +963,7 @@ export interface BoxLayoutOptionMixin {
 }
 /**
  * Need to be parsed by `parsePositionOption` or `parsePositionSizeOption`.
- * Accept number, or numeric stirng (`'123'`), or percentage ('100%'), as x/y/width/height pixel number.
+ * Accept number, or numeric string (`'123'`), or percentage ('100%'), as x/y/width/height pixel number.
  * If null/undefined or invalid, return NaN.
  */
 export type PositionSizeOption = number | string;
@@ -1202,9 +1202,9 @@ export type VisualOptionLinear = Arrayable<VisualOptionUnit>;
 
 /**
  * Option about visual properties can be encoded from ordinal categories.
- * Each value can either be a dictonary to lookup with category name, or
+ * Each value can either be a dictionary to lookup with category name, or
  * be an array to lookup with category index. In this case the array length should
- * be same with categories
+ * be same with categories.
  */
 export type VisualOptionCategory = Arrayable<VisualOptionUnit> | Dictionaryable<VisualOptionUnit>;
 
@@ -1315,6 +1315,9 @@ export interface LabelCommonOption<
      * PENDING: @see {LabelMarginType}
      * It's `minMargin` instead of `margin` is for not breaking the previous code using `margin`.
      * See the summary in `textMargin`.
+     *
+     * [CAUTION]: do not set `minMargin` in `defaultOption`, otherwise users have to explicitly
+     *  clear the `minMargin` to use `textMargin`.
      */
     minMargin?: number
     /**
@@ -1340,19 +1343,6 @@ export interface LabelCommonOption<
     lineOverflow?: TextStyleProps['lineOverflow']
     ellipsis?: TextStyleProps['ellipsis']
     rich?: RichTextOption
-}
-
-/**
- * PENDING: Temporary impl. unify them?
- * @see {LabelCommonOption['textMargin']}
- * @see {LabelCommonOption['minMargin']}
- */
-export const LabelMarginType = {
-    minMargin: 0,
-    textMargin: 1,
-} as const;
-export interface LabelExtendedTextStyle extends TextStyleProps {
-    __marginType?: (typeof LabelMarginType)[keyof typeof LabelMarginType]
 }
 
 export interface SeriesLabelOption<

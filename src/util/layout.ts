@@ -267,7 +267,7 @@ export function getLayoutRect(
         //
         // aspect is width / height. But this method does not preserve aspect ratio if
         // both width and height can be decided by the given left/top/bottom/right/width/height.
-        // To always preserve aspect ratio, uses `applyPreserveAspect` to prcess the result.
+        // To always preserve aspect ratio, uses `applyPreserveAspect` to process the result.
         aspect?: number
     },
     containerRect: GetLayoutRectInputContainerRect,
@@ -275,7 +275,7 @@ export function getLayoutRect(
     // Commonly used in option `legend.padding`, `timeline.padding`, `title.padding`,
     //  `visualMap.padding`, ...
     // [NOTICE]:
-    //  It's named `margin`, becuase it's the space that outside the bounding rect. But from
+    //  It's named `margin`, because it's the space that outside the bounding rect. But from
     //  the perspective of the the caller, it's commonly used as the `padding` of a component,
     //  because conventionally background color covers this space.
     // [BEHAVIOR]:
@@ -448,7 +448,7 @@ export type BoxLayoutReferenceResult<TEnableByCenter extends boolean = false> = 
     ? (BoxLayoutReferenceRectResult | BoxLayoutReferencePointResult)
     : BoxLayoutReferenceRectResult;
 type BoxLayoutReferenceRectResult = {
-    // This is the defualt way.
+    // This is the default way.
     type: typeof BoxLayoutReferenceType.rect;
     refContainer: LayoutRect;
     refPoint: number[]; // The center of rect in this case.

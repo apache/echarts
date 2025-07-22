@@ -38,8 +38,9 @@ import {
     BaseAxisBreakPayload
 } from './axisAction';
 import {
-    LabelLayoutInfoComputed,
-    labelIntersect
+    LabelLayoutWithGeometry,
+    labelIntersect,
+    labelLayoutApplyTranslation
 } from '../../label/labelLayoutHelper';
 import type SingleAxisView from './SingleAxisView';
 import type { AxisBuilderCfg } from './AxisBuilder';
@@ -424,7 +425,7 @@ function buildAxisBreakLine(
 function adjustBreakLabelPair(
     axisInverse: boolean,
     axisRotation: AxisBuilderCfg['rotation'],
-    layoutPair: (LabelLayoutInfoComputed | NullUndefined)[], // Means [brk_min_label, brk_max_label]
+    layoutPair: (LabelLayoutWithGeometry | NullUndefined)[], // Means [brk_min_label, brk_max_label]
 ): void {
 
     if (find(layoutPair, item => !item)) {
@@ -458,7 +459,7 @@ function adjustBreakLabelPair(
     );
 
     function isParallelToAxis(whIdx: number): boolean {
-        // Assert label[0] and lable[1] has the same rotation, so only use [0].
+        // Assert label[0] and label[1] has the same rotation, so only use [0].
         const localRect = layoutPair[0].localRect;
         const labelVec0 = new Point(
             localRect[WH[whIdx]] * labelPairStTrans[0][0],
@@ -512,8 +513,12 @@ function adjustBreakLabelPair(
         k = (qval - uval) / mtvSt.x;
     }
 
-    Point.scaleAndAdd(layoutPair[0].label, layoutPair[0].label, mtv, -k);
-    Point.scaleAndAdd(layoutPair[1].label, layoutPair[1].label, mtv, 1 - k);
+    const delta0 = new Point();
+    const delta1 = new Point();
+    Point.scale(delta0, mtv, -k);
+    Point.scale(delta1, mtv, 1 - k);
+    labelLayoutApplyTranslation(layoutPair[0], delta0);
+    labelLayoutApplyTranslation(layoutPair[1], delta1);
 }
 
 function updateModelAxisBreak(

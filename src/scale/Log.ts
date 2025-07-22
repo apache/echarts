@@ -64,8 +64,9 @@ class LogScale extends IntervalScale {
 
         return zrUtil.map(ticks, function (tick) {
             const val = tick.value;
-            let powVal = fixRound(mathPow(base, val));
             let roundingCriterion = null;
+
+            let powVal = mathPow(base, val);
 
             // Fix #4158
             if (val === extent[0] && this._fixMin) {
@@ -202,7 +203,7 @@ class LogScale extends IntervalScale {
         if (!scaleBreakHelper) {
             return;
         }
-        const {parsedOriginal, parsedLogged} = scaleBreakHelper.logarithmicParseBreaksFromOption(
+        const { parsedOriginal, parsedLogged } = scaleBreakHelper.logarithmicParseBreaksFromOption(
             breakOptionList,
             this.base,
             zrUtil.bind(this.parse, this)

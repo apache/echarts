@@ -29,11 +29,11 @@ import type { AxisBuilderCfg } from './AxisBuilder';
 import type { BaseAxisBreakPayload } from './axisAction';
 import type { AxisBaseOption } from '../../coord/axisCommonTypes';
 import type { AxisBreakOptionIdentifierInAxis, NullUndefined } from '../../util/types';
-import { LabelLayoutInfoComputed } from '../../label/labelLayoutHelper';
+import { LabelLayoutWithGeometry } from '../../label/labelLayoutHelper';
 import type ComponentModel from '../../model/Component';
 
 /**
- * @file The fasade of axis break view and mode.
+ * @file The facade of axis break view and mode.
  *  Separate the impl to reduce code size.
  *
  * @caution
@@ -45,7 +45,7 @@ export type AxisBreakHelper = {
     adjustBreakLabelPair(
         axisInverse: boolean,
         axisRotation: AxisBuilderCfg['rotation'],
-        layoutPair: (LabelLayoutInfoComputed | NullUndefined)[],
+        layoutPair: (LabelLayoutWithGeometry | NullUndefined)[],
     ): void;
     buildAxisBreakLine(
         axisModel: AxisBaseModel,

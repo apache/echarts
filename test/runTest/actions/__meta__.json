@@ -144,6 +144,7 @@
   "line-visual2": 2,
   "lines-bus": 1,
   "lines-symbolSize-update": 1,
+  "logScale": 3,
   "map": 3,
   "map-contour": 2,
   "map-default": 1,
@@ -177,7 +178,7 @@
   "polar-rounded": 3,
   "polarLine": 1,
   "polarScatter": 1,
-  "radar": 2,
+  "radar": 3,
   "radar2": 1,
   "radar3": 2,
   "radar4": 1,
@@ -237,5 +238,6 @@
   "universalTransition3": 2,
   "visualMap-categories": 1,
   "visualMap-multi-continuous": 1,
+  "visualMap-on-data": 1,
   "visualMap-selectMode": 2
 }
