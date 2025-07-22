@@ -232,7 +232,6 @@ class RadarView extends ChartView {
                 )
             );
             const emphasisModel = itemModel.getModel('emphasis');
-            const itemHoverStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
                 if (symbolPath instanceof ZRImage) {
                     const pathStyle = symbolPath.style;
@@ -249,8 +248,6 @@ class RadarView extends ChartView {
                     symbolPath.style.strokeNoScale = true;
                 }
 
-                const pathEmphasisState = symbolPath.ensureState('emphasis');
-                pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
                 let defaultText = data.getStore().get(data.getDimensionIndex(symbolPath.__dimIdx), idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 
