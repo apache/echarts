@@ -17,12 +17,30 @@
 * under the License.
 */
 
-import Element, { ElementProps } from 'zrender/src/Element';
+const fs = require('fs');
+const preamble = require('./preamble');
+const eachFile = require('./headerUtil').eachFile;
 
-export interface ExtendedElement extends Element {
-    ignoreModelZ?: boolean;
+function run() {
+    const missingFiles = [];
+
+    eachFile(function (absolutePath, fileExt) {
+        const fileStr = fs.readFileSync(absolutePath, 'utf-8');
+        const existLicense = preamble.extractLicense(fileStr, fileExt);
+
+        if (!existLicense && preamble.hasPreamble(fileExt)) {
+            missingFiles.push(absolutePath);
+        }
+    });
+
+    if (missingFiles.length) {
+        console.error('Files missing license header:');
+        missingFiles.forEach(function (path) {
+            console.error(path);
+        });
+        console.error('\nPlease run `node build/addHeader.js` before commit.');
+        process.exit(1);
+    }
 }
 
-export interface ExtendedElementProps extends ElementProps {
-    ignoreModelZ?: boolean;
-}
+run();
