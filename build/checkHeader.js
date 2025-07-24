@@ -18,6 +18,7 @@
 */
 
 const fs = require('fs');
+const chalk = require('chalk');
 const preamble = require('./preamble');
 const eachFile = require('./headerUtil').eachFile;
 
@@ -34,11 +35,11 @@ function run() {
     });
 
     if (missingFiles.length) {
-        console.error('Files missing license header:');
+        console.error(chalk.red('Files missing license header:'));
         missingFiles.forEach(function (path) {
-            console.error(path);
+            console.error(chalk.red(path));
         });
-        console.error('\nPlease run `node build/addHeader.js` before commit.');
+        console.error(chalk.red('\nPlease run `node build/addHeader.js` before commit.'));
         process.exit(1);
     }
 }
