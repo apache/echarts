@@ -52,6 +52,8 @@ under the License.
         <div class="chart" id="cross-item"></div>
         <h1>cross compatible | tooltip.trigger: 'axis' | xAxisPointer label not show</h1>
         <div class="chart" id="cross-axis"></div>
+        <h1>tooltip.trigger: 'axis' | callback params status ('normal' | 'emphasis' | 'blur' | 'select' | undefined)</h1>
+        <div class="chart" id="tooltip-axis-status"></div>
         <h1>tooltip.axisPointer.axis is 'y' | auto snap | auto animation when snap</h1>
         <div class="chart" id="tooltip.axisPointer.axis"></div>
         <h1>showDelay: 50 | enterable | dynamic callback</h1>
@@ -227,6 +229,44 @@ under the License.
         </script>
 
 
+
+
+
+        <script>
+
+            require(['echarts'], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            var result = params[0].name + '<br/>';
+                            for (var i = 0; i < params.length; i++) {
+                                var param = params[i];
+                                var statusText = param.status !== undefined ? ' (' + param.status + ')' : '';
+                                result += param.marker + param.seriesName + statusText + ': ' + param.value + '<br/>';
+                            }
+                            return result;
+                        }
+                    }
+                };
+                var baseTop = 90;
+                var height = 150;
+                var gap = 50;
+                makeCategoryGrid(option, {
+                    grid: {top: baseTop, height: height}
+                });
+                baseTop += height + gap;
+
+                var dom = document.getElementById('tooltip-axis-status');
+                if (dom) {
+                    dom.style.height = baseTop + 'px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(option);
+                }
+            })
+
+        </script>
 
 
 
