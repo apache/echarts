@@ -116,7 +116,7 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
                 zrUtil.defaults(newSeriesOpt, seriesModel.option);
                 (newOption.series as SeriesOption[]).push(newSeriesOpt);
             }
-            // Modify boundaryGap
+            // Modify series
             const coordSys = seriesModel.coordinateSystem;
             if (coordSys && coordSys.type === 'cartesian2d' && (type === 'line' || type === 'bar')) {
                 const categoryAxis = coordSys.getAxesByScale('ordinal')[0];
@@ -130,7 +130,6 @@ class MagicType extends ToolboxFeature<ToolboxMagicTypeFeatureOption> {
                     for (let i = 0; i <= axisIndex; i++) {
                         (newOption[axisType] as any)[axisIndex] = (newOption[axisType] as any)[axisIndex] || {};
                     }
-                    (newOption[axisType] as any)[axisIndex].boundaryGap = type === 'bar';
                 }
             }
         };
