@@ -32,7 +32,7 @@ import {
     getAxisMainType, DATA_ZOOM_AXIS_DIMENSIONS, DataZoomAxisDimension
 } from './helper';
 import SingleAxisModel from '../../coord/single/AxisModel';
-import { MULTIPLE_REFERRING, SINGLE_REFERRING } from '../../util/model';
+import { MULTIPLE_REFERRING, SINGLE_REFERRING, ModelFinderIndexQuery, ModelFinderIdQuery } from '../../util/model';
 
 
 export interface DataZoomOption extends ComponentOption {
@@ -47,22 +47,22 @@ export interface DataZoomOption extends ComponentOption {
     /**
      * Default the first horizontal category axis.
      */
-    xAxisIndex?: number | number[]
-    xAxisId?: string | string[]
+    xAxisIndex?: ModelFinderIndexQuery
+    xAxisId?: ModelFinderIdQuery
 
     /**
      * Default the first vertical category axis.
      */
-    yAxisIndex?: number | number[]
-    yAxisId?: string | string[]
+    yAxisIndex?: ModelFinderIndexQuery
+    yAxisId?: ModelFinderIdQuery
 
-    radiusAxisIndex?: number | number[]
-    radiusAxisId?: string | string[]
-    angleAxisIndex?: number | number[]
-    angleAxisId?: string | string[]
+    radiusAxisIndex?: ModelFinderIndexQuery
+    radiusAxisId?: ModelFinderIdQuery
+    angleAxisIndex?: ModelFinderIndexQuery
+    angleAxisId?: ModelFinderIdQuery
 
-    singleAxisIndex?: number | number[]
-    singleAxisId?: string | string[]
+    singleAxisIndex?: ModelFinderIndexQuery
+    singleAxisId?: ModelFinderIdQuery
 
     /**
      * Possible values: 'filter' or 'empty' or 'weakFilter'.
