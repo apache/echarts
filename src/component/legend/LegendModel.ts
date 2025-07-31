@@ -30,7 +30,9 @@ import {
     LayoutOrient,
     CommonTooltipOption,
     ItemStyleOption,
-    LineStyleOption
+    LineStyleOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
@@ -158,8 +160,8 @@ export interface LegendSymbolStyleOption {
 }
 
 export interface LegendOption extends ComponentOption, LegendStyleOption,
-    BoxLayoutOptionMixin, BorderOptionMixin
-{
+    BoxLayoutOptionMixin, BorderOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
 
     mainType?: 'legend'
 
