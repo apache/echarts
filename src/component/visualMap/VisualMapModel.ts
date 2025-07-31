@@ -33,7 +33,9 @@ import {
     OptionDataValue,
     BuiltinVisualProperty,
     DimensionIndex,
-    OptionId
+    OptionId,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
@@ -56,6 +58,8 @@ type LabelFormatter = (min: OptionDataValue, max?: OptionDataValue) => string;
 type VisualState = VisualMapModel['stateList'][number];
 export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> extends
     ComponentOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
 
@@ -70,8 +74,8 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
      * 'all' or null/undefined: all series.
      * A number or an array of number: the specified series.
      */
-    seriesIndex?: 'all' | number[] | number
-    seriesId?: OptionId | OptionId[]
+    seriesIndex?: modelUtil.ModelFinderIndexQuery
+    seriesId?: modelUtil.ModelFinderIdQuery
 
     /**
      * set min: 0, max: 200, only for campatible with ec2.
