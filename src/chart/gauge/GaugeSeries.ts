@@ -30,7 +30,9 @@ import {
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
     DefaultStatesMixinEmphasis,
-    CallbackDataParams
+    CallbackDataParams,
+    ComponentOnMatrixOptionMixin,
+    ComponentOnCalendarOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -123,6 +125,7 @@ export interface GaugeDataItemOption extends GaugeStateOption,
 }
 export interface GaugeSeriesOption extends SeriesOption<GaugeStateOption, GaugeStatesMixin>,
     GaugeStateOption<CallbackDataParams>,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
     CircleLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'gauge'
 

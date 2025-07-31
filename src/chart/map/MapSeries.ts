@@ -34,7 +34,9 @@ import {
     StatesOptionMixin,
     SeriesLabelOption,
     StatesMixinBase,
-    CallbackDataParams
+    CallbackDataParams,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption } from '../../coord/geo/GeoModel';
@@ -70,6 +72,8 @@ export interface MapSeriesOption extends
     // created. Otherwise use the specified geo component, and
     // `map` and `mapType` are ignored.
     SeriesOnGeoOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
     type?: 'map'

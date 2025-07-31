@@ -767,9 +767,9 @@ let innerUniqueIndex = getRandomIdBase();
  * If both `abcIndex`, `abcId`, `abcName` specified, only one work.
  * The priority is: index > id > name, the same with `ecModel.queryComponents`.
  */
-export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false;
-export type ModelFinderIdQuery = OptionId | OptionId[];
-export type ModelFinderNameQuery = OptionId | OptionId[];
+export type ModelFinderIndexQuery = number | number[] | 'all' | 'none' | false | NullUndefined;
+export type ModelFinderIdQuery = OptionId | OptionId[] | NullUndefined;
+export type ModelFinderNameQuery = OptionId | OptionId[] | NullUndefined;
 // If string, like 'series', means { seriesIndex: 0 }.
 export type ModelFinder = string | ModelFinderObject;
 export type ModelFinderObject = {

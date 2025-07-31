@@ -26,7 +26,9 @@ import {
     ComponentOption,
     CircleLayoutOptionMixin,
     LabelOption,
-    ColorString
+    ColorString,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import { AxisBaseOption, CategoryAxisBaseOption, ValueAxisBaseOption } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
@@ -55,7 +57,10 @@ export interface RadarIndicatorOption {
     axisType?: 'value' | 'log'
 }
 
-export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
+export interface RadarOption extends
+    ComponentOption, CircleLayoutOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
+
     mainType?: 'radar'
 
     startAngle?: number

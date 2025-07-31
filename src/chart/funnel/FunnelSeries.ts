@@ -38,7 +38,9 @@ import {
     SeriesLabelOption,
     SeriesEncodeOptionMixin,
     DefaultStatesMixinEmphasis,
-    CallbackDataParams
+    CallbackDataParams,
+    ComponentOnMatrixOptionMixin,
+    ComponentOnCalendarOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -75,6 +77,7 @@ export interface FunnelDataItemOption
 export interface FunnelSeriesOption
     extends SeriesOption<FunnelStateOption<FunnelCallbackDataParams>, FunnelStatesMixin>,
     FunnelStateOption<FunnelCallbackDataParams>,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin, SeriesEncodeOptionMixin {
     type?: 'funnel'
 

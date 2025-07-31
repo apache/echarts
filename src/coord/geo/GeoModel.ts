@@ -37,7 +37,9 @@ import {
     Dictionary,
     CommonTooltipOption,
     StatesMixinBase,
-    PreserveAspectMixin
+    PreserveAspectMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
@@ -119,6 +121,8 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin, PreserveAspectMix
 
 export interface GeoOption extends
     ComponentOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     // For lens animation on geo.
     AnimationOptionMixin,

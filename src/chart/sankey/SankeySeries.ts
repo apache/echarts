@@ -35,7 +35,9 @@ import {
     OptionDataValueNumeric,
     DefaultEmphasisFocus,
     CallbackDataParams,
-    RoamOptionMixin
+    RoamOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -99,6 +101,8 @@ export interface SankeySeriesOption
     extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
     SankeyBothStateOption<CallbackDataParams>,
     BoxLayoutOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     RoamOptionMixin {
     type?: 'sankey'
 

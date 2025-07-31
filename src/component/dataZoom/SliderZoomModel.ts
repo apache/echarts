@@ -24,7 +24,9 @@ import {
     LineStyleOption,
     AreaStyleOption,
     ItemStyleOption,
-    LabelOption
+    LabelOption,
+    ComponentOnMatrixOptionMixin,
+    ComponentOnCalendarOptionMixin
 } from '../../util/types';
 import { inheritDefaultOption } from '../../util/component';
 import tokens from '../../visual/tokens';
@@ -33,7 +35,9 @@ interface SliderHandleLabelOption {
     show?: boolean
 }
 
-export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMixin {
+export interface SliderDataZoomOption
+    extends DataZoomOption, BoxLayoutOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
 
     show?: boolean
     /**
