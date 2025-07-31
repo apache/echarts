@@ -126,6 +126,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         const refContainer = createBoxLayoutReference(radarModel, api).refContainer;
 
         const center = radarModel.get('center');
+        const clockwise = radarModel.get('clockwise') || false;
         const viewSize = Math.min(refContainer.width, refContainer.height) / 2;
         this.cx = numberUtil.parsePercent(center[0], refContainer.width) + refContainer.x;
         this.cy = numberUtil.parsePercent(center[1], refContainer.height) + refContainer.y;
@@ -140,9 +141,11 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         this.r0 = numberUtil.parsePercent(radius[0], viewSize);
         this.r = numberUtil.parsePercent(radius[1], viewSize);
 
+        const sign = clockwise ? -1 : 1;
+
         each(this._indicatorAxes, function (indicatorAxis, idx) {
             indicatorAxis.setExtent(this.r0, this.r);
-            let angle = (this.startAngle + idx * Math.PI * 2 / this._indicatorAxes.length);
+            let angle = (this.startAngle + sign * idx * Math.PI * 2 / this._indicatorAxes.length);
             // Normalize to [-PI, PI]
             angle = Math.atan2(Math.sin(angle), Math.cos(angle));
             indicatorAxis.angle = angle;

@@ -60,6 +60,8 @@ export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
 
     startAngle?: number
 
+    clockwise?: boolean
+
     shape?: 'polygon' | 'circle'
 
     // TODO. axisType seems to have issue.
@@ -106,6 +108,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
     optionUpdated() {
         const boundaryGap = this.get('boundaryGap');
         const splitNumber = this.get('splitNumber');
+        const clockwise = this.get('clockwise');
         const scale = this.get('scale');
         const axisLine = this.get('axisLine');
         const axisTick = this.get('axisTick');
@@ -135,6 +138,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
             const innerIndicatorOpt: InnerIndicatorAxisOption = zrUtil.merge(zrUtil.clone(indicatorOpt), {
                 boundaryGap: boundaryGap,
                 splitNumber: splitNumber,
+                clockwise: clockwise,
                 scale: scale,
                 axisLine: axisLine,
                 axisTick: axisTick,
@@ -186,6 +190,8 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
         radius: '50%',
 
         startAngle: 90,
+
+        clockwise: false,
 
         axisName: {
             show: true,
