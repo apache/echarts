@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "6.0.0-beta.1",
+  "version": "6.0.0",
   "description": "Apache ECharts is a powerful, interactive charting and data visualization library for browser",
   "license": "Apache-2.0",
   "keywords": [
@@ -59,13 +59,14 @@
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "checktype": "tsc --noEmit",
+    "checkheader": "node build/checkHeader.js",
     "lint": "npx eslint --cache --cache-location node_modules/.cache/eslint src/**/*.ts ssr/client/src/**/*.ts extension-src/**/*.ts",
     "lint:fix": "npx eslint --fix src/**/*.ts extension-src/**/*.ts",
     "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "6.0.0-rc.1"
+    "zrender": "6.0.0"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",

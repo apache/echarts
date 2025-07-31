@@ -3,3 +3,4 @@
 
 npm run lint
 npm run checktype
+npm run checkheader

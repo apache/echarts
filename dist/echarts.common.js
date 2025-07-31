@@ -7564,7 +7564,7 @@
     function registerSSRDataGetter(getter) {
         ssrDataGetter = getter;
     }
-    var version = '6.0.0-rc.1';
+    var version = '6.0.0';
 
     var zrender = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -7678,6 +7678,8 @@
     }
     function round(x, precision, returnStr) {
       if (precision == null) {
+        // FIXME: the default precision should not be provided, since there is no universally adaptable
+        //  precision. The caller need to input a precision according to the scenarios.
         precision = 10;
       }
       // Avoid range error
@@ -8656,7 +8658,7 @@
       var others = {};
       var mainTypeSpecified = false;
       each(finder, function (value, key) {
-        // Exclude 'dataIndex' and other illgal keys.
+        // Exclude 'dataIndex' and other illegal keys.
         if (key === 'dataIndex' || key === 'dataIndexInside') {
           others[key] = value;
           return;
@@ -9238,8 +9240,8 @@
         }
         return i;
     }
-    function parsePlainText(text, style, defaultOuterWidth, defaultOuterHeight) {
-        text != null && (text += '');
+    function parsePlainText(rawText, style, defaultOuterWidth, defaultOuterHeight) {
+        var text = formatText(rawText);
         var overflow = style.overflow;
         var padding = style.padding;
         var paddingH = padding ? padding[1] + padding[3] : 0;
@@ -9339,9 +9341,9 @@
         }
         return RichTextContentBlock;
     }());
-    function parseRichText(text, style, defaultOuterWidth, defaultOuterHeight, topTextAlign) {
+    function parseRichText(rawText, style, defaultOuterWidth, defaultOuterHeight, topTextAlign) {
         var contentBlock = new RichTextContentBlock();
-        text != null && (text += '');
+        var text = formatText(rawText);
         if (!text) {
             return contentBlock;
         }
@@ -9667,6 +9669,33 @@
     }
     var tmpCITCTextRect = new BoundingRect(0, 0, 0, 0);
     var tmpCITCIntersectRectOpt = { outIntersectRect: {}, clamp: true };
+    function formatText(text) {
+        return text != null ? (text += '') : (text = '');
+    }
+    function tSpanCreateBoundingRect(style) {
+        var text = formatText(style.text);
+        var font = style.font;
+        var contentWidth = measureWidth(ensureFontMeasureInfo(font), text);
+        var contentHeight = getLineHeight(font);
+        return tSpanCreateBoundingRect2(style, contentWidth, contentHeight, null);
+    }
+    function tSpanCreateBoundingRect2(style, contentWidth, contentHeight, forceLineWidth) {
+        var rect = new BoundingRect(adjustTextX(style.x || 0, contentWidth, style.textAlign), adjustTextY$1(style.y || 0, contentHeight, style.textBaseline), contentWidth, contentHeight);
+        var lineWidth = forceLineWidth != null
+            ? forceLineWidth
+            : (tSpanHasStroke(style) ? style.lineWidth : 0);
+        if (lineWidth > 0) {
+            rect.x -= lineWidth / 2;
+            rect.y -= lineWidth / 2;
+            rect.width += lineWidth;
+            rect.height += lineWidth;
+        }
+        return rect;
+    }
+    function tSpanHasStroke(style) {
+        var stroke = style.stroke;
+        return stroke != null && stroke !== 'none' && style.lineWidth > 0;
+    }
 
     var STYLE_MAGIC_KEY = '__zr_style_' + Math.round((Math.random() * 10));
     var DEFAULT_COMMON_STYLE = {
@@ -11616,9 +11645,7 @@
             return _super !== null && _super.apply(this, arguments) || this;
         }
         TSpan.prototype.hasStroke = function () {
-            var style = this.style;
-            var stroke = style.stroke;
-            return stroke != null && stroke !== 'none' && style.lineWidth > 0;
+            return tSpanHasStroke(this.style);
         };
         TSpan.prototype.hasFill = function () {
             var style = this.style;
@@ -11632,21 +11659,8 @@
             this._rect = rect;
         };
         TSpan.prototype.getBoundingRect = function () {
-            var style = this.style;
             if (!this._rect) {
-                var text = style.text;
-                text != null ? (text += '') : (text = '');
-                var rect = getBoundingRect(text, style.font, style.textAlign, style.textBaseline);
-                rect.x += style.x || 0;
-                rect.y += style.y || 0;
-                if (this.hasStroke()) {
-                    var w = style.lineWidth;
-                    rect.x -= w / 2;
-                    rect.y -= w / 2;
-                    rect.width += w;
-                    rect.height += w;
-                }
-                this._rect = rect;
+                this._rect = tSpanCreateBoundingRect(this.style);
             }
             return this._rect;
         };
@@ -12104,7 +12118,6 @@
             var bgColorDrawn = !!(style.backgroundColor);
             var outerHeight = contentBlock.outerHeight;
             var outerWidth = contentBlock.outerWidth;
-            var contentWidth = contentBlock.contentWidth;
             var textLines = contentBlock.lines;
             var lineHeight = contentBlock.lineHeight;
             this.isTruncated = !!contentBlock.isTruncated;
@@ -12126,6 +12139,7 @@
                 }
             }
             var defaultLineWidth = 0;
+            var usingDefaultStroke = false;
             var useDefaultFill = false;
             var textFill = getFill('fill' in style
                 ? style.fill
@@ -12134,12 +12148,9 @@
                 ? style.stroke
                 : (!bgColorDrawn
                     && (!defaultStyle.autoStroke || useDefaultFill))
-                    ? (defaultLineWidth = DEFAULT_STROKE_LINE_WIDTH, defaultStyle.stroke)
+                    ? (defaultLineWidth = DEFAULT_STROKE_LINE_WIDTH, usingDefaultStroke = true, defaultStyle.stroke)
                     : null);
             var hasShadow = style.textShadowBlur > 0;
-            var fixedBoundingRect = style.width != null
-                && (style.overflow === 'truncate' || style.overflow === 'break' || style.overflow === 'breakAll');
-            var calculatedLineHeight = contentBlock.calculatedLineHeight;
             for (var i = 0; i < textLines.length; i++) {
                 var el = this._getOrCreateChild(TSpan);
                 var subElStyle = el.createStyle();
@@ -12169,9 +12180,7 @@
                 subElStyle.font = textFont;
                 setSeparateFont(subElStyle, style);
                 textY += lineHeight;
-                if (fixedBoundingRect) {
-                    el.setBoundingRect(new BoundingRect(adjustTextX(subElStyle.x, contentWidth, subElStyle.textAlign), adjustTextY$1(subElStyle.y, calculatedLineHeight, subElStyle.textBaseline), contentWidth, calculatedLineHeight));
-                }
+                el.setBoundingRect(tSpanCreateBoundingRect2(subElStyle, contentBlock.contentWidth, contentBlock.calculatedLineHeight, usingDefaultStroke ? 0 : null));
             }
         };
         ZRText.prototype._updateRichTexts = function () {
@@ -12268,6 +12277,7 @@
             var defaultStyle = this._defaultStyle;
             var useDefaultFill = false;
             var defaultLineWidth = 0;
+            var usingDefaultStroke = false;
             var textFill = getFill('fill' in tokenStyle ? tokenStyle.fill
                 : 'fill' in style ? style.fill
                     : (useDefaultFill = true, defaultStyle.fill));
@@ -12275,7 +12285,7 @@
                 : 'stroke' in style ? style.stroke
                     : (!bgColorDrawn
                         && !parentBgColorDrawn
-                        && (!defaultStyle.autoStroke || useDefaultFill)) ? (defaultLineWidth = DEFAULT_STROKE_LINE_WIDTH, defaultStyle.stroke)
+                        && (!defaultStyle.autoStroke || useDefaultFill)) ? (defaultLineWidth = DEFAULT_STROKE_LINE_WIDTH, usingDefaultStroke = true, defaultStyle.stroke)
                         : null);
             var hasShadow = tokenStyle.textShadowBlur > 0
                 || style.textShadowBlur > 0;
@@ -12302,9 +12312,7 @@
             if (textFill) {
                 subElStyle.fill = textFill;
             }
-            var textWidth = token.contentWidth;
-            var textHeight = token.contentHeight;
-            el.setBoundingRect(new BoundingRect(adjustTextX(subElStyle.x, textWidth, subElStyle.textAlign), adjustTextY$1(subElStyle.y, textHeight, subElStyle.textBaseline), textWidth, textHeight));
+            el.setBoundingRect(tSpanCreateBoundingRect2(subElStyle, token.contentWidth, token.contentHeight, usingDefaultStroke ? 0 : null));
         };
         ZRText.prototype._renderBackground = function (style, topStyle, x, y, width, height) {
             var textBackgroundColor = style.backgroundColor;
@@ -12459,25 +12467,6 @@
             || style.lineHeight
             || (style.borderWidth && style.borderColor));
     }
-
-    var VISUAL_DIMENSIONS = createHashMap(['tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'itemChildGroupId', 'seriesName']);
-    var SOURCE_FORMAT_ORIGINAL = 'original';
-    var SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows';
-    var SOURCE_FORMAT_OBJECT_ROWS = 'objectRows';
-    var SOURCE_FORMAT_KEYED_COLUMNS = 'keyedColumns';
-    var SOURCE_FORMAT_TYPED_ARRAY = 'typedArray';
-    var SOURCE_FORMAT_UNKNOWN = 'unknown';
-    var SERIES_LAYOUT_BY_COLUMN = 'column';
-    var SERIES_LAYOUT_BY_ROW = 'row';
-    /**
-     * PENDING: Temporary impl. unify them?
-     * @see {LabelCommonOption['textMargin']}
-     * @see {LabelCommonOption['minMargin']}
-     */
-    var LabelMarginType = {
-      minMargin: 0,
-      textMargin: 1
-    };
 
     var getECData = makeInner();
     var setCommonECData = function (seriesIndex, dataType, dataIdx, el) {
@@ -15171,7 +15160,7 @@
      *  `false` - expand if `delta[i]` is positive, commmonly used in `margin` case. (default)
      * @param noNegative
      *  `true` - negative `delta[i]` will be clampped to 0.
-     *  `false` - No clamp to `delta`. (defualt).
+     *  `false` - No clamp to `delta`. (default).
      * @return The input `rect`.
      */
     function expandOrShrinkRect(rect, delta, shrinkOrExpand, noNegative, minSize // by default [0, 0].
@@ -15181,6 +15170,9 @@
       } else if (isNumber(delta)) {
         _tmpExpandRectDelta[0] = _tmpExpandRectDelta[1] = _tmpExpandRectDelta[2] = _tmpExpandRectDelta[3] = delta;
       } else {
+        if ("development" !== 'production') {
+          assert(delta.length === 4);
+        }
         _tmpExpandRectDelta[0] = delta[0];
         _tmpExpandRectDelta[1] = delta[1];
         _tmpExpandRectDelta[2] = delta[2];
@@ -15281,6 +15273,27 @@
       return !transform || mathAbs$1(transform[1]) < AXIS_ALIGN_EPSILON && mathAbs$1(transform[2]) < AXIS_ALIGN_EPSILON || mathAbs$1(transform[0]) < AXIS_ALIGN_EPSILON && mathAbs$1(transform[3]) < AXIS_ALIGN_EPSILON;
     }
     var AXIS_ALIGN_EPSILON = 1e-5;
+    /**
+     * Create or copy to the existing bounding rect to avoid modifying `source`.
+     *
+     * @usage
+     *  out.rect = ensureCopyRect(out.rect, sourceRect);
+     */
+    function ensureCopyRect(target, source) {
+      return target ? BoundingRect.copy(target, source) : source.clone();
+    }
+    /**
+     * Create or copy to the existing transform to avoid modifying `source`.
+     *
+     * [CAUTION]: transform is `NullUndefined` if no transform, following convention of zrender,
+     *  and enable to bypass some unnecessary calculation, since in most cases there is no transform.
+     *
+     * @usage
+     *  out.transform = ensureCopyTransform(out.transform, sourceTransform);
+     */
+    function ensureCopyTransform(target, source) {
+      return source ? copy$1(target || create$1(), source) : undefined;
+    }
     function retrieveZInfo(model) {
       return {
         z: model.get('z') || 0,
@@ -15334,9 +15347,9 @@
       doUpdateZ(el, z, zlevel, -Infinity);
     }
     function doUpdateZ(el, z, zlevel,
-    // FIXME: ideally all the labels shold be above all the glyphs by default,
+    // FIXME: Ideally all the labels should be above all the glyphs by default,
     //  e.g. in graph, edge labels should be above node elements.
-    //  currenly impl does not garaentee that.
+    //  Currently impl does not guarantee that.
     maxZ2) {
       // `ignoreModelZ` is used to intentionally lift elements to cover other elements,
       // where maxZ2 (for label.z2) should also not be counted for its parents.
@@ -15421,6 +15434,8 @@
         setTooltipConfig: setTooltipConfig,
         traverseElements: traverseElements,
         isBoundingRectAxisAligned: isBoundingRectAxisAligned,
+        ensureCopyRect: ensureCopyRect,
+        ensureCopyTransform: ensureCopyTransform,
         retrieveZInfo: retrieveZInfo,
         calcZ2Range: calcZ2Range,
         traverseUpdateZ: traverseUpdateZ,
@@ -15680,22 +15695,25 @@
       if (overflow) {
         textStyle.overflow = overflow;
       }
-      var minMargin = textStyleModel.get('minMargin');
-      if (minMargin != null) {
-        textStyle.margin = minMargin;
-        textStyle.__marginType = LabelMarginType.minMargin;
-      }
-      var textMargin = textStyleModel.get('textMargin');
-      if (textMargin != null) {
-        textStyle.margin = clone(textMargin);
-        textStyle.__marginType = LabelMarginType.textMargin;
-      } else if (opt.defaultTextMargin != null) {
-        textStyle.margin = clone(opt.defaultTextMargin);
-        textStyle.__marginType = LabelMarginType.textMargin;
-      }
       var lineOverflow = textStyleModel.get('lineOverflow');
       if (lineOverflow) {
         textStyle.lineOverflow = lineOverflow;
+      }
+      var labelTextStyle = textStyle;
+      // `minMargin` has a higher precedence than `textMargin`, because `textMargin` is allowed
+      // to be set in `defaultOption`.
+      var minMargin = textStyleModel.get('minMargin');
+      if (minMargin != null) {
+        // `minMargin` only support number value.
+        minMargin = !isNumber(minMargin) ? 0 : minMargin / 2;
+        labelTextStyle.margin = [minMargin, minMargin, minMargin, minMargin];
+        labelTextStyle.__marginType = LabelMarginType.minMargin;
+      } else {
+        var textMargin = textStyleModel.get('textMargin');
+        if (textMargin != null) {
+          labelTextStyle.margin = normalizeCssArray(textMargin);
+          labelTextStyle.__marginType = LabelMarginType.textMargin;
+        }
       }
       setTokenTextStyle(textStyle, textStyleModel, globalTextStyle, null, null, opt, isNotNormal, isAttached, true, false);
     }
@@ -15887,6 +15905,15 @@
         obj.statesModels = labelStatesModels;
       }
     }
+    /**
+     * PENDING: Temporary impl. unify them?
+     * @see {LabelCommonOption['textMargin']}
+     * @see {LabelCommonOption['minMargin']}
+     */
+    var LabelMarginType = {
+      minMargin: 1,
+      textMargin: 2
+    };
 
     var PATH_COLOR = ['textStyle', 'color'];
     var textStyleParams = ['fontStyle', 'fontWeight', 'fontSize', 'fontFamily', 'padding', 'lineHeight', 'rich', 'width', 'height', 'overflow'];
@@ -17558,7 +17585,7 @@
     // Commonly used in option `legend.padding`, `timeline.padding`, `title.padding`,
     //  `visualMap.padding`, ...
     // [NOTICE]:
-    //  It's named `margin`, becuase it's the space that outside the bounding rect. But from
+    //  It's named `margin`, because it's the space that outside the bounding rect. But from
     //  the perspective of the the caller, it's commonly used as the `padding` of a component,
     //  because conventionally background color covers this space.
     // [BEHAVIOR]:
@@ -18179,7 +18206,7 @@
           tokens.darkColor[key] = modifyHSL(hex, null, function (s) {
             return s * 0.9;
           }, function (l) {
-            return 1 - l;
+            return 1 - Math.pow(l, 1.5);
           });
         }
       }
@@ -18285,6 +18312,16 @@
       // See: module:echarts/scale/Time
       useUTC: false
     };
+
+    var VISUAL_DIMENSIONS = createHashMap(['tooltip', 'label', 'itemName', 'itemId', 'itemGroupId', 'itemChildGroupId', 'seriesName']);
+    var SOURCE_FORMAT_ORIGINAL = 'original';
+    var SOURCE_FORMAT_ARRAY_ROWS = 'arrayRows';
+    var SOURCE_FORMAT_OBJECT_ROWS = 'objectRows';
+    var SOURCE_FORMAT_KEYED_COLUMNS = 'keyedColumns';
+    var SOURCE_FORMAT_TYPED_ARRAY = 'typedArray';
+    var SOURCE_FORMAT_UNKNOWN = 'unknown';
+    var SERIES_LAYOUT_BY_COLUMN = 'column';
+    var SERIES_LAYOUT_BY_ROW = 'row';
 
     // The result of `guessOrdinal`.
     var BE_ORDINAL = {
@@ -25153,7 +25190,10 @@
         color: color$2.secondary
       },
       itemStyle: {
-        borderColor: color$2.neutral20
+        borderColor: color$2.borderTint
+      },
+      dividerLineStyle: {
+        color: color$2.border
       }
     };
     var theme = {
@@ -25243,9 +25283,6 @@
         textStyle: {
           color: color$2.secondary
         },
-        inRange: {
-          color: [color$2.neutral10, color$2.theme[0]]
-        },
         handleStyle: {
           borderColor: color$2.neutral30
         }
@@ -25281,10 +25318,12 @@
         x: matrixAxis,
         y: matrixAxis,
         backgroundColor: {
-          borderColor: '#817f91'
+          borderColor: color$2.axisLine
         },
-        innerBackgroundStyle: {
-          borderColor: '#484753'
+        body: {
+          itemStyle: {
+            borderColor: color$2.borderTint
+          }
         }
       },
       timeAxis: axisCommon(),
@@ -27161,9 +27200,9 @@
       return implsStore[name];
     }
 
-    var version$1 = '6.0.0-beta.1';
+    var version$1 = '6.0.0';
     var dependencies = {
-      zrender: '6.0.0-rc.1'
+      zrender: '6.0.0'
     };
     var TEST_FRAME_REMAIN_TIME = 1;
     var PRIORITY_PROCESSOR_SERIES_FILTER = 800;
@@ -28328,15 +28367,16 @@
             coordSysMgr.update(ecModel, api);
             clearColorPalette(ecModel);
             scheduler.performVisualTasks(ecModel, payload);
-            render(this, ecModel, api, payload, updateParams);
-            // Set background
+            // Set background and dark mode before rendering, because they affect auto-color-determination
+            // in zrender Text, and consequently affect the bounding rect if stroke is added.
             var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
-            var darkMode = ecModel.get('darkMode');
             zr.setBackgroundColor(backgroundColor);
             // Force set dark mode.
+            var darkMode = ecModel.get('darkMode');
             if (darkMode != null && darkMode !== 'auto') {
               zr.setDarkMode(darkMode);
             }
+            render(this, ecModel, api, payload, updateParams);
             lifecycle.trigger('afterupdate', ecModel, api);
           },
           updateTransform: function (payload) {
@@ -32321,8 +32361,9 @@
           var minorTicksGroup = [];
           var interval = nextTick.value - prevTick.value;
           var minorInterval = interval / splitNumber;
+          var minorIntervalPrecision = getIntervalPrecision(minorInterval);
           while (count < splitNumber - 1) {
-            var minorTick = roundNumber(prevTick.value + (count + 1) * minorInterval);
+            var minorTick = roundNumber(prevTick.value + (count + 1) * minorInterval, minorIntervalPrecision);
             // For the first and last interval. The count may be less than splitNumber.
             if (minorTick > extent[0] && minorTick < extent[1]) {
               minorTicksGroup.push(minorTick);
@@ -32361,6 +32402,12 @@
         return addCommas(dataNum);
       };
       /**
+       * FIXME: refactor - disallow override, use composition instead.
+       *
+       * The override of `calcNiceTicks` should ensure these members are provided:
+       *  this._intervalPrecision
+       *  this._interval
+       *
        * @param splitNumber By default `5`.
        */
       IntervalScale.prototype.calcNiceTicks = function (splitNumber, minInterval, maxInterval) {
@@ -32416,11 +32463,12 @@
         extent = this._extent.slice();
         this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
         var interval = this._interval;
+        var intervalPrecition = this._intervalPrecision;
         if (!opt.fixMin) {
-          extent[0] = roundNumber(Math.floor(extent[0] / interval) * interval);
+          extent[0] = roundNumber(Math.floor(extent[0] / interval) * interval, intervalPrecition);
         }
         if (!opt.fixMax) {
-          extent[1] = roundNumber(Math.ceil(extent[1] / interval) * interval);
+          extent[1] = roundNumber(Math.ceil(extent[1] / interval) * interval, intervalPrecition);
         }
         this._innerSetExtent(extent[0], extent[1]);
       };
@@ -32985,6 +33033,7 @@
         var idx = Math.min(bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen), scaleIntervalsLen - 1);
         // Interval that can be used to calculate ticks
         this._interval = scaleIntervals[idx][1];
+        this._intervalPrecision = getIntervalPrecision(this._interval);
         // Min level used when picking ticks from top down.
         // We check one more level to avoid the ticks are to sparse in some case.
         this._minLevelUnit = scaleIntervals[Math.max(idx - 1, 0)][0];
@@ -33375,8 +33424,8 @@
         var scaleBreakHelper = getScaleBreakHelper();
         return map(ticks, function (tick) {
           var val = tick.value;
-          var powVal = fixRound(mathPow$1(base, val));
           var roundingCriterion = null;
+          var powVal = mathPow$1(base, val);
           // Fix #4158
           if (val === extent[0] && this._fixMin) {
             roundingCriterion = originalExtent[0];
@@ -33450,6 +33499,7 @@
         }
         var niceExtent = [fixRound(mathCeil(extent[0] / interval) * interval), fixRound(mathFloor(extent[1] / interval) * interval)];
         this._interval = interval;
+        this._intervalPrecision = getIntervalPrecision(interval);
         this._niceExtent = niceExtent;
       };
       LogScale.prototype.calcNiceExtent = function (opt) {
@@ -35459,128 +35509,192 @@
       return statesModels;
     }
 
-    // Also prevent duck typing.
-    var LABEL_LAYOUT_INFO_KIND_RAW = 1;
-    var LABEL_LAYOUT_INFO_KIND_COMPUTED = 2;
+    var LABEL_LAYOUT_BASE_PROPS = ['label', 'labelLine', 'layoutOption', 'priority', 'defaultAttr', 'marginForce', 'minMarginForce', 'marginDefault', 'suggestIgnore'];
+    var LABEL_LAYOUT_DIRTY_BIT_OTHERS = 1;
+    var LABEL_LAYOUT_DIRTY_BIT_OBB = 2;
+    var LABEL_LAYOUT_DIRTY_ALL = LABEL_LAYOUT_DIRTY_BIT_OTHERS | LABEL_LAYOUT_DIRTY_BIT_OBB;
+    function setLabelLayoutDirty(labelGeometry, dirtyOrClear, dirtyBits) {
+      dirtyBits = dirtyBits || LABEL_LAYOUT_DIRTY_ALL;
+      dirtyOrClear ? labelGeometry.dirty |= dirtyBits : labelGeometry.dirty &= ~dirtyBits;
+    }
+    function isLabelLayoutDirty(labelGeometry, dirtyBits) {
+      dirtyBits = dirtyBits || LABEL_LAYOUT_DIRTY_ALL;
+      return labelGeometry.dirty == null || !!(labelGeometry.dirty & dirtyBits);
+    }
     /**
-     * If `defaultAttr.ignore: true`, return `NullUndefined`.
-     *  (the caller is reponsible for ensuring the label is always `ignore: true`.)
-     * Otherwise the `layoutInfo` will be modified and returned.
-     * `label.ignore` is not necessarily falsy, since it might be modified by some overlap resolving handling.
+     * [CAUTION]
+     *  - No auto dirty propagation mechanism yet. If the transform of the raw label or any of its ancestors is
+     *    changed, must sync the changes to the props of `LabelGeometry` by:
+     *    either explicitly call:
+     *      `setLabelLayoutDirty(labelLayout, true); ensureLabelLayoutWithGeometry(labelLayout);`
+     *    or call (if only translation is performed):
+     *      `labelLayoutApplyTranslation(labelLayout);`
+     *  - `label.ignore` is not necessarily falsy, and not considered in computing `LabelGeometry`,
+     *    since it might be modified by some overlap resolving handling.
+     *  - To duplicate or make a variation:
+     *    use `newLabelLayoutWithGeometry`.
      *
      * The result can also be the input of this method.
-     *
-     * @see ensureLabelLayoutInfoComputed
+     * @return `NullUndefined` if and only if `labelLayout` is `NullUndefined`.
      */
-    function prepareLabelLayoutInfo(layoutInfo) {
-      if (!layoutInfo || layoutInfo.defaultAttr.ignore) {
+    function ensureLabelLayoutWithGeometry(labelLayout) {
+      if (!labelLayout) {
         return;
       }
-      var label = layoutInfo.label;
-      var ignoreMargin = layoutInfo.ignoreMargin;
-      var transform = label.getComputedTransform();
-      // NOTE: Get bounding rect after getComputedTransform, or label may not been updated by the host el.
-      var localRect = label.getBoundingRect();
-      var axisAligned = isBoundingRectAxisAligned(transform);
-      if (!ignoreMargin) {
-        localRect = applyTextMarginToLocalRect(label, localRect);
+      if (isLabelLayoutDirty(labelLayout)) {
+        computeLabelGeometry(labelLayout, labelLayout.label, labelLayout);
       }
-      var globalRect = localRect.clone();
-      globalRect.applyTransform(transform);
-      if (!ignoreMargin && label.style.__marginType === LabelMarginType.minMargin) {
-        // `minMargin` only support number value.
-        var halfMinMargin = (label.style.margin || 0) / 2;
-        expandOrShrinkRect(globalRect, halfMinMargin, false, false);
-      }
-      var computed = layoutInfo;
-      computed.kind = LABEL_LAYOUT_INFO_KIND_COMPUTED,
-      // --- computed properties ---
-      computed.rect = globalRect;
-      computed.localRect = localRect;
-      computed.obb = null,
-      // will be created by `ensureOBB` when using.
-      computed.axisAligned = axisAligned;
-      computed.transform = transform;
-      return computed;
+      return labelLayout;
     }
     /**
-     * The reverse operation of `ensureLabelLayoutInfoComputedv`.
+     * The props in `out` will be filled if existing, or created.
      */
-    function rollbackToLabelLayoutInfoRaw(labelLayoutInfo) {
-      if (labelLayoutInfo == null) {
-        return;
+    function computeLabelGeometry(out, label, opt) {
+      // [CAUTION] These props may be modified directly for performance consideration,
+      //  therefore, do not output the internal data structure of zrender Element.
+      var rawTransform = label.getComputedTransform();
+      out.transform = ensureCopyTransform(out.transform, rawTransform);
+      // NOTE: should call `getBoundingRect` after `getComputedTransform`, or may get an inaccurate bounding rect.
+      //  The reason is that `getComputedTransform` calls `__host.updateInnerText()` internally, which updates the label
+      //  by `textConfig` mounted on the host.
+      // PENDING: add a dirty bit for that in zrender?
+      var outLocalRect = out.localRect = ensureCopyRect(out.localRect, label.getBoundingRect());
+      var labelStyleExt = label.style;
+      var margin = labelStyleExt.margin;
+      var marginForce = opt && opt.marginForce;
+      var minMarginForce = opt && opt.minMarginForce;
+      var marginDefault = opt && opt.marginDefault;
+      var marginType = labelStyleExt.__marginType;
+      if (marginType == null && marginDefault) {
+        margin = marginDefault;
+        marginType = LabelMarginType.textMargin;
       }
-      var raw = labelLayoutInfo;
-      raw.kind = LABEL_LAYOUT_INFO_KIND_RAW;
-      return raw;
+      // `textMargin` and `minMargin` can not exist both.
+      for (var i = 0; i < 4; i++) {
+        _tmpLabelMargin[i] = marginType === LabelMarginType.minMargin && minMarginForce && minMarginForce[i] != null ? minMarginForce[i] : marginForce && marginForce[i] != null ? marginForce[i] : margin ? margin[i] : 0;
+      }
+      if (marginType === LabelMarginType.textMargin) {
+        expandOrShrinkRect(outLocalRect, _tmpLabelMargin, false, false);
+      }
+      var outGlobalRect = out.rect = ensureCopyRect(out.rect, outLocalRect);
+      if (rawTransform) {
+        outGlobalRect.applyTransform(rawTransform);
+      }
+      // Notice: label.style.margin is actually `minMargin / 2`, handled by `setTextStyleCommon`.
+      if (marginType === LabelMarginType.minMargin) {
+        expandOrShrinkRect(outGlobalRect, _tmpLabelMargin, false, false);
+      }
+      out.axisAligned = isBoundingRectAxisAligned(rawTransform);
+      (out.label = out.label || {}).ignore = label.ignore;
+      setLabelLayoutDirty(out, false);
+      setLabelLayoutDirty(out, true, LABEL_LAYOUT_DIRTY_BIT_OBB);
+      // Do not remove `obb` (if existing) for reuse, just reset the dirty bit.
+      return out;
+    }
+    var _tmpLabelMargin = [0, 0, 0, 0];
+    /**
+     * The props in `out` will be filled if existing, or created.
+     */
+    function computeLabelGeometry2(out, rawLocalRect, rawTransform) {
+      out.transform = ensureCopyTransform(out.transform, rawTransform);
+      out.localRect = ensureCopyRect(out.localRect, rawLocalRect);
+      out.rect = ensureCopyRect(out.rect, rawLocalRect);
+      if (rawTransform) {
+        out.rect.applyTransform(rawTransform);
+      }
+      out.axisAligned = isBoundingRectAxisAligned(rawTransform);
+      out.obb = undefined; // Reset to undefined, will be created by `ensureOBB` when using.
+      (out.label = out.label || {}).ignore = false;
+      return out;
     }
     /**
-     * This method supports that the label layout info is not computed until needed,
-     * for performance consideration.
-     *
-     * [CAUTION]
-     *  - If the raw label is changed, must call
-     *    `ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(layoutInfo))`
-     *    to recreate the layout info.
-     *  - Null checking is needed for the result. @see prepareLabelLayoutInfo
-     *
-     * Usage:
-     *  To make a copy of labelLayoutInfo, simply:
-     *      const layoutInfoCopy = rollbackToLabelLayoutInfoRaw(extends({}, someLabelLayoutInfo));
+     * This is a shortcut of
+     *   ```js
+     *   labelLayout.label.x = newX;
+     *   labelLayout.label.y = newY;
+     *   setLabelLayoutDirty(labelLayout, true);
+     *   ensureLabelLayoutWithGeometry(labelLayout);
+     *   ```
+     * and provide better performance in this common case.
      */
-    function ensureLabelLayoutInfoComputed(labelLayoutInfo) {
-      if (!labelLayoutInfo) {
+    function labelLayoutApplyTranslation(labelLayout, offset) {
+      if (!labelLayout) {
         return;
       }
-      if (labelLayoutInfo.kind !== LABEL_LAYOUT_INFO_KIND_COMPUTED) {
-        labelLayoutInfo = prepareLabelLayoutInfo(labelLayoutInfo);
+      labelLayout.label.x += offset.x;
+      labelLayout.label.y += offset.y;
+      labelLayout.label.markRedraw();
+      var transform = labelLayout.transform;
+      if (transform) {
+        transform[4] += offset.x;
+        transform[5] += offset.y;
       }
-      return labelLayoutInfo;
+      var globalRect = labelLayout.rect;
+      if (globalRect) {
+        globalRect.x += offset.x;
+        globalRect.y += offset.y;
+      }
+      var obb = labelLayout.obb;
+      if (obb) {
+        obb.fromBoundingRect(labelLayout.localRect, transform);
+      }
     }
-    function prepareIntersectionCheckInfo(localRect, transform) {
-      var globalRect = localRect.clone();
-      globalRect.applyTransform(transform);
-      return {
-        obb: null,
-        rect: globalRect,
-        localRect: localRect,
-        axisAligned: isBoundingRectAxisAligned(transform),
-        transform: transform
-      };
-    }
-    function createSingleLayoutInfoComputed(el) {
-      return ensureLabelLayoutInfoComputed({
-        kind: LABEL_LAYOUT_INFO_KIND_RAW,
-        label: el,
-        priority: el.z2,
-        defaultAttr: {
-          ignore: el.ignore
+    /**
+     * To duplicate or make a variation of a label layout.
+     * Copy the only relevant properties to avoid the conflict or wrongly reuse of the props of `LabelLayoutWithGeometry`.
+     */
+    function newLabelLayoutWithGeometry(newBaseWithDefaults, source) {
+      for (var i = 0; i < LABEL_LAYOUT_BASE_PROPS.length; i++) {
+        var prop = LABEL_LAYOUT_BASE_PROPS[i];
+        if (newBaseWithDefaults[prop] == null) {
+          newBaseWithDefaults[prop] = source[prop];
         }
-      });
+      }
+      return ensureLabelLayoutWithGeometry(newBaseWithDefaults);
     }
     /**
      * Create obb if no one, can cache it.
      */
-    function ensureOBB(layoutInfo) {
-      return layoutInfo.obb || (layoutInfo.obb = new OrientedBoundingRect(layoutInfo.localRect, layoutInfo.transform));
+    function ensureOBB(labelGeometry) {
+      var obb = labelGeometry.obb;
+      if (!obb || isLabelLayoutDirty(labelGeometry, LABEL_LAYOUT_DIRTY_BIT_OBB)) {
+        labelGeometry.obb = obb = obb || new OrientedBoundingRect();
+        obb.fromBoundingRect(labelGeometry.localRect, labelGeometry.transform);
+        setLabelLayoutDirty(labelGeometry, false, LABEL_LAYOUT_DIRTY_BIT_OBB);
+      }
+      return obb;
     }
     /**
-     * The input localRect is never modified.
-     * The returned localRect maybe the input localRect.
+     * Adjust labels on x/y direction to avoid overlap.
+     *
+     * PENDING: the current implementation is based on the global bounding rect rather than the local rect,
+     *  which may be not preferable in some edge cases when the label has rotation, but works for most cases,
+     *  since rotation is unnecessary when there is sufficient space, while squeezing is applied regardless
+     *  of overlapping when there is no enough space.
+     *
+     * NOTICE:
+     *  - The input `list` and its content will be modified (sort, label.x/y, rect).
+     *  - The caller should sync the modifications to the other parts by
+     *    `setLabelLayoutDirty` and `ensureLabelLayoutWithGeometry` if needed.
+     *
+     * @return adjusted
      */
-    function applyTextMarginToLocalRect(label, localRect) {
-      if (label.style.__marginType !== LabelMarginType.textMargin) {
-        return localRect;
-      }
-      var textMargin = normalizeCssArray$1(retrieve2(label.style.margin, [0, 0]));
-      localRect = localRect.clone();
-      expandOrShrinkRect(localRect, textMargin, false, false);
-      return localRect;
-    }
-    function shiftLayout(list, xyDim, sizeDim, minBound, maxBound, balanceShift) {
+    function shiftLayoutOnXY(list, xyDimIdx,
+    // 0 for x, 1 for y
+    minBound,
+    // for x, leftBound; for y, topBound
+    maxBound,
+    // for x, rightBound; for y, bottomBound
+    // If average the shifts on all labels and add them to 0
+    // TODO: Not sure if should enable it.
+    // Pros: The angle of lines will distribute more equally
+    // Cons: In some layout. It may not what user wanted. like in pie. the label of last sector is usually changed unexpectedly.
+    balanceShift) {
       var len = list.length;
+      var xyDim = XY$1[xyDimIdx];
+      var sizeDim = WH$1[xyDimIdx];
       if (len < 2) {
-        return;
+        return false;
       }
       list.sort(function (a, b) {
         return a.rect[xyDim] - b.rect[xyDim];
@@ -35588,6 +35702,7 @@
       var lastPos = 0;
       var delta;
       var adjusted = false;
+      // const shifts = [];
       var totalShifts = 0;
       for (var i = 0; i < len; i++) {
         var item = list[i];
@@ -35600,6 +35715,7 @@
           adjusted = true;
         }
         var shift = Math.max(-delta, 0);
+        // shifts.push(shift);
         totalShifts += shift;
         lastPos = rect[xyDim] + rect[sizeDim];
       }
@@ -35712,22 +35828,16 @@
       return adjusted;
     }
     /**
-     * Adjust labels on y direction to avoid overlap.
-     */
-    function shiftLayoutOnY(list, topBound, bottomBound,
-    // If average the shifts on all labels and add them to 0
-    balanceShift) {
-      return shiftLayout(list, 'y', 'height', topBound, bottomBound, balanceShift);
-    }
-    /**
-     * [CAUTION]: the `label.ignore` in the input is not necessarily falsy.
-     *  this method checks intersection regardless of current `ignore`,
-     *  if no intersection, restore the `ignore` to `defaultAttr.ignore`.
-     *  And `labelList` will be modified.
-     *  Therefore, if some other overlap resolving strategy has ignored some elements,
-     *  do not input them to this method.
-     * PENDING: review the diff between the requirements from LabelManager and AxisBuilder,
-     *  and uniform the behavior?
+     * [NOTICE - restore]:
+     *  'series:layoutlabels' may be triggered during some shortcut passes, such as zooming in series.graph/geo
+     *  (`updateLabelLayout`), where the modified `Element` props should be restorable from `defaultAttr`.
+     *  @see `SavedLabelAttr` in `LabelManager.ts`
+     *  `restoreIgnore` can be called to perform the restore, if needed.
+     *
+     * [NOTICE - state]:
+     *  Regarding Element's states, this method is only designed for the normal state.
+     *  PENDING: although currently this method is effectively called in other states in `updateLabelLayout` case,
+     *      the bad case is not noticeable in the zooming scenario.
      */
     function hideOverlap(labelList) {
       var displayedLabels = [];
@@ -35746,8 +35856,10 @@
         el.ignore = true;
       }
       for (var i = 0; i < labelList.length; i++) {
-        var labelItem = ensureLabelLayoutInfoComputed(labelList[i]);
-        if (!labelItem || labelItem.label.ignore) {
+        var labelItem = ensureLabelLayoutWithGeometry(labelList[i]);
+        // The current `el.ignore` is involved, since some previous overlap
+        // resolving strategies may have set `el.ignore` to true.
+        if (labelItem.label.ignore) {
           continue;
         }
         var label = labelItem.label;
@@ -35770,22 +35882,22 @@
           hideEl(label);
           labelLine && hideEl(labelLine);
         } else {
-          label.attr('ignore', labelItem.defaultAttr.ignore);
-          labelLine && labelLine.attr('ignore', labelItem.defaultAttr.labelGuideIgnore);
           displayedLabels.push(labelItem);
         }
       }
     }
     /**
-     * [NOTICE]:
-     *  - `label.ignore` is not considered - no requirement so far.
-     *  - `baseLayoutInfo` and `targetLayoutInfo` may be modified - obb may be created and saved.
-     *
      * Enable fast check for performance; use obb if inevitable.
      * If `mtv` is used, `targetLayoutInfo` can be moved based on the values filled into `mtv`.
+     *
+     * This method is based only on the current `Element` states (regardless of other states).
+     * Typically this method (and the entire layout process) is performed in normal state.
      */
     function labelIntersect(baseLayoutInfo, targetLayoutInfo, mtv, intersectOpt) {
       if (!baseLayoutInfo || !targetLayoutInfo) {
+        return false;
+      }
+      if (baseLayoutInfo.label && baseLayoutInfo.label.ignore || targetLayoutInfo.label && targetLayoutInfo.label.ignore) {
         return false;
       }
       // Fast rejection.
@@ -42366,7 +42478,7 @@
           list[i].label.x = farthestX;
         }
       }
-      if (shiftLayoutOnY(list, viewTop, viewTop + viewHeight)) {
+      if (shiftLayoutOnXY(list, 1, viewTop, viewTop + viewHeight)) {
         recalculateX(list);
       }
     }
@@ -42417,7 +42529,7 @@
             }
           }
           layout.targetTextWidth = targetTextWidth;
-          constrainTextWidth(layout, targetTextWidth);
+          constrainTextWidth(layout, targetTextWidth, false);
         }
       }
       adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight, viewLeft, viewTop, rightmostX);
@@ -42463,9 +42575,6 @@
      * which case, previous wrapping should be redo.
      */
     function constrainTextWidth(layout, availableWidth, forceRecalculate) {
-      if (forceRecalculate === void 0) {
-        forceRecalculate = false;
-      }
       if (layout.labelStyleWidth != null) {
         // User-defined style.width has the highest priority.
         return;
@@ -42480,7 +42589,6 @@
       // textRect.width already contains paddingH if bgColor is set
       var oldOuterWidth = textRect.width + (bgColor ? 0 : paddingH);
       if (availableWidth < oldOuterWidth || forceRecalculate) {
-        var oldHeight = textRect.height;
         if (overflow && overflow.match('break')) {
           // Temporarily set background to be null to calculate
           // the bounding box without background.
@@ -42512,13 +42620,18 @@
           : null;
           label.setStyle('width', newWidth);
         }
-        var newRect = label.getBoundingRect();
-        textRect.width = newRect.width;
-        var margin = (label.style.margin || 0) + 2.1;
-        textRect.height = newRect.height + margin;
-        textRect.y -= (textRect.height - oldHeight) / 2;
+        computeLabelGlobalRect(textRect, label);
       }
     }
+    function computeLabelGlobalRect(out, label) {
+      _tmpLabelGeometry.rect = out;
+      computeLabelGeometry(_tmpLabelGeometry, label, _computeLabelGeometryOpt);
+    }
+    var _computeLabelGeometryOpt = {
+      minMarginForce: [null, 0, null, 0],
+      marginDefault: [1, 0, 1, 0]
+    };
+    var _tmpLabelGeometry = {};
     function isPositionCenter(sectorShape) {
       // Not change x for center label
       return sectorShape.position === 'center';
@@ -42650,12 +42763,8 @@
         });
         // Not sectorShape the inside label
         if (!isLabelInside) {
-          var textRect = label.getBoundingRect().clone();
-          textRect.applyTransform(label.getComputedTransform());
-          // Text has a default 1px stroke. Exclude this.
-          var margin = (label.style.margin || 0) + 2.1;
-          textRect.y -= margin / 2;
-          textRect.height += margin;
+          var textRect = new BoundingRect(0, 0, 0, 0);
+          computeLabelGlobalRect(textRect, label);
           labelLayoutList.push({
             label: label,
             labelLine: labelLine,
@@ -44370,17 +44479,15 @@
     }
 
     var PI$5 = Math.PI;
-    // This tune is also for backward compat, since nameMoveOverlap is set as default,
-    // in compact layout (multiple charts in one canvas), name should be more close to the axis line and labels.
-    var DEFAULT_CENTER_NAME_MARGIN_LEVELS = [[1, 2], [5, 3], [8, 3]];
-    var DEFAULT_ENDS_NAME_MARGIN_LEVELS = [[0, 1], [0, 3], [0, 3]];
+    var DEFAULT_CENTER_NAME_MARGIN_LEVELS = [[1, 2, 1, 2], [5, 3, 5, 3], [8, 3, 8, 3]];
+    var DEFAULT_ENDS_NAME_MARGIN_LEVELS = [[0, 1, 0, 1], [0, 3, 0, 3], [0, 3, 0, 3]];
     var getLabelInner = makeInner();
     var getTickInner = makeInner();
     /**
      * A context shared by difference axisBuilder instances.
      * For cross-axes overlap resolving.
      *
-     * Lifecycle constrait: should not over a pass of ec main process.
+     * Lifecycle constraint: should not over a pass of ec main process.
      *  If model is changed, the context must be disposed.
      *
      * @see AxisBuilderLocalContext
@@ -44410,14 +44517,14 @@
      *     (such as `hideOverlap`, `fixMinMaxLabelShow`) and after transform calculating.
      *  2. Can be called multiple times and should be idempotent.
      */
-    function resetOverlapRecordToShared(cfg, shared, axisModel, labelLayoutInfoList) {
+    function resetOverlapRecordToShared(cfg, shared, axisModel, labelLayoutList) {
       var axis = axisModel.axis;
       var record = shared.ensureRecord(axisModel);
       var labelInfoList = [];
       var stOccupiedRect;
       var useStOccupiedRect = hasAxisName(cfg.axisName) && isNameLocationCenter(cfg.nameLocation);
-      each(labelLayoutInfoList, function (layout) {
-        var layoutInfo = ensureLabelLayoutInfoComputed(layout);
+      each(labelLayoutList, function (layout) {
+        var layoutInfo = ensureLabelLayoutWithGeometry(layout);
         if (!layoutInfo || layoutInfo.label.ignore) {
           return;
         }
@@ -44461,7 +44568,7 @@
       if (isNameLocationCenter(cfg.nameLocation)) {
         var stOccupiedRect = thisRecord.stOccupiedRect;
         if (stOccupiedRect) {
-          moveIfOverlap(prepareIntersectionCheckInfo(stOccupiedRect, thisRecord.transGroup.transform), nameLayoutInfo, nameMoveDirVec);
+          moveIfOverlap(computeLabelGeometry2({}, stOccupiedRect, thisRecord.transGroup.transform), nameLayoutInfo, nameMoveDirVec);
         }
       } else {
         moveIfOverlapByLinearLabels(thisRecord.labelInfoList, thisRecord.dirVec, nameLayoutInfo, nameMoveDirVec);
@@ -44475,8 +44582,7 @@
         bidirectional: false,
         touchThreshold: 0.05
       })) {
-        Point.add(movableLayoutInfo.label, movableLayoutInfo.label, mtv);
-        ensureLabelLayoutInfoComputed(rollbackToLabelLayoutInfoRaw(movableLayoutInfo));
+        labelLayoutApplyTranslation(movableLayoutInfo, mtv);
       }
     }
     function moveIfOverlapByLinearLabels(baseLayoutInfoList, baseDirVec, movableLayoutInfo, moveDirVec) {
@@ -44755,7 +44861,7 @@
         }
         var needCallLayout = dealLastTickLabelResultReusable(local, group, extraParams);
         if (needCallLayout) {
-          axisTickLabelLayout(cfg, local, shared, axisModel, group, transformGroup, api, AxisTickLabelComputingKind.estimate);
+          layOutAxisTickLabel(cfg, local, shared, axisModel, group, transformGroup, api, AxisTickLabelComputingKind.estimate);
         }
       },
       /**
@@ -44769,7 +44875,7 @@
         }
         var needCallLayout = dealLastTickLabelResultReusable(local, group, extraParams);
         if (needCallLayout) {
-          axisTickLabelLayout(cfg, local, shared, axisModel, group, transformGroup, api, AxisTickLabelComputingKind.determine);
+          layOutAxisTickLabel(cfg, local, shared, axisModel, group, transformGroup, api, AxisTickLabelComputingKind.determine);
         }
         var ticksEls = buildAxisMajorTicks(cfg, group, transformGroup, axisModel);
         syncLabelIgnoreToMajorTicks(cfg, local.labelLayoutList, ticksEls);
@@ -44854,14 +44960,6 @@
             fill: textStyleModel.getTextColor() || axisModel.get(['axisLine', 'lineStyle', 'color']),
             align: textStyleModel.get('align') || labelLayout.textAlign,
             verticalAlign: textStyleModel.get('verticalAlign') || labelLayout.textVerticalAlign
-          }, {
-            defaultTextMargin: isNameLocationCenter(nameLocation)
-            // Make axis name visually far from axis labels.
-            // (but not too aggressive, consider multiple small charts)
-            ? DEFAULT_CENTER_NAME_MARGIN_LEVELS[nameMarginLevel]
-            // top/button margin is set to `0` to inserted the xAxis name into the indention
-            // above the axis labels to save space. (see example below.)
-            : DEFAULT_ENDS_NAME_MARGIN_LEVELS[nameMarginLevel]
           }),
           z2: 1
         });
@@ -44882,7 +44980,20 @@
         transformGroup.add(textEl);
         textEl.updateTransform();
         local.nameEl = textEl;
-        var nameLayout = sharedRecord.nameLayout = createSingleLayoutInfoComputed(textEl);
+        var nameLayout = sharedRecord.nameLayout = ensureLabelLayoutWithGeometry({
+          label: textEl,
+          priority: textEl.z2,
+          defaultAttr: {
+            ignore: textEl.ignore
+          },
+          marginDefault: isNameLocationCenter(nameLocation)
+          // Make axis name visually far from axis labels.
+          // (but not too aggressive, consider multiple small charts)
+          ? DEFAULT_CENTER_NAME_MARGIN_LEVELS[nameMarginLevel]
+          // top/button margin is set to `0` to inserted the xAxis name into the indention
+          // above the axis labels to save space. (see example below.)
+          : DEFAULT_ENDS_NAME_MARGIN_LEVELS[nameMarginLevel]
+        });
         sharedRecord.nameLocation = nameLocation;
         group.add(textEl);
         textEl.decomposeTransform();
@@ -44895,7 +45006,7 @@
         }
       }
     };
-    function axisTickLabelLayout(cfg, local, shared, axisModel, group, transformGroup, api, kind) {
+    function layOutAxisTickLabel(cfg, local, shared, axisModel, group, transformGroup, api, kind) {
       if (!axisLabelBuildResultExists(local)) {
         buildAxisLabel(cfg, local, group, kind, axisModel, api);
       }
@@ -44955,53 +45066,47 @@
       // Have not consider onBand yet, where tick els is more than label els.
       // Assert no ignore in labels.
       function deal(showMinMaxLabel, outmostLabelIdx, innerLabelIdx) {
-        var outmostLabelLayout = labelLayoutList[outmostLabelIdx];
-        var innerLabelLayout = labelLayoutList[innerLabelIdx];
+        var outmostLabelLayout = ensureLabelLayoutWithGeometry(labelLayoutList[outmostLabelIdx]);
+        var innerLabelLayout = ensureLabelLayoutWithGeometry(labelLayoutList[innerLabelIdx]);
         if (!outmostLabelLayout || !innerLabelLayout) {
           return;
         }
-        if (showMinMaxLabel === false) {
+        if (showMinMaxLabel === false || outmostLabelLayout.suggestIgnore) {
           ignoreEl(outmostLabelLayout.label);
+          return;
         }
-        // PENDING: Originally we thougth `optionHideOverlap === false` means do not hide anything,
+        if (innerLabelLayout.suggestIgnore) {
+          ignoreEl(innerLabelLayout.label);
+          return;
+        }
+        // PENDING: Originally we thought `optionHideOverlap === false` means do not hide anything,
         //  since currently the bounding rect of text might not accurate enough and might slightly bigger,
         //  which causes false positive. But `optionHideOverlap: null/undfined` is falsy and likely
         //  be treated as false.
-        else {
-          // In most fonts the glyph does not reach the boundary of the bouding rect.
-          // This is needed to avoid too aggressive to hide two elements that meet at the edge
-          // due to compact layout by the same bounding rect or OBB.
-          var touchThreshold = 0.1;
-          // This treatment is for backward compatibility. And `!optionHideOverlap` implies that
-          // the user accepts the visual touch between adjacent labels, thus "hide min/max label"
-          // should be conservative, since the space might be sufficient in this case.
-          var ignoreMargin = !optionHideOverlap;
-          if (ignoreMargin) {
-            // Make a copy to apply `ignoreMargin`.
-            outmostLabelLayout = rollbackToLabelLayoutInfoRaw(defaults({
-              ignoreMargin: ignoreMargin
-            }, outmostLabelLayout));
-            innerLabelLayout = rollbackToLabelLayoutInfoRaw(defaults({
-              ignoreMargin: ignoreMargin
-            }, innerLabelLayout));
-          }
-          var anyIgnored = false;
-          if (outmostLabelLayout.suggestIgnore) {
-            ignoreEl(outmostLabelLayout.label);
-            anyIgnored = true;
-          }
-          if (innerLabelLayout.suggestIgnore) {
+        // In most fonts the glyph does not reach the boundary of the bounding rect.
+        // This is needed to avoid too aggressive to hide two elements that meet at the edge
+        // due to compact layout by the same bounding rect or OBB.
+        var touchThreshold = 0.1;
+        // This treatment is for backward compatibility. And `!optionHideOverlap` implies that
+        // the user accepts the visual touch between adjacent labels, thus "hide min/max label"
+        // should be conservative, since the space might be sufficient in this case.
+        if (!optionHideOverlap) {
+          var marginForce = [0, 0, 0, 0];
+          // Make a copy to apply `ignoreMargin`.
+          outmostLabelLayout = newLabelLayoutWithGeometry({
+            marginForce: marginForce
+          }, outmostLabelLayout);
+          innerLabelLayout = newLabelLayoutWithGeometry({
+            marginForce: marginForce
+          }, innerLabelLayout);
+        }
+        if (labelIntersect(outmostLabelLayout, innerLabelLayout, null, {
+          touchThreshold: touchThreshold
+        })) {
+          if (showMinMaxLabel) {
             ignoreEl(innerLabelLayout.label);
-            anyIgnored = true;
-          }
-          if (!anyIgnored && labelIntersect(ensureLabelLayoutInfoComputed(outmostLabelLayout), ensureLabelLayoutInfoComputed(innerLabelLayout), null, {
-            touchThreshold: touchThreshold
-          })) {
-            if (showMinMaxLabel) {
-              ignoreEl(innerLabelLayout.label);
-            } else {
-              ignoreEl(outmostLabelLayout.label);
-            }
+          } else {
+            ignoreEl(outmostLabelLayout.label);
           }
         }
       }
@@ -45014,7 +45119,7 @@
       deal(showMinLabel, 0, 1);
       deal(showMaxLabel, labelsLen - 1, labelsLen - 2);
     }
-    // PENDING: is it necessary to display a tick while the cooresponding label is ignored?
+    // PENDING: Is it necessary to display a tick while the corresponding label is ignored?
     function syncLabelIgnoreToMajorTicks(cfg, labelLayoutList, tickEls) {
       if (cfg.showMinorTicks) {
         // It probably unreaasonable to hide major ticks when show minor ticks.
@@ -45121,7 +45226,7 @@
         }
       }
     }
-    // Return whether need to call `axisTickLabelLayout` again.
+    // Return whether need to call `layOutAxisTickLabel` again.
     function dealLastTickLabelResultReusable(local, group, extraParams) {
       if (axisLabelBuildResultExists(local)) {
         var axisLabelsCreationContext = local.axisLabelsCreationContext;
@@ -45257,7 +45362,6 @@
       });
       var labelLayoutList = map(labelEls, function (label) {
         return {
-          kind: LABEL_LAYOUT_INFO_KIND_RAW,
           label: label,
           priority: getLabelInner(label)["break"] ? label.z2 + (z2Max - z2Min + 1) // Make break labels be highest priority.
           : label.z2,
@@ -45268,7 +45372,7 @@
       });
       axisLabelBuildResultSet(local, labelLayoutList, labelGroup, axisLabelCreationCtx);
     }
-    // Indicate that `axisTickLabelLayout` has been called.
+    // Indicate that `layOutAxisTickLabel` has been called.
     function axisLabelBuildResultExists(local) {
       return !!local.labelLayoutList;
     }
@@ -45280,14 +45384,15 @@
     }
     function updateAxisLabelChangableProps(cfg, axisModel, labelLayoutList, transformGroup) {
       var labelMargin = axisModel.get(['axisLabel', 'margin']);
-      each(labelLayoutList, function (layoutInfo, idx) {
-        if (!layoutInfo) {
+      each(labelLayoutList, function (layout, idx) {
+        var geometry = ensureLabelLayoutWithGeometry(layout);
+        if (!geometry) {
           return;
         }
-        var labelEl = layoutInfo.label;
+        var labelEl = geometry.label;
         var inner = getLabelInner(labelEl);
         // See the comment in `suggestIgnore`.
-        layoutInfo.suggestIgnore = labelEl.ignore;
+        geometry.suggestIgnore = labelEl.ignore;
         // Currently no `ignore:true` is set in `buildAxisLabel`
         // But `ignore:true` may be set subsequently for overlap handling, thus reset it here.
         labelEl.ignore = false;
@@ -45301,9 +45406,8 @@
         _tmpLayoutEl.decomposeTransform();
         copyTransform(labelEl, _tmpLayoutEl);
         labelEl.markRedraw();
-        if (layoutInfo.kind === LABEL_LAYOUT_INFO_KIND_COMPUTED) {
-          rollbackToLabelLayoutInfoRaw(layoutInfo);
-        }
+        setLabelLayoutDirty(geometry, true);
+        ensureLabelLayoutWithGeometry(geometry);
       });
     }
     var _tmpLayoutEl = new Rect();
@@ -45335,7 +45439,7 @@
       var moveOverlap = axisModel.get(['breakLabelLayout', 'moveOverlap'], true);
       if (moveOverlap === true || moveOverlap === 'auto') {
         each(breakLabelIndexPairs, function (idxPair) {
-          getAxisBreakHelper().adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, [ensureLabelLayoutInfoComputed(labelLayoutList[idxPair[0]]), ensureLabelLayoutInfoComputed(labelLayoutList[idxPair[1]])]);
+          getAxisBreakHelper().adjustBreakLabelPair(axisModel.axis.inverse, axisRotation, [ensureLabelLayoutWithGeometry(labelLayoutList[idxPair[0]]), ensureLabelLayoutWithGeometry(labelLayoutList[idxPair[1]])]);
         });
       }
     }
@@ -46022,7 +46126,7 @@
       // Assume `updateAllAxisExtentTransByGridRect` has been performed once before this call.
       // [NOTE]:
       // - The bounding rect of the axis elements might be sensitve to variations in `axis.extent` due to strategies
-      //  like hideOverlap/moveOverlap. @see the comment in `LabelLayoutInfoBase['suggestIgnore']`.
+      //  like hideOverlap/moveOverlap. @see the comment in `LabelLayoutBase['suggestIgnore']`.
       // - The final `gridRect` might be slightly smaller than the ideally expected result if labels are giant and
       //  get hidden due to overlapping. More iterations could improve precision, but not performant. We consider
       //  the current result acceptable, since no alignment among charts can be guaranteed when using this feature.
@@ -48239,7 +48343,7 @@
       // `legacy: false`, force do not compat.
       // `legacy` not set: auto detect whether legacy.
       //     But in this case we do not compat (difficult to detect and rare case):
-      //     Becuse custom series and graphic component support "merge", users may firstly
+      //     Because custom series and graphic component support "merge", users may firstly
       //     only set `textStrokeWidth` style or secondly only set `text`.
       return style && (style.legacy || style.legacy !== false && !hasOwnTextContentOption && !hasOwnTextConfig && elType !== 'tspan'
       // Difficult to detect whether legacy for a "text" el.
@@ -53175,9 +53279,11 @@
         clearTimeout(this._longHideTimeout);
         var zr = this._zr;
         transformLocalCoordClear(zr && zr.painter && zr.painter.getViewportRoot(), this._container);
-        if (this.el) {
-          var parentNode = this.el.parentNode;
-          parentNode && parentNode.removeChild(this.el);
+        var el = this.el;
+        if (el) {
+          el.onmouseenter = el.onmousemove = el.onmouseleave = null;
+          var parentNode = el.parentNode;
+          parentNode && parentNode.removeChild(el);
         }
         this.el = this._container = null;
       };
@@ -54363,6 +54469,7 @@
          * If marker model is created by self from series
          */
         _this.createdBySelf = false;
+        _this.preventAutoZ = true;
         return _this;
       }
       /**
@@ -54686,6 +54793,7 @@
         markerGroupMap.each(function (item) {
           !inner$d(item).keep && _this.group.remove(item.group);
         });
+        updateZ$1(ecModel, markerGroupMap, this.type);
       };
       MarkerView.prototype.markKeep = function (drawGroup) {
         inner$d(drawGroup).keep = true;
@@ -54707,6 +54815,18 @@
       MarkerView.type = 'marker';
       return MarkerView;
     }(ComponentView);
+    function updateZ$1(ecModel, markerGroupMap, type) {
+      ecModel.eachSeries(function (seriesModel) {
+        var markerModel = MarkerModel.getMarkerModelFromSeries(seriesModel, type);
+        var markerDraw = markerGroupMap.get(seriesModel.id);
+        if (markerModel && markerDraw && markerDraw.group) {
+          var _a = retrieveZInfo(markerModel),
+            z = _a.z,
+            zlevel = _a.zlevel;
+          traverseUpdateZ(markerDraw.group, z, zlevel);
+        }
+      });
+    }
 
     function updateMarkerLayout(mpData, seriesModel, api) {
       var coordSys = seriesModel.coordinateSystem;
@@ -60309,7 +60429,7 @@
         return layout.transform ? mul$1(create$1(), axisStTrans, layout.transform) : axisStTrans;
       });
       function isParallelToAxis(whIdx) {
-        // Assert label[0] and lable[1] has the same rotation, so only use [0].
+        // Assert label[0] and label[1] has the same rotation, so only use [0].
         var localRect = layoutPair[0].localRect;
         var labelVec0 = new Point(localRect[WH$1[whIdx]] * labelPairStTrans[0][0], localRect[WH$1[whIdx]] * labelPairStTrans[0][1]);
         return Math.abs(labelVec0.y) < 1e-5;
@@ -60350,8 +60470,12 @@
         var uval = uvalMax < 0 ? uvalMax : uvalMin > 0 ? uvalMin : 0;
         k = (qval - uval) / mtvSt.x;
       }
-      Point.scaleAndAdd(layoutPair[0].label, layoutPair[0].label, mtv, -k);
-      Point.scaleAndAdd(layoutPair[1].label, layoutPair[1].label, mtv, 1 - k);
+      var delta0 = new Point();
+      var delta1 = new Point();
+      Point.scale(delta0, mtv, -k);
+      Point.scale(delta1, mtv, 1 - k);
+      labelLayoutApplyTranslation(layoutPair[0], delta0);
+      labelLayoutApplyTranslation(layoutPair[1], delta1);
     }
     function updateModelAxisBreak(model, payload) {
       var result = {

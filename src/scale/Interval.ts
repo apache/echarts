@@ -35,7 +35,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
     // Step is calculated in adjustExtent.
     protected _interval: number = 0;
     protected _niceExtent: [number, number];
-    private _intervalPrecision: number = 2;
+    protected _intervalPrecision: number = 2;
 
 
     parse(val: ScaleDataValue): number {
@@ -213,9 +213,10 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             const minorTicksGroup = [];
             const interval = nextTick.value - prevTick.value;
             const minorInterval = interval / splitNumber;
+            const minorIntervalPrecision = helper.getIntervalPrecision(minorInterval);
 
             while (count < splitNumber - 1) {
-                const minorTick = roundNumber(prevTick.value + (count + 1) * minorInterval);
+                const minorTick = roundNumber(prevTick.value + (count + 1) * minorInterval, minorIntervalPrecision);
 
                 // For the first and last interval. The count may be less than splitNumber.
                 if (minorTick > extent[0] && minorTick < extent[1]) {
@@ -276,6 +277,12 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
     }
 
     /**
+     * FIXME: refactor - disallow override, use composition instead.
+     *
+     * The override of `calcNiceTicks` should ensure these members are provided:
+     *  this._intervalPrecision
+     *  this._interval
+     *
      * @param splitNumber By default `5`.
      */
     calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
@@ -345,12 +352,13 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
 
         this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
         const interval = this._interval;
+        const intervalPrecition = this._intervalPrecision;
 
         if (!opt.fixMin) {
-            extent[0] = roundNumber(Math.floor(extent[0] / interval) * interval);
+            extent[0] = roundNumber(Math.floor(extent[0] / interval) * interval, intervalPrecition);
         }
         if (!opt.fixMax) {
-            extent[1] = roundNumber(Math.ceil(extent[1] / interval) * interval);
+            extent[1] = roundNumber(Math.ceil(extent[1] / interval) * interval, intervalPrecition);
         }
         this._innerSetExtent(extent[0], extent[1]);
     }
