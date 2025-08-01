@@ -1660,7 +1660,7 @@ type LabelFormatterParams = {
  * Common axis option. can be configured on each axis
  */
 export interface CommonAxisPointerOption {
-    show?: boolean | 'auto'
+    show?: boolean | 'auto' | 'always'
 
     z?: number;
     zlevel?: number;
