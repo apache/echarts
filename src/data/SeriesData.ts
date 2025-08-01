@@ -1391,7 +1391,7 @@ class SeriesData<
             const invertedIndicesMap = data._invertedIndicesMap;
             zrUtil.each(invertedIndicesMap, function (invertedIndices, dim) {
                 const dimInfo = data._dimInfos[dim];
-                // Currently, only dimensions that has ordinalMeta can create inverted indices.
+                // Currently, only dimensions that have ordinalMeta or are of type time can create inverted indices.
                 const ordinalMeta = dimInfo.ordinalMeta;
                 const store = data._store;
                 if (ordinalMeta) {
@@ -1403,6 +1403,13 @@ class SeriesData<
                     for (let i = 0; i < invertedIndices.length; i++) {
                         invertedIndices[i] = INDEX_NOT_FOUND;
                     }
+                    for (let i = 0; i < store.count(); i++) {
+                        // Only support the case that all values are distinct.
+                        invertedIndices[store.get(dimInfo.storeDimIndex, i) as number] = i;
+                    }
+                }
+                else if (dimInfo.type === 'time') {
+                    invertedIndices = invertedIndicesMap[dim] = { length: store.count() };
                     for (let i = 0; i < store.count(); i++) {
                         // Only support the case that all values are distinct.
                         invertedIndices[store.get(dimInfo.storeDimIndex, i) as number] = i;
