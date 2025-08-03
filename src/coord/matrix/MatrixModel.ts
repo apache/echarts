@@ -169,7 +169,7 @@ export interface MatrixDimensionCellOption extends MatrixBaseCellOption {
     // Do not use type `OrdinalRawValue` here. Number input is forbiden due to the possible confusion.
     // e.g., if `matrix.x.data: [1, 2, 3]` is allowed, then querying `coord: [1, null]` will actually get
     // the second column, since number represents the index (i.e. `MatrixXYLocator` or `OrdinalNumber`).
-    value?: string;
+    value?: string | NullUndefined;
     // column width (for x dimension) or row height (for y dimension).
     // If not specified (null/undefined), auto calculate it.
     // Only available on leaves, to avoid unnecessary complex.
