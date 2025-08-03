@@ -83,8 +83,10 @@ export interface GeoTooltipFormatterParams {
 }
 
 export interface GeoCommonOptionMixin extends RoamOptionMixin, PreserveAspectMixin {
+    // When series.map use an external geo component, all of the properties should not be set.
+
     // Map name
-    map: string;
+    map?: string;
 
     // Aspect is width / height. Inited to be geoJson bbox aspect
     // This parameter is used for scale this aspect
