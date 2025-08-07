@@ -16,6 +16,7 @@
   ],
   "main": "dist/echarts.js",
   "module": "index.js",
+  "unpkg": "dist/echarts.min.js",
   "jsdelivr": "dist/echarts.min.js",
   "types": "index.d.ts",
   "homepage": "https://echarts.apache.org",
