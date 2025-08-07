@@ -239,7 +239,7 @@ async function runTsCompile(localTs, compilerOptions, srcPathList) {
         }
     });
     if (allDiagnostics.length > 0) {
-        throw new Error('TypeScript Compile Failed')
+        throw new Error('TypeScript Compile Failed');
     }
 }
 module.exports.runTsCompile = runTsCompile;
