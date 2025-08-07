@@ -455,6 +455,9 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
     }
 
     static getDefaultOption(ecModel: GlobalModel) {
+        const darkMode = ecModel.get('darkMode')
+	    const color = darkMode === true ? tokens.darkColor : tokens.color
+
         const defaultOption: ToolboxDataViewFeatureOption = {
             show: true,
             readOnly: false,
@@ -465,12 +468,12 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
             icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
             title: ecModel.getLocaleModel().get(['toolbox', 'dataView', 'title']),
             lang: ecModel.getLocaleModel().get(['toolbox', 'dataView', 'lang']),
-            backgroundColor: tokens.color.background,
-            textColor: tokens.color.primary,
-            textareaColor: tokens.color.background,
-            textareaBorderColor: tokens.color.border,
-            buttonColor: tokens.color.accent50,
-            buttonTextColor: tokens.color.neutral00
+            backgroundColor: color.background,
+            textColor: color.primary,
+            textareaColor: color.background,
+            textareaBorderColor: color.border,
+            buttonColor: color.accent50,
+            buttonTextColor: color.neutral00
         };
 
         return defaultOption;
