@@ -37,7 +37,9 @@ import {
     SeriesLabelOption,
     DefaultEmphasisFocus,
     AriaOptionMixin,
-    BlurScope
+    BlurScope,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { LayoutRect } from '../../util/layout';
@@ -153,6 +155,8 @@ export interface TreemapSeriesNodeItemOption extends TreemapSeriesVisualOption,
 export interface TreemapSeriesOption
     extends SeriesOption<TreemapStateOption<TreemapSeriesCallbackDataParams>, ExtraStateOption>,
     TreemapStateOption<TreemapSeriesCallbackDataParams>,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     RoamOptionMixin,
     TreemapSeriesVisualOption {

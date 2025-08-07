@@ -1,0 +1,98 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <!-- THESE MAP API KEYS ARE ONLY FOR TESTING USAGE!!! -->
+        <script src="https://api.map.baidu.com/api?v=2.0&ak=KOmVjPVUAey1G2E8zNhPiuQ6QiEmAwZu"></script>
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <script src="lib/testHelper.js"></script>
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main8"></div>
+
+
+        <script>
+            require([
+                'echarts',
+                'extension/bmap'
+            ], function (echarts) {
+
+                var option = {
+                    bmap: {
+                        center: [115, 30],
+                        zoom: 5,
+                        roam: true,
+                    },
+                    tooltip: {},
+                    series: [
+                        {
+                            type: 'pie',
+                            name: 'BMap',
+                            coordinateSystem: 'bmap',
+                            radius: 20,
+                            center: [120, 30],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        },
+                        {
+                            type: 'pie',
+                            name: 'No CRS',
+                            // coordinateSystem: 'bmap',
+                            radius: 20,
+                            center: [110, 36],
+                            data: [
+                                { value: 1048, name: 'A' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main8', {
+                    title: ['Pie series on BMap'],
+                    option: option,
+                    buttons: [{
+                        text: 'Convert point [120, 30] to pixel',
+                        onclick: function () {
+                            alert(chart.convertToPixel('bmap', [120, 30]));
+                        }
+                    }]
+                });
+            });
+        </script>
+
+    </body>
+</html>

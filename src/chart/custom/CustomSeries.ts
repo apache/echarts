@@ -37,7 +37,8 @@ import {
     ParsedValue,
     SeriesDataType,
     SeriesEncodeOptionMixin,
-    SeriesOnCalendarOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     SeriesOnCartesianOptionMixin,
     SeriesOnGeoOptionMixin,
     SeriesOnPolarOptionMixin,
@@ -363,7 +364,8 @@ export interface CustomSeriesOption extends
     SeriesOnPolarOptionMixin,
     SeriesOnSingleOptionMixin,
     SeriesOnGeoOptionMixin,
-    SeriesOnCalendarOptionMixin {
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin {
 
     type?: 'custom'
 

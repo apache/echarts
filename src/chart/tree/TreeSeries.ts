@@ -31,7 +31,9 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import View from '../../coord/View';
@@ -83,6 +85,7 @@ export interface TreeSeriesLeavesOption
 
 export interface TreeSeriesOption extends
     SeriesOption<TreeSeriesStateOption, TreeStatesMixin>, TreeSeriesStateOption,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
     SymbolOptionMixin<CallbackDataParams>, BoxLayoutOptionMixin, RoamOptionMixin {
     type?: 'tree'
 

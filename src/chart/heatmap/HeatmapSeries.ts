@@ -29,7 +29,8 @@ import {
     OptionDataValue,
     StatesOptionMixin,
     SeriesEncodeOptionMixin,
-    SeriesOnCalendarOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     DefaultStatesMixinEmphasis,
     CallbackDataParams
 } from '../../util/types';
@@ -64,7 +65,8 @@ export interface HeatmapSeriesOption
     HeatmapStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin,
     SeriesOnGeoOptionMixin,
-    SeriesOnCalendarOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     SeriesEncodeOptionMixin {
 
     type?: 'heatmap'

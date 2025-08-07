@@ -19,7 +19,10 @@
 
 
 import ComponentModel from '../../model/Component';
-import { ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin, NullUndefined } from '../../util/types';
+import {
+    ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin, NullUndefined,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin
+} from '../../util/types';
 import Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 import type GlobalModel from '../../model/Global';
@@ -31,8 +34,9 @@ import tokens from '../../visual/tokens';
 export const OUTER_BOUNDS_DEFAULT = {left: 0, right: 0, top: 0, bottom: 0};
 export const OUTER_BOUNDS_CLAMP_DEFAULT = ['25%', '25%'];
 
-export interface GridOption
-    extends ComponentOption, BoxLayoutOptionMixin, ShadowOptionMixin {
+export interface GridOption extends ComponentOption,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
+    BoxLayoutOptionMixin, ShadowOptionMixin {
 
     mainType?: 'grid';
 

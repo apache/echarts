@@ -159,7 +159,7 @@ class View extends Transformable implements CoordinateSystemMaster, CoordinateSy
         if (opt && opt.api && opt.ecModel && opt.ecModel.getShallow('legacyViewCoordSysCenterBase') && centerCoord) {
             centerCoord = [
                 parsePercent(centerCoord[0], opt.api.getWidth()),
-                parsePercent(centerCoord[1], opt.api.getWidth())
+                parsePercent(centerCoord[1], opt.api.getHeight())
             ];
         }
 

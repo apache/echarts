@@ -37,7 +37,9 @@ import {
     Dictionary,
     CommonTooltipOption,
     StatesMixinBase,
-    PreserveAspectMixin
+    PreserveAspectMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import { GeoProjection, NameMap } from './geoTypes';
 import GlobalModel from '../../model/Global';
@@ -81,8 +83,10 @@ export interface GeoTooltipFormatterParams {
 }
 
 export interface GeoCommonOptionMixin extends RoamOptionMixin, PreserveAspectMixin {
+    // When series.map use an external geo component, all of the properties should not be set.
+
     // Map name
-    map: string;
+    map?: string;
 
     // Aspect is width / height. Inited to be geoJson bbox aspect
     // This parameter is used for scale this aspect
@@ -119,6 +123,8 @@ export interface GeoCommonOptionMixin extends RoamOptionMixin, PreserveAspectMix
 
 export interface GeoOption extends
     ComponentOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     // For lens animation on geo.
     AnimationOptionMixin,

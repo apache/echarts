@@ -28,7 +28,8 @@ import {
     SeriesOnCartesianOptionMixin,
     SeriesOnGeoOptionMixin,
     SeriesOnPolarOptionMixin,
-    SeriesOnCalendarOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     SeriesLargeOptionMixin,
     LineStyleOption,
     OptionDataValue,
@@ -113,7 +114,7 @@ export interface LinesDataItemOption extends LinesStateOption,
 export interface LinesSeriesOption
     extends SeriesOption<LinesStateOption, LinesStatesMixin>, LinesStateOption<CallbackDataParams>,
     SeriesOnCartesianOptionMixin, SeriesOnGeoOptionMixin, SeriesOnPolarOptionMixin,
-    SeriesOnCalendarOptionMixin, SeriesLargeOptionMixin {
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin, SeriesLargeOptionMixin {
 
     type?: 'lines'
 

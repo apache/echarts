@@ -20,7 +20,8 @@
 import ComponentModel from '../../model/Component';
 import { error } from '../../util/log';
 import {
-    BorderOptionMixin, BoxLayoutOptionMixin, ComponentOption, ItemStyleOption, NullUndefined,
+    BorderOptionMixin, BoxLayoutOptionMixin, ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin, ComponentOption, ItemStyleOption, NullUndefined,
 } from '../../util/types';
 import tokens from '../../visual/tokens';
 import {
@@ -37,7 +38,10 @@ import { ThumbnailBridgeImpl } from './ThumbnailBridgeImpl';
 // TODO: currently only graph supports thumbnail.
 // May need some refactor if serving new components in future.
 
-export interface ThumbnailOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+export interface ThumbnailOption extends
+    ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
+
     mainType?: 'thumbnail'
 
     show?: boolean
