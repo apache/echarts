@@ -455,8 +455,8 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
     }
 
     static getDefaultOption(ecModel: GlobalModel) {
-				const darkMode = ecModel.get('darkMode')
-				const color = darkMode === true ? tokens.darkColor : tokens.color
+	const darkMode = ecModel.get('darkMode')
+	const color = darkMode === true ? tokens.darkColor : tokens.color
         const defaultOption: ToolboxDataViewFeatureOption = {
             show: true,
             readOnly: false,
