@@ -881,6 +881,9 @@ export interface CallbackDataParams {
     status?: DisplayState;
     dimensionIndex?: number;
     percent?: number; // Only for chart like 'pie'
+    // point element coordinates
+    x?: number;
+    y?: number;
 
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
@@ -1480,6 +1483,15 @@ export interface TooltipFormatterCallback<T> {
         params: T, asyncTicket: string,
         callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement | HTMLElement[]) => void
     ) : string | HTMLElement | HTMLElement[]
+        /**
+     * For async callback with tooltip pos.
+     * Returned html string will be a placeholder when callback is not invoked.
+     */
+        (
+            params: T, asyncTicket: string,
+            callback: (cbTicket: string, htmlOrDomNodes: string | HTMLElement | HTMLElement[]) => void,
+            position: [number, number],
+        ) : string | HTMLElement | HTMLElement[]
 }
 
 type TooltipBuiltinPosition = 'inside' | 'top' | 'left' | 'right' | 'bottom';
