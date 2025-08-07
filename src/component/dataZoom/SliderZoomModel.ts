@@ -124,7 +124,7 @@ export interface SliderDataZoomOption extends DataZoomOption, BoxLayoutOptionMix
     brushStyle?: ItemStyleOption
 
     emphasis?: {
-        handleLabel: SliderHandleLabelOption
+        handleLabel?: SliderHandleLabelOption
         handleStyle?: ItemStyleOption
         moveHandleStyle?: ItemStyleOption
     },
