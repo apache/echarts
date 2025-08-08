@@ -103,6 +103,16 @@ const theme = {
     toolbox: {
         iconStyle: {
             borderColor: color.accent50
+        },
+        feature: {
+            dataView: {
+                backgroundColor: color.background,
+                textColor: color.primary,
+                textareaColor: color.background,
+                textareaBorderColor: color.border,
+                buttonColor: color.accent50,
+                buttonTextColor: color.neutral00
+            }
         }
     },
     tooltip: {
