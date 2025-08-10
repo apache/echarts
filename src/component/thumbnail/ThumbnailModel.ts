@@ -20,7 +20,7 @@
 import ComponentModel from '../../model/Component';
 import { error } from '../../util/log';
 import {
-    BorderOptionMixin, BoxLayoutOptionMixin, ComponentOnCalendarOptionMixin,
+    BoxLayoutOptionMixin, ComponentOnCalendarOptionMixin,
     ComponentOnMatrixOptionMixin, ComponentOption, ItemStyleOption, NullUndefined,
 } from '../../util/types';
 import tokens from '../../visual/tokens';
@@ -39,7 +39,7 @@ import { ThumbnailBridgeImpl } from './ThumbnailBridgeImpl';
 // May need some refactor if serving new components in future.
 
 export interface ThumbnailOption extends
-    ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin,
+    ComponentOption, BoxLayoutOptionMixin,
     ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
 
     mainType?: 'thumbnail'
