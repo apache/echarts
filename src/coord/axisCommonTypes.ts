@@ -123,7 +123,7 @@ export interface AxisBaseOptionCommon extends ComponentOption,
         zigzagAmplitude?: number;
         zigzagMinSpan?: number;
         zigzagMaxSpan?: number;
-        zigzagZ: number;
+        zigzagZ?: number;
         expandOnClick?: boolean;
     };
     breakLabelLayout?: {
