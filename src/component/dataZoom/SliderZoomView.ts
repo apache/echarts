@@ -294,8 +294,11 @@ class SliderZoomView extends DataZoomView {
 
         // Position barGroup
         const rect = thisGroup.getBoundingRect([sliderGroup]);
-        thisGroup.x = location.x - rect.x;
-        thisGroup.y = location.y - rect.y;
+        const rectX = isNaN(rect.x) ? 0 : rect.x;
+        const rectY = isNaN(rect.y) ? 0 : rect.y;
+
+        thisGroup.x = location.x - rectX;
+        thisGroup.y = location.y - rectY;
         thisGroup.markRedraw();
     }
 
