@@ -106,7 +106,7 @@ const theme = {
         },
         feature: {
             dataView: {
-                backgroundColor: color.background,
+                backgroundColor: backgroundColor,
                 textColor: color.primary,
                 textareaColor: color.background,
                 textareaBorderColor: color.border,
