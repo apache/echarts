@@ -33,7 +33,7 @@ import ExtensionAPI from '../core/ExtensionAPI';
 import SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
-import SeriesData from '../data/SeriesData';
+import SeriesData, { DataCalculationInfo } from '../data/SeriesData';
 import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import { TooltipMarker } from './format';
@@ -880,7 +880,7 @@ export interface CallbackDataParams {
     marker?: TooltipMarker;
     status?: DisplayState;
     dimensionIndex?: number;
-    percent?: number; // Only for chart like 'pie'
+    percent?: number; // Only for chart like 'pie' or when 'stackPercent' is used.
 
     // Param name list for mapping `a`, `b`, `c`, `d`, `e`
     $vars: string[];
@@ -1983,7 +1983,21 @@ export interface SeriesStackOptionMixin {
     stack?: string
     stackStrategy?: 'samesign' | 'all' | 'positive' | 'negative';
     stackOrder?: 'seriesAsc' | 'seriesDesc'; // default: seriesAsc
+    stackPercent?: boolean;
 }
+
+export type StackInfo = Pick<
+    DataCalculationInfo<SeriesOption & SeriesStackOptionMixin>,
+    'stackedDimension'
+    | 'isStackedByIndex'
+    | 'stackedByDimension'
+    | 'stackResultDimension'
+    | 'stackedOverDimension'
+    | 'isPercentStackEnabled'
+> & {
+    data: SeriesData
+    seriesModel: SeriesModel<SeriesOption & SeriesStackOptionMixin>
+};
 
 type SamplingFunc = (frame: ArrayLike<number>) => number;
 
