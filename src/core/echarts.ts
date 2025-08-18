@@ -744,7 +744,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
-        const backup = this.getOption ? this.getOption() : null;
+        const backup = typeof this.getOption === 'function' ? this.getOption() : null;
 
         let silent = opts && opts.silent;
         let updateParams = null as UpdateLifecycleParams;
