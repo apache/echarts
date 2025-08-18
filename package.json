@@ -160,6 +160,7 @@
     "./lib/chart/bar": "./lib/chart/bar.js",
     "./lib/chart/boxplot": "./lib/chart/boxplot.js",
     "./lib/chart/candlestick": "./lib/chart/candlestick.js",
+    "./lib/chart/chord": "./lib/chart/chord.js",
     "./lib/chart/custom": "./lib/chart/custom.js",
     "./lib/chart/effectScatter": "./lib/chart/effectScatter.js",
     "./lib/chart/funnel": "./lib/chart/funnel.js",
