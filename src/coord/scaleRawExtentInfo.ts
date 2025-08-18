@@ -21,7 +21,7 @@ import { assert, isArray, eqNaN, isFunction } from 'zrender/src/core/util';
 import Scale from '../scale/Scale';
 import { AxisBaseModel } from './AxisBaseModel';
 import { parsePercent } from 'zrender/src/contain/text';
-import { AxisBaseOption, CategoryAxisBaseOption } from './axisCommonTypes';
+import { AxisBaseOption, CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from './axisCommonTypes';
 import { ScaleDataValue } from '../util/types';
 
 
@@ -69,6 +69,11 @@ export class ScaleRawExtentInfo {
     // Make that the `rawExtentInfo` can not be modified any more.
     readonly frozen: boolean;
 
+    // custom dataMin/dataMax
+    private _dataMinRaw: ScaleDataValue;
+    private _dataMaxRaw: ScaleDataValue;
+    private _dataMinNum: number;
+    private _dataMaxNum: number;
 
     constructor(
         scale: Scale,
@@ -97,6 +102,19 @@ export class ScaleRawExtentInfo {
 
         const isOrdinal = this._isOrdinal = scale.type === 'ordinal';
         this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
+
+        if (scale.type === 'interval' || scale.type === 'log') {
+            // Process custom dataMin/dataMax
+            this._dataMinRaw = (model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('dataMin', true);
+            if (this._dataMinRaw != null) {
+                this._dataMinNum = parseAxisModelMinMax(scale, this._dataMinRaw);
+            }
+
+            this._dataMaxRaw = (model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('dataMax', true);
+            if (this._dataMaxRaw != null) {
+                this._dataMaxNum = parseAxisModelMinMax(scale, this._dataMaxRaw);
+            }
+        }
 
         let axisMinValue = model.get('min', true);
         if (axisMinValue == null) {
@@ -173,8 +191,20 @@ export class ScaleRawExtentInfo {
         // (3) If no data, it should be ensured that `scale.setBlank` is set.
 
         const isOrdinal = this._isOrdinal;
-        const dataMin = this._dataMin;
-        const dataMax = this._dataMax;
+        let dataMin = this._dataMin;
+        let dataMax = this._dataMax;
+
+        // Include custom dataMin/dataMax in calculation
+        // If dataMin is set and less than current data minimum, update the minimum value
+        if (this._dataMinNum != null && isFinite(dataMin) && this._dataMinNum < dataMin) {
+            dataMin = this._dataMinNum;
+        }
+
+        // If dataMax is set and greater than current data maximum, update the maximum value
+        if (this._dataMaxNum != null && isFinite(dataMax) && this._dataMaxNum > dataMax) {
+            dataMax = this._dataMaxNum;
+        }
+
         const axisDataLen = this._axisDataLen;
         const boundaryGapInner = this._boundaryGapInner;
 
