@@ -26,8 +26,11 @@ import type {
     AngleAxisOption as AngleAxisComponentOption
 } from '../coord/polar/AxisModel';
 import type {
+    // Historical typo, deprecated but still exported for compatibility.
     XAXisOption as XAXisComponentOption,
-    YAXisOption as YAXisComponentOption
+    YAXisOption as YAXisComponentOption,
+    XAXisOption as XAxisComponentOption,
+    YAXisOption as YAxisComponentOption,
 } from '../coord/cartesian/AxisModel';
 import type {SingleAxisOption as SingleAxisComponentOption} from '../coord/single/AxisModel';
 import type {ParallelAxisOption as ParallelAxisComponentOption} from '../coord/parallel/AxisModel';
@@ -153,6 +156,8 @@ export {
     GeoComponentOption,
     XAXisComponentOption,
     YAXisComponentOption,
+    XAxisComponentOption,
+    YAxisComponentOption,
     SingleAxisComponentOption,
     RadiusAxisComponentOption,
     AngleAxisComponentOption,

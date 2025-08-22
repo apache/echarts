@@ -32,7 +32,9 @@ import {
     ColorString,
     CommonTooltipOption,
     CallbackDataParams,
-    ZREasing
+    ZREasing,
+    ComponentOnMatrixOptionMixin,
+    ComponentOnCalendarOptionMixin
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
@@ -102,7 +104,10 @@ export interface TimelineDataItemOption extends SymbolOptionMixin {
     tooltip?: boolean
 }
 
-export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, SymbolOptionMixin {
+export interface TimelineOption extends ComponentOption,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
+    BoxLayoutOptionMixin, SymbolOptionMixin {
+
     mainType?: 'timeline'
 
     backgroundColor?: ZRColor

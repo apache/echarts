@@ -29,7 +29,9 @@ import {
     ItemStyleOption,
     LabelOption,
     CommonTooltipOption,
-    Dictionary
+    Dictionary,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import tokens from '../../visual/tokens';
 
@@ -40,9 +42,13 @@ export interface ToolboxTooltipFormatterParams {
     title: string
     $vars: ['name', 'title']
 }
-export interface ToolboxOption extends ComponentOption,
+export interface ToolboxOption extends
+    ComponentOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
+
     mainType?: 'toolbox'
 
     show?: boolean

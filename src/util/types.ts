@@ -1946,33 +1946,38 @@ export interface SeriesOnCartesianOptionMixin {
     xAxisIndex?: number
     yAxisIndex?: number
 
-    xAxisId?: string
-    yAxisId?: string
+    xAxisId?: OptionId
+    yAxisId?: OptionId
 }
 
 export interface SeriesOnPolarOptionMixin {
     polarIndex?: number
-    polarId?: string;
+    polarId?: OptionId;
 }
 
 export interface SeriesOnSingleOptionMixin {
     singleAxisIndex?: number
-    singleAxisId?: string
+    singleAxisId?: OptionId
 }
 
 export interface SeriesOnGeoOptionMixin {
     geoIndex?: number;
-    geoId?: string
+    geoId?: OptionId
 }
 
-export interface SeriesOnCalendarOptionMixin {
+export interface SeriesOnRadarOptionMixin {
+    radarIndex?: number;
+    radarId?: OptionId
+}
+
+export interface ComponentOnCalendarOptionMixin {
     calendarIndex?: number
-    calendarId?: string
+    calendarId?: OptionId
 }
 
 export interface ComponentOnMatrixOptionMixin {
     matrixIndex?: number
-    matrixId?: string
+    matrixId?: OptionId
 }
 
 export interface SeriesLargeOptionMixin {
