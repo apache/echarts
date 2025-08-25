@@ -564,6 +564,11 @@ class GaugeView extends ChartView {
                     const progress = progressList[idx];
                     progress.useStyle(data.getItemVisual(idx, 'style'));
                     progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
+                    if (progress.style.fill === 'auto') {
+                        progress.setStyle('fill', getColor(
+                            linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true)
+                        ));
+                    }
                     (progress as ECElement).z2EmphasisLift = 0;
                     setStatesStylesFromModel(progress, itemModel);
                     toggleHoverEmphasis(progress, focus, blurScope, emphasisDisabled);
