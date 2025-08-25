@@ -1018,10 +1018,15 @@ function renderNode(
         const defaultText = convertOptionIdName(nodeModel.get('name'), null);
 
         const isShow = normalLabelModel.getShallow('show');
+        const labelWidth = normalLabelModel.getShallow('width') as number;
+        const labelHeight = normalLabelModel.getShallow('height');
+
+        const statesModels = getLabelStatesModels(nodeModel,
+            upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL);
 
         setLabelStyle(
             rectEl,
-            getLabelStatesModels(nodeModel, upperLabelRect ? PATH_UPPERLABEL_NORMAL : PATH_LABEL_NOAMAL),
+            statesModels,
             {
                 defaultText: isShow ? defaultText : null,
                 inheritColor: visualColor,
@@ -1053,8 +1058,8 @@ function renderNode(
             );
             if (textStyle.width !== width || textStyle.height !== height) {
                 textEl.setStyle({
-                    width,
-                    height
+                    width: labelWidth || width,
+                    height: labelHeight || height
                 });
             }
         };
