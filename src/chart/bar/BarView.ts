@@ -1041,8 +1041,8 @@ function updateStyle(
             )
         )
         : (isHorizontalOrRadial
-            ? ((layout as RectLayout).height >= 0 ? 'bottom' : 'top')
-            : ((layout as RectLayout).width >= 0 ? 'right' : 'left'));
+            ? getLabelPositionForHorizontal(layout as RectLayout, seriesModel.coordinateSystem)
+            : getLabelPositionForVertical(layout as RectLayout, seriesModel.coordinateSystem));
 
     const labelStatesModels = getLabelStatesModels(itemModel);
 
@@ -1286,6 +1286,24 @@ function createBackgroundEl(
         silent: true,
         z2: 0
     });
+}
+
+function getLabelPositionForHorizontal(layout: RectLayout, coordSys: CoordSysOfBar): 'top' | 'bottom' {
+    if (layout.height === 0) {
+        // For zero height, determine position based on axis inverse status
+        const valueAxis = (coordSys as Cartesian2D).getOtherAxis((coordSys as Cartesian2D).getBaseAxis());
+        return valueAxis.inverse ? 'bottom' : 'top';
+    }
+    return layout.height > 0 ? 'bottom' : 'top';
+}
+
+function getLabelPositionForVertical(layout: RectLayout, coordSys: CoordSysOfBar): 'left' | 'right' {
+    if (layout.width === 0) {
+        // For zero width, determine position based on axis inverse status
+        const valueAxis = (coordSys as Cartesian2D).getOtherAxis((coordSys as Cartesian2D).getBaseAxis());
+        return valueAxis.inverse ? 'left' : 'right';
+    }
+    return layout.width >= 0 ? 'right' : 'left';
 }
 
 export default BarView;
