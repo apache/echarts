@@ -242,14 +242,14 @@ class GlobalModel extends Model<ECUnitOption> {
      * @return Whether option changed.
      */
     resetOption(
-        type: 'recreate' | 'timeline' | 'media',
+        type: 'recreate' | 'timeline' | 'media'| 'theme',
         opt?: Pick<GlobalModelSetOptionOpts, 'replaceMerge'>
     ): boolean {
         return this._resetOption(type, normalizeSetOptionInput(opt));
     }
 
     private _resetOption(
-        type: 'recreate' | 'timeline' | 'media',
+        type: 'recreate' | 'timeline' | 'media'| 'theme',
         opt: InnerSetOptionOpts
     ): boolean {
         let optionChanged = false;
@@ -283,6 +283,13 @@ class GlobalModel extends Model<ECUnitOption> {
         // If we really need to modify a props in each `MediaUnit['option']`, use the full version
         // (`{baseOption, media}`) in `setOption`.
         // For `timeline`, the case is the same.
+        if (type === 'theme') {
+            const themeOption = this._theme.option;
+            if (themeOption) {
+                optionChanged = true;
+                this._mergeOption({ theme: themeOption }, opt);
+            }
+        }
 
         if (!type || type === 'recreate' || type === 'timeline') {
             const timelineOption = optionManager.getTimelineOption(this);
@@ -322,6 +329,9 @@ class GlobalModel extends Model<ECUnitOption> {
 
         resetSourceDefaulter(this);
 
+        if (newOption.theme) {
+            mergeTheme(option, newOption.theme);
+        }
         // If no component class, merge directly.
         // For example: color, animaiton options, etc.
         each(newOption, function (componentOption, mainType: ComponentMainType) {
@@ -547,7 +557,7 @@ echarts.use([${seriesImportName}]);`);
 
     setTheme(theme: object) {
         this._theme = new Model(theme);
-        this._resetOption('recreate', null);
+        this._resetOption('theme', null);
     }
 
     getTheme(): Model {
@@ -1012,8 +1022,7 @@ function isNotTargetSeries(seriesModel: SeriesModel, payload: Payload): boolean 
 }
 
 function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
-    // PENDING
-    // NOT use `colorLayer` in theme if option has `color`
+
     const notMergeColorLayer = option.color && !option.colorLayer;
 
     each(theme, function (themeItem, name) {
@@ -1023,8 +1032,6 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
             return;
         }
 
-        // If it is component model mainType, the model handles that merge later.
-        // otherwise, merge them here.
         if (!ComponentModel.hasClass(name)) {
             if (typeof themeItem === 'object') {
                 option[name] = !option[name]
