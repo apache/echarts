@@ -1022,7 +1022,8 @@ function isNotTargetSeries(seriesModel: SeriesModel, payload: Payload): boolean 
 }
 
 function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
-
+    // PENDING
+    // NOT use `colorLayer` in theme if option has `color`
     const notMergeColorLayer = option.color && !option.colorLayer;
 
     each(theme, function (themeItem, name) {
@@ -1032,6 +1033,8 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
             return;
         }
 
+        // If it is component model mainType, the model handles that merge later.
+        // otherwise, merge them here.
         if (!ComponentModel.hasClass(name)) {
             if (typeof themeItem === 'object') {
                 option[name] = !option[name]
