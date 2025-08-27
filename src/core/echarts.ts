@@ -744,6 +744,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
+        const backup = typeof this.getOption === 'function' ? this.getOption() : null;
+
         let silent = opts && opts.silent;
         let updateParams = null as UpdateLifecycleParams;
 
@@ -761,9 +763,6 @@ class ECharts extends Eventful<ECEventDefinition> {
         try {
             this._updateTheme(theme);
             ecModel.setTheme(this._theme);
-
-            prepare(this);
-            updateMethods.update.call(this, {type: 'setTheme'}, updateParams);
         }
         catch (e) {
             this[IN_MAIN_PROCESS_KEY] = false;
@@ -772,6 +771,13 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         this[IN_MAIN_PROCESS_KEY] = false;
 
+        if (backup) {
+            this.setOption(backup as any, { notMerge: true, lazyUpdate: false, silent: !!silent });
+            return;
+        }
+
+        prepare(this);
+        updateMethods.update.call(this, {type: 'setTheme'}, updateParams);
         flushPendingActions.call(this, silent);
         triggerUpdatedEvent.call(this, silent);
     }
