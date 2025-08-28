@@ -346,6 +346,58 @@ under the License.
                     chart5.setOption(option5, true);
                 }}]
             });
+            var option6 = {
+                tooltip: {
+                    formatter: '{a} <br/>{b} : {c}%'
+                },
+                toolbox: {
+                    feature: {
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                series: [
+                    {
+                        name: '业务指标',
+                        type: 'gauge',
+                        axisLine: {
+                            lineStyle: {
+                                width: 5,
+                                color: [
+                                    [0.3, '#67e0e3'],
+                                    [0.7, '#37a2da'],
+                                    [1, '#fd666d']
+                                ]
+                            }
+                        },
+                        progress:{
+                            show:true,
+                            overlap:true,
+                            width:-10,
+                            itemStyle: {
+                                color: 'auto'
+                            }
+                        },
+                        pointer: {
+                            show: false,
+                        },
+                        data: [
+                            {value: 50, name: '本月跑步'}
+                        ],
+                    }
+                ]
+            };
+            var chart6 = testHelper.create(echarts, 'main6', {
+                title: [
+                    'progress.itemStyle.color: \'auto\''
+                ],
+                renderer: 'svg',
+                option: option6
+            });
+            setInterval(function () {
+                option6.series[0].data[0].value = (Math.random() * 100).toFixed(2) - 0;
+                chart6.setOption(option6, true);
+            }, 2000);
 
         });
         </script>
