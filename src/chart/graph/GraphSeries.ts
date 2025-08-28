@@ -173,7 +173,7 @@ export interface GraphSeriesOption
     /**
      * Symbol size scale ratio in roam
      */
-    nodeScaleRatio?: 0.6,
+    nodeScaleRatio?: number,
 
     draggable?: boolean
 
