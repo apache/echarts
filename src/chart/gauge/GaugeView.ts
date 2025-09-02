@@ -529,6 +529,7 @@ class GaugeView extends ChartView {
                 const focus = emphasisModel.get('focus');
                 const blurScope = emphasisModel.get('blurScope');
                 const emphasisDisabled = emphasisModel.get('disabled');
+                const autoColor = getColor(linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true));
                 if (showPointer) {
                     const pointer = data.getItemGraphicEl(idx) as ECSymbol;
                     const symbolStyle = data.getItemVisual(idx, 'style');
@@ -550,9 +551,7 @@ class GaugeView extends ChartView {
 
 
                     if (pointer.style.fill === 'auto') {
-                        pointer.setStyle('fill', getColor(
-                            linearMap(data.get(valueDim, idx) as number, valueExtent, [0, 1], true)
-                        ));
+                        pointer.setStyle('fill', autoColor);
                     }
 
                     (pointer as ECElement).z2EmphasisLift = 0;
@@ -564,6 +563,9 @@ class GaugeView extends ChartView {
                     const progress = progressList[idx];
                     progress.useStyle(data.getItemVisual(idx, 'style'));
                     progress.setStyle(itemModel.getModel(['progress', 'itemStyle']).getItemStyle());
+                    if (progress.style.fill === 'auto') {
+                        progress.setStyle('fill', autoColor);
+                    }
                     (progress as ECElement).z2EmphasisLift = 0;
                     setStatesStylesFromModel(progress, itemModel);
                     toggleHoverEmphasis(progress, focus, blurScope, emphasisDisabled);
