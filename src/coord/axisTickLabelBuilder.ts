@@ -132,8 +132,10 @@ export function createAxisLabels(axis: Axis, ctx: AxisLabelsComputingContext): {
         return {
             labels: zrUtil.map(ticks, numval => {
                 const tick = {value: numval};
+                const index = ticks.indexOf(numval);
+
                 return {
-                    formattedLabel: labelFormatter(tick),
+                    formattedLabel: labelFormatter(tick, index),
                     rawLabel: axis.scale.getLabel(tick),
                     tickValue: numval,
                     time: undefined as ScaleTick['time'] | NullUndefined,
