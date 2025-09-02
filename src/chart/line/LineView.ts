@@ -132,7 +132,7 @@ function getStackedOnPoints(
     data: SeriesData,
     dataCoordInfo: ReturnType<typeof prepareDataCoordInfo>
 ) {
-    if (!dataCoordInfo.valueDim) {
+    if (dataCoordInfo.valueDim == null) {
         return [];
     }
 
