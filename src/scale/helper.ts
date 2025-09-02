@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import {getPrecision, round, nice, quantityExponent} from '../util/number';
+import {getPrecision, round, nice, niceBinary, quantityExponent} from '../util/number';
 import IntervalScale from './Interval';
 import LogScale from './Log';
 import type Scale from './Scale';
@@ -53,12 +53,13 @@ export function intervalScaleNiceTicks(
     spanWithBreaks: number,
     splitNumber: number,
     minInterval?: number,
-    maxInterval?: number
+    maxInterval?: number,
+    tickBase?: number
 ): intervalScaleNiceTicksResult {
 
     const result = {} as intervalScaleNiceTicksResult;
 
-    let interval = result.interval = nice(spanWithBreaks / splitNumber, true);
+    let interval = result.interval = getNiceInterval(spanWithBreaks / splitNumber, true, tickBase);
     if (minInterval != null && interval < minInterval) {
         interval = result.interval = minInterval;
     }
@@ -172,4 +173,15 @@ export function logTransform(base: number, extent: number[], noClampNegative?: b
         Math.log(noClampNegative ? extent[0] : Math.max(0, extent[0])) / loggedBase,
         Math.log(noClampNegative ? extent[1] : Math.max(0, extent[1])) / loggedBase
     ];
+}
+
+function getNiceInterval(val: number, round?: boolean, base?: number): number {
+  if (base === 2) {
+    return niceBinary(val, round);
+  }
+ else if (base === 10) {
+    return nice(val, round);
+  }
+  // default to base 10
+  return nice(val, round);
 }

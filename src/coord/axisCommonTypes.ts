@@ -163,6 +163,12 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
      * Will be ignored if interval is set.
      */
     alignTicks?: boolean
+
+    /**
+     * Configures the base of the interval to be used, e.g. use 2 for binary-based nice intervals (1, 2, 4, 8 × 2^n)
+     * or 10 for decimal-based intervals (1, 2, 5 × 10^n) (default).
+     */
+    tickBase?: number;
 }
 
 export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {
