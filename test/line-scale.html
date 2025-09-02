@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Line Scale Test</title>
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+</head>
+<body>
+    <style>
+        html, body, #main {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+    
+    <div id="main"></div>
+    
+    <script>
+        require(['echarts'], function (echarts) {
+            var chart = echarts.init(document.getElementById('main'));
+            
+            var option = {
+                title: {
+                    text: 'Line Scale',
+                    left: 'center'
+                },
+                dataset: {
+                    source: [
+                        ['x', 'y'],
+                        [1, 10],
+                        [2, 20],
+                        [3, 30],
+                        [4, 40],
+                        [5, 50]
+                    ]
+                },
+                xAxis: {
+                    type: 'category'
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                dataZoom: [{
+                    type: 'slider',
+                    start: 40,
+                    end: 50,
+                    filterMode: 'empty'
+                }],
+                series: [{
+                    type: 'line',
+                }]
+            };
+            
+            chart.setOption(option);
+        });
+    </script>
+</body>
+</html>
