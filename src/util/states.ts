@@ -180,6 +180,19 @@ export function setStatesFlag(el: ECElement, stateName: DisplayState) {
     }
 }
 
+export function getElementState(el: ECElement): DisplayState {
+    if (el.selected) {
+        return 'select';
+    }
+    else if (el.hoverState === 1) {
+        return 'blur';
+    }
+    else if (el.hoverState === 2) {
+        return 'emphasis';
+    }
+    return 'normal';
+}
+
 /**
  * If we reuse elements when rerender.
  * DON'T forget to clearStates before we update the style and shape.
