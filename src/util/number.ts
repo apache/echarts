@@ -522,6 +522,52 @@ export function nice(val: number, round?: boolean): number {
 }
 
 /**
+ * Binary-based nice function for bytes, memory, etc.
+ * Produces intervals like 1, 2, 4, 8 × 2^n
+ */
+export function niceBinary(val: number, round?: boolean): number {
+    const exp2 = Math.pow(2, Math.floor(Math.log2(val)));
+    const f = val / exp2; // 1 <= f < 2
+
+    let nf: number;
+    if (round) {
+        if (f < 1.5) {
+            nf = 1;
+        }
+        else if (f < 2.5) {
+            nf = 2;
+        }
+        else if (f < 4) {
+            nf = 4;
+        }
+        else if (f < 7) {
+            nf = 8;
+        }
+        else {
+            nf = 16;
+        }
+    }
+    else {
+        if (f < 1) {
+            nf = 1;
+        }
+        else if (f < 2) {
+            nf = 2;
+        }
+        else if (f < 3) {
+            nf = 4;
+        }
+        else if (f < 5) {
+            nf = 8;
+        }
+        else {
+            nf = 16;
+        }
+    }
+    return nf * exp2;
+}
+
+/**
  * This code was copied from "d3.js"
  * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/arrays/quantile.js>.
  * See the license statement at the head of this file.
