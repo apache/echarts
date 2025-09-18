@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts Mixed Rose Type Test</title>
+    <script src="../dist/echarts.js"></script>
+</head>
+<body>
+    <div id="main" style="width: 600px; height: 400px;"></div>
+    <div>
+        <button onclick="setRoseType('radius')">Radius</button>
+        <button onclick="setRoseType('area')">Area</button>
+        <button onclick="setRoseType('mixed')">Mixed</button>
+        <button onclick="setRoseType(false)">None</button>
+    </div>
+    <script>
+        var chart = echarts.init(document.getElementById('main'));
+
+        var option = {
+            title: {
+                text: 'Rose Type Test',
+                left: 'center'
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    if (Array.isArray(params.value) && params.value.length >= 2) {
+                        return params.seriesName + '<br/>' +
+                               params.name + ': Radius=' + params.value[0] + ', Angle=' + params.value[1] + ' (' + params.percent + '%)';
+                    } else {
+                        return params.seriesName + '<br/>' +
+                               params.name + ': ' + params.value + ' (' + params.percent + '%)';
+                    }
+                }
+            },
+            series: [
+                {
+                    name: 'Rose Type',
+                    type: 'pie',
+                    radius: ['30%', '70%'],
+                    center: ['50%', '50%'],
+                    roseType: 'mixed', // Default to mixed
+                    data: [
+                        { value: [10, 15], name: 'A' },
+                        { value: [20, 25], name: 'B' },
+                        { value: [30, 35], name: 'C' },
+                        { value: [40, 45], name: 'D' },
+                        { value: [50, 55], name: 'E' }
+                    ],
+                    label: {
+                        show: true,
+                        formatter: function(params) {
+                            if (Array.isArray(params.value) && params.value.length >= 2) {
+                                return params.name + ': R=' + params.value[0] + ', A=' + params.value[1];
+                            } else {
+                                return params.name + ': ' + params.value;
+                            }
+                        }
+                    }
+                }
+            ]
+        };
+
+        chart.setOption(option);
+
+        function setRoseType(type) {
+            option.series[0].roseType = type;
+
+            // Convert data format based on roseType
+            if (type === 'mixed') {
+                // Ensure data is in array format for mixed type
+                option.series[0].data = [
+                    { value: [10, 15], name: 'A' },
+                    { value: [20, 25], name: 'B' },
+                    { value: [30, 35], name: 'C' },
+                    { value: [40, 45], name: 'D' },
+                    { value: [50, 55], name: 'E' }
+                ];
+            } else {
+                // Convert to single values for other types
+                // For non-mixed types, use the average of the two values
+                option.series[0].data = [
+                    { value: 12.5, name: 'A' }, // Average of [10, 15]
+                    { value: 22.5, name: 'B' }, // Average of [20, 25]
+                    { value: 32.5, name: 'C' }, // Average of [30, 35]
+                    { value: 42.5, name: 'D' }, // Average of [40, 45]
+                    { value: 52.5, name: 'E' }  // Average of [50, 55]
+                ];
+            }
+
+            chart.setOption(option);
+        }
+    </script>
+</body>
+</html>
