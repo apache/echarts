@@ -39,7 +39,8 @@ under the License.
         <script>
             var chart;
             var series = [];
-
+            var iconBase64CS = `data:image/png;base64,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`
+            var iconBase64CQ = `data:image/png;base64,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`
             function run() {
                 setInterval(function () {
                     for (var i = 0; i < series.length; ++i) {
@@ -63,6 +64,7 @@ under the License.
                         undefined,
                         'radial',
                         'tangential',
+                        'tangential-fixed',
                         30
                     ];
 
@@ -74,6 +76,43 @@ under the License.
                     for (var rot = 0; rot < 2; ++rot) {
                         for (var i = 0; i < rows; ++i) {
                             for (var j = 0; j < cols; ++j) {
+                                let label = {
+                                    show: true,
+                                    position: positions[i],
+                                    rotate: rotates[j],
+                                    formatter: 'value: {c}',
+                                    borderColor: '#0ff',
+                                    borderWidth: 2
+                                }
+                                if(rotates[j] === 'tangential-fixed'){
+                                    label = {
+                                        show: true,
+                                        position: positions[i],
+                                        rotate: rotates[j],
+                                        formatter: (par)=>{
+                                            if(par.dataIndex % 2 === 0){
+                                                return `{iconCS|}`
+                                            }
+                                            return `{iconCQ|}`
+                                        },
+                                        rich:{
+                                            iconCS:{
+                                                width:24,
+                                                height:24,
+                                                backgroundColor:{
+                                                    image:iconBase64CS
+                                                }
+                                            },
+                                            iconCQ:{
+                                                width:24,
+                                                height:24,
+                                                backgroundColor:{
+                                                    image:iconBase64CQ
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                                 series.push({
                                     type: 'pie',
                                     data: [
@@ -82,14 +121,7 @@ under the License.
                                         2.4,
                                         3.6
                                     ],
-                                    label: {
-                                        show: true,
-                                        position: positions[i],
-                                        rotate: rotates[j],
-                                        formatter: 'value: {c}',
-                                        borderColor: '#0ff',
-                                        borderWidth: 2
-                                    },
+                                    label,
                                     labelLayout: {
                                         hideOverlap: false
                                     },
@@ -103,7 +135,7 @@ under the License.
                                         100 / rows / 2 * 0.6 + '%'
                                     ]
                                 });
-                                var rotText = j === 3 ? '30°' : rotates[j];
+                                var rotText = j === 4 ? '30°' : rotates[j];
                                 title.push({
                                     text: 'startAngle: ' + (rot ? 0 : 90) + '\n' + positions[i] + ', rotate: ' + rotText,
                                     left: 100 / cols * (j + 0.5) + '%',
