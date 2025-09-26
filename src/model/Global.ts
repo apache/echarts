@@ -242,14 +242,14 @@ class GlobalModel extends Model<ECUnitOption> {
      * @return Whether option changed.
      */
     resetOption(
-        type: 'recreate' | 'timeline' | 'media'| 'theme',
+        type: 'recreate' | 'timeline' | 'media',
         opt?: Pick<GlobalModelSetOptionOpts, 'replaceMerge'>
     ): boolean {
         return this._resetOption(type, normalizeSetOptionInput(opt));
     }
 
     private _resetOption(
-        type: 'recreate' | 'timeline' | 'media'| 'theme',
+        type: 'recreate' | 'timeline' | 'media' | 'theme',
         opt: InnerSetOptionOpts
     ): boolean {
         let optionChanged = false;
@@ -286,8 +286,8 @@ class GlobalModel extends Model<ECUnitOption> {
         if (type === 'theme') {
             const themeOption = this._theme.option;
             if (themeOption) {
+                mergeTheme(this.option, themeOption, true);
                 optionChanged = true;
-                this._mergeOption({ theme: themeOption }, opt);
             }
         }
 
@@ -328,10 +328,6 @@ class GlobalModel extends Model<ECUnitOption> {
         const replaceMergeMainTypeMap = opt && opt.replaceMergeMainTypeMap;
 
         resetSourceDefaulter(this);
-
-        if (newOption.theme) {
-            mergeTheme(option, newOption.theme);
-        }
         // If no component class, merge directly.
         // For example: color, animaiton options, etc.
         each(newOption, function (componentOption, mainType: ComponentMainType) {
@@ -1021,7 +1017,7 @@ function isNotTargetSeries(seriesModel: SeriesModel, payload: Payload): boolean 
     }
 }
 
-function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
+function mergeTheme(option: ECUnitOption, theme: ThemeOption, preserveUserOptions?: boolean): void {
     // PENDING
     // NOT use `colorLayer` in theme if option has `color`
     const notMergeColorLayer = option.color && !option.colorLayer;
@@ -1039,7 +1035,9 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
             if (typeof themeItem === 'object') {
                 option[name] = !option[name]
                     ? clone(themeItem)
-                    : merge(option[name], themeItem, false);
+                    : preserveUserOptions
+                        ? merge(themeItem, option[name], false) // User options have higher priority
+                        : merge(option[name], themeItem, false); // Theme has higher priority
             }
             else {
                 if (option[name] == null) {
