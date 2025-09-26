@@ -437,6 +437,9 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         opts = opts || {};
 
+        // mark the echarts instance as raw in Vue 3 to prevent the object being converted to be a proxy.
+        (this as any).__v_skip = true;
+
         this._dom = dom;
 
         let defaultRenderer = 'canvas';
