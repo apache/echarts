@@ -198,7 +198,9 @@ function turnPointsIntoStep(
             case 'end':
                 stepPt[baseIndex] = nextPt[baseIndex];
                 stepPt[1 - baseIndex] = pt[1 - baseIndex];
-                stepPoints.push(stepPt[0], stepPt[1]);
+                if (!isNaN(nextPt[1 - baseIndex])) {
+                    stepPoints.push(stepPt[0], stepPt[1]);
+                }
                 break;
             case 'middle':
                 const middle = (pt[baseIndex] + nextPt[baseIndex]) / 2;
@@ -206,14 +208,18 @@ function turnPointsIntoStep(
                 stepPt[baseIndex] = stepPt2[baseIndex] = middle;
                 stepPt[1 - baseIndex] = pt[1 - baseIndex];
                 stepPt2[1 - baseIndex] = nextPt[1 - baseIndex];
-                stepPoints.push(stepPt[0], stepPt[1]);
-                stepPoints.push(stepPt2[0], stepPt2[1]);
+                if (!isNaN(nextPt[1 - baseIndex]) && !isNaN(pt[1 - baseIndex])) {
+                    stepPoints.push(stepPt[0], stepPt[1]);
+                    stepPoints.push(stepPt2[0], stepPt2[1]);
+                }
                 break;
             default:
                 // default is start
                 stepPt[baseIndex] = pt[baseIndex];
                 stepPt[1 - baseIndex] = nextPt[1 - baseIndex];
-                stepPoints.push(stepPt[0], stepPt[1]);
+                if (!isNaN(pt[1 - baseIndex])) {
+                    stepPoints.push(stepPt[0], stepPt[1]);
+                }
         }
     }
     // Last points
