@@ -1088,8 +1088,8 @@ class DataStore {
      * Data iteration
      * @param ctx default this
      * @example
-     *  list.each('x', function (x, idx) {});
-     *  list.each(['x', 'y'], function (x, y, idx) {});
+     *  list.each(0, function (x, idx) {});
+     *  list.each([0, 1], function (x, y, idx) {});
      *  list.each(function (idx) {})
      */
     each(dims: DimensionIndex[], cb: EachCb): void {
