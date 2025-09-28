@@ -1,0 +1,232 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <title>Test: HideOverlap with AxisPointer TriggerEmphasis Fix</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 20px;
+            }
+            #main {
+                width: 800px;
+                height: 400px;
+                margin: 20px 0;
+            }
+            .info {
+                background: #f0f0f0;
+                padding: 10px;
+                margin: 10px 0;
+                border-radius: 5px;
+                max-width: 800px;
+            }
+            .test-title {
+                background: #146402;
+                color: #fff;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="test-title">
+            <h1>Test: HideOverlap with AxisPointer TriggerEmphasis Fix</h1>
+        </div>
+        
+        <div class="info">
+            <strong>测试说明：</strong>
+            <ul>
+                <li>这个测试验证了 GitHub issue #20744 的修复效果</li>
+                <li>问题：axisPointer triggerEmphasis 时 labelLayout.hideOverlap 不生效</li>
+                <li>将鼠标悬停在不同的轴刻度上，观察标签重叠处理是否正确</li>
+                <li>期望结果：emphasis 时 hideOverlap 依旧生效，且优先显示当前 hover 图形的标签</li>
+            </ul>
+        </div>
+
+        <div id="main"></div>
+
+        <div class="info">
+            <strong>测试步骤：</strong>
+            <ol>
+                <li>将鼠标悬停在不同的 x 轴刻度上（特别是 'Tue' 位置）</li>
+                <li>观察标签是否正确处理重叠</li>
+                <li>检查 emphasis 状态下的标签是否优先显示</li>
+                <li>打开浏览器控制台查看事件日志</li>
+            </ol>
+            <strong>期望行为：</strong>
+            <ul>
+                <li>正常状态下，重叠的标签会被隐藏</li>
+                <li>当 axisPointer triggerEmphasis 时，当前 hover 的数据点标签应该优先显示</li>
+                <li>其他重叠的标签仍然会被正确隐藏</li>
+            </ul>
+        </div>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                
+                var myChart = echarts.init(document.getElementById('main'));
+
+                // 基于 GitHub issue 中提到的示例创建测试用例
+                var option = {
+                    title: {
+                        text: 'Stacked Line - HideOverlap Fix Test'
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['Email', 'Union Ads', 'Video Ads', 'Direct', 'Search Engine']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    toolbox: {
+                        feature: {
+                            saveAsImage: {}
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisPointer: {
+                            type: 'line',
+                            triggerEmphasis: true
+                        }
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: 'Email',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [100, 100.5, 100.2, 100.8, 100.1, 100.9, 100.3],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            },
+                            labelLayout: {
+                                hideOverlap: true
+                            }
+                        },
+                        {
+                            name: 'Union Ads',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [10, 10.1, 10.05, 10.15, 10.02, 10.18, 10.08],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            },
+                            labelLayout: {
+                                hideOverlap: true
+                            }
+                        },
+                        {
+                            name: 'Video Ads',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [5, 5.05, 5.02, 5.08, 5.01, 5.09, 5.04],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            },
+                            labelLayout: {
+                                hideOverlap: true
+                            }
+                        },
+                        {
+                            name: 'Direct',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [3, 3.02, 3.01, 3.04, 3.005, 3.045, 3.02],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            },
+                            labelLayout: {
+                                hideOverlap: true
+                            }
+                        },
+                        {
+                            name: 'Search Engine',
+                            type: 'line',
+                            stack: 'Total',
+                            data: [2, 2.01, 2.005, 2.02, 2.003, 2.025, 2.01],
+                            label: {
+                                show: true,
+                                position: 'top',
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            },
+                            labelLayout: {
+                                hideOverlap: true
+                            }
+                        }
+                    ]
+                };
+
+                myChart.setOption(option);
+
+                // 添加事件监听来观察修复效果
+                myChart.on('highlight', function(params) {
+                    console.log('Highlight event:', params);
+                });
+
+                myChart.on('downplay', function(params) {
+                    console.log('Downplay event:', params);
+                });
+
+                // 添加 axisPointer 事件监听
+                myChart.on('updateAxisPointer', function(params) {
+                    console.log('UpdateAxisPointer event:', params);
+                });
+
+                // 窗口大小变化时重新调整图表
+                window.addEventListener('resize', function() {
+                    myChart.resize();
+                });
+            });
+        </script>
+    </body>
+</html>
