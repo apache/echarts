@@ -314,7 +314,7 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             const data = seriesModel.getData();
 
             data.each(
-                this.getDataDimensionIndex(data, seriesModel.seriesIndex),
+                this.getDataDimensionIndex(data),
                 function (value: number, dataIndex: number) {
                     // Should always base on model pieceList, because it is order sensitive.
                     const pIdx = VisualMapping.findPieceIndex(value, pieceList);

@@ -33,9 +33,9 @@ import {
     OptionDataValue,
     BuiltinVisualProperty,
     DimensionIndex,
-    OptionId,
     ComponentOnCalendarOptionMixin,
-    ComponentOnMatrixOptionMixin
+    ComponentOnMatrixOptionMixin,
+    OptionId,
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
@@ -91,7 +91,17 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
     /**
      * Dimension to be encoded
      */
-    dimension?: number | number[]
+    dimension?: number
+
+    /**
+     * Series targets with specific dimensions
+     * When provided, seriesIndex, seriesId, and dimension are ignored
+     */
+    seriesTargets?: {
+        seriesIndex?: number
+        seriesId?: OptionId
+        dimension: number
+    }[]
 
     /**
      * Visual configuration for the data in selection
@@ -247,6 +257,30 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
      * @return An array of series indices.
      */
     protected getTargetSeriesIndices(): number[] {
+        const seriesTargets = this.option.seriesTargets;
+        if (seriesTargets) {
+            // When seriesTargets is provided, collect all target series indices
+            const indices: number[] = [];
+            for (const target of seriesTargets) {
+                if (target.seriesIndex != null) {
+                    indices.push(target.seriesIndex);
+                }
+                else if (target.seriesId != null) {
+                    // Find series by ID
+                    let seriesModel: SeriesModel;
+                    this.ecModel.eachSeries(function (series) {
+                        if (series.id === target.seriesId) {
+                            seriesModel = series;
+                        }
+                    });
+                    if (seriesModel) {
+                        indices.push(seriesModel.componentIndex);
+                    }
+                }
+            }
+            return indices;
+        }
+
         const optionSeriesId = this.option.seriesId;
         let optionSeriesIndex = this.option.seriesIndex;
         if (optionSeriesIndex == null && optionSeriesId == null) {
@@ -407,15 +441,21 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     // }
 
     getDimension(seriesIndex: number): number {
-        const optDim = this.option.dimension;
-        if (isArray(optDim) && seriesIndex != null) {
-            const idx = this.getTargetSeriesIndices().indexOf(seriesIndex);
-            return optDim[idx] ?? optDim[optDim.length - 1];
+        const seriesTargets = this.option.seriesTargets;
+        if (seriesTargets) {
+            const target = seriesTargets.find(target =>
+                (target.seriesIndex != null && target.seriesIndex === seriesIndex)
+                || (target.seriesId != null && target.seriesId === this.ecModel.getSeriesByIndex(seriesIndex).id)
+            );
+            if (target) {
+                return target.dimension;
+            }
         }
-        return [].concat(optDim)[0];
+        return this.option.dimension;
     }
 
-    getDataDimensionIndex(data: SeriesData, seriesIndex: number): DimensionIndex {
+    getDataDimensionIndex(data: SeriesData): DimensionIndex {
+        const seriesIndex = (data.hostModel as any).seriesIndex;
         const optDim = this.getDimension(seriesIndex);
 
         if (optDim != null) {

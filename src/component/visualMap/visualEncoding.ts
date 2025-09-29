@@ -42,7 +42,7 @@ export const visualMapEncodingHandlers: StageHandler[] = [
                     visualMapModel.stateList,
                     visualMapModel.targetVisuals,
                     zrUtil.bind(visualMapModel.getValueState, visualMapModel),
-                    visualMapModel.getDataDimensionIndex(seriesModel.getData(), seriesModel.seriesIndex)
+                    visualMapModel.getDataDimensionIndex(seriesModel.getData())
                 ));
             });
 
@@ -65,7 +65,7 @@ export const visualMapEncodingHandlers: StageHandler[] = [
                         outerColors: []
                     } as VisualMeta;
 
-                    const dimIdx = visualMapModel.getDataDimensionIndex(data, seriesModel.seriesIndex);
+                    const dimIdx = visualMapModel.getDataDimensionIndex(data);
                     if (dimIdx >= 0) {
                         // visualMeta.dimension should be dimension index, but not concrete dimension.
                         visualMeta.dimension = dimIdx;
