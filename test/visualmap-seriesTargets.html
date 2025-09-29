@@ -71,6 +71,38 @@
                     }
                 });
             });
+
+            createCase('seriesTargets: using seriesId to target specific series', 1, function (chart) {
+                chart.setOption({
+                    tooltip: {},
+                    dataset: {
+                        source: [
+                            ['product', 'sales', 'profit', 'growth'],
+                            ['Product A', 120, 45, 12],
+                            ['Product B', 200, 80, 25],
+                            ['Product C', 150, 60, 18],
+                            ['Product D', 80, 30, 8]
+                        ]
+                    },
+                    xAxis: { type: 'category' },
+                    yAxis: {},
+                    series: [
+                        { type: 'bar', id: 'sales-bar', name: 'Sales' },
+                        { type: 'bar', id: 'profit-bar', name: 'Profit' },
+                        { type: 'bar', id: 'growth-bar', name: 'Growth' }
+                    ],
+                    visualMap: {
+                        type: 'continuous',
+                        min: 0,
+                        max: 200,
+                        seriesTargets: [
+                            { seriesId: 'sales-bar', dimension: 1 },
+                            { seriesId: 'profit-bar', dimension: 2 },
+                            { seriesId: 'growth-bar', dimension: 3 }
+                        ]
+                    }
+                });
+            });
         });
     </script>
 </body>
