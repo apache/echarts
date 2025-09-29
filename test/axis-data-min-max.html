@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <style>
+        .chart {
+            height: 350px;
+            margin: 20px 0;
+        }
+    </style>
+
+    <div id="main0" class="chart"></div>
+    <div id="main1" class="chart"></div>
+    <div id="main2" class="chart"></div>
+    <div id="main3" class="chart"></div>
+    <div id="main4" class="chart"></div>
+    <div id="main5" class="chart"></div>
+    <div id="main6" class="chart"></div>
+    <div id="main7" class="chart"></div>
+    <div id="main8" class="chart"></div>
+    <div id="main9" class="chart"></div>
+
+    <script>
+        require(['echarts'], function (echarts) {
+            // Basic data
+            var baseData = [820, 932, 901, 934, 1290, 1330, 1320];
+            var days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+            // Data with negative values
+            var negativeData = [120, -132, 201, -234, 290, -330, 320];
+
+            // Log axis data (must be positive)
+            var logData = [5, 20, 36, 100, 500, 1200, 3500];
+
+            // Test 1: Basic dataMax usage (dataMax > actual data maximum)
+            var chart1 = testHelper.create(echarts, 'main0', {
+                title: 'dataMax > actual data',
+                option: {
+                    xAxis: {
+                        type: 'category',
+                        data: days
+                    },
+                    yAxis: {
+                        type: 'value',
+                        dataMax: 1555, // Greater than actual data maximum 1330
+                    },
+                    series: [
+                        {
+                            data: baseData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 2: dataMax < actual data maximum (should not affect range)
+            var chart2 = testHelper.create(echarts, 'main1', {
+                title: 'dataMax < actual data (no effect on range)',
+                option: {
+                    xAxis: {
+                        type: 'category',
+                        data: days
+                    },
+                    yAxis: {
+                        type: 'value',
+                        dataMax: 1000, // Less than actual data maximum 1330, should not affect
+                    },
+                    series: [
+                        {
+                            data: baseData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 3: Negative data + dataMin usage (dataMin < actual data minimum)
+            var chart3 = testHelper.create(echarts, 'main2', {
+                title: 'Negative data + dataMin < actual data',
+                option: {
+                    xAxis: {
+                        type: 'category',
+                        data: days
+                    },
+                    yAxis: {
+                        type: 'value',
+                        dataMin: -500, // Less than actual data minimum -330
+                    },
+                    series: [
+                        {
+                            data: negativeData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 4: Negative data + dataMin > actual data minimum (should not affect range)
+            var chart4 = testHelper.create(echarts, 'main3', {
+                title: 'Negative data + dataMin > actual data (no effect on range)',
+                option: {
+                    xAxis: {
+                        type: 'category',
+                        data: days
+                    },
+                    yAxis: {
+                        type: 'value',
+                        dataMin: -100, // Greater than actual data minimum -330, should not affect
+                    },
+                    series: [
+                        {
+                            data: negativeData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 5: Negative data + using both dataMin and dataMax
+            var chart5 = testHelper.create(echarts, 'main4', {
+                title: 'Negative data + using both dataMin and dataMax',
+                option: {
+                    xAxis: {
+                        type: 'category',
+                        data: days
+                    },
+                    yAxis: {
+                        type: 'value',
+                        dataMin: -500,
+                        dataMax: 500,
+                    },
+                    series: [
+                        {
+                            data: negativeData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 6: Comparing with min/max properties
+            var chart6 = testHelper.create(echarts, 'main5', {
+                title: 'min/max vs dataMin/dataMax (negative data)',
+                option: {
+                    xAxis: {
+                        type: 'category',
+                        data: days
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: -500,
+                        max: 500,
+                    },
+                    series: [
+                        {
+                            data: negativeData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 7: Using dataMin/dataMax on category axis (should have no effect)
+            var chart7 = testHelper.create(echarts, 'main6', {
+                title: 'dataMin/dataMax on category axis (no effect)',
+                option: {
+                    yAxis: {
+                        type: 'category',
+                        data: days,
+                        dataMin: 2, // No effect on category axis
+                        dataMax: 5, // No effect on category axis
+                    },
+                    xAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            data: negativeData,
+                            type: 'bar'
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 8: Log axis + dataMin usage
+            var chart8 = testHelper.create(echarts, 'main7', {
+                title: 'Log axis + dataMin usage',
+                option: {
+                    xAxis: {
+                        type: 'category',
+                        data: days
+                    },
+                    yAxis: {
+                        type: 'log',
+                        dataMin: 0.5, // Using a smaller fraction, much less than actual data minimum 5
+                    },
+                    series: [
+                        {
+                            data: logData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 9: Log axis + dataMax usage
+            var chart9 = testHelper.create(echarts, 'main8', {
+                title: 'Log axis + dataMax usage',
+                option: {
+                    xAxis: {
+                        type: 'category',
+                        data: days
+                    },
+                    yAxis: {
+                        type: 'log',
+                        dataMax: 100000, // Greater than actual data maximum 3500
+                    },
+                    series: [
+                        {
+                            data: logData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 10: Time axis + dataMin/dataMax usage
+            var timeData = [];
+            var timeLabels = [];
+            var baseTime = new Date('2024-01-01').getTime();
+            for (let i = 0; i < 7; i++) {
+                var time = baseTime + i * 24 * 3600 * 1000; // Add days
+                timeLabels.push(time);
+                timeData.push([time, 820 + Math.random() * 500]);
+            }
+
+            var chart10 = testHelper.create(echarts, 'main9', {
+                title: 'Time axis + dataMin/dataMax usage',
+                option: {
+                    xAxis: {
+                        type: 'time',
+                        dataMin: baseTime - 2 * 24 * 3600 * 1000, // 2 days before first data point
+                        dataMax: baseTime + 8 * 24 * 3600 * 1000, // 1 day after last data point
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            data: timeData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            var date = new Date(params[0].value[0]);
+                            return date.toLocaleDateString() + '<br/>' + 
+                                   params[0].seriesName + ': ' + params[0].value[1].toFixed(2);
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
