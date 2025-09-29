@@ -70,8 +70,6 @@ export class ScaleRawExtentInfo {
     readonly frozen: boolean;
 
     // custom dataMin/dataMax
-    private _dataMinRaw: ScaleDataValue;
-    private _dataMaxRaw: ScaleDataValue;
     private _dataMinNum: number;
     private _dataMaxNum: number;
 
@@ -103,16 +101,16 @@ export class ScaleRawExtentInfo {
         const isOrdinal = this._isOrdinal = scale.type === 'ordinal';
         this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
 
-        if (scale.type === 'interval' || scale.type === 'log') {
+        if (scale.type === 'interval' || scale.type === 'log' || scale.type === 'time') {
             // Process custom dataMin/dataMax
-            this._dataMinRaw = (model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('dataMin', true);
-            if (this._dataMinRaw != null) {
-                this._dataMinNum = parseAxisModelMinMax(scale, this._dataMinRaw);
+            const dataMinRaw = (model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('dataMin', true);
+            if (dataMinRaw != null) {
+                this._dataMinNum = parseAxisModelMinMax(scale, dataMinRaw);
             }
 
-            this._dataMaxRaw = (model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('dataMax', true);
-            if (this._dataMaxRaw != null) {
-                this._dataMaxNum = parseAxisModelMinMax(scale, this._dataMaxRaw);
+            const dataMaxRaw = (model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('dataMax', true);
+            if (dataMaxRaw != null) {
+                this._dataMaxNum = parseAxisModelMinMax(scale, dataMaxRaw);
             }
         }
 

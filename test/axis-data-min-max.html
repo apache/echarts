@@ -49,6 +49,7 @@ under the License.
     <div id="main6" class="chart"></div>
     <div id="main7" class="chart"></div>
     <div id="main8" class="chart"></div>
+    <div id="main9" class="chart"></div>
 
     <script>
         require(['echarts'], function (echarts) {
@@ -285,6 +286,45 @@ under the License.
                     ],
                     tooltip: {
                         trigger: 'axis'
+                    }
+                }
+            });
+
+            // Test 10: Time axis + dataMin/dataMax usage
+            var timeData = [];
+            var timeLabels = [];
+            var baseTime = new Date('2024-01-01').getTime();
+            for (let i = 0; i < 7; i++) {
+                var time = baseTime + i * 24 * 3600 * 1000; // Add days
+                timeLabels.push(time);
+                timeData.push([time, 820 + Math.random() * 500]);
+            }
+
+            var chart10 = testHelper.create(echarts, 'main9', {
+                title: 'Time axis + dataMin/dataMax usage',
+                option: {
+                    xAxis: {
+                        type: 'time',
+                        dataMin: baseTime - 2 * 24 * 3600 * 1000, // 2 days before first data point
+                        dataMax: baseTime + 8 * 24 * 3600 * 1000, // 1 day after last data point
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            data: timeData,
+                            type: 'line',
+                            smooth: true
+                        }
+                    ],
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            var date = new Date(params[0].value[0]);
+                            return date.toLocaleDateString() + '<br/>' + 
+                                   params[0].seriesName + ': ' + params[0].value[1].toFixed(2);
+                        }
                     }
                 }
             });
