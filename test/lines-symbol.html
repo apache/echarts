@@ -24,7 +24,8 @@ under the License.
         <script src='lib/simpleRequire.js'></script>
         <script src='lib/config.js'></script>
         <script src='lib/jquery.min.js'></script>
-        <script src='http://api.map.baidu.com/api?v=2.0&ak=KOmVjPVUAey1G2E8zNhPiuQ6QiEmAwZu'></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css">
         <meta name='viewport' content='width=device-width, initial-scale=1' />
     </head>
     <body>
@@ -36,6 +37,8 @@ under the License.
             }
         </style>
         <div id='main'></div>
+        <div id='symbol-polyline'></div>
+
         <script>
 
             require([
@@ -147,6 +150,46 @@ under the License.
 
             });
 
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                option = {
+                    xAxis: {
+                        type: 'value',min:0,
+                        max:100
+                    },
+                    yAxis: {
+                        type: 'value',min:0,max:100
+                    },
+                    series: [
+                        {
+                            data: [{coords:[[0,0],[30,30],[60,30], [80,20]]}],
+                            type: 'lines',
+                            coordinateSystem: 'cartesian2d',
+                            polyline: true,
+                            lineStyle:{
+                                color:'black',
+                                width:2,
+                                curveness:0
+                            },
+                            symbol: 'arrow',
+                            symbolSize:30
+                        }
+                    ]
+                };
+
+
+                var chart = testHelper.create(echarts, 'symbol-polyline', {
+                    title: 'Symbol should appear on polyline',
+                    option: option,
+                    height: 600
+                });
+
+            });
         </script>
     </body>
 </html>
