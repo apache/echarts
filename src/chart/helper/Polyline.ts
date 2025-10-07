@@ -27,7 +27,6 @@ import SeriesModel from '../../model/Series';
 import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { ECSymbol } from '../../util/symbol';
 import * as vector from 'zrender/src/core/vector';
-import { VectorArray } from 'zrender/src/core/vector';
 import {
     SYMBOL_CATEGORIES,
     LineECSymbol,
@@ -167,8 +166,8 @@ class Polyline extends graphic.Group {
                 }
 
                 let tangent = [0, 0];
-                let p1: VectorArray;
-                let p2: VectorArray;
+                let p1: vector.VectorArray;
+                let p2: vector.VectorArray;
 
                 if (percent === 0) {
                     p1 = points[0];
