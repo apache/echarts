@@ -233,8 +233,7 @@ class SunburstPiece extends graphic.Sector {
             }
             else {
                 if (!textAlign || textAlign === 'center') {
-                    // Put label in the center if it's a full circle, or if it's a root-level node with no inner radius
-                    // and there's only one sibling (to avoid overlapping labels)
+                    // Put label in the center if it's a circle
                     if (layout.r0 === 0 && isRadianAroundZero(angle - 2 * Math.PI)) {
                         r = 0;
                     }
