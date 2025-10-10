@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <script src="lib/dat.gui.min.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+<body>
+    
+    <div id="test1"></div>
+    <div id="test2"></div>
+    <div id="test3"></div>
+    <script>
+        require(['echarts'], function (echarts) {
+            
+        // Test Case 1: Partial Arcs with r0 = 0
+           var partialArcData = [
+                {
+                    name: 'Grandpa',
+                    children: [
+                        {
+                            name: 'Uncle Leo',
+                            value: 15,
+                            children: [
+                                {
+                                    name: 'Cousin Jack',
+                                    value: 2
+                                },
+                                {
+                                    name: 'Cousin Mary',
+                                    value: 5,
+                                    children: [
+                                        {
+                                            name: 'Jackson',
+                                            value: 2
+                                        }
+                                    ]
+                                },
+                                {
+                                    name: 'Cousin Ben',
+                                    value: 4
+                                }
+                            ]
+                        },
+                        {
+                            name: 'Father',
+                            value: 10,
+                            children: [
+                                {
+                                    name: 'Me',
+                                    value: 5
+                                },
+                                {
+                                    name: 'Brother Peter',
+                                    value: 1
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ];
+           
+
+            var chart1 = testHelper.create(echarts, 'test1', {
+                title: ['Test 1: Family Tree with Inner Radius = 0'],
+                option: {
+                    series: {
+                        type: 'sunburst',
+                        data: partialArcData,
+                        radius: [0, '80%'], // r0 = 0
+                        startAngle: 0,
+                        label: {
+                            show: true,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        },
+                        levels: [{}, {
+                            label: {
+                                rotate: 'tangential'
+                            }
+                        }]
+                    }
+                },
+                height: 350
+            });
+
+            // Test Case 2: Same data with inner radius > 0
+            var chart2 = testHelper.create(echarts, 'test2', {
+                title: ['Test 2: Family Tree with Inner Radius > 0)'],
+                option: {
+                    series: {
+                        type: 'sunburst',
+                        data: partialArcData,
+                        radius: ['20%', '80%'], // r0 > 0
+                        startAngle: 0,
+                        label: {
+                            show: true,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        },
+                        levels: [{}, {
+                            label: {
+                                rotate: 'tangential'
+                            }
+                        }]
+                    }
+                },
+                height: 350
+            });
+
+            // Test Case 3: Multiple Root Nodes (Root A & Root B) - Overlap Prevention
+            var multipleRootsData = [
+                {
+                    name: 'Root A',
+                    children: [
+                        {
+                            name: 'Child A1',
+                            value: 1
+                        },
+                        {
+                            name: 'Child A2',
+                            value: 10
+                        }
+                    ]
+                },
+                {
+                    name: 'Root B',
+                    children: [
+                        {
+                            name: 'Child B1',
+                            value: 5
+                        },
+                        {
+                            name: 'Child B2',
+                            value: 8
+                        }
+                    ]
+                }
+            ];
+
+            var chart3 = testHelper.create(echarts, 'test3', {
+                title: ['Test 3: Multiple Roots (A & B) - Labels NOT Centered'],
+                option: {
+                    series: {
+                        type: 'sunburst',
+                        data: multipleRootsData,
+                        radius: [0, '80%'], // r0 = 0
+                        label: {
+                            show: true,
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        }
+                    }
+                },
+                height: 350
+            });
+        });
+    </script>
+</body>
+</html>

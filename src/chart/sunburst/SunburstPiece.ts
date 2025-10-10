@@ -234,7 +234,7 @@ class SunburstPiece extends graphic.Sector {
             else {
                 if (!textAlign || textAlign === 'center') {
                     // Put label in the center if it's a circle
-                    if (angle === 2 * Math.PI && layout.r0 === 0) {
+                    if (layout.r0 === 0 && isRadianAroundZero(angle - 2 * Math.PI)) {
                         r = 0;
                     }
                     else {
