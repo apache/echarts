@@ -68,7 +68,7 @@ export interface PieStateOption<TCbParams = never> {
     labelLine?: PieLabelLineOption
 }
 interface PieLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
-    rotate?: number | boolean | 'radial' | 'tangential' | 'tangential-fixed'
+    rotate?: number | boolean | 'radial' | 'tangential' | 'tangential-noflip'
     alignTo?: 'none' | 'labelLine' | 'edge'
     edgeDistance?: string | number
     /**

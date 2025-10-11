@@ -484,7 +484,7 @@ export default function pieLabelLayout(
             const radialAngle = nx < 0 ? -midAngle + PI : -midAngle;
             labelRotate = radialAngle;
         }
-        else if (rotate === 'tangential' || rotate === 'tangential-fixed'
+        else if (rotate === 'tangential' || rotate === 'tangential-noflip'
             && labelPosition !== 'outside' && labelPosition !== 'outer'
         ) {
             let rad = Math.atan2(nx, ny);
@@ -492,7 +492,7 @@ export default function pieLabelLayout(
                 rad = PI * 2 + rad;
             }
             const isDown = ny > 0;
-            if (isDown && rotate !== 'tangential-fixed') {
+            if (isDown && rotate !== 'tangential-noflip') {
                 rad = PI + rad;
             }
             labelRotate = rad - PI;
