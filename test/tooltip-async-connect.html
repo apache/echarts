@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css" />
+        <title>Async Tooltip Formatter with Connected Charts</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+            }
+            .chart-container {
+                position: relative;
+                height: 200px;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="test-title">
+            <div class="test-title-inner">
+                <p>Tooltip Async Connect</p>
+                <p>Charts connected with group "group1"</p>
+                <p>
+                    Expected: When hovering over chart 1, BOTH tooltips should
+                    initially show "Loading", then BOTH should update to show
+                    the resolved value.
+                </p>
+                <p>
+                    Note: Each chart's async formatter resolves independently
+                    after 500ms.
+                </p>
+            </div>
+        </div>
+        <div id="chart-container-1" class="chart-container"></div>
+        <div id="chart-container-2" class="chart-container"></div>
+
+        <script>
+            require(["echarts"], function (echarts) {
+                var dom1 = document.getElementById("chart-container-1");
+                var dom2 = document.getElementById("chart-container-2");
+
+                var myChart1 = echarts.init(dom1, null, {
+                    renderer: "canvas",
+                    useDirtyRect: false,
+                });
+                var myChart2 = echarts.init(dom2, null, {
+                    renderer: "canvas",
+                    useDirtyRect: false,
+                });
+
+                var option;
+
+                const data = [
+                    ["2000-06-05", 116],
+                    ["2000-06-06", 129],
+                    ["2000-06-07", 135],
+                    ["2000-06-08", 86],
+                    ["2000-06-09", 73],
+                    ["2000-06-10", 85],
+                    ["2000-06-11", 73],
+                    ["2000-06-12", 68],
+                    ["2000-06-13", 92],
+                    ["2000-06-14", 130],
+                    ["2000-06-15", 245],
+                    ["2000-06-16", 139],
+                    ["2000-06-17", 115],
+                    ["2000-06-18", 111],
+                    ["2000-06-19", 309],
+                    ["2000-06-20", 206],
+                    ["2000-06-21", 137],
+                    ["2000-06-22", 128],
+                    ["2000-06-23", 85],
+                    ["2000-06-24", 94],
+                    ["2000-06-25", 71],
+                    ["2000-06-26", 106],
+                    ["2000-06-27", 84],
+                    ["2000-06-28", 93],
+                    ["2000-06-29", 85],
+                    ["2000-06-30", 73],
+                    ["2000-07-01", 83],
+                    ["2000-07-02", 125],
+                    ["2000-07-03", 107],
+                    ["2000-07-04", 82],
+                    ["2000-07-05", 44],
+                    ["2000-07-06", 72],
+                    ["2000-07-07", 106],
+                    ["2000-07-08", 107],
+                    ["2000-07-09", 66],
+                    ["2000-07-10", 91],
+                    ["2000-07-11", 92],
+                    ["2000-07-12", 113],
+                    ["2000-07-13", 107],
+                    ["2000-07-14", 131],
+                    ["2000-07-15", 111],
+                    ["2000-07-16", 64],
+                    ["2000-07-17", 69],
+                    ["2000-07-18", 88],
+                    ["2000-07-19", 77],
+                    ["2000-07-20", 83],
+                    ["2000-07-21", 111],
+                    ["2000-07-22", 57],
+                    ["2000-07-23", 55],
+                    ["2000-07-24", 60],
+                ];
+                const dateList = data.map(function (item) {
+                    return item[0];
+                });
+                const valueList = data.map(function (item) {
+                    return item[1];
+                });
+
+                option = {
+                    tooltip: {
+                        trigger: "axis",
+                        formatter: function (params, ticket, callback) {
+                            setTimeout(() => {
+                                callback(ticket, "Value: " + params[0].value);
+                            }, 500);
+                            return "Loading";
+                        },
+                    },
+                    xAxis: [
+                        {
+                            data: dateList,
+                        },
+                    ],
+                    yAxis: [{}],
+                    series: [
+                        {
+                            type: "line",
+                            showSymbol: false,
+                            data: valueList,
+                        },
+                    ],
+                };
+
+                option && myChart1.setOption(option);
+                option && myChart2.setOption(option);
+
+                window.addEventListener("resize", myChart1.resize);
+                window.addEventListener("resize", myChart2.resize);
+
+                myChart1.group = "group1";
+                myChart2.group = "group1";
+                echarts.connect("group1");
+            });
+        </script>
+    </body>
+</html>
