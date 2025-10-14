@@ -102,14 +102,14 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * + 'dataMin': use the min value in data.
      * + null/undefined: auto decide min value (consider pretty look and boundaryGap).
      */
-    min?: ScaleDataValue | 'dataMin' | ((extent: {min: number, max: number}) => ScaleDataValue);
+    min?: ScaleDataValue | 'dataMin' | ((extent: {min: number, max: number}) => ScaleDataValue | NullUndefined);
     /**
      * Max value of the axis. can be:
      * + ScaleDataValue
      * + 'dataMax': use the max value in data.
      * + null/undefined: auto decide max value (consider pretty look and boundaryGap).
      */
-    max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
+    max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue | NullUndefined);
     startValue?: number;
 
     jitter?: number;
