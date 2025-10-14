@@ -1,0 +1,228 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+    <style>
+        .chart-row {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .chart-container {
+            width: 48%;
+            display: inline-block;
+            vertical-align: top;
+            margin: 1%;
+            height: 360px;
+        }
+        .chart-title {
+            text-align: center;
+            margin: 12px 0 3px 0;
+            font-weight: bold;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chart-title">无标记（基础折线图）</div>
+    <div class="chart-row">
+        <div id="main-none" class="chart-container"></div>
+        <div id="main-none-minmax" class="chart-container"></div>
+    </div>
+
+    <div class="chart-title">仅有 markLine</div>
+    <div class="chart-row">
+        <div id="main-markline" class="chart-container"></div>
+        <div id="main-markline-minmax" class="chart-container"></div>
+    </div>
+
+    <div class="chart-title">仅有 markPoint</div>
+    <div class="chart-row">
+        <div id="main-markpoint" class="chart-container"></div>
+        <div id="main-markpoint-minmax" class="chart-container"></div>
+    </div>
+
+    <div class="chart-title">仅有 markArea</div>
+    <div class="chart-row">
+        <div id="main-markarea" class="chart-container"></div>
+        <div id="main-markarea-minmax" class="chart-container"></div>
+    </div>
+
+    <script>
+        var optionBase = {
+            title: {
+                text: '主标题',
+                subtext: '副标题',
+                left: 'center',
+                top: 'top',
+                textAlign: 'center',
+                textVerticalAlign: 'top'
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            },
+            yAxis: {
+                type: 'value'
+            }
+        };
+
+        // 用于yAxis增加min/max配置的option
+        function getOptionWithYAxisMinMax(baseOption) {
+            return {
+                ...baseOption,
+                yAxis: {
+                    ...baseOption.yAxis,
+                    min: -100,
+                    max: 400
+                }
+            };
+        }
+
+        require(['echarts'], function (echarts) {
+            // 1. 无任何标记
+            var chartNone = echarts.init(document.getElementById('main-none'));
+            chartNone.setOption({
+                ...optionBase,
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line'
+                }]
+            });
+
+            var chartNoneMinMax = echarts.init(document.getElementById('main-none-minmax'));
+            chartNoneMinMax.setOption({
+                ...getOptionWithYAxisMinMax(optionBase),
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line'
+                }]
+            });
+
+            // 2. 仅 markLine
+            var chartMarkline = echarts.init(document.getElementById('main-markline'));
+            chartMarkline.setOption({
+                ...optionBase,
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markLine: {
+                        data: [
+                            {
+                                name: '两个屏幕坐标之间的标线',
+                                yAxis: 467,
+                                lineStyle: { color: 'red' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            var chartMarklineMinMax = echarts.init(document.getElementById('main-markline-minmax'));
+            chartMarklineMinMax.setOption({
+                ...getOptionWithYAxisMinMax(optionBase),
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markLine: {
+                        data: [
+                            {
+                                name: '两个屏幕坐标之间的标线',
+                                yAxis: 467,
+                                lineStyle: { color: 'red' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            // 3. 仅 markPoint
+            var chartMarkpoint = echarts.init(document.getElementById('main-markpoint'));
+            chartMarkpoint.setOption({
+                ...optionBase,
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markPoint: {
+                        data: [
+                            { coord: [2, 432], value: 432, itemStyle: {color: 'blue'}, name: '自定义点' }
+                        ]
+                    }
+                }]
+            });
+
+            var chartMarkpointMinMax = echarts.init(document.getElementById('main-markpoint-minmax'));
+            chartMarkpointMinMax.setOption({
+                ...getOptionWithYAxisMinMax(optionBase),
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markPoint: {
+                        data: [
+                            { coord: [2, 432], value: 432, itemStyle: {color: 'blue'}, name: '自定义点' }
+                        ]
+                    }
+                }]
+            });
+
+            // 4. 仅 markArea
+            var chartMarkarea = echarts.init(document.getElementById('main-markarea'));
+            chartMarkarea.setOption({
+                ...optionBase,
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markArea: {
+                        data: [
+                            [
+                                { yAxis: 987, itemStyle: {color: 'rgba(255,0,0,0.15)'} },
+                                { yAxis: 1100 }
+                            ]
+                        ]
+                    }
+                }]
+            });
+
+            var chartMarkareaMinMax = echarts.init(document.getElementById('main-markarea-minmax'));
+            chartMarkareaMinMax.setOption({
+                ...getOptionWithYAxisMinMax(optionBase),
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markArea: {
+                        data: [
+                            [
+                                { yAxis: 987, itemStyle: {color: 'rgba(255,0,0,0.15)'} },
+                                { yAxis: 1100 }
+                            ]
+                        ]
+                    }
+                }]
+            });
+        });
+    </script>
+</body>
+</html>
