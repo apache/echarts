@@ -57,6 +57,7 @@ import { normalizeTooltipFormatResult } from '../../model/mixin/dataFormat';
 import { createTooltipMarkup, buildTooltipMarkup, TooltipMarkupStyleCreator } from './tooltipMarkup';
 import { findEventDispatcher } from '../../util/event';
 import { clear, createOrUpdate } from '../../util/throttle';
+import { getElementState } from '../../util/states';
 
 const proxyRect = new Rect({
     shape: { x: -1, y: -1, width: 2, height: 2 }
@@ -582,6 +583,11 @@ class TooltipView extends ComponentView {
                         axisModel.axis, { value: axisValue as number }
                     );
                     cbParams.axisValueLabel = axisValueLabel;
+                    const data = series.getData();
+                    const el = data.getItemGraphicEl(dataIndex);
+                    if (el) {
+                        cbParams.status = getElementState(el);
+                    }
                     // Pre-create marker style for makers. Users can assemble richText
                     // text in `formatter` callback and use those markers style.
                     cbParams.marker = markupStyleCreator.makeTooltipMarker(
