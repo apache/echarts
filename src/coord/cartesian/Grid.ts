@@ -568,7 +568,6 @@ class Grid implements CoordinateSystemMaster {
             axis: Axis2D,
             axisType: OptionAxisType,
         ): void {
-            // 检查该轴是否配置为包含 marker 数据
             const includeMarkerInExtent = axis.model.get('includeMarkerInExtent') ?? true;
             if (includeMarkerInExtent && value != null && typeof value !== 'string' && axisType !== 'category') {
                 const val = axis.scale.parse(value);

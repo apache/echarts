@@ -129,9 +129,6 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     breakLabelLayout?: {
         moveOverlap?: 'auto' | boolean;
     }
-
-    // Whether to include marker data (markPoint, markLine, markArea) in axis extent calculation
-    includeMarkerInExtent?: boolean;
 }
 
 export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
