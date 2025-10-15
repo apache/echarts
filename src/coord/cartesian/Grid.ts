@@ -53,7 +53,7 @@ import {
     updateCartesianAxisViewCommonPartBuilder,
     isCartesian2DInjectedAsDataCoordSys
 } from './cartesianAxisHelper';
-import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
+import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon, OptionAxisType } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { isIntervalOrLogScale } from '../../scale/helper';
 import { alignScaleTicks } from '../axisAlignTicks';
@@ -566,9 +566,11 @@ class Grid implements CoordinateSystemMaster {
         function UnionExtentForAxisByValue(
             value: any,
             axis: Axis2D,
-            axisType: string,
+            axisType: OptionAxisType,
         ): void {
-            if (value != null && typeof value !== 'string' && axisType !== 'category') {
+            // 检查该轴是否配置为包含 marker 数据
+            const includeMarkerInExtent = axis.model.get('includeMarkerInExtent') ?? true;
+            if (includeMarkerInExtent && value != null && typeof value !== 'string' && axisType !== 'category') {
                 const val = axis.scale.parse(value);
                 if (!isNaN(val)) {
                     axis.scale._innerUnionExtent([val, val]);

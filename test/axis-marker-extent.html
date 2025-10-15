@@ -47,7 +47,7 @@ under the License.
     </style>
 </head>
 <body>
-    <div class="chart-title">无标记（基础折线图）</div>
+    <div class="chart-title">仅有 markLine（includeMarkerInExtent: false）</div>
     <div class="chart-row">
         <div id="main-none" class="chart-container"></div>
         <div id="main-none-minmax" class="chart-container"></div>
@@ -57,6 +57,12 @@ under the License.
     <div class="chart-row">
         <div id="main-markline" class="chart-container"></div>
         <div id="main-markline-minmax" class="chart-container"></div>
+    </div>
+
+    <div class="chart-title">仅有 markLine（includeMarkerInExtent: true）</div>
+    <div class="chart-row">
+        <div id="main-markline-include-marker" class="chart-container"></div>
+        <div id="main-markline-include-marker-minmax" class="chart-container"></div>
     </div>
 
     <div class="chart-title">仅有 markPoint</div>
@@ -107,9 +113,22 @@ under the License.
             var chartNone = echarts.init(document.getElementById('main-none'));
             chartNone.setOption({
                 ...optionBase,
+                yAxis: {
+                    ...optionBase.yAxis,
+                    includeMarkerInExtent: false
+                },
                 series: [{
                     data: [150, 230, 224, 218, 135, 147, 260],
-                    type: 'line'
+                    type: 'line',
+                    markLine: {
+                        data: [
+                            {
+                                name: '两个屏幕坐标之间的标线',
+                                yAxis: 467,
+                                lineStyle: { color: 'red' }
+                            }
+                        ]
+                    }
                 }]
             });
 
@@ -144,6 +163,53 @@ under the License.
             var chartMarklineMinMax = echarts.init(document.getElementById('main-markline-minmax'));
             chartMarklineMinMax.setOption({
                 ...getOptionWithYAxisMinMax(optionBase),
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markLine: {
+                        data: [
+                            {
+                                name: '两个屏幕坐标之间的标线',
+                                yAxis: 467,
+                                lineStyle: { color: 'red' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            // 2.1 仅有 markLine（includeMarkerInExtent: true）用例
+            var chartMarklineIncludeMarker = echarts.init(document.getElementById('main-markline-include-marker'));
+            chartMarklineIncludeMarker.setOption({
+                ...optionBase,
+                yAxis: {
+                    ...optionBase.yAxis,
+                    includeMarkerInExtent: true
+                },
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markLine: {
+                        data: [
+                            {
+                                name: '两个屏幕坐标之间的标线',
+                                yAxis: 467,
+                                lineStyle: { color: 'red' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            var chartMarklineIncludeMarkerMinMax = echarts.init(document.getElementById('main-markline-include-marker-minmax'));
+            chartMarklineIncludeMarkerMinMax.setOption({
+                ...getOptionWithYAxisMinMax(optionBase),
+                yAxis: {
+                    ...optionBase.yAxis,
+                    min: -100,
+                    max: 400,
+                    includeMarkerInExtent: true
+                },
                 series: [{
                     data: [150, 230, 224, 218, 135, 147, 260],
                     type: 'line',
