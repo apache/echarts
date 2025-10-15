@@ -587,9 +587,8 @@ class Grid implements CoordinateSystemMaster {
                 if (!item) {
                     return;
                 }
-                const items = isObject(item) && !item.coord && !item.xAxis && !item.yAxis
-                    ? (Array.isArray(item) ? item : [item])
-                    : [item];
+                const items = isObject(item) && !item.coord && !item.xAxis && !item.yAxis && Array.isArray(item)
+                    ? item : [item];
 
                 each(items, function (markerItem) {
                     if (!markerItem) {
