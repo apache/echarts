@@ -572,7 +572,10 @@ class Grid implements CoordinateSystemMaster {
             if (includeMarkerInExtent && value != null && typeof value !== 'string' && axisType !== 'category') {
                 const val = axis.scale.parse(value);
                 if (!isNaN(val)) {
-                    axis.scale._innerUnionExtent([val, val]);
+                    // Construct the parameter and use unionExtentFromData to avoid using the private method _innerUnionExtent
+                    axis.scale.unionExtentFromData({
+                        getApproximateExtent: () => [val, val]
+                    } as any, 0);
                 }
             }
         }
