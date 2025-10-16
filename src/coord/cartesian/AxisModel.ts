@@ -37,6 +37,8 @@ export type CartesianAxisOption = AxisBaseOption & {
     // Offset is for multiple axis on the same position.
     offset?: number;
     categorySortInfo?: OrdinalSortInfo;
+    // Whether to include marker data (markPoint, markLine, markArea) in axis extent calculation
+    includeMarkerInExtent?: boolean;
 };
 
 export type XAXisOption = CartesianAxisOption & {
