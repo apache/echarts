@@ -46,6 +46,7 @@ under the License.
         <div id="main4"></div>
         <div id="main_collect"></div>
         <div id="main_series_data_use_ordinal_number"></div>
+        <div id="main_x_y_length"></div>
 
 
 
@@ -661,6 +662,49 @@ under the License.
                 });
             });
         </script>
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var option = {
+                    matrix: {
+                        x: {length: 4},
+                        y: {length: 3},
+                    },
+                    series: {
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        label: {show: true},
+                        encode: {label: 2},
+                        symbolSize: 20,
+                        data: [
+                            [0, 0, 1223],
+                            [1, 0, 323],
+                            [2, 0, 142],
+                            [0, 1, 63],
+                            [1, 1, 91],
+                            [2, 1, 45],
+                            [0, 2, 55],
+                            [1, 2, 15],
+                            [2, 2, 53],
+                        ]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_x_y_length', {
+                    title: [
+                        'matrx.x/y.length'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
 
 
 
