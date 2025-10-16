@@ -59,6 +59,12 @@ under the License.
         <div id="main-markline-minmax" class="chart-container"></div>
     </div>
 
+    <div class="chart-title">markLine为负值用例</div>
+    <div class="chart-row">
+        <div id="main-markline-negative" class="chart-container"></div>
+        <div id="main-markline-negative-minmax" class="chart-container"></div>
+    </div>
+
     <div class="chart-title">仅有 markLine（includeMarkerInExtent: true）</div>
     <div class="chart-row">
         <div id="main-markline-include-marker" class="chart-container"></div>
@@ -172,6 +178,42 @@ under the License.
                                 name: '两个屏幕坐标之间的标线',
                                 yAxis: 467,
                                 lineStyle: { color: 'red' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            var chartMarklineNegative = echarts.init(document.getElementById('main-markline-negative'));
+            chartMarklineNegative.setOption({
+                ...optionBase,
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markLine: {
+                        data: [
+                            {
+                                name: '负值标线',
+                                yAxis: -80,
+                                lineStyle: { color: 'green' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            var chartMarklineNegativeMinMax = echarts.init(document.getElementById('main-markline-negative-minmax'));
+            chartMarklineNegativeMinMax.setOption({
+                ...getOptionWithYAxisMinMax(optionBase),
+                series: [{
+                    data: [150, 230, 224, 218, 135, 147, 260],
+                    type: 'line',
+                    markLine: {
+                        data: [
+                            {
+                                name: '负值标线',
+                                yAxis: -80,
+                                lineStyle: { color: 'green' }
                             }
                         ]
                     }
