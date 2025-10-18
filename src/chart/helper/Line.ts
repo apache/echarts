@@ -19,10 +19,9 @@
 
 import { isArray, each, retrieve2 } from 'zrender/src/core/util';
 import * as vector from 'zrender/src/core/vector';
-import * as symbolUtil from '../../util/symbol';
 import ECLinePath from './LinePath';
 import * as graphic from '../../util/graphic';
-import { toggleHoverEmphasis, enterEmphasis, leaveEmphasis, SPECIAL_STATES } from '../../util/states';
+import { toggleHoverEmphasis, enterEmphasis, leaveEmphasis } from '../../util/states';
 import {getLabelStatesModels, setLabelStyle} from '../../label/labelStyle';
 import {round} from '../../util/number';
 import SeriesData from '../../data/SeriesData';
@@ -37,19 +36,18 @@ import {
 import SeriesModel from '../../model/Series';
 import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
 import { TextStyleProps } from 'zrender/src/graphic/Text';
-import { LineDataVisual } from '../../visual/commonVisualTypes';
 import Model from '../../model/Model';
 import tokens from '../../visual/tokens';
-
-const SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'] as const;
-
-type ECSymbol = ReturnType<typeof createSymbol>;
-
-type LineECSymbol = ECSymbol & {
-    __specifiedRotation: number
-};
-
-type LineList = SeriesData<SeriesModel, LineDataVisual>;
+import {
+    SYMBOL_CATEGORIES,
+    LineECSymbol,
+    LineList,
+    createSymbol,
+    makeSymbolTypeKey,
+    makeSymbolTypeValue,
+    ECSymbol,
+    updateSymbol
+} from './lineSymbolHelper';
 
 export interface LineLabel extends graphic.Text {
     lineLabelOriginalOpacity: number
@@ -60,64 +58,6 @@ interface InnerLineLabel extends LineLabel {
     __verticalAlign: TextStyleProps['verticalAlign']
     __position: LineLabelOption['position']
     __labelDistance: number[]
-}
-
-function makeSymbolTypeKey(symbolCategory: 'fromSymbol' | 'toSymbol') {
-    return '_' + symbolCategory + 'Type' as '_fromSymbolType' | '_toSymbolType';
-}
-function makeSymbolTypeValue(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: number) {
-    const symbolType = lineData.getItemVisual(idx, name);
-    if (!symbolType || symbolType === 'none') {
-        return symbolType;
-    }
-    const symbolSize = lineData.getItemVisual(idx, name + 'Size' as 'fromSymbolSize' | 'toSymbolSize');
-    const symbolRotate = lineData.getItemVisual(idx, name + 'Rotate' as 'fromSymbolRotate' | 'toSymbolRotate');
-    const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset');
-    const symbolKeepAspect = lineData.getItemVisual(idx,
-        name + 'KeepAspect' as 'fromSymbolKeepAspect' | 'toSymbolKeepAspect');
-    const symbolSizeArr = symbolUtil.normalizeSymbolSize(symbolSize);
-
-    const symbolOffsetArr = symbolUtil.normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
-
-    return symbolType + symbolSizeArr + symbolOffsetArr + (symbolRotate || '') + (symbolKeepAspect || '');
-}
-
-/**
- * @inner
- */
-function createSymbol(name: 'fromSymbol' | 'toSymbol', lineData: LineList, idx: number) {
-    const symbolType = lineData.getItemVisual(idx, name);
-    if (!symbolType || symbolType === 'none') {
-        return;
-    }
-
-    const symbolSize = lineData.getItemVisual(idx, name + 'Size' as 'fromSymbolSize' | 'toSymbolSize');
-    const symbolRotate = lineData.getItemVisual(idx, name + 'Rotate' as 'fromSymbolRotate' | 'toSymbolRotate');
-    const symbolOffset = lineData.getItemVisual(idx, name + 'Offset' as 'fromSymbolOffset' | 'toSymbolOffset');
-    const symbolKeepAspect = lineData.getItemVisual(idx,
-        name + 'KeepAspect' as 'fromSymbolKeepAspect' | 'toSymbolKeepAspect');
-
-    const symbolSizeArr = symbolUtil.normalizeSymbolSize(symbolSize);
-
-    const symbolOffsetArr = symbolUtil.normalizeSymbolOffset(symbolOffset || 0, symbolSizeArr);
-
-    const symbolPath = symbolUtil.createSymbol(
-        symbolType,
-        -symbolSizeArr[0] / 2 + (symbolOffsetArr as number[])[0],
-        -symbolSizeArr[1] / 2 + (symbolOffsetArr as number[])[1],
-        symbolSizeArr[0],
-        symbolSizeArr[1],
-        null,
-        symbolKeepAspect
-    );
-
-    (symbolPath as LineECSymbol).__specifiedRotation = symbolRotate == null || isNaN(symbolRotate)
-        ? void 0
-        : +symbolRotate * Math.PI / 180 || 0;
-
-    symbolPath.name = name;
-
-    return symbolPath;
 }
 
 function createLine(points: number[][]) {
@@ -262,33 +202,7 @@ class Line extends graphic.Group {
         line.ensureState('blur').style = blurLineStyle;
         line.ensureState('select').style = selectLineStyle;
 
-        // Update symbol
-        each(SYMBOL_CATEGORIES, function (symbolCategory) {
-            const symbol = this.childOfName(symbolCategory) as ECSymbol;
-            if (symbol) {
-                // Share opacity and color with line.
-                symbol.setColor(visualColor);
-                symbol.style.opacity = lineStyle.opacity;
-
-                for (let i = 0; i < SPECIAL_STATES.length; i++) {
-                    const stateName = SPECIAL_STATES[i];
-                    const lineState = line.getState(stateName);
-                    if (lineState) {
-                        const lineStateStyle = lineState.style || {};
-                        const state = symbol.ensureState(stateName);
-                        const stateStyle = state.style || (state.style = {});
-                        if (lineStateStyle.stroke != null) {
-                            stateStyle[symbol.__isEmptyBrush ? 'stroke' : 'fill'] = lineStateStyle.stroke;
-                        }
-                        if (lineStateStyle.opacity != null) {
-                            stateStyle.opacity = lineStateStyle.opacity;
-                        }
-                    }
-                }
-
-                symbol.markRedraw();
-            }
-        }, this);
+        updateSymbol.bind(this)(lineStyle, line);
 
         const rawVal = seriesModel.getRawValue(idx) as number;
         setLabelStyle(this, labelStatesModels, {
