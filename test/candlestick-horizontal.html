@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style></style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+        <script>
+            require(["echarts"], function (echarts) {
+                var daval = [
+                    { value: ["2017-10-24", 20, 34, 10, 38] },
+                    { value: ["2017-10-25", 40, 35, 30, 50] },
+                    { value: ["2017-10-26", 31, 38, 33, 44] },
+                    { value: ["2017-10-27", 38, 15, 5, 42] },
+                ];
+                var daray = [
+                    ["2017-10-24", 20, 34, 10, 38],
+                    ["2017-10-25", 40, 35, 30, 50],
+                    ["2017-10-26", 31, 38, 33, 44],
+                    ["2017-10-27", 38, 15, 5, 42],
+                ];
+                var option = {
+                    tooltip: {
+                        trigger: "axis",
+                        axisPointer: {
+                            type: "shadow",
+                        },
+                    },
+                    grid: {
+                        left: "15%",
+                        right: "10%",
+                        bottom: "10%",
+                    },
+                    xAxis: {
+                        type: "time",
+                    },
+                    yAxis: {},
+                    series: [
+                        {
+                            type: "candlestick",
+                            encode: {
+                                x: 0,
+                                y: [1, 3, 2, 4],
+                            },
+                            data: daval,
+                            // data: daray,
+                            itemStyle: {
+                                color: "#ec0000",
+                                color0: "#00da3c",
+                                borderColor: "#8A0000",
+                                borderColor0: "#008F28",
+                            },
+                        },
+                    ],
+                };
+
+                var chart = testHelper.create(echarts, "main0", {
+                    title: [
+                        "Vertical candlestick with dataset and encode",
+                    ],
+                    option: option,
+                });
+            });
+        </script>
+
+        <script>
+            require(["echarts"], function (echarts) {
+                var daval = [
+                    { value: ["2017-10-24", 20, 34, 10, 38] },
+                    { value: ["2017-10-25", 40, 35, 30, 50] },
+                    { value: ["2017-10-26", 31, 38, 33, 44] },
+                    { value: ["2017-10-27", 38, 15, 5, 42] },
+                ];
+                var daray = [
+                    ["2017-10-24", 20, 34, 10, 38],
+                    ["2017-10-25", 40, 35, 30, 50],
+                    ["2017-10-26", 31, 38, 33, 44],
+                    ["2017-10-27", 38, 15, 5, 42],
+                ];
+                var option = {
+                    tooltip: {
+                        trigger: "axis",
+                        axisPointer: {
+                            type: "shadow",
+                        },
+                    },
+                    grid: {
+                        left: "15%",
+                        right: "10%",
+                        bottom: "10%",
+                    },
+                    xAxis: {},
+                    yAxis: {
+                        type: "time",
+                    },
+                    series: [
+                        {
+                            type: "candlestick",
+                            encode: {
+                                x: [1, 3, 2, 4],
+                                y: 0,
+                            },
+                            data: daval,
+                            itemStyle: {
+                                color: "#ec0000",
+                                color0: "#00da3c",
+                                borderColor: "#8A0000",
+                                borderColor0: "#008F28",
+                            },
+                        },
+                    ],
+                };
+
+                var chart = testHelper.create(echarts, "main1", {
+                    title: [
+                        "Horizontal candlestick with dataset and encode",
+                    ],
+                    option: option,
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -76,10 +76,37 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
         const yAxisType = yAxisModel.get('type');
         let addOrdinal;
 
-        // FIXME
-        // Consider time axis.
+        const encodeRules = this.getEncode();
+        const hasXEncode = encodeRules && encodeRules.get('x') != null;
+        const hasYEncode = encodeRules && encodeRules.get('y') != null;
 
-        if (xAxisType === 'category') {
+        if (hasXEncode && hasYEncode) {
+            const xEncode = encodeRules.get('x');
+            const yEncode = encodeRules.get('y');
+            const xIsArray = zrUtil.isArray(xEncode) && xEncode.length > 1;
+            const yIsArray = zrUtil.isArray(yEncode) && yEncode.length > 1;
+
+            if (yIsArray && !xIsArray) {
+                option.layout = 'horizontal';
+            }
+            else if (xIsArray && !yIsArray) {
+                option.layout = 'vertical';
+            }
+            else if (xAxisType === 'category') {
+                option.layout = 'horizontal';
+                ordinalMeta = xAxisModel.getOrdinalMeta();
+                addOrdinal = !this._hasEncodeRule('x');
+            }
+            else if (yAxisType === 'category') {
+                option.layout = 'vertical';
+                ordinalMeta = yAxisModel.getOrdinalMeta();
+                addOrdinal = !this._hasEncodeRule('y');
+            }
+            else {
+                option.layout = option.layout || 'horizontal';
+            }
+        }
+        else if (xAxisType === 'category') {
             option.layout = 'horizontal';
             ordinalMeta = xAxisModel.getOrdinalMeta();
             addOrdinal = !this._hasEncodeRule('x');
@@ -169,4 +196,4 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
 };
 
 
-export {WhiskerBoxCommonMixin};
+export { WhiskerBoxCommonMixin };
