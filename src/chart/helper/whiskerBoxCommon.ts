@@ -17,17 +17,17 @@
 * under the License.
 */
 
-import createSeriesDataSimply from './createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
-import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
-import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
-import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '../../util/types';
+import type Axis2D from '../../coord/cartesian/Axis2D';
+import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
+import { getDimensionTypeByAxis } from '../../data/helper/dimensionHelper';
+import { makeSeriesEncodeForAxisCoordSys } from '../../data/helper/sourceHelper';
+import type SeriesData from '../../data/SeriesData';
 import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
-import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
-import type SeriesData from '../../data/SeriesData';
-import type Axis2D from '../../coord/cartesian/Axis2D';
-import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
+import type { LayoutOrient, SeriesOnCartesianOptionMixin, SeriesOption } from '../../util/types';
+import createSeriesDataSimply from './createSeriesDataSimply';
 
 interface CommonOption extends SeriesOption, SeriesOnCartesianOptionMixin {
     layout?: LayoutOrient
@@ -76,37 +76,7 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
         const yAxisType = yAxisModel.get('type');
         let addOrdinal;
 
-        const encodeRules = this.getEncode();
-        const hasXEncode = encodeRules && encodeRules.get('x') != null;
-        const hasYEncode = encodeRules && encodeRules.get('y') != null;
-
-        if (hasXEncode && hasYEncode) {
-            const xEncode = encodeRules.get('x');
-            const yEncode = encodeRules.get('y');
-            const xIsArray = zrUtil.isArray(xEncode) && xEncode.length > 1;
-            const yIsArray = zrUtil.isArray(yEncode) && yEncode.length > 1;
-
-            if (yIsArray && !xIsArray) {
-                option.layout = 'horizontal';
-            }
-            else if (xIsArray && !yIsArray) {
-                option.layout = 'vertical';
-            }
-            else if (xAxisType === 'category') {
-                option.layout = 'horizontal';
-                ordinalMeta = xAxisModel.getOrdinalMeta();
-                addOrdinal = !this._hasEncodeRule('x');
-            }
-            else if (yAxisType === 'category') {
-                option.layout = 'vertical';
-                ordinalMeta = yAxisModel.getOrdinalMeta();
-                addOrdinal = !this._hasEncodeRule('y');
-            }
-            else {
-                option.layout = option.layout || 'horizontal';
-            }
-        }
-        else if (xAxisType === 'category') {
+        if (xAxisType === 'category') {
             option.layout = 'horizontal';
             ordinalMeta = xAxisModel.getOrdinalMeta();
             addOrdinal = !this._hasEncodeRule('x');
@@ -115,6 +85,12 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
             option.layout = 'vertical';
             ordinalMeta = yAxisModel.getOrdinalMeta();
             addOrdinal = !this._hasEncodeRule('y');
+        }
+        else if (xAxisType === 'time') {
+            option.layout = 'horizontal';
+        }
+        else if (yAxisType === 'time') {
+            option.layout = 'vertical';
         }
         else {
             option.layout = option.layout || 'horizontal';

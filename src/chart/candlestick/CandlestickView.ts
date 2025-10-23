@@ -110,9 +110,6 @@ class CandlestickView extends ChartView {
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
                     const itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
-                    if (!itemLayout) {
-                        return;
-                    }
 
                     if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
                         return;
@@ -138,10 +135,6 @@ class CandlestickView extends ChartView {
                 }
 
                 const itemLayout = data.getItemLayout(newIdx) as CandlestickItemLayout;
-                if (!itemLayout) {
-                    group.remove(el);
-                    return;
-                }
                 if (needsClip && isNormalBoxClipped(clipArea, itemLayout)) {
                     group.remove(el);
                     return;
@@ -198,9 +191,6 @@ class CandlestickView extends ChartView {
         let dataIndex;
         while ((dataIndex = params.next()) != null) {
             const itemLayout = data.getItemLayout(dataIndex) as CandlestickItemLayout;
-            if (!itemLayout) {
-                continue;
-            }
             const el = createNormalBox(itemLayout, dataIndex);
             setBoxCommon(el, data, dataIndex, isSimpleBox);
 
