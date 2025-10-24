@@ -212,12 +212,85 @@ function drawSegment(
     return k;
 }
 
+/**
+ * Extend points array for smooth closed curve by prepending last two points
+ * and appending first two points
+ */
+function extendPointsForClosedCurve(
+    points: ArrayLike<number>,
+    startIndex: number,
+    len: number,
+    connectNulls: boolean
+): ArrayLike<number> {
+    const firstX = points[startIndex * 2];
+    const firstY = points[startIndex * 2 + 1];
+    const lastX = points[(len - 1) * 2];
+    const lastY = points[(len - 1) * 2 + 1];
+
+    // Find the second-to-last valid point
+    let prevIdx = len - 2;
+    if (connectNulls) {
+        while (prevIdx >= startIndex && isPointNull(points[prevIdx * 2], points[prevIdx * 2 + 1])) {
+            prevIdx--;
+        }
+    }
+
+    // Find the second valid point
+    let nextIdx = startIndex + 1;
+    if (connectNulls) {
+        while (nextIdx < len && isPointNull(points[nextIdx * 2], points[nextIdx * 2 + 1])) {
+            nextIdx++;
+        }
+    }
+
+    // Build prepend part (2 points = 4 values)
+    const prependPart = new (points.constructor as any)(4);
+    if (prevIdx >= startIndex) {
+        prependPart[0] = points[prevIdx * 2];
+        prependPart[1] = points[prevIdx * 2 + 1];
+    }
+    else {
+        prependPart[0] = lastX;
+        prependPart[1] = lastY;
+    }
+    prependPart[2] = lastX;
+    prependPart[3] = lastY;
+
+    // Build append part (2 points = 4 values)
+    const appendPart = new (points.constructor as any)(4);
+    appendPart[0] = firstX;
+    appendPart[1] = firstY;
+    if (nextIdx < len) {
+        appendPart[2] = points[nextIdx * 2];
+        appendPart[3] = points[nextIdx * 2 + 1];
+    }
+    else {
+        appendPart[2] = firstX;
+        appendPart[3] = firstY;
+    }
+
+    // Create extended points array and merge all parts
+    const pointsLen = (len - startIndex) * 2;
+    const extendedLength = 4 + pointsLen + 4;
+    const extendedPoints = new (points.constructor as any)(extendedLength);
+    extendedPoints.set(prependPart, 0);
+    // Copy original points slice
+    const pointsSlice = (points as any).subarray
+        ? (points as any).subarray(startIndex * 2, len * 2)
+        : Array.prototype.slice.call(points, startIndex * 2, len * 2);
+    extendedPoints.set(pointsSlice, 4);
+    extendedPoints.set(appendPart, 4 + pointsLen);
+
+    return extendedPoints;
+}
+
 class ECPolylineShape {
     points: ArrayLike<number>;
     smooth = 0;
     smoothConstraint = true;
     smoothMonotone: 'x' | 'y' | 'none';
     connectNulls: boolean;
+    connectEnds: boolean;
 }
 
 interface ECPolylineProps extends PathProps {
@@ -246,7 +319,7 @@ export class ECPolyline extends Path<ECPolylineProps> {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolylineShape) {
-        const points = shape.points;
+        let points = shape.points;
 
         let i = 0;
         let len = points.length / 2;
@@ -266,6 +339,24 @@ export class ECPolyline extends Path<ECPolylineProps> {
                 }
             }
         }
+
+        // If connectEnds is enabled, extend points array for smooth closed curve
+        if (shape.connectEnds && len > 2) {
+            const firstX = points[i * 2];
+            const firstY = points[i * 2 + 1];
+            const lastX = points[(len - 1) * 2];
+            const lastY = points[(len - 1) * 2 + 1];
+
+            // Only connect if first and last points are not null and not the same
+            if (!isPointNull(firstX, firstY) && !isPointNull(lastX, lastY)
+                && (firstX !== lastX || firstY !== lastY)) {
+
+                points = extendPointsForClosedCurve(points, i, len, shape.connectNulls);
+                i = 2;
+                len = points.length / 2 - 1;
+            }
+        }
+
         while (i < len) {
             i += drawSegment(
                 ctx, points, i, len, len,
@@ -370,8 +461,8 @@ export class ECPolygon extends Path {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolygonShape) {
-        const points = shape.points;
-        const stackedOnPoints = shape.stackedOnPoints;
+        let points = shape.points;
+        let stackedOnPoints = shape.stackedOnPoints;
 
         let i = 0;
         let len = points.length / 2;
@@ -390,6 +481,27 @@ export class ECPolygon extends Path {
                 }
             }
         }
+
+        // If connectEnds is enabled, extend both points and stackedOnPoints arrays
+        if (shape.connectEnds && len > 2) {
+            const firstX = points[i * 2];
+            const firstY = points[i * 2 + 1];
+            const lastX = points[(len - 1) * 2];
+            const lastY = points[(len - 1) * 2 + 1];
+
+            // Only connect if first and last points are not null and not the same
+            if (!isPointNull(firstX, firstY) && !isPointNull(lastX, lastY)
+                && (firstX !== lastX || firstY !== lastY)) {
+
+                points = extendPointsForClosedCurve(points, i, len, shape.connectNulls);
+                if (stackedOnPoints) {
+                    stackedOnPoints = extendPointsForClosedCurve(stackedOnPoints, i, len, shape.connectNulls);
+                }
+                i = 2;
+                len = points.length / 2 - 1;
+            }
+        }
+
         while (i < len) {
             const k = drawSegment(
                 ctx, points, i, len, len,

@@ -55,6 +55,14 @@ export type RadiusAxisOption = AxisBaseOption & {
      * Id of host polar component
      */
     polarId?: string;
+
+    splitLine?: AxisBaseOption['splitLine'] & {
+        /**
+         * Shape of splitLine: 'arc' | 'polygon'
+         * Default: 'arc'
+         */
+        shape?: 'arc' | 'polygon';
+    };
 };
 
 type PolarAxisOption = AngleAxisOption | RadiusAxisOption;

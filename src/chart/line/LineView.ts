@@ -865,11 +865,13 @@ class LineView extends ChartView {
 
         const smooth = getSmooth(seriesModel.get('smooth'));
         const smoothMonotone = seriesModel.get('smoothMonotone');
+        const connectEnds = isCoordSysPolar && seriesModel.get('connectEnds');
 
         polyline.setShape({
             smooth,
             smoothMonotone,
-            connectNulls
+            connectNulls,
+            connectEnds
         });
 
         if (polygon) {
@@ -894,7 +896,8 @@ class LineView extends ChartView {
                 smooth,
                 stackedOnSmooth,
                 smoothMonotone,
-                connectNulls
+                connectNulls,
+                connectEnds
             });
 
             setStatesStylesFromModel(polygon, seriesModel, 'areaStyle');

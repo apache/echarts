@@ -108,36 +108,81 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const angleExtent = angleAxis.getExtent();
         const shapeType = Math.abs(angleExtent[1] - angleExtent[0]) === 360 ? 'Circle' : 'Arc';
 
+        // Check if polygon shape is requested and angleAxis is category type
+        const splitLineShape = splitLineModel.get('shape');
+        const usePolygon = splitLineShape === 'polygon' && angleAxis.type === 'category';
+
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
-        const splitLines: graphic.Circle[][] = [];
+        if (usePolygon) {
+            // Use polyline shape for category angleAxis
+            const angleTicksCoords = angleAxis.getTicksCoords();
+            const splitLines: graphic.Polyline[][] = [];
 
-        for (let i = 0; i < ticksCoords.length; i++) {
-            const colorIndex = (lineCount++) % lineColors.length;
-            splitLines[colorIndex] = splitLines[colorIndex] || [];
-            splitLines[colorIndex].push(new graphic[shapeType]({
-                shape: {
-                    cx: polar.cx,
-                    cy: polar.cy,
-                    // ensure circle radius >= 0
-                    r: Math.max(ticksCoords[i].coord, 0),
-                    startAngle: -angleExtent[0] * RADIAN,
-                    endAngle: -angleExtent[1] * RADIAN,
-                    clockwise: angleAxis.inverse
+            for (let i = 0; i < ticksCoords.length; i++) {
+                const radius = Math.max(ticksCoords[i].coord, 0);
+                const colorIndex = (lineCount++) % lineColors.length;
+                splitLines[colorIndex] = splitLines[colorIndex] || [];
+
+                // Create polyline points based on angle ticks
+                const points: [number, number][] = [];
+                for (let j = 0; j < angleTicksCoords.length; j++) {
+                    const angle = -angleTicksCoords[j].coord * RADIAN;
+                    const x = polar.cx + radius * Math.cos(angle);
+                    const y = polar.cy + radius * Math.sin(angle);
+                    points.push([x, y]);
                 }
-            }));
-        }
 
-        // Simple optimization
-        // Batching the lines if color are the same
-        for (let i = 0; i < splitLines.length; i++) {
-            group.add(graphic.mergePath(splitLines[i], {
-                style: zrUtil.defaults({
-                    stroke: lineColors[i % lineColors.length],
-                    fill: null
-                }, lineStyleModel.getLineStyle()),
-                silent: true
-            }));
+                splitLines[colorIndex].push(new graphic.Polyline({
+                    shape: {
+                        points: points
+                    }
+                }));
+            }
+
+            // Simple optimization
+            // Batching the lines if color are the same
+            for (let i = 0; i < splitLines.length; i++) {
+                group.add(graphic.mergePath(splitLines[i], {
+                    style: zrUtil.defaults({
+                        stroke: lineColors[i % lineColors.length],
+                        fill: null
+                    }, lineStyleModel.getLineStyle()),
+                    silent: true
+                }));
+            }
+        }
+        else {
+            // Use default arc/circle shape
+            const splitLines: graphic.Circle[][] = [];
+
+            for (let i = 0; i < ticksCoords.length; i++) {
+                const colorIndex = (lineCount++) % lineColors.length;
+                splitLines[colorIndex] = splitLines[colorIndex] || [];
+                splitLines[colorIndex].push(new graphic[shapeType]({
+                    shape: {
+                        cx: polar.cx,
+                        cy: polar.cy,
+                        // ensure circle radius >= 0
+                        r: Math.max(ticksCoords[i].coord, 0),
+                        startAngle: -angleExtent[0] * RADIAN,
+                        endAngle: -angleExtent[1] * RADIAN,
+                        clockwise: angleAxis.inverse
+                    }
+                }));
+            }
+
+            // Simple optimization
+            // Batching the lines if color are the same
+            for (let i = 0; i < splitLines.length; i++) {
+                group.add(graphic.mergePath(splitLines[i], {
+                    style: zrUtil.defaults({
+                        stroke: lineColors[i % lineColors.length],
+                        fill: null
+                    }, lineStyleModel.getLineStyle()),
+                    silent: true
+                }));
+            }
         }
     },
 

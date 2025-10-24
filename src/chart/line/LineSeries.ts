@@ -113,6 +113,12 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
 
     connectNulls?: boolean
 
+    /**
+     * Connect the end and start points of the line.
+     * Only effective in polar coordinate system.
+     */
+    connectEnds?: boolean
+
     showSymbol?: boolean
     // false | 'auto': follow the label interval strategy.
     // true: show all symbols.
@@ -200,6 +206,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         // Whether to connect break point.
         connectNulls: false,
+
+        // Whether to connect end and start points in polar coordinate system.
+        connectEnds: false,
 
         // Sampling for large data. Can be: 'average', 'max', 'min', 'sum', 'lttb'.
         sampling: 'none',
