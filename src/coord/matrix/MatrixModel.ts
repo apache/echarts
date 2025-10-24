@@ -158,6 +158,9 @@ interface MatrixDimensionOption extends MatrixCellStyleOption, MatrixDimensionLe
     type?: 'category'; // For internal usage; force be 'category'.
     show?: boolean;
     data?: MatrixDimensionCellLooseOption[];
+    // A simple way to provide column/row count if no need to compose a `data`.
+    // Note: `length` is ignored if `data` is specified.
+    length?: number;
     // `levels[0]`: the topmost (for x dimension) or leftmost (for y dimension) level.
     // If not specified, use null/undefined, such as `levels: [null, null, {levelSize: 10}]`
     levels?: (MatrixDimensionLevelOption | NullUndefined)[];
