@@ -243,6 +243,11 @@ class TooltipView extends ComponentView {
         const api = this._api;
         const triggerOn = tooltipModel.get('triggerOn');
 
+        if (tooltipModel.option.trigger !== 'axis') {
+            // _lastDataByCoordSys is used for axis tooltip.
+            this._lastDataByCoordSys = null;
+        }
+
         // Try to keep the tooltip show when refreshing
         if (this._lastX != null
             && this._lastY != null
