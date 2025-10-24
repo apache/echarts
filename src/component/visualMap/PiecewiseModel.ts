@@ -313,13 +313,11 @@ class PiecewiseModel extends VisualMapModel<PiecewiseVisualMapOption> {
             const dataIndices: number[] = [];
             const data = seriesModel.getData();
 
-            data.each(
-                this.getDataDimensionIndex(data),
-                function (value: number, dataIndex: number) {
-                    // Should always base on model pieceList, because it is order sensitive.
-                    const pIdx = VisualMapping.findPieceIndex(value, pieceList);
-                    pIdx === pieceIndex && dataIndices.push(dataIndex);
-                }, this);
+            data.each(this.getDataDimensionIndex(data), function (value: number, dataIndex: number) {
+                // Should always base on model pieceList, because it is order sensitive.
+                const pIdx = VisualMapping.findPieceIndex(value, pieceList);
+                pIdx === pieceIndex && dataIndices.push(dataIndex);
+            }, this);
 
             result.push({seriesId: seriesModel.id, dataIndex: dataIndices});
         }, this);
