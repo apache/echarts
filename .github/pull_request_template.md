@@ -53,6 +53,12 @@ One of the following should be checked.
 
 ## Misc
 
+### Security Checking
+
+- [ ] This PR uses security-sensitive Web APIs.
+
+<!-- PLEASE CHECK IT AGAINST: <https://github.com/apache/echarts/wiki/Security-Checklist-for-Code-Contributors> -->
+
 ### ZRender Changes
 
 - [ ] This PR depends on ZRender changes (ecomfe/zrender#xxx).
@@ -60,10 +66,6 @@ One of the following should be checked.
 ### Related test cases or examples to use the new APIs
 
 N.A.
-
-
-
-## Others
 
 ### Merging options
 
