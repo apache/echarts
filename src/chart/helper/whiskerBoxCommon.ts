@@ -17,17 +17,17 @@
 * under the License.
 */
 
+import createSeriesDataSimply from './createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
-import type Axis2D from '../../coord/cartesian/Axis2D';
-import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
-import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
-import { getDimensionTypeByAxis } from '../../data/helper/dimensionHelper';
-import { makeSeriesEncodeForAxisCoordSys } from '../../data/helper/sourceHelper';
-import type SeriesData from '../../data/SeriesData';
+import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
+import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
+import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '../../util/types';
 import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
-import type { LayoutOrient, SeriesOnCartesianOptionMixin, SeriesOption } from '../../util/types';
-import createSeriesDataSimply from './createSeriesDataSimply';
+import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
+import type SeriesData from '../../data/SeriesData';
+import type Axis2D from '../../coord/cartesian/Axis2D';
+import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
 
 interface CommonOption extends SeriesOption, SeriesOnCartesianOptionMixin {
     layout?: LayoutOrient

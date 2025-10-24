@@ -65,11 +65,7 @@ const candlestickVisual: StageHandler = {
                 let dataIndex;
                 while ((dataIndex = params.next()) != null) {
                     const itemModel = data.getItemModel(dataIndex);
-                    const itemLayout = data.getItemLayout(dataIndex);
-                    if (!itemLayout) {
-                        continue;
-                    }
-                    const sign = itemLayout.sign;
+                    const sign = data.getItemLayout(dataIndex).sign;
 
                     const style = itemModel.getItemStyle();
                     style.fill = getColor(sign, itemModel);
