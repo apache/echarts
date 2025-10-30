@@ -285,7 +285,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
      *
      * @param splitNumber By default `5`.
      */
-    calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
+    calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number, tickBase?: number): void {
         splitNumber = splitNumber || 5;
         let extent = this._extent.slice() as [number, number];
         let span = this._getExtentSpanWithBreaks();
@@ -302,7 +302,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         }
 
         const result = helper.intervalScaleNiceTicks(
-            extent, span, splitNumber, minInterval, maxInterval
+            extent, span, splitNumber, minInterval, maxInterval, tickBase,
         );
 
         this._intervalPrecision = result.intervalPrecision;
@@ -316,6 +316,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         fixMax?: boolean,
         minInterval?: number,
         maxInterval?: number
+        tickBase?: number,
     }): void {
         let extent = this._extent.slice() as [number, number];
         // If extent start and end are same, expand them
@@ -350,7 +351,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         this._innerSetExtent(extent[0], extent[1]);
         extent = this._extent.slice() as [number, number];
 
-        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
+        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval, opt.tickBase);
         const interval = this._interval;
         const intervalPrecition = this._intervalPrecision;
 
