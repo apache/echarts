@@ -51,8 +51,7 @@ const candlestickLayout: StageHandler = {
         const coordSys = seriesModel.coordinateSystem;
         const data = seriesModel.getData();
         const candleWidth = calculateCandleWidth(seriesModel, data);
-        const layout = seriesModel.get('layout');
-        const cDimIdx = layout === 'horizontal' ? 0 : 1;
+        const cDimIdx = seriesModel.getWhiskerBoxesLayout() === 'horizontal' ? 0 : 1;
         const vDimIdx = 1 - cDimIdx;
         const coordDims = ['x', 'y'];
         const cDimI = data.getDimensionIndex(data.mapDimension(coordDims[cDimIdx]));

@@ -41,6 +41,7 @@ under the License.
         <div id="main6"></div>
         <div id="main7"></div>
         <div id="main8"></div>
+        <div id="main9"></div>
 
         <script>
             require(["echarts"], function (echarts) {
@@ -69,7 +70,8 @@ under the License.
                     xAxisType,
                     yAxisType,
                     encode,
-                    data
+                    data,
+                    layout,
                 ) {
                     var itemStyle =
                         chartType === "candlestick"
@@ -101,6 +103,7 @@ under the License.
                                 type: chartType,
                                 encode: encode,
                                 data: data,
+                                layout: layout,
                                 itemStyle: itemStyle,
                             },
                         ],
@@ -219,6 +222,24 @@ under the License.
                             "time",
                             { x: [0, 1, 2, 3, 4], y: 5 },
                             reversedaray
+                        ),
+                    },
+                    {
+                        id: "main9",
+                        title: "boxplot with dual time axes",
+                        option: createChartOption(
+                            "boxplot",
+                            "time",
+                            "time",
+                            { y: [0, 1, 2, 3, 4], x: 5 },
+                            reversedaray.map(item => {
+                                const newItem = item.slice();
+                                for (let i = 0; i < 5; i++) {
+                                    newItem[i] = new Date(newItem[i] + 1761804046510).toISOString();
+                                }
+                                return newItem;
+                            }),
+                            'horizontal'
                         ),
                     },
                 ];
