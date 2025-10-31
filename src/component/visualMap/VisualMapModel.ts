@@ -261,7 +261,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         if (seriesTargets) {
             // When seriesTargets is provided, collect all target series indices
             const indices: number[] = [];
-            for (const target of seriesTargets) {
+            each(seriesTargets, (target) => {
                 if (target.seriesIndex != null) {
                     indices.push(target.seriesIndex);
                 }
@@ -277,7 +277,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
                         indices.push(seriesModel.componentIndex);
                     }
                 }
-            }
+            });
             return indices;
         }
 
