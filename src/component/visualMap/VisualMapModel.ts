@@ -443,7 +443,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     getDimension(seriesIndex: number): number {
         const seriesTargets = this.option.seriesTargets;
         if (seriesTargets) {
-            const target = seriesTargets.find(target =>
+            const target = zrUtil.find(seriesTargets, target =>
                 (target.seriesIndex != null && target.seriesIndex === seriesIndex)
                 || (target.seriesId != null && target.seriesId === this.ecModel.getSeriesByIndex(seriesIndex).id)
             );
