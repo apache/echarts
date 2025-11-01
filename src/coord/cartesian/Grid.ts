@@ -44,7 +44,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
-import { NullUndefined, ScaleDataValue } from '../../util/types';
+import { NullUndefined, ScaleDataValue, SeriesOption } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import OrdinalScale from '../../scale/Ordinal';
 import {
@@ -53,7 +53,7 @@ import {
     updateCartesianAxisViewCommonPartBuilder,
     isCartesian2DInjectedAsDataCoordSys
 } from './cartesianAxisHelper';
-import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
+import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon, OptionAxisType } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { isIntervalOrLogScale } from '../../scale/helper';
 import { alignScaleTicks } from '../axisAlignTicks';
@@ -80,6 +80,8 @@ type AxesMap = {
 };
 
 type ParsedOuterBoundsContain = 'all' | 'axisLabel';
+
+type MarkerTypes = 'markPoint' | 'markLine' | 'markArea';
 
 // margin is [top, right, bottom, left]
 const XY_TO_MARGIN_IDX = [
@@ -542,12 +544,66 @@ class Grid implements CoordinateSystemMaster {
 
                 unionExtent(data, xAxis);
                 unionExtent(data, yAxis);
+
+                // 处理 markPoint、markLine、markArea
+                const markerTypes: MarkerTypes[] = ['markPoint', 'markLine', 'markArea'];
+
+                markerTypes.forEach(markerType => {
+                    const markerOpt = seriesModel.get(markerType as keyof SeriesOption);
+                    if (markerOpt && markerOpt.data) {
+                        unionMarkerExtent(markerOpt.data, xAxis, yAxis);
+                    }
+                });
             }
         }, this);
 
         function unionExtent(data: SeriesData, axis: Axis2D): void {
             each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
                 axis.scale.unionExtentFromData(data, dim);
+            });
+        }
+
+        function UnionExtentForAxisByValue(
+            value: any,
+            axis: Axis2D,
+            axisType: OptionAxisType,
+        ): void {
+            const includeMarkerInExtent = axis.model.get('includeMarkerInExtent') ?? true;
+            if (includeMarkerInExtent && value != null && typeof value !== 'string' && axisType !== 'category') {
+                const val = axis.scale.parse(value);
+                if (!isNaN(val)) {
+                    // Construct the parameter and use unionExtentFromData to avoid using the private method _innerUnionExtent
+                    axis.scale.unionExtentFromData({
+                        getApproximateExtent: () => [val, val]
+                    } as any, 0);
+                }
+            }
+        }
+
+        function unionMarkerExtent(
+            markerData: any[],
+            xAxis: Axis2D,
+            yAxis: Axis2D,
+        ): void {
+            each(markerData, function (item) {
+                if (!item) {
+                    return;
+                }
+                const items = Array.isArray(item) ? item : [item];
+
+                each(items, function (markerItem) {
+                    if (!markerItem) {
+                        return;
+                    }
+
+                    UnionExtentForAxisByValue(markerItem.xAxis, xAxis, xAxis.type);
+                    UnionExtentForAxisByValue(markerItem.yAxis, yAxis, yAxis.type);
+
+                    if (markerItem.coord && Array.isArray(markerItem.coord)) {
+                        UnionExtentForAxisByValue(markerItem.coord[0], xAxis, xAxis.type);
+                        UnionExtentForAxisByValue(markerItem.coord[1], yAxis, yAxis.type);
+                    }
+                });
             });
         }
     }
