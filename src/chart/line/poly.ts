@@ -212,12 +212,29 @@ function drawSegment(
     return k;
 }
 
+function getSmoothableLoopedPoints(shape: ECPolygonShape) {
+    let points = (shape.points as number[]);
+
+    if (shape.connectNulls) {
+        const nonNull: number[] = [];
+        for (let i = 0; i < points.length; i += 2) {
+            if (!isPointNull(points[i], points[i + 1])) {
+                nonNull.push(points[i], points[i + 1]);
+            }
+        }
+        points = nonNull;
+    }
+
+    return [points[points.length - 2], points[points.length - 1], ...points, points[0], points[1]];
+}
+
 class ECPolylineShape {
     points: ArrayLike<number>;
     smooth = 0;
     smoothConstraint = true;
     smoothMonotone: 'x' | 'y' | 'none';
     connectNulls: boolean;
+    loop = false;
 }
 
 interface ECPolylineProps extends PathProps {
@@ -246,8 +263,15 @@ export class ECPolyline extends Path<ECPolylineProps> {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolylineShape) {
-        const points = shape.points;
+        if (shape.loop) {
+            return ECPolygon.prototype.buildPath.call(this, ctx, {
+                ...shape,
+                stackedOnPoints: [],
+                stackedOnSmooth: 0
+            });
+        }
 
+        const points = shape.points;
         let i = 0;
         let len = points.length / 2;
 
@@ -370,7 +394,8 @@ export class ECPolygon extends Path {
     }
 
     buildPath(ctx: PathProxy, shape: ECPolygonShape) {
-        const points = shape.points;
+        const shouldSmoothLoopedPoints = shape.loop && shape.smooth;
+        const points = shouldSmoothLoopedPoints ? getSmoothableLoopedPoints(shape) : shape.points;
         const stackedOnPoints = shape.stackedOnPoints;
 
         let i = 0;
@@ -392,13 +417,14 @@ export class ECPolygon extends Path {
         }
         while (i < len) {
             const k = drawSegment(
-                ctx, points, i, len, len,
+                ctx, points,
+                shouldSmoothLoopedPoints ? i - 1 : i, len, shouldSmoothLoopedPoints ? len - 1 : len,
                 1,
                 shape.smooth,
                 smoothMonotone, shape.connectNulls
             );
             drawSegment(
-                ctx, stackedOnPoints, i + k - 1, k, len,
+                ctx, stackedOnPoints, i + k - 1, k, shouldSmoothLoopedPoints ? len - 1 : len,
                 -1,
                 shape.stackedOnSmooth,
                 smoothMonotone, shape.connectNulls

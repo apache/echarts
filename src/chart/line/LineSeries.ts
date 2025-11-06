@@ -121,6 +121,8 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
     data?: (LineDataValue | LineDataItemOption)[]
 
     triggerLineEvent?: boolean
+
+    loop?: boolean
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -152,6 +154,8 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         legendHoverLink: true,
 
         clip: true,
+
+        loop: false,
 
         label: {
             position: 'top'
