@@ -182,7 +182,6 @@ todo
 *.asm
 
 # Distribution files
-/dist/
 /esm
 /echarts.all.js
 /echarts.simple.js
