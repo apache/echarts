@@ -21978,8 +21978,8 @@
        * Data iteration
        * @param ctx default this
        * @example
-       *  list.each('x', function (x, idx) {});
-       *  list.each(['x', 'y'], function (x, y, idx) {});
+       *  list.each(0, function (x, idx) {});
+       *  list.each([0, 1], function (x, y, idx) {});
        *  list.each(function (idx) {})
        */
       DataStore.prototype.each = function (dims, cb) {
@@ -24250,6 +24250,16 @@
       toolbox: {
         iconStyle: {
           borderColor: color$2.accent50
+        },
+        feature: {
+          dataView: {
+            backgroundColor: backgroundColor,
+            textColor: color$2.primary,
+            textareaColor: color$2.background,
+            textareaBorderColor: color$2.border,
+            buttonColor: color$2.accent50,
+            buttonTextColor: color$2.neutral00
+          }
         }
       },
       tooltip: {
@@ -26355,6 +26365,8 @@
         // Can't dispatch action during rendering procedure
         _this._pendingActions = [];
         opts = opts || {};
+        // mark the echarts instance as raw in Vue 3 to prevent the object being converted to be a proxy.
+        _this.__v_skip = true;
         _this._dom = dom;
         var defaultRenderer = 'canvas';
         var defaultCoarsePointer = 'auto';
@@ -32516,6 +32528,17 @@
         this._dataMax = dataExtent[1];
         var isOrdinal = this._isOrdinal = scale.type === 'ordinal';
         this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
+        if (scale.type === 'interval' || scale.type === 'log' || scale.type === 'time') {
+          // Process custom dataMin/dataMax
+          var dataMinRaw = model.get('dataMin', true);
+          if (dataMinRaw != null) {
+            this._dataMinNum = parseAxisModelMinMax(scale, dataMinRaw);
+          }
+          var dataMaxRaw = model.get('dataMax', true);
+          if (dataMaxRaw != null) {
+            this._dataMaxNum = parseAxisModelMinMax(scale, dataMaxRaw);
+          }
+        }
         var axisMinValue = model.get('min', true);
         if (axisMinValue == null) {
           axisMinValue = model.get('startValue', true);
@@ -32577,6 +32600,15 @@
         var isOrdinal = this._isOrdinal;
         var dataMin = this._dataMin;
         var dataMax = this._dataMax;
+        // Include custom dataMin/dataMax in calculation
+        // If dataMin is set and less than current data minimum, update the minimum value
+        if (this._dataMinNum != null && isFinite(dataMin) && this._dataMinNum < dataMin) {
+          dataMin = this._dataMinNum;
+        }
+        // If dataMax is set and greater than current data maximum, update the maximum value
+        if (this._dataMaxNum != null && isFinite(dataMax) && this._dataMaxNum > dataMax) {
+          dataMax = this._dataMaxNum;
+        }
         var axisDataLen = this._axisDataLen;
         var boundaryGapInner = this._boundaryGapInner;
         var span = !isOrdinal ? dataMax - dataMin || Math.abs(dataMin) : null;
@@ -33567,16 +33599,17 @@
         var labelFormatter_1 = makeLabelFormatter(axis);
         var extent_1 = axis.scale.getExtent();
         var tickNumbers = tickValuesToNumbers(axis, custom);
-        var ticks = filter(tickNumbers, function (val) {
+        var ticks_1 = filter(tickNumbers, function (val) {
           return val >= extent_1[0] && val <= extent_1[1];
         });
         return {
-          labels: map(ticks, function (numval) {
+          labels: map(ticks_1, function (numval) {
             var tick = {
               value: numval
             };
+            var index = ticks_1.indexOf(numval);
             return {
-              formattedLabel: labelFormatter_1(tick),
+              formattedLabel: labelFormatter_1(tick, index),
               rawLabel: axis.scale.getLabel(tick),
               tickValue: numval,
               time: undefined,
@@ -37047,7 +37080,7 @@
       return isNumber(smooth) ? smooth : smooth ? 0.5 : 0;
     }
     function getStackedOnPoints(coordSys, data, dataCoordInfo) {
-      if (!dataCoordInfo.valueDim) {
+      if (dataCoordInfo.valueDim == null) {
         return [];
       }
       var len = data.count();
@@ -39305,7 +39338,7 @@
       el.useStyle(style);
       var cursorStyle = itemModel.getShallow('cursor');
       cursorStyle && el.attr('cursor', cursorStyle);
-      var labelPositionOutside = isPolar ? isHorizontalOrRadial ? layout.r >= layout.r0 ? 'endArc' : 'startArc' : layout.endAngle >= layout.startAngle ? 'endAngle' : 'startAngle' : isHorizontalOrRadial ? layout.height >= 0 ? 'bottom' : 'top' : layout.width >= 0 ? 'right' : 'left';
+      var labelPositionOutside = isPolar ? isHorizontalOrRadial ? layout.r >= layout.r0 ? 'endArc' : 'startArc' : layout.endAngle >= layout.startAngle ? 'endAngle' : 'startAngle' : isHorizontalOrRadial ? getLabelPositionForHorizontal(layout, seriesModel.coordinateSystem) : getLabelPositionForVertical(layout, seriesModel.coordinateSystem);
       var labelStatesModels = getLabelStatesModels(itemModel);
       setLabelStyle(el, labelStatesModels, {
         labelFetcher: seriesModel,
@@ -39490,6 +39523,22 @@
         silent: true,
         z2: 0
       });
+    }
+    function getLabelPositionForHorizontal(layout, coordSys) {
+      if (layout.height === 0) {
+        // For zero height, determine position based on axis inverse status
+        var valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+        return valueAxis.inverse ? 'bottom' : 'top';
+      }
+      return layout.height > 0 ? 'bottom' : 'top';
+    }
+    function getLabelPositionForVertical(layout, coordSys) {
+      if (layout.width === 0) {
+        // For zero width, determine position based on axis inverse status
+        var valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+        return valueAxis.inverse ? 'left' : 'right';
+      }
+      return layout.width >= 0 ? 'right' : 'left';
     }
 
     function install$2(registers) {
@@ -40078,13 +40127,13 @@
         } else if (rotate === 'radial' || rotate === true) {
           var radialAngle = nx < 0 ? -midAngle + PI : -midAngle;
           labelRotate = radialAngle;
-        } else if (rotate === 'tangential' && labelPosition !== 'outside' && labelPosition !== 'outer') {
+        } else if (rotate === 'tangential' || rotate === 'tangential-noflip' && labelPosition !== 'outside' && labelPosition !== 'outer') {
           var rad = Math.atan2(nx, ny);
           if (rad < 0) {
             rad = PI * 2 + rad;
           }
           var isDown = ny > 0;
-          if (isDown) {
+          if (isDown && rotate !== 'tangential-noflip') {
             rad = PI + rad;
           }
           labelRotate = rad - PI;
