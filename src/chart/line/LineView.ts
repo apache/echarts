@@ -926,19 +926,24 @@ class LineView extends ChartView {
         const shouldTriggerLineEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'line';
         const shouldTriggerAreaEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'area';
 
-        shouldTriggerLineEvent && this.packEventData(seriesModel, polyline);
-        shouldTriggerAreaEvent && polygon && this.packEventData(seriesModel, polygon);
+        this.packEventData(seriesModel, polyline, shouldTriggerLineEvent);
+        this.packEventData(seriesModel, polygon, shouldTriggerAreaEvent);
     }
 
-    private packEventData(seriesModel: LineSeriesModel, el: Element) {
-        getECData(el).eventData = {
+    private packEventData(seriesModel: LineSeriesModel, el: Element, enable: boolean) {
+        if (!el) {
+            return;
+        }
+        getECData(el).eventData = enable ? {
             componentType: 'series',
             componentSubType: 'line',
             componentIndex: seriesModel.componentIndex,
             seriesIndex: seriesModel.seriesIndex,
             seriesName: seriesModel.name,
-            seriesType: 'line'
-        };
+            seriesType: 'line',
+            // for determining this event is triggered by area or line
+            selfType: el === this._polygon ? 'area' : 'line'
+        } : null;
     }
 
     highlight(
