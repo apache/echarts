@@ -42,6 +42,7 @@ import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import { getECData } from '../../util/innerStore';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { parseDataValue } from '../../data/helper/dataValueHelper';
+import tokens from '../../visual/tokens';
 
 interface MarkAreaDrawGroup {
     group: graphic.Group
@@ -380,7 +381,7 @@ class MarkAreaView extends MarkerView {
                     labelDataIndex: idx,
                     defaultText: areaData.getName(idx) || '',
                     inheritColor: isString(style.fill)
-                        ? colorUtil.modifyAlpha(style.fill, 1) : '#000'
+                        ? colorUtil.modifyAlpha(style.fill, 1) : tokens.color.neutral99
                 }
             );
 

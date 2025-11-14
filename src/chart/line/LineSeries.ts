@@ -42,6 +42,7 @@ import type Polar from '../../coord/polar/Polar';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
 import {LegendIconParams} from '../../component/legend/LegendModel';
+import tokens from '../../visual/tokens';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -196,7 +197,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         smooth: false,
         smoothMonotone: null,
         symbol: 'emptyCircle',
-        symbolSize: 4,
+        symbolSize: 6,
         symbolRotate: null,
 
         showSymbol: true,
@@ -271,7 +272,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         if (symbolType.indexOf('empty') > -1) {
             symbol.style.stroke = symbol.style.fill;
-            symbol.style.fill = '#fff';
+            symbol.style.fill = tokens.color.neutral00;
             symbol.style.lineWidth = 2;
         }
 

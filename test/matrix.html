@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+        <div id="main0-1"></div>
+        <div id="main0-2"></div>
+        <div id="main-dark"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main4"></div>
+        <div id="main_collect"></div>
+        <div id="main_series_data_use_ordinal_number"></div>
+        <div id="main_x_y_length"></div>
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+            var option;
+
+            option = {
+                matrix: {
+                    x: {
+                        data: [{
+                            value: 'A',
+                            children: ['A1', 'A2', {
+                                value: 'A3',
+                                children: ['A31', 'A32']
+                            }]
+                        }],
+                    },
+                    y: {
+                        data: ['U', 'V', 'W']
+                    },
+                    body: {
+                        itemStyle: {
+                            // borderColor: '#333',
+                        },
+                        data: [{
+                            coord: [['A2', 'A31', 'A32'], 'V'],
+                            mergeCells: true,
+                        }, {
+                            coord: [null, 'W'],
+                            clamp: true,
+                            mergeCells: true,
+                        }]
+                    }
+                },
+                textStyle: {
+                    fontSize: 25,
+                    color: 'red'
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 80,
+                    top: 'middle',
+                    dimension: 2,
+                    color: ['rgba(100,204,105,0.4)', 'rgba(3,4,5,0.4)'],
+                    calculable: true
+                },
+                series: {
+                    type: 'heatmap',
+                    coordinateSystem: 'matrix',
+                    itemStyle: {
+                        borderRadius: 10,
+                    },
+                    data: [
+                        ['A1', 'U', 10], ['A1', 'V', 200], ['A2', 'U', 300],
+                        ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60], ['A1', 'W', 80]
+                    ],
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Heatmap with Matrix'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+            var option;
+
+            option = {
+                matrix: {
+                    x: {
+                        show: false,
+                        data: [{
+                            value: 'A',
+                            children: ['A1', 'A2', {
+                                value: 'A3',
+                                children: ['A31', 'A32']
+                            }]
+                        }]
+                    },
+                    y: {
+                        show: false,
+                        data: ['U', 'V']
+                    }
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 80,
+                    top: 'middle',
+                    dimension: 2,
+                    calculable: true
+                },
+                series: {
+                    type: 'heatmap',
+                    coordinateSystem: 'matrix',
+                    data: [
+                        ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
+                        ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
+                    ],
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0-1', {
+                title: [
+                    'no header',
+                    'x.show: false, y.show: false'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                dataset: {
+                    source: [
+                        ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
+                        ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
+                    ]
+                },
+                matrix: {
+                    x: {
+                        data: [{
+                            value: 'A',
+                            children: ['A1', 'A2', {
+                                value: 'A3',
+                                children: ['A31', 'A32']
+                            }]
+                        }]
+                    },
+                    y: {
+                        data: ['U', 'V']
+                    }
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 80,
+                    top: 'middle',
+                    dimension: 2,
+                    calculable: true
+                },
+                series: {
+                    type: 'heatmap',
+                    coordinateSystem: 'matrix',
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0-2', {
+                title: [
+                    'Heatmap with Matrix (dataset)'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            option = {
+                dataset: {
+                    source: []
+                },
+                matrix: {
+                    x: {
+                        data: [{
+                            value: 'A',
+                            children: ['A1', 'A2', {
+                                value: 'A3',
+                                children: ['A31', 'A32']
+                            }]
+                        }]
+                    },
+                    y: {
+                        data: ['U', 'V']
+                    }
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 80,
+                    top: 'middle',
+                    dimension: 2,
+                    calculable: true
+                },
+                series: {
+                    type: 'heatmap',
+                    coordinateSystem: 'matrix',
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main-dark', {
+                title: [
+                    'Matrix with darkMode'
+                ],
+                option: option,
+                theme: 'dark'
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                var option;
+                option = {
+                    matrix: {
+                        x: {
+                            data: [{
+                                value: 'A',
+                                children: ['A1', 'A2', {
+                                    value: 'A3',
+                                    children: ['A31', 'A32']
+                                }]
+                            }]
+                        },
+                        y: {
+                            data: ['U', 'V']
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        coordinateSystem: 'matrix',
+                        center: ['A1', 'U'],
+                        radius: 18,
+                        data: [
+                            {
+                                value: 12,
+                                name: 'x'
+                            }, {
+                                value: 24,
+                                name: 'y'
+                            }, {
+                                value: 23,
+                                name: 'z'
+                            }
+                        ],
+                        label: {
+                            show: true
+                        }
+                    }, {
+                        type: 'pie',
+                        coordinateSystem: 'matrix',
+                        center: ['A31', 'V'],
+                        radius: 18,
+                        data: [
+                            {
+                                value: 18,
+                                name: 'x'
+                            }, {
+                                value: 44,
+                                name: 'y'
+                            }, {
+                                value: 43,
+                                name: 'z'
+                            }
+                        ],
+                        label: {
+                            show: true
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Pie with Matrix'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var option;
+                option = {
+                    matrix: {
+                        x: {
+                            data: [{
+                                value: 'A',
+                                children: ['A1', 'A2', {
+                                    value: 'A3',
+                                    children: ['A31', 'A32']
+                                }]
+                            }]
+                        },
+                        y: {
+                            data: ['U', 'V']
+                        },
+                        body: {
+                            data: [{
+                                // coord: ['A31', 'V']
+                                coord: ['A3', 'V'],
+                                mergeCells: true,
+                            }]
+                        }
+                    },
+                    series: [{
+                        type: 'graph',
+                        coordinateSystem: 'matrix',
+                        edgeSymbol: ['none', 'arrow'],
+                        symbolSize: 30,
+                        links: [{
+                            source: 0,
+                            target: 1
+                        }, {
+                            source: 1,
+                            target: 2
+                        }],
+                        data: [
+                            ['A1', 'U', 10], ['A1', 'V', 20], ['A2', 'U', 30],
+                            ['A2', 'V', 40], ['A31', 'U', 50], ['A3', 'V', 60]
+                        ],
+                        label: {
+                            show: true,
+                            formatter: params => {
+                                return params.data[2];
+                            }
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Graph with Matrix'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                var option;
+                option = {
+                    matrix: {
+                        x: {
+                            data: [{
+                                value: 'A',
+                                children: ['A1', 'A2', {
+                                    value: 'A3',
+                                    children: ['A31', 'A32']
+                                }]
+                            }]
+                        },
+                        y: {
+                            data: ['U', 'V']
+                        }
+                    },
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        data: [
+                            ['A1', 'U', 89, '😄'], ['A31', 'V', 95, '😍'], ['A2', 'U', 45, '😠']
+                        ],
+                        encode: {
+                            x: 0,
+                            y: 1,
+                            value: 2,
+                            label: 3
+                        },
+                        renderItem: function (params, api) {
+                            const x = api.value(0);
+                            const y = api.value(1);
+                            const rect = api.layout([x, y]).rect;
+                            const fontSize = 20;
+                            const padding = 10;
+                            const value = api.value(2);
+                            return {
+                                type: 'group',
+                                children: [{
+                                    type: 'rect',
+                                    shape: {
+                                        x: rect.x + padding,
+                                        y: rect.y + padding,
+                                        width: (rect.width - padding * 2) / 100 * value,
+                                        height: rect.height - padding * 2
+                                    },
+                                    style: {
+                                        fill: value > 90 ? 'green'
+                                            : value > 60 ? 'orange'
+                                                : 'red',
+                                    }
+                                }, {
+                                    type: 'text',
+                                    style: {
+                                        x: rect.x + (rect.width - padding * 2) / 100 * value - padding,
+                                        y: rect.y + rect.height / 2 - fontSize / 2,
+                                        text: api.value(3),
+                                        fontSize: fontSize,
+                                        textBaseline: 'middle',
+                                        textAlign: 'center'
+                                    }
+                                }, {
+                                    type: 'text',
+                                    style: {
+                                        x: rect.x + 30,
+                                        y: rect.y + rect.height / 2 - fontSize / 2,
+                                        text: api.value(2),
+                                        fontSize: fontSize,
+                                        textBaseline: 'middle',
+                                        textAlign: 'center',
+                                        fill: 'white'
+                                    }
+                                }]
+                            };
+                        }
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'Custom series with Matrix'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                const makeRenderItem = (xDim, yDim, valDim, dataExtent) => (params, api) => {
+                    const xval = api.value(xDim);
+                    const yval = api.value(yDim);
+                    const labelVal = api.value(valDim);
+                    const rect = api.layout([xval, yval]).rect;
+                    const height = rect.height * 0.3;
+                    const y = rect.y + (rect.height - height) / 2;
+                    const x = rect.x + rect.width * 0.3;
+                    const widthMax = rect.width * 0.5;
+                    const width = linearMap(labelVal, dataExtent, [0, widthMax])
+                    return {
+                        type: 'group',
+                        children: [{
+                            type: 'rect',
+                            shape: {x, y, width, height},
+                            style: api.style({
+                                fill: '#47f',
+                            }),
+                        }, {
+                            type: 'text',
+                            x: rect.x + 15,
+                            y: rect.y + rect.height / 2,
+                            style: {
+                                text: labelVal + '',
+                                fill: '#333',
+                                textVerticalAlign: 'middle',
+                            },
+                        }]
+                    };
+                };
+
+                function linearMap(val, domain, range) {
+                    const d0 = domain[0];
+                    const d1 = domain[1];
+                    const r0 = range[0];
+                    const r1 = range[1];
+                    const subDomain = d1 - d0;
+                    const subRange = r1 - r0;
+
+                    return subDomain === 0 ? subRange === 0 ? r0 : (r0 + r1) / 2
+                        : val === d0 ? r0
+                        : val === d1 ? r1
+                        : (val - d0) / subDomain * subRange + r0;
+                }
+
+                const _dataExtent = [0, 10000];
+
+                var option = {
+                    dataset: {
+                        source: [
+                            ['2021-02-01', 'amount', 1212, 'file', 2321, 'Q', 1412],
+                            ['2021-02-02', 'amount', 7181, 'file', 2114, 'Q', 1402],
+                            ['2021-02-03', 'amount', 2763, 'file', 4212, 'Q', 8172],
+                            ['2021-02-04', 'amount', 6122, 'file', 2942, 'Q', 6121],
+                            ['2021-02-05', 'amount', 4221, 'file', 3411, 'Q', 1987],
+                            ['2021-02-06', 'amount', 7221, 'file', 5121, 'Q', 1303],
+                        ]
+                    },
+                    matrix: {},
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        encode: {x: 1, y: 0},
+                        renderItem: makeRenderItem(1, 0, 2, _dataExtent),
+                    }, {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        symbol: 'rect',
+                        encode: {x: 3, y: 0},
+                        renderItem: makeRenderItem(3, 0, 4, _dataExtent),
+                    }, {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        encode: {x: 5, y: 0},
+                        renderItem: makeRenderItem(5, 0, 6, _dataExtent),
+                    }],
+                };
+
+                var chart = testHelper.create(echarts, 'main_collect', {
+                    title: [
+                        'No matrix.x.data, matrix.y.data declared, collect form dataset.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var option = {
+                    matrix: {
+                        x: {data: ['fruit', 'bread', 'milk']},
+                        y: {data: ['good', 'medium', 'bad']},
+                    },
+                    series: {
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        label: {show: true},
+                        encode: {label: 2},
+                        symbolSize: 20,
+                        data: [
+                            [0, 0, 1223],
+                            [1, 0, 323],
+                            [2, 0, 142],
+                            [0, 1, 63],
+                            [1, 1, 91],
+                            [2, 1, 45],
+                            [0, 2, 55],
+                            [1, 2, 15],
+                            [2, 2, 53],
+                        ]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_series_data_use_ordinal_number', {
+                    title: [
+                        'series.data specify ordinal number rather than text'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var option = {
+                    matrix: {
+                        x: {length: 4},
+                        y: {length: 3},
+                    },
+                    series: {
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        label: {show: true},
+                        encode: {label: 2},
+                        symbolSize: 20,
+                        data: [
+                            [0, 0, 1223],
+                            [1, 0, 323],
+                            [2, 0, 142],
+                            [0, 1, 63],
+                            [1, 1, 91],
+                            [2, 1, 45],
+                            [0, 2, 55],
+                            [1, 2, 15],
+                            [2, 2, 53],
+                        ]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_x_y_length', {
+                    title: [
+                        'matrx.x/y.length'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+    </body>
+</html>
+

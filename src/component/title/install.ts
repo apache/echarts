@@ -21,7 +21,7 @@ import * as zrUtil from 'zrender/src/core/util';
 import * as graphic from '../../util/graphic';
 import {getECData} from '../../util/innerStore';
 import {createTextStyle} from '../../label/labelStyle';
-import {getLayoutRect} from '../../util/layout';
+import {createBoxLayoutReference, getLayoutRect} from '../../util/layout';
 import ComponentModel from '../../model/Component';
 import {
     ComponentOption,
@@ -30,19 +30,24 @@ import {
     ZRTextVerticalAlign,
     ZRColor,
     BorderOptionMixin,
-    LabelOption
+    LabelOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import {windowOpen} from '../../util/format';
 import { EChartsExtensionInstallRegisters } from '../../extension';
+import tokens from '../../visual/tokens';
 
 interface TitleTextStyleOption extends LabelOption {
     width?: number
 }
 
-export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+export interface TitleOption extends
+    ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
 
     mainType?: 'title'
 
@@ -109,12 +114,12 @@ class TitleModel extends ComponentModel<TitleOption> {
 
         subtarget: 'blank',
 
-        left: 0,
-        top: 0,
+        left: 'center',
+        top: tokens.size.m,
 
-        backgroundColor: 'rgba(0,0,0,0)',
+        backgroundColor: tokens.color.transparent,
 
-        borderColor: '#ccc',
+        borderColor: tokens.color.primary,
 
         borderWidth: 0,
 
@@ -124,15 +129,14 @@ class TitleModel extends ComponentModel<TitleOption> {
         textStyle: {
             fontSize: 18,
             fontWeight: 'bold',
-            color: '#464646'
+            color: tokens.color.primary
         },
         subtextStyle: {
             fontSize: 12,
-            color: '#6E7079'
+            color: tokens.color.quaternary
         }
     };
 }
-
 
 // View
 class TitleView extends ComponentView {
@@ -212,11 +216,10 @@ class TitleView extends ComponentView {
         const layoutOption = titleModel.getBoxLayoutParams();
         layoutOption.width = groupRect.width;
         layoutOption.height = groupRect.height;
+
+        const layoutRef = createBoxLayoutReference(titleModel, api);
         const layoutRect = getLayoutRect(
-            layoutOption, {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }, titleModel.get('padding')
+            layoutOption, layoutRef.refContainer, titleModel.get('padding')
         );
         // Adjust text align based on position
         if (!textAlign) {

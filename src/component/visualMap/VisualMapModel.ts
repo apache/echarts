@@ -32,13 +32,17 @@ import {
     BorderOptionMixin,
     OptionDataValue,
     BuiltinVisualProperty,
-    DimensionIndex
+    DimensionIndex,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
+    OptionId,
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
 import SeriesData from '../../data/SeriesData';
+import tokens from '../../visual/tokens';
 
 const mapVisual = VisualMapping.mapVisual;
 const eachVisual = VisualMapping.eachVisual;
@@ -54,6 +58,8 @@ type LabelFormatter = (min: OptionDataValue, max?: OptionDataValue) => string;
 type VisualState = VisualMapModel['stateList'][number];
 export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> extends
     ComponentOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
 
@@ -67,12 +73,13 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
     /**
      * 'all' or null/undefined: all series.
      * A number or an array of number: the specified series.
-     * set min: 0, max: 200, only for campatible with ec2.
-     * In fact min max should not have default value.
      */
-    seriesIndex?: 'all' | number[] | number
+    seriesIndex?: modelUtil.ModelFinderIndexQuery
+    seriesId?: modelUtil.ModelFinderIdQuery
 
     /**
+     * set min: 0, max: 200, only for campatible with ec2.
+     * In fact min max should not have default value.
      * min value, must specified if pieces is not specified.
      */
     min?: number
@@ -85,6 +92,16 @@ export interface VisualMapOption<T extends VisualOptionBase = VisualOptionBase> 
      * Dimension to be encoded
      */
     dimension?: number
+
+    /**
+     * Series targets with specific dimensions
+     * When provided, seriesIndex, seriesId, and dimension are ignored
+     */
+    seriesTargets?: {
+        seriesIndex?: number
+        seriesId?: OptionId
+        dimension: number
+    }[]
 
     /**
      * Visual configuration for the data in selection
@@ -237,23 +254,54 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     }
 
     /**
-     * @protected
-     * @return {Array.<number>} An array of series indices.
+     * @return An array of series indices.
      */
-    getTargetSeriesIndices() {
-        const optionSeriesIndex = this.option.seriesIndex;
-        let seriesIndices: number[] = [];
-
-        if (optionSeriesIndex == null || optionSeriesIndex === 'all') {
-            this.ecModel.eachSeries(function (seriesModel, index) {
-                seriesIndices.push(index);
+    protected getTargetSeriesIndices(): number[] {
+        const seriesTargets = this.option.seriesTargets;
+        if (seriesTargets) {
+            // When seriesTargets is provided, collect all target series indices
+            const indices: number[] = [];
+            each(seriesTargets, (target) => {
+                if (target.seriesIndex != null) {
+                    indices.push(target.seriesIndex);
+                }
+                else if (target.seriesId != null) {
+                    // Find series by ID
+                    let seriesModel: SeriesModel;
+                    this.ecModel.eachSeries(function (series) {
+                        if (series.id === target.seriesId) {
+                            seriesModel = series;
+                        }
+                    });
+                    if (seriesModel) {
+                        indices.push(seriesModel.componentIndex);
+                    }
+                }
             });
-        }
-        else {
-            seriesIndices = modelUtil.normalizeToArray(optionSeriesIndex);
+            return indices;
         }
 
-        return seriesIndices;
+        const optionSeriesId = this.option.seriesId;
+        let optionSeriesIndex = this.option.seriesIndex;
+        if (optionSeriesIndex == null && optionSeriesId == null) {
+            optionSeriesIndex = 'all';
+        }
+
+        const seriesModels = modelUtil.queryReferringComponents(
+            this.ecModel,
+            'series',
+            {
+                index: optionSeriesIndex,
+                id: optionSeriesId,
+            },
+            {
+                useDefault: false,
+                enableAll: true,
+                enableNone: false,
+            }
+        ).models;
+
+        return zrUtil.map(seriesModels, seriesModel => seriesModel.componentIndex);
     }
 
     /**
@@ -392,8 +440,23 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
     //     }
     // }
 
+    getDimension(seriesIndex: number): number {
+        const seriesTargets = this.option.seriesTargets;
+        if (seriesTargets) {
+            const target = zrUtil.find(seriesTargets, target =>
+                (target.seriesIndex != null && target.seriesIndex === seriesIndex)
+                || (target.seriesId != null && target.seriesId === this.ecModel.getSeriesByIndex(seriesIndex).id)
+            );
+            if (target) {
+                return target.dimension;
+            }
+        }
+        return this.option.dimension;
+    }
+
     getDataDimensionIndex(data: SeriesData): DimensionIndex {
-        const optDim = this.option.dimension;
+        const seriesIndex = (data.hostModel as any).seriesIndex;
+        const optDim = this.getDimension(seriesIndex);
 
         if (optDim != null) {
             return data.getDimensionIndex(optDim);
@@ -605,7 +668,7 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         // zlevel: 0,
         z: 4,
 
-        seriesIndex: 'all',
+        // seriesIndex: 'all',
 
         min: 0,
         max: 200,
@@ -620,18 +683,18 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
         inverse: false,
         orient: 'vertical',        // 'horizontal' ¦ 'vertical'
 
-        backgroundColor: 'rgba(0,0,0,0)',
-        borderColor: '#ccc',       // 值域边框颜色
-        contentColor: '#5793f3',
-        inactiveColor: '#aaa',
+        backgroundColor: tokens.color.transparent,
+        borderColor: tokens.color.borderTint,       // 值域边框颜色
+        contentColor: tokens.color.theme[0],
+        inactiveColor: tokens.color.disabled,
         borderWidth: 0,
-        padding: 5,
+        padding: tokens.size.m,
                                     // 接受数组分别设定上右下左边距，同css
         textGap: 10,               //
         precision: 0,              // 小数精度，默认为0，无小数点
 
         textStyle: {
-            color: '#333'          // 值域文字颜色
+            color: tokens.color.secondary          // 值域文字颜色
         }
     };
 }

@@ -43,11 +43,11 @@ import { PointLike } from 'zrender/src/core/Point';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { createTextStyle } from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
+import tokens from '../../visual/tokens';
 
 const Rect = graphic.Rect;
 
 // Constants
-const DEFAULT_LOCATION_EDGE_GAP = 7;
 const DEFAULT_FRAME_BORDER_WIDTH = 1;
 const DEFAULT_FILLER_SIZE = 30;
 const DEFAULT_MOVE_HANDLE_SIZE = 7;
@@ -224,22 +224,24 @@ class SliderZoomView extends DataZoomView {
         const showMoveHandle = dataZoomModel.get('brushSelect');
         const moveHandleSize = showMoveHandle ? DEFAULT_MOVE_HANDLE_SIZE : 0;
 
+        const refContainer = layout.createBoxLayoutReference(dataZoomModel, api).refContainer;
+
         // If some of x/y/width/height are not specified,
         // auto-adapt according to target grid.
         const coordRect = this._findCoordRect();
-        const ecSize = { width: api.getWidth(), height: api.getHeight() };
+        const edgeGap = dataZoomModel.get('defaultLocationEdgeGap', true) || 0;
         // Default align by coordinate system rect.
         const positionInfo = this._orient === HORIZONTAL
             ? {
                 // Why using 'right', because right should be used in vertical,
                 // and it is better to be consistent for dealing with position param merge.
-                right: ecSize.width - coordRect.x - coordRect.width,
-                top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP - moveHandleSize),
+                right: refContainer.width - coordRect.x - coordRect.width,
+                top: refContainer.height - DEFAULT_FILLER_SIZE - edgeGap - moveHandleSize,
                 width: coordRect.width,
                 height: DEFAULT_FILLER_SIZE
             }
             : { // vertical
-                right: DEFAULT_LOCATION_EDGE_GAP,
+                right: edgeGap,
                 top: coordRect.y,
                 width: DEFAULT_FILLER_SIZE,
                 height: coordRect.height
@@ -258,7 +260,7 @@ class SliderZoomView extends DataZoomView {
 
         const layoutRect = layout.getLayoutRect(
             layoutParams,
-            ecSize
+            refContainer
         );
 
         this._location = { x: layoutRect.x, y: layoutRect.y };
@@ -292,8 +294,11 @@ class SliderZoomView extends DataZoomView {
 
         // Position barGroup
         const rect = thisGroup.getBoundingRect([sliderGroup]);
-        thisGroup.x = location.x - rect.x;
-        thisGroup.y = location.y - rect.y;
+        const rectX = isNaN(rect.x) ? 0 : rect.x;
+        const rectY = isNaN(rect.y) ? 0 : rect.y;
+
+        thisGroup.x = location.x - rectX;
+        thisGroup.y = location.y - rectY;
         thisGroup.markRedraw();
     }
 
@@ -388,7 +393,7 @@ class SliderZoomView extends DataZoomView {
 
             const areaPoints = [[size[0], 0], [0, 0]];
             const linePoints: number[][] = [];
-            const step = thisShadowExtent[1] / (data.count() - 1);
+            const step = thisShadowExtent[1] / (Math.max(1, data.count() - 1));
             const normalizationConstant = size[0] / (thisDataExtent[1] - thisDataExtent[0]);
             const isTimeAxis = info.thisAxis.type === 'time';
             let thisCoord = -step;
@@ -429,8 +434,10 @@ class SliderZoomView extends DataZoomView {
                     linePoints.push([thisCoord, 0]);
                 }
 
-                areaPoints.push([thisCoord, otherCoord]);
-                linePoints.push([thisCoord, otherCoord]);
+                if (!isEmpty) {
+                    areaPoints.push([thisCoord, otherCoord]);
+                    linePoints.push([thisCoord, otherCoord]);
+                }
 
                 lastIsEmpty = isEmpty;
             });
@@ -516,11 +523,12 @@ class SliderZoomView extends DataZoomView {
                 }
 
                 otherDim = seriesModel.getData().mapDimension(otherDim);
+                const thisDim = seriesModel.getData().mapDimension(axisDim);
 
                 result = {
                     thisAxis: thisAxis,
                     series: seriesModel,
-                    thisDim: axisDim,
+                    thisDim: thisDim,
                     otherDim: otherDim,
                     otherAxisInverse: otherAxisInverse
                 };
@@ -574,7 +582,7 @@ class SliderZoomView extends DataZoomView {
                 stroke: dataZoomModel.get('dataBackgroundColor' as any)
                     || dataZoomModel.get('borderColor'),
                 lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
-                fill: 'rgba(0,0,0,0)'
+                fill: tokens.color.transparent
             }
         }));
 
@@ -664,7 +672,7 @@ class SliderZoomView extends DataZoomView {
             const moveHandleIcon = displayables.moveHandleIcon = createSymbol(
                 dataZoomModel.get('moveHandleIcon'),
                 -iconSize / 2, -iconSize / 2, iconSize, iconSize,
-                '#fff',
+                tokens.color.neutral00,
                 true
             );
             moveHandleIcon.silent = true;
@@ -697,7 +705,7 @@ class SliderZoomView extends DataZoomView {
 
         actualMoveZone.attr({
             draggable: true,
-            cursor: getCursor(this._orient),
+            cursor: 'default',
             drift: bind(this._onDragMove, this, 'all'),
             ondragstart: bind(this._showDataInfo, this, true),
             ondragend: bind(this._onDragEnd, this),

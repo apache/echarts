@@ -26,12 +26,10 @@
 
 import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
-import SeriesData from '../data/SeriesData';
 import * as scaleHelper from './helper';
 import {
     OrdinalRawValue,
     OrdinalNumber,
-    DimensionLoose,
     OrdinalSortInfo,
     OrdinalScaleTick,
     ScaleTick
@@ -140,10 +138,9 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
             : Math.round(val);
     }
 
-    contain(rank: OrdinalRawValue | OrdinalNumber): boolean {
-        rank = this.parse(rank);
-        return scaleHelper.contain(rank, this._extent)
-            && rank >= 0 && rank < this._ordinalMeta.categories.length;
+    contain(val: OrdinalNumber): boolean {
+        return scaleHelper.contain(val, this._extent)
+            && val >= 0 && val < this._ordinalMeta.categories.length;
     }
 
     /**
@@ -151,9 +148,9 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @param val raw ordinal number.
      * @return normalized value in [0, 1].
      */
-    normalize(val: OrdinalRawValue | OrdinalNumber): number {
-        val = this._getTickNumber(this.parse(val));
-        return scaleHelper.normalize(val, this._extent);
+    normalize(val: OrdinalNumber): number {
+        val = this._getTickNumber(val);
+        return this._calculator.normalize(val, this._extent);
     }
 
     /**
@@ -161,7 +158,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @return raw ordinal number.
      */
     scale(val: number): OrdinalNumber {
-        val = Math.round(scaleHelper.scale(val, this._extent));
+        val = Math.round(this._calculator.scale(val, this._extent));
         return this.getRawOrdinalNumber(val);
     }
 
@@ -265,10 +262,6 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
 
     count(): number {
         return this._extent[1] - this._extent[0] + 1;
-    }
-
-    unionExtentFromData(data: SeriesData, dim: DimensionLoose) {
-        this.unionExtent(data.getApproximateExtent(dim));
     }
 
     /**

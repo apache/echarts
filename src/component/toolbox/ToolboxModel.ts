@@ -29,8 +29,11 @@ import {
     ItemStyleOption,
     LabelOption,
     CommonTooltipOption,
-    Dictionary
+    Dictionary,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
+import tokens from '../../visual/tokens';
 
 
 export interface ToolboxTooltipFormatterParams {
@@ -39,9 +42,13 @@ export interface ToolboxTooltipFormatterParams {
     title: string
     $vars: ['name', 'title']
 }
-export interface ToolboxOption extends ComponentOption,
+export interface ToolboxOption extends
+    ComponentOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     BorderOptionMixin {
+
     mainType?: 'toolbox'
 
     show?: boolean
@@ -120,27 +127,27 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
 
         backgroundColor: 'transparent',
 
-        borderColor: '#ccc',
+        borderColor: tokens.color.border,
 
         borderRadius: 0,
 
         borderWidth: 0,
 
-        padding: 5,
+        padding: tokens.size.m,
 
         itemSize: 15,
 
-        itemGap: 8,
+        itemGap: tokens.size.s,
 
         showTitle: true,
 
         iconStyle: {
-            borderColor: '#666',
+            borderColor: tokens.color.accent50,
             color: 'none'
         },
         emphasis: {
             iconStyle: {
-                borderColor: '#3E98C5'
+                borderColor: tokens.color.accent50
             }
         },
         // textStyle: {},

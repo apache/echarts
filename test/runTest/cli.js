@@ -45,6 +45,7 @@ program
     .option('--renderer <renderer>', 'svg/canvas renderer')
     .option('--use-coarse-pointer <useCoarsePointer>', '"auto" (by default) or "true" or "false"')
     .option('--threads <threads>', 'How many threads to run concurrently')
+    .option('--theme <theme>', 'Theme to use)')
     .option('--no-save', 'Don\'t save result')
     .option('--dir <dir>', 'Out dir');
 
@@ -55,6 +56,8 @@ program.actual = program.actual || 'local';
 program.threads = +program.threads || 1;
 program.renderer = (program.renderer || 'canvas').toLowerCase();
 program.useCoarsePointer = (program.useCoarsePointer || 'auto').toLowerCase();
+program.theme = program.theme || 'none';
+console.log('CLI theme parameter:', program.theme);
 program.dir = program.dir || (__dirname + '/tmp');
 
 if (!program.tests) {
@@ -173,7 +176,7 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
     const fileUrl = testOpt.fileUrl;
     const screenshots = [];
     const logs = [];
-    const errors = [];
+    const errors = []; // string[]
 
     const page = await browser.newPage();
     page.setRequestInterception(true);
@@ -207,14 +210,36 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
     await page.exposeFunction('__VRT_MOUSE_MOVE__', async (x, y) =>  {
         await page.mouse.move(x, y);
     });
-    await page.exposeFunction('__VRT_MOUSE_DOWN__', async () =>  {
-        await page.mouse.down();
+    await page.exposeFunction('__VRT_MOUSE_DOWN__', async (errMsgPart) =>  {
+        try {
+            await page.mouse.down();
+        }
+        catch (err) {
+            // e.g., if double mousedown without a mouseup, error "'left' is already pressed." will be thrown.
+            // Report to users to re-record the test case.
+            if (errMsgPart) {
+                if ((err.message + '').indexOf('already pressed') >= 0) {
+                    errMsgPart += ' May be caused by duplicated mousedowns without a mouseup.'
+                        + ' Please re-record the test case.';
+                }
+                err.message = err.message + ' ' + errMsgPart;
+            }
+            throw err;
+        }
     });
-    await page.exposeFunction('__VRT_MOUSE_UP__', async () =>  {
-        await page.mouse.up();
+    await page.exposeFunction('__VRT_MOUSE_UP__', async (errMsgPart) =>  {
+        try {
+            await page.mouse.up();
+        }
+        catch (err) {
+            if (errMsgPart) {
+                err.message = err.message + ' ' + errMsgPart;
+            }
+            throw err;
+        }
     });
-    await page.exposeFunction('__VRT_LOAD_ERROR__', async (err) =>  {
-        errors.push(err);
+    await page.exposeFunction('__VRT_LOAD_ERROR__', async (errStr) =>  {
+        errors.push(errStr);
     });
     // await page.exposeFunction('__VRT_WAIT_FOR_NETWORK_IDLE__', async () =>  {
     //     await waitForNetworkIdle();
@@ -234,8 +259,8 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
         });
     });
 
-    page.exposeFunction('__VRT_LOG_ERRORS__', (err) =>  {
-        errors.push(err);
+    page.exposeFunction('__VRT_LOG_ERRORS__', (errStr) =>  {
+        errors.push(errStr);
     });
 
     let actionScreenshotCount = {};
@@ -276,9 +301,16 @@ async function runTestPage(browser, testOpt, source, version, runtimeCode, isExp
     try {
         await page.setViewport({
             width: 800,
-            height: 600
+            height: 600,
         });
-        await page.goto(`${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`, {
+
+        let url = `${origin}/test/${fileUrl}?__RENDERER__=${program.renderer}&__COARSE__POINTER__=${program.useCoarsePointer}`;
+
+        if (program.theme && program.theme !== 'none' && version === 'local') {
+            url += `&__THEME__=${program.theme}`;
+        }
+
+        await page.goto(url, {
             waitUntil: 'networkidle2',
             timeout: 10000,
             // timeout: 0
@@ -409,11 +441,12 @@ async function runTest(browser, testOpt, runtimeCode, expectedSource, expectedVe
         testOpt.expectedVersion = expectedVersion;
         testOpt.useSVG = program.renderer === 'svg';
         testOpt.useCoarsePointer = program.useCoarsePointer;
+        testOpt.theme = program.theme;
         testOpt.lastRun = Date.now();
     }
     else {
         // Only run once
-        await runTestPage(browser, testOpt, 'local', runtimeCode, true);
+        await runTestPage(browser, testOpt, expectedSource, 'local', runtimeCode, true);
     }
 }
 

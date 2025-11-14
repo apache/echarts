@@ -1,0 +1,18 @@
+[
+  {
+    "link": "",
+    "comment": "The hideOverlap effect changed slightly due to the el.ignore is introduced to intersection check, which is more reasonable in logic. But regarding the visual effect in this scenario, both acceptable.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1752158582123
+  },
+  {
+    "link": "https://github.com/apache/echarts/pull/19459",
+    "comment": "",
+    "type": "New Feature",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1748488750868
+  }
+]

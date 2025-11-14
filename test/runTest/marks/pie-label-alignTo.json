@@ -1,0 +1,18 @@
+[
+  {
+    "link": "",
+    "comment": "The label diff results from the fix of the margin. Indiscernible to naked eye. More compact so that the hideOverlap effect is changed, but both acceptable. Or indiscernible to the naked eye.",
+    "type": "Others",
+    "markedBy": "Ovilia",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1753174655356
+  },
+  {
+    "link": "https://github.com/ecomfe/zrender/pull/1122",
+    "comment": "Text wrapping enhanced",
+    "type": "Bug Fixing",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1750749886803
+  }
+]

@@ -53,6 +53,7 @@ export interface MarkerPositionOption {
     // Absolute position, px or percent string
     x?: number | string
     y?: number | string
+    relativeTo?: 'container' | 'coordinate'
 
     /**
      * Coord on any coordinate system
@@ -106,6 +107,8 @@ abstract class MarkerModel<Opts extends MarkerOption = MarkerOption> extends Com
      * If marker model is created by self from series
      */
     createdBySelf = false;
+
+    preventAutoZ = true;
 
     static readonly dependencies = ['series', 'grid', 'polar', 'geo'];
 

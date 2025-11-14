@@ -1,0 +1,10 @@
+[
+  {
+    "link": "",
+    "comment": "The label diff results from the fix of the margin. Indiscernible to naked eye. More compact so that some `hideOverlap` is avoided.",
+    "type": "New Feature",
+    "markedBy": "Ovilia",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1753239094513
+  }
+]

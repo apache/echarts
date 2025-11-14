@@ -40,20 +40,21 @@ import { SeriesOption } from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
+import { createBoxLayoutReference } from '../../util/layout';
 
 /**
  * Resize method bound to the polar
  */
 function resizePolar(polar: Polar, polarModel: PolarModel, api: ExtensionAPI) {
     const center = polarModel.get('center');
-    const width = api.getWidth();
-    const height = api.getHeight();
 
-    polar.cx = parsePercent(center[0], width);
-    polar.cy = parsePercent(center[1], height);
+    const refContainer = createBoxLayoutReference(polarModel, api).refContainer;
+
+    polar.cx = parsePercent(center[0], refContainer.width) + refContainer.x;
+    polar.cy = parsePercent(center[1], refContainer.height) + refContainer.y;
 
     const radiusAxis = polar.getRadiusAxis();
-    const size = Math.min(width, height) / 2;
+    const size = Math.min(refContainer.width, refContainer.height) / 2;
 
     let radius = polarModel.get('radius');
     if (radius == null) {

@@ -207,7 +207,7 @@ class EffectLine extends graphic.Group {
         const p1 = symbol.__p1;
         const p2 = symbol.__p2;
         const cp1 = symbol.__cp1;
-        const t = symbol.__t < 1 ? symbol.__t : 2 - symbol.__t;
+        const t = symbol.__t <= 1 ? symbol.__t : 2 - symbol.__t;
         const pos = [symbol.x, symbol.y];
         const lastPos = pos.slice();
         const quadraticAt = curveUtil.quadraticAt;
@@ -216,9 +216,9 @@ class EffectLine extends graphic.Group {
         pos[1] = quadraticAt(p1[1], cp1[1], p2[1], t);
 
         // Tangent
-        const tx = symbol.__t < 1 ? quadraticDerivativeAt(p1[0], cp1[0], p2[0], t)
+        const tx = symbol.__t <= 1 ? quadraticDerivativeAt(p1[0], cp1[0], p2[0], t)
                  : quadraticDerivativeAt(p2[0], cp1[0], p1[0], 1 - t);
-         const ty = symbol.__t < 1 ? quadraticDerivativeAt(p1[1], cp1[1], p2[1], t)
+        const ty = symbol.__t <= 1 ? quadraticDerivativeAt(p1[1], cp1[1], p2[1], t)
                  : quadraticDerivativeAt(p2[1], cp1[1], p1[1], 1 - t);
 
 

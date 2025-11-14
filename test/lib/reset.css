@@ -51,9 +51,222 @@ body > .main {
     padding-left: 2px;
     padding-right: 2px;
 }
-.test-buttons button {
+
+/*
+ * [ CAUTION ]
+ *  The existing CSS class names below MUST NOT be modified;
+ *  otherwise, some recorded visual test cases may fail.
+ */
+
+.test-inputs {
+    background: #eee;
+}
+.test-inputs button {
     margin: 10px 5px;
 }
+.test-inputs-fix-height {
+    position: relative;
+    overflow: scroll;
+    box-sizing: border-box;
+    background: #eee;
+    padding: 0;
+}
+.test-inputs-fix-height::before {
+  content: 'Scroll ⬇';
+  position: sticky;
+  float: right;
+  top: 0;
+  right: 0;
+  padding: 0 2px 0 5px;
+  height: 14px;
+  line-height: 14px;
+  font-size: 11px;
+  color: #333;
+  z-index: 9999;
+  background: #ccc;
+  text-align: right;
+}
+.test-inputs-style-compact button {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.test-inputs-slider {
+    white-space: nowrap;
+    display: inline-block;
+    margin: 10px 5px;
+    font-size: 14px;
+    padding: 0;
+}
+.test-inputs-style-compact .test-inputs-slider {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.test-inputs-slider-input {
+    width: 109px;
+    height: 16px;
+}
+.test-inputs-slider-no-delta-buttons .test-inputs-slider-input {
+    width: 129px;
+}
+.test-inputs-style-compact .test-inputs-slider-input {
+    width: 75px;
+}
+.test-inputs-slider-sub {
+    margin-left: -10px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+.test-inputs-style-compact .test-inputs-slider-sub {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+.test-inputs-slider span {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-inputs-slider-disabled span {
+    color: #aaa;
+}
+.test-inputs-slider input {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-inputs-slider-btn-incdec {
+    display: inline-block;
+    vertical-align: middle;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    background: none;
+    border-color: transparent;
+    padding: 0;
+    user-select: none;
+    cursor: pointer;
+}
+.test-inputs-slider-btn-decrease {
+    border-width: 5px 7px 5px 0;
+    border-right-color: rgb(48,119,226);
+    margin: 0 1px 0 2px;
+}
+.test-inputs-slider-btn-decrease:hover {
+    border-right-color: #245dc1;
+}
+.test-inputs-slider-btn-increase {
+    border-width: 5px 0 5px 7px;
+    border-left-color: rgb(48,119,226);
+    margin: 0 2px 0 1px;
+}
+.test-inputs-slider-btn-increase:hover {
+    border-left-color: #245dc1;
+}
+.test-inputs-slider-disabled .test-inputs-slider-btn-decrease {
+    border-right-color: #bbb;
+    cursor: default;
+}
+.test-inputs-slider-disabled .test-inputs-slider-btn-increase {
+    border-left-color: #bbb;
+    cursor: default;
+}
+.test-inputs-slider-disabled .test-inputs-slider-btn-decrease:hover {
+    border-left-color: #bbb;
+}
+.test-inputs-slider-disabled .test-inputs-slider-btn-increase:hover {
+    border-left-color: #bbb;
+}
+.test-inputs-select {
+    white-space: nowrap;
+    display: inline-block;
+    font-size: 14px;
+    margin: 10px 5px;
+    margin-right: 10px;
+}
+.test-inputs-style-compact .test-inputs-select {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.test-inputs-select span {
+    vertical-align: middle;
+    margin: 0 3px;
+}
+.test-inputs-select-disabled span {
+    color: #aaa;
+}
+.test-inputs-select select {
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+    font-size: 13.3333px;
+    height: 19px;
+}
+.test-inputs-groupset {
+    position: relative;
+    overflow: auto;
+    border: 1px solid #bbb;
+    padding: 0;
+    margin: 0 3px; /* margin-bottom will collapse. */
+    background: #fff;
+    display: block;
+    width: auto;
+}
+.test-inputs-groupset.test-inputs-fix-height::before {
+    right: 0;
+    left: 0;
+    height: 12px;
+    line-height: 12px;
+    font-size: 9px;
+}
+.test-inputs-groupset-text {
+    position: sticky;
+    display: block;
+    top: 0;
+    left: 0;
+    padding: 0;
+    margin: 0;
+    padding-left: 10px;
+    color: #333;
+    z-index: 9998;
+    height: 12px;
+    line-height: 12px;
+    font-size: 9px;
+    background: #ccc;
+}
+.test-inputs-groupset-group {
+    position: relative;
+    margin: 5px 2px;
+    background: #fff;
+}
+.test-inputs-groupset-margin-bottom {
+    /* A workaround for margin collapse, without breaking parent CSS (may fail previous visual tests) */
+    height: 3px;
+    position: relative;
+    display: block;
+    width: auto;
+}
+.test-inputs-hr {
+    position: relative;
+    background: #ccc;
+    padding: 0;
+    height: 1px;
+    border-width: 0;
+    margin-block: unset;
+    margin-inline: unset;
+    margin: 8px 2px;
+}
+.test-inputs-hr-text {
+    position: absolute;
+    color: #333;
+    background: #ddd;
+    right: 0;
+    top: -6px;
+    text-align: right;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-size: 10px;
+    line-height: 10px;
+    padding: 2px 5px;
+    margin: 0;
+}
+
 .test-chart-block {
     position: relative;
 }
@@ -72,6 +285,21 @@ body > .main {
 }
 .test-chart-block-has-right .test-chart-block-left {
     margin-right: 320px;
+}
+.test-chart-wrapper {
+    position: relative;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+}
+.test-bounding-rects {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 0;
+    margin: 0;
+    border-width: 0;
+    z-index: 999999;
 }
 .test-info {
     padding-left: 10px;

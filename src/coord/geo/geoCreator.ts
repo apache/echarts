@@ -27,13 +27,13 @@ import MapSeries, { MapSeriesOption } from '../../chart/map/MapSeries';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { CoordinateSystemCreator } from '../CoordinateSystem';
 import { NameMap } from './geoTypes';
-import { SeriesOption, SeriesOnGeoOptionMixin } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import type Model from '../../model/Model';
 import type GlobalModel from '../../model/Global';
-import type SeriesModel from '../../model/Series';
 import type ComponentModel from '../../model/Component';
 import * as vector from 'zrender/src/core/vector';
+import { injectCoordSysByOption } from '../../core/CoordinateSystem';
+import { SINGLE_REFERRING } from '../../util/model';
 import type { GeoJSONRegion } from './Region';
 
 export type resizeGeoType = typeof resizeGeo;
@@ -96,8 +96,9 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
     const centerOption = geoModel.get('layoutCenter');
     const sizeOption = geoModel.get('layoutSize');
 
-    const viewWidth = api.getWidth();
-    const viewHeight = api.getHeight();
+    // Laying out geo on `dataCoordSys`, such as cartesian, works theoretically but not supported yet.
+    // Therefore here we only handle cases that laying out on `boxCoordSys`, such as matrix/calendar.
+    const {refContainer} = layout.createBoxLayoutReference(geoModel, api);
 
     const aspect = rect.width / rect.height * this.aspectScale;
 
@@ -107,10 +108,10 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
 
     if (centerOption && sizeOption) {
         center = [
-            numberUtil.parsePercent(centerOption[0], viewWidth),
-            numberUtil.parsePercent(centerOption[1], viewHeight)
+            numberUtil.parsePercent(centerOption[0], refContainer.width) + refContainer.x,
+            numberUtil.parsePercent(centerOption[1], refContainer.height) + refContainer.y
         ];
-        size = numberUtil.parsePercent(sizeOption, Math.min(viewWidth, viewHeight));
+        size = numberUtil.parsePercent(sizeOption, Math.min(refContainer.width, refContainer.height));
 
         if (!isNaN(center[0]) && !isNaN(center[1]) && !isNaN(size)) {
             useCenterAndSize = true;
@@ -140,18 +141,15 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
     else {
         // Use left/top/width/height
         const boxLayoutOption = geoModel.getBoxLayoutParams() as Parameters<typeof layout.getLayoutRect>[0];
-
         boxLayoutOption.aspect = aspect;
 
-        viewRect = layout.getLayoutRect(boxLayoutOption, {
-            width: viewWidth,
-            height: viewHeight
-        });
+        viewRect = layout.getLayoutRect(boxLayoutOption, refContainer);
+        viewRect = layout.applyPreserveAspect(geoModel, viewRect, aspect);
     }
 
     this.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
 
-    this.setCenter(geoModel.get('center'), api);
+    this.setCenter(geoModel.get('center'));
     this.setZoom(geoModel.get('zoom'));
 }
 
@@ -184,7 +182,9 @@ class GeoCreator implements CoordinateSystemCreator {
             const mapName = geoModel.get('map');
 
             const geo = new Geo(mapName + idx, mapName, zrUtil.extend({
-                nameMap: geoModel.get('nameMap')
+                nameMap: geoModel.get('nameMap'),
+                api,
+                ecModel,
             }, getCommonGeoProperties(geoModel)));
 
             geo.zoomLimit = geoModel.get('scaleLimit');
@@ -202,13 +202,19 @@ class GeoCreator implements CoordinateSystemCreator {
         });
 
         ecModel.eachSeries(function (seriesModel) {
-            const coordSys = seriesModel.get('coordinateSystem');
-            if (coordSys === 'geo') {
-                const geoIndex = (
-                    seriesModel as SeriesModel<SeriesOption & SeriesOnGeoOptionMixin>
-                ).get('geoIndex') || 0;
-                seriesModel.coordinateSystem = geoList[geoIndex];
-            }
+            injectCoordSysByOption({
+                targetModel: seriesModel,
+                coordSysType: 'geo',
+                coordSysProvider() {
+                    const geoModel = seriesModel.subType === 'map'
+                        ? (seriesModel as MapSeries).getHostGeoModel()
+                        : seriesModel.getReferringComponents(
+                            'geo', SINGLE_REFERRING
+                        ).models[0] as GeoModel;
+                    return geoModel && geoModel.coordinateSystem;
+                },
+                allowNotFound: true,
+            });
         });
 
         // If has map series
@@ -228,7 +234,9 @@ class GeoCreator implements CoordinateSystemCreator {
             });
 
             const geo = new Geo(mapType, mapType, zrUtil.extend({
-                nameMap: zrUtil.mergeAll(nameMapList)
+                nameMap: zrUtil.mergeAll(nameMapList),
+                api,
+                ecModel,
             }, getCommonGeoProperties(mapSeries[0])));
 
             geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {

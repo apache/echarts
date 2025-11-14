@@ -26,16 +26,19 @@ import {
     AnimationOption,
     BlurScope,
     CallbackDataParams,
+    CoordinateSystemDataLayout,
     Dictionary,
     DimensionLoose,
     ItemStyleOption,
     LabelOption,
+    NullUndefined,
     OptionDataValue,
     OrdinalRawValue,
     ParsedValue,
     SeriesDataType,
     SeriesEncodeOptionMixin,
-    SeriesOnCalendarOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     SeriesOnCartesianOptionMixin,
     SeriesOnGeoOptionMixin,
     SeriesOnPolarOptionMixin,
@@ -117,6 +120,8 @@ export interface CustomBaseElementOption extends Partial<Pick<
     textContent?: CustomTextOption | false;
     // `false` means remove the clipPath
     clipPath?: CustomBaseZRPathOption | false;
+    // `false` means not show tooltip
+    tooltipDisabled?: boolean;
     // `extra` can be set in any el option for custom prop for annimation duration.
     extra?: Dictionary<unknown> & TransitionOptionMixin;
     // updateDuringAnimation
@@ -234,9 +239,24 @@ export interface CustomTextOption extends CustomDisplayableOption, TransitionOpt
     keyframeAnimation?: ElementKeyframeAnimationOption<TextProps> | ElementKeyframeAnimationOption<TextProps>[]
 }
 
+export interface CustomompoundPathOptionOnState extends CustomDisplayableOptionOnState {
+    style?: PathStyleProps;
+}
+export interface CustomCompoundPathOption extends CustomDisplayableOption, TransitionOptionMixin<PathProps> {
+    type: 'compoundPath';
+    shape?: PathProps['shape'];
+    style?: PathStyleProps & TransitionOptionMixin<PathStyleProps>;
+    emphasis?: CustomompoundPathOptionOnState;
+    blur?: CustomompoundPathOptionOnState;
+    select?: CustomompoundPathOptionOnState;
+
+    keyframeAnimation?: ElementKeyframeAnimationOption<PathProps> | ElementKeyframeAnimationOption<PathProps>[]
+}
+
 export type CustomElementOption = CustomPathOption
     | CustomImageOption
     | CustomTextOption
+    | CustomCompoundPathOption
     | CustomGroupOption;
 
 // Can only set focus, blur on the root element.
@@ -286,13 +306,30 @@ export interface CustomSeriesRenderItemParamsCoordSys {
 }
 export interface CustomSeriesRenderItemCoordinateSystemAPI {
     coord(
-        data: OptionDataValue | OptionDataValue[],
-        clamp?: boolean
+        // @see `CoordinateSystemDataCoord`
+        data: (OptionDataValue | NullUndefined)
+            | (OptionDataValue | NullUndefined)[]
+            | (OptionDataValue | OptionDataValue[] | NullUndefined)[],
+        // Some coord sys may support `clamp?: boolean` there.
+        // Can also be an `{xxx?: ...}` here.
+        opt?: unknown
     ): number[];
     size?(
+        // Represents a range, rather than a absolute value.
+        // e.g., `dataSize: [5, 100]` represents
+        // data range `5` in x and data range `100` in y.
         dataSize: OptionDataValue | OptionDataValue[],
+        // Represents a data point, based on which to calculate size.
+        // Some axis, such as logarithm, size varies in different points.
         dataItem?: OptionDataValue | OptionDataValue[]
     ): number | number[];
+    layout?(
+        // @see `CoordinateSystemDataCoord`
+        data: (OptionDataValue | NullUndefined)
+            | (OptionDataValue | NullUndefined)[]
+            | (OptionDataValue | OptionDataValue[] | NullUndefined)[],
+        opt?: unknown
+    ): CoordinateSystemDataLayout;
 }
 
 export type WrapEncodeDefRet = Dictionary<number[]>;
@@ -308,6 +345,7 @@ export interface CustomSeriesRenderItemParams {
 
     dataIndexInside: number;
     dataInsideLength: number;
+    itemPayload: Dictionary<unknown>;
 
     actionType?: string;
 }
@@ -326,7 +364,8 @@ export interface CustomSeriesOption extends
     SeriesOnPolarOptionMixin,
     SeriesOnSingleOptionMixin,
     SeriesOnGeoOptionMixin,
-    SeriesOnCalendarOptionMixin {
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin {
 
     type?: 'custom'
 
@@ -334,6 +373,7 @@ export interface CustomSeriesOption extends
     coordinateSystem?: string | 'none';
 
     renderItem?: CustomSeriesRenderItem;
+    itemPayload?: Dictionary<unknown>;
 
     /**
      * @deprecated
@@ -377,7 +417,7 @@ export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
     static type = 'series.custom';
     readonly type = CustomSeriesModel.type;
 
-    static dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar'];
+    static dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar', 'matrix'];
 
     // preventAutoZ = true;
 

@@ -66,6 +66,7 @@ under the License.
     <div id="main-FR" class="chart"></div>
     <div id="main-JA" class="chart"></div>
     <div id="main-TH" class="chart"></div>
+    <div id="main-EL" class="chart"></div>
 </div>
 
 <script>
@@ -218,6 +219,15 @@ under the License.
     require(['echarts', 'i18n/langTH'], function (echarts) {
         var chart = echarts.init(document.getElementById('main-TH'), null, {
             locale: 'TH'
+        });
+        chart.setOption(window.option);
+    });
+</script>
+
+<script>
+    require(['echarts', 'i18n/langEL'], function (echarts) {
+        var chart = echarts.init(document.getElementById('main-EL'), null, {
+            locale: 'EL'
         });
         chart.setOption(window.option);
     });

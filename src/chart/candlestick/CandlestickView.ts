@@ -106,6 +106,8 @@ class CandlestickView extends ChartView {
             group.removeAll();
         }
 
+        const transPointDim = getTransPointDimension(seriesModel);
+
         data.diff(oldData)
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
@@ -115,7 +117,7 @@ class CandlestickView extends ChartView {
                         return;
                     }
 
-                    const el = createNormalBox(itemLayout, newIdx, true);
+                    const el = createNormalBox(itemLayout, newIdx, transPointDim, true);
                     graphic.initProps(el, {shape: {points: itemLayout.ends}}, seriesModel, newIdx);
 
                     setBoxCommon(el, data, newIdx, isSimpleBox);
@@ -141,7 +143,7 @@ class CandlestickView extends ChartView {
                 }
 
                 if (!el) {
-                    el = createNormalBox(itemLayout, newIdx);
+                    el = createNormalBox(itemLayout, newIdx, transPointDim);
                 }
                 else {
                     graphic.updateProps(el, {
@@ -188,10 +190,12 @@ class CandlestickView extends ChartView {
         const data = seriesModel.getData();
         const isSimpleBox = data.getLayout('isSimpleBox');
 
+        const transPointDim = getTransPointDimension(seriesModel);
+
         let dataIndex;
         while ((dataIndex = params.next()) != null) {
             const itemLayout = data.getItemLayout(dataIndex) as CandlestickItemLayout;
-            const el = createNormalBox(itemLayout, dataIndex);
+            const el = createNormalBox(itemLayout, dataIndex, transPointDim);
             setBoxCommon(el, data, dataIndex, isSimpleBox);
 
             el.incremental = true;
@@ -262,12 +266,17 @@ class NormalBoxPath extends Path<NormalBoxPathProps> {
 }
 
 
-function createNormalBox(itemLayout: CandlestickItemLayout, dataIndex: number, isInit?: boolean) {
+function createNormalBox(
+    itemLayout: CandlestickItemLayout,
+    dataIndex: number,
+    constDim: number,
+    isInit?: boolean
+) {
     const ends = itemLayout.ends;
     return new NormalBoxPath({
         shape: {
             points: isInit
-                ? transInit(ends, itemLayout)
+                ? transInit(ends, constDim, itemLayout)
                 : ends
         },
         z2: 100
@@ -310,12 +319,16 @@ function setBoxCommon(el: NormalBoxPath, data: SeriesData, dataIndex: number, is
     toggleHoverEmphasis(el, emphasisModel.get('focus'), emphasisModel.get('blurScope'), emphasisModel.get('disabled'));
 }
 
-function transInit(points: number[][], itemLayout: CandlestickItemLayout) {
+function transInit(points: number[][], dim: number, itemLayout: CandlestickItemLayout) {
     return zrUtil.map(points, function (point) {
         point = point.slice();
-        point[1] = itemLayout.initBaseline;
+        point[dim] = itemLayout.initBaseline;
         return point;
     });
+}
+
+function getTransPointDimension(seriesModel: CandlestickSeriesModel): number {
+    return seriesModel.getWhiskerBoxesLayout() === 'horizontal' ? 1 : 0;
 }
 
 

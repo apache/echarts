@@ -113,7 +113,7 @@ export interface DefaultDataVisual {
     symbolRotate?: number
     symbolKeepAspect?: boolean
     symbolOffset?: string | number | (string | number)[]
-    z2: number,
+    z2: number
     liftZ?: number
     // For legend.
     legendIcon?: string
@@ -879,25 +879,13 @@ class SeriesData<
     }
 
     /**
-     * Retrieve the index of nearest value
-     * @param dim
-     * @param value
-     * @param [maxDistance=Infinity]
-     * @return If and only if multiple indices has
-     *         the same value, they are put to the result.
-     */
-    indicesOfNearest(dim: DimensionLoose, value: number, maxDistance?: number): number[] {
-        return this._store.indicesOfNearest(
-            this._getStoreDimIndex(dim),
-            value, maxDistance
-        );
-    }
-    /**
      * Data iteration
      * @param ctx default this
      * @example
      *  list.each('x', function (x, idx) {});
      *  list.each(['x', 'y'], function (x, y, idx) {});
+     *  list.each(0, function (x, idx) {});
+     *  list.each([0, 1], function (x, y, idx) {});
      *  list.each(function (idx) {})
      */
     each<Ctx>(cb: EachCb0<Ctx>, ctx?: Ctx, ctxCompat?: Ctx): void;
