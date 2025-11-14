@@ -25,6 +25,22 @@ under the License.
         <script src='lib/simpleRequire.js'></script>
         <script src='lib/config.js'></script>
         <script src='lib/testHelper.js'></script>
+        <style>
+            .log-container {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(255, 255, 255, 0.7);
+                font-size: 12px;
+                pointer-events: none;
+            }
+            .log-container:empty {
+                display: none;
+            }
+        </style>
     </head>
     <body>
         <div id='main0'></div>
@@ -124,6 +140,7 @@ under the License.
                         {
                             text: 'Disable All Events',
                             onClick: function () {
+                                logDom.innerHTML = 'Disabled all events<br/>There should be <b>NO</b> more logs below<br/><br/>';
                                 chart.setOption({
                                     series: [
                                         {
@@ -153,8 +170,19 @@ under the License.
                     ]
                 });
 
+                var logDom = document.createElement('div');
+                logDom.className = 'log-container';
+                chart.getDom().appendChild(logDom);
+
                 chart.on('click', function (params) {
                     console.log(params);
+                    logDom.appendChild(document.createTextNode(JSON.stringify({
+                        seriesName: params.seriesName,
+                        seriesIndex: params.seriesIndex,
+                        selfType: params.selfType,
+                    })));
+                    logDom.appendChild(document.createElement('br'));
+                    logDom.scrollTop = logDom.scrollHeight;
                 });
             });
 
