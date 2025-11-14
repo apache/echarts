@@ -621,7 +621,7 @@ class LineView extends ChartView {
     _endLabel: graphic.Text;
 
     _polyline: ECPolyline;
-    _polygon: ECPolygon;
+    _polygon?: ECPolygon;
 
     _stackedOnPoints: ArrayLike<number>;
     _points: ArrayLike<number>;
@@ -927,13 +927,10 @@ class LineView extends ChartView {
         const shouldTriggerAreaEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'area';
 
         this.packEventData(seriesModel, polyline, shouldTriggerLineEvent);
-        this.packEventData(seriesModel, polygon, shouldTriggerAreaEvent);
+        polygon && this.packEventData(seriesModel, polygon, shouldTriggerAreaEvent);
     }
 
     private packEventData(seriesModel: LineSeriesModel, el: Element, enable: boolean) {
-        if (!el) {
-            return;
-        }
         getECData(el).eventData = enable ? {
             componentType: 'series',
             componentSubType: 'line',
