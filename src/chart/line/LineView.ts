@@ -52,10 +52,10 @@ import { setStatesStylesFromModel, setStatesFlag, toggleHoverEmphasis, SPECIAL_S
 import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
 import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
-
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 import { convertToColorString } from '../../util/format';
+import { warnDeprecated } from '../../util/styleCompat';
 import { lerp } from 'zrender/src/tool/color';
 import Element from 'zrender/src/Element';
 
@@ -922,6 +922,10 @@ class LineView extends ChartView {
 
         const triggerEvent = seriesModel.get('triggerEvent');
         const triggerLineEvent = seriesModel.get('triggerLineEvent');
+
+        if (__DEV__) {
+            triggerLineEvent && warnDeprecated('triggerLineEvent', 'Use the `triggerEvent` option instead.');
+        }
 
         const shouldTriggerLineEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'line';
         const shouldTriggerAreaEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'area';
