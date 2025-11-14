@@ -277,18 +277,65 @@ function makeCategoryTicks(axis: Axis, tickModel: AxisBaseModel) {
 }
 
 function makeRealNumberLabels(axis: Axis): ReturnType<typeof createAxisLabels> {
-    const ticks = axis.scale.getTicks();
+    const labelModel = axis.getLabelModel();
+    const showAllLabel = shouldShowAllLabels(axis);
+    const includeMinLabel = labelModel.get('showMinLabel') || showAllLabel;
+    const includeMaxLabel = labelModel.get('showMaxLabel') || showAllLabel;
+    
+    const pruneByBreak = (includeMinLabel || includeMaxLabel) ? 'preserve_extent_bound' : 'auto';
+    const ticks = axis.scale.getTicks({ pruneByBreak: pruneByBreak });
+    
     const labelFormatter = makeLabelFormatter(axis);
+    
+    const labels = zrUtil.map(ticks, function (tick, idx) {
+        return {
+            formattedLabel: labelFormatter(tick, idx),
+            rawLabel: axis.scale.getLabel(tick),
+            tickValue: tick.value,
+            time: tick.time,
+            break: tick.break,
+        };
+    });
+
+    const extent = axis.scale.getExtent();
+    if (includeMinLabel && ticks.length > 0) {
+        const firstTick = ticks[0];
+        const isFirstTickBreak = firstTick.break != null;
+        const notAtExtentStart = Math.abs(firstTick.value - extent[0]) > 1e-10;
+        
+        if (notAtExtentStart || isFirstTickBreak) {
+            const minTick = { value: extent[0] };
+            const timeInfo = (firstTick.time && !isFirstTickBreak) ? firstTick.time : undefined;
+            labels.unshift({
+                formattedLabel: labelFormatter(minTick, 0),
+                rawLabel: axis.scale.getLabel(minTick),
+                tickValue: extent[0],
+                time: timeInfo,
+                break: undefined,
+            });
+        }
+    }
+
+    if (includeMaxLabel && ticks.length > 0) {
+        const lastTick = ticks[ticks.length - 1];
+        const isLastTickBreak = lastTick.break != null;
+        const notAtExtentEnd = Math.abs(lastTick.value - extent[1]) > 1e-10;
+        
+        if (notAtExtentEnd || isLastTickBreak) {
+            const maxTick = { value: extent[1] };
+            const timeInfo = (lastTick.time && !isLastTickBreak) ? lastTick.time : undefined;
+            labels.push({
+                formattedLabel: labelFormatter(maxTick, labels.length),
+                rawLabel: axis.scale.getLabel(maxTick),
+                tickValue: extent[1],
+                time: timeInfo,
+                break: undefined,
+            });
+        }
+    }
+
     return {
-        labels: zrUtil.map(ticks, function (tick, idx) {
-            return {
-                formattedLabel: labelFormatter(tick, idx),
-                rawLabel: axis.scale.getLabel(tick),
-                tickValue: tick.value,
-                time: tick.time,
-                break: tick.break,
-            };
-        })
+        labels: labels
     };
 }
 
@@ -515,7 +562,7 @@ function makeLabelsByNumericCategoryInterval(
     const includeMinLabel = labelModel.get('showMinLabel') || showAllLabel;
     const includeMaxLabel = labelModel.get('showMaxLabel') || showAllLabel;
 
-    if (includeMinLabel && startTick !== ordinalExtent[0]) {
+    if (includeMinLabel && startTick > ordinalExtent[0]) {
         addItem(ordinalExtent[0]);
     }
 
