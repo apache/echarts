@@ -2317,6 +2317,12 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             renderComponents(ecIns, ecModel, api, payload, updateParams);
 
+            // Skip series rendering for takeGlobalCursor to prevent unnecessary re-render
+            // when user clicks toolbox buttons (brush, dataZoom, etc.)
+            if (payload && payload.type === 'takeGlobalCursor') {
+                return;
+            }
+
             each(ecIns._chartsViews, function (chart: ChartView) {
                 chart.__alive = false;
             });
