@@ -70,6 +70,7 @@ import { error, log } from '../../util/log';
 import { AxisTickLabelComputingKind } from '../axisTickLabelBuilder';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
 import { mathMax, parsePositionSizeOption } from '../../util/number';
+import { MarkerTypes } from '../../component/marker/checkMarkerInSeries';
 
 type Cartesian2DDimensionName = 'x' | 'y';
 
@@ -80,8 +81,6 @@ type AxesMap = {
 };
 
 type ParsedOuterBoundsContain = 'all' | 'axisLabel';
-
-type MarkerTypes = 'markPoint' | 'markLine' | 'markArea';
 
 // margin is [top, right, bottom, left]
 const XY_TO_MARGIN_IDX = [
@@ -545,7 +544,7 @@ class Grid implements CoordinateSystemMaster {
                 unionExtent(data, xAxis);
                 unionExtent(data, yAxis);
 
-                // 处理 markPoint、markLine、markArea
+                // Handle markPoint, markLine, markArea
                 const markerTypes: MarkerTypes[] = ['markPoint', 'markLine', 'markArea'];
 
                 markerTypes.forEach(markerType => {
@@ -563,7 +562,7 @@ class Grid implements CoordinateSystemMaster {
             });
         }
 
-        function UnionExtentForAxisByValue(
+        function unionExtentForAxisByValue(
             value: any,
             axis: Axis2D,
             axisType: OptionAxisType,
@@ -572,10 +571,7 @@ class Grid implements CoordinateSystemMaster {
             if (includeMarkerInExtent && value != null && typeof value !== 'string' && axisType !== 'category') {
                 const val = axis.scale.parse(value);
                 if (!isNaN(val)) {
-                    // Construct the parameter and use unionExtentFromData to avoid using the private method _innerUnionExtent
-                    axis.scale.unionExtentFromData({
-                        getApproximateExtent: () => [val, val]
-                    } as any, 0);
+                    axis.scale.unionExtentByValue(val);
                 }
             }
         }
@@ -596,12 +592,12 @@ class Grid implements CoordinateSystemMaster {
                         return;
                     }
 
-                    UnionExtentForAxisByValue(markerItem.xAxis, xAxis, xAxis.type);
-                    UnionExtentForAxisByValue(markerItem.yAxis, yAxis, yAxis.type);
+                    unionExtentForAxisByValue(markerItem.xAxis, xAxis, xAxis.type);
+                    unionExtentForAxisByValue(markerItem.yAxis, yAxis, yAxis.type);
 
                     if (markerItem.coord && Array.isArray(markerItem.coord)) {
-                        UnionExtentForAxisByValue(markerItem.coord[0], xAxis, xAxis.type);
-                        UnionExtentForAxisByValue(markerItem.coord[1], yAxis, yAxis.type);
+                        unionExtentForAxisByValue(markerItem.coord[0], xAxis, xAxis.type);
+                        unionExtentForAxisByValue(markerItem.coord[1], yAxis, yAxis.type);
                     }
                 });
             });

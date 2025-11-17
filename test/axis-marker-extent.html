@@ -83,6 +83,13 @@ under the License.
         <div id="main-markarea-minmax" class="chart-container"></div>
     </div>
 
+    <!-- 新增水平条形图 markLine 用例 -->
+    <div class="chart-title">Bar Chart（水平）基于 markLine 用例</div>
+    <div class="chart-row">
+        <div id="main-bar-horiz-markline" class="chart-container"></div>
+        <div id="main-bar-horiz-markline-minmax" class="chart-container"></div>
+    </div>
+
     <script>
         var optionBase = {
             title: {
@@ -330,6 +337,67 @@ under the License.
                     }
                 }]
             });
+
+            // 5. 水平 Bar Chart + markLine 用例
+            var barHorizData = [320, 432, 301, 334, 390, 330, 220];
+            // 构建水平条形图的 option
+            var barHorizOption = {
+                ...optionBase,
+                xAxis: {
+                    type: 'value' // 水平条形图 x 轴为 value
+                },
+                yAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                series: [{
+                    data: barHorizData,
+                    type: 'bar',
+                    markLine: {
+                        data: [
+                            {
+                                name: '警戒线',
+                                xAxis: 650, // 水平条形图 markLine 在 xAxis 放置
+                                lineStyle: { color: 'purple' },
+                                label: { formatter: '警戒线: 650' }
+                            }
+                        ]
+                    }
+                }]
+            };
+            var chartBarHorizMarkline = echarts.init(document.getElementById('main-bar-horiz-markline'));
+            chartBarHorizMarkline.setOption(barHorizOption);
+
+            // 含 min/max 水平条形图
+            var barHorizOptionMinMax = {
+                ...optionBase,
+                xAxis: {
+                    type: 'value',
+                    min: -100,
+                    max: 400
+                },
+                yAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                series: [{
+                    data: barHorizData,
+                    type: 'bar',
+                    markLine: {
+                        data: [
+                            {
+                                name: '警戒线',
+                                xAxis: 650,
+                                lineStyle: { color: 'purple' },
+                                label: { formatter: '警戒线: 300' }
+                            }
+                        ]
+                    }
+                }]
+            };
+            var chartBarHorizMarklineMinMax = echarts.init(document.getElementById('main-bar-horiz-markline-minmax'));
+            chartBarHorizMarklineMinMax.setOption(barHorizOptionMinMax);
+
         });
     </script>
 </body>

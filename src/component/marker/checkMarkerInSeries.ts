@@ -20,7 +20,7 @@
 import { isArray } from 'zrender/src/core/util';
 import { SeriesOption } from '../../util/types';
 
-type MarkerTypes = 'markPoint' | 'markLine' | 'markArea';
+export type MarkerTypes = 'markPoint' | 'markLine' | 'markArea';
 
 type SeriesWithMarkerOption = SeriesOption & Partial<Record<MarkerTypes, unknown>>;
 
