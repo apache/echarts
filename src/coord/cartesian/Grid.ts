@@ -567,7 +567,7 @@ class Grid implements CoordinateSystemMaster {
             axis: Axis2D,
             axisType: OptionAxisType,
         ): void {
-            const includeMarkerInExtent = axis.model.get('includeMarkerInExtent') ?? true;
+            const includeMarkerInExtent = axis.model.get('includeMarkerInExtent') ?? false;
             if (includeMarkerInExtent && value != null && typeof value !== 'string' && axisType !== 'category') {
                 const val = axis.scale.parse(value);
                 if (!isNaN(val)) {

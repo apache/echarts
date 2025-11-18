@@ -65,7 +65,7 @@ under the License.
         <div id="main-markline-negative-minmax" class="chart-container"></div>
     </div>
 
-    <div class="chart-title">仅有 markLine（includeMarkerInExtent: true）</div>
+    <div class="chart-title">仅有 markLine（includeMarkerInExtent未设置）</div>
     <div class="chart-row">
         <div id="main-markline-include-marker" class="chart-container"></div>
         <div id="main-markline-include-marker-minmax" class="chart-container"></div>
@@ -105,7 +105,8 @@ under the License.
                 data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
             },
             yAxis: {
-                type: 'value'
+                type: 'value',
+                includeMarkerInExtent: true,
             }
         };
 
@@ -227,13 +228,13 @@ under the License.
                 }]
             });
 
-            // 2.1 仅有 markLine（includeMarkerInExtent: true）用例
+            // 2.1 仅有 markLine（includeMarkerInExtent未设置）用例
             var chartMarklineIncludeMarker = echarts.init(document.getElementById('main-markline-include-marker'));
             chartMarklineIncludeMarker.setOption({
                 ...optionBase,
                 yAxis: {
                     ...optionBase.yAxis,
-                    includeMarkerInExtent: true
+                    includeMarkerInExtent: undefined
                 },
                 series: [{
                     data: [150, 230, 224, 218, 135, 147, 260],
@@ -257,7 +258,7 @@ under the License.
                     ...optionBase.yAxis,
                     min: -100,
                     max: 400,
-                    includeMarkerInExtent: true
+                    includeMarkerInExtent: undefined
                 },
                 series: [{
                     data: [150, 230, 224, 218, 135, 147, 260],
@@ -344,7 +345,8 @@ under the License.
             var barHorizOption = {
                 ...optionBase,
                 xAxis: {
-                    type: 'value' // 水平条形图 x 轴为 value
+                    type: 'value', // 水平条形图 x 轴为 value
+                    includeMarkerInExtent: true,
                 },
                 yAxis: {
                     type: 'category',
@@ -374,7 +376,8 @@ under the License.
                 xAxis: {
                     type: 'value',
                     min: -100,
-                    max: 400
+                    max: 400,
+                    includeMarkerInExtent: true,
                 },
                 yAxis: {
                     type: 'category',
