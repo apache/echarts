@@ -115,8 +115,8 @@ const defaultOption: AxisBaseOption = {
         show: false,
         areaStyle: {
             color: [
-                tokens.color.backgroundTint,
-                tokens.color.backgroundTransparent
+                tokens.color.backgroundTransparent,
+                tokens.color.backgroundTint
             ]
         }
     },
