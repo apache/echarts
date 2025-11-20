@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Axis Break showMinLabel Test</title>
+    <script src="../dist/echarts.js"></script>
+</head>
+<body>
+    <div id="main" style="width: 1200px;height:600px;"></div>
+    <script type="text/javascript">
+        var myChart = echarts.init(document.getElementById('main'));
+        var formatTime = echarts.time.format;
+        var _data = generateData1();
+        
+        var option = {
+            title: {
+                text: 'Intraday Chart with Breaks (Single Day)',
+                left: 'center'
+            },
+            tooltip: {
+                show: true,
+                trigger: 'axis'
+            },
+            xAxis: [
+                {
+                    type: 'time',
+                    interval: 1000 * 60 * 30,
+                    axisLabel: {
+                        showMinLabel: true,
+                        showMaxLabel: true,
+                        formatter: (value, index, extra) => {
+                            if (!extra || !extra.break) {
+                                return formatTime(value, '{HH}:{mm}');
+                            }
+                            if (extra.break.type === 'start') {
+                                return (
+                                    formatTime(extra.break.start, '{HH}:{mm}') +
+                                    '/' +
+                                    formatTime(extra.break.end, '{HH}:{mm}')
+                                );
+                            }
+                            return '';
+                        }
+                    },
+                    breakLabelLayout: {
+                        moveOverlap: false
+                    },
+                    breaks: [
+                        {
+                            start: _data.breakStart,
+                            end: _data.breakEnd,
+                            gap: 0
+                        }
+                    ],
+                    breakArea: {
+                        expandOnClick: false,
+                        zigzagAmplitude: 0,
+                        zigzagZ: 200
+                    }
+                }
+            ],
+            yAxis: {
+                type: 'value',
+                min: 'dataMin'
+            },
+            dataZoom: [
+                {
+                    type: 'inside',
+                    xAxisIndex: 0
+                },
+                {
+                    type: 'slider',
+                    xAxisIndex: 0
+                }
+            ],
+            series: [
+                {
+                    type: 'line',
+                    symbolSize: 0,
+                    data: _data.seriesData
+                }
+            ]
+        };
+
+        function generateData1() {
+            var seriesData = [];
+            var time = new Date('2024-04-09 00:00:00');
+            var endTime = new Date('2024-04-09 23:59:59').getTime();
+            var breakStart = new Date('2024-04-09 02:00:00').getTime();
+            var breakEnd = new Date('2024-04-09 09:00:00').getTime();
+            for (var val = 1669; time.getTime() <= endTime; ) {
+                if (time.getTime() <= breakStart || time.getTime() >= breakEnd) {
+                    val = val + Math.floor((Math.random() - 0.5 * Math.sin(val / 1000)) * 20 * 100) / 100;
+                    val = +val.toFixed(2);
+                    seriesData.push([time.getTime(), val]);
+                }
+                time.setMinutes(time.getMinutes() + 1);
+            }
+            return {
+                seriesData: seriesData,
+                breakStart: breakStart,
+                breakEnd: breakEnd
+            };
+        }
+
+        myChart.setOption(option);
+    </script>
+</body>
+</html>
