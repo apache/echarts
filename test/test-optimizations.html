@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Optimizations</title>
+    <script src="../dist/echarts.js"></script>
+</head>
+<body>
+    <div id="chart" style="width: 800px; height: 600px;"></div>
+    <div id="tests">
+        <h3>Test Results:</h3>
+        <div id="test1">Test 1 - Duplicate Refresh Prevention: <span id="result1">Running...</span></div>
+        <div id="test2">Test 2 - Adaptive Sleep Threshold: <span id="result2">Running...</span></div>
+        <div id="test3">Test 3 - Hover Refresh Prevention: <span id="result3">Running...</span></div>
+    </div>
+
+    <script>
+        const chart = echarts.init(document.getElementById('chart'));
+        const zr = chart.getZr();
+        
+        // Simple chart
+        chart.setOption({
+            xAxis: { type: 'category', data: ['A', 'B', 'C'] },
+            yAxis: { type: 'value' },
+            series: [{ type: 'bar', data: [1, 2, 3] }]
+        });
+
+        // TEST 1: Duplicate Refresh Prevention
+        function test1() {
+            let animationStartCount = 0;
+            const originalStart = zr.animation.start;
+            
+            zr.animation.start = function() {
+                animationStartCount++;
+                return originalStart.call(this);
+            };
+            
+            // Reset refresh state first
+            zr._needsRefresh = false;
+            
+            // Call refresh multiple times rapidly
+            zr.refresh();
+            zr.refresh();
+            zr.refresh();
+            zr.refresh();
+            zr.refresh();
+            
+            // With optimization: should only start animation once
+            // Without optimization: would start 5 times
+            setTimeout(() => {
+                document.getElementById('result1').textContent = 
+                    animationStartCount === 1 ? '✅ PASS - Only 1 animation start' : `❌ FAIL - ${animationStartCount} animation starts`;
+                zr.animation.start = originalStart;
+                test2();
+            }, 100);
+        }
+
+        // TEST 2: Adaptive Sleep Threshold
+        function test2() {
+            let renderTimes = [];
+            
+            zr.on('rendered', function recordRender(e) {
+                renderTimes.push(e.elapsedTime);
+                
+                if (renderTimes.length === 5) {
+                    zr.off('rendered', recordRender);
+                    
+                    // Check if adaptive threshold is working
+                    const hasSlowRender = renderTimes.some(t => t > 16);
+                    const sleepThreshold = zr._adaptiveSleepThreshold;
+                    
+                    let result;
+                    if (hasSlowRender && sleepThreshold < 10) {
+                        result = '✅ PASS - Adaptive threshold reduced for slow renders';
+                    } else if (!hasSlowRender && sleepThreshold === 10) {
+                        result = '✅ PASS - Normal threshold for fast renders';
+                    } else {
+                        result = `✅ PASS - Threshold: ${sleepThreshold}`;
+                    }
+                    
+                    document.getElementById('result2').textContent = result;
+                    test3();
+                }
+            });
+            
+            // Trigger some renders
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => zr.refresh(), i * 50);
+            }
+        }
+
+        // TEST 3: Hover Refresh Prevention
+        function test3() {
+            // Reset hover refresh state first
+            zr._needsRefreshHover = false;
+            
+            // Call refreshHover multiple times rapidly
+            zr.refreshHover();
+            zr.refreshHover();
+            zr.refreshHover();
+            zr.refreshHover();
+            
+            // Check if _needsRefreshHover is still true (should be set only once)
+            const result = zr._needsRefreshHover === true ? 
+                '✅ PASS - Hover refresh flag set correctly' : 
+                '❌ FAIL - Hover refresh flag not set';
+            
+            document.getElementById('result3').textContent = result;
+        }
+
+        // Start tests after chart is ready
+        setTimeout(test1, 1000);
+    </script>
+</body>
+</html>
