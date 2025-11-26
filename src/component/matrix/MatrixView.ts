@@ -31,6 +31,7 @@ import { LineShape } from 'zrender/src/graphic/shape/Line';
 import { subPixelOptimize } from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Group, Text, Rect, Line, XY, setTooltipConfig, expandOrShrinkRect } from '../../util/graphic';
 import { clearTmpModel, ListIterator } from '../../util/model';
+import { getECData } from '../../util/innerStore';
 import { clone, retrieve2, isFunction, isString } from 'zrender/src/core/util';
 import { formatTplSimple } from '../../util/format';
 import { invert } from 'zrender/src/core/matrix';
@@ -380,6 +381,16 @@ function createMatrixCell(
         );
     }
     cellRect.silent = rectSilent;
+
+    const eventData = {
+        componentType: 'matrix',
+        componentIndex: matrixModel.componentIndex,
+        name: textValue + ''
+    };
+    getECData(cellRect).eventData = eventData;
+    if (cellText) {
+        getECData(cellText).eventData = eventData;
+    }
 
     clearTmpModel(_tmpCellModel);
     clearTmpModel(_tmpCellItemStyleModel);
