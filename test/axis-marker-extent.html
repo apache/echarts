@@ -90,6 +90,18 @@ under the License.
         <div id="main-bar-horiz-markline-minmax" class="chart-container"></div>
     </div>
 
+    <!-- 新增 x 轴 time 类型和 y 轴 log 类型用例 -->
+    <div class="chart-title">x轴为 time 类型</div>
+    <div class="chart-row">
+        <div id="main-time-xaxis" class="chart-container"></div>
+        <div id="main-time-xaxis-minmax" class="chart-container"></div>
+    </div>
+    <div class="chart-title">y轴为 log 类型</div>
+    <div class="chart-row">
+        <div id="main-log-yaxis" class="chart-container"></div>
+        <div id="main-log-yaxis-minmax" class="chart-container"></div>
+    </div>
+
     <script>
         var optionBase = {
             title: {
@@ -400,6 +412,133 @@ under the License.
             };
             var chartBarHorizMarklineMinMax = echarts.init(document.getElementById('main-bar-horiz-markline-minmax'));
             chartBarHorizMarklineMinMax.setOption(barHorizOptionMinMax);
+
+            // ==== 新增x轴为time类型的用例 ====
+            var timeData = [
+                ['2023-01-01', 120],
+                ['2023-01-02', 132],
+                ['2023-01-03', 101],
+                ['2023-01-04', 134],
+                ['2023-01-05', 90],
+                ['2023-01-06', 230],
+                ['2023-01-07', 210]
+            ];
+            var chartTimeXaxis = echarts.init(document.getElementById('main-time-xaxis'));
+            chartTimeXaxis.setOption({
+                title: { text: 'x 轴为 time 类型', left: 'center' },
+                tooltip: { trigger: 'axis' },
+                xAxis: {
+                    type: 'time',
+                    name: '日期',
+                    splitLine: { show: false },
+                    includeMarkerInExtent: true
+                },
+                yAxis: {
+                    type: 'value',
+                    includeMarkerInExtent: true
+                },
+                series: [{
+                    type: 'line',
+                    data: timeData,
+                    markLine: {
+                        data: [
+                            {
+                                name: '时间警戒线',
+                                xAxis: '2023-01-10',
+                                lineStyle: { color: 'orange' },
+                                label: { formatter: '时间警戒线@01-05' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            var chartTimeXaxisMinMax = echarts.init(document.getElementById('main-time-xaxis-minmax'));
+            chartTimeXaxisMinMax.setOption({
+                title: { text: 'x 轴为 time 类型 + min/max', left: 'center' },
+                tooltip: { trigger: 'axis' },
+                xAxis: {
+                    type: 'time',
+                    name: '日期',
+                    min: '2022-12-31',
+                    max: '2023-01-08',
+                    splitLine: { show: false },
+                    includeMarkerInExtent: true
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 80,
+                    max: 260,
+                    includeMarkerInExtent: true
+                },
+                series: [{
+                    type: 'line',
+                    data: timeData,
+                    markLine: {
+                        data: [
+                            {
+                                name: '时间警戒线',
+                                xAxis: '2023-01-10',
+                                lineStyle: { color: 'orange' },
+                                label: { formatter: '时间警戒线@01-05' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            // ==== 新增y轴为log类型的用例 ====
+            var logData = [
+                [1, 100],
+                [2, 400],
+                [3, 1000],
+                [4, 4000],
+                [5, 9000],
+                [6, 16000]
+            ];
+            var chartLogYaxis = echarts.init(document.getElementById('main-log-yaxis'));
+            chartLogYaxis.setOption({
+                title: { text: 'y 轴为 log 类型', left: 'center' },
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'value', includeMarkerInExtent: true },
+                yAxis: { type: 'log', includeMarkerInExtent: true },
+                series: [{
+                    type: 'line',
+                    data: logData,
+                    markLine: {
+                        data: [
+                            {
+                                name: '对数警戒线',
+                                yAxis: 1000000,
+                                lineStyle: { color: 'brown' },
+                                label: { formatter: '对数警戒线: 10000' }
+                            }
+                        ]
+                    }
+                }]
+            });
+
+            var chartLogYaxisMinMax = echarts.init(document.getElementById('main-log-yaxis-minmax'));
+            chartLogYaxisMinMax.setOption({
+                title: { text: 'y 轴为 log 类型 + min/max', left: 'center' },
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'value', min: 0, max: 8, includeMarkerInExtent: true },
+                yAxis: { type: 'log', min: 10, max: 20000, includeMarkerInExtent: true },
+                series: [{
+                    type: 'line',
+                    data: logData,
+                    markLine: {
+                        data: [
+                            {
+                                name: '对数警戒线',
+                                yAxis: 1000000,
+                                lineStyle: { color: 'brown' },
+                                label: { formatter: '对数警戒线: 10000' }
+                            }
+                        ]
+                    }
+                }]
+            });
 
         });
     </script>
