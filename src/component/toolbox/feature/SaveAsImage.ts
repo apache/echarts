@@ -42,10 +42,14 @@ export interface ToolboxSaveAsImageFeatureOption extends ToolboxFeatureOption {
     lang?: string[]
 }
 
+interface ProxyWindow extends Window {
+    rawWindow?: Window
+}
+
 function pickEventView(): Window {
   try {
-    void new MouseEvent("click", { view: window?.rawWindow || window });
-    return window?.rawWindow || window;
+    void new MouseEvent("click", { view: (window as ProxyWindow)?.rawWindow || window });
+    return (window as ProxyWindow)?.rawWindow || window;
   } catch {
     if (document.defaultView) {
       try {
