@@ -1,0 +1,301 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                display: flex;
+                width: 100%;
+                height: 100%;
+                overflow-x: auto;
+            }
+            .chart-item {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                border-right: 1px solid #e0e0e0;
+            }
+            .chart-item:last-child {
+                border-right: none;
+            }
+            .title {
+                text-align: center;
+                font-size: 14px;
+                font-weight: bold;
+                padding: 10px;
+                background: #f0f0f0;
+            }
+            .chart {
+                flex: 1;
+            }
+        </style>
+        <div class="container">
+            <div class="chart-item">
+                <div class="title">connectEnds: false</div>
+                <div id="chart1" class="chart"></div>
+            </div>
+            <div class="chart-item">
+                <div class="title">connectEnds: true</div>
+                <div id="chart2" class="chart"></div>
+            </div>
+            <div class="chart-item">
+                <div class="title">connectEnds: true + smooth</div>
+                <div id="chart3" class="chart"></div>
+            </div>
+            <div class="chart-item">
+                <div class="title">connectEnds: value angleAxis</div>
+                <div id="chart4" class="chart"></div>
+            </div>
+            <div class="chart-item">
+                <div class="title">connectEnds: boundaryGap true</div>
+                <div id="chart5" class="chart"></div>
+            </div>
+        </div>
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                const categories = ['A', 'B', 'C', 'D', 'E', 'F'];
+                const data = [
+                    [8, 'A'],
+                    [6, 'B'],
+                    [7, 'C'],
+                    [5, 'D'],
+                    [8, 'E'],
+                    [6, 'F']
+                ];
+                const valueData = [
+                    [0, 8],
+                    [60, 6],
+                    [120, 7],
+                    [180, 5],
+                    [240, 9],
+                    [300, 6],
+                    [360, 8]
+                ];
+
+                // Chart 1: connectEnds: false (默认)
+                const chart1 = echarts.init(document.getElementById('chart1'));
+                chart1.setOption({
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: categories,
+                        boundaryGap: false,
+                        startAngle: 90
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: data,
+                        connectEnds: false,
+                        lineStyle: {
+                            color: '#5470c6'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        }
+                    }]
+                });
+
+                // Chart 2: connectEnds: true
+                const chart2 = echarts.init(document.getElementById('chart2'));
+                chart2.setOption({
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: categories,
+                        boundaryGap: false,
+                        startAngle: 90
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: data,
+                        connectEnds: true,
+                        lineStyle: {
+                            color: '#91cc75'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        }
+                    }]
+                });
+
+                // Chart 3: connectEnds: true + smooth
+                const chart3 = echarts.init(document.getElementById('chart3'));
+                chart3.setOption({
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: categories,
+                        boundaryGap: false,
+                        startAngle: 90
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: data,
+                        connectEnds: true,
+                        smooth: true,
+                        lineStyle: {
+                            color: '#ee6666'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        }
+                    }]
+                });
+
+                // Chart 4: value angleAxis + connectEnds
+                const chart4 = echarts.init(document.getElementById('chart4'));
+                chart4.setOption({
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    angleAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 360,
+                        startAngle: 90,
+                        splitNumber: 6
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: valueData,
+                        connectEnds: true,
+                        lineStyle: {
+                            color: '#fac858'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        },
+                        encode: {
+                            angle: 0,
+                            radius: 1
+                        }
+                    }]
+                });
+
+                // Chart 5: category boundaryGap true + connectEnds
+                const chart5 = echarts.init(document.getElementById('chart5'));
+                chart5.setOption({
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: categories,
+                        boundaryGap: true,
+                        startAngle: 90
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        type: 'line',
+                        data: data,
+                        connectEnds: true,
+                        lineStyle: {
+                            color: '#73c0de'
+                        },
+                        areaStyle: {
+                            opacity: 0.2
+                        }
+                    }]
+                });
+
+                window.addEventListener('resize', function() {
+                    chart1.resize();
+                    chart2.resize();
+                    chart3.resize();
+                    chart4.resize();
+                    chart5.resize();
+                });
+            });
+
+        </script>
+    </body>
+</html>
+
