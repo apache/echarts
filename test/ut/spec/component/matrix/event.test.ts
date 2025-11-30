@@ -43,10 +43,6 @@ describe('matrix_event', function () {
                     data: ['Y']
                 },
                 body: {
-                    silent: false,
-                    itemStyle: {
-                        color: 'transparent'
-                    },
                     data: [
                         { coord: [0, 0], value: 'Cell A' }
                     ]
@@ -56,31 +52,24 @@ describe('matrix_event', function () {
 
         chart.setOption(option);
 
-        let clicked = false;
-        let componentType = '';
-        let name = '';
+        let clickedParams: any = null;
 
         chart.on('click', function (params) {
-            clicked = true;
-            componentType = params.componentType;
-            name = params.name;
+            clickedParams = params;
         });
 
         // Find the matrix cell element
         const zr = chart.getZr();
-        const storage = zr.storage;
-        const displayList = storage.getDisplayList();
+        const displayList = zr.storage.getDisplayList();
 
         let targetEl;
         for (let i = 0; i < displayList.length; i++) {
             const el = displayList[i];
             const ecData = getECData(el);
-            if (ecData && ecData.componentMainType === 'matrix' && ecData.eventData) {
+            if (ecData && ecData.eventData && ecData.eventData.name === 'Cell A') {
                 // Find the cell with the specific name
-                if (ecData.eventData.name === 'Cell A') {
-                    targetEl = el;
-                    break;
-                }
+                targetEl = el;
+                break;
             }
         }
 
@@ -93,9 +82,12 @@ describe('matrix_event', function () {
             offsetY: 10  // Dummy
         });
 
-        expect(clicked).toEqual(true);
-        expect(componentType).toEqual('matrix');
-        expect(name).toEqual('Cell A');
+        expect(clickedParams).not.toBeNull();
+        expect(clickedParams.componentType).toEqual('matrix');
+        expect(clickedParams.matrixIndex).toEqual(0);
+        expect(clickedParams.targetType).toEqual('body');
+        expect(clickedParams.name).toEqual('Cell A');
+        expect(clickedParams.coord).toEqual([0, 0]);
     });
 
     it('should not attach eventData when triggerEvent is false (default)', function () {
@@ -108,7 +100,6 @@ describe('matrix_event', function () {
                     data: ['Y']
                 },
                 body: {
-                    silent: false,
                     data: [
                         { coord: [0, 0], value: 'Cell A' }
                     ]
