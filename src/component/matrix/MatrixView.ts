@@ -175,7 +175,8 @@ function renderDimensionCells(group: Group, matrixModel: MatrixModel, ecModel: G
                 shape,
                 dimCell.option.value,
                 Z2_DIMENSION_CELL_DEFAULT,
-                tooltipOption
+                tooltipOption,
+                dimIdx === 0 ? 'x' : 'y'
             );
         }
     }
@@ -246,12 +247,15 @@ function createBodyAndCorner(
                     shape,
                     bodyCornerCellOption ? bodyCornerCellOption.value : null,
                     Z2_BODY_CORNER_CELL_DEFAULT,
-                    tooltipOption
+                    tooltipOption,
+                    bodyCornerOptionRoot
                 );
             }
         }
     } // End of createBodyOrCornerCells
 }
+
+type MatrixTargetType = 'x' | 'y' | 'body' | 'corner';
 
 function createMatrixCell(
     xyLocator: MatrixXYLocator[],
@@ -266,6 +270,7 @@ function createMatrixCell(
     textValue: unknown,
     zrCellDefault: Z2CellDefault,
     tooltipOption: MatrixOption['tooltip'],
+    targetType: MatrixTargetType
 ): void {
     // Do not use getModel for handy performance optimization.
     _tmpCellItemStyleModel.option = cellOption ? cellOption.itemStyle : null;
@@ -340,31 +345,34 @@ function createMatrixCell(
     }
 
     // Set silent
+    const triggerEvent = matrixModel.get('triggerEvent');
     if (cellText) {
         let labelSilent = _tmpCellLabelModel.get('silent');
-        // auto, tooltip of text cells need silient: false, but non-text cells
-        // do not need a special cursor in most cases.
+        // By default, silent: false is needed for triggerEvent or tooltip interaction.
         if (labelSilent == null) {
-            labelSilent = !tooltipOptionShow;
+            labelSilent = !(triggerEvent || tooltipOptionShow);
         }
         cellText.silent = labelSilent;
         cellText.ignoreHostSilent = true;
     }
     let rectSilent = _tmpCellModel.get('silent');
     if (rectSilent == null) {
-        rectSilent = (
-            // If no background color in cell, set `rect.silent: false` will cause that only
-            // the border response to mouse hovering, which is probably weird.
+        // If no background color in cell, set `rect.silent: false` will cause that only
+        // the border response to mouse hovering, which is probably weird.
+        rectSilent = !(triggerEvent || tooltipOptionShow) || (
             !cellRect.style || cellRect.style.fill === 'none' || !cellRect.style.fill
         );
     }
     cellRect.silent = rectSilent;
 
-    if (matrixModel.get('triggerEvent')) {
+    if (triggerEvent) {
         const eventData = {
-            componentType: 'matrix',
+            componentType: 'matrix' as const,
             componentIndex: matrixModel.componentIndex,
-            name: textValue + ''
+            matrixIndex: matrixModel.componentIndex,
+            targetType: targetType,
+            name: textValue != null ? textValue + '' : null,
+            coord: xyLocator.slice()
         };
         getECData(cellRect).eventData = eventData;
         if (cellText) {
