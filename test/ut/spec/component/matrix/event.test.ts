@@ -32,9 +32,10 @@ describe('matrix_event', function () {
         chart.dispose();
     });
 
-    it('should trigger click event on matrix cell', function () {
+    it('should trigger click event on matrix cell when triggerEvent is true', function () {
         const option = {
             matrix: {
+                triggerEvent: true,
                 x: {
                     data: ['A', 'B']
                 },
@@ -95,5 +96,41 @@ describe('matrix_event', function () {
         expect(clicked).toEqual(true);
         expect(componentType).toEqual('matrix');
         expect(name).toEqual('Cell A');
+    });
+
+    it('should not attach eventData when triggerEvent is false (default)', function () {
+        const option = {
+            matrix: {
+                x: {
+                    data: ['A']
+                },
+                y: {
+                    data: ['Y']
+                },
+                body: {
+                    silent: false,
+                    data: [
+                        { coord: [0, 0], value: 'Cell A' }
+                    ]
+                }
+            }
+        };
+
+        chart.setOption(option);
+
+        const zr = chart.getZr();
+        const displayList = zr.storage.getDisplayList();
+
+        let hasEventData = false;
+        for (let i = 0; i < displayList.length; i++) {
+            const el = displayList[i];
+            const ecData = getECData(el);
+            if (ecData && ecData.eventData && ecData.eventData.componentType === 'matrix') {
+                hasEventData = true;
+                break;
+            }
+        }
+
+        expect(hasEventData).toEqual(false);
     });
 });

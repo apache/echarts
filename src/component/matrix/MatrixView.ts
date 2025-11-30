@@ -360,14 +360,16 @@ function createMatrixCell(
     }
     cellRect.silent = rectSilent;
 
-    const eventData = {
-        componentType: 'matrix',
-        componentIndex: matrixModel.componentIndex,
-        name: textValue + ''
-    };
-    getECData(cellRect).eventData = eventData;
-    if (cellText) {
-        getECData(cellText).eventData = eventData;
+    if (matrixModel.get('triggerEvent')) {
+        const eventData = {
+            componentType: 'matrix',
+            componentIndex: matrixModel.componentIndex,
+            name: textValue + ''
+        };
+        getECData(cellRect).eventData = eventData;
+        if (cellText) {
+            getECData(cellText).eventData = eventData;
+        }
     }
 
     clearTmpModel(_tmpCellModel);

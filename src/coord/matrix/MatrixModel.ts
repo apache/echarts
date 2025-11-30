@@ -44,6 +44,7 @@ export interface MatrixOption extends ComponentOption, BoxLayoutOptionMixin {
     // Used on the outer border and the divider line.
     borderZ2?: number;
     tooltip?: CommonTooltipOption<MatrixTooltipFormatterParams>;
+    triggerEvent?: boolean;
 
     // PENDING: do we need to support other states, i.e., `emphasis`, `blur`, `select`?
 }
@@ -279,6 +280,7 @@ const defaultMatrixOption: MatrixOption = {
         borderColor: tokens.color.axisLine,
         borderWidth: 1,
     },
+    triggerEvent: false,
 };
 
 
