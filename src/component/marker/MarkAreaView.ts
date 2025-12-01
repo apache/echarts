@@ -412,9 +412,11 @@ function createList(
             const data = seriesModel.getData();
             const info = data.getDimensionInfo(
                 data.mapDimension(coordDim)
-            ) || {};
+            );
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
-            return extend(extend({}, info), {
+            // When using dataset with encode, dimension info might be incomplete/undefined
+            const baseInfo = info ? extend({}, info) : new SeriesDimensionDefine({ name: coordDim, type: 'float' });
+            return extend(baseInfo, {
                 name: coordDim,
                 // DON'T use ordinalMeta to parse and collect ordinal.
                 ordinalMeta: null
