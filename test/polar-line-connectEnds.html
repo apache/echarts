@@ -60,7 +60,7 @@ under the License.
         </style>
         <div class="container">
             <div class="chart-item">
-                <div class="title">connectEnds: false</div>
+                <div class="title">Default (no connectEnds)</div>
                 <div id="chart1" class="chart"></div>
             </div>
             <div class="chart-item">
@@ -105,7 +105,7 @@ under the License.
                     [360, 8]
                 ];
 
-                // Chart 1: connectEnds: false (默认)
+                // Chart 1: connectEnds not specified (should default to false)
                 const chart1 = echarts.init(document.getElementById('chart1'));
                 chart1.setOption({
                     polar: {
@@ -130,7 +130,7 @@ under the License.
                         coordinateSystem: 'polar',
                         type: 'line',
                         data: data,
-                        connectEnds: false,
+                        // connectEnds is not specified, should default to false
                         lineStyle: {
                             color: '#5470c6'
                         },

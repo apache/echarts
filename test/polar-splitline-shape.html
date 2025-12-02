@@ -58,7 +58,7 @@ under the License.
         </style>
         <div class="container">
             <div class="chart-item">
-                <div class="title">shape: 'arc'</div>
+                <div class="title">Default (no shape specified)</div>
                 <div id="chart1" class="chart"></div>
             </div>
             <div class="chart-item">
@@ -89,11 +89,11 @@ under the License.
                     valueAngleData.push([radius, (360 / categories.length) * i]);
                 }
 
-                // Chart 1: shape: 'arc'
+                // Chart 1: shape: 'arc' (default, no shape specified)
                 const chart1 = echarts.init(document.getElementById('chart1'));
                 chart1.setOption({
                     title: {
-                        text: 'Circular Grid Lines',
+                        text: 'Circular Grid Lines (default)',
                         left: 'center',
                         top: 10
                     },
@@ -107,7 +107,7 @@ under the License.
                         max: 10,
                         splitLine: {
                             show: true,
-                            shape: 'polygon',
+                            // shape is not specified, should default to 'arc'
                             lineStyle: {
                                 color: '#ddd'
                             }
