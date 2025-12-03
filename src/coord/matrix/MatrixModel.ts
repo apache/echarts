@@ -195,6 +195,19 @@ export interface MatrixDimensionLevelOption {
 export interface MatrixDimensionModel extends Model<MatrixDimensionOption> {
 }
 
+export interface MatrixLabelOption extends LabelOption {
+    formatter?: string | ((params: MatrixLabelFormatterParams) => string);
+}
+
+export interface MatrixLabelFormatterParams {
+    componentType: 'matrix';
+    componentIndex: number;
+    name: string;
+    value: unknown;
+    xyLocator: MatrixXYLocator[];
+    $vars: readonly ['name', 'value', 'xyLocator'];
+}
+
 /**
  * Two levels of cascade inheritance:
  *  - priority-high: style options defined in `matrix.x/y/coner/body.data[i]` (in cell)
@@ -209,7 +222,7 @@ export interface MatrixCellStyleOption {
     //    The text truncation rect is obtained by cell rect minus by padding.
     //  - The inner series / other coord sys padding is not supported, to avoid necessary complexity.
     //    Consider some series, such as heatmap, prefer no padding.
-    label?: LabelOption;
+    label?: MatrixLabelOption;
     itemStyle?: ItemStyleOption;
     cursor?: string;
     // By default, auto decide whether to be silent, considering tooltip.

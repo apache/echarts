@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+
+        <!-- Test case 1: Function formatter on x dimension -->
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+            var option = {
+                matrix: {
+                    x: {
+                        data: ['Column A', 'Column B', 'Column C'],
+                        label: {
+                            formatter: function(params) {
+                                // Add prefix to column names
+                                return '📊 ' + params.name;
+                            }
+                        }
+                    },
+                    y: {
+                        data: ['Row 1', 'Row 2', 'Row 3'],
+                        label: {
+                            formatter: function(params) {
+                                // Add prefix to row names
+                                return '→ ' + params.name;
+                            }
+                        }
+                    },
+                    body: {
+                        data: [
+                            { coord: ['Column A', 'Row 1'], value: 'A1' },
+                            { coord: ['Column B', 'Row 2'], value: 'B2' }
+                        ],
+                        label: {
+                            formatter: function(params) {
+                                return '★ ' + params.name;
+                            }
+                        }
+                    }
+                },
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'Test: Function formatter on x and y labels',
+                    'x labels should have "📊" prefix',
+                    'y labels should have "→" prefix',
+                    'body labels should have "★" prefix'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <!-- Test case 2: String template formatter on x dimension -->
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+            var option = {
+                matrix: {
+                    x: {
+                        data: ['A', 'B', 'C'],
+                        label: {
+                            formatter: 'Col: {name}'
+                        }
+                    },
+                    y: {
+                        data: ['X', 'Y', 'Z'],
+                        label: {
+                            formatter: 'Row: {name}'
+                        }
+                    }
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 50,
+                    show: false
+                },
+                series: {
+                    type: 'heatmap',
+                    coordinateSystem: 'matrix',
+                    data: [
+                        ['A', 'X', 10],
+                        ['A', 'Y', 20],
+                        ['B', 'X', 30],
+                        ['B', 'Y', 40],
+                        ['C', 'Z', 50]
+                    ],
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'Test: String template formatter on x and y labels',
+                    'x labels should show "Col: A", "Col: B", "Col: C"',
+                    'y labels should show "Row: X", "Row: Y", "Row: Z"'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <!-- Test case 3: Formatter with nested structure -->
+        <script>
+        require([
+            'echarts',
+        ], function (echarts) {
+            var option = {
+                matrix: {
+                    x: {
+                        data: [{
+                            value: 'Group 1',
+                            children: ['A1', 'A2']
+                        }, {
+                            value: 'Group 2',
+                            children: ['B1', 'B2']
+                        }],
+                        label: {
+                            formatter: function(params) {
+                                return '[' + params.name + ']';
+                            }
+                        }
+                    },
+                    y: {
+                        data: ['Row 1', 'Row 2'],
+                        label: {
+                            formatter: function(params) {
+                                return params.name + ' ★';
+                            }
+                        }
+                    }
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 50,
+                    show: false
+                },
+                series: {
+                    type: 'heatmap',
+                    coordinateSystem: 'matrix',
+                    data: [
+                        ['A1', 'Row 1', 10],
+                        ['A2', 'Row 1', 20],
+                        ['B1', 'Row 2', 30],
+                        ['B2', 'Row 2', 40]
+                    ],
+                    label: {
+                        show: true
+                    }
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                title: [
+                    'Test: Formatter with nested structure',
+                    'x labels should be wrapped in brackets: [Group 1], [A1], etc.',
+                    'y labels should have ★ suffix'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+    </body>
+</html>
+
