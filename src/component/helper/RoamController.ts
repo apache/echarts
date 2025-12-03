@@ -409,9 +409,8 @@ class RoamController extends Eventful<RoamEventDefinition> {
         ) {
             return;
         }
-        const scale = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
         this._checkTriggerMoveZoom(this, 'zoom', null, e, {
-            scale: scale, originX: e.pinchX, originY: e.pinchY, isAvailableBehavior: null
+            scale: e.pinchScale, originX: e.pinchX, originY: e.pinchY, isAvailableBehavior: null
         });
     }
 
