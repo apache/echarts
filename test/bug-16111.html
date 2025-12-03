@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Bug #16111 - containLabel + overflow</title>
+    <script src="../dist/echarts.js"></script>
+</head>
+<body>
+    <div id="main" style="width: 800px; height: 600px; border: 1px solid #ccc;"></div>
+    
+    <script>
+        var myChart = echarts.init(document.getElementById('main'));
+        
+        var option = {
+            grid: {
+                left: 0,
+                top: 0,
+                bottom: 0,
+                containLabel: true,
+                backgroundColor: '#f0f0f0' // To visualize grid area
+            },
+            yAxis: {
+                axisLabel: {
+                    align: 'right',
+                    width: 300,
+                    overflow: 'truncate',
+                    ellipsis: '...',
+                },
+                type: 'category',
+                data: [
+                    'There is a problem with this paragraph, I expect the length of containLabel to be based on yAxis.axisLabel.width instead of the actual text width',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat',
+                    'Sun',
+                ],
+            },
+            xAxis: {
+                type: 'value',
+            },
+            series: [
+                {
+                    data: [120, 200, 150, 80, 70, 110, 130],
+                    type: 'bar',
+                    showBackground: true,
+                    backgroundStyle: {
+                        color: 'rgba(180, 180, 180, 0.2)',
+                    },
+                },
+            ],
+        };
+        
+        myChart.setOption(option);
+    </script>
+</body>
+</html>

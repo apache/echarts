@@ -788,28 +788,41 @@ function layOutGridByOuterBounds(
             if (!shouldAxisShow(axis.model)) {
                 return;
             }
-            // FIXME: zr Group.union may wrongly union (0, 0, 0, 0) and not performant.
-            // unionRect.union(axis.axisBuilder.group.getBoundingRect());
 
-            // If ussing Group.getBoundingRect to calculate shrink space, it is not strictly accurate when
-            // the outermost label is ignored and the secondary label is very long and contribute to the
-            // union extension:
-            //      -|---|---|---|
-            //         1,000,000,000
-            // Therefore we calculate them one by one.
-            // Also considered axis may be blank or no labels.
             const sharedRecord = axisBuilderSharedCtx.ensureRecord(axis.model);
             const labelInfoList = sharedRecord.labelInfoList;
             if (labelInfoList) {
+                // 🔧 FIX: Get configured label width with proper type checking
+                const axisLabelModel = axis.model.getModel('axisLabel');
+                let configuredWidth: number | null = null;
+
+                const widthValue = axisLabelModel.get('width');
+                if (widthValue != null) {
+                    const numValue = typeof widthValue === 'string'
+                        ? parseFloat(widthValue)
+                        : widthValue;
+                    if (!isNaN(numValue)) {
+                        configuredWidth = numValue;
+                    }
+                }
+
                 for (let idx = 0; idx < labelInfoList.length; idx++) {
                     const labelInfo = labelInfoList[idx];
                     let proportion = axis.scale.normalize(getLabelInner(labelInfo.label).tickValue);
                     proportion = xyIdx === 1 ? 1 - proportion : proportion;
-                    // xAxis use proportion on x, yAxis use proprotion on y, otherwise not.
-                    fillMarginOnOneDimension(labelInfo.rect, xyIdx, proportion);
-                    fillMarginOnOneDimension(labelInfo.rect, 1 - xyIdx, NaN);
+
+                    // 🔧 MODIFIED: Use configured width if available
+                    let rectToUse = labelInfo.rect;
+                    if (configuredWidth !== null && axis.dim === 'y') {
+                        rectToUse = labelInfo.rect.clone();
+                        rectToUse.width = configuredWidth;
+                    }
+
+                    fillMarginOnOneDimension(rectToUse, xyIdx, proportion);
+                    fillMarginOnOneDimension(rectToUse, 1 - xyIdx, NaN);
                 }
             }
+
             const nameLayout = sharedRecord.nameLayout;
             if (nameLayout) {
                 const proportion = isNameLocationCenter(sharedRecord.nameLocation) ? 0.5 : NaN;
