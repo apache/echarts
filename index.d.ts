@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as echarts from './types/dist/echarts';
+export * from './types/dist/echarts';
 // Export for UMD module.
 export as namespace echarts;
-export = echarts;
