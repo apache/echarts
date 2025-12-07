@@ -379,15 +379,15 @@ function createMatrixCell(
     }
     let rectSilent = _tmpCellModel.get('silent');
     if (rectSilent == null) {
-        // If no background color in cell, set `rect.silent: false` will cause that only
-        // the border response to mouse hovering, which is probably weird.
-        rectSilent = !(triggerEvent || tooltipOptionShow) || (
+        rectSilent = (
+            // If no background color in cell, set `rect.silent: false` will cause that only
+            // the border response to mouse hovering, which is probably weird.
             !cellRect.style || cellRect.style.fill === 'none' || !cellRect.style.fill
         );
     }
     cellRect.silent = rectSilent;
 
-    if (triggerEvent) {
+    if (triggerEvent && cellText) {
         const eventData = {
             componentType: 'matrix' as const,
             componentIndex: matrixModel.componentIndex,
@@ -396,10 +396,7 @@ function createMatrixCell(
             name: textValue != null ? textValue + '' : null,
             coord: xyLocator.slice()
         };
-        getECData(cellRect).eventData = eventData;
-        if (cellText) {
-            getECData(cellText).eventData = eventData;
-        }
+        getECData(cellText).eventData = eventData;
     }
 
     clearTmpModel(_tmpCellModel);
