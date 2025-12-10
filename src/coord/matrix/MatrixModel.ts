@@ -204,8 +204,8 @@ export interface MatrixLabelFormatterParams {
     componentIndex: number;
     name: string;
     value: unknown;
-    xyLocator: MatrixXYLocator[];
-    $vars: readonly ['name', 'value', 'xyLocator'];
+    coord: MatrixXYLocator[];
+    $vars: readonly ['name', 'value', 'coord'];
 }
 
 /**

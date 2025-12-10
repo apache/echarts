@@ -303,17 +303,17 @@ function createMatrixCell(
                 componentIndex: matrixModel.componentIndex,
                 name: text,
                 value: textValue as unknown,
-                xyLocator: xyLocator.slice() as MatrixXYLocator[],
-                $vars: ['name', 'value', 'xyLocator'] as const
+                coord: xyLocator.slice() as MatrixXYLocator[],
+                $vars: ['name', 'value', 'coord'] as const
             };
-            if (isFunction(formatter)) {
+            if (isString(formatter)) {
+                text = formatTplSimple(formatter, params);
+            }
+            else if (isFunction(formatter)) {
                 const formattedText = formatter(params);
                 if (formattedText != null) {
                     text = formattedText + '';
                 }
-            }
-            else if (isString(formatter)) {
-                text = formatTplSimple(formatter, params);
             }
         }
 

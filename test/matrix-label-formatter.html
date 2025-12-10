@@ -76,7 +76,7 @@ under the License.
                 },
             };
 
-            var chart = testHelper.create(echarts, 'main0', {
+            testHelper.create(echarts, 'main0', {
                 title: [
                     'Test: Function formatter on x and y labels',
                     'x labels should have "📊" prefix',
@@ -130,7 +130,7 @@ under the License.
                 }
             };
 
-            var chart = testHelper.create(echarts, 'main1', {
+            testHelper.create(echarts, 'main1', {
                 title: [
                     'Test: String template formatter on x and y labels',
                     'x labels should show "Col: A", "Col: B", "Col: C"',
@@ -192,7 +192,7 @@ under the License.
                 }
             };
 
-            var chart = testHelper.create(echarts, 'main2', {
+            testHelper.create(echarts, 'main2', {
                 title: [
                     'Test: Formatter with nested structure',
                     'x labels should be wrapped in brackets: [Group 1], [A1], etc.',
