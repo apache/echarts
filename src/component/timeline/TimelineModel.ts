@@ -32,12 +32,15 @@ import {
     ColorString,
     CommonTooltipOption,
     CallbackDataParams,
-    ZREasing
+    ZREasing,
+    ComponentOnMatrixOptionMixin,
+    ComponentOnCalendarOptionMixin
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel, { GlobalModelSetOptionOpts } from '../../model/Global';
 import { each, isObject, clone } from 'zrender/src/core/util';
 import { convertOptionIdName, getDataItemValue } from '../../util/model';
+import tokens from '../../visual/tokens';
 
 
 export interface TimelineControlStyle extends ItemStyleOption {
@@ -101,7 +104,10 @@ export interface TimelineDataItemOption extends SymbolOptionMixin {
     tooltip?: boolean
 }
 
-export interface TimelineOption extends ComponentOption, BoxLayoutOptionMixin, SymbolOptionMixin {
+export interface TimelineOption extends ComponentOption,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
+    BoxLayoutOptionMixin, SymbolOptionMixin {
+
     mainType?: 'timeline'
 
     backgroundColor?: ZRColor
@@ -315,7 +321,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
         bottom: 0,
         width: null,
         height: 40,
-        padding: 5,
+        padding: tokens.size.m,
 
         controlPosition: 'left',           // 'left' 'right' 'top' 'bottom' 'none'
         autoPlay: false,
@@ -327,7 +333,7 @@ class TimelineModel extends ComponentModel<TimelineOption> {
 
         itemStyle: {},
         label: {
-            color: '#000'
+            color: tokens.color.secondary
         },
 
         data: []

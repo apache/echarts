@@ -25,29 +25,37 @@ under the License.
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                padding: 0;
-                margin: 0;
-                height: 100%;
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
             }
         </style>
-        <div id="main"></div>
+
+
+        <div id="main_roam"></div>
+
+
         <script>
             require([
                 'echarts',
                 './data/flare.json'
             ], function (echarts, data) {
-                var chart = echarts.init(document.getElementById('main'));
 
-                window.onresize = function () {
-                    chart.resize();
+                var _ctx = {
+                    center: null
                 };
 
-                chart.setOption({
+                var option = {
+                    backgroundColor: '#eef',
 
                     tooltip: {
                         trigger: 'item',
@@ -57,6 +65,8 @@ under the License.
                     series:[
                         {
                             type: 'tree',
+                            id: 'tree0',
+                            // animation: false,
 
                             data: [data],
 
@@ -68,19 +78,300 @@ under the License.
                             // roam: 'move',
 
                             layout: 'radial',
-
+                            // layout: 'orthogonal',
                             symbol: 'emptyCircle',
+                            // label: {show: false},
 
                             symbolSize: 7,
-
                             initialTreeDepth: 3,
-
                             animationDurationUpdate: 750
-
                         }
                     ]
-                });
+                };
+
+                function makeRectIndicators(option) {
+                    var graphicOption = option.graphic = option.graphic || {};
+                    graphicElsOption = graphicOption.elements = graphicOption.elements || [];
+                    graphicElsOption.push({
+                        id: 'view_rect_indicator',
+                        type: 'rect',
+                        silent: true,
+                        z: -9,
+                        style: {
+                            // fill: '#e0e0e0',
+                            fill: 'none',
+                            stroke: '#999',
+                            lineWidth: 1,
+                            lineDash: 'dashed',
+                        },
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'view rect',
+                                fill: '#555',
+                                fontSize: 11,
+                            },
+                        },
+                        textConfig: {
+                            position: 'insideTopRight'
+                        }
+                    }, {
+                        id: 'content_rect_indicator',
+                        type: 'rect',
+                        silent: true,
+                        z: -10,
+                        style: {
+                            // fill: 'rgba(150,100,50,0.3)',
+                            fill: 'none',
+                            stroke: '#999',
+                            lineWidth: 1,
+                            lineDash: 'dashed',
+                        },
+                        textContent: {
+                            type: 'text',
+                            style: {
+                                text: 'content bounding rect',
+                                fill: '#555',
+                                fontSize: 11,
+                            },
+                        },
+                        textConfig: {
+                            position: 'insideTopRight'
+                        }
+                    });
+
+                    var gridOptions = option.grid = option.grid || [];
+                    if (!Array.isArray(gridOptions)) {
+                        gridOptions = option.grid = [option.grid];
+                    }
+                    gridOptions.push({
+                        id: 'viewport_indicator',
+                        show: true,
+                        // Using `grid` as a indicator is a tricky way - should no bounding rect,
+                        // otherwise it affect the trigger of geo roam due to `onIrrelevantElement`.
+                        backgroundColor: '#eee',
+                        silent: false,
+                        ..._ctx.layoutParams,
+                        borderColor: '#aaa',
+                        borderType: 'dashed',
+                        z: -100,
+                    });
+                }
+                makeRectIndicators(option);
+
+                function renderIndicatorRect() {
+                    if (!chart) {
+                        return;
+                    }
+                    // [CAVEAT] Internal data structure, probably change, do not use it outside.
+                    // const queryParam = {mainType: 'series', query: {seriesId: _ctx.seriesMapId}};
+                    // const viewCoordSys = chart.getModel().findComponents(queryParam)[0].coordinateSystem;
+                    // const contentBoundingRect = viewCoordSys.getBoundingRect().clone();
+                    // const trans = viewCoordSys.getComputedTransform();
+                    // if (trans) {
+                    //     contentBoundingRect.applyTransform(trans);
+                    // }
+                    // chart.setOption({
+                    //     grid: {
+                    //         id: 'viewport_indicator',
+                    //         ..._ctx.layoutParams,
+                    //     },
+                    //     graphic: {
+                    //         elements: [{
+                    //             id: 'content_rect_indicator',
+                    //             shape: contentBoundingRect,
+                    //         }]
+                    //     },
+                    // });
+                }
+
+                var chart = testHelper.create(echarts, 'main_roam', {
+                    title: [
+                        'tree roam and layout'
+                    ],
+                    option: option,
+                    inputsStyle: 'compact',
+                    inputs: [
+                        {
+                            type: 'select',
+                            text: 'box layout:',
+                            values: [
+                                'do_nothing',
+                                {
+                                    left: 50, top: 80, right: '20%', bottom: 20,
+                                },
+                                {
+                                    left: null, top: null, right: null, bottom: null,
+                                },
+                                {
+                                    left: 30, top: 30, right: null, bottom: '50%',
+                                },
+                            ],
+                            onchange: function () {
+                                var layoutParams = this.value;
+                                if (layoutParams == 'do_nothing') {
+                                    return;
+                                }
+                                chart.setOption({
+                                    series: {
+                                        id: 'tree0',
+                                        ...layoutParams,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'layout:',
+                            values: ['radial', 'orthogonal'],
+                            onchange: function () {
+                                chart.setOption({
+                                    series: {
+                                        id: 'tree0',
+                                        layout: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'roam:',
+                            values: [true, 'scale', 'move'],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'tree0',
+                                        roam: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'roamTrigger:',
+                            values: ['global', undefined],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'tree0',
+                                        roamTrigger: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            text: 'zoom:',
+                            type: 'select',
+                            values: [undefined, 0.5, 1, 5],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'tree0',
+                                        zoom: this.value,
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'specify center:',
+                            values: [false, true],
+                            onchange() {
+                                chart.__testHelper.switchGroup(
+                                    this.value ? 'group_use_center' : 'group_no_center'
+                                )
+                                if (this.value) {
+                                    _ctx.center = _ctx.center || ['50%', '50%'];
+                                }
+                                else {
+                                    _ctx.center = null;
+                                }
+                                chart.setOption({
+                                    series: {
+                                        id: 'graph0',
+                                        center: _ctx.center
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'label.show:',
+                            values: [true, false],
+                            onchange() {
+                                chart.setOption({
+                                    series: {
+                                        id: 'tree0',
+                                        label: {show: this.value},
+                                    }
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'groupset',
+                            inputsHeight: 40,
+                            groups: [{
+                                id: 'group_no_center',
+                                text: 'no center',
+                            }, {
+                                id: 'group_use_center',
+                                text: 'specify center',
+                                inputs: [
+                                    ...[0, 1].map(centerIdx => ({
+                                        type: 'select',
+                                        text: `center[${centerIdx}]:`,
+                                        options: [
+                                            {
+                                                id: 'percent',
+                                                text: 'percent',
+                                                input: {type: 'range', min: -50, max: 150, value: 50, suffix: '%'}
+                                            },
+                                            {
+                                                id: 'absolute',
+                                                text: 'absolute',
+                                                input: {type: 'range', min: -100, max: 800, value: 100}
+                                            },
+                                        ],
+                                        onchange() {
+                                            if (this.optionId === 'absolute') {
+                                                _ctx.center[centerIdx] = this.value;
+                                            }
+                                            else if (this.optionId === 'percent') {
+                                                _ctx.center[centerIdx] = this.value + '%';
+                                            }
+                                            chart.setOption({
+                                                series: {
+                                                    id: 'tree0',
+                                                    center: _ctx.center
+                                                }
+                                            });
+                                            renderIndicatorRect();
+                                        }
+                                    }))
+                                ]
+                            }]
+                        }, // End of groupset
+                    ] // End of inputs
+                }); // End of testHelper.create
+
+                if (chart) {
+                    chart.on('treeRoam', e => {
+                        renderIndicatorRect();
+                    });
+                }
+
             });
         </script>
+
     </body>
 </html>

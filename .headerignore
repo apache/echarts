@@ -5,6 +5,7 @@
 node_modules
 .*\.git
 .*\.github
+.*\.husky
 .*\.editorconfig
 .*\.gitignore
 .*\.jshintrc

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main_geo_svg_organ"></div>
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'data/svg/Veins_Medical_Diagram_clip_art.svg',
+                './data/czech_geo.json',
+            ], function (echarts, organ_svg, czech_geo) {
+
+                echarts.registerMap('czech_geo', czech_geo);
+                echarts.registerMap('svg_organ', {svg: organ_svg});
+                echarts.registerMap('geoJSON_plain_rect', {
+                    'type': 'FeatureCollection',
+                    'features': [
+                        {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'Polygon',
+                                'coordinates': [
+                                    [[2000, 2000], [5000, 2000], [5000, 5000], [2000, 5000]]
+                                ]
+                            },
+                            'properties': {
+                                'name': 'Some Place',
+                                'childNum': 1
+                            }
+                        }
+                    ]
+                });
+                echarts.registerMap('geoJSON_height_zero', {
+                    'type': 'FeatureCollection',
+                    'features': [
+                        {
+                            'type': 'Feature',
+                            'geometry': {
+                                'type': 'Polygon',
+                                'coordinates': [
+                                    [[2000, 2000], [5000, 2000], [5000, 2000.00001], [2000, 2000]]
+                                ]
+                            },
+                            'properties': {
+                                'name': 'Some Place',
+                                'childNum': 1
+                            }
+                        }
+                    ]
+                });
+
+                const _ctx = {
+                    center: null,
+                    usingComponent: 'use_geo',
+                    mapSource: 'svg_organ',
+                    geoId: null,
+                    seriesMapId: null,
+                    layoutParams: {
+                        left: 10,
+                        right: '50%',
+                        top: 50,
+                        bottom: 50,
+                    },
+                };
+
+                var option = {
+                    backgroundColor: '#eef',
+                    tooltip: {
+                    },
+                    geo: [],
+                    xAxis: {
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        data: ['heart', 'large-intestine', 'small-intestine', 'spleen', 'kidney', 'lung', 'liver']
+                    },
+                    grid: [{
+                        left: '70%'
+                    }, {
+                        id: 'geo_viewport_indicator',
+                        show: true,
+                        // Using `grid` as a indicator is a tricky way - should no bounding rect,
+                        // otherwise it affect the trigger of geo roam due to `onIrrelevantElement`.
+                        backgroundColor: '#ccd',
+                        silent: false,
+                        ..._ctx.layoutParams,
+                        borderColor: '#aaa',
+                        borderType: 'dashed',
+                        z: -100,
+                    }],
+                    graphic: {
+                        elements: [{
+                            id: 'geo_view_rect_indicator',
+                            type: 'rect',
+                            silent: true,
+                            z: -9,
+                            style: {
+                                // fill: '#e0e0e0',
+                                fill: 'none',
+                                stroke: '#999',
+                                lineWidth: 1,
+                                lineDash: 'dashed',
+                            },
+                            textContent: {
+                                type: 'text',
+                                style: {
+                                    text: 'view rect',
+                                    fill: '#555',
+                                    fontSize: 11,
+                                },
+                            },
+                            textConfig: {
+                                position: 'insideTopRight'
+                            }
+                        }, {
+                            id: 'geo_content_rect_indicator',
+                            type: 'rect',
+                            silent: true,
+                            z: -10,
+                            style: {
+                                // fill: 'rgba(150,100,50,0.3)',
+                                fill: 'none',
+                                stroke: '#999',
+                                lineWidth: 1,
+                                lineDash: 'dashed',
+                            },
+                            textContent: {
+                                type: 'text',
+                                style: {
+                                    text: 'content bounding rect',
+                                    fill: '#555',
+                                    fontSize: 11,
+                                },
+                            },
+                            textConfig: {
+                                position: 'insideTopRight'
+                            }
+                        }]
+                    },
+                    series: [{
+                        type: 'bar',
+                        id: 'data_bar',
+                        // selectedMode: 'multiple',
+                        emphasis: {
+                            focus: 'self'
+                        },
+                        data: [121, 321, 141, 52, 198, 289, 139]
+                    }],
+                };
+                addGeoMapOption(option);
+
+
+                function makeGeoOption() {
+                    _ctx.geoId = 'geo' + Math.random();
+                    return {
+                        id: _ctx.geoId,
+                        clip: true,
+                        map: _ctx.mapSource,
+                        // map: 'geoJSON_plain_rect',
+                        roam: true,
+                        selectedMode: 'multiple',
+                        ..._ctx.layoutParams,
+                        emphasis: {
+                            focus: 'self',
+                            // itemStyle: {
+                            //     color: null
+                            // },
+                            label: {
+                                position: 'bottom',
+                                distance: 20,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        },
+                        blur: {
+                        },
+                        select: {
+                            itemStyle: {
+                                color: '#b50205'
+                            },
+                            label: {
+                                show: false,
+                                textBorderColor: '#fff',
+                                textBorderWidth: 2
+                            }
+                        }
+                    }
+                };
+
+                function makeSeriesMapOption() {
+                    _ctx.seriesMapId = 'map' + Math.random();
+                    return {
+                        type: 'map',
+                        id: _ctx.seriesMapId,
+                        map: _ctx.mapSource,
+                        roam: true,
+                        clip: true,
+                        selectedMode: 'multiple',
+                        ..._ctx.layoutParams,
+                    };
+                }
+
+                function addGeoMapOption(option) {
+                    if (_ctx.usingComponent === 'use_geo') {
+                        option.geo.push(makeGeoOption());
+                    }
+                    else {
+                        option.series.push(makeSeriesMapOption());
+                    }
+                }
+
+                function updateUsingComponent() {
+                    if (!chart) {
+                        return;
+                    }
+                    var option = {
+                        geo: [],
+                        series: [{
+                            id: 'data_bar' // preserve it.
+                        }]
+                    };
+                    addGeoMapOption(option);
+                    chart.setOption(option, {replaceMerge: ['geo', 'series']});
+                }
+
+                function updateGeoOrMapOption(componentOption) {
+                    const option = {};
+                    if (_ctx.usingComponent === 'use_geo') {
+                        componentOption.id = _ctx.geoId;
+                        option.geo = componentOption;
+                    }
+                    else if (_ctx.usingComponent === 'user_series_map') {
+                        componentOption.id = _ctx.seriesMapId;
+                        option.series = componentOption;
+                    }
+                    chart.setOption(option);
+                }
+
+                function renderIndicatorRect() {
+                    if (!chart) {
+                        return;
+                    }
+                    // [CAVEAT] Internal data structure, probably change, do not use it outside.
+                    const queryParam = _ctx.usingComponent === 'use_geo'
+                        ? {mainType: 'geo', query: {geoId: _ctx.geoId}}
+                        : {mainType: 'series', query: {seriesId: _ctx.seriesMapId}}
+                    const viewCoordSys = chart.getModel().findComponents(queryParam)[0].coordinateSystem;
+                    const viewRect = viewCoordSys.getViewRect().clone();
+                    const contentBoundingRect = viewCoordSys.getBoundingRect().clone();
+                    const trans = viewCoordSys.getComputedTransform();
+                    if (trans) {
+                        contentBoundingRect.applyTransform(trans);
+                    }
+                    const useCenterSizeLayout =
+                        _ctx.layoutParams.layoutSize != null && _ctx.layoutParams.layoutCenter != null;
+
+                    chart.setOption({
+                        grid: {
+                            show: !useCenterSizeLayout,
+                            id: 'geo_viewport_indicator',
+                            ..._ctx.layoutParams,
+                        },
+                        graphic: {
+                            elements: [
+                                {
+                                    id: 'geo_view_rect_indicator',
+                                    shape: viewRect,
+                                },
+                                {
+                                    id: 'geo_content_rect_indicator',
+                                    shape: contentBoundingRect,
+                                }
+                            ]
+                        },
+                    });
+                }
+
+                var chart = testHelper.create(echarts, 'main_geo_svg_organ', {
+                    title: [
+                        'Hover on bar should not roam'
+                    ],
+                    option: option,
+                    onResize() {
+                        renderIndicatorRect();
+                    },
+                    inputsStyle: 'compact',
+                    inputs: [
+                        {
+                            type: 'select',
+                            text: 'using component:',
+                            values: ['use_geo', 'user_series_map'],
+                            onchange() {
+                                _ctx.usingComponent = this.value;
+                                updateUsingComponent();
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'geo source:',
+                            values: ['svg_organ', 'czech_geo', 'geoJSON_plain_rect', 'geoJSON_height_zero'],
+                            onchange: function () {
+                                _ctx.mapSource = this.value;
+                                updateUsingComponent();
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'geo box:',
+                            values: [
+                                'do_nothing',
+                                {
+                                    left: 50, top: 80, right: '50%', bottom: 90,
+                                    layoutSize: null, layoutCenter: null
+                                },
+                                {
+                                    left: null, top: null, right: null, bottom: null,
+                                    layoutSize: '80%', layoutCenter: [300, 200]
+                                },
+                                {
+                                    left: 30, top: 30, right: null, bottom: '50%',
+                                    layoutSize: null, layoutCenter: null
+                                },
+                            ],
+                            onchange: function () {
+                                var layoutParams = this.value;
+                                if (layoutParams == 'do_nothing') {
+                                    return;
+                                }
+                                _ctx.layoutParams = layoutParams;
+                                updateGeoOrMapOption({
+                                    ...layoutParams,
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'select',
+                            text: 'clip:',
+                            values: [true, false],
+                            onchange() {
+                                updateGeoOrMapOption({
+                                    clip: this.value,
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'roamTrigger:',
+                            values: [undefined, 'global'],
+                            onchange() {
+                                updateGeoOrMapOption({
+                                    roamTrigger: this.value,
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            text: 'zoom:',
+                            type: 'select',
+                            values: [undefined, 0.5, 1, 5],
+                            onchange() {
+                                updateGeoOrMapOption({
+                                    zoom: this.value,
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'specify center:',
+                            values: [false, true],
+                            onchange() {
+                                chart.__testHelper.switchGroup(
+                                    this.value ? 'group_use_center' : 'group_no_center'
+                                )
+                                if (this.value) {
+                                    _ctx.center = _ctx.center || ['50%', '50%'];
+                                }
+                                else {
+                                    _ctx.center = null;
+                                }
+                                updateGeoOrMapOption({
+                                    center: _ctx.center
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'groupset',
+                            inputsHeight: 40,
+                            groups: [{
+                                id: 'group_no_center',
+                                text: 'no center',
+                            }, {
+                                id: 'group_use_center',
+                                text: 'specify center',
+                                inputs: [
+                                    ...[0, 1].map(centerIdx => ({
+                                        type: 'select',
+                                        text: `center[${centerIdx}]:`,
+                                        options: [
+                                            {
+                                                id: 'percent',
+                                                text: 'percent',
+                                                input: {type: 'range', min: -50, max: 150, value: 50, suffix: '%'}
+                                            },
+                                            {
+                                                id: 'absolute',
+                                                text: 'absolute',
+                                                input: {type: 'range', min: -100, max: 800, value: 100}
+                                            },
+                                        ],
+                                        onchange() {
+                                            if (this.optionId === 'absolute') {
+                                                _ctx.center[centerIdx] = this.value;
+                                            }
+                                            else if (this.optionId === 'percent') {
+                                                _ctx.center[centerIdx] = this.value + '%';
+                                            }
+                                            updateGeoOrMapOption({
+                                                center: _ctx.center
+                                            });
+                                            renderIndicatorRect();
+                                        }
+                                    }))
+                                ]
+                            }]
+                        }, // End of groupset
+                        {
+                            type: 'select',
+                            text: 'preserveAspect:',
+                            values: [undefined, 'contain', 'cover'],
+                            onchange() {
+                                updateGeoOrMapOption({
+                                    preserveAspect: this.value
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'preserveAspectAlign:',
+                            values: [undefined, 'left', 'right', 'center'],
+                            onchange() {
+                                updateGeoOrMapOption({
+                                    preserveAspectAlign: this.value
+                                });
+                                renderIndicatorRect();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'preserveAspectVerticalAlign:',
+                            values: [undefined, 'top', 'bottom', 'middle'],
+                            onchange() {
+                                updateGeoOrMapOption({
+                                    preserveAspectVerticalAlign: this.value
+                                });
+                                renderIndicatorRect();
+                            }
+                        }
+                    ] // End of `inputs`
+
+                }); // End of `testHelper.create`
+
+                if (chart) {
+                    chart.on('mouseover', { seriesId: 'data_bar' }, function (event) {
+                        chart.dispatchAction({
+                            type: 'highlight',
+                            geoIndex: 0,
+                            name: event.name
+                        });
+                    });
+                    chart.on('mouseout', { seriesId: 'data_bar' }, function (event) {
+                        chart.dispatchAction({
+                            type: 'downplay',
+                            geoIndex: 0,
+                            name: event.name
+                        });
+                    });
+                }
+
+                renderIndicatorRect();
+
+                if (chart) {
+                    chart.on('georoam', function () {
+                        renderIndicatorRect();
+                    });
+                }
+
+            }); // End of `require`
+
+
+        </script>
+
+
+    </body>
+</html>
+

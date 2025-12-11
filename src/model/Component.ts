@@ -40,8 +40,10 @@ import {
     ComponentSubType,
     ComponentFullType,
     ComponentLayoutMode,
-    BoxLayoutOptionMixin
+    BoxLayoutOptionMixin,
+    NullUndefined
 } from '../util/types';
+import { CoordinateSystem } from '../coord/CoordinateSystem';
 
 const inner = makeInner<{
     defaultOption: ComponentOption
@@ -118,6 +120,11 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     // // `CoordinateSystemHostModel` itself.
     // coordinateSystem: CoordinateSystemMaster | CoordinateSystemExecutive;
 
+    // Determine the layout box based on that coordinate system, if specified.
+    // Will be injected.
+    // @see injectCoordinateSystem
+    boxCoordinateSystem?: CoordinateSystem | NullUndefined;
+
     /**
      * Support merge layout params.
      * Only support 'box' now (left/right/top/bottom/width/height).
@@ -132,6 +139,7 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     // Injectable properties:
     __viewId: string;
     __requireNewView: boolean;
+
 
     static protoInitialize = (function () {
         const proto = ComponentModel.prototype;
@@ -242,15 +250,17 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     getDefaultOption(): Opt {
         const ctor = this.constructor;
 
-        // If using class declaration, it is different to travel super class
-        // in legacy env and auto merge defaultOption. So if using class
-        // declaration, defaultOption should be merged manually.
         if (!isExtendedClass(ctor)) {
-            // When using ts class, defaultOption must be declared as static.
+            // When using ES class declaration, defaultOption must be declared as static.
+            // And manually inherit the defaultOption from its parent class if needed, such as,
+            //  ```ts
+            //  static defaultOption = inheritDefaultOption(ParentModel.defaultOption, {...});
+            //  ```
             return (ctor as any).defaultOption;
         }
 
         // FIXME: remove this approach?
+        // Legacy: auto merge defaultOption from ancestor classes if using ParentClass.extend(subProto)
         const fields = inner(this);
         if (!fields.defaultOption) {
             const optList = [];
@@ -300,15 +310,8 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
 
     getBoxLayoutParams() {
         // Consider itself having box layout configs.
-        const boxLayoutModel = this as Model<ComponentOption & BoxLayoutOptionMixin>;
-        return {
-            left: boxLayoutModel.get('left'),
-            top: boxLayoutModel.get('top'),
-            right: boxLayoutModel.get('right'),
-            bottom: boxLayoutModel.get('bottom'),
-            width: boxLayoutModel.get('width'),
-            height: boxLayoutModel.get('height')
-        };
+        // For backward compatibility, by default do not `ignoreParent`.
+        return layout.getBoxLayoutParams(this as Model<BoxLayoutOptionMixin>, false);
     }
 
     /**

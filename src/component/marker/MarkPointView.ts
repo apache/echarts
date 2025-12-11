@@ -29,7 +29,7 @@ import MarkPointModel, {MarkPointDataItemOption} from './MarkPointModel';
 import GlobalModel from '../../model/Global';
 import MarkerModel from './MarkerModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { HashMap, isFunction, map, filter, curry, extend } from 'zrender/src/core/util';
+import { HashMap, isFunction, map, filter, curry, extend, retrieve2 } from 'zrender/src/core/util';
 import { getECData } from '../../util/innerStore';
 import { getVisualFromData } from '../../visual/helper';
 import { ZRColor } from '../../util/types';
@@ -41,11 +41,28 @@ function updateMarkerLayout(
     api: ExtensionAPI
 ) {
     const coordSys = seriesModel.coordinateSystem;
+    const apiWidth = api.getWidth();
+    const apiHeight = api.getHeight();
+    const coordRect = coordSys && coordSys.getArea && coordSys.getArea();
     mpData.each(function (idx: number) {
         const itemModel = mpData.getItemModel<MarkPointDataItemOption>(idx);
+        const isRelativeToCoordinate = itemModel.get('relativeTo') === 'coordinate';
+        const width = isRelativeToCoordinate
+            ? (coordRect ? coordRect.width : 0)
+            : apiWidth;
+        const height = isRelativeToCoordinate
+            ? (coordRect ? coordRect.height : 0)
+            : apiHeight;
+        const left = isRelativeToCoordinate && coordRect
+            ? coordRect.x
+            : 0;
+        const top = isRelativeToCoordinate && coordRect
+            ? coordRect.y
+            : 0;
+
         let point;
-        const xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
-        const yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
+        const xPx = numberUtil.parsePercent(itemModel.get('x'), width) + left;
+        const yPx = numberUtil.parsePercent(itemModel.get('y'), height) + top;
         if (!isNaN(xPx) && !isNaN(yPx)) {
             point = [xPx, yPx];
         }
@@ -143,12 +160,14 @@ class MarkPointView extends MarkerView {
             }
 
             const style = itemModel.getModel('itemStyle').getItemStyle();
+            const z2 = itemModel.get('z2');
             const color = getVisualFromData(seriesData, 'color') as ZRColor;
             if (!style.fill) {
                 style.fill = color;
             }
 
             mpData.setItemVisual(idx, {
+                z2: retrieve2(z2, 0),
                 symbol: symbol,
                 symbolSize: symbolSize,
                 symbolRotate: symbolRotate,

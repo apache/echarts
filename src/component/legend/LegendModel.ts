@@ -30,13 +30,16 @@ import {
     LayoutOrient,
     CommonTooltipOption,
     ItemStyleOption,
-    LineStyleOption
+    LineStyleOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import { Dictionary } from 'zrender/src/core/types';
 import GlobalModel from '../../model/Global';
 import { ItemStyleProps } from '../../model/mixin/itemStyle';
 import { LineStyleProps } from './../../model/mixin/lineStyle';
 import {PathStyleProps} from 'zrender/src/graphic/Path';
+import tokens from '../../visual/tokens';
 
 type LegendDefaultSelectorOptionsProps = {
     type: string;
@@ -157,8 +160,8 @@ export interface LegendSymbolStyleOption {
 }
 
 export interface LegendOption extends ComponentOption, LegendStyleOption,
-    BoxLayoutOptionMixin, BorderOptionMixin
-{
+    BoxLayoutOptionMixin, BorderOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
 
     mainType?: 'legend'
 
@@ -236,6 +239,7 @@ export interface LegendOption extends ComponentOption, LegendStyleOption,
      */
     tooltip?: CommonTooltipOption<LegendTooltipFormatterParams>
 
+    triggerEvent?: boolean
 }
 
 class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentModel<Ops> {
@@ -452,24 +456,24 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
 
         left: 'center',
         // right: 'center',
-        top: 0,
-        // bottom: null,
+        // top: 0,
+        bottom: tokens.size.m,
 
         align: 'auto',
 
-        backgroundColor: 'rgba(0,0,0,0)',
-        borderColor: '#ccc',
+        backgroundColor: tokens.color.transparent,
+        borderColor: tokens.color.border,
         borderRadius: 0,
         borderWidth: 0,
         padding: 5,
-        itemGap: 10,
+        itemGap: 8,
         itemWidth: 25,
         itemHeight: 14,
         symbolRotate: 'inherit',
         symbolKeepAspect: true,
 
-        inactiveColor: '#ccc',
-        inactiveBorderColor: '#ccc',
+        inactiveColor: tokens.color.disabled,
+        inactiveBorderColor: tokens.color.disabled,
         inactiveBorderWidth: 'auto',
 
         itemStyle: {
@@ -486,7 +490,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         lineStyle: {
             width: 'auto',
             color: 'inherit',
-            inactiveColor: '#ccc',
+            inactiveColor: tokens.color.disabled,
             inactiveWidth: 2,
             opacity: 'inherit',
             type: 'inherit',
@@ -497,7 +501,7 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
         },
 
         textStyle: {
-            color: '#333'
+            color: tokens.color.secondary
         },
         selectedMode: true,
 
@@ -509,16 +513,15 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
             padding: [3, 5, 3, 5],
             fontSize: 12,
             fontFamily: 'sans-serif',
-            color: '#666',
+            color: tokens.color.tertiary,
             borderWidth: 1,
-            borderColor: '#666'
+            borderColor: tokens.color.border
         },
 
         emphasis: {
             selectorLabel: {
                 show: true,
-                color: '#eee',
-                backgroundColor: '#666'
+                color: tokens.color.quaternary
             }
         },
 
@@ -530,7 +533,9 @@ class LegendModel<Ops extends LegendOption = LegendOption> extends ComponentMode
 
         tooltip: {
             show: false
-        }
+        },
+
+        triggerEvent: false
     };
 }
 

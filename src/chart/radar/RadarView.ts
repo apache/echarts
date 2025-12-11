@@ -211,11 +211,19 @@ class RadarView extends ChartView {
                 const stateIgnore = stateModel.isEmpty() && stateModel.parentModel.isEmpty();
                 // Won't be ignore if normal state is not ignore.
                 polygon.ensureState(stateName).ignore = stateIgnore && polygonIgnore;
+                const lineStyle = itemModel.getModel([stateName, 'lineStyle']).getLineStyle();
+                polyline.ensureState(stateName).style = lineStyle;
+                const areaStyle = stateModel.getAreaStyle();
+                polygon.ensureState(stateName).style = areaStyle;
+                const itemStateStyle = itemModel.getModel([stateName, 'itemStyle']).getItemStyle();
+                symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
+                    symbolPath.ensureState(stateName).style = zrUtil.clone(itemStateStyle);
+                });
             });
 
             polygon.useStyle(
                 zrUtil.defaults(
-                    areaStyleModel.getAreaStyle(),
+                    itemModel.getModel('areaStyle').getAreaStyle(),
                     {
                         fill: color,
                         opacity: 0.7,
@@ -224,7 +232,6 @@ class RadarView extends ChartView {
                 )
             );
             const emphasisModel = itemModel.getModel('emphasis');
-            const itemHoverStyle = emphasisModel.getModel('itemStyle').getItemStyle();
             symbolGroup.eachChild(function (symbolPath: RadarSymbol) {
                 if (symbolPath instanceof ZRImage) {
                     const pathStyle = symbolPath.style;
@@ -241,8 +248,6 @@ class RadarView extends ChartView {
                     symbolPath.style.strokeNoScale = true;
                 }
 
-                const pathEmphasisState = symbolPath.ensureState('emphasis');
-                pathEmphasisState.style = zrUtil.clone(itemHoverStyle);
                 let defaultText = data.getStore().get(data.getDimensionIndex(symbolPath.__dimIdx), idx);
                 (defaultText == null || isNaN(defaultText as number)) && (defaultText = '');
 

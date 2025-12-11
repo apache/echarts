@@ -36,9 +36,14 @@ import {
     OptionDataItemObject,
     StatesOptionMixin,
     SeriesLabelOption,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
+    SeriesOnGeoOptionMixin,
+    SeriesOnCartesianOptionMixin
 } from '../../util/types';
 import type SeriesData from '../../data/SeriesData';
+import { registerLayOutOnCoordSysUsage } from '../../core/CoordinateSystem';
 
 interface PieItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // can be 10
@@ -63,7 +68,7 @@ export interface PieStateOption<TCbParams = never> {
     labelLine?: PieLabelLineOption
 }
 interface PieLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
-    rotate?: number | boolean | 'radial' | 'tangential'
+    rotate?: number | boolean | 'radial' | 'tangential' | 'tangential-noflip'
     alignTo?: 'none' | 'labelLine' | 'edge'
     edgeDistance?: string | number
     /**
@@ -100,15 +105,17 @@ export interface PieDataItemOption extends
 export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption<PieCallbackDataParams>, ExtraStateOption>, 'labelLine'>,
     PieStateOption<PieCallbackDataParams>,
-    Omit<CircleLayoutOptionMixin, 'center'>,
+    CircleLayoutOptionMixin<{centerExtra: string | number}>,
+    SeriesOnGeoOptionMixin,
+    SeriesOnCartesianOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 
     type?: 'pie'
 
     roseType?: 'radius' | 'area'
-
-    center?: string | number | (string | number)[]
 
     clockwise?: boolean
     startAngle?: number
@@ -216,7 +223,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         colorBy: 'data',
         // 默认全局居中
         center: ['50%', '50%'],
-        radius: [0, '75%'],
+        radius: [0, '50%'],
         // 默认顺时针
         clockwise: true,
         startAngle: 90,
@@ -243,6 +250,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
         stillShowZeroSum: true,
 
         // cursor: null,
+        coordinateSystemUsage: 'box',
 
         left: 0,
         top: 0,
@@ -265,7 +273,8 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // Works only position is 'outer' and alignTo is 'edge'.
             edgeDistance: '25%',
             // Works only position is 'outer' and alignTo is not 'edge'.
-            bleedMargin: 10,
+            // The default `bleedMargin` is auto determined according to view rect size.
+            // bleedMargin: 10,
             // Distance between text and label line.
             distanceToLabelLine: 5
             // formatter: 标签文本格式器，同 tooltip.formatter，不支持异步回调
@@ -278,7 +287,7 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
             // 引导线两段中的第一段长度
             length: 15,
             // 引导线两段中的第二段长度
-            length2: 15,
+            length2: 30,
             smooth: false,
             minTurnAngle: 90,
             maxSurfaceAngle: 90,
@@ -326,5 +335,14 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
     };
 
 }
+
+registerLayOutOnCoordSysUsage({
+    fullType: PieSeriesModel.type,
+    getCoord2(model: PieSeriesModel) {
+        // Not able to validate `center` type here.
+        // But percentage center, such as '12%', is not allowed in this case.
+        return model.getShallow('center');
+    }
+});
 
 export default PieSeriesModel;

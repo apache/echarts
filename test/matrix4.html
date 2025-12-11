@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div style="
+            height: 1207px;
+            margin: 0;
+            padding: 20px;
+            background: #eee;
+            overflow: hidden;
+            box-sizing: border-box;
+        "
+        >
+            This is a placeholder for y coord matching the visual test due to the visual test migration.
+            <br>
+            Scroll down to check the test case below.
+            <br>
+            ↓ ↓ ↓
+        </div>
+
+        <div id="main_self_layout"></div>
+        <div id="main_dim_data_edge_cases"></div>
+
+
+
+
+
+
+        <script>
+
+            var option;
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                const layoutList = [
+                    {
+                        layout: {
+                            left: 10,
+                            bottom: 10,
+                            width: 250,
+                            height: 50,
+                        },
+                        expect: 'left-bottom',
+                    },
+                    {
+                        layout: {
+                            right: 10,
+                            bottom: 10,
+                            width: 250,
+                            height: 50,
+                        },
+                        expect: 'right-bottom'
+                    },
+                    {
+                        layout: {
+                        },
+                        expect: 'default place'
+                    },
+                ];
+
+                option = {
+                    backgroundColor: '#eee',
+                    matrix: [
+
+                        // Layout test (r/l/t/b/w/h)
+                        ...layoutList.map(item => ({
+                            ...item.layout,
+                            backgroundStyle: {
+                                color: '#ddd'
+                            },
+                            x: {show: false, data: ['X1']},
+                            y: {show: false, data: ['Y1']},
+                            body: {
+                                label: {fontSize: 10},
+                                data: [{
+                                    coord: [0, 0],
+                                    value: `expect matrix on ${item.expect} due to\nl/r/t/b/w/h settings are:\n`
+                                        + JSON.stringify(item.layout)
+                                }]
+                            }
+                        })),
+
+                        // z-order test
+                        ...[{
+                            matrixLayout: {
+                                top: 10,
+                                left: 10,
+                                width: 300,
+                                height: 50,
+                            },
+                            borderZ2: undefined,
+                        }, {
+                            matrixLayout: {
+                                top: 'center',
+                                left: 10,
+                                width: 300,
+                                height: 50,
+                            },
+                            borderZ2: 500,
+                        }].map(({matrixLayout, borderZ2}) => ({
+                            ...matrixLayout,
+                            backgroundStyle: {
+                                color: 'yellow',
+                                borderColor: 'orange',
+                                borderWidth: 5,
+                                shadowColor: '#111',
+                                shadowBlur: 15,
+                            },
+                            borderZ2,
+                            x: {
+                                data: ['X1', 'X2', 'X3'],
+                                dividerLineStyle: {
+                                    color: 'rgb(0,200,200)',
+                                    width: 5,
+                                },
+                            },
+                            y: {
+                                data: ['Y1', 'Y2', 'Y3'],
+                                dividerLineStyle: {
+                                    color: 'rgb(100,150,150)',
+                                    width: 5,
+                                },
+                            },
+                            body: {
+                                label: {
+                                    fontSize: 10,
+                                },
+                                itemStyle: {
+                                    borderWidth: 1,
+                                    borderColor: 'blue'
+                                },
+                                data: [{
+                                    coord: [0, 0],
+                                    itemStyle: {
+                                        borderColor: 'red',
+                                        borderWidth: 3
+                                    },
+                                    value: 'red border',
+                                }, {
+                                    coord: [[1, 2], 0],
+                                    itemStyle: {
+                                        borderColor: 'green',
+                                        borderWidth: 3
+                                    },
+                                    mergeCells: true,
+                                    value: 'green border',
+                                }, {
+                                    coord: [[1, 2], 2],
+                                    mergeCells: true,
+                                    label: {
+                                        position: 'insideRight'
+                                    },
+                                    value: `borderZ2: ${borderZ2}`,
+                                }]
+                            },
+                            z: 10
+                        }))
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main_self_layout', {
+                    height: 200,
+                    title: [
+                        'matrix self layout test',
+                        'z-index test'
+                    ],
+                    option: option,
+                });
+            });
+
+        </script>
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const MatrixClampOption = {
+                    none: 0,
+                    all: 1,
+                    body: 2,
+                    corner: 3,
+                };
+
+                function makeMatrixOption({x, y, xLevels, yLevels}, {xShow, yShow}) {
+                    return {
+                        top: 90,
+                        bottom: 100,
+                        left: 160,
+                        x: {
+                            show: !!xShow,
+                            data: x,
+                            levels: xLevels ? xLevels : undefined,
+                            itemStyle: {color: '#111'},
+                            label: {color: '#eee'},
+                        },
+                        y: {
+                            show: !!yShow,
+                            data: y,
+                            levels: yLevels ? yLevels : undefined,
+                            itemStyle: {color: '#111'},
+                            label: {color: '#eee'},
+                        },
+                        corner: {
+                            itemStyle: {color: '#333'},
+                            label: {color: '#eee'},
+                        }
+                    };
+                }
+
+                function makeFailedOption(failed) {
+                    return {
+                        id: 'success_or_fail',
+                        type: 'text',
+                        ignore: failed == null,
+                        style: {
+                            text: failed ? 'Case Failed' : 'Case Succeeded',
+                            fontSize: 18,
+                            fill: failed ? 'red' : 'green',
+                        }
+                    }
+                }
+
+                const _matrixXYDataMap = {
+                    test_d: {
+                        desc: 'Different subtree have duplicated text, expect display the original text',
+                        data: {
+                            x: [{value: 'a', children: ['o', 'p', 'q']}, {value: 'b', children: ['o', 'p', 'q']}],
+                            y: [{value: 'M', children: [new Date(), /a/]}]
+                        },
+                        testList: [{
+                            testType: 'convertToLayout',
+                            cases: [{
+                                input: ['o', 'Y1'],
+                                expect: {matrixXYLocatorRange: [[0, 0], [1, 1]]},
+                            }, {
+                                input: [3, 0],
+                                expect: {matrixXYLocatorRange: [[3, 3], [0, 0]]},
+                            }, {
+                                input: [7, 0],
+                                expect: {matrixXYLocatorRange: [[3, 5], [0, 0]]},
+                            }, {
+                                input: [7, 0],
+                                opt: {clamp: MatrixClampOption.body},
+                                expect: {matrixXYLocatorRange: [[3, 5], [0, 0]]},
+                            }]
+                        }]
+                    },
+                    test_a: {
+                        desc: 'matrix.y.data is empty array, expect no error.',
+                        data: {
+                            x: ['a', 'X2', null, 'd'],
+                            y: [],
+                        },
+                        testList: [{
+                            testType: 'convertToLayout',
+                            cases: [{
+                                input: ['X2', null],
+                                expect: {matrixXYLocatorRange: [[1, 1], [NaN, NaN]]},
+                            }, {
+                                input: [null, 0],
+                                expect: {matrixXYLocatorRange: [[NaN, NaN], [NaN, NaN]]},
+                            }, {
+                                input: [null, null],
+                                opt: {clamp: MatrixClampOption.body},
+                                expect: {matrixXYLocatorRange: [[0, 3], [NaN, NaN]]},
+                            }]
+                        }]
+                    },
+                    test_a2: {
+                        desc: 'matrix.x.data is empty array, expect no error.',
+                        data: {
+                            x: [],
+                            y: ['a', 'X2', null, 'd'],
+                        },
+                    },
+                    test_b: {
+                        desc: '[null] is allowed; number is illegal in matrix.x/y.data and replaced by auto-gen text.',
+                        data: {
+                            x: [null, null],
+                            y: [1, 2, 3],
+                        },
+                        testList: [{
+                            testType: 'convertToLayout',
+                            cases: [{
+                                input: ['X1', 0],
+                                expect: {matrixXYLocatorRange: [[1, 1], [0, 0]]},
+                            }, {
+                                input: [-1, -1],
+                                expect: {matrixXYLocatorRange: [[-1, -1], [-1, -1]]},
+                            }, {
+                                input: [null, null],
+                                opt: {clamp: MatrixClampOption.body},
+                                expect: {matrixXYLocatorRange: [[0, 1], [0, 2]]},
+                            }, {
+                                input: [null, null],
+                                opt: {clamp: MatrixClampOption.corner},
+                                expect: {matrixXYLocatorRange: [[-1, -1], [-1, -1]]},
+                            }, {
+                                input: [0, 0],
+                                opt: {clamp: MatrixClampOption.corner},
+                                expect: {matrixXYLocatorRange: [[-1, -1], [-1, -1]]},
+                            }]
+                        }]
+                    },
+                    test_c: {
+                        desc: 'No matrix.x/y.data, expect no error',
+                        data: {
+                            x: [],
+                            y: [],
+                        },
+                        testList: [{
+                            testType: 'convertToLayout',
+                            cases: [{
+                                input: [0, 0],
+                                expect: {matrixXYLocatorRange: [[NaN, NaN], [NaN, NaN]]},
+                            }, {
+                                input: [null, null],
+                                opt: {clamp: MatrixClampOption.body},
+                                expect: {matrixXYLocatorRange: [[NaN, NaN], [NaN, NaN]]},
+                            }]
+                        }]
+                    },
+                    test_e: {
+                        desc: 'All col/row width specified but not touch or overflow the bounary',
+                        data: {
+                            x: [{value: 'a1', size: 30}, {value: 'a2', size: 30}],
+                            y: [{value: 'b1', size: 300}, {value: 'b2', size: 300}],
+                            yLevels: [{levelSize: 50}]
+                        },
+                    },
+                    test_f: {
+                        desc: 'collect all from series.data (has null/NaN/undefined/illegal, expect display)',
+                        data: {
+                            x: undefined,
+                            y: undefined,
+                            seriesData: [
+                                ['fruit', undefined, 1223],
+                                ['bread', 'good', 323],
+                                ['milk', 'good', 142],
+                                [null, 'medium', 63],
+                                ['bread', 'medium', 91],
+                                ['milk', 9999, 45],
+                                ['fruit', NaN, 55],
+                                ['bread', 'bad', 15],
+                                ['milk', 'bad', 53],
+                            ],
+                        },
+                    },
+                    test_g: {
+                        desc: 'no series.data and no matrix.x/y',
+                        data: {
+                            x: undefined,
+                            y: undefined,
+                            seriesData: [],
+                        },
+                    },
+                };
+
+                let _ctx = {
+                    xyData: 'test_d',
+                    testResult: null, // {result: unknown, failed: boolean}
+                    xShow: true,
+                    yShow: true,
+                    convertFromPixelOpt: null,
+                };
+
+                function updateView() {
+                    const option = {
+                        matrix: makeMatrixOption(_matrixXYDataMap[_ctx.xyData].data, _ctx),
+                        series: {
+                            data: _matrixXYDataMap[_ctx.xyData].data.seriesData
+                        },
+                    };
+                    chart.setOption(option, {replaceMerge: 'matrix'});
+
+                    chart.setOption({
+                        graphic: {
+                            elements: [{
+                                id: 'convert_result',
+                                style: {
+                                    text: _ctx.testResult ? _ctx.testResult.result : '',
+                                }
+                            }, {
+                                id: 'desc_text',
+                                style: {
+                                    text: '--- expect ---\n' + (_matrixXYDataMap[_ctx.xyData].desc || '')
+                                        + '\n--- current matrix data ---\n'
+                                        + testHelper.printObject(
+                                            {
+                                                x: {
+                                                    data: _matrixXYDataMap[_ctx.xyData].data.x,
+                                                    levels: _matrixXYDataMap[_ctx.xyData].data.xLevels,
+                                                },
+                                                y: {
+                                                    data: _matrixXYDataMap[_ctx.xyData].data.y,
+                                                    levels: _matrixXYDataMap[_ctx.xyData].data.yLevels,
+                                                },
+                                            },
+                                            {lineBreakMaxColumn: 150}
+                                        )
+                                        + '\n--- current series data ---\n' + (
+                                            _matrixXYDataMap[_ctx.xyData].data.seriesData
+                                                ? testHelper.printObject(
+                                                    _matrixXYDataMap[_ctx.xyData].data.seriesData,
+                                                    {lineBreakMaxColumn: 30}
+                                                )
+                                                : 'undefined'
+                                        )
+                                }
+                            },
+                            makeFailedOption(_ctx.testResult ? !!_ctx.testResult.failed : undefined)
+                            ]
+                        }
+                    });
+                }
+
+                const option = {
+                    tooltip: {},
+                    backgroundColor: '#aee',
+                    matrix: makeMatrixOption(_matrixXYDataMap[_ctx.xyData].data, _ctx),
+                    series: {
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        symbolSize: 20,
+                        encode: {label: 2},
+                        label: {show: true},
+                        data: _matrixXYDataMap[_ctx.xyData].data.seriesData
+                    },
+                    graphic: {
+                        elements: [{
+                            bottom: 5,
+                            left: 'center',
+                            id: 'convert_result',
+                            type: 'text',
+                            style: {
+                                text: '',
+                                fill: 'blue',
+                                fontSize: 11,
+                            },
+                            silent: true
+                        }, {
+                            left: 5,
+                            top: 5,
+                            id: 'desc_text',
+                            type: 'text',
+                            style: {
+                                fontSize: 12,
+                                fill: '#333',
+                            },
+                            silent: true
+                        }, {
+                            right: 5,
+                            top: 5,
+                            id: 'success_or_fail',
+                            type: 'text',
+                            style: {
+                                fontSize: 20,
+                                fill: 'red',
+                            },
+                            silent: true
+                        }]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main_dim_data_edge_cases', {
+                    title: [
+                        'edge case',
+                        '**click** on matrix inside and outside to test clamp.'
+                    ],
+                    option: option,
+                    height: 400,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        text: 'test cases:',
+                        type: 'select',
+                        options: Object.keys(_matrixXYDataMap).map(key => {
+                            let text = _matrixXYDataMap[key].desc;
+                            const MAX_STR = 100;
+                            if (text.length > MAX_STR) {
+                                text = text.slice(0, MAX_STR) + ' ...';
+                            }
+                            return {text: text, value: key};
+                        }),
+                        onchange() {
+                            const key = this.value;
+                            _ctx.xyData = key;
+                            _ctx.testResult = null;
+                            chart.__testHelper.switchGroup(key);
+                            updateView();
+                        }
+                    }, {
+                        type: 'br',
+                    }, {
+                        text: 'matrix.x show:',
+                        type: 'select',
+                        values: [true, false],
+                        onchange() {
+                            _ctx.xShow = this.value;
+                            updateView();
+                        }
+                    }, {
+                        text: 'matrix.y show:',
+                        type: 'select',
+                        values: [true, false],
+                        onchange() {
+                            _ctx.yShow = this.value;
+                            updateView();
+                        }
+                    }, {
+                        text: 'convertFromPixel opt:',
+                        type: 'select',
+                        options: [
+                            {value: undefined},
+                            {text: 'clamp body', value: {clamp: MatrixClampOption.body}},
+                            {text: 'clamp corner', value: {clamp: MatrixClampOption.corner}},
+                            {text: 'clamp all', value: {clamp: MatrixClampOption.all}},
+                            {text: 'clamp none', value: {clamp: MatrixClampOption.none}},
+                        ],
+                        onchange() {
+                            _ctx.convertFromPixelOpt = this.value;
+                        }
+                    }, {
+                        type: 'groupset',
+                        inputsStyle: 'compact',
+                        inputsHeight: 70,
+                        groups: Object.keys(_matrixXYDataMap).map(key => {
+                            const textList = _matrixXYDataMap[key].testList || [];
+                            const inputs = [];
+                            textList.forEach(testItem => {
+                                if (testItem.testType === 'convertToLayout') {
+                                    const cases = testItem.cases;
+                                    cases.forEach(caseItem => {
+                                        inputs.push({
+                                            text: `convertToLayout(${testHelper.printObject(caseItem.input)}, ${testHelper.printObject(caseItem.opt)})`,
+                                            onclick() {
+                                                let expect = caseItem.expect;
+                                                let failed = false;
+                                                let actual;
+                                                try {
+                                                    actual = chart.convertToLayout({matrixIndex: 0}, caseItem.input, caseItem.opt);
+                                                    console.log(actual);
+                                                    if (!numEq(expect.matrixXYLocatorRange[0][0], actual.matrixXYLocatorRange[0][0])
+                                                        || !numEq(expect.matrixXYLocatorRange[0][1], actual.matrixXYLocatorRange[0][1])
+                                                        || !numEq(expect.matrixXYLocatorRange[1][0], actual.matrixXYLocatorRange[1][0])
+                                                        || !numEq(expect.matrixXYLocatorRange[1][1], actual.matrixXYLocatorRange[1][1])
+                                                    ) {
+                                                        failed = true;
+                                                    }
+                                                }
+                                                catch (err) {
+                                                    console.error(err);
+                                                    failed = true;
+                                                }
+                                                const result = 'convertToLayout result: ' + testHelper.printObject(actual);
+                                                _ctx.testResult = {result, failed};
+                                                updateView();
+                                            }
+                                        });
+                                    });
+                                }
+                                else {
+                                    throw new Error('illegal');
+                                }
+                            });
+
+                            return {
+                                id: key,
+                                text: '[' + key + '] test cases:',
+                                inputs,
+                            };
+                        })
+                    }] // End of inputs
+                });
+
+                if (chart) {
+                    updateView();
+
+                    chart.getZr().on('click', function (event) {
+                        const point = [event.offsetX, event.offsetY];
+                        const data = chart.convertFromPixel({matrixIndex: 0}, point, _ctx.convertFromPixelOpt);
+                        const layout = chart.convertToLayout({matrixIndex: 0}, data);
+
+                        _ctx.testResult = {
+                            result: 'convertFromPixel result: ' + testHelper.printObject(data) + '\n'
+                                + 'Then use it convertToLayout result: ' + testHelper.printObject(layout),
+                            failed: false
+                        };
+                        updateView();
+                    });
+                }
+            });
+
+            function eqNaN(value) {
+                return value !== value;
+            }
+
+            function numEq(expect, actual) {
+                return eqNaN(expect)
+                    ? eqNaN(actual)
+                    : expect === actual;
+            }
+        </script>
+
+
+
+    </body>
+</html>
+

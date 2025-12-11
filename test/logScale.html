@@ -21,25 +21,32 @@ under the License.
 <html>
     <head>
         <meta charset='utf-8'>
-        <script src='lib/simpleRequire.js'></script>
-        <script src='lib/config.js'></script>
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            html, body, #main, #main1 {
-                width: 100%;
-                height: 100%;
-            }
         </style>
-        <div id='main'></div>
+
+        <div id='main0'></div>
         <div id='main1'></div>
+        <div id='main2_negative'></div>
+        <div id='main_small_values'></div>
+        <div id='main3'></div>
+
+
         <script>
 
             require([
                 'echarts'
             ], function (echarts) {
-            var chart = echarts.init(document.getElementById('main'));
-                chart.setOption({
+                var option = {
                     title: {
                         text: '对数轴示例',
                         x: 'center'
@@ -79,18 +86,28 @@ under the License.
                         type: 'line',
                         data: [1, 0.1, 0.01, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8]
                     }]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'log test 1',
+                    ],
+                    option: option,
                 });
+
+
             });
 
         </script>
+
+
         <script>
 
             require([
                 'echarts'
             ], function (echarts) {
-                var chart = echarts.init(document.getElementById('main1'));
                 // See #13154
-                chart.setOption({
+                var option = {
                     xAxis: {
                         type: 'value',
                     },
@@ -109,9 +126,270 @@ under the License.
                             ],
                         },
                     ],
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'log test 2',
+                    ],
+                    option: option,
                 });
+
+
             });
 
         </script>
+
+
+
+        <script>
+
+
+            require([
+                'echarts',
+            ], function (echarts /*, data */) {
+
+                var option = {
+                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    legend: {
+                        top: 3,
+                        backgroundColor: 'rgba(250,0,0,0.4)',
+                        borderRadius: 3,
+                        borderWidth: 2,
+                        borderColor: 'rgba(150,0,0,0.7)'
+                    },
+                    tooltip: {},
+                    xAxis: [
+                        {
+                            id: 0,
+                            name: 'xAxis_0 long name',
+                            nameTextStyle: {
+                                rich: {
+                                    name_big_1: {
+                                        borderWidth: 4,
+                                        borderColor: 'rgba(0,180,0,0.5)',
+                                        backgroundColor: 'rgba(0,150,0,0.5)',
+                                        padding: [10, 20],
+                                        color: '#000',
+                                        fontSize: 20
+                                    }
+                                },
+                                color: '#555'
+                            },
+                            nameMoveOverlap: true,
+                            nameLocation: 'middle',
+                            axisLabel: {
+                                textStyle: {
+                                    rich: {
+                                        label_big_1: {
+                                            borderWidth: 4,
+                                            borderColor: 'rgba(0,180,0,0.5)',
+                                            backgroundColor: 'rgba(0,150,0,0.5)',
+                                            padding: [10, 20],
+                                            color: '#000',
+                                            fontSize: 20
+                                        }
+                                    },
+                                    color: '#555'
+                                }
+                            },
+                            axisLine: {onZero: false},
+                            position: ['bottom', 'top']
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            id: 0,
+                            name: 'yAxis_0 long name',
+                            type: 'log',
+                            nameTextStyle: {
+                                rich: {
+                                    name_big_1: {
+                                        borderWidth: 4,
+                                        borderColor: 'rgba(0,180,0,0.5)',
+                                        backgroundColor: 'rgba(0,150,0,0.5)',
+                                        padding: [10, 20],
+                                        color: '#000',
+                                        fontSize: 20
+                                    }
+                                },
+                                color: '#555'
+                            },
+                            nameMoveOverlap: true,
+                            nameLocation: 'middle',
+                            axisLabel: {
+                                textStyle: {
+                                    rich: {
+                                        label_big_1: {
+                                            borderWidth: 4,
+                                            borderColor: 'rgba(0,180,0,0.5)',
+                                            backgroundColor: 'rgba(0,150,0,0.5)',
+                                            padding: [10, 20],
+                                            color: '#000',
+                                            fontSize: 20
+                                        }
+                                    },
+                                    color: '#555'
+                                }
+                            },
+                            axisLine: {onZero: false},
+                            position: ['left', 'right']
+                        }
+                    ],
+                    grid: [
+                        {
+                            left: 100,
+                            right: 10,
+                            top: 30,
+                            bottom: 100,
+                            show: true,
+                            backgroundColor: 'rgba(150,0,0,0.2)'
+                        }
+                    ],
+                    series: [
+                        {
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                            symbolSize: 10,
+                            name: 'series_small_0',
+                            data: [[-50, 12]],
+                            type: 'scatter'
+                        },
+                        {
+                            xAxisIndex: 0,
+                            yAxisIndex: 0,
+                            symbolSize: 10,
+                            name: 'series_big_0',
+                            data: [
+                                [10000000000, -832],
+                                [55555550000, 31133232233]
+                            ],
+                            type: 'scatter'
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main2_negative', {
+                    title: [
+                        'Test negative',
+                    ],
+                    option: option,
+                });
+
+            });
+
+
+        </script>
+
+        <script>
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                function genData(exponent) {
+                    return [
+                        [0.00001782501876267492, `1.6783442046243093e${-9 + exponent}`],
+                        [0.20000000000000004, `1.5239855205892977e${-13 + exponent}`],
+                        [0.3097633237824966, `9.94535044331967e${-14 + exponent}`],
+                        [1, `2.966552224094815e${-19 + exponent}`],
+                        // [10, `1.6783442046243093e${-9 + exponent}`],
+                        // [100, `1.5239855205892977e${-13 + exponent}`]
+                    ];
+                }
+
+                option = {
+                    style: {
+                        height: '100%',
+                        width: '100%'
+                    },
+                    tooltip: {},
+                    grid: [
+                        {
+                        containLabel: true
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            type: 'log',
+                            logBase: 10,
+                            axisLabel: {
+                                formatter: function (value) {
+                                    return value.toExponential(0);
+                                }
+                            }
+                        }
+                    ],
+                    xAxis: [
+                        {
+                            // type: 'log',
+                            // logBase: 10
+                        }
+                    ],
+                    series: [
+                        {
+                            data: genData(0),
+                            type: 'line',
+                            // showSymbol: false
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main_small_values', {
+                    title: [
+                        'test small values',
+                    ],
+                    option: option,
+                    inputs: [
+                        {
+                            type: 'select',
+                            text: 'exponent:',
+                            values: [0, -9, -19, -50],
+                            onchange: function () {
+                                chart.setOption({
+                                    series: [{
+                                        data: genData(this.value)
+                                    }]
+                                });
+                            }
+                        },
+                    ]
+                });
+
+
+            });
+
+        </script>
+
+        <script>
+
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                option = {
+                    xAxis: {
+                        data: ['2017-10-24', '2017-10-25', '2017-10-26', '2017-10-27']
+                    },
+                    yAxis: {},
+                    series: [
+                        {
+                        type: 'candlestick',
+                        data: [
+                            ['0.000000000012', '0.000000000034', '0.000000000010', '0.000000000038']
+                        ]
+                        }
+                    ]
+                    };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Test Case Description of main0'
+                    ],
+                    option: option,
+                });
+            });
+        </script>
+
     </body>
 </html>

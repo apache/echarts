@@ -26,10 +26,6 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ZRColor } from '../../util/types';
 
-const axisBuilderAttrs = [
-    'axisLine', 'axisTickLabel', 'axisName'
-] as const;
-
 class RadarView extends ComponentView {
 
     static type = 'radar';
@@ -39,18 +35,18 @@ class RadarView extends ComponentView {
         const group = this.group;
         group.removeAll();
 
-        this._buildAxes(radarModel);
+        this._buildAxes(radarModel, api);
         this._buildSplitLineAndArea(radarModel);
     }
 
-    _buildAxes(radarModel: RadarModel) {
+    _buildAxes(radarModel: RadarModel, api: ExtensionAPI) {
         const radar = radarModel.coordinateSystem;
         const indicatorAxes = radar.getIndicatorAxes();
         const axisBuilders = zrUtil.map(indicatorAxes, function (indicatorAxis) {
             const axisName = indicatorAxis.model.get('showName')
                 ? indicatorAxis.name
                 : ''; // hide name
-            const axisBuilder = new AxisBuilder(indicatorAxis.model, {
+            const axisBuilder = new AxisBuilder(indicatorAxis.model, api, {
                 axisName: axisName,
                 position: [radar.cx, radar.cy],
                 rotation: indicatorAxis.angle,
@@ -62,8 +58,8 @@ class RadarView extends ComponentView {
         });
 
         zrUtil.each(axisBuilders, function (axisBuilder) {
-            zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
-            this.group.add(axisBuilder.getGroup());
+            axisBuilder.build();
+            this.group.add(axisBuilder.group);
         }, this);
     }
 

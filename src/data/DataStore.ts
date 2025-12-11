@@ -564,63 +564,6 @@ class DataStore {
         return -1;
     }
 
-
-    /**
-     * Retrieve the index of nearest value.
-     * @param dim
-     * @param value
-     * @param [maxDistance=Infinity]
-     * @return If and only if multiple indices have
-     *         the same value, they are put to the result.
-     */
-    indicesOfNearest(
-        dim: DimensionIndex, value: number, maxDistance?: number
-    ): number[] {
-        const chunks = this._chunks;
-        const dimData = chunks[dim];
-        const nearestIndices: number[] = [];
-
-        if (!dimData) {
-            return nearestIndices;
-        }
-
-        if (maxDistance == null) {
-            maxDistance = Infinity;
-        }
-
-        let minDist = Infinity;
-        let minDiff = -1;
-        let nearestIndicesLen = 0;
-
-        // Check the test case of `test/ut/spec/data/SeriesData.js`.
-        for (let i = 0, len = this.count(); i < len; i++) {
-            const dataIndex = this.getRawIndex(i);
-            const diff = value - (dimData[dataIndex] as number);
-            const dist = Math.abs(diff);
-            if (dist <= maxDistance) {
-                // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
-                // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
-                // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
-                // So we choose the one that `diff >= 0` in this case.
-                // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
-                // should be push to `nearestIndices`.
-                if (dist < minDist
-                    || (dist === minDist && diff >= 0 && minDiff < 0)
-                ) {
-                    minDist = dist;
-                    minDiff = diff;
-                    nearestIndicesLen = 0;
-                }
-                if (diff === minDiff) {
-                    nearestIndices[nearestIndicesLen++] = i;
-                }
-            }
-        }
-        nearestIndices.length = nearestIndicesLen;
-
-        return nearestIndices;
-    }
-
     getIndices(): ArrayLike<number> {
         let newIndices;
 
@@ -1145,8 +1088,8 @@ class DataStore {
      * Data iteration
      * @param ctx default this
      * @example
-     *  list.each('x', function (x, idx) {});
-     *  list.each(['x', 'y'], function (x, y, idx) {});
+     *  list.each(0, function (x, idx) {});
+     *  list.each([0, 1], function (x, y, idx) {});
      *  list.each(function (idx) {})
      */
     each(dims: DimensionIndex[], cb: EachCb): void {

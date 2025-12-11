@@ -40,6 +40,7 @@ under the License.
         <div id="main3"></div>
         <div id="main4"></div>
         <div id="main5"></div>
+        <div id="main6"></div>
 
         <script>
         require(['echarts'], function (echarts) {
@@ -377,6 +378,60 @@ under the License.
             var chart = testHelper.create(echarts, 'main5', {
                 title: [
                     'customValues should not overflow the grid (time axis)'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var weeklyData = [
+                ['2025-05-26', 116],
+                ['2025-06-02', 129],
+                ['2025-06-09', 135],
+                ['2025-06-16', 86],
+                ['2025-06-23', 73],
+                ['2025-06-30', 85],
+                ['2025-07-07', 73],
+                ['2025-07-14', 68],
+                ['2025-07-21', 92],
+                ['2025-07-28', 84],
+                ['2025-08-04', 79],
+                ['2025-08-11', 88],
+                ['2025-08-18', 91],
+                ['2025-08-25', 95]
+            ];
+
+            var timestamps = weeklyData.map(function(d) { return new Date(d[0]).getTime(); });
+
+            var option = {
+                xAxis: {
+                    type: 'time',
+                    axisLabel: {
+                        customValues: timestamps,
+                        formatter: function(value) {
+                            var date = new Date(value);
+                            var month = date.getMonth() + 1;
+                            var day = date.getDate();
+                            return (day < 10 ? '0' + day : day) + '.' + (month < 10 ? '0' + month : month);
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    type: 'bar',
+                    data: weeklyData
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main6', {
+                title: [
+                    'Time axis customValues with formatter',
+                    'Should not throw TypeError about tick.time.level',
+                    'Labels formatted as DD.MM'
                 ],
                 option: option
             });

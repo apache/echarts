@@ -1,0 +1,388 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <title>graph-thumbnail.html</title>
+    </head>
+
+    <body>
+        <style>
+            .test-chart {
+                border: 10px solid #ddd;
+            }
+        </style>
+        <div id="main0"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main_in_matrix"></div>
+    </body>
+
+    <script>
+        function createBaseGraphOption() {
+            return {
+                tooltip: {},
+                legend: {},
+                series: [{
+                    type: 'graph',
+                    name: 'Gene',
+                    layout: 'circular',
+                    circular: {
+                        rotateLabel: true
+                    },
+                    // center: [700, '30%'],
+                    // zoom: 8,
+                    roam: true,
+                    focusNodeAdjacency: true,
+                    label: {
+                        show: true
+                    },
+                    lineStyle: {
+                        color: 'source',
+                        curveness: 0.3
+                    },
+                    emphasis: {
+                        label: {
+                            color: 'blue'
+                        },
+                        lineStyle: {
+                            width: 10
+                        }
+                    },
+                    data: [
+                        {
+                            itemStyle: null,
+                            name: 'DRD2',
+                            value: 40,
+                            symbolSize: 40
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'ADORA2A',
+                            value: 0,
+                            symbolSize: 20
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'ARRB2',
+                            value: 30,
+                            symbolSize: 20,
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'CALM1',
+                            value: 20,
+                            symbolSize: 40
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'CALM2',
+                            value: 0,
+                            symbolSize: 20
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'FLNA',
+                            value: 0,
+                            symbolSize: 20
+                        },
+                        {
+                            itemStyle: null,
+                            name: 'NSF',
+                            value: 0,
+                            symbolSize: 20
+                        }
+                    ],
+                    links: [
+                        {
+                            source: 'DRD2',
+                            target: 'ADORA2A'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'ARRB2'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'CALM1'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'CALM2'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'FLNA'
+                        },
+                        {
+                            source: 'DRD2',
+                            target: 'NSF'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'ADORA2A'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'ARRB2'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'CALM2'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'FLNA'
+                        },
+                        {
+                            source: 'CALM1',
+                            target: 'NSF'
+                        },
+                    ]
+                }]
+            };
+        }
+    </script>
+
+
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = createBaseGraphOption();
+            option.thumbnail = {
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                option: option,
+                width: 600,
+                title: [
+                    'minimun opiton (default behavior): ',
+                    '- thumbnail should be placed at right-bottom',
+                    '- thumbnail content should show the entire graph',
+                    '- widdth and height should be 1/4 of canvas',
+                    '- Should has white bg',
+                    '- "pen" and "zoom" should be fine',
+                ],
+                inputsStyle: 'compact',
+                inputs: [
+                    {
+                        type: 'select',
+                        text: 'thumbnail.show:',
+                        values: [true, false],
+                        onchange() {
+                            chart.setOption({
+                                thumbnail: {
+                                    show: this.value,
+                                }
+                            });
+                        }
+                    },
+                    {
+                        type: 'select',
+                        text: 'roam:',
+                        values: [true, false, 'scale', 'move'],
+                        onchange() {
+                            chart.setOption({
+                                series: {
+                                    roam: this.value,
+                                }
+                            });
+                        }
+                    },
+                    {
+                        type: 'select',
+                        text: 'series:',
+                        values: ['graph', 'no_graph'],
+                        onchange() {
+                            var newSeries;
+                            if (this.value === 'graph') {
+                                newSeries = createBaseGraphOption().series;
+                            }
+                            chart.setOption({
+                                series: newSeries
+                            }, {
+                                replaceMerge: ['series']
+                            })
+                        },
+                    },
+                    {
+                        type: 'select',
+                        text: 'graph layout:',
+                        values: ['circular', 'force'],
+                        onchange() {
+                            var layout = this.value;
+                            chart.setOption({
+                                series: {
+                                    layout: layout,
+                                }
+                            });
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = createBaseGraphOption();
+            option.thumbnail = {
+                width: 100,
+                right: 10,
+                top: 10,
+                bottom: 10,
+                itemStyle: {
+                    borderWidth: 20,
+                    borderColor: 'rgba(0,0,0,0.4)'
+                },
+                windowStyle: {
+                    color: 'yellow',
+                    borderWidth: 3,
+                    borderColor: 'blue',
+                    shadowBlur: 5
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main2', {
+                option: option,
+                width: 600,
+                height: 200,
+                title: [
+                    'style:',
+                    '- borderWidth: 10, width: 100, height: 180, right: 10, top: 10',
+                    '- windowStyle: {color: "yellow", borderWidth: 3, borderColor: "blue", shadowBlur: 5}'
+                ]
+            });
+        });
+    </script>
+
+
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = createBaseGraphOption();
+            option.backgroundColor = 'rgba(222, 200, 100, 0.5)';
+            option.series[0].zoom = 5;
+            option.series[0].scaleLimit = {
+                max: 6,
+                min: 0.8,
+            };
+
+            option.thumbnail = {
+                left: 10,
+                top: 'center',
+                width: '10%',
+                height: '30%',
+                itemStyle: {
+                    borderRadius: 3,
+                },
+                windowStyle: {
+                    borderRadius: 3,
+                    // color: 'yellow',
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main3', {
+                title: [
+                    'Should have border-radius in both box and window rect',
+                    'Should auto use chart bg, should be opacity bg',
+                    'left: 10, top: "center", width: "10%", height: "30%"',
+                    'init zoom: 5, **scaleLimit: exists**'
+                ],
+                option: option,
+                height: 300,
+                width: 600
+            });
+        });
+    </script>
+
+
+
+    <script>
+        require(['echarts'], function (echarts) {
+            var option = createBaseGraphOption();
+            var colCount = 5;
+            var rowCount = 5;
+            var shouldShow = false;
+
+            var itemStyle = shouldShow ? {borderWidth: 1} : {borderWidth: 0};
+            option.matrix = {
+                x: {data: Array(colCount).fill(null), show: shouldShow, itemStyle},
+                y: {data: Array(rowCount).fill(null), show: shouldShow, itemStyle},
+                body: {itemStyle},
+                backgroundStyle: {borderWidth: 0},
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+            };
+            option.series[0].coordinateSystem = 'matrix';
+            option.series[0].coordinateSystemUsage = 'box';
+            option.series[0].coord = [[0, 1], [0, colCount - 1]];
+
+            option.thumbnail = {
+                left: 2,
+                top: 2,
+                right: 2,
+                bottom: 2,
+                coordinateSystem: 'matrix',
+                coord: [4, [3, 4]],
+                itemStyle: {
+                },
+            };
+
+            var chart = testHelper.create(echarts, 'main_in_matrix', {
+                title: [
+                    'In matrix layout'
+                ],
+                option: option,
+                width: 600,
+                inputsStyle: 'compact',
+                inputs: [
+                    {
+                        type: 'select',
+                        text: 'matix grid show:',
+                        values: [false, true],
+                        onchange() {
+                            var shouldShow = this.value;
+                            var itemStyle = shouldShow ? {borderWidth: 1} : {borderWidth: 0};
+                            chart.setOption({
+                                matrix: {
+                                    x: {show: shouldShow, itemStyle},
+                                    y: {show: shouldShow, itemStyle},
+                                    body: {itemStyle},
+                                },
+                            });
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+
+</html>

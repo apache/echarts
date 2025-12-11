@@ -31,7 +31,9 @@ import {
     StatesOptionMixin,
     OptionDataItemObject,
     DefaultEmphasisFocus,
-    SunburstColorByMixin
+    SunburstColorByMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -122,6 +124,8 @@ export interface SunburstSeriesOption extends
     SeriesOption<SunburstStateOption<SunburstDataParams>, SunburstStatesMixin>,
     SunburstStateOption<SunburstDataParams>,
     SunburstColorByMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     CircleLayoutOptionMixin {
 
     type?: 'sunburst'

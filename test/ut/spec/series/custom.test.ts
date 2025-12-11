@@ -80,6 +80,13 @@ describe('custom_series', function () {
         const option = {
             xAxis: { scale: true },
             yAxis: {},
+            grid: {
+                containLabel: false,
+                left: '10%',
+                right: '10%',
+                top: 60,
+                bottom: 70
+            },
             series: [
                 {
                     type: 'custom',

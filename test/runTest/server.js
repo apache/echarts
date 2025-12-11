@@ -49,9 +49,11 @@ const {
     delTestsRun,
     RESULTS_ROOT_DIR,
     checkStoreVersion,
-    clearStaledResults
+    clearStaledResults,
+    getUserMeta,
+    saveUserMeta
 } = require('./store');
-const {prepareEChartsLib, getActionsFullPath, fetchVersions, cleanBranchDirectory, fetchRecentPRs} = require('./util');
+const {prepareEChartsLib, getActionsFullPath, fetchVersions} = require('./util');
 const fse = require('fs-extra');
 const fs = require('fs');
 const open = require('open');
@@ -153,6 +155,7 @@ function startTests(testsNameList, socket, {
     expectedVersion,
     renderer,
     useCoarsePointer,
+    theme,
     noSave
 }) {
     console.log('Received: ', testsNameList.join(','));
@@ -215,6 +218,7 @@ function startTests(testsNameList, socket, {
                 '--expected-source', expectedSource,
                 '--renderer', renderer || '',
                 '--use-coarse-pointer', useCoarsePointer,
+                '--theme', theme || 'none',
                 '--threads', Math.min(threadsCount, CLI_FIXED_THREADS_COUNT),
                 '--dir', getResultBaseDir(),
                 ...(noHeadless ? ['--no-headless'] : []),
@@ -375,6 +379,7 @@ async function start() {
                     expectedVersion: data.expectedVersion,
                     renderer: data.renderer,
                     useCoarsePointer: data.useCoarsePointer,
+                    theme: data.theme,
                     noSave: false
                 }
             );
@@ -394,6 +399,120 @@ async function start() {
         });
 
         socket.on('stop', abortTests);
+
+        socket.on('markAsExpected', function(data, callback) {
+            console.log('Mark as expected:', data.testName, data.type);
+            const store = require('./store');
+            try {
+                store.markTestAsExpected({
+                    testName: data.testName,
+                    link: data.link || '',
+                    comment: data.comment || '',
+                    type: data.type,
+                    markedBy: data.markedBy || '',
+                    lastVersion: data.lastVersion || '',
+                    markTime: data.markTime
+                });
+                // Send the updated list
+                socket.emit('updateTestsList', store.getTestsList());
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }
+            catch (e) {
+                console.error(e);
+                if (typeof callback === 'function') {
+                    callback(e.toString());
+                }
+            }
+        });
+
+        socket.on('saveUserMeta', function(data) {
+            saveUserMeta(data);
+        });
+
+        socket.on('getUserMeta', function() {
+            const userMeta = getUserMeta();
+            socket.emit('userMeta', userMeta);
+        });
+
+        socket.on('deleteMarks', function(data, callback) {
+            try {
+                const { testName } = data;
+                if (!testName) {
+                    throw new Error('Test name is required');
+                }
+
+                console.log(`Deleting all marks for test "${testName}"`);
+
+                // 使用 getMarkedAsExpectedFullPath 获取标记文件路径
+                const store = require('./store');
+                const util = require('./util');
+                const fs = require('fs');
+                const marksFilePath = util.getMarkedAsExpectedFullPath(testName);
+
+                // 检查文件是否存在
+                if (fs.existsSync(marksFilePath)) {
+                    // 删除文件
+                    fs.unlinkSync(marksFilePath);
+                    console.log(`Deleted marks file for test "${testName}"`);
+
+                    // 更新内存中的测试对象
+                    const test = store.getTestsList().find(test => test.name === testName);
+                    if (test) {
+                        test.markedAsExpected = null;
+                    }
+
+                    // 更新客户端的测试列表
+                    socket.emit('updateTestsList', store.getTestsList());
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                } else {
+                    console.log(`No marks file found for test "${testName}"`);
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                }
+            }
+            catch (e) {
+                console.error('Failed to delete marks:', e);
+                if (typeof callback === 'function') {
+                    callback(e.toString());
+                }
+            }
+        });
+
+        socket.on('deleteMark', function(data, callback) {
+            try {
+                const { testName, markTime } = data;
+                if (!testName) {
+                    throw new Error('Test name is required');
+                }
+                if (!markTime) {
+                    throw new Error('Mark time is required');
+                }
+
+                console.log(`Deleting mark for test "${testName}" at time ${markTime}`);
+                const success = require('./store').deleteMark(testName, markTime);
+
+                if (success) {
+                    // 更新客户端的测试列表
+                    socket.emit('updateTestsList', require('./store').getTestsList());
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                } else {
+                    throw new Error(`Failed to delete mark for test "${testName}" at time ${markTime}`);
+                }
+            }
+            catch (e) {
+                console.error('Failed to delete mark:', e);
+                if (typeof callback === 'function') {
+                    callback(e.toString());
+                }
+            }
+        });
     });
 
     io.of('/recorder').on('connect', async socket => {
@@ -432,6 +551,7 @@ async function start() {
                     expectedVersion: data.expectedVersion,
                     renderer: data.renderer || '',
                     useCoarsePointer: data.useCoarsePointer,
+                    theme: data.theme || 'none',
                     noSave: true
                 });
             }

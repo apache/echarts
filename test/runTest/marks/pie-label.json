@@ -1,0 +1,18 @@
+[
+  {
+    "link": "",
+    "comment": "The pie label diff results from the fix of the margin. Indiscernible to naked eye.",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1752513452527
+  },
+  {
+    "link": "https://github.com/ecomfe/zrender/pull/1122",
+    "comment": "Text wrapping enhanced",
+    "type": "Bug Fixing",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1750750082507
+  }
+]

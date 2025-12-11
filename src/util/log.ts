@@ -61,7 +61,7 @@ export function deprecateLog(str: string) {
 
 export function deprecateReplaceLog(oldOpt: string, newOpt: string, scope?: string) {
     if (__DEV__) {
-        deprecateLog((scope ? `[${scope}]` : '') + `${oldOpt} is deprecated, use ${newOpt} instead.`);
+        deprecateLog((scope ? `[${scope}]` : '') + `${oldOpt} is deprecated; use ${newOpt} instead.`);
     }
 }
 

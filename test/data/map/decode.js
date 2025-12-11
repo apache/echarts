@@ -33,7 +33,7 @@ function decode(json) {
         var encodeOffsets = geometry.encodeOffsets;
         var coordinates = geometry.coordinates;
 
-        // Geometry may be appeded manually in the script after json loaded.
+        // Geometry may be appended manually in the script after json loaded.
         // In this case this geometry is usually not encoded.
         if (!encodeOffsets) {
             return;
@@ -78,7 +78,7 @@ function decodeRing(coordinate, encodeOffsets, encodeScale) {
         // ZigZag decoding
         x = (x >> 1) ^ (-(x & 1));
         y = (y >> 1) ^ (-(y & 1));
-        // Delta deocding
+        // Delta decoding
         x += prevX;
         y += prevY;
 
