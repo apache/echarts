@@ -540,7 +540,7 @@ function setLabelLineState(
     stateObj.ignore = ignore;
     // Set smooth
     let smooth = stateModel.get('smooth');
-    smooth  = smooth === true ? 0.3 : Math.max(+smooth, 0) || 0;
+    smooth = smooth === true ? 0.3 : Math.max(+smooth, 0) || 0;
 
     stateObj.shape = stateObj.shape || {};
 
