@@ -540,24 +540,13 @@ function setLabelLineState(
     stateObj.ignore = ignore;
     // Set smooth
     let smooth = stateModel.get('smooth');
-
-    // "smooth" is a boolean logical value
-    if (typeof smooth === 'boolean') {
-        if (smooth) {
-            smooth = 0.3;
-        }
-        else {
-            smooth = 0;
-        }
-    }
-
+    smooth  = smooth === true ? 0.3 : +smooth || 0;
+    
     stateObj.shape = stateObj.shape || {};
-
-    // true-->false 0.3-->0
-    // It must be greater than or equal to zero to support smooth reset
-    if (smooth >= 0) {
-        (stateObj.shape as Polyline['shape']).smooth = smooth as number;
-    }
+    
+    // always set the `smooth` property
+    (stateObj.shape as Polyline['shape']).smooth = Math.max(smooth,0);
+    
     const styleObj = stateModel.getModel('lineStyle').getLineStyle();
     isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
 }
