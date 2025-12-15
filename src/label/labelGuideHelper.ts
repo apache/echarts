@@ -546,7 +546,7 @@ function setLabelLineState(
         if (smooth) {
             smooth = 0.3;
         }
-    else {
+        else {
             smooth = 0;
         }
     }
