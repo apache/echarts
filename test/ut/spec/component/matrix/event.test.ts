@@ -58,18 +58,23 @@ describe('matrix_event', function () {
             clickedParams = params;
         });
 
-        // Find the matrix cell element
+        // Find the matrix cell text element
+        // Note: Text elements are stored as textContent of their parent Rect, not directly in displayList
         const zr = chart.getZr();
         const displayList = zr.storage.getDisplayList();
 
         let targetEl;
         for (let i = 0; i < displayList.length; i++) {
             const el = displayList[i];
-            const ecData = getECData(el);
-            if (ecData && ecData.eventData && ecData.eventData.name === 'Cell A') {
-                // Find the cell with the specific name
-                targetEl = el;
-                break;
+            // Check if this element has a text content with eventData
+            const textContent = el.getTextContent && el.getTextContent();
+            if (textContent) {
+                const textEcData = getECData(textContent);
+                if (textEcData && textEcData.eventData && textEcData.eventData.name === 'Cell A') {
+                    // Found the text element with the specific name
+                    targetEl = textContent;
+                    break;
+                }
             }
         }
 
@@ -115,10 +120,14 @@ describe('matrix_event', function () {
         let hasEventData = false;
         for (let i = 0; i < displayList.length; i++) {
             const el = displayList[i];
-            const ecData = getECData(el);
-            if (ecData && ecData.eventData && ecData.eventData.componentType === 'matrix') {
-                hasEventData = true;
-                break;
+            // Check text content for eventData
+            const textContent = el.getTextContent && el.getTextContent();
+            if (textContent) {
+                const textEcData = getECData(textContent);
+                if (textEcData && textEcData.eventData && textEcData.eventData.componentType === 'matrix') {
+                    hasEventData = true;
+                    break;
+                }
             }
         }
 
