@@ -516,7 +516,9 @@ class TreemapView extends ChartView {
         });
 
         controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-        controllerHost.zoom = seriesModel.get('zoom');
+        if (controllerHost.zoom === undefined) {
+            controllerHost.zoom = seriesModel.get('zoom') || 1;
+        }
     }
 
     private _clearController() {
