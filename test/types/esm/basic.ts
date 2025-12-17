@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../../';
+import * as echarts from 'echarts';
 
 const dom = document.createElement('div');
 dom.className = 'chart';

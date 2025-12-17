@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../../';
+import * as echarts from 'echarts';
 
 const dom = document.createElement('div');
 dom.className = 'chart';
@@ -31,13 +31,11 @@ const option: echarts.EChartsOption = {
 };
 chart.setOption(option);
 
-// Mouse event.
 chart.on('click', function (params) {
     console.log(params.name);
     this.off('click');
 });
 
-// Rendered event.
 chart.on('rendered', function (params) {
     console.log(params.elapsedTime);
     this.off('rendered');
