@@ -20,7 +20,7 @@ import { bind, each, clone, trim, isString, isFunction, isArray, isObject, exten
 import env from 'zrender/src/core/env';
 import TooltipHTMLContent from './TooltipHTMLContent';
 import TooltipRichContent from './TooltipRichContent';
-import { convertToColorString, formatTpl, TooltipMarker } from '../../util/format';
+import { convertToColorString, encodeHTML, formatTpl, TooltipMarker } from '../../util/format';
 import { parsePercent } from '../../util/number';
 import { Rect } from '../../util/graphic';
 import findPointFromSeries from '../axisPointer/findPointFromSeries';
@@ -171,8 +171,8 @@ class TooltipView extends ComponentView {
 
         this._tooltipContent = renderMode === 'richText'
             ? new TooltipRichContent(api)
-            : new TooltipHTMLContent(api.getDom(), api, {
-                appendToBody: tooltipModel.get('appendToBody', true)
+            : new TooltipHTMLContent(api, {
+                appendTo: tooltipModel.get('appendToBody', true) ? 'body' : tooltipModel.get('appendTo', true)
             });
     }
 
@@ -242,6 +242,12 @@ class TooltipView extends ComponentView {
         const ecModel = this._ecModel;
         const api = this._api;
         const triggerOn = tooltipModel.get('triggerOn');
+
+        if (tooltipModel.get('trigger') !== 'axis') {
+            // _lastDataByCoordSys and _cbParamsList are used for axis tooltip only.
+            this._lastDataByCoordSys = null;
+            this._cbParamsList = null;
+        }
 
         // Try to keep the tooltip show when refreshing
         if (this._lastX != null
@@ -393,6 +399,7 @@ class TooltipView extends ComponentView {
         }
 
         this._lastX = this._lastY = this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
 
         if (payload.from !== this.uid) {
             this._hide(makeDispatchAction(payload, api));
@@ -449,7 +456,6 @@ class TooltipView extends ComponentView {
     ) {
         const el = e.target;
         const tooltipModel = this._tooltipModel;
-
         if (!tooltipModel) {
             return;
         }
@@ -463,20 +469,31 @@ class TooltipView extends ComponentView {
             this._showAxisTooltip(dataByCoordSys, e);
         }
         else if (el) {
+            const ecData = getECData(el);
+            if (ecData.ssrType === 'legend') {
+                // Don't trigger tooltip for legend tooltip item
+                return;
+            }
             this._lastDataByCoordSys = null;
+            this._cbParamsList = null;
 
             let seriesDispatcher: Element;
             let cmptDispatcher: Element;
-            findEventDispatcher(el, (target) => {
+            findEventDispatcher(el, function (target) {
+                if ((target as ECElement).tooltipDisabled) {
+                    seriesDispatcher = cmptDispatcher = null;
+                    return true;
+                }
+                if (seriesDispatcher || cmptDispatcher) {
+                    return;
+                }
                 // Always show item tooltip if mouse is on the element with dataIndex
                 if (getECData(target).dataIndex != null) {
                     seriesDispatcher = target;
-                    return true;
                 }
                 // Tooltip provided directly. Like legend.
-                if (getECData(target).tooltipConfig != null) {
+                else if (getECData(target).tooltipConfig != null) {
                     cmptDispatcher = target;
-                    return true;
                 }
             }, true);
 
@@ -492,6 +509,7 @@ class TooltipView extends ComponentView {
         }
         else {
             this._lastDataByCoordSys = null;
+            this._cbParamsList = null;
             this._hide(dispatchAction);
         }
     }
@@ -540,6 +558,9 @@ class TooltipView extends ComponentView {
                 if (!axisModel || axisValue == null) {
                     return;
                 }
+                // FIXME: when using `tooltip.trigger: 'axis'`, the precision of the axis value displayed in tooltip
+                //  should match the original series values rather than using the default stretegy in Interval.ts
+                //  (getPrecision(interval) + 2); otherwise it may cuase confusion.
                 const axisValueLabel = axisPointerViewHelper.getValueLabel(
                     axisValue, axisModel.axis, ecModel,
                     axisItem.seriesDataIndices,
@@ -719,9 +740,11 @@ class TooltipView extends ComponentView {
         el: ECElement,
         dispatchAction: ExtensionAPI['dispatchAction']
     ) {
+        const isHTMLRenderMode = this._renderMode === 'html';
         const ecData = getECData(el);
         const tooltipConfig = ecData.tooltipConfig;
         let tooltipOpt = tooltipConfig.option || {};
+        let encodeHTMLContent = tooltipOpt.encodeHTMLContent;
         if (isString(tooltipOpt)) {
             const content = tooltipOpt;
             tooltipOpt = {
@@ -729,6 +752,16 @@ class TooltipView extends ComponentView {
                 // Fixed formatter
                 formatter: content
             };
+            // when `tooltipConfig.option` is a string rather than an object,
+            // we can't know if the content needs to be encoded
+            // for the sake of security, encode it by default.
+            encodeHTMLContent = true;
+        }
+
+        if (encodeHTMLContent && isHTMLRenderMode && tooltipOpt.content) {
+            // clone might be unnecessary?
+            tooltipOpt = clone(tooltipOpt);
+            tooltipOpt.content = encodeHTML(tooltipOpt.content);
         }
 
         const tooltipModelCascade = [tooltipOpt] as TooltipModelOptionCascade[];
@@ -804,7 +837,8 @@ class TooltipView extends ComponentView {
             [x, y],
             params,
             tooltipModel.get('trigger'),
-            tooltipModel.get('borderColor')
+            tooltipModel.get('borderColor'),
+            tooltipModel.get('defaultBorderColor', true)
         );
         const nearPointColor = nearPoint.color;
 
@@ -848,13 +882,14 @@ class TooltipView extends ComponentView {
         point: number[],
         tooltipDataParams: TooltipCallbackDataParams | TooltipCallbackDataParams[],
         trigger: TooltipOption['trigger'],
-        borderColor: ZRColor
+        borderColor: ZRColor,
+        defaultBorderColor: ZRColor
     ): {
         color: ZRColor;
     } {
         if (trigger === 'axis' || isArray(tooltipDataParams)) {
             return {
-                color: borderColor || (this._renderMode === 'html' ? '#fff' : 'none')
+                color: borderColor || defaultBorderColor
             };
         }
 
@@ -1001,6 +1036,7 @@ class TooltipView extends ComponentView {
         // FIXME
         // duplicated hideTip if manuallyHideTip is called from dispatchAction.
         this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
         dispatchAction({
             type: 'hideTip',
             from: this.uid
@@ -1014,6 +1050,11 @@ class TooltipView extends ComponentView {
         clear(this, '_updatePosition');
         this._tooltipContent.dispose();
         globalListener.unregister('itemTooltip', api);
+
+        this._tooltipContent = null;
+        this._tooltipModel = null;
+        this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
     }
 }
 

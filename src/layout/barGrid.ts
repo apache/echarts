@@ -44,6 +44,7 @@ interface LayoutSeriesInfo {
     barMaxWidth: number
     barMinWidth: number
     barGap: number | string
+    defaultBarGap?: number | string
     barCategoryGap: number | string
     axisKey: string
     stackId: string
@@ -236,6 +237,7 @@ export function makeColumnLayout(barSeries: BarSeriesModel[]) {
         );
         const barGap = seriesModel.get('barGap');
         const barCategoryGap = seriesModel.get('barCategoryGap');
+        const defaultBarGap = seriesModel.get('defaultBarGap');
 
         seriesInfoList.push({
             bandWidth: bandWidth,
@@ -244,6 +246,7 @@ export function makeColumnLayout(barSeries: BarSeriesModel[]) {
             barMinWidth: barMinWidth,
             barGap: barGap,
             barCategoryGap: barCategoryGap,
+            defaultBarGap: defaultBarGap,
             axisKey: getAxisKey(baseAxis),
             stackId: getSeriesStackId(seriesModel)
         });
@@ -273,7 +276,7 @@ function doCalBarWidthAndOffset(seriesInfoList: LayoutSeriesInfo[]) {
             remainedWidth: bandWidth,
             autoWidthCount: 0,
             categoryGap: null,
-            gap: '20%',
+            gap: seriesInfo.defaultBarGap || 0,
             stacks: {}
         };
         const stacks = columnsOnAxis.stacks;
@@ -512,14 +515,13 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                     while ((dataIndex = params.next()) != null) {
                         const value = store.get(stacked ? stackedDimIdx : valueDimIdx, dataIndex);
                         const baseValue = store.get(baseDimIdx, dataIndex) as number;
-
                         let baseCoord = valueAxisStart;
-                        let startValue;
+                        let stackStartValue;
 
                         // Because of the barMinHeight, we can not use the value in
                         // stackResultDimension directly.
                         if (stacked) {
-                            startValue = +value - (store.get(valueDimIdx, dataIndex) as number);
+                            stackStartValue = +value - (store.get(valueDimIdx, dataIndex) as number);
                         }
 
                         let x;
@@ -530,7 +532,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         if (isValueAxisH) {
                             const coord = cartesian.dataToPoint([value, baseValue]);
                             if (stacked) {
-                                const startCoord = cartesian.dataToPoint([startValue, baseValue]);
+                                const startCoord = cartesian.dataToPoint([stackStartValue, baseValue]);
                                 baseCoord = startCoord[0];
                             }
                             x = baseCoord;
@@ -545,7 +547,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         else {
                             const coord = cartesian.dataToPoint([baseValue, value]);
                             if (stacked) {
-                                const startCoord = cartesian.dataToPoint([baseValue, startValue]);
+                                const startCoord = cartesian.dataToPoint([baseValue, stackStartValue]);
                                 baseCoord = startCoord[1];
                             }
                             x = coord[0] + columnOffset;
@@ -603,5 +605,13 @@ function isInLargeMode(seriesModel: BarSeriesModel) {
 
 // See cases in `test/bar-start.html` and `#7412`, `#8747`.
 function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D) {
-    return valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.type === 'log' ? 1 : 0));
+    let startValue = valueAxis.model.get('startValue');
+    if (!startValue) {
+        startValue = 0;
+    }
+    return valueAxis.toGlobalCoord(
+        valueAxis.dataToCoord(
+            valueAxis.type === 'log'
+            ? (startValue > 0 ? startValue : 1)
+            : startValue));
 }

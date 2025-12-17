@@ -99,6 +99,66 @@ var localeObj = {
             title: 'Guardar como imagen',
             lang: ['Clic derecho para guardar imagen']
         }
+    },
+    series: {
+        typeNames: {
+            pie: 'Gráfico circular',
+            bar: 'Gráfico de barras',
+            line: 'Gráfico de líneas',
+            scatter: 'Diagrama de dispersión',
+            effectScatter: 'Diagrama de dispersión de ondas',
+            radar: 'Gráfico de radar',
+            tree: 'Árbol',
+            treemap: 'Mapa de árbol',
+            boxplot: 'Diagrama de caja',
+            candlestick: 'Gráfico de velas',
+            k: 'Gráfico de líneas K',
+            heatmap: 'Mapa de calor',
+            map: 'Mapa',
+            parallel: 'Mapa de coordenadas paralelas',
+            lines: 'Gráfico de líneas',
+            graph: 'Gráfico de relaciones',
+            sankey: 'Diagrama de Sankey',
+            funnel: 'Gráfico de embudo',
+            gauge: 'Medidor',
+            pictorialBar: 'Gráfico de barras pictóricas',
+            themeRiver: 'Mapa de río temático',
+            sunburst: 'Sunburst',
+            custom: 'Gráfico personalizado',
+            chart: 'Gráfico'
+        }
+    },
+    aria: {
+        general: {
+            withTitle: 'Este es un gráfico sobre “{title}”',
+            withoutTitle: 'Este es un gráfico'
+        },
+        series: {
+            single: {
+                prefix: '',
+                withName: ' con tipo {seriesType} llamado {seriesName}.',
+                withoutName: ' con tipo {seriesType}.'
+            },
+            multiple: {
+                prefix: '. Consta de {seriesCount} series.',
+                withName: ' La serie {seriesId} es un {seriesType} que representa {seriesName}.',
+                withoutName: ' La serie {seriesId} es un {seriesType}.',
+                separator: {
+                    middle: '',
+                    end: ''
+                }
+            }
+        },
+        data: {
+            allData: 'Los datos son los siguientes: ',
+            partialData: 'Los primeros {displayCnt} elementos son: ',
+            withName: 'los datos para {name} son {value}',
+            withoutName: '{value}',
+            separator: {
+                middle: ', ',
+                end: '. '
+            }
+        }
     }
 };
 

@@ -30,6 +30,7 @@ import {
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
+import type { RoamControllerHost } from '../../component/helper/roamHelper';
 import RoamController, { RoamEventParams } from '../../component/helper/RoamController';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
@@ -153,6 +154,7 @@ class TreemapView extends ChartView {
     private _containerGroup: graphic.Group;
     private _breadcrumb: Breadcrumb;
     private _controller: RoamController;
+    private _controllerHost: RoamControllerHost;
 
     private _oldTree: Tree;
 
@@ -173,7 +175,6 @@ class TreemapView extends ChartView {
         api: ExtensionAPI,
         payload: TreemapZoomToNodePayload | TreemapRenderPayload | TreemapMovePayload | TreemapRootToNodePayload
     ) {
-
         const models = ecModel.findComponents({
             mainType: 'series', subType: 'treemap', query: payload
         });
@@ -272,6 +273,14 @@ class TreemapView extends ChartView {
 
         this._oldTree = thisTree;
         this._storage = thisStorage;
+
+        if (this._controllerHost) {
+            const _oldRootLayout = this.seriesModel.layoutInfo;
+            const rootLayout = thisTree.root.getLayout();
+            if (rootLayout.width === _oldRootLayout.width && rootLayout.height === _oldRootLayout.height) {
+                this._controllerHost.zoom = 1;
+            }
+        }
 
         return {
             lastsForAnimation,
@@ -471,23 +480,48 @@ class TreemapView extends ChartView {
 
     private _resetController(api: ExtensionAPI) {
         let controller = this._controller;
+        let controllerHost = this._controllerHost;
+
+        if (!controllerHost) {
+            this._controllerHost = {
+                target: this.group
+            } as RoamControllerHost;
+            controllerHost = this._controllerHost;
+        }
+
+        const seriesModel = this.seriesModel;
 
         // Init controller.
         if (!controller) {
             controller = this._controller = new RoamController(api.getZr());
-            controller.enable(this.seriesModel.get('roam'));
             controller.on('pan', bind(this._onPan, this));
             controller.on('zoom', bind(this._onZoom, this));
         }
 
-        const rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
-        controller.setPointerChecker(function (e, x, y) {
-            return rect.contain(x, y);
+        controller.enable(seriesModel.get('roam'), {
+            api,
+            zInfo: {component: seriesModel},
+            triggerInfo: {
+                roamTrigger: seriesModel.get('roamTrigger'),
+                isInSelf: (e, x, y) => {
+                    const containerGroup = this._containerGroup;
+                    return containerGroup
+                        // Currently only x, y exist in tranform.
+                        ? containerGroup.getBoundingRect().contain(x - containerGroup.x, y - containerGroup.y)
+                        : false;
+                },
+                // isInClip: (e, x, y) => {
+                // }
+            },
         });
+
+        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
+        controllerHost.zoom = seriesModel.get('zoom');
     }
 
     private _clearController() {
         let controller = this._controller;
+        this._controllerHost = null;
         if (controller) {
             controller.dispose();
             controller = null;
@@ -526,6 +560,7 @@ class TreemapView extends ChartView {
     private _onZoom(e: RoamEventParams['zoom']) {
         let mouseX = e.originX;
         let mouseY = e.originY;
+        const zoomDelta = e.scale;
 
         if (this._state !== 'animating') {
             // These param must not be cached.
@@ -544,6 +579,24 @@ class TreemapView extends ChartView {
             const rect = new BoundingRect(
                 rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height
             );
+
+            // scaleLimit
+            let zoomLimit = null;
+            const _controllerHost = this._controllerHost;
+            zoomLimit = _controllerHost.zoomLimit;
+
+            let newZoom = _controllerHost.zoom = _controllerHost.zoom || 1;
+            newZoom *= zoomDelta;
+            if (zoomLimit) {
+                const zoomMin = zoomLimit.min || 0;
+                const zoomMax = zoomLimit.max || Infinity;
+                newZoom = Math.max(
+                    Math.min(zoomMax, newZoom),
+                    zoomMin
+                );
+            }
+            const zoomScale = newZoom / _controllerHost.zoom;
+            _controllerHost.zoom = newZoom;
             const layoutInfo = this.seriesModel.layoutInfo;
 
             // Transform mouse coord from global to containerGroup.
@@ -553,7 +606,7 @@ class TreemapView extends ChartView {
             // Scale root bounding rect.
             const m = matrix.create();
             matrix.translate(m, m, [-mouseX, -mouseY]);
-            matrix.scale(m, m, [e.scale, e.scale]);
+            matrix.scale(m, m, [zoomScale, zoomScale]);
             matrix.translate(m, m, [mouseX, mouseY]);
 
             rect.applyTransform(m);
@@ -665,13 +718,12 @@ class TreemapView extends ChartView {
     }
 
     /**
-     * @public
-     * @param {number} x Global coord x.
-     * @param {number} y Global coord y.
-     * @return {Object} info If not found, return undefined;
-     * @return {number} info.node Target node.
-     * @return {number} info.offsetX x refer to target node.
-     * @return {number} info.offsetY y refer to target node.
+     * @param x Global coord x.
+     * @param y Global coord y.
+     * @return info If not found, return undefined;
+     * @return info.node Target node.
+     * @return info.offsetX x refer to target node.
+     * @return info.offsetY y refer to target node.
      */
     findTarget(x: number, y: number): FoundTargetInfo {
         let targetInfo;
@@ -706,9 +758,6 @@ class TreemapView extends ChartView {
     }
 }
 
-/**
- * @inner
- */
 function createStorage(): RenderElementStorage | LastCfgStorage {
     return {
         nodeGroup: [],
@@ -718,7 +767,6 @@ function createStorage(): RenderElementStorage | LastCfgStorage {
 }
 
 /**
- * @inner
  * @return Return undefined means do not travel further.
  */
 function renderNode(
@@ -837,6 +885,9 @@ function renderNode(
         setAsHighDownDispatcher(group, !isDisabled);
         // Only for enabling highlight/downplay.
         data.setItemGraphicEl(thisNode.dataIndex, group);
+
+        const cursorStyle = nodeModel.getShallow('cursor');
+        cursorStyle && content.attr('cursor', cursorStyle);
 
         enableHoverFocus(group, focusOrIndices, blurScope);
     }

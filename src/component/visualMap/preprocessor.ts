@@ -53,6 +53,21 @@ export default function visualMapPreprocessor(option) {
                 }
             });
         }
+
+        // Validate seriesTargets
+        if (__DEV__) {
+            const seriesTargets = opt.seriesTargets;
+            if (seriesTargets && zrUtil.isArray(seriesTargets)) {
+                each(seriesTargets, function (target) {
+                    if (!zrUtil.isObject(target) || target.dimension == null) {
+                        console.warn('Each seriesTarget should have a dimension property');
+                    }
+                    if (target.seriesIndex == null && target.seriesId == null) {
+                        console.warn('Each seriesTarget should have either seriesIndex or seriesId');
+                    }
+                });
+            }
+        }
     });
 }
 

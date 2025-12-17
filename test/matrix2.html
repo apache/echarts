@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main_layout"></div>
+        <div id="main_edge_cases"></div>
+        <div id="main_self_layout"></div>
+        <div id="main_dim_data_edge_cases"></div>
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                const MatrixClampOption = {
+                    none: 0,
+                    all: 1,
+                    body: 2,
+                    corner: 3,
+                };
+
+                var LEVEL_SIZE_1 = 15;
+                var LEVEL_SIZE_2 = 20;
+                var LEVEL_SIZE_3 = '10%';
+                var LEVEL_SIZE_4 = '0%';
+                var CELL_SIZE_1 = 30;
+                var CELL_SIZE_2 = 0;
+                var BODY_COMMON_COLOR = 'rgba(200, 150, 20, 0.1)';
+                var BODY_R2_A2_COLOR = 'rgba(200, 155, 0)';
+                var BODY_R1_B2_COLOR = 'rgba(200, 115, 200, 0.3)';
+                var X_COMMON_COLOR = 'rgba(22, 188, 212, 0.1)';
+                var X_T1_COLOR = 'rgba(12,122,250,0.8)';
+
+                var bodyData = [
+                    {
+                        coord: ['R2', 'A3'],
+                        mergeCells: true,
+                    },
+                    {
+                        coord: [['R1', 'S'], 'A'],
+                        itemStyle: {
+                            color: 'rgb(220,240,130)',
+                        }
+                    },
+                    {
+                        coord: ['R1', ['B4', 'C']],
+                        mergeCells: true,
+                    },
+                    {
+                        coord: [['R1', 'R2'], ['B2', 'B3']],
+                        itemStyle: {
+                            borderWidth: 4,
+                            borderColor: 'orange',
+                            color: 'red',
+                        },
+                        mergeCells: true,
+                    },
+                    {
+                        coord: ['R2', 'A2'],
+                        itemStyle: {
+                            borderWidth: 4,
+                            borderColor: 'blue',
+                            color: BODY_R2_A2_COLOR,
+                        },
+                        z2: 200,
+                    },
+                    {
+                        coord: [['R2', 'T'], 'B2'], // Overlap span, should be ignored.
+                        mergeCells: true,
+                        itemStyle: {
+                            borderWidth: 4,
+                            borderColor: 'rgb(200, 152, 222)',
+                            color: BODY_R1_B2_COLOR,
+                        },
+                        _desc: 'expand to cover all merged cells'
+                    },
+                    {
+                        coord: ['T', ['A1', 'A31']], // Overlap span, should be ignored.
+                        mergeCells: true,
+                        itemStyle: {
+                            borderColor: 'rgb(123,134,10)',
+                            borderWidth: 3,
+                            color: 'rgb(220,230,170)',
+                        },
+                        z2: 200,
+                    },
+                    {
+                        coord: ['R2', 'E'],
+                        value: 'very long long long text',
+                        label: {
+                            color: 'red',
+                        }
+                    },
+                    {
+                        coord: ['U', null],
+                        coordClamp: true,
+                        itemStyle: {
+                            color: 'rgb(220,230,170)',
+                        },
+                    },
+                    {
+                        coord: [NaN, 'F'],
+                        coordClamp: true,
+                        mergeCells: true,
+                    }
+                ];
+
+                var cornerData = [
+                    {
+                        coord: [null, -2],
+                        coordClamp: true,
+                        value: 'some',
+                        mergeCells: true,
+                    }
+                ]
+
+                const MATRIX_BACKGROUND_STYLE_MAP = {
+                    do_nothing: {
+                        backgroundStyle: {},
+                        x: {
+                            itemStyle: {},
+                        },
+                    },
+                    style1: {
+                        backgroundStyle: {
+                            borderWidth: 5,
+                        },
+                        x: {
+                            itemStyle: {
+                                borderWidth: 2,
+                                color: 'red',
+                                borderColor: 'rgba(11,222,33)'
+                            }
+                        }
+                    },
+                    style2: {
+                        backgroundStyle: {
+                            borderWidth: 1,
+                        },
+                        x: {
+                            itemStyle: {
+                                borderWidth: 1,
+                                color: 'none',
+                                borderColor: 'blue'
+                            }
+                        }
+                    },
+                };
+
+                // --- state ------
+                let _xShowing = true;
+                let _yShowing = true;
+                let _convertFromPixelClampOpt = undefined;
+                let _convertToPointCaseItem = null;
+                let _matrixBgStyleIndex = 0;
+                let _textOverflow = 'truncate'; // internal default value.
+                // ----------------
+
+                var option;
+                option = {
+                    backgroundColor: '#eee',
+                    tooltip: {},
+                    title: {
+                        text: '',
+                        right: 'center',
+                    },
+                    matrix: {
+                        left: 120,
+                        right: '29%',
+                        tooltip: {
+                            show: true,
+                            formatter(params) {
+                                return params.name;
+                            }
+                        },
+                        x: {
+                            label: {
+                            },
+                            itemStyle: {
+                                color: X_COMMON_COLOR
+                            },
+                            levels: [null, {levelSize: LEVEL_SIZE_1}],
+                            data: [
+                                {
+                                    value: 'R',
+                                    children: ['R1', {value: 'R2', size: CELL_SIZE_1}]
+                                },
+                                {
+                                    value: 'S'
+                                },
+                                {
+                                    value: 'T',
+                                    children: [
+                                        {
+                                            value: 'T1',
+                                            itemStyle: {
+                                                borderWidth: 3,
+                                                borderColor: 'rgba(12,12,190)',
+                                                color: X_T1_COLOR,
+                                            },
+                                            label: {
+                                                fontSize: 22,
+                                                color: '#fff',
+                                                textBorderColor: '#333',
+                                                textBorderWidth: 2,
+                                            },
+                                            children: ['T11']
+                                        }
+                                    ]
+                                },
+                                {
+                                    value: 'long long header text 1',
+                                    label: {
+                                        color: 'rgb(211,111,0)',
+                                    },
+                                    children: [{
+                                        value: 'long long header text 2',
+                                        label: {
+                                            color: 'rgb(211,81,0)',
+                                        }
+                                    }]
+                                },
+                                {
+                                    value: 'U',
+                                    size: 20,
+                                },
+                                {
+                                    value: 'V',
+                                    size: 20,
+                                }
+                            ]
+                        },
+                        y: {
+                            levelSize: LEVEL_SIZE_2,
+                            levels: [
+                                null,
+                                {levelSize: LEVEL_SIZE_4},
+                                null,
+                                null,
+                                {levelSize: LEVEL_SIZE_3}
+                            ],
+                            data: [{
+                                value: 'LLL',
+                                children: [{
+                                    value: 'LL',
+                                    children: [
+                                        {
+                                            value: 'A',
+                                            children: ['A1', 'A2', {
+                                                value: 'A3',
+                                                children: ['A31', 'A32']
+                                            }]
+                                        }, {
+                                            value: 'B',
+                                            children: ['B1', 'B2', 'B3', 'B4']
+                                        }, {
+                                            value: 'C',
+                                        }, {
+                                            value: 'D',
+                                            size: CELL_SIZE_2,
+                                        }
+                                    ]
+                                }, {
+                                    value: 'E',
+                                }, {
+                                    value: 'F',
+                                    itemStyle: {
+                                        color: '#bbb'
+                                    }
+                                }]
+                            }]
+                        },
+                        body: {
+                            data: bodyData,
+                            label: {
+                            },
+                            itemStyle: {
+                                color: BODY_COMMON_COLOR
+                            }
+                        },
+                        corner: {
+                            itemStyle: {
+                                borderWidth: 1,
+                            },
+                            data: cornerData,
+                        }
+                    },
+                    graphic: {
+                        elements: [{
+                            right: 5,
+                            y: 5,
+                            id: 'info_bodyData',
+                            type: 'text',
+                            style: {
+                                text: 'Check body cell merge and style:\n' + testHelper.printObject(bodyData, {lineBreakMaxColumn: 40}),
+                                fontSize: 7,
+                            }
+                        }, {
+                            left: 5,
+                            y: 5,
+                            id: 'info_cornerData',
+                            type: 'text',
+                            style: {
+                                text: 'Check corner cell merge and style:\n' + testHelper.printObject(cornerData, {lineBreakMaxColumn: 40}),
+                                fontSize: 7,
+                            }
+                        }, {
+                            x: 120,
+                            y: 5,
+                            id: 'info2',
+                            type: 'text',
+                            style: {
+                                text: [
+                                    'Check background: ',
+                                    ` BODY_COMMON_COLOR = ${BODY_COMMON_COLOR}`,
+                                    ` BODY_R2_A2_COLOR = ${BODY_R2_A2_COLOR}`,
+                                    ` BODY_R1_B2_COLOR = ${BODY_R1_B2_COLOR}`,
+                                    ` X_COMMON_COLOR = ${X_COMMON_COLOR}`,
+                                    ` X_T1_COLOR = ${X_T1_COLOR}`,
+                                ].join('\n'),
+                                fontSize: 7,
+                            }
+                        }]
+                    },
+                    grid: [{
+                        id: 'aa',
+                        coordinateSystem: 'matrix',
+                        coord: ['R2', 'B3'],
+                        top: 5,
+                        left: 5,
+                        right: 5,
+                        bottom: 5,
+                        containLabel: true,
+                    }, {
+                        id: 'bb',
+                        coordinateSystem: 'matrix',
+                        coord: ['R1', 'B4'],
+                        top: 5,
+                        left: 5,
+                        right: 5,
+                        bottom: 5,
+                        containLabel: true,
+                    }],
+                    xAxis: [{
+                        id: 'aa',
+                        gridId: 'aa',
+                        axisLabel: {fontSize: 9}
+                    }, {
+                        id: 'bb',
+                        gridId: 'bb',
+                        data: ['bb1', 'bb2', 'bb3'],
+                        axisLabel: {fontSize: 9}
+                    }],
+                    yAxis: [{
+                        id: 'aa',
+                        gridId: 'aa',
+                        interval: Infinity,
+                        axisLabel: {fontSize: 9, showMinLabel: true, showMaxLabel: true,},
+                    }, {
+                        id: 'bb',
+                        gridId: 'bb',
+                        interval: Infinity,
+                        axisLabel: {fontSize: 9, showMinLabel: true, showMaxLabel: true,},
+                    }],
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        symbolSize: 30,
+                        data: [
+                            ['R1', 'A1', 10], ['R2', 'A1', 20], ['R1', 'A2', 30]
+                        ],
+                        label: {
+                            show: true,
+                            formatter: params => {
+                                return params.data[2];
+                            }
+                        }
+                    }, {
+                        // type: 'effectScatter',
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        symbolSize: function (val) {
+                            return val[2] / 3;
+                        },
+                        data: [
+                            ['R2', 'A2', 40], ['R1', 'A31', 50], ['R2', 'A3', 60]
+                        ],
+                    }, {
+                        type: 'scatter',
+                        name: 'right desc',
+                        silent: true,
+                        coordinateSystem: 'matrix',
+                        symbolSize: 0,
+                        symbolOffset: [0, 10],
+                        label: {show: true, overflow: 'break', minMargin: 15},
+                        labelLine: {show: true},
+                        labelLayout: {
+                            x: '73%',
+                            moveOverlap: 'shiftY',
+                            width: 70,
+                        },
+                        encode: {label: [0, 1, 2]},
+                        data: [
+                            ['T1', -2, `x.levels[3].levelSize: ${LEVEL_SIZE_1}`],
+                            ['T11', -1, 'levelSize: average (not specified)'],
+                            ['R2', -1, `size: ${CELL_SIZE_1}`],
+                        ]
+                    }, {
+                        type: 'scatter',
+                        name: 'left desc',
+                        silent: true,
+                        coordinateSystem: 'matrix',
+                        symbolSize: 0,
+                        symbolOffset: [0, 10],
+                        label: {show: true, overflow: 'break', minMargin: 15},
+                        labelLine: {show: true},
+                        labelLayout: {x: '1%', width: 110, moveOverlap: 'shiftY'},
+                        encode: {label: [0, 1, 2]},
+                        data: [
+                            [-3, 'A', `y.levelSize: ${LEVEL_SIZE_2}`],
+                            [-2, 'A3', `y.levelSize: ${LEVEL_SIZE_2}`],
+                            [-1, 'A31', `y.levels[4].levelSize: ${LEVEL_SIZE_3}`],
+                            [-1, 'D', `size: ${CELL_SIZE_2}`],
+                            [-4, 'E', `y.levels[2].levelSize: ${LEVEL_SIZE_4}`]
+                        ]
+                    },
+                    {
+                        type: 'line',
+                        xAxisId: 'aa',
+                        yAxisId: 'aa',
+                        data: [[11, 22], [33, 44], [55, 66]],
+                    }, {
+                        type: 'bar',
+                        xAxisId: 'bb',
+                        yAxisId: 'bb',
+                        data: [987, 583, 671],
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main_layout', {
+                    title: [
+                        'Locator testing.',
+                        'scatter, cartesian, with Matrix.',
+                        'cell merging: should display **on the center** of the merged cell.',
+                        'click on cell to call convertFromPixel - especially on span cell.',
+                        'click on corner should correct.',
+                        'tooltip can be displayed for text (consider overflow).',
+                    ],
+                    height: 500,
+                    option: option,
+                    inputsStyle: 'compact',
+                    inputs: [
+                        {
+                            text: 'matrix.x show:',
+                            type: 'select',
+                            values: [true, false],
+                            onchange() {
+                                _xShowing = this.value;
+                                chart.setOption({
+                                    matrix: {
+                                        x: {show: _xShowing},
+                                    },
+                                });
+                                updateCaseView();
+                            }
+                        },
+                        {
+                            text: 'matrix.y show:',
+                            type: 'select',
+                            values: [true, false],
+                            onchange() {
+                                _yShowing = this.value;
+                                chart.setOption({
+                                    matrix: {
+                                        y: {show: _yShowing},
+                                    },
+                                });
+                                updateCaseView();
+                            }
+                        },
+                        {
+                            text: 'convertFromPixel clamp:',
+                            type: 'select',
+                            options: [
+                                {value: undefined}
+                            ].concat(Object.keys(MatrixClampOption).map(key => ({
+                                text: key,
+                                value: MatrixClampOption[key],
+                            }))),
+                            onchange() {
+                                _convertFromPixelClampOpt = this.value;
+                                updateCaseView();
+                            },
+                        },
+                        {
+                            type: 'select',
+                            text: 'text overflow:',
+                            values: ['truncate', 'break', 'none'],
+                            onchange() {
+                                _textOverflow = this.value;
+                                chart.setOption({
+                                    matrix: {
+                                        x: {label: {overflow: _textOverflow}},
+                                        y: {label: {overflow: _textOverflow}},
+                                        body: {label: {overflow: _textOverflow}},
+                                        corner: {label: {overflow: _textOverflow}},
+                                    },
+                                });
+                                updateCaseView();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'switch style:',
+                            values: Object.keys(MATRIX_BACKGROUND_STYLE_MAP),
+                            onchange() {
+                                const preset = MATRIX_BACKGROUND_STYLE_MAP[this.value];
+                                chart.setOption({
+                                    matrix: {
+                                        backgroundStyle: preset.backgroundStyle,
+                                        x: {
+                                            itemStyle: preset.x.itemStyle,
+                                        }
+                                    }
+                                });
+                                updateCaseView();
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: 'convertToPixel test cases:',
+                            values: [
+                                'do_nothing',
+                                ['R2', 'A31'],
+                                ['not_exists', 'A1'],
+                                ['S', Infinity],
+                                [1, 3],
+                                ['R1', 'A'],
+                                ['R1', 'A2'],
+                                ['R1', 'B4'],
+                                ['R1', 'B2'],
+                                ['R1', 'C'],
+                                ['R2', 'B3'],
+                            ],
+                            onchange() {
+                                const caseItem = this.value;
+                                if (caseItem === 'do_nothing') {
+                                    return;
+                                }
+                                _convertToPointCaseItem = this.value;
+                                updateCaseView();
+                            }
+                        },
+                    ]
+                });
+
+                function updateCaseView() {
+                    if (!_convertToPointCaseItem) {
+                        return;
+                    }
+                    const result = chart.convertToPixel({matrixIndex: 0}, _convertToPointCaseItem);
+                    updateConvertToPixelResult(result);
+                }
+
+                function updateConvertToPixelResult(result) {
+                    console.log(result);
+                    chart.setOption({
+                        title: {
+                            text: 'convertToPixel result: ' + testHelper.printObject(result)
+                        },
+                        graphic: {
+                            elements: [{
+                                id: 'result',
+                                type: 'circle',
+                                shape: {
+                                    cx: result[0],
+                                    cy: result[1],
+                                    r: 20,
+                                },
+                                ignore: isNaN(result[0]) || isNaN(result[1]),
+                                z: 1000,
+                                style: {
+                                    stroke: 'red',
+                                    fill: null,
+                                    lineWidth: 5,
+                                    opacity: 0.8,
+                                },
+                                textContent: {
+                                    style: {
+                                        text: '⬅ convertToPixel result',
+                                        fill: 'red',
+                                    },
+                                    z: 1000,
+                                },
+                                textConfig: {
+                                    position: 'right'
+                                },
+                            }]
+                        }
+                    });
+                }
+
+                if (chart) {
+                    chart.getZr().on('click', function (event) {
+                        const point = [event.offsetX, event.offsetY];
+                        let opt = null;
+                        if (_convertFromPixelClampOpt != null) {
+                            opt = {clamp: _convertFromPixelClampOpt};
+                        }
+                        const result = chart.convertFromPixel({matrixIndex: 0}, point, opt);
+                        console.log('point', point, 'result', result);
+                        chart.setOption({
+                            title: {
+                                text: 'convertFromPixel result: ' + testHelper.printObject(result)
+                            }
+                        });
+                    });
+                }
+
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var LEVEL_SIZE_1 = 15;
+                var LEVEL_SIZE_2 = 20;
+                var LEVEL_SIZE_3 = '10%';
+                var LEVEL_SIZE_4 = '0%';
+                var CELL_SIZE_1 = 30;
+                var CELL_SIZE_2 = 0;
+                var BODY_COMMON_COLOR = 'rgba(200, 150, 20, 0.1)';
+                var BODY_R2_A2_COLOR = 'rgba(200, 155, 0)';
+                var BODY_R1_B2_COLOR = 'rgba(200, 115, 200, 0.3)';
+                var X_COMMON_COLOR = 'rgba(22, 188, 212, 0.1)';
+                var X_T1_COLOR = 'rgba(12,122,250,0.8)';
+
+                var _bodyData = [
+                    {
+                        coord: ['R2', 'A3'],
+                        mergeCells: true,
+                        value: 'merged',
+                    },
+                    {
+                        coord: ['R1', ['B4', 'C']],
+                        mergeCells: true,
+                        value: 'merged',
+                    },
+                    {
+                        coord: [['R1', 'R2'], ['B2', 'B3']],
+                        mergeCells: true,
+                        value: 'merged',
+                    },
+                    {
+                        coord: ['O', ['B2', 'not_exist']],
+                        coordClamp: true,
+                        mergeCells: true,
+                        value: 'merged',
+                        __expect: 'column O merged'
+                    },
+                    {
+                        coord: ['T', ['A1', 'A31']],
+                        mergeCells: true,
+                        value: 'merged',
+                    },
+                    {
+                        coord: ['S', null],
+                        coordClamp: true,
+                        mergeCells: true,
+                        value: 'merged',
+                        __expect: 'column S merged.'
+                    },
+                ];
+                var _cornerData = [
+                    {
+                        coord: [[-1, -2], -1],
+                        mergeCells: true,
+                        value: 'merged',
+                    }
+                ];
+
+                const _xData = [
+                    {
+                        value: 'R',
+                        children: ['R1', {value: 'R2', size: CELL_SIZE_1}]
+                    },
+                    {
+                        value: 'S'
+                    },
+                    {
+                        value: 'T',
+                        children: [
+                            {
+                                value: 'T1',
+                                children: ['T11'],
+                            }
+                        ]
+                    },
+                    'O',
+                    'P',
+                ];
+                const _yData = [
+                    {
+                        value: 'A',
+                        children: ['A1', 'A2', {
+                            value: 'A3',
+                            children: ['A31', 'A32']
+                        }]
+                    }, {
+                        value: 'B',
+                        children: ['B1', 'B2', 'B3', 'B4']
+                    }, {
+                        value: 'C',
+                    }, {
+                        value: 'D',
+                    }
+                ];
+                const MatrixClampOption = {
+                    none: 0,
+                    all: 1,
+                    body: 2,
+                    corner: 3,
+                };
+
+                // --- state ------
+                let _xShowing = true;
+                let _yShowing = true;
+                let _convertToLayoutClampOpt = undefined;
+                let _ignoreMergeCells = undefined;
+                let _testCase = null;
+                // ----------------
+
+                function calcMeta() {
+                    const xMeta = calcOneDim(_xData);
+                    const yMeta = calcOneDim(_yData);
+                    function calcOneDim(xyData) {
+                        let levelCount = 0;
+                        let leafCount = 0;
+                        travel(xyData, 0, 0);
+                        function travel(list, locatorStart, level) {
+                            levelCount = Math.max(levelCount, level);
+                            leafCount = Math.max(leafCount, locatorStart);
+                            if (!list) {
+                                return;
+                            }
+                            list.forEach((item, idx) => {
+                                travel(item.children, locatorStart + idx, level + 1);
+                            });
+                        }
+                        return {levelCount, leafCount};
+                    }
+                    const xUnitCount = xMeta.leafCount + (_yShowing ? yMeta.levelCount : 0);
+                    const yUnitCount = yMeta.leafCount + (_xShowing ? xMeta.levelCount : 0);
+                    return {xUnitCount, yUnitCount};
+                }
+
+                var option;
+                option = {
+                    backgroundColor: '#eee',
+                    tooltip: {},
+                    title: {
+                        text: '',
+                        right: 'center',
+                    },
+                    matrix: [{
+                        // matrix 0
+                        right: 10,
+                        bottom: 10,
+                        width: 180,
+                        height: 80,
+                        x: {
+                            data: ['X1', 'X2', 'X3'],
+                        },
+                        y: {
+                            data: ['Y1', 'Y2', 'Y3', 'Y4'],
+                        },
+                        body: {
+                            data: [{
+                                coord: [[0, 2], [1, 2]],
+                                value: 'should be right-bottom',
+                                mergeCells: true,
+                            }]
+                        },
+                    }, {
+                        // matrix 1
+                        id: 'main_matrix',
+                        right: 10,
+                        left: 230,
+                        top: 50,
+                        bottom: 120,
+                        tooltip: {
+                            show: true,
+                            formatter(params) {
+                                return params.name;
+                            }
+                        },
+                        x: {
+                            label: {
+                            },
+                            itemStyle: {
+                                color: X_COMMON_COLOR
+                            },
+                            levels: [null, {levelSize: LEVEL_SIZE_1}],
+                            data: _xData
+                        },
+                        y: {
+                            levelSize: 40,
+                            data: _yData,
+                        },
+                        body: {
+                            data: _bodyData,
+                            label: {
+                            },
+                            itemStyle: {
+                                color: BODY_COMMON_COLOR
+                            }
+                        },
+                        corner: {
+                            data: _cornerData,
+                            itemStyle: {
+                                borderWidth: 1,
+                            },
+                        }
+                    }],
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        matrixIndex: 1,
+                        symbolSize: 30,
+                        data: [
+                            ['R1', 'A1', 10], ['R2', 'A1', 20], ['R1', 'A2', 30]
+                        ],
+                        label: {
+                            show: true,
+                            formatter: params => {
+                                return params.data[2];
+                            }
+                        }
+                    }],
+                    graphic: {
+                        elements: [{
+                            left: 5,
+                            y: 5,
+                            id: 'info_bodyData',
+                            type: 'text',
+                            style: {
+                                text: 'Check body cell merge and style:\n' + testHelper.printObject(_bodyData, {lineBreakMaxColumn: 40}),
+                                fontSize: 7,
+                            }
+                        }, {
+                            left: 140,
+                            y: 5,
+                            id: 'info_cornerData',
+                            type: 'text',
+                            style: {
+                                text: 'Check corner cell merge and style:\n' + testHelper.printObject(_cornerData, {lineBreakMaxColumn: 40}),
+                                fontSize: 7,
+                            }
+                        }, {
+                            id: 'result_convertToLayout',
+                            type: 'rect',
+                            shape: {x: 0, y: 0, width: 0, height: 0},
+                            ignore: true,
+                            silent: true,
+                            style: {
+                                fill: 'rgba(210,20,100,0.3)',
+                                stroke: 'rgba(210,20,100,0.8)',
+                                lineWidth: 3,
+                            }
+                        }, {
+                            id: 'result_assertionFailure',
+                            type: 'text',
+                            ignore: true,
+                            silent: true,
+                            left: 10,
+                            bottom: 10,
+                            style: {
+                                text: 'Some Case Failed',
+                                fill: 'red',
+                                fontSize: 20,
+                            }
+                        }]
+                    },
+                };
+
+                var chart = testHelper.create(echarts, 'main_edge_cases', {
+                    title: [
+                        'Edge cases.',
+                        'Test both when **show/hide** matrix.x/y; different **clamp**; **ignoreCellMerge** or not.',
+                        'drag to resize to test cell border alignment',
+                        '(must not affect by subpixel optimize or rounding error)',
+                    ],
+                    height: 350,
+                    option: option,
+                    inputsStyle: 'compact',
+                    draggable: true,
+                    inputs: [
+                        {
+                            text: 'matrix.x show:',
+                            type: 'select',
+                            values: [true, false],
+                            onchange() {
+                                _xShowing = this.value;
+                                chart.setOption({
+                                    matrix: {
+                                        id: 'main_matrix',
+                                        x: {show: _xShowing},
+                                    },
+                                });
+                                updateCaseView();
+                            }
+                        },
+                        {
+                            text: 'matrix.y show:',
+                            type: 'select',
+                            values: [true, false],
+                            onchange() {
+                                _yShowing = this.value;
+                                chart.setOption({
+                                    matrix: {
+                                        id: 'main_matrix',
+                                        y: {show: _yShowing},
+                                    },
+                                });
+                                updateCaseView();
+                            }
+                        },
+                        {
+                            text: 'convertToLayout clamp:',
+                            type: 'select',
+                            options: [
+                                {value: undefined}
+                            ].concat(Object.keys(MatrixClampOption).map(key => ({
+                                text: key,
+                                value: MatrixClampOption[key],
+                            }))),
+                            onchange() {
+                                _convertToLayoutClampOpt = this.value;
+                                updateCaseView();
+                            },
+                        },
+                        {
+                            text: 'ignoreMergeCells:',
+                            type: 'select',
+                            values: [undefined, false, true],
+                            onchange() {
+                                _ignoreMergeCells = this.value;
+                                updateCaseView();
+                            },
+                        },
+                        {
+                            type: 'br',
+                        },
+                        {
+                            type: 'select',
+                            text: 'convertToLayout test cases:',
+                            options: [{value: 'do_nothing'}].concat([
+                                {
+                                    input: [],
+                                    expectDefault: {
+                                        rectNaN: {x: true, y: true, width: true, height: true},
+                                        matrixXYLocatorRange: [[NaN, NaN], [NaN, NaN]]
+                                    }
+                                },
+                                {
+                                    input: ['R2', null],
+                                    expectDefault: {
+                                        rectNaN: {y: true, height: true},
+                                        matrixXYLocatorRange: [[1, 1], [NaN, NaN]]
+                                    }
+                                },
+                                {
+                                    input: [['S', 'O'], NaN],
+                                    expectDefault: {
+                                        rectNaN: {y: true, height: true},
+                                        matrixXYLocatorRange: [[2, 4], [NaN, NaN]]
+                                    }
+                                },
+                                {
+                                    input: [['R'], NaN],
+                                    expectDefault: {
+                                        rectNaN: {y: true, height: true},
+                                        matrixXYLocatorRange: [[0, 1], [NaN, NaN]]
+                                    }
+                                },
+                                {
+                                    input: [NaN, 'A31'],
+                                    expectDefault: {
+                                        rectNaN: {x: true, width: true},
+                                        matrixXYLocatorRange: [[NaN, NaN], [2, 2]]
+                                    }
+                                },
+                                {
+                                    input: [undefined, ['A32', 'B3']],
+                                    expectDefault: {
+                                        rectNaN: {x: true, width: true},
+                                        matrixXYLocatorRange: [[NaN, NaN], [3, 6]]
+                                    }
+                                },
+                                {
+                                    input: [null, 'B'],
+                                    expectDefault: {
+                                        rectNaN: {x: true, width: true},
+                                        matrixXYLocatorRange: [[NaN, NaN], [4, 7]]
+                                    }
+                                },
+                                {
+                                    input: ['S', 'A32'],
+                                    expectDefault: {
+                                        rectNaN: {},
+                                        matrixXYLocatorRange: [[2, 2], [0, 9]]
+                                    }
+                                },
+                                {
+                                    input: ['T', 'B1'],
+                                    expectDefault: {
+                                        rectNaN: {},
+                                        matrixXYLocatorRange: [[3, 3], [4, 4]]
+                                    }
+                                },
+                                {
+                                    input: [[-1, 1], [-1, 2]],
+                                    expectDefault: {
+                                        rectNaN: {},
+                                        matrixXYLocatorRange: [[-2, 1], [-1, 3]]
+                                    }
+                                },
+                                {
+                                    input: ['R', -2],
+                                    expectDefault: {
+                                        rectNaN: {},
+                                        matrixXYLocatorRange: [[0, 1], [-2, -2]]
+                                    }
+                                },
+                            ].map(item => ({
+                                text: testHelper.printObject(item.input),
+                                value: item,
+                            }))),
+                            onchange() {
+                                if (this.value === 'do_nothing') {
+                                    return;
+                                }
+                                _testCase = this.value;
+                                updateCaseView();
+                            } // End of onchange
+                        } // End of convertToLayout test cases
+                    ]
+                });
+
+                function updateCaseView() {
+                    performTest(function (assert) {
+                        if (!_testCase) {
+                            return;
+                        }
+                        const {input, expectDefault} = _testCase;
+                        const shouldBeClampped = !(
+                            _convertToLayoutClampOpt == null || _convertToLayoutClampOpt === MatrixClampOption.none
+                        );
+                        const isDefaultCase = !shouldBeClampped && !_ignoreMergeCells;
+
+                        const meta = calcMeta();
+                        let opt = undefined;
+                        if (_convertToLayoutClampOpt != null) {
+                            opt = opt || {};
+                            opt.clamp = _convertToLayoutClampOpt;
+                        }
+                        if (_ignoreMergeCells != null) {
+                            opt = opt || {};
+                            opt.ignoreMergeCells = _ignoreMergeCells;
+                        }
+
+                        const result = chart.convertToLayout({matrixIndex: 1}, input, opt);
+                        console.log('Call convertToLayout', 'input:', input, 'opt:', opt, 'result:', result);
+
+                        assert(testHelper.getType(result) === 'object');
+                        assert(testHelper.getType(result.rect) === 'object');
+                        assert(testHelper.getType(result.rect.x) === 'number');
+                        assert(testHelper.getType(result.rect.y) === 'number');
+                        assert(testHelper.getType(result.rect.width) === 'number');
+                        assert(testHelper.getType(result.rect.height) === 'number');
+                        assert(testHelper.getType(result.matrixXYLocatorRange) === 'array');
+                        assert(testHelper.getType(result.matrixXYLocatorRange[0]) === 'array');
+                        assert(testHelper.getType(result.matrixXYLocatorRange[1]) === 'array');
+                        assert(testHelper.getType(result.matrixXYLocatorRange[0][0]) === 'number');
+                        assert(testHelper.getType(result.matrixXYLocatorRange[0][1]) === 'number');
+                        assert(testHelper.getType(result.matrixXYLocatorRange[1][0]) === 'number');
+                        assert(testHelper.getType(result.matrixXYLocatorRange[1][1]) === 'number');
+
+                        ['x', 'y', 'width', 'height'].forEach(prop => {
+                            if (isDefaultCase) {
+                                if (expectDefault.rectNaN[prop]) {
+                                    assert(eqNaN(result.rect[prop]));
+                                }
+                                else {
+                                    assert(isFinite(result.rect[prop]));
+                                }
+                            }
+                            else if (shouldBeClampped) {
+                                assert(isFinite(result.rect[prop]));
+                            }
+                        });
+
+                        if (isDefaultCase) {
+                            assert(numEq(expectDefault.matrixXYLocatorRange[0][0], result.matrixXYLocatorRange[0][0]));
+                            assert(numEq(expectDefault.matrixXYLocatorRange[0][1], result.matrixXYLocatorRange[0][1]));
+                            assert(numEq(expectDefault.matrixXYLocatorRange[1][0], result.matrixXYLocatorRange[1][0]));
+                            assert(numEq(expectDefault.matrixXYLocatorRange[1][1], result.matrixXYLocatorRange[1][1]));
+                        }
+
+                        return result;
+                    });
+
+                    function performTest(cb) {
+                        let testFailed = false;
+                        function assert(condition) {
+                            if (!condition) {
+                                testFailed = true;
+                                console.error('assertion failed', new Error());
+                            }
+                        }
+
+                        let result;
+                        try {
+                            result = cb(assert);
+                        }
+                        catch (err) {
+                            testFailed = true;
+                            console.error(err);
+                        }
+
+                        const COVER_SIZE = 10000; // Just a big enough number.
+                        let indicatorShape = {x: 0, y: 0, width: 0, height: 0};
+                        if (result) {
+                            indicatorShape = {};
+                            indicatorShape.x = eqNaN(result.rect.x) ? -COVER_SIZE / 2 : result.rect.x;
+                            indicatorShape.y = eqNaN(result.rect.y) ? -COVER_SIZE / 2 : result.rect.y;
+                            indicatorShape.width = eqNaN(result.rect.width) ? COVER_SIZE : result.rect.width;
+                            indicatorShape.height = eqNaN(result.rect.height) ? COVER_SIZE : result.rect.height;;
+                        }
+
+                        chart.setOption({
+                            graphic: {
+                                elements: [{
+                                    id: 'result_convertToLayout',
+                                    shape: indicatorShape,
+                                    ignore: testFailed,
+                                }, {
+                                    id: 'result_assertionFailure',
+                                    ignore: !testFailed,
+                                }]
+                            },
+                        });
+                    }
+                }
+
+                function eqNaN(value) {
+                    return value !== value;
+                }
+
+                function numEq(expect, actual) {
+                    return eqNaN(expect)
+                        ? eqNaN(actual)
+                        : expect === actual;
+                }
+
+            });
+
+        </script>
+
+
+
+
+
+    </body>
+</html>
+

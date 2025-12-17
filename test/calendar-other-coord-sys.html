@@ -1,0 +1,884 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>calendar</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main0"></div>
+        <div id="main_custom_series"></div>
+
+
+
+        <script>
+            require([
+                'echarts',
+                './data/czech_geo.json',
+                'data/svg/Beef_cuts_France.svg',
+            ], function (echarts, czech_geo, Beef_cuts_France) {
+                echarts.registerMap('czech_geo', czech_geo);
+                echarts.registerMap('Beef_cuts_France', {
+                    svg: Beef_cuts_France
+                });
+
+                const option = {
+                    calendar: [{
+                        id: 'calendar0',
+                        orient: 'vertical',
+                        width: 100,
+                        right: 30,
+                        height: '10%',
+                        bottom: 30,
+                        itemStyle: {
+                            borderWidth: 1,
+                        },
+                        yearLabel: {
+                            show: false,
+                            textStyle: {
+                                fontSize: 30
+                            }
+                        },
+                        dayLabel: {
+                            firstDay: 1,
+                            // nameMap: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+                        },
+                        monthLabel: {
+                            show: false
+                        },
+                        range: ['2017-01']
+                    }, {
+                        id: 'calendar1',
+                        orient: 'vertical',
+                        left: 30,
+                        right: 30,
+                        top: 70,
+                        bottom: 30,
+                        itemStyle: {
+                            borderWidth: 1,
+                        },
+                        yearLabel: {
+                            show: false,
+                            textStyle: {
+                                fontSize: 30
+                            }
+                        },
+                        dayLabel: {
+                            margin: 20,
+                            firstDay: 1,
+                            nameMap: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+                        },
+                        monthLabel: {
+                            show: false
+                        },
+                        range: ['2017-02']
+                    }],
+                    tooltip : {
+                        // trigger: 'axis',
+                    },
+                    title: [{
+                        text: 'This is toolbox',
+                        left: 'center',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-02',
+                        textStyle: {
+                            fontSize: 10
+                        }
+                    }],
+                    legend: {
+                        bottom: 20,
+                        data: ['line_q', 'line_p'],
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-01',
+                        bottom: 3,
+                        textStyle: {
+                            fontSize: 9,
+                        },
+                        itemHeight: 5,
+                        itemWidth: 10,
+                        itemGap: 3,
+                        padding: 2,
+                    },
+                    xAxis: [{
+                        id: 'cartesian_a',
+                        axisTick: {show: false},
+                        axisLabel: {fontSize: 9, margin: 3},
+                        splitLine: {show: false},
+                    }],
+                    yAxis: [{
+                        id: 'cartesian_a',
+                        axisTick: {show: false},
+                        axisLine: {show: false},
+                        axisLabel: {fontSize: 9, margin: 6},
+                    }],
+                    grid: [{
+                        id: 'cartesian_a',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-01',
+                        containLabel: true,
+                        top: 10,
+                        bottom: 22,
+                        left: 8,
+                        right: 8,
+                        tooltip: {
+                            trigger: 'axis',
+                        }
+                    }],
+                    toolbox: {
+                        show: true,
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            // dataView: { readOnly: false },
+                            restore: {},
+                            saveAsImage: {}
+                        },
+                        top: 'center',
+                        left: 'center',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-02',
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisLabel: {fontSize: 9},
+                    },
+                    radiusAxis: {
+                        axisLabel: {fontSize: 9},
+                    },
+                    polar: {
+                        // center: ['40%', '50%'],
+                        radius: '50%',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-03',
+                    },
+                    radar: {
+                        axisName: {
+                            color: '#333',
+                            fontSize: 9,
+                        },
+                        nameGap: 0,
+                        radius: '80%',
+                        indicator : [
+                            {text: 'IE8-', max: 400},
+                            {text: 'IE9+', max: 400},
+                            {text: 'Safari', max: 400},
+                            {text: 'Firefox', max: 400},
+                            {text: 'Chrome', max: 400}
+                        ],
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-04',
+                    },
+                    singleAxis: {
+                        type: 'value',
+                        // height: height,
+                        splitArea: {
+                            show: true
+                        },
+                        axisTick: {show: false},
+                        axisLabel: {fontSize: 9, margin: 3},
+                        bottom: 12,
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-05',
+                    },
+                    parallelAxis: [
+                        {dim: 0, name: 'f0'},
+                        {dim: 1, name: 'f1'},
+                        {dim: 2, name: 'f2'}
+                    ],
+                    parallel: {
+                        left: 10,
+                        right: 30,
+                        top: 30,
+                        bottom: 10,
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-06',
+                        parallelAxisDefault: {
+                            nameGap: 5,
+                        }
+                    },
+                    geo: [{
+                        map: 'czech_geo',
+                        id: 'czech_geo_component',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-07',
+                        // left: '50%',
+                        // right: 10,
+                        // layoutCenter: [10, 10],
+                        // layoutSize: 100,
+                    }],
+                    visualMap: [{
+                        type: 'continuous',
+                        left: 'center',
+                        bottom: 0,
+                        // width: '50%',
+                        itemHeight: 90,
+                        itemWidth: 10,
+                        min: 5,
+                        max: 100,
+                        // text: ['Price'],
+                        realtime: true,
+                        calculable: true,
+                        orient: 'horizontal',
+                        seriesId: ['Beef_cuts_France', 'czech_geo_series'],
+                        inRange: {
+                            color: ['#dbac00', '#db6e00', '#cf0000']
+                        },
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-08',
+                    }, {
+                        type: 'piecewise',
+                        right: 0,
+                        bottom: 0,
+                        top: 'center',
+                        // width: '50%',
+                        // itemHeight: 90,
+                        itemWidth: 10,
+                        itemGap: 5,
+                        min: 5,
+                        max: 100,
+                        // text: ['Price'],
+                        realtime: true,
+                        calculable: true,
+                        textStyle: {
+                            fontSize: 9,
+                        },
+                        textGap: 3,
+                        // orient: 'horizontal',
+                        seriesId: ['Beef_cuts_France', 'czech_geo_series'],
+                        inRange: {
+                            color: ['#dbac00', '#db6e00', '#cf0000']
+                        },
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-07',
+                    }],
+                    dataZoom: [{
+                        type: 'slider',
+                        xAxisId: 'cartesian_a',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-10',
+                        bottom: 0,
+                        height: 20,
+                        left: 'center',
+                        top: 'center',
+                    }],
+                    series: [{
+                        type: 'line',
+                        name: 'line_q',
+                        xAxisId: 'cartesian_a',
+                        yAxisId: 'cartesian_a',
+                        data: [[12, 321], [34, 516], [56, 198]]
+                    }, {
+                        type: 'line',
+                        name: 'line_p',
+                        xAxisId: 'cartesian_a',
+                        yAxisId: 'cartesian_a',
+                        data: [[12, 121], [34, 216], [56, 798]]
+                    }, {
+                        type: 'bar',
+                        data: [1, 2, '-', 3, 0, 5, 7],
+                        coordinateSystem: 'polar',
+                        barMaxWidth: '50%',
+                        barMinHeight: 10
+                    }, {
+                        type: 'radar',
+                        symbol: 'none',
+                        lineStyle: {
+                            color: 'rgba(180,100,120)',
+                            width: 1,
+                        },
+                        emphasis: {
+                            areaStyle: {
+                                color:'rgba(0,250,0,0.3)'
+                            }
+                        },
+                        data: (function () {
+                            const dataList = [];
+                            for (let i = 0; i < 10; i++) {
+                                dataList.push({
+                                    value:[
+                                        (40 - i) * 10,
+                                        (38 - i) * 4 + 60,
+                                        i * 15 + 10,
+                                        i * 30,
+                                        i * 50 / 2
+                                    ],
+                                    name: i + 2000 + ''
+                                });
+                            }
+                            return dataList;
+                        })()
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: function (val) {
+                            return val[1] / 2;
+                        },
+                        data: (function () {
+                            const dataList = [];
+                            for (let i = 0; i < 30; i++) {
+                                dataList.push([Math.random() * 100, Math.random() * 30]);
+                            }
+                            return dataList;
+                        })()
+                    }, {
+                        type: 'parallel',
+                        smooth: 0,
+                        lineStyle: {color: 'red'},
+                        data: (function () {
+                            function generate_data(n, m, lb, ub) {
+                                let s = [];
+                                for (let i = 0; i < n; i++) {
+                                    let vec = [];
+                                    for (let j = 0; j < m; j++) {
+                                        vec.push(lb + (Math.random() * (ub - lb)));
+                                    }
+                                    s.push(vec);
+                                }
+                                return s;
+                            }
+                            data = generate_data(20, 3, 0.0, 1.0);
+                            return data;
+                        })(),
+                    }, {
+                        name: 'French Beef Cuts',
+                        id: 'Beef_cuts_France',
+                        type: 'map',
+                        map: 'Beef_cuts_France',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coordinateSystemUsage: 'box',
+                        coord: '2017-02-08',
+                        roam: true,
+                        // top: 0,
+                        bottom: 0,
+                        aspectScale: 1,
+                        zoom: 1,
+                        // layoutSize: '30%',
+                        showLegendSymbol: false,
+                        emphasis: {
+                            label: {
+                                show: false
+                            }
+                        },
+                        data: [
+                            { name: 'Queue', value: 15 },
+                            { name: 'Langue', value: 35 },
+                            { name: 'Plat de joue', value: 15 },
+                            { name: 'Gros bout de poitrine', value: 25 },
+                            { name: 'Jumeau à pot-au-feu', value: 45 },
+                            { name: 'Onglet', value: 85 },
+                            { name: 'Plat de tranche', value: 25 },
+                            { name: 'Araignée', value: 15 },
+                            { name: 'Gîte à la noix', value: 55 },
+                            { name: 'Bavette d\'aloyau', value: 25 },
+                            { name: 'Tende de tranche', value: 65 },
+                            { name: 'Rond de gîte', value: 45 },
+                            { name: 'Bavettede de flanchet', value: 85 },
+                            { name: 'Flanchet', value: 35 },
+                            { name: 'Hampe', value: 75 },
+                            { name: 'Plat de côtes', value: 65 },
+                            { name: 'Tendron Milieu de poitrine', value: 65 },
+                            { name: 'Macreuse à pot-au-feu', value: 85 },
+                            { name: 'Rumsteck', value: 75 },
+                            { name: 'Faux-filet', value: 65 },
+                            { name: 'Côtes Entrecôtes', value: 55 },
+                            { name: 'Basses côtes', value: 45 },
+                            { name: 'Collier', value: 85 },
+                            { name: 'Jumeau à biftek', value: 15 },
+                            { name: 'Paleron', value: 65 },
+                            { name: 'Macreuse à bifteck', value: 45 },
+                            { name: 'Gîte', value: 85 },
+                            { name: 'Aiguillette baronne', value: 65 },
+                            { name: 'Filet', value: 95 },
+                        ]
+                    }, {
+                        type: 'map',
+                        map: 'czech_geo',
+                        coordinateSystem: 'calendar',
+                        coordinateSystemUsage: 'box',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-09',
+                        // left: '50%',
+                        // right: 10,
+                        // layoutCenter: [10, 10],
+                        // layoutSize: 100,
+                    }, {
+                        type: 'map',
+                        geoId: 'czech_geo_component',
+                        id: 'czech_geo_series',
+                        geoIndex: 0,
+                        data: [
+                            {name: 'Praha', value: 23},
+                            {name: 'Plzeňský kraj', value: 51},
+                            {name: 'Středočeský kraj', value: 91}
+                        ]
+                    }, {
+                        type: 'pie',
+                        id: 'pie_a',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-11',
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a1', value: 123},
+                            {name: 'no_center', value: 234},
+                            {name: 'c1', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_b',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-12',
+                        center: [15, 15],
+                        radius: '20%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a2', value: 123},
+                            {name: 'center_15', value: 234},
+                            {name: 'c2', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_c',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-13',
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a', value: 123},
+                            {name: 'b', value: 234},
+                            {name: 'no_coord', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_d',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-14',
+                        left: '50%',
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a', value: 123},
+                            {name: 'b', value: 234},
+                            {name: 'left:50%', value: 345},
+                        ],
+                    }, {
+                        type: 'funnel',
+                        id: 'funnel_a',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-15',
+                        gap: 3,
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        label: {position: 'inside'},
+                        sort: 'ascending',
+                        data:[
+                            {value:60, name:'a'},
+                            {value:40, name:'b'},
+                            {value:20, name:'c'},
+                            {value:80, name:'d'},
+                        ]
+                    }, {
+                        type: 'graph',
+                        id: 'graph_a',
+                        layout: 'none',
+                        coordinateSystem: 'calendar',
+                        coordinateSystemUsage: 'box',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-16',
+                        symbolSize: 15,
+                        roam: true,
+                        label: {show: true, fontSize: 10},
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 7],
+                        lineStyle: {opacity: 0.9, width: 2, curveness: 0},
+                        data: [
+                            {name: 'Node 0', x: 300, y: 300},
+                            {name: 'Node 1', x: 800, y: 300},
+                            {name: 'all in one cell', x: 550, y: 100},
+                            {name: 'Node 3', x: 550, y: 500}
+                        ],
+                        links: [
+                            {source: 0, target: 1},
+                            {source: 1, target: 2},
+                            {source: 0, target: 3}
+                        ],
+                    }, {
+                        type: 'graph',
+                        id: 'graph_b',
+                        layout: 'none',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        // no coord, but use coord sys by data.
+                        symbolSize: 15,
+                        roam: true,
+                        label: {show: true, fontSize: 10},
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 7],
+                        lineStyle: {opacity: 0.9, width: 2, curveness: 0},
+                        data: [
+                            {name: 'Node 0', value: ['2017-02-17', 100]},
+                            {name: 'Node 1', value: ['2017-02-18', 200]},
+                            {name: 'cross cells', value: ['2017-02-19', 300]},
+                        ],
+                        links: [
+                            {source: 0, target: 1},
+                            {source: 1, target: 2},
+                            {source: 0, target: 3}
+                        ],
+                    }, {
+                        type: 'sankey',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-20',
+                        layout: 'none',
+                        roam: true,
+                        roamTrigger: 'self',
+                        // left: 50,
+                        // bottom: 20,
+                        // right: 50,
+                        scaleLimit: {min: 0.5, max: 1.5},
+                        emphasis: {focus: 'adjacency'},
+                        data: [
+                            {name: 'a'},
+                            {name: 'b'},
+                            {name: 'a1'},
+                            {name: 'a2'},
+                            {name: 'b1'},
+                            {name: 'c'}
+                        ],
+                        links: [
+                            {source: 'a', target: 'a1', value: 5},
+                            {source: 'a', target: 'a2', value: 3},
+                            {source: 'b', target: 'b1', value: 8},
+                            {source: 'a', target: 'b1', value: 3},
+                            {source: 'b1', target: 'a1', value: 1},
+                            {source: 'b1', target: 'c', value: 2},
+                        ]
+                    }, {
+                        type: 'tree',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        roamTrigger: 'self',
+                        coord: '2017-02-21',
+                        data: [{
+                            "name": "flare",
+                            "value": 111,
+                            "children": [
+                                {
+                                    "name": "flex",
+                                    "value": 222,
+                                    "children": [
+                                        {"name": "FlareVis", "value": 4116, symbolSize: 20}
+                                    ]
+                                },
+                                {
+                                    "name": "scale",
+                                    "value": 333,
+                                    "children": [
+                                        {"name": "IScaleMap", "value": 2105},
+                                        {"name": "LinearScale", "value": 1316},
+                                        {"name": "LogScale", "value": 3151},
+                                        {"name": "OrdinalScale", "value": 3770},
+                                        {"name": "QuantileScale", "value": 2435},
+                                        {"name": "QuantitativeScale", "value": 4839},
+                                        {"name": "RootScale", "value": 1756},
+                                        {"name": "Scale", "value": 4268},
+                                        {"name": "ScaleType", "value": 1821},
+                                        {"name": "TimeScale", "value": 5833}
+                                ]
+                                },
+                                {
+                                    "name": "display",
+                                    "value": 444,
+                                    "children": [
+                                        {"name": "DirtySprite", "value": 8833}
+                                ]
+                                }
+                            ]
+                        }],
+                        // top: '18%',
+                        // bottom: '14%',
+                        roam: true,
+                        // roam: 'scale',
+                        // roam: 'move',
+                        // layout: 'radial',
+                        symbol: 'emptyCircle',
+                        symbolSize: 7,
+                        label: {show: false},
+                        initialTreeDepth: 3,
+                        animationDurationUpdate: 750
+                    }, {
+                        type: 'treemap',
+                        coordinateSystem: 'calendar',
+                        calendarId: 'calendar1',
+                        coord: '2017-02-22',
+                        visibleMin: 300,
+                        // animation: false,
+                        animationDurationUpdate: 2000,
+                        // data: data.children,
+                        data: [
+                            {
+                                name: 'a',
+                                value: 10,
+                                children: [{
+                                    name: 'a1',
+                                    value: 11,
+                                    children: [
+                                        {name: 'a11', value: 111},
+                                        {name: 'a111', value: 1111},
+                                        {name: 'a112', value: 1111},
+                                        {name: 'a113', value: 111},
+                                        {name: 'a114', value: 111},
+                                        {name: 'a115', value: 1100}
+                                    ]
+                                }
+                            ]},
+                            {
+                                name: 'b',
+                                value: 6,
+                                children: [{
+                                    name: 'b1',
+                                    value: 15,
+                                    chidren: [
+                                        {name: 'b11', value: 120}
+                                    ]
+                                }]
+                            }
+                        ],
+                        leafDepth: 1,
+                        nodeClick: 'link',
+                        levels: [{
+                            itemStyle: {
+                                borderColor: '#333',
+                                borderWidth: 4,
+                                gapWidth: 2
+                            }
+                        }, {
+                            itemStyle: {
+                                borderColor: '#aaa',
+                                gapWidth: 2,
+                                borderWidth: 2
+                            },
+                            colorSaturation: [0.2, 0.7]
+                        }]
+                    }] // End of series
+                };
+
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Declaratively lay out other components and coord sys',
+                    ],
+                    option: option,
+                    height: 550,
+                    inputStyle: 'compact',
+                    inputs: [{
+                        text: 'border style:',
+                        type: 'select',
+                        options: [{
+                            value: 'default',
+                        }, {
+                            text: 'thick width',
+                            input: {type: 'range', value: 10, min: 0, max: 20}
+                        }],
+                        onchange() {
+                            const opt = this.value;
+                            let itemStyle;
+                            let splitLineStyle;
+                            if (opt === 'default') {
+                                itemStyle = {
+                                    borderColor: '#ccc',
+                                    borderWidth: 1,
+                                };
+                                splitLineStyle = {
+                                    color: '#111',
+                                };
+                            }
+                            else {
+                                itemStyle = {
+                                    borderColor: '#ccc',
+                                    borderWidth: this.value
+                                };
+                                splitLineStyle = {
+                                    color: '#ccc',
+                                };
+                            }
+                            chart.setOption({
+                                calendar: {
+                                    id: 'calendar1',
+                                    itemStyle,
+                                    splitLine: {lineStyle: splitLineStyle}
+                                }
+                            });
+                        }
+                    }]
+                });
+
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                function renderItem(params, api) {
+                    const timeVal = api.value(0);
+                    const contentRect = api.layout(timeVal).contentRect;
+                    const rect = api.layout(timeVal).rect;
+                    const center = api.coord(timeVal);
+                    return {
+                        type: 'group',
+                        children: [{
+                            type: 'rect',
+                            shape: contentRect,
+                            style: api.style({
+                                fill: 'none',
+                                stroke: 'blue',
+                                lineWidth: 2,
+                                // opacity: 0.4,
+                            }),
+                        }, {
+                            type: 'rect',
+                            shape: rect,
+                            style: api.style({
+                                fill: 'none',
+                                stroke: 'green',
+                                lineWidth: 2,
+                                // opacity: 0.4,
+                            }),
+                        }, {
+                            type: 'rect',
+                            shape: {x: center[0] - 5, y: center[1] - 5, width: 10, height: 10},
+                            style: {
+                                fill: 'green',
+                                opacity: 0.8,
+                            }
+                        }]
+                    };
+                };
+
+                var option = {
+                    dataset: {
+                        source: [
+                            ['2017-02-01', 1212, 2321, 1412],
+                            ['2017-02-02', 7181, 2114, 1402],
+                            ['2017-02-03', 2763, 4212, 8172],
+                            ['2017-02-04', 6122, 2942, 6121],
+                            ['2017-02-05', 4221, 3411, 1987],
+                            ['2017-02-06', 7221, 5121, 1303],
+                        ]
+                    },
+                    calendar: {
+                        id: 'calendar1',
+                        orient: 'vertical',
+                        left: 100,
+                        right: 100,
+                        top: 70,
+                        bottom: 30,
+                        itemStyle: {
+                            borderWidth: 10,
+                        },
+                        yearLabel: {
+                            show: false,
+                            textStyle: {
+                                fontSize: 30
+                            }
+                        },
+                        dayLabel: {
+                            margin: 20,
+                            firstDay: 1,
+                            nameMap: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+                        },
+                        monthLabel: {
+                            show: false
+                        },
+                        range: ['2017-02']
+                    },
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'calendar',
+                        encode: {time: 0},
+                        renderItem: renderItem,
+                    }],
+                };
+
+                var chart = testHelper.create(echarts, 'main_custom_series', {
+                    title: [
+                        'custom series, test api.coord and api.layout'
+                    ],
+                    height: 350,
+                    option: option
+                });
+            });
+        </script>
+
+
+
+    </body>
+</html>

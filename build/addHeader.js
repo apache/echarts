@@ -17,17 +17,10 @@
 * under the License.
 */
 
-
 const fs = require('fs');
-const preamble = require('./preamble');
-const pathTool = require('path');
 const chalk = require('chalk');
-
-// In the `.headerignore`, each line is a pattern in RegExp.
-// all relative path (based on the echarts base directory) is tested.
-// The pattern should match the relative path completely.
-const excludesPath = pathTool.join(__dirname, '../.headerignore');
-const ecBasePath = pathTool.join(__dirname, '../');
+const preamble = require('./preamble');
+const eachFile = require('./headerUtil').eachFile;
 
 const isVerbose = process.argv[2] === '--verbose';
 
@@ -128,56 +121,6 @@ function run() {
     console.log('\nDone.');
 }
 
-function eachFile(visit) {
 
-    const excludePatterns = [];
-    const extReg = /\.([a-zA-Z0-9_-]+)$/;
-
-    prepareExcludePatterns();
-    travel('./');
-
-    function travel(relativePath) {
-        if (isExclude(relativePath)) {
-            return;
-        }
-
-        const absolutePath = pathTool.join(ecBasePath, relativePath);
-        const stat = fs.statSync(absolutePath);
-
-        if (stat.isFile()) {
-            visit(absolutePath, getExt(absolutePath));
-        }
-        else if (stat.isDirectory()) {
-            fs.readdirSync(relativePath).forEach(function (file) {
-                travel(pathTool.join(relativePath, file));
-            });
-        }
-    }
-
-    function prepareExcludePatterns() {
-        const content = fs.readFileSync(excludesPath, {encoding: 'utf-8'});
-        content.replace(/\r/g, '\n').split('\n').forEach(function (line) {
-            line = line.trim();
-            if (line && line.charAt(0) !== '#') {
-                excludePatterns.push(new RegExp(line));
-            }
-        });
-    }
-
-    function isExclude(relativePath) {
-        for (let i = 0; i < excludePatterns.length; i++) {
-            if (excludePatterns[i].test(relativePath)) {
-                return true;
-            }
-        }
-    }
-
-    function getExt(path) {
-        if (path) {
-            const mathResult = path.match(extReg);
-            return mathResult && mathResult[1];
-        }
-    }
-}
 
 run();

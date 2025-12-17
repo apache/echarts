@@ -23,6 +23,7 @@ import GlobalModel from '../../model/Global';
 import SunburstSeriesModel, { SunburstSeriesNodeItemOption } from './SunburstSeries';
 import { Dictionary, ColorString } from '../../util/types';
 import { TreeNode } from '../../data/Tree';
+import tokens from '../../visual/tokens';
 
 export default function sunburstVisual(ecModel: GlobalModel) {
 
@@ -30,6 +31,11 @@ export default function sunburstVisual(ecModel: GlobalModel) {
 
     // Default color strategy
     function pickColor(node: TreeNode, seriesModel: SunburstSeriesModel, treeHeight: number) {
+        if (node.depth === 0) {
+            // Don't use palette color for the root node, because it's displayed only when drilling down.
+            return tokens.color.neutral50;
+        }
+
         // Choose color from palette based on the first level.
         let current = node;
         while (current && current.depth > 1) {

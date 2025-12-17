@@ -108,8 +108,12 @@ class ContinuousView extends VisualMapView {
 
     private _firstShowIndicator: boolean;
 
-    private _api: ExtensionAPI;
+    init(ecModel: GlobalModel, api: ExtensionAPI) {
+        super.init(ecModel, api);
 
+        this._hoverLinkFromSeriesMouseOver = zrUtil.bind(this._hoverLinkFromSeriesMouseOver, this);
+        this._hideIndicator = zrUtil.bind(this._hideIndicator, this);
+    }
 
     doRender(
         visualMapModel: ContinuousModel,
@@ -117,8 +121,6 @@ class ContinuousView extends VisualMapView {
         api: ExtensionAPI,
         payload: {type: string, from: string}
     ) {
-        this._api = api;
-
         if (!payload || payload.type !== 'selectDataRange' || payload.from !== this.uid) {
             this._buildView();
         }
@@ -189,8 +191,10 @@ class ContinuousView extends VisualMapView {
             style: createTextStyle(textStyleModel, {
                 x: position[0],
                 y: position[1],
-                verticalAlign: orient === 'horizontal' ? 'middle' : align as TextVerticalAlign,
-                align: orient === 'horizontal' ? align as TextAlign : 'center',
+                verticalAlign: textStyleModel.get('verticalAlign')
+                    || (orient === 'horizontal' ? 'middle' : align as TextVerticalAlign),
+                align: textStyleModel.get('align')
+                    || (orient === 'horizontal' ? align as TextAlign : 'center'),
                 text
             })
         }));
@@ -599,6 +603,7 @@ class ContinuousView extends VisualMapView {
         const handleLabels = shapes.handleLabels;
         const itemSize = visualMapModel.itemSize;
         const dataExtent = visualMapModel.getExtent();
+        const align = this._applyTransform('left', shapes.mainGroup);
 
         each([0, 1], function (handleIndex) {
             const handleThumb = handleThumbs[handleIndex];
@@ -616,6 +621,17 @@ class ContinuousView extends VisualMapView {
                 shapes.handleLabelPoints[handleIndex],
                 graphic.getTransform(handleThumb, this.group)
             );
+
+            if (this._orient === 'horizontal') {
+                // If visualMap controls symbol size, an additional offset needs to be added to labels to avoid collision at minimum size.
+                // Offset reaches value of 0 at "maximum" position, so maximum position is not altered at all.
+                const minimumOffset = align === 'left' || align === 'top'
+                    ? (itemSize[0] - symbolSize) / 2
+                    : (itemSize[0] - symbolSize) / -2;
+
+                textPoint[1] += minimumOffset;
+            }
+
             handleLabels[handleIndex].setStyle({
                 x: textPoint[0],
                 y: textPoint[1],
@@ -711,7 +727,7 @@ class ContinuousView extends VisualMapView {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
                 // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
-                this._api.enterBlur(handleLabels[i]);
+                this.api.enterBlur(handleLabels[i]);
             }
         }
     }
@@ -856,7 +872,7 @@ class ContinuousView extends VisualMapView {
             for (let i = 0; i < handleLabels.length; i++) {
                 // Fade out handle labels.
                 // NOTE: Must use api enter/leave on emphasis/blur/select state. Or the global states manager will change it.
-                this._api.leaveBlur(handleLabels[i]);
+                this.api.leaveBlur(handleLabels[i]);
             }
         }
     }
@@ -874,6 +890,7 @@ class ContinuousView extends VisualMapView {
         this._hideIndicator();
 
         const zr = this.api.getZr();
+
         zr.off('mouseover', this._hoverLinkFromSeriesMouseOver);
         zr.off('mouseout', this._hideIndicator);
     }
@@ -892,7 +909,7 @@ class ContinuousView extends VisualMapView {
             : graphic.transformDirection(vertex, transform, inverse);
     }
 
- // TODO: TYPE more specified payload types.
+    // TODO: TYPE more specified payload types.
     private _dispatchHighDown(type: 'highlight' | 'downplay', batch: Payload['batch']) {
         batch && batch.length && this.api.dispatchAction({
             type: type,
@@ -904,14 +921,6 @@ class ContinuousView extends VisualMapView {
      * @override
      */
     dispose() {
-        this._clearHoverLinkFromSeries();
-        this._clearHoverLinkToSeries();
-    }
-
-    /**
-     * @override
-     */
-    remove() {
         this._clearHoverLinkFromSeries();
         this._clearHoverLinkToSeries();
     }

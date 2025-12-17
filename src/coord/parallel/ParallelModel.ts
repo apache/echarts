@@ -21,7 +21,10 @@
 import * as zrUtil from 'zrender/src/core/util';
 import ComponentModel from '../../model/Component';
 import Parallel from './Parallel';
-import { DimensionName, ComponentOption, BoxLayoutOptionMixin } from '../../util/types';
+import {
+    DimensionName, ComponentOption, BoxLayoutOptionMixin, ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
+} from '../../util/types';
 import ParallelAxisModel, { ParallelAxisOption } from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
@@ -30,7 +33,12 @@ import SeriesModel from '../../model/Series';
 
 export type ParallelLayoutDirection = 'horizontal' | 'vertical';
 
-export interface ParallelCoordinateSystemOption extends ComponentOption, BoxLayoutOptionMixin {
+export interface ParallelCoordinateSystemOption extends
+    ComponentOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
+    BoxLayoutOptionMixin {
+
     mainType?: 'parallel';
 
     layout?: ParallelLayoutDirection;

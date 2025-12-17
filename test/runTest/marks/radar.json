@@ -1,0 +1,10 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/21081",
+    "comment": "fix(radar): itemStyle of emphasis not working",
+    "type": "Bug Fixing",
+    "markedBy": "Ovilia",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1753165510342
+  }
+]

@@ -52,9 +52,9 @@ export interface BaseBarSeriesOption<StateOption, ExtraStateOption extends State
     /**
      * Max width of bar. Defaults to 1 on cartesian coordinate system. Otherwise it's null.
      */
-    barMaxWidth?: number
+    barMaxWidth?: number | string
 
-    barMinWidth?: number
+    barMinWidth?: number | string
 
     /**
      * Bar width. Will be calculated automatically.
@@ -66,6 +66,11 @@ export interface BaseBarSeriesOption<StateOption, ExtraStateOption extends State
      * Gap between each bar inside category. Default to be 30%. Can be an aboslute pixel value
      */
     barGap?: string | number
+
+    /**
+     * @private
+     */
+    defaultBarGap?: string | number
 
     /**
      * Gap between each category. Default to be 20%. can be an absolute pixel value.
@@ -101,11 +106,12 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
                     // If axis type is category, use tick coords instead
                     if (axis.type === 'category' && dims != null) {
                         const tickCoords = axis.getTicksCoords();
+                        const alignTicksWithLabel = axis.getTickModel().get('alignWithLabel');
 
                         let targetTickId = clampData[idx];
                         // The index of rightmost tick of markArea is 1 larger than x1/y1 index
                         const isEnd = dims[idx] === 'x1' || dims[idx] === 'y1';
-                        if (isEnd) {
+                        if (isEnd && !alignTicksWithLabel) {
                             targetTickId += 1;
                         }
 
@@ -198,7 +204,9 @@ class BaseBarSeriesModel<Opts extends BaseBarSeriesOption<unknown> = BaseBarSeri
         large: false,
         largeThreshold: 400,
         progressive: 3e3,
-        progressiveChunkMode: 'mod'
+        progressiveChunkMode: 'mod',
+
+        defaultBarGap: '10%'
     };
 }
 

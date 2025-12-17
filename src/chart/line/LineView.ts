@@ -52,10 +52,10 @@ import { setStatesStylesFromModel, setStatesFlag, toggleHoverEmphasis, SPECIAL_S
 import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
 import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
-
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 import { convertToColorString } from '../../util/format';
+import { warnDeprecated } from '../../util/styleCompat';
 import { lerp } from 'zrender/src/tool/color';
 import Element from 'zrender/src/Element';
 
@@ -132,7 +132,7 @@ function getStackedOnPoints(
     data: SeriesData,
     dataCoordInfo: ReturnType<typeof prepareDataCoordInfo>
 ) {
-    if (!dataCoordInfo.valueDim) {
+    if (dataCoordInfo.valueDim == null) {
         return [];
     }
 
@@ -147,8 +147,19 @@ function getStackedOnPoints(
     return points;
 }
 
+/**
+ * Filter the null data and extend data for step considering `stepTurnAt`
+ *
+ * @param points data to convert, that may containing null
+ * @param basePoints base data to reference, used only for areaStyle points
+ * @param coordSys coordinate system
+ * @param stepTurnAt 'start' | 'end' | 'middle' | true
+ * @param connectNulls whether to connect nulls
+ * @returns converted point positions
+ */
 function turnPointsIntoStep(
     points: ArrayLike<number>,
+    basePoints: ArrayLike<number> | null,
     coordSys: Cartesian2D | Polar,
     stepTurnAt: 'start' | 'end' | 'middle',
     connectNulls: boolean
@@ -163,12 +174,18 @@ function turnPointsIntoStep(
     const nextPt: number[] = [];
     const filteredPoints = [];
     if (connectNulls) {
-      for (i = 0; i < points.length; i += 2) {
-          if (!isNaN(points[i]) && !isNaN(points[i + 1])) {
-              filteredPoints.push(points[i], points[i + 1]);
-          }
-      }
-      points = filteredPoints;
+        for (i = 0; i < points.length; i += 2) {
+            /**
+             * For areaStyle of stepped lines, `stackedOnPoints` should be
+             * filtered the same as `points` so that the base axis values
+             * should stay the same as the lines above. See #20021
+             */
+            const reference = basePoints || points;
+            if (!isNaN(reference[i]) && !isNaN(reference[i + 1])) {
+                filteredPoints.push(points[i], points[i + 1]);
+            }
+        }
+        points = filteredPoints;
     }
     for (i = 0; i < points.length - 2; i += 2) {
         nextPt[0] = points[i + 2];
@@ -604,7 +621,7 @@ class LineView extends ChartView {
     _endLabel: graphic.Text;
 
     _polyline: ECPolyline;
-    _polygon: ECPolygon;
+    _polygon?: ECPolygon;
 
     _stackedOnPoints: ArrayLike<number>;
     _points: ArrayLike<number>;
@@ -624,6 +641,8 @@ class LineView extends ChartView {
 
         this._symbolDraw = symbolDraw;
         this._lineGroup = lineGroup;
+
+        this._changePolyState = zrUtil.bind(this._changePolyState, this);
     }
 
     render(seriesModel: LineSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
@@ -644,7 +663,7 @@ class LineView extends ChartView {
 
         const lineGroup = this._lineGroup;
 
-        const hasAnimation = !ecModel.ssr && seriesModel.isAnimationEnabled();
+        const hasAnimation = !ecModel.ssr && seriesModel.get('animation');
 
         const isAreaChart = !areaStyleModel.isEmpty();
 
@@ -717,12 +736,11 @@ class LineView extends ChartView {
             );
 
             if (step) {
-                // TODO If stacked series is not step
-                points = turnPointsIntoStep(points, coordSys, step, connectNulls);
-
                 if (stackedOnPoints) {
-                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step, connectNulls);
+                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, points, coordSys, step, connectNulls);
                 }
+                // TODO If stacked series is not step
+                points = turnPointsIntoStep(points, null, coordSys, step, connectNulls);
             }
 
             polyline = this._newPolyline(points);
@@ -801,11 +819,11 @@ class LineView extends ChartView {
                 else {
                     // Not do it in update with animation
                     if (step) {
-                        // TODO If stacked series is not step
-                        points = turnPointsIntoStep(points, coordSys, step, connectNulls);
                         if (stackedOnPoints) {
-                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step, connectNulls);
+                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, points, coordSys, step, connectNulls);
                         }
+                        // TODO If stacked series is not step
+                        points = turnPointsIntoStep(points, null, coordSys, step, connectNulls);
                     }
 
                     polyline.setShape({
@@ -885,9 +903,7 @@ class LineView extends ChartView {
             toggleHoverEmphasis(polygon, focus, blurScope, emphasisDisabled);
         }
 
-        const changePolyState = (toState: DisplayState) => {
-            this._changePolyState(toState);
-        };
+        const changePolyState = this._changePolyState;
 
         data.eachItemGraphicEl(function (el) {
             // Switch polyline / polygon state if element changed its state.
@@ -904,21 +920,31 @@ class LineView extends ChartView {
         this._step = step;
         this._valueOrigin = valueOrigin;
 
-        if (seriesModel.get('triggerLineEvent')) {
-            this.packEventData(seriesModel, polyline);
-            polygon && this.packEventData(seriesModel, polygon);
+        const triggerEvent = seriesModel.get('triggerEvent');
+        const triggerLineEvent = seriesModel.get('triggerLineEvent');
+
+        if (__DEV__) {
+            triggerLineEvent && warnDeprecated('triggerLineEvent', 'Use the `triggerEvent` option instead.');
         }
+
+        const shouldTriggerLineEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'line';
+        const shouldTriggerAreaEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'area';
+
+        this.packEventData(seriesModel, polyline, shouldTriggerLineEvent);
+        polygon && this.packEventData(seriesModel, polygon, shouldTriggerAreaEvent);
     }
 
-    private packEventData(seriesModel: LineSeriesModel, el: Element) {
-        getECData(el).eventData = {
+    private packEventData(seriesModel: LineSeriesModel, el: Element, enable: boolean) {
+        getECData(el).eventData = enable ? {
             componentType: 'series',
             componentSubType: 'line',
             componentIndex: seriesModel.componentIndex,
             seriesIndex: seriesModel.seriesIndex,
             seriesName: seriesModel.name,
-            seriesType: 'line'
-        };
+            seriesType: 'line',
+            // for determining this event is triggered by area or line
+            selfType: el === this._polygon ? 'area' : 'line'
+        } : null;
     }
 
     highlight(
@@ -1337,10 +1363,10 @@ class LineView extends ChartView {
         let stackedOnNext = diff.stackedOnNext;
         if (step) {
             // TODO If stacked series is not step
-            current = turnPointsIntoStep(diff.current, coordSys, step, connectNulls);
-            stackedOnCurrent = turnPointsIntoStep(diff.stackedOnCurrent, coordSys, step, connectNulls);
-            next = turnPointsIntoStep(diff.next, coordSys, step, connectNulls);
-            stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step, connectNulls);
+            stackedOnCurrent = turnPointsIntoStep(diff.stackedOnCurrent, diff.current, coordSys, step, connectNulls);
+            current = turnPointsIntoStep(diff.current, null, coordSys, step, connectNulls);
+            stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, diff.next, coordSys, step, connectNulls);
+            next = turnPointsIntoStep(diff.next, null, coordSys, step, connectNulls);
         }
         // Don't apply animation if diff is large.
         // For better result and avoid memory explosion problems like

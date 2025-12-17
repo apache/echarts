@@ -314,7 +314,7 @@ export function querySeriesUpstreamDatasetModel(
 export function queryDatasetUpstreamDatasetModels(
     datasetModel: DatasetModel
 ): DatasetModel[] {
-    // Only these attributes declared, we by defualt reference to `datasetIndex: 0`.
+    // Only these attributes declared, we by default reference to `datasetIndex: 0`.
     // Otherwise, no reference.
     if (!datasetModel.get('transform', true)
         && !datasetModel.get('fromTransformResult', true)
@@ -449,8 +449,8 @@ function doGuessOrdinal(
     function detectValue(val: OptionDataValue): BeOrdinalValue {
         const beStr = isString(val);
         // Consider usage convenience, '1', '2' will be treated as "number".
-        // `isFinit('')` get `true`.
-        if (val != null && isFinite(val as number) && val !== '') {
+        // `Number('')` (or any whitespace) is `0`.
+        if (val != null && Number.isFinite(Number(val)) && val !== '') {
             return beStr ? BE_ORDINAL.Might : BE_ORDINAL.Not;
         }
         else if (beStr && val !== '-') {

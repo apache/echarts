@@ -25,10 +25,8 @@ import { RadiusAxisModel } from '../../coord/polar/AxisModel';
 import Polar from '../../coord/polar/Polar';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
 import GlobalModel from '../../model/Global';
+import ExtensionAPI from '../../core/ExtensionAPI';
 
-const axisBuilderAttrs = [
-    'axisLine', 'axisTickLabel', 'axisName'
-] as const;
 const selfBuilderAttrs = [
     'splitLine', 'splitArea', 'minorSplitLine'
 ] as const;
@@ -44,7 +42,7 @@ class RadiusAxisView extends AxisView {
 
     private _axisGroup: graphic.Group;
 
-    render(radiusAxisModel: RadiusAxisModel, ecModel: GlobalModel) {
+    render(radiusAxisModel: RadiusAxisModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this.group.removeAll();
         if (!radiusAxisModel.get('show')) {
             return;
@@ -63,9 +61,9 @@ class RadiusAxisView extends AxisView {
         const radiusExtent = radiusAxis.getExtent();
 
         const layout = layoutAxis(polar, radiusAxisModel, axisAngle);
-        const axisBuilder = new AxisBuilder(radiusAxisModel, layout);
-        zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
-        newAxisGroup.add(axisBuilder.getGroup());
+        const axisBuilder = new AxisBuilder(radiusAxisModel, api, layout);
+        axisBuilder.build();
+        newAxisGroup.add(axisBuilder.group);
 
         graphic.groupTransition(oldAxisGroup, newAxisGroup, radiusAxisModel);
 
@@ -105,6 +103,11 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         let lineColors = lineStyleModel.get('color');
         let lineCount = 0;
 
+        const angleAxis = polar.getAngleAxis();
+        const RADIAN = Math.PI / 180;
+        const angleExtent = angleAxis.getExtent();
+        const shapeType = Math.abs(angleExtent[1] - angleExtent[0]) === 360 ? 'Circle' : 'Arc';
+
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
         const splitLines: graphic.Circle[][] = [];
@@ -112,12 +115,15 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         for (let i = 0; i < ticksCoords.length; i++) {
             const colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
-            splitLines[colorIndex].push(new graphic.Circle({
+            splitLines[colorIndex].push(new graphic[shapeType]({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
                     // ensure circle radius >= 0
-                    r: Math.max(ticksCoords[i].coord, 0)
+                    r: Math.max(ticksCoords[i].coord, 0),
+                    startAngle: -angleExtent[0] * RADIAN,
+                    endAngle: -angleExtent[1] * RADIAN,
+                    clockwise: angleAxis.inverse
                 }
             }));
         }

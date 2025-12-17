@@ -35,7 +35,9 @@ import {
     OptionEncode,
     DefaultStatesMixinEmphasis,
     ZRColor,
-    CallbackDataParams
+    CallbackDataParams,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
@@ -60,6 +62,8 @@ export interface ParallelSeriesDataItemOption extends ParallelStateOption,
 export interface ParallelSeriesOption extends
     SeriesOption<ParallelStateOption<CallbackDataParams>, ParallelStatesMixin>,
     ParallelStateOption<CallbackDataParams>,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     SeriesEncodeOptionMixin {
 
     type?: 'parallel';

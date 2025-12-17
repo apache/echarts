@@ -39,6 +39,8 @@ under the License.
 
         <div id="main0"></div>
 
+        <div id="main_roam"></div>
+
 
 
 
@@ -130,6 +132,107 @@ under the License.
             });
         });
         </script>
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            option = {
+                series: [
+                    {
+                        name:'treemap',
+                        type:'treemap',
+                        id: 'treemap0',
+                        label: {
+                            position: 'insideRight'
+                        },
+                        breadcrumb: {
+                        },
+                        itemStyle: {
+                            color: 'blue'
+                        },
+                        levels: [{
+                            itemStyle: {
+                                borderWidth: 15,
+                                gapWidth: 30,
+                                borderColor: 'pink'
+                            }
+                        }, {
+                            itemStyle: {
+                                borderWidth: 15,
+                                gapWidth: 40,
+                                borderColor: '#333'
+                            }
+                        }, {
+                            itemStyle: {
+                                color: 'green',
+                                borderWidth: 10,
+                                borderColor: '#555570'
+                            }
+                        }],
+                        data:[{
+                            name: '三星',
+                            value: 2,
+                        }, {
+                            name: '小米',
+                            value: 4,
+                            children: [{
+                                name: '小米0',
+                                value: 10,
+                                children: [{
+                                    itemStyle: {
+                                        color: 'orange'
+                                    },
+                                    name: '小尺',
+                                    value: 300
+                                }, {
+                                    name: '小寸',
+                                    value: 200
+                                }, {
+                                    name: '小光年',
+                                    value: 200
+                                }]
+                            }, {
+                                name: '小米1',
+                                value: 4
+                            }]
+                        }, {
+                            name: '三曰生',
+                            value: 1
+                        }]
+                    }
+                ]
+            };
+
+            var chart = testHelper.create(echarts, 'main_roam', {
+                title: [
+                    'treemap roam'
+                ],
+                option: option,
+                inputsStyle: 'compact',
+                inputs: [
+                    {
+                        type: 'select',
+                        text: 'roamTrigger',
+                        values: ['global', undefined],
+                        onchange() {
+                            chart.setOption({
+                                series: {
+                                    id: 'treemap0',
+                                    roamTrigger: this.value,
+                                }
+                            });
+                        }
+                    }
+                ]
+            });
+        });
+        </script>
+
 
 
     </body>

@@ -27,7 +27,9 @@ import ZRText from 'zrender/src/graphic/Text';
 import BoundingRect, {RectLike} from 'zrender/src/core/BoundingRect';
 import { each, isNumber } from 'zrender/src/core/util';
 import { limitTurnAngle, limitSurfaceAngle } from '../../label/labelGuideHelper';
-import { shiftLayoutOnY } from '../../label/labelLayoutHelper';
+import {
+    computeLabelGeometry, LabelGeometry, shiftLayoutOnXY
+} from '../../label/labelLayoutHelper';
 
 const RADIAN = Math.PI / 180;
 
@@ -89,7 +91,7 @@ function adjustSingleSide(
             const rA = r + item.len;
             const rA2 = rA * rA;
             // Use ellipse implicit function to calculate x
-            const dx = Math.sqrt((1 - Math.abs(dy * dy / rB2)) * rA2);
+            const dx = Math.sqrt(Math.abs((1 - dy * dy / rB2) * rA2));
             const newX = cx + (dx + item.len2) * dir;
             const deltaX = newX - item.label.x;
             const newTargetWidth = item.targetTextWidth - deltaX * dir;
@@ -139,7 +141,7 @@ function adjustSingleSide(
         }
     }
 
-    if (shiftLayoutOnY(list, viewTop, viewTop + viewHeight)) {
+    if (shiftLayoutOnXY(list, 1, viewTop, viewTop + viewHeight)) {
         recalculateX(list);
     }
 }
@@ -212,7 +214,7 @@ function avoidOverlap(
             }
             layout.targetTextWidth = targetTextWidth;
 
-            constrainTextWidth(layout, targetTextWidth);
+            constrainTextWidth(layout, targetTextWidth, false);
         }
     }
 
@@ -267,7 +269,7 @@ function avoidOverlap(
 function constrainTextWidth(
     layout: LabelLayout,
     availableWidth: number,
-    forceRecalculate: boolean = false
+    forceRecalculate: boolean
 ) {
     if (layout.labelStyleWidth != null) {
         // User-defined style.width has the highest priority.
@@ -285,7 +287,7 @@ function constrainTextWidth(
     // textRect.width already contains paddingH if bgColor is set
     const oldOuterWidth = textRect.width + (bgColor ? 0 : paddingH);
     if (availableWidth < oldOuterWidth || forceRecalculate) {
-        const oldHeight = textRect.height;
+
         if (overflow && overflow.match('break')) {
             // Temporarily set background to be null to calculate
             // the bounding box without background.
@@ -325,13 +327,19 @@ function constrainTextWidth(
             label.setStyle('width', newWidth);
         }
 
-        const newRect = label.getBoundingRect();
-        textRect.width = newRect.width;
-        const margin = (label.style.margin || 0) + 2.1;
-        textRect.height = newRect.height + margin;
-        textRect.y -= (textRect.height - oldHeight) / 2;
+        computeLabelGlobalRect(textRect, label);
     }
 }
+
+function computeLabelGlobalRect(out: BoundingRect, label: ZRText): void {
+    _tmpLabelGeometry.rect = out;
+    computeLabelGeometry(_tmpLabelGeometry, label, _computeLabelGeometryOpt);
+}
+const _computeLabelGeometryOpt = {
+    minMarginForce: [null, 0, null, 0],
+    marginDefault: [1, 0, 1, 0], // Arbitrary value
+};
+const _tmpLabelGeometry: Partial<LabelGeometry> = {};
 
 function isPositionCenter(sectorShape: LabelLayout) {
     // Not change x for center label
@@ -384,7 +392,11 @@ export default function pieLabelLayout(
         const labelDistance = labelModel.get('distanceToLabelLine');
         const labelAlignTo = labelModel.get('alignTo');
         const edgeDistance = parsePercent(labelModel.get('edgeDistance'), viewWidth);
-        const bleedMargin = labelModel.get('bleedMargin');
+        let bleedMargin = labelModel.get('bleedMargin');
+        if (bleedMargin == null) {
+            // An arbitrary strategy for small viewRect - especial pie is layout in calendar or matrix coord sys.
+            bleedMargin = Math.min(viewWidth, viewHeight) > 200 ? 10 : 2;
+        }
 
         const labelLineModel = itemModel.getModel('labelLine');
         let labelLineLen = labelLineModel.get('length');
@@ -472,7 +484,7 @@ export default function pieLabelLayout(
             const radialAngle = nx < 0 ? -midAngle + PI : -midAngle;
             labelRotate = radialAngle;
         }
-        else if (rotate === 'tangential'
+        else if (rotate === 'tangential' || rotate === 'tangential-noflip'
             && labelPosition !== 'outside' && labelPosition !== 'outer'
         ) {
             let rad = Math.atan2(nx, ny);
@@ -480,7 +492,7 @@ export default function pieLabelLayout(
                 rad = PI * 2 + rad;
             }
             const isDown = ny > 0;
-            if (isDown) {
+            if (isDown && rotate !== 'tangential-noflip') {
                 rad = PI + rad;
             }
             labelRotate = rad - PI;
@@ -498,12 +510,9 @@ export default function pieLabelLayout(
 
         // Not sectorShape the inside label
         if (!isLabelInside) {
-            const textRect = label.getBoundingRect().clone();
-            textRect.applyTransform(label.getComputedTransform());
-            // Text has a default 1px stroke. Exclude this.
-            const margin = (label.style.margin || 0) + 2.1;
-            textRect.y -= margin / 2;
-            textRect.height += margin;
+
+            const textRect = new BoundingRect(0, 0, 0, 0);
+            computeLabelGlobalRect(textRect, label);
 
             labelLayoutList.push({
                 label,

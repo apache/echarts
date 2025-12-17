@@ -260,7 +260,8 @@ under the License.
                                 left: BASE_LEFT + i * (GRID_WIDTH + GAP),
                                 top: BASE_TOP + (CROSS_DIM_NUMBER - 1 - j) * (GRID_HEIGHT + GAP),
                                 width: GRID_WIDTH,
-                                height: GRID_HEIGHT
+                                height: GRID_HEIGHT,
+                                outerBoundsMode: 'none'
                             });
                             xAxisList.push({
                                 id: id,

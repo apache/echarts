@@ -37,6 +37,10 @@ function _trim(str: string): string {
     return str.replace(/^\s+|\s+$/g, '');
 }
 
+export const mathMin = Math.min;
+export const mathMax = Math.max;
+export const mathAbs = Math.abs;
+
 /**
  * Linear mapping a value from domain to range
  * @param  val
@@ -100,33 +104,48 @@ export function linearMap(
 }
 
 /**
- * Convert a percent string to absolute number.
- * Returns NaN if percent is not a valid string or number
+ * Preserve the name `parsePercent` for backward compatibility,
+ * and it's effectively published as `echarts.number.parsePercent`.
  */
-export function parsePercent(percent: number | string, all: number): number {
-    switch (percent) {
+export const parsePercent = parsePositionOption;
+
+/**
+ * @see {parsePositionSizeOption} and also accept a string preset.
+ * @see {PositionSizeOption}
+ */
+export function parsePositionOption(option: unknown, percentBase: number, percentOffset?: number): number {
+    switch (option) {
         case 'center':
         case 'middle':
-            percent = '50%';
+            option = '50%';
             break;
         case 'left':
         case 'top':
-            percent = '0%';
+            option = '0%';
             break;
         case 'right':
         case 'bottom':
-            percent = '100%';
+            option = '100%';
             break;
     }
-    if (zrUtil.isString(percent)) {
-        if (_trim(percent).match(/%$/)) {
-            return parseFloat(percent) / 100 * all;
+    return parsePositionSizeOption(option, percentBase, percentOffset);
+}
+
+/**
+ * Accept number, or numeric stirng (`'123'`), or percentage ('100%'), as x/y/width/height pixel number.
+ * If null/undefined or invalid, return NaN.
+ * (But allow JS type coercion (`+option`) due to backward compatibility)
+ * @see {PositionSizeOption}
+ */
+export function parsePositionSizeOption(option: unknown, percentBase: number, percentOffset?: number): number {
+    if (zrUtil.isString(option)) {
+        if (_trim(option).match(/%$/)) {
+            return parseFloat(option) / 100 * percentBase + (percentOffset || 0);
         }
-
-        return parseFloat(percent);
+        return parseFloat(option);
     }
-
-    return percent == null ? NaN : +percent;
+    // Allow flexible input due to backward compatibility.
+    return option == null ? NaN : +option;
 }
 
 /**
@@ -138,6 +157,8 @@ export function round(x: number | string, precision: number, returnStr: false): 
 export function round(x: number | string, precision: number, returnStr: true): string;
 export function round(x: number | string, precision?: number, returnStr?: boolean): string | number {
     if (precision == null) {
+        // FIXME: the default precision should not be provided, since there is no universally adaptable
+        //  precision. The caller need to input a precision according to the scenarios.
         precision = 10;
     }
     // Avoid range error
@@ -211,7 +232,7 @@ export function getPixelPrecision(dataExtent: [number, number], pixelExtent: [nu
     const log = Math.log;
     const LN10 = Math.LN10;
     const dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
-    const sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
+    const sizeQuantity = Math.round(log(mathAbs(pixelExtent[1] - pixelExtent[0])) / LN10);
     // toFixed() digits argument must be between 0 and 20.
     const precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
     return !isFinite(precision) ? 20 : precision;

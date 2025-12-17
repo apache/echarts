@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Determine if workflow build job is successful
         id: check-build-success
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           result-encoding: string
           script: |
@@ -25,11 +25,11 @@ jobs:
             return jobsRes.data.jobs.some((job) => job.name.includes('build') && job.conclusion === 'success');
 
     outputs:
-      SHOULD_DEPOLY: ${{ steps.check-build-success.outputs.result }}
+      SHOULD_DEPLOY: ${{ steps.check-build-success.outputs.result }}
 
   deploy:
     needs: [on-success]
-    if: ${{ needs.on-success.outputs.SHOULD_DEPOLY == 'true' }}
+    if: ${{ needs.on-success.outputs.SHOULD_DEPLOY == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -38,7 +38,7 @@ jobs:
           mkdir .actions
           cd .actions
           git clone --depth=1 https://github.com/dawidd6/action-download-artifact.git
-          git clone --depth=1 https://github.com/actions-cool/maintain-one-comment.git
+          git clone --depth=1 https://github.com/plainheart/maintain-one-comment.git
 
       - name: Fetch PR dist files
         uses: ./.actions/action-download-artifact
@@ -46,10 +46,12 @@ jobs:
           workflow: ${{ github.event.workflow.id }}
           run_id: ${{ github.event.workflow_run.id }}
           name: pr_preview
+          path: pr-dist
           if_no_artifact_found: fail
 
       - name: Output PR metadata
         id: pr-metadata
+        working-directory: pr-dist
         run: |
           echo "NUMBER=$(cat pr_number)" >> $GITHUB_OUTPUT
           echo "COMMIT_SHA=$(cat pr_commit_sha)" >> $GITHUB_OUTPUT
@@ -59,6 +61,7 @@ jobs:
         env:
           PR_NUMBER: ${{ steps.pr-metadata.outputs.NUMBER }}
           SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
+        working-directory: pr-dist
         run: |
           export SURGE_DOMAIN=https://echarts-pr-$PR_NUMBER.surge.sh
           npx surge --project ./package --domain $SURGE_DOMAIN --token $SURGE_TOKEN
@@ -70,7 +73,6 @@ jobs:
           COMMIT_SHA_SHORT: ${{ steps.pr-metadata.outputs.COMMIT_SHA_SHORT }}
         with:
           body: |
-            <!-- ECHARTS_PR_PREVIEW -->
             The changes brought by this PR can be previewed at: https://echarts.apache.org/examples/editor?version=PR-${{ env.PR_NUMBER }}@${{ env.COMMIT_SHA_SHORT }}
           body-include: '<!-- ECHARTS_PR_PREVIEW -->'
           number: ${{ env.PR_NUMBER }}

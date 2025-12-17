@@ -1,0 +1,26 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/21059",
+    "comment": "Due to the axis name avoiding overlapping by default.",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "5.6.0",
+    "markTime": 1750814230084
+  },
+  {
+    "link": "https://github.com/apache/echarts/pull/21059",
+    "comment": "Introduced by the `outerBounds` feature, which avoids axis name overflowing the canvas by default.",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "5.6.0",
+    "markTime": 1750782451694
+  },
+  {
+    "link": "https://github.com/apache/echarts/pull/20998",
+    "comment": "",
+    "type": "New Feature",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1750316568282
+  }
+]

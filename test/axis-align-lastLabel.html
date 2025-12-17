@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+
+        <div id="main0"></div>
+
+
+        <div id="main1"></div>
+
+
+
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            var data = [];
+            for (let i = 0; i < 200; ++i) {
+                data.push([i, Math.floor(Math.random() * 100)]);
+            }
+
+            option = {
+                xAxis: {
+                    axisLabel: {
+                        formatter: 'label of {value}',
+                        showMinLabel: true,
+                        showMaxLabel: true,
+                        alignMinLabel: 'left',
+                        alignMaxLabel: 'right'
+                    }
+                },
+                yAxis: {},
+                series: {
+                    type: 'line',
+                    data
+                },
+                dataZoom: {
+                    type: 'slider',
+                    start: 20,
+                    end: 42
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'alignMinLabel: left, alignMaxLabel: right'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+
+        <script>
+        require([
+            'echarts',
+            // 'map/js/china',
+            // './data/nutrients.json'
+        ], function (echarts) {
+            var option;
+
+            var data = [];
+            for (let i = 0; i < 200; ++i) {
+                data.push([i, Math.floor(Math.random() * 100)]);
+            }
+
+            option = {
+                yAxis: {
+                    axisLabel: {
+                        formatter: 'label of {value}',
+                        showMinLabel: true,
+                        showMaxLabel: true,
+                        verticalAlignMinLabel: 'bottom',
+                        verticalAlignMaxLabel: 'top'
+                    }
+                },
+                xAxis: {},
+                series: {
+                    type: 'line',
+                    data
+                },
+                dataZoom: {
+                    type: 'slider',
+                    start: 20,
+                    end: 42,
+                    yAxisIndex: 0
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main1', {
+                title: [
+                    'verticalAlignMinLabel: bottom, verticalAlignMaxLabel: top'
+                ],
+                option: option
+                // height: 300,
+                // buttons: [{text: 'btn-txt', onclick: function () {}}],
+                // recordCanvas: true,
+            });
+        });
+        </script>
+
+
+    </body>
+</html>
+

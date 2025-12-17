@@ -30,7 +30,8 @@ import {
     SeriesEncodeOptionMixin,
     OptionEncodeValue,
     ColorBy,
-    StatesOptionMixin
+    StatesOptionMixin,
+    DimensionLoose
 } from '../util/types';
 import ComponentModel, { ComponentModelConstructor } from './Component';
 import {PaletteMixin} from './mixin/palette';
@@ -140,13 +141,14 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     // @readonly
     type: string;
 
-    // Should be implenented in subclass.
+    // Should be impleneted in subclass.
     defaultOption: SeriesOption;
 
     // @readonly
     seriesIndex: number;
 
-    // coordinateSystem will be injected in the echarts/CoordinateSystem
+    // Will be injected.
+    // @see `injectCoordinateSystem`
     coordinateSystem: CoordinateSystem;
 
     // Injected outside
@@ -347,7 +349,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const task = getCurrentTask(this);
         if (task) {
             const data = task.context.data;
-            return (dataType == null ? data : data.getLinkedData(dataType)) as SeriesData<this>;
+            return (dataType == null || !data.getLinkedData ? data : data.getLinkedData(dataType)) as SeriesData<this>;
         }
         else {
             // When series is not alive (that may happen when click toolbox
@@ -434,6 +436,62 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
         const coordSys = this.coordinateSystem;
         // @ts-ignore
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
+    }
+
+    /**
+     * Retrieve the index of nearest value in the view coordinate.
+     * Data position is compared with each axis's dataToCoord.
+     *
+     * @param axisDim axis dimension
+     * @param dim data dimension
+     * @param value
+     * @param [maxDistance=Infinity] The maximum distance in view coordinate space
+     * @return If and only if multiple indices has
+     *         the same value, they are put to the result.
+     */
+    indicesOfNearest(axisDim: DimensionName, dim: DimensionLoose, value: number, maxDistance?: number): number[] {
+        const data = this.getData();
+        const coordSys = this.coordinateSystem;
+        const axis = coordSys && coordSys.getAxis(axisDim);
+        if (!coordSys || !axis) {
+            return [];
+        }
+        const targetCoord = axis.dataToCoord(value);
+
+        if (maxDistance == null) {
+            maxDistance = Infinity;
+        }
+
+        const nearestIndices: number[] = [];
+        let minDist = Infinity;
+        let minDiff = -1;
+        let nearestIndicesLen = 0;
+
+        data.each(dim, (dimValue, idx) => {
+            const dataCoord = axis.dataToCoord(dimValue);
+            const diff = targetCoord - dataCoord;
+            const dist = Math.abs(diff);
+            if (dist <= maxDistance) {
+                // When the `value` is at the middle of `this.get(dim, i)` and `this.get(dim, i+1)`,
+                // we'd better not push both of them to `nearestIndices`, otherwise it is easy to
+                // get more than one item in `nearestIndices` (more specifically, in `tooltip`).
+                // So we choose the one that `diff >= 0` in this case.
+                // But if `this.get(dim, i)` and `this.get(dim, j)` get the same value, both of them
+                // should be push to `nearestIndices`.
+                if (dist < minDist
+                    || (dist === minDist && diff >= 0 && minDiff < 0)
+                ) {
+                    minDist = dist;
+                    minDiff = diff;
+                    nearestIndicesLen = 0;
+                }
+                if (diff === minDiff) {
+                    nearestIndices[nearestIndicesLen++] = idx;
+                }
+            }
+        });
+        nearestIndices.length = nearestIndicesLen;
+        return nearestIndices;
     }
 
     /**

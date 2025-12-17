@@ -392,7 +392,7 @@ class GraphNode {
         const connectedEdgesMap = zrUtil.createHashMap<boolean, number>();
         const connectedNodesMap = zrUtil.createHashMap<boolean, number>();
 
-        for (let i = 0; i < this.edges.length; i++) {
+        for (let i = 0, len = this.edges.length; i < len; i++) {
             const adjacentEdge = this.edges[i];
             if (adjacentEdge.dataIndex < 0) {
                 continue;
@@ -409,9 +409,14 @@ class GraphNode {
                 nodeIteratorIndex++;
                 connectedNodesMap.set(sourceNode.dataIndex, true);
 
-                for (let j = 0; j < sourceNode.inEdges.length; j++) {
-                    connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
-                    sourceNodesQueue.push(sourceNode.inEdges[j].node1);
+                const sourceNodeInEdges = sourceNode.inEdges;
+                for (let j = 0, len = sourceNodeInEdges.length, inEdge, inEdgeDataIndex; j < len; j++) {
+                    inEdge = sourceNodeInEdges[j];
+                    inEdgeDataIndex = inEdge.dataIndex;
+                    if (inEdgeDataIndex >= 0 && !connectedEdgesMap.hasKey(inEdgeDataIndex)) {
+                        connectedEdgesMap.set(inEdgeDataIndex, true);
+                        sourceNodesQueue.push(inEdge.node1);
+                    }
                 }
             }
 
@@ -420,9 +425,15 @@ class GraphNode {
                 const targetNode = targetNodesQueue[nodeIteratorIndex];
                 nodeIteratorIndex++;
                 connectedNodesMap.set(targetNode.dataIndex, true);
-                for (let j = 0; j < targetNode.outEdges.length; j++) {
-                    connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
-                    targetNodesQueue.push(targetNode.outEdges[j].node2);
+
+                const targetNodeOutEdges = targetNode.outEdges;
+                for (let j = 0, len = targetNodeOutEdges.length, outEdge, outEdgeDataIndex; j < len; j++) {
+                    outEdge = targetNodeOutEdges[j];
+                    outEdgeDataIndex = outEdge.dataIndex;
+                    if (outEdgeDataIndex >= 0 && !connectedEdgesMap.hasKey(outEdgeDataIndex)) {
+                        connectedEdgesMap.set(outEdgeDataIndex, true);
+                        targetNodesQueue.push(outEdge.node2);
+                    }
                 }
             }
         }
@@ -491,9 +502,14 @@ class GraphEdge {
 
             connectedNodesMap.set(sourceNode.dataIndex, true);
 
-            for (let j = 0; j < sourceNode.inEdges.length; j++) {
-                connectedEdgesMap.set(sourceNode.inEdges[j].dataIndex, true);
-                sourceNodes.push(sourceNode.inEdges[j].node1);
+            const sourceNodeInEdges = sourceNode.inEdges;
+            for (let j = 0, len = sourceNodeInEdges.length, inEdge, inEdgeDataIndex; j < len; j++) {
+                inEdge = sourceNode.inEdges[j];
+                inEdgeDataIndex = inEdge.dataIndex;
+                if (inEdgeDataIndex >= 0 && !connectedEdgesMap.hasKey(inEdgeDataIndex)) {
+                    connectedEdgesMap.set(inEdgeDataIndex, true);
+                    sourceNodes.push(inEdge.node1);
+                }
             }
         }
 
@@ -504,9 +520,14 @@ class GraphEdge {
 
             connectedNodesMap.set(targetNode.dataIndex, true);
 
-            for (let j = 0; j < targetNode.outEdges.length; j++) {
-                connectedEdgesMap.set(targetNode.outEdges[j].dataIndex, true);
-                targetNodes.push(targetNode.outEdges[j].node2);
+            const targetNodeOutEdges = targetNode.outEdges;
+            for (let j = 0, len = targetNodeOutEdges.length, outEdge, outEdgeDataIndex; j < len; j++) {
+                outEdge = targetNode.outEdges[j];
+                outEdgeDataIndex = outEdge.dataIndex;
+                if (outEdgeDataIndex >= 0 && !connectedEdgesMap.hasKey(outEdgeDataIndex)) {
+                    connectedEdgesMap.set(outEdgeDataIndex, true);
+                    targetNodes.push(outEdge.node2);
+                }
             }
         }
 

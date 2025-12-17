@@ -34,12 +34,17 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     DefaultEmphasisFocus,
-    CallbackDataParams
+    CallbackDataParams,
+    RoamOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import SeriesData from '../../data/SeriesData';
 import { LayoutRect } from '../../util/layout';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import type View from '../../coord/View';
+import tokens from '../../visual/tokens';
 
 
 type FocusNodeAdjacency = boolean | 'inEdges' | 'outEdges' | 'allEdges';
@@ -95,7 +100,10 @@ export interface SankeyLevelOption extends SankeyNodeStateOption, SankeyEdgeStat
 export interface SankeySeriesOption
     extends SeriesOption<SankeyBothStateOption<CallbackDataParams>, ExtraStateOption>,
     SankeyBothStateOption<CallbackDataParams>,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
+    RoamOptionMixin {
     type?: 'sankey'
 
     /**
@@ -148,6 +156,10 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
     static readonly type = 'series.sankey';
     readonly type = SankeySeriesModel.type;
 
+    static layoutMode = 'box' as const;
+
+    coordinateSystem: View;
+
     levelModels: Model<SankeyLevelOption>[];
 
     layoutInfo: LayoutRect;
@@ -156,9 +168,9 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
      * Init a graph data structure from data in option series
      */
     getInitialData(option: SankeySeriesOption, ecModel: GlobalModel) {
-        const links = option.edges || option.links;
-        const nodes = option.data || option.nodes;
-        const levels = option.levels;
+        const links = option.edges || option.links || [];
+        const nodes = option.data || option.nodes || [];
+        const levels = option.levels || [];
         this.levelModels = [];
         const levelModels = this.levelModels;
 
@@ -172,10 +184,10 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
                 }
             }
         }
-        if (nodes && links) {
-            const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
-            return graph.data;
-        }
+
+        const graph = createGraphFromNodeEdge(nodes, links, this, true, beforeLink);
+        return graph.data;
+
         function beforeLink(nodeData: SeriesData, edgeData: SeriesData) {
             nodeData.wrapMethod('getItemModel', function (model: Model, idx: number) {
                 const seriesModel = model.parentModel as SankeySeriesModel;
@@ -211,6 +223,14 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         const dataItem = nodes[dataIndex];
         dataItem.localX = localPosition[0];
         dataItem.localY = localPosition[1];
+    }
+
+    setCenter(center: number[]) {
+        this.option.center = center;
+    }
+
+    setZoom(zoom: number) {
+        this.option.zoom = zoom;
     }
 
     /**
@@ -281,7 +301,9 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         // zlevel: 0,
         z: 2,
 
-        coordinateSystem: 'view',
+        // `coordinateSystem` can be declared as 'matrix', 'calendar',
+        //  which provides box layout container.
+        coordinateSystemUsage: 'box',
 
         left: '5%',
         top: '5%',
@@ -296,6 +318,12 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         draggable: true,
 
         layoutIterations: 32,
+
+        // true | false | 'move' | 'scale', see module:component/helper/RoamController.
+        roam: false,
+        roamTrigger: 'global',
+        center: null,
+        zoom: 1,
 
         label: {
             show: true,
@@ -313,7 +341,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
         nodeAlign: 'justify',
 
         lineStyle: {
-            color: '#314656',
+            color: tokens.color.neutral50,
             opacity: 0.2,
             curveness: 0.5
         },
@@ -329,7 +357,7 @@ class SankeySeriesModel extends SeriesModel<SankeySeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
         },
 

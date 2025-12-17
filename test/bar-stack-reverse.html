@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            #main {
+                width: 100%;
+                height: 100%;
+            }
+            .test-title {
+                padding: 10px;
+                margin: 10px 0;
+                font-weight: bold;
+                font-size: 16px;
+            }
+            .chart-container {
+                width: 100%;
+                height: 400px;
+                margin-bottom: 20px;
+            }
+            .small-chart-container {
+                width: 100%;
+                height: 350px;
+                margin-bottom: 20px;
+            }
+            .controls {
+                margin: 20px 0;
+                padding: 10px;
+                background-color: #f9f9f9;
+                border: 1px solid #ddd;
+            }
+            .control-group {
+                margin: 10px 0;
+            }
+            .control-group label {
+                font-weight: bold;
+                margin-right: 10px;
+            }
+            button {
+                padding: 5px 10px;
+                margin: 0 5px;
+                border: 1px solid #ccc;
+                background-color: #fff;
+                cursor: pointer;
+            }
+            button.active {
+                background-color: #5470c6;
+                color: white;
+                border-color: #5470c6;
+            }
+        </style>
+
+        <div class="test-title">Stack Order Test: 'normal' vs 'reverse'</div>
+        
+        <!-- Part 1: Static Test -->
+        <div class="test-title">Vertical Bar Charts: Normal vs Reverse</div>
+        <div id="verticalChart" class="small-chart-container"></div>
+        
+        <div class="test-title">Horizontal Bar Charts: Normal vs Reverse</div>
+        <div id="horizontalChart" class="small-chart-container"></div>
+        
+        <div class="test-title">Stacked Line Charts: Normal vs Reverse</div>
+        <div id="lineChart" class="small-chart-container"></div>
+
+        <!-- Part 2: Interactive Test -->
+        <div class="test-title">2. Interactive Test - Based on Official Example</div>
+        <p>This section is based on the <a href="https://echarts.apache.org/examples/en/editor.html?c=bar-y-category-stack" target="_blank">official stacked bar example</a>, supporting dynamic switching between stack orders and chart types:</p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Stack Order:</label>
+                <button id="normalBtn" class="active" onclick="setStackOrder('normal')">Normal (Default)</button>
+                <button id="reverseBtn" onclick="setStackOrder('reverse')">Reverse</button>
+            </div>
+            <div class="control-group">
+                <label>Chart Type:</label>
+                <button id="horizontalBtn" class="active" onclick="setChartType('horizontal')">Horizontal Bar</button>
+                <button id="verticalBtn" onclick="setChartType('vertical')">Vertical Bar</button>
+            </div>
+        </div>
+
+        <div id="interactiveChart" class="chart-container"></div>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                // ===== Part 1: Static Test =====
+                const data = [
+                    { category: 'A', value1: 10, value2: 20, value3: 30 },
+                    { category: 'B', value1: 15, value2: 25, value3: 35 },
+                    { category: 'C', value1: 20, value2: 15, value3: 25 },
+                    { category: 'D', value1: 25, value2: 10, value3: 20 },
+                    { category: 'E', value1: 30, value2: 20, value3: 10 }
+                ];
+
+                // 1. Vertical bar chart
+                const verticalChart = echarts.init(document.getElementById('verticalChart'));
+                const verticalOption = {
+                    title: { text: 'Vertical Bar Charts', left: 'center' },
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                    legend: { data: ['Series 1', 'Series 2', 'Series 3'], top: 30 },
+                    grid: [
+                        { left: '5%', right: '55%', top: '15%', bottom: '10%' },
+                        { left: '55%', right: '5%', top: '15%', bottom: '10%' }
+                    ],
+                    xAxis: [
+                        { type: 'category', data: data.map(item => item.category), gridIndex: 0, name: 'Normal Order', nameLocation: 'middle', nameGap: 30 },
+                        { type: 'category', data: data.map(item => item.category), gridIndex: 1, name: 'Reverse Order', nameLocation: 'middle', nameGap: 30 }
+                    ],
+                    yAxis: [
+                        { type: 'value', gridIndex: 0 },
+                        { type: 'value', gridIndex: 1 }
+                    ],
+                    series: [
+                        // Normal order
+                        { name: 'Series 1', type: 'bar', stack: 'stack1', data: data.map(item => item.value1), xAxisIndex: 0, yAxisIndex: 0, label: { show: true, position: 'inside' } },
+                        { name: 'Series 2', type: 'bar', stack: 'stack1', data: data.map(item => item.value2), xAxisIndex: 0, yAxisIndex: 0, label: { show: true, position: 'inside' } },
+                        { name: 'Series 3', type: 'bar', stack: 'stack1', data: data.map(item => item.value3), xAxisIndex: 0, yAxisIndex: 0, label: { show: true, position: 'inside' } },
+                        // Reverse order
+                        { name: 'Series 1', type: 'bar', stack: 'stack2', stackOrder: 'seriesDesc', data: data.map(item => item.value1), xAxisIndex: 1, yAxisIndex: 1, label: { show: true, position: 'inside' } },
+                        { name: 'Series 2', type: 'bar', stack: 'stack2', data: data.map(item => item.value2), xAxisIndex: 1, yAxisIndex: 1, label: { show: true, position: 'inside' } },
+                        { name: 'Series 3', type: 'bar', stack: 'stack2', data: data.map(item => item.value3), xAxisIndex: 1, yAxisIndex: 1, label: { show: true, position: 'inside' } }
+                    ]
+                };
+                verticalChart.setOption(verticalOption);
+
+                // 2. Horizontal bar chart
+                const horizontalChart = echarts.init(document.getElementById('horizontalChart'));
+                const horizontalOption = {
+                    title: { text: 'Horizontal Bar Charts', left: 'center' },
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                    legend: { data: ['Series 1', 'Series 2', 'Series 3'], top: 30 },
+                    grid: [
+                        { left: '15%', right: '55%', top: '15%', bottom: '10%' },
+                        { left: '55%', right: '15%', top: '15%', bottom: '10%' }
+                    ],
+                    xAxis: [
+                        { type: 'value', gridIndex: 0 },
+                        { type: 'value', gridIndex: 1 }
+                    ],
+                    yAxis: [
+                        { type: 'category', data: data.map(item => item.category), gridIndex: 0, name: 'Normal Order', nameLocation: 'middle', nameGap: 50 },
+                        { type: 'category', data: data.map(item => item.category), gridIndex: 1, name: 'Reverse Order', nameLocation: 'middle', nameGap: 50 }
+                    ],
+                    series: [
+                        // Normal order
+                        { name: 'Series 1', type: 'bar', stack: 'hstack1', data: data.map(item => item.value1), xAxisIndex: 0, yAxisIndex: 0, label: { show: true, position: 'inside' } },
+                        { name: 'Series 2', type: 'bar', stack: 'hstack1', data: data.map(item => item.value2), xAxisIndex: 0, yAxisIndex: 0, label: { show: true, position: 'inside' } },
+                        { name: 'Series 3', type: 'bar', stack: 'hstack1', data: data.map(item => item.value3), xAxisIndex: 0, yAxisIndex: 0, label: { show: true, position: 'inside' } },
+                        // Reverse order
+                        { name: 'Series 1', type: 'bar', stack: 'hstack2', stackOrder: 'seriesDesc', data: data.map(item => item.value1), xAxisIndex: 1, yAxisIndex: 1, label: { show: true, position: 'inside' } },
+                        { name: 'Series 2', type: 'bar', stack: 'hstack2', data: data.map(item => item.value2), xAxisIndex: 1, yAxisIndex: 1, label: { show: true, position: 'inside' } },
+                        { name: 'Series 3', type: 'bar', stack: 'hstack2', data: data.map(item => item.value3), xAxisIndex: 1, yAxisIndex: 1, label: { show: true, position: 'inside' } }
+                    ]
+                };
+                horizontalChart.setOption(horizontalOption);
+
+                // 3. Line chart
+                const lineChart = echarts.init(document.getElementById('lineChart'));
+                const lineOption = {
+                    title: { text: 'Stacked Line Charts', left: 'center' },
+                    tooltip: { trigger: 'axis' },
+                    legend: { data: ['Series 1', 'Series 2', 'Series 3'], top: 30 },
+                    grid: [
+                        { left: '5%', right: '55%', top: '15%', bottom: '10%' },
+                        { left: '55%', right: '5%', top: '15%', bottom: '10%' }
+                    ],
+                    xAxis: [
+                        { type: 'category', data: data.map(item => item.category), gridIndex: 0, name: 'Normal Order', nameLocation: 'middle', nameGap: 30 },
+                        { type: 'category', data: data.map(item => item.category), gridIndex: 1, name: 'Reverse Order', nameLocation: 'middle', nameGap: 30 }
+                    ],
+                    yAxis: [
+                        { type: 'value', gridIndex: 0 },
+                        { type: 'value', gridIndex: 1 }
+                    ],
+                    series: [
+                        // Normal order
+                        { name: 'Series 1', type: 'line', stack: 'linestack1', data: data.map(item => item.value1), xAxisIndex: 0, yAxisIndex: 0, areaStyle: {}, symbol: 'circle', symbolSize: 6 },
+                        { name: 'Series 2', type: 'line', stack: 'linestack1', data: data.map(item => item.value2), xAxisIndex: 0, yAxisIndex: 0, areaStyle: {}, symbol: 'circle', symbolSize: 6 },
+                        { name: 'Series 3', type: 'line', stack: 'linestack1', data: data.map(item => item.value3), xAxisIndex: 0, yAxisIndex: 0, areaStyle: {}, symbol: 'circle', symbolSize: 6 },
+                        // Reverse order
+                        { name: 'Series 1', type: 'line', stack: 'linestack2', stackOrder: 'seriesDesc', data: data.map(item => item.value1), xAxisIndex: 1, yAxisIndex: 1, areaStyle: {}, symbol: 'circle', symbolSize: 6 },
+                        { name: 'Series 2', type: 'line', stack: 'linestack2', data: data.map(item => item.value2), xAxisIndex: 1, yAxisIndex: 1, areaStyle: {}, symbol: 'circle', symbolSize: 6 },
+                        { name: 'Series 3', type: 'line', stack: 'linestack2', data: data.map(item => item.value3), xAxisIndex: 1, yAxisIndex: 1, areaStyle: {}, symbol: 'circle', symbolSize: 6 }
+                    ]
+                };
+                lineChart.setOption(lineOption);
+
+                // ===== Part 2: Interactive Test =====
+                let interactiveChart = echarts.init(document.getElementById('interactiveChart'));
+                let currentStackOrder = 'normal';
+                let currentChartType = 'horizontal';
+
+                // Data based on official example
+                const baseOption = {
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' }
+                    },
+                    legend: {
+                        data: ['Direct', 'Mail Ad', 'Affiliate Ad', 'Video Ad', 'Search Engine']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    }
+                };
+
+                const seriesData = [
+                    { name: 'Direct', type: 'bar', stack: 'total', label: { show: true }, emphasis: { focus: 'series' }, data: [320, 302, 301, 334, 390, 330, 320] },
+                    { name: 'Mail Ad', type: 'bar', stack: 'total', label: { show: true }, emphasis: { focus: 'series' }, data: [120, 132, 101, 134, 90, 230, 210] },
+                    { name: 'Affiliate Ad', type: 'bar', stack: 'total', label: { show: true }, emphasis: { focus: 'series' }, data: [220, 182, 191, 234, 290, 330, 310] },
+                    { name: 'Video Ad', type: 'bar', stack: 'total', label: { show: true }, emphasis: { focus: 'series' }, data: [150, 212, 201, 154, 190, 330, 410] },
+                    { name: 'Search Engine', type: 'bar', stack: 'total', label: { show: true }, emphasis: { focus: 'series' }, data: [820, 832, 901, 934, 1290, 1330, 1320] }
+                ];
+
+                function getInteractiveOption() {
+                    const option = JSON.parse(JSON.stringify(baseOption));
+                    
+                    if (currentChartType === 'horizontal') {
+                        option.xAxis = { type: 'value' };
+                        option.yAxis = { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] };
+                    } else {
+                        option.xAxis = { type: 'category', data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] };
+                        option.yAxis = { type: 'value' };
+                    }
+
+                    option.series = seriesData.map((series, index) => {
+                        const newSeries = JSON.parse(JSON.stringify(series));
+                        if (index === 0 && currentStackOrder === 'reverse') {
+                            newSeries.stackOrder = 'seriesDesc';
+                        }
+                        return newSeries;
+                    });
+
+                    return option;
+                }
+
+                function updateInteractiveChart() {
+                    const option = getInteractiveOption();
+                    interactiveChart.setOption(option, true);
+                }
+
+                // Global functions
+                window.setStackOrder = function(order) {
+                    currentStackOrder = order;
+                    document.getElementById('normalBtn').classList.toggle('active', order === 'normal');
+                    document.getElementById('reverseBtn').classList.toggle('active', order === 'reverse');
+                    updateInteractiveChart();
+                };
+
+                window.setChartType = function(type) {
+                    currentChartType = type;
+                    document.getElementById('horizontalBtn').classList.toggle('active', type === 'horizontal');
+                    document.getElementById('verticalBtn').classList.toggle('active', type === 'vertical');
+                    updateInteractiveChart();
+                };
+
+                // Initialize interactive chart
+                updateInteractiveChart();
+
+                // Responsive resize
+                window.addEventListener('resize', function() {
+                    verticalChart.resize();
+                    horizontalChart.resize();
+                    lineChart.resize();
+                    interactiveChart.resize();
+                });
+            });
+        </script>
+    </body>
+</html> 

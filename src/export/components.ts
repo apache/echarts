@@ -28,6 +28,7 @@ export {install as GeoComponent} from '../component/geo/install';
 export {install as SingleAxisComponent} from '../component/singleAxis/install';
 export {install as ParallelComponent} from '../component/parallel/install';
 export {install as CalendarComponent} from '../component/calendar/install';
+export {install as MatrixComponent} from '../component/matrix/install';
 
 export {install as GraphicComponent} from '../component/graphic/install';
 
@@ -57,6 +58,8 @@ export {install as VisualMapContinuousComponent} from '../component/visualMap/in
 
 export {install as VisualMapPiecewiseComponent} from '../component/visualMap/installVisualMapPiecewise';
 
+export {install as ThumbnailComponent} from '../component/thumbnail/install';
+
 export {install as AriaComponent} from '../component/aria/install';
 
 export {install as TransformComponent} from '../component/transform/install';
@@ -77,6 +80,7 @@ export {
     SingleAxisComponentOption,
     ParallelComponentOption,
     CalendarComponentOption,
+    MatrixComponentOption,
 
     GraphicComponentOption,
 
@@ -97,6 +101,8 @@ export {
     DataZoomComponentOption,
 
     VisualMapComponentOption,
+
+    ThumbnailComponentOption,
 
     AriaComponentOption,
 

@@ -204,22 +204,26 @@ under the License.
                     height: 500
                 });
 
+                var curDimension = 0;
                 chart && chart.on('updateAxisPointer', function (event) {
                     var xAxisInfo = event.axesInfo[0];
                     if (xAxisInfo) {
                         var dimension = xAxisInfo.value + 1;
-                        chart.setOption({
-                            series: {
-                                id: 'pie',
-                                label: {
-                                    formatter: '{b}: {@[' + dimension + ']} ({d}%)'
-                                },
-                                encode: {
-                                    value: dimension,
-                                    tooltip: dimension
+                        if (curDimension !== dimension) {
+                            curDimension = dimension;
+                            chart.setOption({
+                                series: {
+                                    id: 'pie',
+                                    label: {
+                                        formatter: '{b}: {@[' + dimension + ']} ({d}%)'
+                                    },
+                                    encode: {
+                                        value: dimension,
+                                        tooltip: dimension
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
                 });
             });

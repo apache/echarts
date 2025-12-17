@@ -25,23 +25,21 @@ jobs:
         run: |
           echo "FETCH_DEPTH=$(($PR_COMMIT_COUNT + 1))" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: ${{ env.FETCH_DEPTH }}
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
         id: cache-dep
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
+        uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-lint-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-dep.outputs.cache-hit != 'true'
@@ -50,7 +48,7 @@ jobs:
       - name: Collect changed files
         run: |
           mkdir ~/tmp/
-          git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} --diff-filter=ACM --name-only --relative '*src/**/*.ts' > ~/tmp/changed_files
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} --diff-filter=ACM --name-only --relative '*src/*.ts' '*src/**/*.ts' > ~/tmp/changed_files
           echo -e "Changed files: \n$(cat ~/tmp/changed_files)"
 
       - name: Lint
@@ -67,21 +65,19 @@ jobs:
         node-version: [18.x]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Cache node modules
         id: cache-dep
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-node-modules
+        uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
         if: steps.cache-dep.outputs.cache-hit != 'true'
@@ -102,7 +98,7 @@ jobs:
         run: |
           export PR_PREVIEW_DIR='echarts-pr-preview'
           mkdir -p $PR_PREVIEW_DIR
-          npm pack -pack-destination $PR_PREVIEW_DIR
+          npm pack --pack-destination $PR_PREVIEW_DIR
           echo "PR_PREVIEW_DIR=$PR_PREVIEW_DIR" >> $GITHUB_ENV
 
       - name: Save PR metadata and dist files
@@ -120,7 +116,7 @@ jobs:
           rm -f *.tgz
           echo -e "Dist files: \n$(ls -l)"
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ steps.save-pr-data.outcome == 'success' }}
         with:
           name: pr_preview

@@ -38,6 +38,7 @@ import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import ZRImage from 'zrender/src/graphic/Image';
 import { getECData } from '../../util/innerStore';
+import { createClipPath } from '../helper/createClipPathFromCoordSys';
 
 const BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'borderWidth'] as const;
 
@@ -214,6 +215,17 @@ class PictorialBarView extends ChartView {
             })
             .execute();
 
+        // Do clipping
+        const clipPath = seriesModel.get('clip', true)
+            ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
+            : null;
+        if (clipPath) {
+            group.setClipPath(clipPath);
+        }
+        else {
+            group.removeClipPath();
+        }
+
         this._data = data;
 
         return this.group;
@@ -329,7 +341,11 @@ function prepareBarLength(
 
     // if 'pxSign' means sign of pixel,  it can't be zero, or symbolScale will be zero
     // and when borderWidth be settled, the actual linewidth will be NaN
-    outputSymbolMeta.pxSign = boundingLength > 0 ? 1 : -1;
+    const isXAxis = valueDim.xy === 'x';
+    const isInverse = valueAxis.inverse;
+    outputSymbolMeta.pxSign = (isXAxis && !isInverse) || (!isXAxis && isInverse)
+        ? boundingLength >= 0 ? 1 : -1
+        : boundingLength > 0 ? 1 : -1;
 }
 
 function convertToCoordOnAxis(axis: Axis2D, value: number) {
@@ -915,6 +931,7 @@ function updateCommon(
 
     const barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.boundingLength > 0)];
     const barRect = bar.__pictorialBarRect;
+    barRect.ignoreClip = true;
 
     setLabelStyle(
         barRect, getLabelStatesModels(itemModel),

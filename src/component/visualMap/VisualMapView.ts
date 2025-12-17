@@ -154,10 +154,11 @@ class VisualMapView extends ComponentView {
         const model = this.visualMapModel;
         const api = this.api;
 
+        const refContainer = layout.createBoxLayoutReference(model, api).refContainer;
         layout.positionElement(
             group,
             model.getBoxLayoutParams(),
-            {width: api.getWidth(), height: api.getHeight()}
+            refContainer
         );
     }
 

@@ -20,7 +20,6 @@
 import * as zrUtil from 'zrender/src/core/util';
 import RoamController from './RoamController';
 import * as roamHelper from '../../component/helper/roamHelper';
-import {onIrrelevantElement} from '../../component/helper/cursorHelper';
 import * as graphic from '../../util/graphic';
 import {
     toggleHoverEmphasis,
@@ -30,10 +29,12 @@ import {
 import geoSourceManager from '../../coord/geo/geoSourceManager';
 import {getUID} from '../../util/component';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption, RegoinOption } from '../../coord/geo/GeoModel';
+import GeoModel, { GeoCommonOptionMixin, GeoItemStyleOption, RegionOption } from '../../coord/geo/GeoModel';
 import MapSeries, { MapDataItemOption } from '../../chart/map/MapSeries';
 import GlobalModel from '../../model/Global';
-import { Payload, ECElement, LineStyleOption, InnerFocus, DisplayState } from '../../util/types';
+import {
+    Payload, ECElement, LineStyleOption, InnerFocus, DisplayState, NullUndefined, RoamOptionMixin
+} from '../../util/types';
 import GeoView from '../geo/GeoView';
 import MapView from '../../chart/map/MapView';
 import Geo from '../../coord/geo/Geo';
@@ -142,6 +143,8 @@ class MapDraw {
      */
     private _mouseDownFlag: boolean;
 
+    private _transformGroup: graphic.Group;
+
     private _regionsGroup: RegionsGroup;
 
     private _regionsGroupByName: zrUtil.HashMap<RegionsGroup>;
@@ -158,14 +161,15 @@ class MapDraw {
 
 
     constructor(api: ExtensionAPI) {
-        const group = new graphic.Group();
+        const group = this.group = new graphic.Group();
+        const transformGroup = this._transformGroup = new graphic.Group();
+        group.add(transformGroup);
         this.uid = getUID('ec_map_draw');
         this._controller = new RoamController(api.getZr());
-        this._controllerHost = { target: group };
-        this.group = group;
+        this._controllerHost = { target: transformGroup };
 
-        group.add(this._regionsGroup = new graphic.Group() as RegionsGroup);
-        group.add(this._svgGroup = new graphic.Group());
+        transformGroup.add(this._regionsGroup = new graphic.Group() as RegionsGroup);
+        transformGroup.add(this._svgGroup = new graphic.Group());
     }
 
     draw(
@@ -190,7 +194,7 @@ class MapDraw {
         const geo = mapOrGeoModel.coordinateSystem;
 
         const regionsGroup = this._regionsGroup;
-        const group = this.group;
+        const transformGroup = this._transformGroup;
 
         const transformInfo = geo.getTransformInfo();
         const transformInfoRaw = transformInfo.raw;
@@ -199,15 +203,25 @@ class MapDraw {
         // No animation when first draw or in action
         const isFirstDraw = !regionsGroup.childAt(0) || payload;
 
-        if (isFirstDraw) {
-            group.x = transformInfoRoam.x;
-            group.y = transformInfoRoam.y;
-            group.scaleX = transformInfoRoam.scaleX;
-            group.scaleY = transformInfoRoam.scaleY;
-            group.dirty();
+        const clip = (mapOrGeoModel as Model<GeoCommonOptionMixin>).getShallow('clip', true);
+        let clipRect: graphic.BoundingRect | NullUndefined;
+        if (clip) {
+            clipRect = geo.getViewRect().clone();
+            this.group.setClipPath(new graphic.Rect({shape: clipRect.clone()}));
         }
         else {
-            graphic.updateProps(group, transformInfoRoam, mapOrGeoModel);
+            this.group.removeClipPath();
+        }
+
+        if (isFirstDraw) {
+            transformGroup.x = transformInfoRoam.x;
+            transformGroup.y = transformInfoRoam.y;
+            transformGroup.scaleX = transformInfoRoam.scaleX;
+            transformGroup.scaleY = transformInfoRoam.scaleY;
+            transformGroup.dirty();
+        }
+        else {
+            graphic.updateProps(transformGroup, transformInfoRoam, mapOrGeoModel);
         }
 
         const isVisualEncodedByVisualMap = data
@@ -231,7 +245,7 @@ class MapDraw {
             this._buildSVG(viewBuildCtx);
         }
 
-        this._updateController(mapOrGeoModel, ecModel, api);
+        this._updateController(mapOrGeoModel, clipRect, ecModel, api);
 
         this._updateMapSelectHandler(mapOrGeoModel, regionsGroup, api, fromView);
     }
@@ -240,7 +254,7 @@ class MapDraw {
         const regionsGroupByName = this._regionsGroupByName = zrUtil.createHashMap<RegionsGroup, string>();
         const regionsInfoByName = zrUtil.createHashMap<{
             dataIdx: number;
-            regionModel: Model<RegoinOption> | Model<MapDataItemOption>;
+            regionModel: Model<RegionOption> | Model<MapDataItemOption>;
         }, string>();
         const regionsGroup = this._regionsGroup;
         const transformInfoRaw = viewBuildCtx.transformInfoRaw;
@@ -301,6 +315,9 @@ class MapDraw {
                 regionModel = viewBuildCtx.isGeo
                     ? mapOrGeoModel.getRegionModel(regionName)
                     : (data ? data.getItemModel(dataIdx) as Model<MapDataItemOption> : null);
+
+                const silent = (regionModel as Model<RegionOption>).get('silent', true);
+                silent != null && (regionGroup.silent = silent);
 
                 regionsInfoByName.set(regionName, { dataIdx, regionModel });
             }
@@ -420,6 +437,9 @@ class MapDraw {
             if (el instanceof Displayable) {
                 el.culling = true;
             }
+
+            const silent = (regionModel as Model<RegionOption>).get('silent', true);
+            silent != null && (el.silent = silent);
 
             // We do not know how the SVG like so we'd better not to change z2.
             // Otherwise it might bring some unexpected result. For example,
@@ -551,19 +571,32 @@ class MapDraw {
     }
 
     private _updateController(
-        this: MapDraw, mapOrGeoModel: GeoModel | MapSeries, ecModel: GlobalModel, api: ExtensionAPI
+        this: MapDraw,
+        mapOrGeoModel: GeoModel | MapSeries,
+        clipRect: graphic.BoundingRect | NullUndefined,
+        ecModel: GlobalModel,
+        api: ExtensionAPI
     ): void {
         const geo = mapOrGeoModel.coordinateSystem;
         const controller = this._controller;
         const controllerHost = this._controllerHost;
 
-        // @ts-ignore FIXME:TS
-        controllerHost.zoomLimit = mapOrGeoModel.get('scaleLimit');
+        controllerHost.zoomLimit = (mapOrGeoModel as Model<RoamOptionMixin>).get('scaleLimit');
         controllerHost.zoom = geo.getZoom();
 
         // roamType is will be set default true if it is null
-        // @ts-ignore FIXME:TS
-        controller.enable(mapOrGeoModel.get('roam') || false);
+        controller.enable(
+            (mapOrGeoModel as Model<RoamOptionMixin>).get('roam') || false,
+            {
+                api,
+                zInfo: {component: mapOrGeoModel},
+                triggerInfo: {
+                    roamTrigger: (mapOrGeoModel as Model<RoamOptionMixin>).get('roamTrigger'),
+                    isInSelf: (e, x, y) => geo.containPoint([x, y]),
+                    isInClip: (e, x, y) => !clipRect || clipRect.contain(x, y),
+                },
+            }
+        );
         const mainType = mapOrGeoModel.mainType;
 
         function makeActionBase(): Payload {
@@ -595,6 +628,7 @@ class MapDraw {
             roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
 
             api.dispatchAction(zrUtil.extend(makeActionBase(), {
+                totalZoom: controllerHost.zoom,
                 zoom: e.scale,
                 originX: e.originX,
                 originY: e.originY,
@@ -604,11 +638,6 @@ class MapDraw {
             }));
 
         }, this);
-
-        controller.setPointerChecker(function (e, x, y) {
-            return geo.containPoint([x, y])
-                && !onIrrelevantElement(e, api, mapOrGeoModel);
-        });
     }
 
     /**

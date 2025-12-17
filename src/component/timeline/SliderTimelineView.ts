@@ -756,10 +756,7 @@ function createScaleByModel(model: SliderTimelineModel, axisType?: string): Scal
 function getViewRect(model: SliderTimelineModel, api: ExtensionAPI) {
     return layout.getLayoutRect(
         model.getBoxLayoutParams(),
-        {
-            width: api.getWidth(),
-            height: api.getHeight()
-        },
+        layout.createBoxLayoutReference(model, api).refContainer,
         model.get('padding')
     );
 }

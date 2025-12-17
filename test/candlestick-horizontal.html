@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style></style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+        <div id="main7"></div>
+        <div id="main8"></div>
+        <div id="main9"></div>
+
+        <script>
+            require(["echarts"], function (echarts) {
+                var daval = [
+                    { value: ["2017-10-24", 20, 34, 10, 38, 25] },
+                    { value: ["2017-10-25", 40, 35, 30, 50, 42] },
+                    { value: ["2017-10-26", 31, 38, 33, 44, 35] },
+                    { value: ["2017-10-27", 38, 15, 5, 42, 28] },
+                ];
+                var daray = [
+                    ["2017-10-24", 20, 34, 10, 38, 25],
+                    ["2017-10-25", 40, 35, 30, 50, 42],
+                    ["2017-10-26", 31, 38, 33, 44, 35],
+                    ["2017-10-27", 38, 15, 5, 42, 28],
+                ];
+                var reversedaray = [
+                    [20, 34, 10, 38, 25, "2017-10-24"],
+                    [40, 35, 30, 50, 42, "2017-10-25"],
+                    [31, 38, 33, 44, 35, "2017-10-26"],
+                    [38, 15, 5, 42, 28, "2017-10-27"],
+                ];
+
+                // Helper function to create chart option
+                function createChartOption(
+                    chartType,
+                    xAxisType,
+                    yAxisType,
+                    encode,
+                    data,
+                    layout,
+                ) {
+                    var itemStyle =
+                        chartType === "candlestick"
+                            ? {
+                                  color: "#ec0000",
+                                  color0: "#00da3c",
+                                  borderColor: "#8A0000",
+                                  borderColor0: "#008F28",
+                              }
+                            : {
+                                  color: "#ec0000",
+                                  borderColor: "#8A0000",
+                              };
+
+                    return {
+                        tooltip: {
+                            trigger: "axis",
+                            axisPointer: { type: "shadow" },
+                        },
+                        grid: {
+                            left: "15%",
+                            right: "10%",
+                            bottom: "10%",
+                        },
+                        xAxis: xAxisType ? { type: xAxisType } : {},
+                        yAxis: yAxisType ? { type: yAxisType } : {},
+                        series: [
+                            {
+                                type: chartType,
+                                encode: encode,
+                                data: data,
+                                layout: layout,
+                                itemStyle: itemStyle,
+                            },
+                        ],
+                    };
+                }
+
+                // Test cases
+                var tests = [
+                    // xAxis is time
+                    {
+                        id: "main0",
+                        title: "xAxis is time (candlestick, daval)",
+                        option: createChartOption(
+                            "candlestick",
+                            "time",
+                            null,
+                            { x: 0, y: [1, 3, 2, 4] },
+                            daval
+                        ),
+                    },
+
+                    // xAxis is category
+                    {
+                        id: "main1",
+                        title: "xAxis is category (candlestick, daval)",
+                        option: createChartOption(
+                            "candlestick",
+                            "category",
+                            null,
+                            { x: 0, y: [1, 3, 2, 4] },
+                            daval
+                        ),
+                    },
+
+                    // yAxis is time
+                    {
+                        id: "main2",
+                        title: "yAxis is time (candlestick, daval)",
+                        option: createChartOption(
+                            "candlestick",
+                            null,
+                            "time",
+                            { x: [1, 3, 2, 4], y: 0 },
+                            daval
+                        ),
+                    },
+
+                    // yAxis is category
+                    {
+                        id: "main3",
+                        title: "yAxis is category (candlestick, daval)",
+                        option: createChartOption(
+                            "candlestick",
+                            null,
+                            "category",
+                            { x: [1, 3, 2, 4], y: 0 },
+                            daval
+                        ),
+                    },
+
+                    // encode 0 as y / x
+                    {
+                        id: "main4",
+                        title: "encode 0 as y (horizontal candlestick)",
+                        option: createChartOption(
+                            "candlestick",
+                            null,
+                            "category",
+                            { y: 0 },
+                            daval
+                        ),
+                    },
+                    {
+                        id: "main5",
+                        title: "encode 0 as x (vertical candlestick)",
+                        option: createChartOption(
+                            "candlestick",
+                            "category",
+                            null,
+                            { x: 0 },
+                            daval
+                        ),
+                    },
+
+                    // data uses daray
+                    {
+                        id: "main6",
+                        title: "data uses daray (candlestick)",
+                        option: createChartOption(
+                            "candlestick",
+                            "time",
+                            null,
+                            { x: 0, y: [1, 3, 2, 4] },
+                            daray
+                        ),
+                    },
+
+                    // boxplot tests
+                    {
+                        id: "main7",
+                        title: "boxplot with xAxis time",
+                        option: createChartOption(
+                            "boxplot",
+                            "time",
+                            null,
+                            { x: 5, y: [0, 1, 2, 3, 4] },
+                            reversedaray
+                        ),
+                    },
+                    {
+                        id: "main8",
+                        title: "boxplot with yAxis time",
+                        option: createChartOption(
+                            "boxplot",
+                            null,
+                            "time",
+                            { x: [0, 1, 2, 3, 4], y: 5 },
+                            reversedaray
+                        ),
+                    },
+                    {
+                        id: "main9",
+                        title: "boxplot with dual time axes",
+                        option: createChartOption(
+                            "boxplot",
+                            "time",
+                            "time",
+                            { y: [0, 1, 2, 3, 4], x: 5 },
+                            reversedaray.map(item => {
+                                const newItem = item.slice();
+                                for (let i = 0; i < 5; i++) {
+                                    newItem[i] = new Date(newItem[i] + 1761804046510).toISOString();
+                                }
+                                return newItem;
+                            }),
+                            'horizontal'
+                        ),
+                    },
+                ];
+
+                // Create all charts
+                tests.forEach(function (test) {
+                    testHelper.create(echarts, test.id, {
+                        title: [test.title],
+                        option: test.option,
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

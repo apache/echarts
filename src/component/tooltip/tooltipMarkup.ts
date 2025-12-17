@@ -31,6 +31,7 @@ import SeriesModel from '../../model/Series';
 import { getRandomIdBase } from '../../util/number';
 import Model from '../../model/Model';
 import { TooltipOption } from './TooltipModel';
+import tokens from '../../visual/tokens';
 
 type RichTextStyle = {
     fontSize: number | string,
@@ -42,6 +43,17 @@ type TextStyle = string | RichTextStyle;
 
 const TOOLTIP_LINE_HEIGHT_CSS = 'line-height:1';
 
+function getTooltipLineHeight(
+    textStyle: TooltipOption['textStyle']
+) {
+    const lineHeight = textStyle.lineHeight;
+    if (lineHeight == null) {
+        return TOOLTIP_LINE_HEIGHT_CSS;
+    }
+    else {
+        return `line-height:${encodeHTML(lineHeight + '')}px`;
+    }
+}
 // TODO: more textStyle option
 function getTooltipTextStyle(
     textStyle: TooltipOption['textStyle'],
@@ -50,10 +62,10 @@ function getTooltipTextStyle(
     nameStyle: TextStyle
     valueStyle: TextStyle
 } {
-    const nameFontColor = textStyle.color || '#6e7079';
+    const nameFontColor = textStyle.color || tokens.color.tertiary;
     const nameFontSize = textStyle.fontSize || 12;
     const nameFontWeight = textStyle.fontWeight || '400';
-    const valueFontColor = textStyle.color || '#464646';
+    const valueFontColor = textStyle.color || tokens.color.secondary;
     const valueFontSize = textStyle.fontSize || 14;
     const valueFontWeight = textStyle.fontWeight || '900';
 
@@ -162,6 +174,7 @@ export interface TooltipMarkupNameValueBlock extends TooltipMarkupBlock {
     // null/undefined/NaN/''... (displayed as '-').
     noName?: boolean;
     noValue?: boolean;
+    dataIndex?: number;
 
     valueFormatter?: CommonTooltipOption<unknown>['valueFormatter']
 }
@@ -271,6 +284,7 @@ function buildSection(
     const subMarkupText = ctx.renderMode === 'richText'
         ? subMarkupTextList.join(gaps.richText)
         : wrapBlockHTML(
+            toolTipTextStyle,
             subMarkupTextList.join(''),
             noHeader ? topMarginForOuterGap : gaps.html
         );
@@ -281,13 +295,15 @@ function buildSection(
 
     const displayableHeader = makeValueReadable(fragment.header, 'ordinal', ctx.useUTC);
     const {nameStyle} = getTooltipTextStyle(toolTipTextStyle, ctx.renderMode);
+    const tooltipLineHeight = getTooltipLineHeight(toolTipTextStyle);
     if (ctx.renderMode === 'richText') {
         return wrapInlineNameRichText(ctx, displayableHeader, nameStyle as RichTextStyle) + gaps.richText
             + subMarkupText;
     }
     else {
         return wrapBlockHTML(
-            `<div style="${nameStyle};${TOOLTIP_LINE_HEIGHT_CSS};">`
+            toolTipTextStyle,
+            `<div style="${nameStyle};${tooltipLineHeight};">`
                 + encodeHTML(displayableHeader)
                 + '</div>'
                 + subMarkupText,
@@ -323,14 +339,16 @@ function buildNameValue(
         ? ''
         : ctx.markupStyleCreator.makeTooltipMarker(
             fragment.markerType,
-            fragment.markerColor || '#333',
+            fragment.markerColor || tokens.color.secondary,
             renderMode
         );
     const readableName = noName
         ? ''
         : makeValueReadable(name, 'ordinal', useUTC);
     const valueTypeOption = fragment.valueType;
-    const readableValueList = noValue ? [] : valueFormatter(fragment.value as OptionDataValue);
+    const readableValueList = noValue
+        ? []
+        : valueFormatter(fragment.value as OptionDataValue, fragment.dataIndex);
     const valueAlignRight = !noMarker || !noName;
     // It little weird if only value next to marker but far from marker.
     const valueCloseToMarker = !noMarker && noName;
@@ -347,6 +365,7 @@ function buildNameValue(
             ))
         )
         : wrapBlockHTML(
+            toolTipTextStyle,
             (noMarker ? '' : markerStr)
             + (noName ? '' : wrapInlineNameHTML(readableName, !noMarker, nameStyle as string))
             + (noValue ? '' : wrapInlineValueHTML(
@@ -403,12 +422,14 @@ function getGap(gapLevel: number): {
 }
 
 function wrapBlockHTML(
+    textStyle: TooltipOption['textStyle'],
     encodedContent: string,
     topGap: number
 ): string {
     const clearfix = '<div style="clear:both"></div>';
     const marginCSS = `margin: ${topGap}px 0 0`;
-    return `<div style="${marginCSS};${TOOLTIP_LINE_HEIGHT_CSS};">`
+    const tooltipLineHeight = getTooltipLineHeight(textStyle);
+    return `<div style="${marginCSS};${tooltipLineHeight};">`
         + encodedContent + clearfix
         + '</div>';
 }

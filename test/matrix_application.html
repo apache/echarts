@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main1_b"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main_tiny_cartesians"></div>
+        <div id="main_grid_layout"></div>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                const label = {
+                    fontSize: 16,
+                    color: '#555'
+                };
+                const option = {
+                    matrix: {
+                        x: {
+                            data: ['Positive', 'Negative'],
+                            label
+                        },
+                        y: {
+                            data: ['Positive', 'Negative'],
+                            label
+                        },
+                        top: 80,
+                        width: 600,
+                        left: 'center'
+                    },
+                    series: {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        data: [
+                            ['Positive', 'Positive', 10],
+                            ['Positive', 'Negative', 2],
+                            ['Negative', 'Positive', 3],
+                            ['Negative', 'Negative', 5]
+                        ],
+                        label: {
+                            show: true,
+                            formatter: params => {
+                                const value = params.value[2];
+                                return '{name|'
+                                    + (params.value[0] === params.value[1]
+                                    ? 'True ' : 'False ')
+                                    + params.value[1] + '}\n{value|'
+                                    + value + '}';
+                            },
+                            rich: {
+                                name: {
+                                    color: '#fff',
+                                    backgroundColor: '#999',
+                                    textBorderColor: '#333',
+                                    padding: 5,
+                                    fontSize: 18
+                                },
+                                value: {
+                                    color: '#444',
+                                    textBorderWidth:  0,
+                                    padding: 5,
+                                    fontSize: 16,
+                                    align: 'center'
+                                }
+                            }
+                        },
+                        renderItem: function (params, api) {
+                            const x = api.value(0);
+                            const y = api.value(1);
+                            const rect = api.layout([x, y]).rect;
+                            return {
+                                type: 'rect',
+                                shape: rect,
+                                style: api.style({
+                                    fill: x === y ? '#8f8' : '#f88',
+                                }),
+                            }
+                        }
+                    },
+                    graphic: {
+                        elements: [{
+                            type: 'text',
+                            style: {
+                                text: 'True Class',
+                                fill: '#333',
+                                font: 'bold 24px serif',
+                                textAlign: 'center'
+                            },
+                            x: (window.innerWidth - 600) / 2 + 600 / 6 * 4,
+                            y: 40,
+                        }, {
+                            type: 'text',
+                            style: {
+                                text: 'Predicted Class',
+                                fill: '#333',
+                                font: 'bold 24px serif',
+                                textAlign: 'center'
+                            },
+                            x: (window.innerWidth - 600) / 2 - 50,
+                            y: 270,
+                            rotation: Math.PI / 2
+                        }]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Confusion Matrix'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                const xCnt = 10;
+                const yCnt = 6;
+                const xData = [];
+                const yData = [];
+                for (let i = 0; i < xCnt; ++i) {
+                    xData.push({
+                        value: 'X' + (i + 1)
+                    });
+                }
+
+                for (let i = 0; i < yCnt; ++i) {
+                    yData.push({
+                        value: 'Y' + (i + 1)
+                    });
+                }
+
+                const data = [];
+                for (let i = 1; i <= xCnt; ++i) {
+                    for (let j = 1; j <= yCnt; ++j) {
+                        data.push([
+                            'X' + i,
+                            'Y' + j,
+                            Math.random() * 2 - 1
+                        ]);
+                    }
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: xData
+                        },
+                        y: {
+                            data: yData
+                        },
+                        top: 80
+                    },
+                    visualMap: {
+                        type: 'continuous',
+                        min: -1,
+                        max: 1,
+                        dimension: 2,
+                        calculable: true,
+                        orient: 'horizontal',
+                        top: 5,
+                        left: 'center',
+                        inRange: {
+                            color: [
+                                '#313695',
+                                '#4575b4',
+                                '#74add1',
+                                '#abd9e9',
+                                '#e0f3f8',
+                                '#ffffbf',
+                                '#fee090',
+                                '#fdae61',
+                                '#f46d43',
+                                '#d73027',
+                                '#a50026'
+                            ],
+                            symbolSize: [15, 40]
+                        }
+                    },
+                    series: {
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        data,
+                        itemStyle: {
+                            opacity: 1
+                        },
+                        label: {
+                            show: true,
+                            formatter: params => params.value[2].toFixed(2)
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Correlation Matrix (Scatter)'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                const makeRenderItem = (xDim, yDim, valDim, dataExtent) => (params, api) => {
+                    const xval = api.value(xDim);
+                    const yval = api.value(yDim);
+                    const labelVal = api.value(valDim);
+                    const rect = api.layout([xval, yval]).rect;
+                    const height = rect.height * 0.3;
+                    const y = rect.y + (rect.height - height) / 2;
+                    const x = rect.x + rect.width * 0.3;
+                    const widthMax = rect.width * 0.5;
+                    const width = linearMap(labelVal, dataExtent, [0, widthMax])
+                    return {
+                        type: 'group',
+                        children: [{
+                            type: 'rect',
+                            shape: {x, y, width, height},
+                            style: api.style({
+                                fill: '#47f',
+                            }),
+                        }, {
+                            type: 'text',
+                            x: rect.x + 15,
+                            y: rect.y + rect.height / 2,
+                            style: {
+                                text: labelVal + '',
+                                fill: '#333',
+                                textVerticalAlign: 'middle',
+                            },
+                        }]
+                    };
+                };
+
+                function linearMap(val, domain, range) {
+                    const d0 = domain[0];
+                    const d1 = domain[1];
+                    const r0 = range[0];
+                    const r1 = range[1];
+                    const subDomain = d1 - d0;
+                    const subRange = r1 - r0;
+
+                    return subDomain === 0 ? subRange === 0 ? r0 : (r0 + r1) / 2
+                        : val === d0 ? r0
+                        : val === d1 ? r1
+                        : (val - d0) / subDomain * subRange + r0;
+                }
+
+                const _dataExtent = [0, 10000];
+
+                var option = {
+                    dataset: {
+                        source: [
+                            ['2021-02-01', 0, 1212, 1, 2321, 2, 1412],
+                            ['2021-02-02', 0, 7181, 1, 2114, 2, 1402],
+                            ['2021-02-03', 0, 2763, 1, 4212, 2, 8172],
+                            ['2021-02-04', 0, 6122, 1, 2942, 2, 6121],
+                            ['2021-02-05', 0, 4221, 1, 3411, 2, 1987],
+                            ['2021-02-06', 0, 7221, 1, 5121, 2, 1303],
+                        ]
+                    },
+                    matrix: {
+                        x: {
+                            data: ['Operation Count', 'File Count', 'Total Size'],
+                            itemStyle: {
+                                color: '#333',
+                            },
+                            label: {
+                                color: '#eee',
+                            }
+                        },
+                        y: {
+                            levelSize: 100,
+                        },
+                        corner: {
+                            itemStyle: {
+                                color: '#333',
+                            },
+                            label: {
+                                color: '#eee',
+                            },
+                            data: [{coord: [-1, -1], value: 'Date'}]
+                        }
+                    },
+                    series: [{
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        encode: {x: 1, y: 0},
+                        renderItem: makeRenderItem(1, 0, 2, _dataExtent),
+                    }, {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        symbol: 'rect',
+                        encode: {x: 3, y: 0},
+                        renderItem: makeRenderItem(3, 0, 4, _dataExtent),
+                    }, {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        encode: {x: 5, y: 0},
+                        renderItem: makeRenderItem(5, 0, 6, _dataExtent),
+                    }],
+                };
+
+                var chart = testHelper.create(echarts, 'main1_b', {
+                    title: [
+                        'custom series, tiny bar.'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+
+
+        <script>
+            require([
+                'echarts',
+                // 'map/js/china',
+                // './data/nutrients.json'
+            ], function (echarts) {
+                const xCnt = 8;
+                const yCnt = xCnt;
+                const xData = [];
+                const yData = [];
+                for (let i = 0; i < xCnt; ++i) {
+                    xData.push({
+                        value: 'X' + (i + 1)
+                    });
+                }
+
+                for (let i = 0; i < yCnt; ++i) {
+                    yData.push({
+                        value: 'Y' + (i + 1)
+                    });
+                }
+
+                const data = [];
+                for (let i = 1; i <= xCnt; ++i) {
+                    for (let j = 1; j <= yCnt; ++j) {
+                        if (i >= j) {
+                            data.push([
+                                'X' + i,
+                                'Y' + j,
+                                i === j ? 1 : Math.random() * 2 - 1
+                            ]);
+                        }
+                    }
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: xData
+                        },
+                        y: {
+                            data: yData
+                        },
+                        top: 80
+                    },
+                    visualMap: {
+                        type: 'continuous',
+                        min: -1,
+                        max: 1,
+                        dimension: 2,
+                        calculable: true,
+                        orient: 'horizontal',
+                        top: 5,
+                        left: 'center',
+                        inRange: {
+                            color: [
+                                '#313695',
+                                '#4575b4',
+                                '#74add1',
+                                '#abd9e9',
+                                '#e0f3f8',
+                                '#ffffbf',
+                                '#fee090',
+                                '#fdae61',
+                                '#f46d43',
+                                '#d73027',
+                                '#a50026'
+                            ]
+                        }
+                    },
+                    series: {
+                        type: 'heatmap',
+                        coordinateSystem: 'matrix',
+                        data,
+                        label: {
+                            show: true,
+                            formatter: params => params.value[2].toFixed(2)
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Correlation Matrix (Heatmap)'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const xData = [];
+                const yData = [];
+                for (let i = 0; i < 5; ++i) {
+                    const children = [];
+                    for (let j = 0; j < 5; ++j) {
+                        children.push(i * 5 + j + 1 + '');
+                    }
+                    xData.push({
+                        value: 'X' + (i + 1),
+                        children
+                    });
+                    yData.push({
+                        value: 'Y' + (i + 1),
+                        children
+                    });
+                }
+
+                const data = [];
+                const size = 25;
+                let temp = {};
+
+                for (let i = 1; i <= size; ++i) {
+                    for (let j = 1; j <= size; ++j) {
+                        let base = i === j ? 100 : 20;
+                        const iGroup = Math.ceil(i / 5);
+                        const jGroup = Math.ceil(j / 5);
+                        base += (3 - Math.abs(iGroup - jGroup)) * 35;
+                        if (i % 5 === j % 5) {
+                            base += 20;
+                        }
+                        if (Math.random() > 0.9) {
+                            base += Math.random() * 40;
+                        }
+
+                        if (i > j) {
+                            // Use the previously calculated value to ensure symmetry
+                            data.push([
+                                i + '',
+                                j + '',
+                                temp[j + '_' + i]
+                            ]);
+                        } else {
+                            // Calculate a new value and save it for future use
+                            let value = (Math.random() * 0.5 + 0.5) * base;
+                            data.push([
+                                i + '',
+                                j + '',
+                                value
+                            ]);
+                            temp[i + '_' + j] = value;
+                        }
+                    }
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: xData,
+                            // show: false
+                        },
+                        y: {
+                            data: yData,
+                            // show: false
+                        },
+                        width: 500,
+                        height: 500,
+                        left: (window.innerWidth - 500) / 2
+                    },
+                    tooltip: {
+                        show: true,
+                        valueFormatter: value => Math.round(value)
+                    },
+                    visualMap: {
+                        type: 'continuous',
+                        min: 15,
+                        max: 120,
+                        dimension: 2,
+                        calculable: true,
+                        orient: 'horizontal',
+                        top: 5,
+                        left: 'center',
+                        inRange: {
+                            color: [
+                                '#313695',
+                                '#4575b4',
+                                '#74add1',
+                                '#abd9e9',
+                                '#e0f3f8',
+                                '#ffffbf',
+                                '#fee090',
+                                '#fdae61',
+                                '#f46d43',
+                                '#d73027',
+                                '#a50026'
+                            ]
+                        }
+                    },
+                    series: {
+                        type: 'heatmap',
+                        coordinateSystem: 'matrix',
+                        data
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Covariance Matrix'
+                    ],
+                    option: option,
+                    height: 600
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const colors = {
+                    red: '#f88',
+                    green: '#8f8',
+                    blue: '#8bf',
+                    yellow: '#ff8',
+                }
+                const option = {
+                    matrix: {
+                        x: {
+                            data: Array.from({length: 19}, (_, i) => i + 1 + ''),
+                            label: {
+                                show: false
+                            },
+                            itemStyle: {
+                                borderWidth: 0
+                            },
+                            dividerLineStyle: {
+                                width: 0,
+                            },
+                        },
+                        y: {
+                            data: Array.from({length: 10}, (_, i) => i + 1 + ''),
+                            label: {
+                                show: false
+                            },
+                            itemStyle: {
+                                borderWidth: 0
+                            },
+                            dividerLineStyle: {
+                                width: 0,
+                            },
+                        },
+                        left: 'center',
+                        width: 900,
+                        backgroundStyle: {
+                            borderWidth: 0
+                        },
+                        body: {
+                            itemStyle: {
+                                borderWidth: 0
+                            }
+                        },
+                    },
+                    series: {
+                        type: 'custom',
+                        coordinateSystem: 'matrix',
+                        data: [
+                            ['1', '1', '1', 'H', colors.red],
+                            ['19', '1', '2', 'He', colors.red],
+                            ['1', '2', '3', 'Li', colors.red],
+                            ['2', '2', '4', 'Be', colors.red],
+                            ['14', '2', '5', 'B', colors.yellow],
+                            ['15', '2', '6', 'C', colors.yellow],
+                            ['16', '2', '7', 'N', colors.yellow],
+                            ['17', '2', '8', 'O', colors.yellow],
+                            ['18', '2', '9', 'F', colors.yellow],
+                            ['19', '2', '10', 'Ne', colors.yellow],
+                            ['1', '3', '11', 'Na', colors.red],
+                            ['2', '3', '12', 'Mg', colors.red],
+                            ['14', '3', '13', 'Al', colors.yellow],
+                            ['15', '3', '14', 'Si', colors.yellow],
+                            ['16', '3', '15', 'P', colors.yellow],
+                            ['17', '3', '16', 'S', colors.yellow],
+                            ['18', '3', '17', 'Cl', colors.yellow],
+                            ['19', '3', '18', 'Ar', colors.yellow],
+                            ['1', '4', '19', 'K', colors.red],
+                            ['2', '4', '20', 'Ca', colors.red],
+                            ['4', '4', '21', 'Sc', colors.blue],
+                            ['5', '4', '22', 'Ti', colors.blue],
+                            ['6', '4', '23', 'V', colors.blue],
+                            ['7', '4', '24', 'Cr', colors.blue],
+                            ['8', '4', '25', 'Mn', colors.blue],
+                            ['9', '4', '26', 'Fe', colors.blue],
+                            ['10', '4', '27', 'Co', colors.blue],
+                            ['11', '4', '28', 'Ni', colors.blue],
+                            ['12', '4', '29', 'Cu', colors.blue],
+                            ['13', '4', '30', 'Zn', colors.blue],
+                            ['14', '4', '31', 'Ga', colors.yellow],
+                            ['15', '4', '32', 'Ge', colors.yellow],
+                            ['16', '4', '33', 'As', colors.yellow],
+                            ['17', '4', '34', 'Se', colors.yellow],
+                            ['18', '4', '35', 'Br', colors.yellow],
+                            ['19', '4', '36', 'Kr', colors.yellow],
+                            ['1', '5', '37', 'Rb', colors.red],
+                            ['2', '5', '38', 'Sr', colors.red],
+                            ['4', '5', '39', 'Y', colors.blue],
+                            ['5', '5', '40', 'Zr', colors.blue],
+                            ['6', '5', '41', 'Nb', colors.blue],
+                            ['7', '5', '42', 'Mo', colors.blue],
+                            ['8', '5', '43', 'Tc', colors.blue],
+                            ['9', '5', '44', 'Ru', colors.blue],
+                            ['10', '5', '45', 'Rh', colors.blue],
+                            ['11', '5', '46', 'Pd', colors.blue],
+                            ['12', '5', '47', 'Ag', colors.blue],
+                            ['13', '5', '48', 'Cd', colors.blue],
+                            ['14', '5', '49', 'In', colors.yellow],
+                            ['15', '5', '50', 'Sn', colors.yellow],
+                            ['16', '5', '51', 'Sb', colors.yellow],
+                            ['17', '5', '52', 'Te', colors.yellow],
+                            ['18', '5', '53', 'I', colors.yellow],
+                            ['19', '5', '54', 'Xe', colors.yellow],
+                            ['1', '6', '55', 'Cs', colors.red],
+                            ['2', '6', '56', 'Ba', colors.red],
+                            ['4', '9', '57', 'La', colors.green],
+                            ['5', '9', '58', 'Ce', colors.green],
+                            ['6', '9', '59', 'Pr', colors.green],
+                            ['7', '9', '60', 'Nd', colors.green],
+                            ['8', '9', '61', 'Pm', colors.green],
+                            ['9', '9', '62', 'Sm', colors.green],
+                            ['10', '9', '63', 'Eu', colors.green],
+                            ['11', '9', '64', 'Gd', colors.green],
+                            ['12', '9', '65', 'Tb', colors.green],
+                            ['13', '9', '66', 'Dy', colors.green],
+                            ['14', '9', '67', 'Ho', colors.green],
+                            ['15', '9', '68', 'Er', colors.green],
+                            ['16', '9', '69', 'Tm', colors.green],
+                            ['17', '9', '70', 'Yb', colors.green],
+                            ['4', '6', '71', 'Lu', colors.blue],
+                            ['5', '6', '72', 'Hf', colors.blue],
+                            ['6', '6', '73', 'Ta', colors.blue],
+                            ['7', '6', '74', 'W', colors.blue],
+                            ['8', '6', '75', 'Re', colors.blue],
+                            ['9', '6', '76', 'Os', colors.blue],
+                            ['10', '6', '77', 'Ir', colors.blue],
+                            ['11', '6', '78', 'Pt', colors.blue],
+                            ['12', '6', '79', 'Au', colors.blue],
+                            ['13', '6', '80', 'Hg', colors.blue],
+                            ['14', '6', '81', 'Tl', colors.yellow],
+                            ['15', '6', '82', 'Pb', colors.yellow],
+                            ['16', '6', '83', 'Bi', colors.yellow],
+                            ['17', '6', '84', 'Po', colors.yellow],
+                            ['18', '6', '85', 'At', colors.yellow],
+                            ['19', '6', '86', 'Rn', colors.yellow],
+                            ['1', '7', '87', 'Fr', colors.red],
+                            ['2', '7', '88', 'Ra', colors.red],
+                            ['4', '10', '89', 'Ac', colors.green],
+                            ['5', '10', '90', 'Th', colors.green],
+                            ['6', '10', '91', 'Pa', colors.green],
+                            ['7', '10', '92', 'U', colors.green],
+                            ['8', '10', '93', 'Np', colors.green],
+                            ['9', '10', '94', 'Pu', colors.green],
+                            ['10', '10', '95', 'Am', colors.green],
+                            ['11', '10', '96', 'Cm', colors.green],
+                            ['12', '10', '97', 'Bk', colors.green],
+                            ['13', '10', '98', 'Cf', colors.green],
+                            ['14', '10', '99', 'Es', colors.green],
+                            ['15', '10', '100', 'Fm', colors.green],
+                            ['16', '10', '101', 'Md', colors.green],
+                            ['17', '10', '102', 'No', colors.green],
+                            ['4', '7', '103', 'Lr', colors.blue],
+                            ['5', '7', '104', 'Rf', colors.blue],
+                            ['6', '7', '105', 'Db', colors.blue],
+                            ['7', '7', '106', 'Sg', colors.blue],
+                            ['8', '7', '107', 'Bh', colors.blue],
+                            ['9', '7', '108', 'Hs', colors.blue],
+                            ['10', '7', '109', 'Mt', colors.blue],
+                            ['11', '7', '110', 'Ds', colors.blue],
+                            ['12', '7', '111', 'Rg', colors.blue],
+                            ['13', '7', '112', 'Cn', colors.blue],
+                            ['14', '7', '113', 'Nh', colors.yellow],
+                            ['15', '7', '114', 'Fl', colors.yellow],
+                            ['16', '7', '115', 'Mc', colors.yellow],
+                            ['17', '7', '116', 'Lv', colors.yellow],
+                            ['18', '7', '117', 'Ts', colors.yellow],
+                            ['19', '7', '118', 'Og', colors.yellow],
+
+                            ['3', '6', null, 'La~Yb', colors.green],
+                            ['3', '7', null, 'Ac~No', colors.green],
+                        ],
+                        label: {
+                            show: true,
+                            formatter: params => {
+                                if (params.value[2] == null) {
+                                    return '{small|' + params.value[3] + '}';
+                                }
+                                return params.value[2] + '\n' + params.value[3];
+                            },
+                            rich: {
+                                small: {
+                                    fontSize: 12,
+                                    color: '#777'
+                                }
+                            },
+                            textStyle: {
+                                fontSize: 14,
+                                color: '#555',
+                                align: 'center'
+                            }
+                        },
+                        renderItem: function (params, api) {
+                            const x = api.value(0);
+                            const y = api.value(1);
+                            const rect = api.layout([x, y]).rect;
+                            const isElement = !isNaN(api.value(2));
+                            const margin = 2;
+                            return {
+                                type: 'rect',
+                                shape: {
+                                    x: rect.x + margin,
+                                    y: rect.y + margin,
+                                    width: rect.width - margin * 2,
+                                    height: rect.height - margin * 2
+                                },
+                                style: api.style({
+                                    fill: api.value(4),
+                                    stroke: '#aaa',
+                                    lineWidth: isElement ? 1 : 0,
+                                    opacity: isElement ? 1 : 0.5
+                                }),
+                            }
+                        }
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'Periodic Table'
+                    ],
+                    option: option,
+                    height: 600
+                });
+
+                if (!chart) {
+                    return;
+                }
+
+                const elements = [
+                    ['2', '9', 'Lanthanides', 20],
+                    ['2', '10', 'Actinides', 20],
+                    ['1', '1', 'Nonmetals', -70],
+                    ['1', '2', 'Metals', -70],
+                    ['19', '1', 'Noble gases', 0, -40],
+                    ['9', '3', 'Transition metals\n(somtimes excl. group 12)', -25],
+                    ['1', '8', 's-block\n(incl. He)', 20, -3],
+                    ['3', '8', 'f-block', 0, -10],
+                    ['9', '8', 'd-block', -25, -10],
+                    ['17', '8', 'p-block (excl. He)', -25, -10],
+                    ['16', '1', 'Some elements near\nthe dashed staircase are\nsometimes called metalloids']
+                ].map(row => {
+                    const center = chart.convertToPixel({
+                        matrixIndex: 0
+                    }, row.slice(0, 2));
+                    return {
+                        type: 'text',
+                        style: {
+                            text: row[2],
+                            fill: '#333',
+                            font: 'italic bold 14px sans-serif',
+                            textAlign: 'center',
+                            textVerticalAlign: 'middle'
+                        },
+                        x: center[0] + (row[3] || 0),
+                        y: center[1] + (row[4] || 0),
+                    };
+                });
+
+                chart.setOption({
+                    graphic: {
+                        elements
+                    }
+                });
+            });
+        </script>
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                const _matrixDimensionData = {
+                    x: [
+                        'Mon', 'Tue', 'Wed', 'Thu', 'Fri'
+                    ],
+                    y: [
+                        '8:00 - 10:00',
+                        '10:00 - 12:00',
+                        '12:00 - 14:00',
+                        '14:00 - 16:00',
+                        '16:00 - 18:00',
+                        '18:00 - 20:00',
+                    ]
+                };
+                const _yBreakTimeIndex = 2; // '12:00 - 14:00',
+
+                function eachMatrixCell(cb) {
+                    _matrixDimensionData.y.forEach((yval, yidx) => {
+                        if (yidx === _yBreakTimeIndex) {
+                            return;
+                        }
+                        _matrixDimensionData.x.forEach((xval, xidx) => {
+                            cb(xval, yval, xidx, yidx);
+                        });
+                    });
+                }
+
+                function generateSeriesData(dayCount) {
+                    const dataSource = {};
+                    let allDataMax = 0;
+                    let allDataMin = 0;
+
+                    eachMatrixCell((xval, yval, xidx, yidx) => {
+                        const dayStart = new Date('2025-05-05T00:00:00.000Z'); // Monday
+                        dayStart.setDate(xidx + 5);
+                        const timeStart = dayStart.getTime();
+                        const sevenDay = 7 * 1000 * 3600 * 24;
+                        const cellData = dataSource[makeId(xidx, yidx)] = [];
+                        let lastVal = +(Math.random() * 300).toFixed(0);
+
+                        let turnCount = null;
+                        let sign = -1;
+                        for (let idx = 0; idx < dayCount; idx++) {
+
+                            if (turnCount == null || idx >= turnCount) {
+                                turnCount = idx + Math.round(dayCount / 4 * ((Math.random() - 0.5) * 0.1));
+                                sign = -sign;
+                            }
+                            const deltaMag = 50;
+                            const delta = +(Math.random() * deltaMag - deltaMag / 2 + sign * deltaMag / 3).toFixed(0);
+                            const val = Math.max(0, lastVal += delta);
+                            const xTime = timeStart + idx * sevenDay;
+                            const dataXVal = echarts.time.format(xTime, '{yyyy}-{MM}-{dd}');
+                            cellData.push([dataXVal, val]);
+                            allDataMax = Math.max(val, allDataMax);
+                        }
+                    });
+
+                    const {axisMin, axisMax} = uniformAxisMinMax([allDataMin, allDataMax]);
+                    return {dataSource, axisMax, axisMin};
+                }
+
+                function uniformAxisMinMax(dataExtent) {
+                    if (dataExtent[0] > dataExtent[1]) {
+                        dataExtent = dataExtent.slice();
+                        dataExtent.reverse();
+                    }
+                    function getMinMax(idx) {
+                        const methods = ['floor', 'ceil'];
+                        const exponent = echarts.number.quantityExponent(dataExtent[idx]);
+                        const multiplier = Math.pow(10, exponent);
+                        return Math[methods[idx]](dataExtent[idx] / multiplier) * multiplier;
+                    }
+                    return {
+                        axisMin: getMinMax(0),
+                        axisMax: getMinMax(1),
+                    };
+                }
+
+                const _data = generateSeriesData(365);
+
+                function makeId(xidx, yidx) {
+                    return `${xidx}|${yidx}`;
+                }
+
+                const option = {
+                    matrix: {
+                        x: {
+                            data: _matrixDimensionData.x,
+                            label: {
+                                fontSize: 18,
+                                color: '#555'
+                            },
+                        },
+                        y: {
+                            data: _matrixDimensionData.y,
+                            label: {
+                                fontSize: 16,
+                                color: '#777'
+                            },
+                        },
+                        corner: {
+                            data: [{
+                                coord: [-1, -1],
+                                value: 'Time',
+                            }],
+                            label: {
+                                fontSize: 16,
+                                color: '#777'
+                            },
+                        },
+                        body: {
+                            data: [{
+                                coord: [null, _yBreakTimeIndex],
+                                coordClamp: true,
+                                mergeCells: true,
+                                value: 'Break',
+                                label: {
+                                    color: '#999',
+                                    fontSize: 16,
+                                }
+                            }],
+                        },
+                        top: 30,
+                        bottom: 80,
+                        width: '80%',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+                    grid: (function () {
+                        const optionList = [];
+                        eachMatrixCell((xval, yval, xidx, yidx) => {
+                            optionList.push({
+                                id: makeId(xidx, yidx),
+                                coordinateSystem: 'matrix',
+                                coord: [xval, yval],
+                                top: 10,
+                                bottom: 10,
+                                left: 'center',
+                                width: '90%',
+                                containLabel: true,
+                            });
+                        });
+                        return optionList;
+                    })(),
+                    xAxis: (function () {
+                        const optionList = [];
+                        eachMatrixCell((xval, yval, xidx, yidx) => {
+                            optionList.push({
+                                type: 'category',
+                                id: makeId(xidx, yidx),
+                                gridId: makeId(xidx, yidx),
+                                scale: true,
+                                axisTick: {show: false},
+                                axisLabel: {show: false},
+                                axisLine: {show: false},
+                                splitLine: {show: false},
+                            });
+                        });
+                        return optionList;
+                    })(),
+                    yAxis: (function () {
+                        const optionList = [];
+                        eachMatrixCell((xval, yval, xidx, yidx) => {
+                            optionList.push({
+                                id: makeId(xidx, yidx),
+                                gridId: makeId(xidx, yidx),
+                                // interval: _data.axisMax - _data.axisMin,
+                                interval: Number.MAX_SAFE_INTEGER,
+                                // min: _data.axisMin,
+                                // max: _data.axisMax,
+                                scale: true,
+                                axisLabel: {
+                                    showMaxLabel: true,
+                                    fontSize: 9,
+                                },
+                                axisLine: {show: false},
+                                axisTick: {show: false},
+                            });
+                        });
+                        return optionList;
+                    })(),
+                    dataZoom: {
+                        type: 'slider',
+                        xAxisIndex: 'all',
+                        left: '10%',
+                        right: '10%',
+                        bottom: 30,
+                        height: 30,
+                        throttle: 120,
+                    },
+                    series: (function () {
+                        const optionList = [];
+                        eachMatrixCell((xval, yval, xidx, yidx) => {
+                            optionList.push({
+                                xAxisId: makeId(xidx, yidx),
+                                yAxisId: makeId(xidx, yidx),
+                                type: 'line',
+                                symbol: 'none',
+                                lineStyle: {
+                                    lineWidth: 1,
+                                },
+                                data: _data.dataSource[makeId(xidx, yidx)],
+                            });
+                        });
+                        return optionList;
+                    })(),
+                };
+
+                var chart = testHelper.create(echarts, 'main_tiny_cartesians', {
+                    title: [
+                        'Cartesians in matrix'
+                    ],
+                    option: option,
+                    height: 500,
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                const _contentDefList = [{
+                    option: {
+                        title: {
+                            id: 'header_1',
+                            text: 'Header section',
+                            textStyle: {fontSize: 14},
+                            left: 'center',
+                            top: 15,
+                        },
+                        xAxis: {
+                            type: 'time',
+                            id: 'header_1',
+                            gridId: 'header_1',
+                        },
+                        yAxis: {
+                            id: 'header_1',
+                            gridId: 'header_1',
+                        },
+                        grid: {
+                            id: 'header_1',
+                            containLabel: true,
+                            top: 50,
+                            bottom: 10,
+                            left: 10,
+                            right: 10,
+                        },
+                        series: {
+                            type: 'line',
+                            id: 'header_1',
+                            xAxisId: 'header_1',
+                            yAxisId: 'header_1',
+                            symbol: 'none',
+                            data: generateSingleSeriesData(100),
+                        },
+                    },
+                }, {
+                    option: {
+                        title: {
+                            id: 'sidebar_1',
+                            text: 'Sidebar section',
+                            textStyle: {fontSize: 14},
+                            left: 'center',
+                            top: 15,
+                        },
+                        xAxis: {
+                            id: 'sidebar_1',
+                            gridId: 'sidebar_1',
+                            axisLabel: {
+                                hideOverlap: true,
+                            },
+                        },
+                        yAxis: {
+                            type: 'time',
+                            id: 'sidebar_1',
+                            gridId: 'sidebar_1',
+                            axisLabel: {
+                                hideOverlap: true,
+                            },
+                        },
+                        grid: {
+                            id: 'sidebar_1',
+                            top: 50,
+                            bottom: 30,
+                            left: 40,
+                            right: 30,
+                        },
+                        series: {
+                            type: 'bar',
+                            id: 'sidebar_1',
+                            xAxisId: 'sidebar_1',
+                            yAxisId: 'sidebar_1',
+                            data: generateSingleSeriesData(10, true),
+                        },
+                    },
+                }, {
+                    option: {
+                        title: {
+                            id: 'main_content_area_1',
+                            text: 'Main Content Area',
+                            textStyle: {fontSize: 14},
+                            left: 'center',
+                            top: 15,
+                        },
+                        xAxis: {
+                            type: 'time',
+                            id: 'main_content_area_1',
+                            gridId: 'main_content_area_1',
+                        },
+                        yAxis: {
+                            id: 'main_content_area_1',
+                            gridId: 'main_content_area_1'
+                        },
+                        grid: {
+                            id: 'main_content_area_1',
+                            containLabel: true,
+                            top: 50,
+                            bottom: 10,
+                            left: 10,
+                            right: 10,
+                        },
+                        series: {
+                            type: 'line',
+                            id: 'main_content_area_1',
+                            xAxisId: 'main_content_area_1',
+                            yAxisId: 'main_content_area_1',
+                            symbol: 'none',
+                            data: generateSingleSeriesData(100),
+                        },
+                    },
+                }, {
+                    option: {
+                        title: {
+                            id: 'footer_1',
+                            text: 'Footer section',
+                            textStyle: {fontSize: 14},
+                            left: 'center',
+                            top: 15,
+                        },
+                        xAxis: {
+                            type: 'time',
+                            id: 'footer_1',
+                            gridId: 'footer_1',
+                        },
+                        yAxis: {
+                            id: 'footer_1',
+                            gridId: 'footer_1'
+                        },
+                        grid: {
+                            id: 'footer_1',
+                            containLabel: true,
+                            top: 50,
+                            bottom: 10,
+                            left: 10,
+                            right: 10,
+                        },
+                        series: {
+                            type: 'bar',
+                            id: 'footer_1',
+                            xAxisId: 'footer_1',
+                            yAxisId: 'footer_1',
+                            data: generateSingleSeriesData(10),
+                        },
+                    },
+                }];
+
+                const _option = {
+                    matrix: {
+                        x: {show: false, data: []},
+                        y: {show: false, data: []},
+                        body: {
+                            itemStyle: {borderColor: 'none'}
+                        },
+                        top: 0,
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                    },
+
+                    media: (function () {
+                        const mediaList = [{
+                            query: {maxWidth: 500},
+                            matrix: {
+                                x: {data: Array(1).fill(null)},
+                                y: {data: Array(4).fill(null)},
+                            },
+                            coordList: [{
+                                id: 'header_1',
+                                coord: [0, 0],
+                            }, {
+                                id: 'sidebar_1',
+                                coord: [0, 1],
+                            }, {
+                                id: 'main_content_area_1',
+                                coord: [0, 2],
+                            }, {
+                                id: 'footer_1',
+                                coord: [0, 3],
+                            }]
+                        }, {
+                            // default with no query,
+                            matrix: {
+                                x: {data: Array(4).fill(null)},
+                                y: {data: Array(3).fill(null)},
+                            },
+                            coordList: [{
+                                id: 'header_1',
+                                coord: [[0, 3], 0],
+                            }, {
+                                id: 'sidebar_1',
+                                coord: [0, [1, 2]],
+                            }, {
+                                id: 'main_content_area_1',
+                                coord: [[1, 3], 1],
+                            }, {
+                                id: 'footer_1',
+                                coord: [[1, 3], 2],
+                            }]
+                        }];
+
+                        const mediaOption = mediaList.map(({query, matrix, coordList}) => ({
+                            query,
+                            option: {
+                                matrix: matrix,
+                                title: coordList.map(({id, coord}) => ({id, coord, coordinateSystem: 'matrix'})),
+                                grid: coordList.map(({id, coord}) => ({id, coord, coordinateSystem: 'matrix'})),
+                            },
+                        }));
+                        console.log('mediaOption', mediaOption);
+                        return mediaOption;
+                    })(),
+
+                    // Other components and series:
+                    ...(function () {
+                        const partialOption = {};
+                        for (const def of _contentDefList) {
+                            if (!def.option) {
+                                continue;
+                            }
+                            Object.keys(def.option).forEach(componentName => {
+                                partialOption[componentName] = partialOption[componentName] || [];
+                                if (Array.isArray(def.option[componentName])) {
+                                    partialOption[componentName] =
+                                        partialOption[componentName].concat(def.option[componentName]);
+                                }
+                                else {
+                                    partialOption[componentName].push(def.option[componentName]);
+                                }
+                            })
+                        }
+                        return partialOption;
+                    })()
+                }; // End of _option
+
+                console.log(_option);
+
+                function generateSingleSeriesData(dayCount, inverseXY) {
+                    const dayStart = new Date('2025-05-05T00:00:00.000Z'); // Monday
+                    const timeStart = dayStart.getTime();
+                    const sevenDay = 7 * 1000 * 3600 * 24;
+                    const seriesData = [];
+                    let lastVal = +(Math.random() * 300).toFixed(0);
+
+                    let turnCount = null;
+                    let sign = -1;
+                    for (let idx = 0; idx < dayCount; idx++) {
+                        if (turnCount == null || idx >= turnCount) {
+                            turnCount = idx + Math.round(dayCount / 4 * ((Math.random() - 0.5) * 0.1));
+                            sign = -sign;
+                        }
+                        const deltaMag = 50;
+                        const delta = +(Math.random() * deltaMag - deltaMag / 2 + sign * deltaMag / 3).toFixed(0);
+                        const val = Math.max(0, lastVal += delta);
+                        const xTime = timeStart + idx * sevenDay;
+                        const dataXVal = echarts.time.format(xTime, '{yyyy}-{MM}-{dd}');
+                        const item = [dataXVal, val];
+                        if (inverseXY) {
+                            item.reverse();
+                        }
+                        seriesData.push(item);
+                    }
+
+                    return seriesData;
+                }
+
+                var chart = testHelper.create(echarts, 'main_grid_layout', {
+                    title: [
+                        'Responsive grid layout',
+                        'Using media query; resize to change the layout',
+                    ],
+                    option: _option,
+                    width: 700,
+                    height: 400,
+                    inputsStyle: 'compact',
+                    draggable: true,
+                    inputs: [{
+                        type: 'select',
+                        text: 'show frame lines:',
+                        values: [false, true],
+                        onchange() {
+                            const shouldShow = this.value;
+                            chart.setOption({
+                                matrix: {
+                                    body: {itemStyle: {borderColor: shouldShow ? '#ccc' : 'none'}}
+                                }
+                            });
+                        }
+                    }]
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+    </body>
+</html>
+
