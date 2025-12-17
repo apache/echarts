@@ -101,7 +101,7 @@ export function alignScaleTicks(
         }
 
         const range = interval * alignToSplitNumber;
-        max = Math.ceil(rawExtent[1] / interval) * interval;
+        max = round(Math.ceil(rawExtent[1] / interval) * interval);
         min = round(max - range);
         // Not change the result that crossing zero.
         if (min < 0 && rawExtent[0] >= 0) {
