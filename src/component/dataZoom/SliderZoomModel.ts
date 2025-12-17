@@ -206,7 +206,8 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         moveHandleStyle: {
             color: tokens.color.accent40,
             opacity: 0.5,
-            borderRadius: [0, 0, 2, 2]        },
+            borderRadius: [0, 0, 2, 2]
+        },
 
         showDetail: true,
         showDataShadow: 'auto',                 // Default auto decision.

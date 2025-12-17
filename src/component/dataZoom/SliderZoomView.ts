@@ -40,7 +40,6 @@ import { enableHoverEmphasis } from '../../util/states';
 import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
 import { PointLike } from 'zrender/src/core/Point';
-import Displayable from 'zrender/src/graphic/Displayable';
 import { createTextStyle } from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
 import tokens from '../../visual/tokens';
@@ -658,7 +657,7 @@ class SliderZoomView extends DataZoomView {
         }, this);
 
         // Handle to move. Only visible when brushSelect is set true.
-        let actualMoveZone: Displayable = filler;
+        let actualMoveZone: graphic.Rect = filler;
         if (brushSelect) {
             const moveHandleHeight = parsePercent(dataZoomModel.get('moveHandleSize'), size[1]);
             const moveHandleStyleModel = dataZoomModel.getModel('moveHandleStyle');
@@ -780,12 +779,14 @@ class SliderZoomView extends DataZoomView {
             });
         }, this);
 
+        const borderRadius = normalizeCssArray(this.dataZoomModel.get('borderRadius') || 0);
         // Filler
         displaybles.filler.setShape({
             x: handleInterval[0],
             y: 0,
             width: handleInterval[1] - handleInterval[0],
-            height: size[1]
+            height: size[1],
+            r: borderRadius
         });
 
         const viewExtent = {
@@ -805,7 +806,6 @@ class SliderZoomView extends DataZoomView {
         const dataShadowSegs = displaybles.dataShadowSegs;
         const segIntervals = [0, handleInterval[0], handleInterval[1], size[0]];
 
-        const borderRadius = normalizeCssArray(this.dataZoomModel.get('borderRadius') || 0);
         const segNum = dataShadowSegs.length;
         for (let i = 0; i < segNum; i++) {
             const segGroup = dataShadowSegs[i];
