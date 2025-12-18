@@ -17,53 +17,85 @@
 * under the License.
 */
 
-import type GlobalModel from '../../model/Global';
 import type ScatterSeriesModel from './ScatterSeries';
 import { needFixJitter, fixJitter } from '../../util/jitter';
 import type SingleAxis from '../../coord/single/SingleAxis';
 import type Axis2D from '../../coord/cartesian/Axis2D';
+import type SeriesData from '../../data/SeriesData';
+import type { StageHandler } from '../../util/types';
+import createRenderPlanner from '../helper/createRenderPlanner';
 
-export default function jitterLayout(ecModel: GlobalModel) {
-    ecModel.eachSeriesByType('scatter', function (seriesModel: ScatterSeriesModel) {
-        const coordSys = seriesModel.coordinateSystem;
-        if (coordSys
-            && (coordSys.type === 'cartesian2d' || coordSys.type === 'single')) {
-            const baseAxis = coordSys.getBaseAxis ? coordSys.getBaseAxis() : null;
-            const hasJitter = baseAxis && needFixJitter(seriesModel, baseAxis);
+export default function jitterLayout(): StageHandler {
+    return {
+        seriesType: 'scatter',
 
-            if (hasJitter) {
-                const data = seriesModel.getData();
-                data.each(function (idx) {
-                    const dim = baseAxis.dim;
-                    const orient = (baseAxis as SingleAxis).orient;
-                    const isSingleY = orient === 'horizontal' && baseAxis.type !== 'category'
-                        || orient === 'vertical' && baseAxis.type === 'category';
-                    const layout = data.getItemLayout(idx);
-                    const rawSize = data.getItemVisual(idx, 'symbolSize');
-                    const size = rawSize instanceof Array ? (rawSize[1] + rawSize[0]) / 2 : rawSize;
+        plan: createRenderPlanner(),
 
-                    if (dim === 'y' || dim === 'single' && isSingleY) {
-                        // x is fixed, and y is floating
-                        const jittered = fixJitter(
-                            baseAxis as Axis2D | SingleAxis,
-                            layout[0],
-                            layout[1],
-                            size / 2
-                        );
-                        data.setItemLayout(idx, [layout[0], jittered]);
-                    }
-                    else if (dim === 'x' || dim === 'single' && !isSingleY) {
-                        // y is fixed, and x is floating
-                        const jittered = fixJitter(
-                            baseAxis as Axis2D | SingleAxis,
-                            layout[1],
-                            layout[0],
-                            size / 2
-                        );
-                        data.setItemLayout(idx, [jittered, layout[1]]);
-                    }
-                });
+        reset(seriesModel: ScatterSeriesModel) {
+            const coordSys = seriesModel.coordinateSystem;
+            if (!coordSys || (coordSys.type !== 'cartesian2d' && coordSys.type !== 'single')) {
+                return;
             }
+            const baseAxis = coordSys.getBaseAxis && coordSys.getBaseAxis();
+            const hasJitter = baseAxis && needFixJitter(seriesModel, baseAxis);
+            if (!hasJitter) {
+                return;
+            }
+
+            const dim = baseAxis.dim;
+            const orient = (baseAxis as SingleAxis).orient;
+            const isSingleY = orient === 'horizontal' && baseAxis.type !== 'category'
+                || orient === 'vertical' && baseAxis.type === 'category';
+
+            return {
+                progress(params, data: SeriesData): void {
+                    const points = data.getLayout('points') as number[] | Float32Array;
+                    const chunkPointCount = (params.end - params.start) * 2;
+                    const hasPoints = !!points && points.length >= chunkPointCount;
+
+                    for (let i = params.start; i < params.end; i++) {
+                        const offset = hasPoints ? (i - params.start) * 2 : -1;
+                        const layout = hasPoints ? [points[offset], points[offset + 1]] : data.getItemLayout(i);
+                        if (!layout) {
+                            continue;
+                        }
+
+                        const rawSize = data.getItemVisual(i, 'symbolSize');
+                        const size = rawSize instanceof Array ? (rawSize[1] + rawSize[0]) / 2 : rawSize;
+
+                        if (dim === 'y' || (dim === 'single' && isSingleY)) {
+                            // x is fixed, and y is floating
+                            const jittered = fixJitter(
+                                baseAxis as Axis2D | SingleAxis,
+                                layout[0],
+                                layout[1],
+                                size / 2
+                            );
+                            if (hasPoints) {
+                                points[offset + 1] = jittered;
+                            }
+                            else {
+                                data.setItemLayout(i, [layout[0], jittered]);
+                            }
+                        }
+                        else if (dim === 'x' || (dim === 'single' && !isSingleY)) {
+                            // y is fixed, and x is floating
+                            const jittered = fixJitter(
+                                baseAxis as Axis2D | SingleAxis,
+                                layout[1],
+                                layout[0],
+                                size / 2
+                            );
+                            if (hasPoints) {
+                                points[offset] = jittered;
+                            }
+                            else {
+                                data.setItemLayout(i, [jittered, layout[1]]);
+                            }
+                        }
+                    }
+                }
+            };
         }
-    });
+    };
 }
