@@ -17,4 +17,6 @@
 * under the License.
 */
 
-export * from './types/index';
+// A pseudo `.js` to redirect to `.d.ts`.
+// See `package.README.json` for more details.
+export * from './types/index.js';

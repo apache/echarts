@@ -17,6 +17,18 @@
 * under the License.
 */
 
-export * from './types/dist/echarts';
+/**
+ * @deprecated
+ * Temporarily retain it in case users reference it like this:
+ *  ```ts
+ *  /// <reference path="../node_modules/echarts/index.d.ts" />
+ *  var myChart = echarts.init(...);
+ *  ```
+ *
+ * See section "TypeScript entries" in `echarts/package.README.md` for more details.
+ */
+
+import * as echarts from './types/dist/echarts';
 // Export for UMD module.
 export as namespace echarts;
+export = echarts;
