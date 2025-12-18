@@ -474,8 +474,9 @@ function generateEntries() {
             fs.writeFileSync(nodePath.join(__dirname, `../${entryPath}.js`), jsCode, 'utf-8');
         }
 
-        // Make the d.ts in the same dir as .js, so that the can be found by tsc.
-        // package.json "types" in "exports" does not always seam to work.
+        // Create xxx.d.ts in the same dir with xxx.js, so that they can be found by `tsc`.
+        // This way is more reliable than using "types" field in `package.json` "exports"
+        // considering older versions of `tsc`.
         const dtsCode = fs.readFileSync(nodePath.join(__dirname, `/template/${entryPath}.d.ts`), 'utf-8');
         fs.writeFileSync(nodePath.join(__dirname, `../${entryPath}.d.ts`), dtsCode, 'utf-8');
     });

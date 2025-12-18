@@ -63,6 +63,7 @@ See `MIN_VERSION` in `echarts/build/testDts.js` for the minimal supported TS ver
     + dts:
         + `echarts.core.d.ts` `echarts.features.d.ts` `echarts.components.d.ts` `echarts.charts.d.ts` `echarts.renderers.d.ts`.
         + `echarts/type/dist/all.d.ts`.
+        + `echarts/ssr/client/index.d.ts`.
 
 + CJS (and UMD):
     + dts:
