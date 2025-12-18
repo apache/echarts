@@ -36,7 +36,7 @@ export default function jitterLayout(): StageHandler {
             if (!coordSys || (coordSys.type !== 'cartesian2d' && coordSys.type !== 'single')) {
                 return;
             }
-            const baseAxis = coordSys.getBaseAxis && coordSys.getBaseAxis();
+            const baseAxis = coordSys.getBaseAxis && coordSys.getBaseAxis() as Axis2D | SingleAxis;
             const hasJitter = baseAxis && needFixJitter(seriesModel, baseAxis);
             if (!hasJitter) {
                 return;
@@ -66,7 +66,7 @@ export default function jitterLayout(): StageHandler {
                         if (dim === 'y' || (dim === 'single' && isSingleY)) {
                             // x is fixed, and y is floating
                             const jittered = fixJitter(
-                                baseAxis as Axis2D | SingleAxis,
+                                baseAxis,
                                 layout[0],
                                 layout[1],
                                 size / 2
@@ -81,7 +81,7 @@ export default function jitterLayout(): StageHandler {
                         else if (dim === 'x' || (dim === 'single' && !isSingleY)) {
                             // y is fixed, and x is floating
                             const jittered = fixJitter(
-                                baseAxis as Axis2D | SingleAxis,
+                                baseAxis,
                                 layout[1],
                                 layout[0],
                                 size / 2
