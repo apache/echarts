@@ -76,7 +76,7 @@
     "@babel/types": "7.10.5",
     "@definitelytyped/typescript-versions": "^0.1.9",
     "@definitelytyped/utils": "0.0.188",
-    "@lang/rollup-plugin-dts": "file:../../tigall/echarts/rollup-plugin-dts",
+    "@lang/rollup-plugin-dts": "2.0.3",
     "@microsoft/api-extractor": "7.31.2",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
