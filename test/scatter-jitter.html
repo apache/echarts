@@ -776,7 +776,8 @@ under the License.
                         title: [
                             'Large Dataset **without** Jittering',
                             'The chart **SHOULD NOT** get stuck and render as expected',
-                            '(Manual Test Only)'
+                            '(Manual Test Only)',
+                            'Notice: **DO NOT** use SVG renderer for this test case'
                         ],
                         buttons: [
                             {
@@ -792,6 +793,10 @@ under the License.
                                     elapsedTimeTip.style.zIndex = '9999';
                                     elapsedTimeTip.innerText = 'Rendering...';
                                     chart.getDom().appendChild(elapsedTimeTip);
+                                    if (chart.getZr().painter.type === 'svg') {
+                                        elapsedTimeTip.innerText = 'SVG renderer detected! Please switch to Canvas renderer to test large dataset rendering performance.';
+                                        return;
+                                    }
                                     const onFinished = () => {
                                         const elapsed = performance.now() - startTime;
                                         elapsedTimeTip.innerText = `Rendered in ${elapsed.toFixed(2)} ms`;
