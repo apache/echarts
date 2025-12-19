@@ -776,7 +776,6 @@ under the License.
                         title: [
                             'Large Dataset **without** Jittering',
                             'The chart **SHOULD NOT** get stuck and render as expected',
-                            '(Manual Test Only)',
                             'Notice: **DO NOT** use SVG renderer for this test case'
                         ],
                         buttons: [
@@ -824,7 +823,7 @@ under the License.
             <script>
                 require([
                     'echarts'
-                ], function (echarts) {
+                ], async function (echarts) {
                     function genData(len, offset) {
                         let arr = new Float32Array(len * 2);
                         let off = 0;
@@ -885,17 +884,13 @@ under the License.
                         ]
                     };
 
-                    try {
-                        var chart = testHelper.create(echarts, 'main5', {
-                            title: [
-                                'Large Dataset **with** Jittering',
-                                'The chart **SHOULD NOT** throw errors'
-                            ],
-                            option: option
-                        });
-                    } catch (e) {
-                        console.error(e);
-                    }
+                    var chart = testHelper.create(echarts, 'main5', {
+                        title: [
+                            'Large Dataset **with** Jittering',
+                            'The chart **SHOULD NOT** throw errors'
+                        ],
+                        option: option
+                    });
                 });
             </script>
     </body>
