@@ -21,7 +21,6 @@ import type ScatterSeriesModel from './ScatterSeries';
 import { needFixJitter, fixJitter } from '../../util/jitter';
 import type SingleAxis from '../../coord/single/SingleAxis';
 import type Axis2D from '../../coord/cartesian/Axis2D';
-import type SeriesData from '../../data/SeriesData';
 import type { StageHandler } from '../../util/types';
 import createRenderPlanner from '../helper/createRenderPlanner';
 
@@ -47,11 +46,16 @@ export default function jitterLayout(): StageHandler {
             const isSingleY = orient === 'horizontal' && baseAxis.type !== 'category'
                 || orient === 'vertical' && baseAxis.type === 'category';
 
+            const jitterOnY = dim === 'y' || (dim === 'single' && isSingleY);
+            const jitterOnX = dim === 'x' || (dim === 'single' && !isSingleY);
+            if (!jitterOnY && !jitterOnX) {
+                return;
+            }
+
             return {
-                progress(params, data: SeriesData): void {
-                    const points = data.getLayout('points') as number[] | Float32Array;
-                    const chunkPointCount = (params.end - params.start) * 2;
-                    const hasPoints = !!points && points.length >= chunkPointCount;
+                progress(params, data): void {
+                    const points = data.getLayout('points') as Float32Array;
+                    const hasPoints = !!points;
 
                     for (let i = params.start; i < params.end; i++) {
                         const offset = hasPoints ? (i - params.start) * 2 : -1;
@@ -63,34 +67,24 @@ export default function jitterLayout(): StageHandler {
                         const rawSize = data.getItemVisual(i, 'symbolSize');
                         const size = rawSize instanceof Array ? (rawSize[1] + rawSize[0]) / 2 : rawSize;
 
-                        if (dim === 'y' || (dim === 'single' && isSingleY)) {
+                        if (jitterOnY) {
                             // x is fixed, and y is floating
-                            const jittered = fixJitter(
-                                baseAxis,
-                                layout[0],
-                                layout[1],
-                                size / 2
-                            );
+                            const jittered = fixJitter(baseAxis, layout[0], layout[1], size / 2);
                             if (hasPoints) {
                                 points[offset + 1] = jittered;
                             }
                             else {
-                                data.setItemLayout(i, [layout[0], jittered]);
+                                layout[1] = jittered;
                             }
                         }
-                        else if (dim === 'x' || (dim === 'single' && !isSingleY)) {
+                        else if (jitterOnX) {
                             // y is fixed, and x is floating
-                            const jittered = fixJitter(
-                                baseAxis,
-                                layout[1],
-                                layout[0],
-                                size / 2
-                            );
+                            const jittered = fixJitter(baseAxis, layout[1], layout[0], size / 2);
                             if (hasPoints) {
                                 points[offset] = jittered;
                             }
                             else {
-                                data.setItemLayout(i, [jittered, layout[1]]);
+                                layout[0] = jittered;
                             }
                         }
                     }
