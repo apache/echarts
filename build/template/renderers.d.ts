@@ -17,4 +17,6 @@
 * under the License.
 */
 
-export * from './types/dist/renderers';
+// A pseudo `.js` to redirect to `.d.ts`.
+export * from './types/dist/renderers.js';
+// See section "TypeScript entries" in `echarts/package.README.md` for more details.

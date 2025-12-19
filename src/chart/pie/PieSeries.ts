@@ -36,7 +36,11 @@ import {
     OptionDataItemObject,
     StatesOptionMixin,
     SeriesLabelOption,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
+    SeriesOnGeoOptionMixin,
+    SeriesOnCartesianOptionMixin
 } from '../../util/types';
 import type SeriesData from '../../data/SeriesData';
 import { registerLayOutOnCoordSysUsage } from '../../core/CoordinateSystem';
@@ -64,7 +68,7 @@ export interface PieStateOption<TCbParams = never> {
     labelLine?: PieLabelLineOption
 }
 interface PieLabelOption extends Omit<SeriesLabelOption, 'rotate' | 'position'> {
-    rotate?: number | boolean | 'radial' | 'tangential'
+    rotate?: number | boolean | 'radial' | 'tangential' | 'tangential-noflip'
     alignTo?: 'none' | 'labelLine' | 'edge'
     edgeDistance?: string | number
     /**
@@ -102,6 +106,10 @@ export interface PieSeriesOption extends
     Omit<SeriesOption<PieStateOption<PieCallbackDataParams>, ExtraStateOption>, 'labelLine'>,
     PieStateOption<PieCallbackDataParams>,
     CircleLayoutOptionMixin<{centerExtra: string | number}>,
+    SeriesOnGeoOptionMixin,
+    SeriesOnCartesianOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
     SeriesEncodeOptionMixin {
 

@@ -16,8 +16,9 @@
   ],
   "main": "dist/echarts.js",
   "module": "index.js",
+  "unpkg": "dist/echarts.min.js",
   "jsdelivr": "dist/echarts.min.js",
-  "types": "index.d.ts",
+  "types": "types/dist/echarts.d.cts",
   "homepage": "https://echarts.apache.org",
   "bugs": {
     "url": "https://github.com/apache/echarts/issues",
@@ -55,7 +56,8 @@
     "test": "npx jest --config test/ut/jest.config.cjs",
     "test:single": "npx jest --config test/ut/jest.config.cjs --coverage=false -t",
     "test:single:debug": "npx --node-arg=--inspect-brk jest --runInBand --config test/ut/jest.config.cjs --coverage=false -t",
-    "test:dts": "node build/testDts.js",
+    "test:dts": "npm install --prefix ./test/types && node build/testDts.js",
+    "test:dts:fast": "node build/testDts.js",
     "mktest": "node test/build/mktest.js",
     "mktest:help": "node test/build/mktest.js -h",
     "checktype": "tsc --noEmit",
@@ -72,9 +74,9 @@
     "@babel/code-frame": "7.10.4",
     "@babel/core": "7.3.4",
     "@babel/types": "7.10.5",
-    "@definitelytyped/typescript-versions": "^0.1.1",
+    "@definitelytyped/typescript-versions": "^0.1.9",
     "@definitelytyped/utils": "0.0.188",
-    "@lang/rollup-plugin-dts": "2.0.2",
+    "@lang/rollup-plugin-dts": "2.0.3",
     "@microsoft/api-extractor": "7.31.2",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
@@ -106,9 +108,14 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": {
+        "import": "./types/dist/all.d.ts",
+        "require": "./types/dist/echarts.d.cts",
+        "default": "./types/dist/all.d.ts"
+      },
       "import": "./index.js",
-      "require": "./dist/echarts.js"
+      "require": "./dist/echarts.js",
+      "default": "./index.js"
     },
     "./core": "./core.js",
     "./core.js": "./core.js",
@@ -130,6 +137,7 @@
     "./index.js": "./index.js",
     "./theme/*": "./theme/*",
     "./i18n/*": "./i18n/*",
+    "./types/dist/all": "./types/dist/all.d.ts",
     "./types/dist/charts": "./types/dist/charts.d.ts",
     "./types/dist/components": "./types/dist/components.d.ts",
     "./types/dist/core": "./types/dist/core.d.ts",
@@ -159,6 +167,7 @@
     "./lib/chart/bar": "./lib/chart/bar.js",
     "./lib/chart/boxplot": "./lib/chart/boxplot.js",
     "./lib/chart/candlestick": "./lib/chart/candlestick.js",
+    "./lib/chart/chord": "./lib/chart/chord.js",
     "./lib/chart/custom": "./lib/chart/custom.js",
     "./lib/chart/effectScatter": "./lib/chart/effectScatter.js",
     "./lib/chart/funnel": "./lib/chart/funnel.js",

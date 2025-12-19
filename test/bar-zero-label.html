@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            body {
+                margin: 0;
+                padding: 20px;
+                font-family: Arial, sans-serif;
+            }
+            .chart-row {
+                display: flex;
+                margin-bottom: 20px;
+            }
+            .chart-container {
+                width: 50%;
+                height: 300px;
+                margin-right: 20px;
+            }
+            .chart-container:last-child {
+                margin-right: 0;
+            }
+        </style>
+        <h3>Bar chart zero value label position test</h3>
+        <div class="chart-row">
+            <div id="main0" class="chart-container"></div>
+            <div id="main1" class="chart-container"></div>
+        </div>
+        <div class="chart-row">
+            <div id="main2" class="chart-container"></div>
+            <div id="main3" class="chart-container"></div>
+        </div>
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                
+                // Vertical bar - X axis at bottom
+                const chart0 = echarts.init(document.getElementById('main0'));
+                chart0.setOption({
+                    title: { text: 'Vertical Bar - X axis bottom', textStyle: { fontSize: 12 } },
+                    xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'] },
+                    yAxis: { type: 'value' },
+                    series: [{
+                        type: 'bar',
+                        data: [10, 0, 15, 0, 20],
+                        label: { show: true, position: 'outside' }
+                    }]
+                });
+                
+                // Vertical bar - X axis at top
+                const chart1 = echarts.init(document.getElementById('main1'));
+                chart1.setOption({
+                    title: { text: 'Vertical Bar - X axis top', textStyle: { fontSize: 12 } },
+                    xAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'], position: 'top' },
+                    yAxis: { type: 'value', inverse: true },
+                    series: [{
+                        type: 'bar',
+                        data: [10, 0, 15, 0, 20],
+                        label: { show: true, position: 'outside' }
+                    }]
+                });
+                
+                // Horizontal bar - Y axis at left
+                const chart2 = echarts.init(document.getElementById('main2'));
+                chart2.setOption({
+                    title: { text: 'Horizontal Bar - Y axis left', textStyle: { fontSize: 12 } },
+                    xAxis: { type: 'value' },
+                    yAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'] },
+                    series: [{
+                        type: 'bar',
+                        data: [10, 0, 15, 0, 20],
+                        label: { show: true, position: 'outside' }
+                    }]
+                });
+                
+                // Horizontal bar - Y axis at right
+                const chart3 = echarts.init(document.getElementById('main3'));
+                chart3.setOption({
+                    title: { text: 'Horizontal Bar - Y axis right', textStyle: { fontSize: 12 } },
+                    xAxis: { type: 'value', inverse: true },
+                    yAxis: { type: 'category', data: ['A', 'B', 'C', 'D', 'E'], position: 'right' },
+                    series: [{
+                        type: 'bar',
+                        data: [10, 0, 15, 0, 20],
+                        label: { show: true, position: 'outside' }
+                    }]
+                });
+                
+            });
+        </script>
+    </body>
+</html>

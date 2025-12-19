@@ -158,6 +158,9 @@ interface MatrixDimensionOption extends MatrixCellStyleOption, MatrixDimensionLe
     type?: 'category'; // For internal usage; force be 'category'.
     show?: boolean;
     data?: MatrixDimensionCellLooseOption[];
+    // A simple way to provide column/row count if no need to compose a `data`.
+    // Note: `length` is ignored if `data` is specified.
+    length?: number;
     // `levels[0]`: the topmost (for x dimension) or leftmost (for y dimension) level.
     // If not specified, use null/undefined, such as `levels: [null, null, {levelSize: 10}]`
     levels?: (MatrixDimensionLevelOption | NullUndefined)[];
@@ -169,7 +172,7 @@ export interface MatrixDimensionCellOption extends MatrixBaseCellOption {
     // Do not use type `OrdinalRawValue` here. Number input is forbiden due to the possible confusion.
     // e.g., if `matrix.x.data: [1, 2, 3]` is allowed, then querying `coord: [1, null]` will actually get
     // the second column, since number represents the index (i.e. `MatrixXYLocator` or `OrdinalNumber`).
-    value?: string;
+    value?: string | NullUndefined;
     // column width (for x dimension) or row height (for y dimension).
     // If not specified (null/undefined), auto calculate it.
     // Only available on leaves, to avoid unnecessary complex.
@@ -192,6 +195,19 @@ export interface MatrixDimensionLevelOption {
 export interface MatrixDimensionModel extends Model<MatrixDimensionOption> {
 }
 
+export interface MatrixLabelOption extends LabelOption {
+    formatter?: string | ((params: MatrixLabelFormatterParams) => string);
+}
+
+export interface MatrixLabelFormatterParams {
+    componentType: 'matrix';
+    componentIndex: number;
+    name: string;
+    value: unknown;
+    coord: MatrixXYLocator[];
+    $vars: readonly ['name', 'value', 'coord'];
+}
+
 /**
  * Two levels of cascade inheritance:
  *  - priority-high: style options defined in `matrix.x/y/coner/body.data[i]` (in cell)
@@ -206,7 +222,7 @@ export interface MatrixCellStyleOption {
     //    The text truncation rect is obtained by cell rect minus by padding.
     //  - The inner series / other coord sys padding is not supported, to avoid necessary complexity.
     //    Consider some series, such as heatmap, prefer no padding.
-    label?: LabelOption;
+    label?: MatrixLabelOption;
     itemStyle?: ItemStyleOption;
     cursor?: string;
     // By default, auto decide whether to be silent, considering tooltip.

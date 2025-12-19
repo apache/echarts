@@ -243,6 +243,12 @@ class TooltipView extends ComponentView {
         const api = this._api;
         const triggerOn = tooltipModel.get('triggerOn');
 
+        if (tooltipModel.get('trigger') !== 'axis') {
+            // _lastDataByCoordSys and _cbParamsList are used for axis tooltip only.
+            this._lastDataByCoordSys = null;
+            this._cbParamsList = null;
+        }
+
         // Try to keep the tooltip show when refreshing
         if (this._lastX != null
             && this._lastY != null
@@ -393,6 +399,7 @@ class TooltipView extends ComponentView {
         }
 
         this._lastX = this._lastY = this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
 
         if (payload.from !== this.uid) {
             this._hide(makeDispatchAction(payload, api));
@@ -468,6 +475,7 @@ class TooltipView extends ComponentView {
                 return;
             }
             this._lastDataByCoordSys = null;
+            this._cbParamsList = null;
 
             let seriesDispatcher: Element;
             let cmptDispatcher: Element;
@@ -501,6 +509,7 @@ class TooltipView extends ComponentView {
         }
         else {
             this._lastDataByCoordSys = null;
+            this._cbParamsList = null;
             this._hide(dispatchAction);
         }
     }
@@ -1027,6 +1036,7 @@ class TooltipView extends ComponentView {
         // FIXME
         // duplicated hideTip if manuallyHideTip is called from dispatchAction.
         this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
         dispatchAction({
             type: 'hideTip',
             from: this.uid
@@ -1040,6 +1050,11 @@ class TooltipView extends ComponentView {
         clear(this, '_updatePosition');
         this._tooltipContent.dispose();
         globalListener.unregister('itemTooltip', api);
+
+        this._tooltipContent = null;
+        this._tooltipModel = null;
+        this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
     }
 }
 

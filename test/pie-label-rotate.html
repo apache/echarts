@@ -63,6 +63,7 @@ under the License.
                         undefined,
                         'radial',
                         'tangential',
+                        'tangential-noflip',
                         30
                     ];
 
@@ -103,7 +104,7 @@ under the License.
                                         100 / rows / 2 * 0.6 + '%'
                                     ]
                                 });
-                                var rotText = j === 3 ? '30°' : rotates[j];
+                                var rotText = j === 4 ? '30°' : rotates[j];
                                 title.push({
                                     text: 'startAngle: ' + (rot ? 0 : 90) + '\n' + positions[i] + ', rotate: ' + rotText,
                                     left: 100 / cols * (j + 0.5) + '%',

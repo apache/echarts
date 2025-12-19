@@ -23,7 +23,8 @@ import {
     SeriesOption,
     SeriesOnPolarOptionMixin,
     SeriesOnCartesianOptionMixin,
-    SeriesOnCalendarOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     SeriesOnGeoOptionMixin,
     SeriesOnSingleOptionMixin,
     SymbolOptionMixin,
@@ -66,7 +67,8 @@ export interface EffectScatterDataItemOption extends SymbolOptionMixin,
 export interface EffectScatterSeriesOption
     extends SeriesOption<EffectScatterStateOption<CallbackDataParams>, EffectScatterStatesOptionMixin>,
     EffectScatterStateOption<CallbackDataParams>,
-    SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
+    SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin, SymbolOptionMixin<CallbackDataParams>,
     SeriesEncodeOptionMixin {
 

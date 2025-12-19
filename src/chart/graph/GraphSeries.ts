@@ -27,7 +27,8 @@ import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
-    SeriesOnCalendarOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     SeriesOnGeoOptionMixin,
     SeriesOnSingleOptionMixin,
     OptionDataValue,
@@ -140,7 +141,8 @@ export interface GraphCategoryItemOption extends SymbolOptionMixin,
 
 export interface GraphSeriesOption
     extends SeriesOption<GraphNodeStateOption<CallbackDataParams>, GraphNodeStatesMixin>,
-    SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
+    SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin<CallbackDataParams>,
     RoamOptionMixin,
@@ -171,7 +173,7 @@ export interface GraphSeriesOption
     /**
      * Symbol size scale ratio in roam
      */
-    nodeScaleRatio?: 0.6,
+    nodeScaleRatio?: number,
 
     draggable?: boolean
 

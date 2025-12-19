@@ -343,7 +343,7 @@ export function leveledFormat(
     else if (zrUtil.isFunction(formatter)) {
         const extra: TimeAxisLabelFormatterExtraParams = {
             time: tick.time,
-            level: tick.time.level,
+            level: tick.time ? tick.time.level : 0,
         };
         const scaleBreakHelper = getScaleBreakHelper();
         if (scaleBreakHelper) {

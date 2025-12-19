@@ -30,7 +30,9 @@ import {
     ZRTextVerticalAlign,
     ZRColor,
     BorderOptionMixin,
-    LabelOption
+    LabelOption,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import ComponentView from '../../view/Component';
 import GlobalModel from '../../model/Global';
@@ -43,7 +45,9 @@ interface TitleTextStyleOption extends LabelOption {
     width?: number
 }
 
-export interface TitleOption extends ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin {
+export interface TitleOption extends
+    ComponentOption, BoxLayoutOptionMixin, BorderOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
 
     mainType?: 'title'
 

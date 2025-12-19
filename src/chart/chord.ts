@@ -17,21 +17,8 @@
 * under the License.
 */
 
-import * as echarts from '../../';
+import { use } from '../extension';
+import { install } from './chord/install';
 
-const dom = document.createElement('div');
-dom.className = 'chart';
+use(install);
 
-const chart: echarts.EChartsType = echarts.init(dom);
-
-const option: echarts.EChartsOption = {
-    series: [{
-        type: 'bar',
-        emphasis: {
-            itemStyle: {
-                color: 'red'
-            }
-        }
-    }]
-};
-chart.setOption(option);
