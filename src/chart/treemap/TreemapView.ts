@@ -30,7 +30,6 @@ import {
 import DataDiffer from '../../data/DataDiffer';
 import * as helper from '../helper/treeHelper';
 import Breadcrumb from './Breadcrumb';
-import type { RoamControllerHost } from '../../component/helper/roamHelper';
 import RoamController, { RoamEventParams } from '../../component/helper/RoamController';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
@@ -43,7 +42,7 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import Model from '../../model/Model';
 import { LayoutRect } from '../../util/layout';
-import { TreemapLayoutNode } from './treemapLayout';
+import { calculateCurrentZoom, treemapClampZoom, TreemapLayoutNode } from './treemapLayout';
 import Element from 'zrender/src/Element';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { makeInner, convertOptionIdName } from '../../util/model';
@@ -154,7 +153,6 @@ class TreemapView extends ChartView {
     private _containerGroup: graphic.Group;
     private _breadcrumb: Breadcrumb;
     private _controller: RoamController;
-    private _controllerHost: RoamControllerHost;
 
     private _oldTree: Tree;
 
@@ -273,14 +271,6 @@ class TreemapView extends ChartView {
 
         this._oldTree = thisTree;
         this._storage = thisStorage;
-
-        if (this._controllerHost) {
-            const _oldRootLayout = this.seriesModel.layoutInfo;
-            const rootLayout = thisTree.root.getLayout();
-            if (rootLayout.width === _oldRootLayout.width && rootLayout.height === _oldRootLayout.height) {
-                this._controllerHost.zoom = 1;
-            }
-        }
 
         return {
             lastsForAnimation,
@@ -479,18 +469,9 @@ class TreemapView extends ChartView {
     }
 
     private _resetController(api: ExtensionAPI) {
-        let controller = this._controller;
-        let controllerHost = this._controllerHost;
-
-        if (!controllerHost) {
-            this._controllerHost = {
-                target: this.group
-            } as RoamControllerHost;
-            controllerHost = this._controllerHost;
-        }
-
         const seriesModel = this.seriesModel;
 
+        let controller = this._controller;
         // Init controller.
         if (!controller) {
             controller = this._controller = new RoamController(api.getZr());
@@ -515,15 +496,10 @@ class TreemapView extends ChartView {
             },
         });
 
-        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-        if (controllerHost.zoom == null) {
-            controllerHost.zoom = seriesModel.get('zoom');
-        }
     }
 
     private _clearController() {
         let controller = this._controller;
-        this._controllerHost = null;
         if (controller) {
             controller.dispose();
             controller = null;
@@ -563,10 +539,11 @@ class TreemapView extends ChartView {
         let mouseX = e.originX;
         let mouseY = e.originY;
         const zoomDelta = e.scale;
+        const seriesModel = this.seriesModel;
 
         if (this._state !== 'animating') {
             // These param must not be cached.
-            const root = this.seriesModel.getData().tree.root;
+            const root = seriesModel.getData().tree.root;
 
             if (!root) {
                 return;
@@ -582,24 +559,12 @@ class TreemapView extends ChartView {
                 rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height
             );
 
-            // scaleLimit
-            let zoomLimit = null;
-            const _controllerHost = this._controllerHost;
-            zoomLimit = _controllerHost.zoomLimit;
+            const layoutInfo = seriesModel.layoutInfo;
+            const currZoom = calculateCurrentZoom(layoutInfo, rootLayout);
+            let newZoom = currZoom * zoomDelta;
 
-            let newZoom = _controllerHost.zoom = _controllerHost.zoom || 1;
-            newZoom *= zoomDelta;
-            if (zoomLimit) {
-                const zoomMin = zoomLimit.min || 0;
-                const zoomMax = zoomLimit.max || Infinity;
-                newZoom = Math.max(
-                    Math.min(zoomMax, newZoom),
-                    zoomMin
-                );
-            }
-            const zoomScale = newZoom / _controllerHost.zoom;
-            _controllerHost.zoom = newZoom;
-            const layoutInfo = this.seriesModel.layoutInfo;
+            newZoom = treemapClampZoom(newZoom, seriesModel);
+            const zoomScale = newZoom / currZoom;
 
             // Transform mouse coord from global to containerGroup.
             mouseX -= layoutInfo.x;
