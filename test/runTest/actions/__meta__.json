@@ -191,6 +191,7 @@
   "sankey-jump": 1,
   "sankey-level": 1,
   "scale-extreme-number": 2,
+  "scatter-jitter": 1,
   "scatter-random-stream-fix-axis": 1,
   "scatter-single-axis": 3,
   "scatterMatrix": 3,
