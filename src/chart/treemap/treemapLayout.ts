@@ -29,7 +29,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import BoundingRect, { RectLike } from 'zrender/src/core/BoundingRect';
-import {parsePercent, MAX_SAFE_INTEGER} from '../../util/number';
+import {MAX_SAFE_INTEGER} from '../../util/number';
 import * as layout from '../../util/layout';
 import * as helper from '../helper/treeHelper';
 import TreemapSeriesModel, { TreemapSeriesNodeItemOption } from './TreemapSeries';
@@ -38,10 +38,11 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import Model from '../../model/Model';
 import { TreemapRenderPayload, TreemapMovePayload, TreemapZoomToNodePayload } from './treemapAction';
+import { RoamOptionMixin } from '../../util/types';
+import { clampByZoomLimit } from '../../component/helper/roamHelper';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
-const retrieveValue = zrUtil.retrieve;
 const each = zrUtil.each;
 
 const PATH_BORDER_WIDTH = ['itemStyle', 'borderWidth'] as const;
@@ -95,34 +96,35 @@ export default {
         const refContainer = layout.createBoxLayoutReference(seriesModel, api).refContainer;
         const layoutInfo = layout.getLayoutRect(seriesModel.getBoxLayoutParams(), refContainer);
 
-        const size = seriesOption.size || []; // Compatible with ec2.
-        const containerWidth = parsePercent(
-            retrieveValue(layoutInfo.width, size[0]),
-            refContainer.width
-        );
-        const containerHeight = parsePercent(
-            retrieveValue(layoutInfo.height, size[1]),
-            refContainer.height
-        );
-
         // Fetch payload info.
         const payloadType = payload && payload.type;
         const types = ['treemapZoomToNode', 'treemapRootToNode'];
         const targetInfo = helper
             .retrieveTargetInfo(payload, types, seriesModel);
-        const rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
+        const rootRect: RectLike = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
             ? payload.rootRect : null;
         const viewRoot = seriesModel.getViewRoot();
         const viewAbovePath = helper.getPathToRoot(viewRoot) as TreemapLayoutNode[];
 
         if (payloadType !== 'treemapMove') {
-            const rootSize = payloadType === 'treemapZoomToNode'
-                ? estimateRootSize(
-                    seriesModel, targetInfo, viewRoot, containerWidth, containerHeight
+            let needClampZoom = false;
+            const rootSize: Pick<RectLike, 'width' | 'height'> =
+                payloadType === 'treemapZoomToNode' ? (
+                    needClampZoom = true,
+                    estimateRootSize(seriesModel, targetInfo, viewRoot, layoutInfo)
                 )
-                : rootRect
-                ? [rootRect.width, rootRect.height]
-                : [containerWidth, containerHeight];
+                : rootRect ? (
+                    needClampZoom = true,
+                    zrUtil.extend({}, rootRect)
+                )
+                : zrUtil.extend({}, layoutInfo);
+
+            if (needClampZoom) {
+                let zoom = calculateCurrentZoom(layoutInfo, rootSize);
+                zoom = treemapClampZoom(zoom, seriesModel);
+                rootSize.width = layoutInfo.width * zoom;
+                rootSize.height = layoutInfo.height * zoom;
+            }
 
             let sort = seriesOption.sort;
             if (sort && sort !== 'asc' && sort !== 'desc') {
@@ -146,9 +148,9 @@ export default {
             let viewRootLayout = {
                 x: 0,
                 y: 0,
-                width: rootSize[0],
-                height: rootSize[1],
-                area: rootSize[0] * rootSize[1]
+                width: rootSize.width,
+                height: rootSize.height,
+                area: rootSize.width * rootSize.height
             };
             viewRoot.setLayout(viewRootLayout);
 
@@ -199,14 +201,6 @@ export default {
  * <https://github.com/d3/d3/blob/9cc9a875e636a1dcf36cc1e07bdf77e1ad6e2c74/src/layout/treemap.js>
  * with some modifications made for this program.
  * See the license statement at the head of this file.
- *
- * @protected
- * @param {module:echarts/data/Tree~TreeNode} node
- * @param {Object} options
- * @param {string} options.sort 'asc' or 'desc'
- * @param {number} options.squareRatio
- * @param {boolean} hideChildren
- * @param {number} depth
  */
 function squarify(
     node: TreemapLayoutNode,
@@ -557,18 +551,19 @@ function position(
     rect[wh[idx1WhenH]] -= rowOtherLength;
 }
 
-// Return [containerWidth, containerHeight] as default.
+// Return containerSize as default.
 function estimateRootSize(
     seriesModel: TreemapSeriesModel,
     targetInfo: { node: TreemapLayoutNode },
     viewRoot: TreemapLayoutNode,
-    containerWidth: number,
-    containerHeight: number
-) {
+    containerSize: Pick<RectLike, 'width' | 'height'>,
+): Pick<RectLike, 'width' | 'height'> {
     // If targetInfo.node exists, we zoom to the node,
     // so estimate whole width and height by target node.
     let currNode = (targetInfo || {}).node;
-    const defaultSize = [containerWidth, containerHeight];
+    const containerWidth = containerSize.width;
+    const containerHeight = containerSize.height;
+    const defaultSize = zrUtil.extend({}, containerSize);
 
     if (!currNode || currNode === viewRoot) {
         return defaultSize;
@@ -606,7 +601,7 @@ function estimateRootSize(
     area < viewArea && (area = viewArea);
     const scale = Math.pow(area / viewArea, 0.5);
 
-    return [containerWidth * scale, containerHeight * scale];
+    return {width: containerWidth * scale, height: containerHeight * scale};
 }
 
 // Root position based on coord of containerGroup
@@ -695,4 +690,16 @@ function prunning(
 
 function getUpperLabelHeight(model: NodeModel): number {
     return model.get(PATH_UPPER_LABEL_SHOW) ? model.get(PATH_UPPER_LABEL_HEIGHT) : 0;
+}
+
+export function calculateCurrentZoom(
+    baseSize: Pick<RectLike, 'width' | 'height'>,
+    currSize: Pick<RectLike, 'width' | 'height'>
+): RoamOptionMixin['zoom'] {
+    // width ratio and height ratio are suppposed to be the same.
+    return (currSize.width / baseSize.width) || (currSize.height / baseSize.height) || 1;
+}
+
+export function treemapClampZoom(zoom: number, seriesModel: TreemapSeriesModel): number {
+    return clampByZoomLimit(zoom, seriesModel.get('scaleLimit', true));
 }

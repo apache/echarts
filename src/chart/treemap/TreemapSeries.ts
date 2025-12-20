@@ -158,16 +158,13 @@ export interface TreemapSeriesOption
     ComponentOnCalendarOptionMixin,
     ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin,
+    // NOTE: In treemap, option `"zoom"` has never been exposed.
+    //  If users explicitly specify it in `setOption`, the behavior would be unexpected in before v6.1.0,
+    //  and it is removed since v6.1.0.
     RoamOptionMixin,
     TreemapSeriesVisualOption {
 
     type?: 'treemap'
-
-    /**
-     * configuration in echarts2
-     * @deprecated
-     */
-    size?: (number | string)[]
 
     /**
      * If sort in desc order.
