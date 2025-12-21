@@ -253,7 +253,11 @@ export default function prepareSeriesDataSchema(
         });
     });
 
-    function applyDim(resultItem: SeriesDimensionDefine, coordDim: DimensionName, coordDimIndex: DimensionIndex) {
+    function applyDim(
+        resultItem: SeriesDimensionDefine,
+        coordDim: SeriesDimensionDefine['coordDim'],
+        coordDimIndex: SeriesDimensionDefine['coordDimIndex']
+    ): void {
         if (VISUAL_DIMENSIONS.get(coordDim as keyof DataVisualDimensions) != null) {
             resultItem.otherDims[coordDim as keyof DataVisualDimensions] = coordDimIndex;
         }

@@ -412,12 +412,12 @@ function createList(
             const data = seriesModel.getData();
             const info = data.getDimensionInfo(
                 data.mapDimension(coordDim)
-            ) || {};
+            ) || {} as SeriesDimensionDefine;
             // In map series data don't have lng and lat dimension. Fallback to same with coordSys
             return extend(extend({}, info), {
                 name: coordDim,
                 // DON'T use ordinalMeta to parse and collect ordinal.
-                ordinalMeta: null
+                ordinalMeta: null,
             });
         });
         dataDims = map(dims, (dim, idx) => ({

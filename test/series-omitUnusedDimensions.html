@@ -210,7 +210,9 @@ under the License.
             };
 
             var chart = testHelper.create(echarts, 'main0', {
-                title: 'Omit unused dimension: **series index should be matched**',
+                title: [
+                    'Omit unused dimension: **series index should be matched** (tooltip should display x axis name)'
+                ],
                 option: option
             });
         });

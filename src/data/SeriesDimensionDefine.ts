@@ -69,9 +69,25 @@ class SeriesDimensionDefine {
     /**
      * The index of this dimension in `series.encode[coordDim]`.
      * Mandatory.
+     *
+     * For example,
+     *  Suppose
+     *      - encode option:
+     *          ```js
+     *          encode: {
+     *              x: [1, 3, 5],
+     *              y: [0, 2],
+     *          }
+     *          ```
+     *      - This `seriesDimensionDefine` corresponds to series dimension index `3`,
+     *      - `coordDim` is `x`
+     *  Then
+     *      coordDimIndex should be `1`, where `encode[coordDim][coordDimIndex] === 3`
      */
     coordDimIndex?: number;
+
     /**
+     * The term "other" means "other than coord".
      * The format of `otherDims` is:
      * ```js
      * {
