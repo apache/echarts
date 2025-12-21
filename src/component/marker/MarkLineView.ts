@@ -452,8 +452,6 @@ function createList(coordSys: CoordinateSystem, seriesModel: SeriesModel, mlMode
                 name: coordDim,
                 // DON'T use ordinalMeta to parse and collect ordinal.
                 ordinalMeta: null,
-                // Keep storeDimIndex aligned with coordDimIndex for marker data
-                storeDimIndex: info.coordDimIndex
             });
         });
     }
