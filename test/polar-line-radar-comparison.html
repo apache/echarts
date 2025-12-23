@@ -1,0 +1,297 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Polar Line vs Radar Chart Comparison</title>
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+            }
+            .container {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                height: 100%;
+            }
+            .chart-container {
+                display: flex;
+                flex: 1;
+                width: 100%;
+                min-height: 0;
+            }
+            .chart-item {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                border-right: 1px solid #e0e0e0;
+                min-width: 0;
+            }
+            .chart-item:last-child {
+                border-right: none;
+            }
+            .chart {
+                flex: 1;
+                min-height: 0;
+            }
+        </style>
+        <div class="container">
+            <div class="chart-container">
+                <div class="chart-item">
+                    <div id="radarChart" class="chart"></div>
+                </div>
+                <div class="chart-item">
+                    <div id="polarChart" class="chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                // Radar chart data
+                const indicators = [
+                    { name: 'Sales', max: 6500 },
+                    { name: 'Administration', max: 16000 },
+                    { name: 'Information Technology', max: 30000 },
+                    { name: 'Customer Support', max: 38000 },
+                    { name: 'Development', max: 52000 },
+                    { name: 'Marketing', max: 25000 }
+                ];
+
+                const radarData = [
+                    {
+                        value: [4200, 3000, 20000, 35000, 50000, 18000],
+                        name: 'Allocated Budget'
+                    },
+                    {
+                        value: [5000, 14000, 28000, 26000, 42000, 21000],
+                        name: 'Actual Spending'
+                    }
+                ];
+
+                // Color configuration
+                const colors = ['#5470c6', '#91cc75'];
+
+                // ========== Original Radar Chart ==========
+                const radarChart = echarts.init(document.getElementById('radarChart'));
+                radarChart.setOption({
+                    title: {
+                        text: 'Basic Radar Chart',
+                        left: 'center',
+                        top: 20
+                    },
+                    legend: {
+                        data: ['Allocated Budget', 'Actual Spending'],
+                        top: 50
+                    },
+                    radar: {
+                        indicator: indicators,
+                        center: ['50%', '55%'],
+                        radius: '60%',
+                        startAngle: 90  // Start from top (default is 90)
+                    },
+                    series: [
+                        {
+                            name: 'Budget vs spending',
+                            type: 'radar',
+                            data: radarData,
+                            lineStyle: {
+                                width: 2
+                            },
+                            areaStyle: {
+                                opacity: 0.1
+                            },
+                            symbol: 'circle',
+                            symbolSize: 6
+                        }
+                    ],
+                    color: colors
+                });
+
+                // ========== Simulate Radar Chart using Polar Line ==========
+                const polarChart = echarts.init(document.getElementById('polarChart'));
+
+                // Prepare Polar Line data
+                // Convert radar chart values to polar coordinate format
+                const categories = indicators.map(ind => ind.name);
+                
+                // Calculate normalized radius values (0-10 range for display)
+                const polarSeriesData = radarData.map((dataItem, seriesIdx) => {
+                    const seriesData = dataItem.value.map((val, idx) => {
+                        // Normalize to 0-10 range
+                        const normalizedValue = (val / indicators[idx].max) * 10;
+                        return [normalizedValue, categories[idx]];
+                    });
+                    return {
+                        name: dataItem.name,
+                        type: 'line',
+                        coordinateSystem: 'polar',
+                        // Convert each value to [radius, angleCategory] format
+                        data: seriesData,
+                        connectEnds: true,  // Connect first and last points
+                        smooth: 0,          // No smoothing, consistent with radar chart
+                        lineStyle: {
+                            width: 2,
+                            color: colors[seriesIdx]
+                        },
+                        areaStyle: {
+                            opacity: 0.1,
+                            color: colors[seriesIdx]
+                        },
+                        symbol: 'circle',
+                        symbolSize: 6,
+                        itemStyle: {
+                            color: colors[seriesIdx]
+                        }
+                    };
+                });
+
+                polarChart.setOption({
+                    title: {
+                        text: 'Polar Line Chart (Enhanced)',
+                        left: 'center',
+                        top: 20
+                    },
+                    legend: {
+                        data: ['Allocated Budget', 'Actual Spending'],
+                        top: 50
+                    },
+                    polar: {
+                        center: ['50%', '55%'],
+                        radius: '60%'
+                    },
+                    radiusAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        splitLine: {
+                            show: true,
+                            shape: 'polygon',  // Key feature: polygon grid lines
+                            lineStyle: {
+                                color: '#ddd'
+                            }
+                        },
+                        axisLabel: {
+                            show: false
+                        },
+                        axisLine: {
+                            show: false
+                        },
+                        axisTick: {
+                            show: false
+                        }
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: categories,
+                        clockwise: false,
+                        boundaryGap: false,  // Must be false to align points to radial lines
+                        startAngle: 90,      // Start from top, consistent with radar chart
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                                color: '#ddd'
+                            }
+                        },
+                        axisLine: {
+                            show: false
+                        },
+                        axisTick: {
+                            show: false
+                        },
+                        axisLabel: {
+                            margin: 10,
+                            color: '#333'
+                        }
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: function(params) {
+                            const indicator = indicators[params.dataIndex];
+                            const actualValue = radarData[params.seriesIndex].value[params.dataIndex];
+                            const percentage = ((actualValue / indicator.max) * 100).toFixed(1);
+                            return `<b>${params.seriesName}</b><br/>` +
+                                   `${params.name}: <b>${actualValue}</b> (${percentage}%)<br/>` +
+                                   `Max: ${indicator.max}`;
+                        }
+                    },
+                    series: polarSeriesData,
+                    color: colors
+                });
+
+                // Responsive resize
+                window.addEventListener('resize', function() {
+                    radarChart.resize();
+                    polarChart.resize();
+                });
+
+                // Add linked highlight effect
+                radarChart.on('highlight', function(params) {
+                    if (params.seriesIndex !== undefined) {
+                        polarChart.dispatchAction({
+                            type: 'highlight',
+                            seriesIndex: params.seriesIndex
+                        });
+                    }
+                });
+
+                radarChart.on('downplay', function(params) {
+                    if (params.seriesIndex !== undefined) {
+                        polarChart.dispatchAction({
+                            type: 'downplay',
+                            seriesIndex: params.seriesIndex
+                        });
+                    }
+                });
+
+                polarChart.on('highlight', function(params) {
+                    if (params.seriesIndex !== undefined) {
+                        radarChart.dispatchAction({
+                            type: 'highlight',
+                            seriesIndex: params.seriesIndex
+                        });
+                    }
+                });
+
+                polarChart.on('downplay', function(params) {
+                    if (params.seriesIndex !== undefined) {
+                        radarChart.dispatchAction({
+                            type: 'downplay',
+                            seriesIndex: params.seriesIndex
+                        });
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
+
