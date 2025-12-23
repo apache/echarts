@@ -42,6 +42,7 @@ import type Polar from '../../coord/polar/Polar';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {Group} from '../../util/graphic';
 import {LegendIconParams} from '../../component/legend/LegendModel';
+import tokens from '../../visual/tokens';
 
 type LineDataValue = OptionDataValue | OptionDataValue[];
 
@@ -119,7 +120,18 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
 
     data?: (LineDataValue | LineDataItemOption)[]
 
+    /**
+     * @deprecated
+     * This option has been deprecated since v6.0.1.
+     * Use `triggerEvent: 'line'` for only line event or `triggerEvent: true` for both line and area event.
+     */
     triggerLineEvent?: boolean
+
+    /**
+    * Whether to trigger event when hovering on the line or the area
+    * @since v6.0.1
+    */
+    triggerEvent?: boolean | 'line' | 'area'
 }
 
 class LineSeriesModel extends SeriesModel<LineSeriesOption> {
@@ -187,7 +199,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         smooth: false,
         smoothMonotone: null,
         symbol: 'emptyCircle',
-        symbolSize: 4,
+        symbolSize: 6,
         symbolRotate: null,
 
         showSymbol: true,
@@ -213,7 +225,12 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
             divideShape: 'clone'
         },
 
-        triggerLineEvent: false
+        /**
+         * @deprecated
+         */
+        triggerLineEvent: false,
+
+        triggerEvent: false
     };
 
     getLegendIcon(opt: LegendIconParams): ECSymbol | Group {
@@ -257,7 +274,7 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
 
         if (symbolType.indexOf('empty') > -1) {
             symbol.style.stroke = symbol.style.fill;
-            symbol.style.fill = '#fff';
+            symbol.style.fill = tokens.color.neutral00;
             symbol.style.lineWidth = 2;
         }
 

@@ -27,7 +27,8 @@ import {
     SeriesOption,
     SeriesOnCartesianOptionMixin,
     SeriesOnPolarOptionMixin,
-    SeriesOnCalendarOptionMixin,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin,
     SeriesOnGeoOptionMixin,
     SeriesOnSingleOptionMixin,
     OptionDataValue,
@@ -43,7 +44,8 @@ import {
     GraphEdgeItemObject,
     OptionDataValueNumeric,
     CallbackDataParams,
-    DefaultEmphasisFocus
+    DefaultEmphasisFocus,
+    PreserveAspectMixin
 } from '../../util/types';
 import SeriesModel from '../../model/Series';
 import Graph from '../../data/Graph';
@@ -54,6 +56,7 @@ import { LineDataVisual } from '../../visual/commonVisualTypes';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import { defaultSeriesFormatTooltip } from '../../component/tooltip/seriesFormatTooltip';
 import {initCurvenessList, createEdgeMapForCurveness} from '../helper/multipleGraphEdgeHelper';
+import tokens from '../../visual/tokens';
 
 
 type GraphDataValue = OptionDataValue | OptionDataValue[];
@@ -66,7 +69,6 @@ export interface GraphNodeStateOption<TCbParams = never> {
     itemStyle?: ItemStyleOption<TCbParams>
     label?: SeriesLabelOption
 }
-
 
 interface ExtraEmphasisState {
     focus?: DefaultEmphasisFocus | 'adjacency'
@@ -139,11 +141,13 @@ export interface GraphCategoryItemOption extends SymbolOptionMixin,
 
 export interface GraphSeriesOption
     extends SeriesOption<GraphNodeStateOption<CallbackDataParams>, GraphNodeStatesMixin>,
-    SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin, SeriesOnCalendarOptionMixin,
+    SeriesOnCartesianOptionMixin, SeriesOnPolarOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
     SeriesOnGeoOptionMixin, SeriesOnSingleOptionMixin,
     SymbolOptionMixin<CallbackDataParams>,
     RoamOptionMixin,
-    BoxLayoutOptionMixin {
+    BoxLayoutOptionMixin,
+    PreserveAspectMixin {
 
     type?: 'graph'
 
@@ -169,7 +173,7 @@ export interface GraphSeriesOption
     /**
      * Symbol size scale ratio in roam
      */
-    nodeScaleRatio?: 0.6,
+    nodeScaleRatio?: number,
 
     draggable?: boolean
 
@@ -494,7 +498,8 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
         itemStyle: {},
 
         lineStyle: {
-            color: '#aaa',
+            // Don't use tokens.color.border because of the opacity
+            color: tokens.color.neutral50,
             width: 1,
             opacity: 0.5
         },
@@ -507,9 +512,9 @@ class GraphSeriesModel extends SeriesModel<GraphSeriesOption> {
 
         select: {
             itemStyle: {
-                borderColor: '#212121'
+                borderColor: tokens.color.primary
             }
-        }
+        },
     };
 }
 

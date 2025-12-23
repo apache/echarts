@@ -1,4 +1,3 @@
-
 <!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
@@ -79,8 +78,11 @@ under the License.
                                     :width="20"
                                     :stroke-width="2"
                                     :percentage="test.percentage"
-                                    :status="test.summary"
-                                ></el-progress>
+                                    :status="test.summary === 'markedAsExpected' ? 'success' : test.summary"
+                                    :class="{'is-markedAsExpected': test.summary === 'markedAsExpected'}"
+                                    :color="test.summary === 'markedAsExpected' ? '#00ADE6' : undefined"
+                                >
+                                </el-progress>
                             </el-tooltip>
                         </template>
                         <el-tooltip
@@ -144,27 +146,58 @@ under the License.
                         <div class="run-config-item">
                             <span class="label">
                                 Expected
-                                <el-tooltip content="Use Nightly Build">
-                                    <el-checkbox :disabled="running" v-model="runConfig.isExpectedNightly" size="mini"></el-checkbox>
-                                </el-tooltip>
                             </span>
-                            <el-select :disabled="running" size="mini" v-model="runConfig.expectedVersion" placeholder="Select Version"
-                                :style="`width: ${runConfig.isExpectedNightly ? 160 : 80}px;`"
+                            <el-select :disabled="running" size="mini" v-model="runConfig.expectedSource" style="width: 90px;">
+                                <el-option value="release" label="Release"></el-option>
+                                <el-option value="nightly" label="Nightly"></el-option>
+                                <el-option value="PR" label="PR"></el-option>
+                                <el-option value="local" label="Local"></el-option>
+                            </el-select>
+                            <el-select
+                                v-if="runConfig.expectedSource !== 'local' && runConfig.expectedSource !== 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.expectedVersion"
+                                placeholder="Select Version"
+                                :style="`width: ${runConfig.expectedSource === 'nightly' ? 160 : 80}px;`"
                             >
                                 <el-option v-for="version in expectedVersionsList" :key="version" :label="version" :value="version"></el-option>
                             </el-select>
-                            <!-- <i class="el-icon-link"></i> -->
+                            <el-input
+                                v-if="runConfig.expectedSource === 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.expectedVersion"
+                                placeholder="#123"
+                                style="width: 120px;"
+                            ></el-input>
                             <span class="label">
                                 Actual
-                                <el-tooltip content="Use Nightly Build">
-                                    <el-checkbox :disabled="running" v-model="runConfig.isActualNightly" size="mini"></el-checkbox>
-                                </el-tooltip>
                             </span>
-                            <el-select :disabled="running" size="mini" v-model="runConfig.actualVersion" placeholder="Select Version"
-                                :style="`width: ${runConfig.isActualNightly ? 160 : 80}px;`"
+                            <el-select :disabled="running" size="mini" v-model="runConfig.actualSource" style="width: 90px;">
+                                <el-option value="release" label="Release"></el-option>
+                                <el-option value="nightly" label="Nightly"></el-option>
+                                <el-option value="PR" label="PR"></el-option>
+                                <el-option value="local" label="Local"></el-option>
+                            </el-select>
+                            <el-select
+                                v-if="runConfig.actualSource !== 'local' && runConfig.actualSource !== 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.actualVersion"
+                                placeholder="Select Version"
+                                :style="`width: ${runConfig.actualSource === 'nightly' ? 160 : 80}px;`"
                             >
                                 <el-option v-for="version in actualVersionsList" :key="version" :label="version" :value="version"></el-option>
                             </el-select>
+                            <el-input
+                                v-if="runConfig.actualSource === 'PR'"
+                                :disabled="running"
+                                size="mini"
+                                v-model="runConfig.actualVersion"
+                                placeholder="#123"
+                                style="width: 120px;"
+                            ></el-input>
                         </div>
                         <div class="run-config-item">
                             <span class="label">Renderer</span>
@@ -189,6 +222,13 @@ under the License.
                             </el-select>
                             <!-- <el-slider style="width: 100px;" v-model="runConfig.threads" :step="1" :min="1" :max="8" show-stops></el-slider> -->
                         </div>
+                        <div class="run-config-item">
+                            <span class="label">Theme</span>
+                            <el-select :disabled="running" size="mini" style="width: 100px;" v-model="runConfig.theme" placeholder="none">
+                                <el-option key="none" label="none" value="none"></el-option>
+                                <el-option key="v5" label="v5" value="v5"></el-option>
+                            </el-select>
+                        </div>
                     </div>
                 </div>
 
@@ -201,9 +241,12 @@ under the License.
                             :width="30"
                             :stroke-width="4"
                             :percentage="currentTest.percentage"
-                            :status="currentTest.summary"
+                            :status="currentTest.summary === 'markedAsExpected' ? 'success' : currentTest.summary"
+                            :class="{'is-markedAsExpected': currentTest.summary === 'markedAsExpected'}"
+                            :color="currentTest.summary === 'markedAsExpected' ? '#00ADE6' : undefined"
                             style="margin-top: 5px;"
-                        ></el-progress>
+                        >
+                        </el-progress>
                         <h3>{{currentTest.name}}</h3>
                     </div>
                     <div class="single-test-ops">
@@ -213,6 +256,83 @@ under the License.
                         </el-button-group>
                         <el-button size="mini" @click="open(currentTestUrl, '_blank')" icon="el-icon-link">Open Demo</el-button>
                         <el-button size="mini" @click="open(currentTestRecordUrl, '_blank')" icon="el-icon-video-camera">Record Interaction</el-button>
+                        <el-button size="mini" @click="markAsExpected" icon="el-icon-edit">
+                            <el-tooltip content="Mark the diff as the expected change due to bug fixing or a new feature and the diff should be ignored" placement="top">
+                                <span>Mark Diff As Expected</span>
+                            </el-tooltip>
+                        </el-button>
+                    </div>
+
+                    <!-- Display mark as expected info if available -->
+                    <div v-if="currentTest.markedAsExpected && currentTest.markedAsExpected.length > 0" class="marked-as-expected">
+                        <h4>Marked As Expected History</h4>
+                        <el-table
+                            :data="currentTest.markedAsExpected"
+                            style="width: 100%"
+                            size="small"
+                            :row-class-name="getMarkRowClass">
+                            <el-table-column
+                                label="Time"
+                                width="180">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.markTimeFormatted }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                prop="type"
+                                label="Type"
+                                width="120">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.type }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                prop="markedBy"
+                                label="Marked By"
+                                width="120">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.markedBy || '-' }}</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                prop="lastVersion"
+                                label="Last Version"
+                                width="120">
+                                <template slot-scope="scope">
+                                    <span>{{ scope.row.lastVersion || '-' }}</span>
+                                    <el-tooltip
+                                        :content="validateMarkExpected(scope.row.lastVersion).reason"
+                                        placement="top"
+                                        v-if="!validateMarkExpected(scope.row.lastVersion).valid"
+                                    >
+                                        <el-tag size="mini" type="warning" style="margin-left: 5px">
+                                            Staled
+                                        </el-tag>
+                                    </el-tooltip>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                label="Link">
+                                <template slot-scope="scope">
+                                    <a v-if="scope.row.link" :href="scope.row.link" target="_blank">{{scope.row.link}}</a>
+                                    <span v-else>-</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                label="Comment">
+                                <template slot-scope="scope">
+                                    <span v-if="scope.row.comment">{{scope.row.comment}}</span>
+                                    <span v-else>-</span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                label="Operations"
+                                width="100">
+                                <template slot-scope="scope">
+                                    <el-button type="danger" size="mini" plain @click="deleteMark(scope.row)">Delete</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
                     </div>
 
                     <div v-if="currentTest.results.length > 0">

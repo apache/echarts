@@ -36,8 +36,17 @@ export {
     ECElementEvent,
     HighlightPayload,
     DownplayPayload,
-    SelectChangedPayload
+    SelectChangedPayload,
+    SelectChangedEvent,
 } from '../util/types';
+export {
+    AxisBreakChangedEvent,
+    ExpandAxisBreakPayload,
+    CollapseAxisBreakPayload,
+    ToggleAxisBreakPayload,
+} from '../component/axis/axisAction';
+
+
 export { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 export { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
 export { PatternObject, ImagePatternObject, SVGPatternObject } from 'zrender/src/graphic/Pattern';

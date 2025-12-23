@@ -24,6 +24,7 @@ under the License.
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
         <script src="lib/facePrint.js"></script>
     </head>
     <body>
@@ -239,7 +240,6 @@ under the License.
                 if (!main) {
                     return;
                 }
-                var chart = echarts.init(main);
 
                 var xAxisData = [];
                 var data1 = [];
@@ -300,7 +300,7 @@ under the License.
                     }
                 };
 
-                chart.setOption({
+                var chart = testHelper.create(echarts, 'main2', {
                     legend: {
                         data: ['line', 'line2', 'line3']
                     },

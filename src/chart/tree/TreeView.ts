@@ -25,8 +25,7 @@ import {radialCoordinate} from './layoutHelper';
 import * as bbox from 'zrender/src/core/bbox';
 import View from '../../coord/View';
 import * as roamHelper from '../../component/helper/roamHelper';
-import RoamController, { RoamControllerHost } from '../../component/helper/RoamController';
-import {onIrrelevantElement} from '../../component/helper/cursorHelper';
+import RoamController from '../../component/helper/RoamController';
 import {parsePercent} from '../../util/number';
 import ChartView from '../../view/Chart';
 import TreeSeriesModel, { TreeSeriesOption, TreeSeriesNodeItemOption } from './TreeSeries';
@@ -36,7 +35,8 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import SeriesData from '../../data/SeriesData';
 import { setStatesStylesFromModel, setStatesFlag, setDefaultStateProxy, HOVER_STATE_BLUR } from '../../util/states';
-import { AnimationOption, ECElement } from '../../util/types';
+import { AnimationOption, ECElement, NullUndefined } from '../../util/types';
+import tokens from '../../visual/tokens';
 
 type TreeSymbol = SymbolClz & {
     __edge: graphic.BezierCurve | TreePath
@@ -76,7 +76,7 @@ class TreePath extends Path<TreeEdgePathProps> {
 
     getDefaultStyle() {
         return {
-            stroke: '#000',
+            stroke: tokens.color.neutral99,
             fill: null as string
         };
     }
@@ -132,7 +132,7 @@ class TreeView extends ChartView {
     private _mainGroup = new graphic.Group();
 
     private _controller: RoamController;
-    private _controllerHost: RoamControllerHost;
+    private _controllerHost: roamHelper.RoamControllerHost;
 
     private _data: SeriesData<TreeSeriesModel>;
 
@@ -145,7 +145,7 @@ class TreeView extends ChartView {
 
         this._controllerHost = {
             target: this.group
-        } as RoamControllerHost;
+        } as roamHelper.RoamControllerHost;
 
         this.group.add(this._mainGroup);
     }
@@ -173,7 +173,7 @@ class TreeView extends ChartView {
         }
 
         this._updateViewCoordSys(seriesModel, api);
-        this._updateController(seriesModel, ecModel, api);
+        this._updateController(seriesModel, null, ecModel, api);
 
         const oldData = this._data;
 
@@ -252,15 +252,16 @@ class TreeView extends ChartView {
             max[1] = oldMax ? oldMax[1] : max[1] + 1;
         }
 
-        const viewCoordSys = seriesModel.coordinateSystem = new View();
+        const viewCoordSys = seriesModel.coordinateSystem = new View(null, {api, ecModel: seriesModel.ecModel});
         viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
         viewCoordSys.setBoundingRect(min[0], min[1], max[0] - min[0], max[1] - min[1]);
 
-        viewCoordSys.setCenter(seriesModel.get('center'), api);
+        viewCoordSys.setCenter(seriesModel.get('center'));
         viewCoordSys.setZoom(seriesModel.get('zoom'));
 
-        // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group
+        // Here we use viewCoordSys just for computing the 'position' and 'scale' of the group,
+        // and 'treeRoam' action.
         this.group.attr({
             x: viewCoordSys.x,
             y: viewCoordSys.y,
@@ -274,47 +275,22 @@ class TreeView extends ChartView {
 
     _updateController(
         seriesModel: TreeSeriesModel,
+        clipRect: graphic.BoundingRect | NullUndefined,
         ecModel: GlobalModel,
         api: ExtensionAPI
     ) {
-        const controller = this._controller;
-        const controllerHost = this._controllerHost;
-        const group = this.group;
-        controller.setPointerChecker(function (e, x, y) {
-            const rect = group.getBoundingRect();
-            rect.applyTransform(group.transform);
-            return rect.contain(x, y)
-                && !onIrrelevantElement(e, api, seriesModel);
-        });
+        roamHelper.updateController(
+            seriesModel,
+            api,
+            this.group,
+            this._controller,
+            this._controllerHost,
+            clipRect
+        );
 
-        controller.enable(seriesModel.get('roam'));
-        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-        controllerHost.zoom = seriesModel.coordinateSystem.getZoom();
-
-        controller
-            .off('pan')
-            .off('zoom')
-            .on('pan', (e) => {
-                roamHelper.updateViewOnPan(controllerHost, e.dx, e.dy);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'treeRoam',
-                    dx: e.dx,
-                    dy: e.dy
-                });
-            })
+        this._controller
             .on('zoom', (e) => {
-                roamHelper.updateViewOnZoom(controllerHost, e.scale, e.originX, e.originY);
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'treeRoam',
-                    zoom: e.scale,
-                    originX: e.originX,
-                    originY: e.originY
-                });
                 this._updateNodeAndLinkScale(seriesModel);
-                // Only update label layout on zoom
-                api.updateLabelLayout();
             });
     }
 
@@ -376,7 +352,7 @@ function updateNode(
     const itemModel = node.getModel<TreeSeriesNodeItemOption>();
     const visualColor = (node.getVisual('style') as PathStyleProps).fill;
     const symbolInnerColor = node.isExpand === false && node.children.length !== 0
-            ? visualColor : '#fff';
+            ? visualColor : tokens.color.neutral00;
 
     const virtualRoot = data.tree.root;
 

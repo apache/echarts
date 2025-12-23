@@ -1,0 +1,18 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/21059",
+    "comment": "Introduced by the `outerBounds` feature, which avoids axis name overflowing the canvas by default.",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "5.6.0",
+    "markTime": 1750788695033
+  },
+  {
+    "link": "https://github.com/apache/echarts/pull/16978",
+    "comment": "DataZoom shadow for time axis fixed",
+    "type": "Bug Fixing",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1750750678675
+  }
+]

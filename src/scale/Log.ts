@@ -18,78 +18,97 @@
 */
 
 import * as zrUtil from 'zrender/src/core/util';
-import Scale from './Scale';
+import Scale, { ScaleGetTicksOpt } from './Scale';
 import * as numberUtil from '../util/number';
-import * as scaleHelper from './helper';
 
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
+import {
+    DimensionLoose, DimensionName, ParsedAxisBreakList, AxisBreakOption,
+    ScaleTick
+} from '../util/types';
+import { getIntervalPrecision, logTransform } from './helper';
 import SeriesData from '../data/SeriesData';
-import { DimensionName, ScaleTick } from '../util/types';
+import { getScaleBreakHelper } from './break';
 
-const scaleProto = Scale.prototype;
-// FIXME:TS refactor: not good to call it directly with `this`?
-const intervalScaleProto = IntervalScale.prototype;
-
-const roundingErrorFix = numberUtil.round;
-
+const fixRound = numberUtil.round;
 const mathFloor = Math.floor;
 const mathCeil = Math.ceil;
 const mathPow = Math.pow;
-
 const mathLog = Math.log;
 
-class LogScale extends Scale {
+class LogScale extends IntervalScale {
+
     static type = 'log';
     readonly type = 'log';
 
     base = 10;
 
-    private _originalScale: IntervalScale = new IntervalScale();
+    private _originalScale = new IntervalScale();
 
     private _fixMin: boolean;
     private _fixMax: boolean;
 
-    // FIXME:TS actually used by `IntervalScale`
-    private _interval: number = 0;
-    // FIXME:TS actually used by `IntervalScale`
-    private _niceExtent: [number, number];
-
-
     /**
      * @param Whether expand the ticks to niced extent.
      */
-    getTicks(expandToNicedExtent?: boolean): ScaleTick[] {
-        const originalScale = this._originalScale;
-        const extent = this._extent;
-        const originalExtent = originalScale.getExtent();
+    getTicks(opt?: ScaleGetTicksOpt): ScaleTick[] {
+        opt = opt || {};
+        const extent = this._extent.slice() as [number, number];
+        const originalExtent = this._originalScale.getExtent();
 
-        const ticks = intervalScaleProto.getTicks.call(this, expandToNicedExtent);
+        const ticks = super.getTicks(opt);
+        const base = this.base;
+        const originalBreaks = this._originalScale._innerGetBreaks();
+        const scaleBreakHelper = getScaleBreakHelper();
 
         return zrUtil.map(ticks, function (tick) {
             const val = tick.value;
-            let powVal = numberUtil.round(mathPow(this.base, val));
+            let roundingCriterion = null;
+
+            let powVal = mathPow(base, val);
 
             // Fix #4158
-            powVal = (val === extent[0] && this._fixMin)
-                ? fixRoundingError(powVal, originalExtent[0])
-                : powVal;
-            powVal = (val === extent[1] && this._fixMax)
-                ? fixRoundingError(powVal, originalExtent[1])
-                : powVal;
+            if (val === extent[0] && this._fixMin) {
+                roundingCriterion = originalExtent[0];
+            }
+            else if (val === extent[1] && this._fixMax) {
+                roundingCriterion = originalExtent[1];
+            }
+
+            let vBreak;
+            if (scaleBreakHelper) {
+                const transformed = scaleBreakHelper.getTicksLogTransformBreak(
+                    tick,
+                    base,
+                    originalBreaks,
+                    fixRoundingError
+                );
+                vBreak = transformed.vBreak;
+                if (roundingCriterion == null) {
+                    roundingCriterion = transformed.brkRoundingCriterion;
+                }
+            }
+
+            if (roundingCriterion != null) {
+                powVal = fixRoundingError(powVal, roundingCriterion);
+            }
 
             return {
-                value: powVal
+                value: powVal,
+                break: vBreak,
             };
         }, this);
     }
 
+    protected _getNonTransBreaks(): ParsedAxisBreakList {
+        return this._originalScale._innerGetBreaks();
+    }
+
     setExtent(start: number, end: number): void {
-        const base = mathLog(this.base);
-        // log(-Infinity) is NaN, so safe guard here
-        start = mathLog(Math.max(0, start)) / base;
-        end = mathLog(Math.max(0, end)) / base;
-        intervalScaleProto.setExtent.call(this, start, end);
+        this._originalScale.setExtent(start, end);
+        const loggedExtent = logTransform(this.base, [start, end]);
+        super.setExtent(loggedExtent[0], loggedExtent[1]);
     }
 
     /**
@@ -97,32 +116,22 @@ class LogScale extends Scale {
      */
     getExtent() {
         const base = this.base;
-        const extent = scaleProto.getExtent.call(this);
+        const extent = super.getExtent();
         extent[0] = mathPow(base, extent[0]);
         extent[1] = mathPow(base, extent[1]);
 
         // Fix #4158
-        const originalScale = this._originalScale;
-        const originalExtent = originalScale.getExtent();
+        const originalExtent = this._originalScale.getExtent();
         this._fixMin && (extent[0] = fixRoundingError(extent[0], originalExtent[0]));
         this._fixMax && (extent[1] = fixRoundingError(extent[1], originalExtent[1]));
 
         return extent;
     }
 
-    unionExtent(extent: [number, number]): void {
-        this._originalScale.unionExtent(extent);
-
-        const base = this.base;
-        extent[0] = mathLog(extent[0]) / mathLog(base);
-        extent[1] = mathLog(extent[1]) / mathLog(base);
-        scaleProto.unionExtent.call(this, extent);
-    }
-
-    unionExtentFromData(data: SeriesData, dim: DimensionName): void {
-        // TODO
-        // filter value that <= 0
-        this.unionExtent(data.getApproximateExtent(dim));
+    unionExtentFromData(data: SeriesData, dim: DimensionName | DimensionLoose): void {
+        this._originalScale.unionExtentFromData(data, dim);
+        const loggedOther = logTransform(this.base, data.getApproximateExtent(dim), true);
+        this._innerUnionExtent(loggedOther);
     }
 
     /**
@@ -131,9 +140,9 @@ class LogScale extends Scale {
      */
     calcNiceTicks(approxTickNum: number): void {
         approxTickNum = approxTickNum || 10;
-        const extent = this._extent;
-        const span = extent[1] - extent[0];
-        if (span === Infinity || span <= 0) {
+        const extent = this._extent.slice() as [number, number];
+        const span = this._getExtentSpanWithBreaks();
+        if (!isFinite(span) || span <= 0) {
             return;
         }
 
@@ -151,56 +160,63 @@ class LogScale extends Scale {
         }
 
         const niceExtent = [
-            numberUtil.round(mathCeil(extent[0] / interval) * interval),
-            numberUtil.round(mathFloor(extent[1] / interval) * interval)
+            fixRound(mathCeil(extent[0] / interval) * interval),
+            fixRound(mathFloor(extent[1] / interval) * interval)
         ] as [number, number];
 
         this._interval = interval;
+        this._intervalPrecision = getIntervalPrecision(interval);
         this._niceExtent = niceExtent;
     }
 
     calcNiceExtent(opt: {
-        splitNumber: number, // By default 5.
+        splitNumber: number,
         fixMin?: boolean,
         fixMax?: boolean,
         minInterval?: number,
         maxInterval?: number
     }): void {
-        intervalScaleProto.calcNiceExtent.call(this, opt);
+        super.calcNiceExtent(opt);
 
         this._fixMin = opt.fixMin;
         this._fixMax = opt.fixMax;
     }
 
-    parse(val: any): number {
-        return val;
-    }
-
     contain(val: number): boolean {
         val = mathLog(val) / mathLog(this.base);
-        return scaleHelper.contain(val, this._extent);
+        return super.contain(val);
     }
 
     normalize(val: number): number {
         val = mathLog(val) / mathLog(this.base);
-        return scaleHelper.normalize(val, this._extent);
+        return super.normalize(val);
     }
 
     scale(val: number): number {
-        val = scaleHelper.scale(val, this._extent);
+        val = super.scale(val);
         return mathPow(this.base, val);
     }
 
-    getMinorTicks: IntervalScale['getMinorTicks'];
-    getLabel: IntervalScale['getLabel'];
+    setBreaksFromOption(
+        breakOptionList: AxisBreakOption[],
+    ): void {
+        const scaleBreakHelper = getScaleBreakHelper();
+        if (!scaleBreakHelper) {
+            return;
+        }
+        const { parsedOriginal, parsedLogged } = scaleBreakHelper.logarithmicParseBreaksFromOption(
+            breakOptionList,
+            this.base,
+            zrUtil.bind(this.parse, this)
+        );
+        this._originalScale._innerSetBreak(parsedOriginal);
+        this._innerSetBreak(parsedLogged);
+    }
+
 }
 
-const proto = LogScale.prototype;
-proto.getMinorTicks = intervalScaleProto.getMinorTicks;
-proto.getLabel = intervalScaleProto.getLabel;
-
 function fixRoundingError(val: number, originalVal: number): number {
-    return roundingErrorFix(val, numberUtil.getPrecision(originalVal));
+    return fixRound(val, numberUtil.getPrecision(originalVal));
 }
 
 

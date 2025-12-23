@@ -1,0 +1,18 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/21117",
+    "comment": "feat(marker): markPoint markLine markArea support z option",
+    "type": "New Feature",
+    "markedBy": "Ovilia",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1753175046918
+  },
+  {
+    "link": "https://github.com/apache/echarts/pull/20782",
+    "comment": "markPoint markLine markArea add z2 option to support change level",
+    "type": "New Feature",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1750324411038
+  }
+]

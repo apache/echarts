@@ -22,8 +22,6 @@ under the License.
     <head>
         <meta charset="utf-8">
         <!-- THESE MAP API KEYS ARE ONLY FOR TESTING USAGE!!! -->
-        <script src="https://api.map.baidu.com/api?v=2.0&ak=KOmVjPVUAey1G2E8zNhPiuQ6QiEmAwZu"></script>
-        <script src="https://webapi.amap.com/maps?v=1.4.15&key=aa3e04a4e761abff1c875fb8d60551ed"></script>
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
         <script src="lib/dat.gui.min.js"></script>
@@ -39,10 +37,7 @@ under the License.
         <div id="main3"></div>
         <div id="main4"></div>
         <div id="main5"></div>
-        <div id="main6"></div>
         <div id="main7"></div>
-        <div id="main8"></div>
-        <div id="main9"></div>
 
         <script>
             require([
@@ -219,27 +214,72 @@ under the License.
             ], function (echarts) {
                 var option = {
                     tooltip: {},
-                    xAxis: {
+                    grid: [
+                        {
+                            id: 'a',
+                            left: 20,
+                            width: '40%',
+                        },
+                        {
+                            id: 'b',
+                            right: 20,
+                            width: '40%',
+                        }
+                    ],
+                    xAxis: [{
+                        id: 'a',
+                        gridId: 'a',
                         type: 'category',
-                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-                    },
-                    yAxis: {
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    }, {
+                        id: 'b',
+                        gridId: 'b',
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    }],
+                    yAxis: [{
+                        id: 'a',
+                        gridId: 'a',
                         type: 'category',
                         data: ['A', 'B', 'C', 'D', 'E', 'F', 'G']
                     },
+                    {
+                        id: 'b',
+                        gridId: 'b',
+                        type: 'category',
+                        data: ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+                    }],
                     series: [
                         {
                             type: 'pie',
-                            name: 'Cartesian2D(Category Axes)',
+                            name: 'Cartesian2D(Category Axes) 1',
                             coordinateSystem: 'cartesian2d',
                             radius: 20,
                             center: ['Tue', 'E'],
+                            xAxisId: 'a',
+                            yAxisId: 'a',
                             data: [
                                 { value: 1048, name: 'A' },
                                 { value: 735, name: 'B' },
                                 { value: 580, name: 'C' },
                                 { value: 484, name: 'D' },
                                 { value: 300, name: 'E' }
+                            ]
+                        },
+                        {
+                            type: 'pie',
+                            name: 'Cartesian2D(Category Axes) 2',
+                            coordinateSystem: 'cartesian2d',
+                            radius: 40,
+                            center: ['Wed', 'C'],
+                            xAxisId: 'b',
+                            yAxisId: 'b',
+                            data: [
+                                { value: 48, name: 'A' },
+                                { value: 135, name: 'B' },
+                                { value: 280, name: 'C' },
+                                { value: 984, name: 'D' },
+                                { value: 600, name: 'E' }
                             ]
                         }
                     ]
@@ -274,7 +314,21 @@ under the License.
                             radius: 20,
                             center: ['Tue', 230],
                             data: [
-                                { value: 1048, name: 'A' },
+                                { value: 1048, name: 'use_center' },
+                                { value: 735, name: 'B' },
+                                { value: 580, name: 'C' },
+                                { value: 484, name: 'D' },
+                                { value: 300, name: 'E' }
+                            ]
+                        },
+                        {
+                            type: 'pie',
+                            name: 'Cartesian2D(category axis & value axis)',
+                            coordinateSystem: 'cartesian2d',
+                            radius: 20,
+                            coord: ['Fri', 130],
+                            data: [
+                                { value: 1048, name: 'use_coord' },
                                 { value: 735, name: 'B' },
                                 { value: 580, name: 'C' },
                                 { value: 484, name: 'D' },
@@ -375,115 +429,5 @@ under the License.
             });
         </script>
 
-        <script>
-            require([
-                'echarts',
-                'extension/bmap'
-            ], function (echarts) {
-
-                var option = {
-                    bmap: {
-                        center: [115, 30],
-                        zoom: 5,
-                        roam: true,
-                    },
-                    tooltip: {},
-                    series: [
-                        {
-                            type: 'pie',
-                            name: 'BMap',
-                            coordinateSystem: 'bmap',
-                            radius: 20,
-                            center: [120, 30],
-                            data: [
-                                { value: 1048, name: 'A' },
-                                { value: 735, name: 'B' },
-                                { value: 580, name: 'C' },
-                                { value: 484, name: 'D' },
-                                { value: 300, name: 'E' }
-                            ]
-                        },
-                        {
-                            type: 'pie',
-                            name: 'No CRS',
-                            // coordinateSystem: 'bmap',
-                            radius: 20,
-                            center: [110, 36],
-                            data: [
-                                { value: 1048, name: 'A' },
-                                { value: 735, name: 'B' },
-                                { value: 580, name: 'C' },
-                                { value: 484, name: 'D' },
-                                { value: 300, name: 'E' }
-                            ]
-                        }
-                    ]
-                };
-
-                var chart = testHelper.create(echarts, 'main8', {
-                    title: ['Pie series on BMap'],
-                    option: option,
-                    buttons: [{
-                        text: 'Convert point [120, 30] to pixel',
-                        onclick: function () {
-                            alert(chart.convertToPixel('bmap', [120, 30]));
-                        }
-                    }]
-                });
-            });
-        </script>
-
-        <script>
-            require([
-                'echarts',
-                'https://fastly.jsdelivr.net/npm/echarts-extension-amap/dist/echarts-extension-amap.min.js'
-            ], function (echarts) {
-
-                var option = {
-                    amap: {
-                        viewMode: '3d',
-                        center: [115, 30],
-                        zoom: 5
-                    },
-                    tooltip: {},
-                    series: [
-                        {
-                            type: 'pie',
-                            name: 'AMap',
-                            coordinateSystem: 'amap',
-                            radius: 20,
-                            center: [120, 30],
-                            data: [
-                                { value: 1048, name: 'A' },
-                                { value: 735, name: 'B' },
-                                { value: 580, name: 'C' },
-                                { value: 484, name: 'D' },
-                                { value: 300, name: 'E' }
-                            ]
-                        },
-                        {
-                            type: 'pie',
-                            name: 'No CRS',
-                            // coordinateSystem: 'amap',
-                            radius: 20,
-                            center: [110, 36],
-                            data: [
-                                { value: 1048, name: 'A' },
-                                { value: 735, name: 'B' },
-                                { value: 580, name: 'C' },
-                                { value: 484, name: 'D' },
-                                { value: 300, name: 'E' }
-                            ]
-                        }
-                    ]
-                };
-
-                testHelper.create(echarts, 'main9', {
-                    title: ['Pie series on AMap'],
-                    option: option
-                });
-
-            });
-        </script>
     </body>
 </html>

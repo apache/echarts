@@ -1,0 +1,18 @@
+[
+  {
+    "link": "",
+    "comment": "1. matrix.body/corner.data[i].coord disable 'clamp' by default.\n2. Support option.textStyle.",
+    "type": "New Feature",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1752590797892
+  },
+  {
+    "link": "https://github.com/apache/echarts/issues/19807",
+    "comment": "",
+    "type": "New Feature",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1750679813704
+  }
+]

@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <script src="lib/draggable.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+        </style>
+
+
+        <div id="main_layout_components_series"></div>
+        <div id="main_layout_timeline"></div>
+        <div id="main_text_overflow_and_tooltip"></div>
+
+
+
+        <script>
+            require([
+                'echarts',
+                './data/czech_geo.json',
+                'data/svg/Beef_cuts_France.svg',
+            ], function (echarts, czech_geo, Beef_cuts_France) {
+
+                echarts.registerMap('czech_geo', czech_geo);
+                echarts.registerMap('Beef_cuts_France', {
+                    svg: Beef_cuts_France
+                });
+
+                // --- state ------
+                let _xShowing = true;
+                let _yShowing = true;
+                let _testCase = null;
+                // ----------------
+
+                var option;
+                option = {
+                    backgroundColor: '#eee',
+                    tooltip: {},
+                    title: {
+                        text: '',
+                        right: 'center',
+                    },
+                    matrix: [{
+                        // matrix 0
+                        id: 'matrix0',
+                        left: 10,
+                        bottom: 10,
+                        width: '30%',
+                        top: 40,
+                        x: {
+                            levelSize: 20,
+                            data: ['X1', 'X2', 'X3'],
+                        },
+                        y: {
+                            levelSize: 30,
+                            data: ['Y1', 'Y2', 'Y3', 'Y4'],
+                        },
+                        body: {
+                            data: [{
+                                coord: [[0, 2], 1],
+                                mergeCells: true,
+                            }, {
+                                coord: [['X1', 'X2'], 'Y1'],
+                                mergeCells: true,
+                            }, {
+                                coord: [['X1', 'X2'], 'Y3'],
+                                mergeCells: true,
+                            }, {
+                                coord: [['X1', 'X2'], 'Y4'],
+                                mergeCells: true,
+                            }]
+                        },
+                    }, {
+                        // matrix 1
+                        id: 'matrix1',
+                        right: 10,
+                        left: '35%',
+                        top: 20,
+                        bottom: 30,
+                        tooltip: {
+                            show: true,
+                            formatter(params) {
+                                return params.name;
+                            }
+                        },
+                        x: {
+                            label: {
+                                color: '#eee'
+                            },
+                            itemStyle: {
+                                color: 'rgba(10,10,0,0.9)'
+                            },
+                            levels: [null, {levelSize: 30}],
+                            data: [{
+                                value: 'R',
+                                children: ['R1', {value: 'R2'}]
+                            }, {
+                                value: 'S'
+                            }, {
+                                value: 'T',
+                                children: [
+                                    {
+                                        value: 'T1',
+                                        children: ['T11'],
+                                    }
+                                ]
+                            },
+                            'O',
+                            'P',
+                            'Q',
+                            ]
+                        },
+                        y: {
+                            levelSize: 30,
+                            label: {
+                                color: '#eee'
+                            },
+                            itemStyle: {
+                                color: 'rgba(10,10,0,0.9)'
+                            },
+                            data: [{
+                                value: 'A',
+                                children: ['A1', 'A2', {
+                                    value: 'A3',
+                                    children: ['A31', 'A32']
+                                }]
+                            }, {
+                                value: 'B',
+                                children: ['B1', 'B2', 'B3', 'B4']
+                            }, {
+                                value: 'C',
+                            }, {
+                                value: 'D',
+                            }],
+                        },
+                        body: {
+                            label: {
+                            },
+                            itemStyle: {
+                                // color: 'rgba(240,240,140,0.5)'
+                            },
+                            data: [{
+                                coord: ['R2', 'A3'],
+                                mergeCells: true,
+                            }, {
+                                coord: ['R1', ['B4', 'C']],
+                                mergeCells: true,
+                            }, {
+                                coord: [['R1', 'R2'], ['B2', 'B3']],
+                                mergeCells: true,
+                            }, {
+                                coord: [['O', 'P'], ['B3', 'C']],
+                                mergeCells: true,
+                            }, {
+                                coord: ['T', ['A1', 'A31']],
+                                mergeCells: true,
+                            }, {
+                                coord: [null, 'D'],
+                                coordClamp: true,
+                                mergeCells: true,
+                            }, {
+                                coord: [['P', 'Q'], 'A1'],
+                                mergeCells: true,
+                            }, {
+                                coord: [['P', 'Q'], 'A2'],
+                                mergeCells: true,
+                            }, {
+                                coord: [['P', 'Q'], 'A3'],
+                                mergeCells: true,
+                            }],
+                        },
+                        corner: {
+                            label: {
+                                color: '#eee'
+                            },
+                            itemStyle: {
+                                color: 'rgba(10,10,0,0.9)',
+                                // borderWidth: 1,
+                            },
+                            data: [{
+                                coord: [[-1, -3], -1],
+                                mergeCells: true,
+                                value: 'Y values',
+                            }, {
+                                coord: [[-1, -2], -2],
+                                mergeCells: true,
+                                value: 'X values',
+                                label: {
+                                    position: 'insideRight'
+                                }
+                            }],
+                        }
+                    }],
+                    toolbox: {
+                        show: true,
+                        feature: {
+                            dataZoom: {
+                                yAxisIndex: 'none'
+                            },
+                            // dataView: { readOnly: false },
+                            restore: {},
+                            saveAsImage: {}
+                        },
+                        top: 'center',
+                        left: 'center',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: [['P', 'Q'], 'A1'],
+                    },
+                    angleAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisLabel: {fontSize: 9},
+                    },
+                    radiusAxis: {
+                        axisLabel: {fontSize: 9},
+                    },
+                    polar: {
+                        // center: ['40%', '50%'],
+                        radius: '50%',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X3', 'Y3']
+                    },
+                    radar: {
+                        axisName: {
+                            color: '#333',
+                            fontSize: 9,
+                        },
+                        nameGap: 0,
+                        radius: '80%',
+                        indicator : [
+                           {text: 'IE8-', max: 400},
+                           {text: 'IE9+', max: 400},
+                           {text: 'Safari', max: 400},
+                           {text: 'Firefox', max: 400},
+                           {text: 'Chrome', max: 400}
+                        ],
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X3', 'Y4'],
+                    },
+                    singleAxis: {
+                        type: 'value',
+                        // height: height,
+                        splitArea: {
+                            show: true
+                        },
+                        axisTick: {show: false},
+                        axisLabel: {fontSize: 9, margin: 3},
+                        bottom: 12,
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['R1', 'D'],
+                    },
+                    parallelAxis: [
+                        {dim: 0, name: 'f0'},
+                        {dim: 1, name: 'f1'},
+                        {dim: 2, name: 'f2'}
+                    ],
+                    parallel: {
+                        left: 10,
+                        right: 30,
+                        top: 30,
+                        bottom: 10,
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y4'],
+                        parallelAxisDefault: {
+                            nameGap: 5,
+                        }
+                    },
+                    grid: [{
+                        id: 'cartesian_a',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        left: 3,
+                        right: 3,
+                        top: 3,
+                        bottom: 3,
+                        containLabel: true,
+                        coord: ['R2', 'B2'],
+                    }, {
+                        id: 'cartesian_b',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        left: 3,
+                        right: 3,
+                        top: 30,
+                        bottom: 30,
+                        containLabel: true,
+                        coord: ['X1', 'Y3'],
+                    }],
+                    xAxis: [{
+                        id: 'cartesian_a',
+                        gridId: 'cartesian_a',
+                        axisLabel: {hideOverlap: true},
+                    }, {
+                        id: 'cartesian_b',
+                        gridId: 'cartesian_b',
+                        axisTick: {length: 3},
+                        axisLabel: {fontSize: 9, margin: 5},
+                    }],
+                    yAxis: [{
+                        id: 'cartesian_a',
+                        gridId: 'cartesian_a',
+                    }, {
+                        id: 'cartesian_b',
+                        gridId: 'cartesian_b',
+                        axisTick: {length: 3},
+                        axisLabel: {fontSize: 9, margin: 5},
+                    }],
+                    geo: [{
+                        map: 'czech_geo',
+                        id: 'czech_geo_component',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y2'],
+                        roam: true,
+                        roamTrigger: 'global',
+                        clip: true,
+                        left: 5,
+                        top: 5,
+                        bottom: 5,
+                        right: 20,
+                        preserveAspect: true,
+                        // left: '50%',
+                        // right: 10,
+                        // layoutCenter: [10, 10],
+                        // layoutSize: 100,
+                    }],
+                    visualMap: [{
+                        type: 'continuous',
+                        left: 'center',
+                        bottom: 0,
+                        // width: '50%',
+                        itemHeight: 90,
+                        itemWidth: 10,
+                        min: 5,
+                        max: 100,
+                        // text: ['Price'],
+                        realtime: false,
+                        calculable: true,
+                        orient: 'horizontal',
+                        seriesId: ['Beef_cuts_France', 'czech_geo_series'],
+                        inRange: {
+                            color: ['#dbac00', '#db6e00', '#cf0000']
+                        },
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y1'],
+                    }, {
+                        type: 'piecewise',
+                        right: 0,
+                        bottom: 0,
+                        top: 'center',
+                        // width: '50%',
+                        // itemHeight: 90,
+                        itemWidth: 10,
+                        itemGap: 5,
+                        min: 5,
+                        max: 100,
+                        // text: ['Price'],
+                        realtime: true,
+                        calculable: true,
+                        textStyle: {
+                            fontSize: 9,
+                        },
+                        textGap: 3,
+                        // orient: 'horizontal',
+                        seriesId: ['Beef_cuts_France', 'czech_geo_series'],
+                        inRange: {
+                            color: ['#dbac00', '#db6e00', '#cf0000']
+                        },
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y2'],
+                    }],
+                    dataZoom: [{
+                        type: 'slider',
+                        xAxisId: 'cartesian_b',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix0',
+                        coord: ['X1', 'Y3'],
+                        bottom: 0,
+                        height: 20,
+                        // left: 0,
+                        left: 'center'
+                    }],
+                    legend: {
+                        data: ['line_a', 'line_b'],
+                        coordinateSystem: 'matrix',
+                        coord: ['X1', 'Y3'],
+                        textStyle: {
+                            fontSize: 11,
+                        },
+                        itemHeight: 7,
+                        itemWidth: 15,
+                    },
+                    title: [{
+                        text: 'series-map (svg source)',
+                        coordinateSystem: 'matrix',
+                        coord: ['X1', 'Y1'],
+                        textStyle: {
+                            fontSize: 10
+                        }
+                    }, {
+                        text: 'series-map\n(standalone)',
+                        coordinateSystem: 'matrix',
+                        coord: ['X3', 'Y1'],
+                        textStyle: {
+                            fontSize: 10
+                        }
+                    }, {
+                        text: 'geo component\n(and serves a series.map)',
+                        coordinateSystem: 'matrix',
+                        coord: ['X3', 'Y2'],
+                        textStyle: {
+                            fontSize: 10
+                        }
+                    }],
+                    thumbnail: {
+                        seriesId: 'graph_a',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['S', 'A1'],
+                        left: 2,
+                        top: 2,
+                        right: 2,
+                        bottom: 2,
+                    },
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'matrix',
+                        matrixIndex: 1,
+                        symbolSize: 30,
+                        data: [
+                            ['R1', 'A1', 'scatter'], ['R2', 'A1', 20], ['R1', 'A2', 30]
+                        ],
+                        encode: {label: 2},
+                        label: {show: true}
+                    }, {
+                        type: 'scatter',
+                        xAxisId: 'cartesian_a',
+                        yAxisId: 'cartesian_a',
+                        data: [[111212,23256], [98,76], [37,82]],
+                    }, {
+                        type: 'line',
+                        name: 'line_a',
+                        xAxisId: 'cartesian_b',
+                        yAxisId: 'cartesian_b',
+                        data: [[12,16], [48, 86], [68, 16], [97, 62]],
+                    }, {
+                        type: 'line',
+                        name: 'line_b',
+                        xAxisId: 'cartesian_b',
+                        yAxisId: 'cartesian_b',
+                        data: [[16,26], [28, 46], [58, 96], [87, 52]],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_a',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['O', 'B3'],
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a1', value: 123},
+                            {name: 'no_center', value: 234},
+                            {name: 'c1', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_b',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['P', 'B2'],
+                        center: [15, 15],
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a2', value: 123},
+                            {name: 'center_15', value: 234},
+                            {name: 'c2', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_c',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        center: ['O', 'B2'],
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a', value: 123},
+                            {name: 'b', value: 234},
+                            {name: 'no_coord', value: 345},
+                        ],
+                    }, {
+                        type: 'pie',
+                        id: 'pie_d',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['Q', 'B2'],
+                        left: '50%',
+                        radius: '50%',
+                        label: {overflow: 'none'},
+                        labelLayout: {hideOverlap: false},
+                        labelLine: {length: 2, length2: 2},
+                        data: [
+                            {name: 'a', value: 123},
+                            {name: 'b', value: 234},
+                            {name: 'left:50%', value: 345},
+                        ],
+                    }, {
+                        type: 'funnel',
+                        id: 'funnel_a',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['O', 'A1'],
+                        gap: 3,
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        label: {position: 'inside'},
+                        sort: 'ascending',
+                        data:[
+                            {value:60, name:'a'},
+                            {value:40, name:'b'},
+                            {value:20, name:'c'},
+                            {value:80, name:'d'},
+                        ]
+                    }, {
+                        type: 'graph',
+                        id: 'graph_a',
+                        layout: 'none',
+                        coordinateSystem: 'matrix',
+                        coordinateSystemUsage: 'box',
+                        matrixId: 'matrix1',
+                        coord: ['T', 'A1'],
+                        symbolSize: 15,
+                        roam: true,
+                        label: {show: true, fontSize: 10},
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 7],
+                        lineStyle: {opacity: 0.9, width: 2, curveness: 0},
+                        data: [
+                            {name: 'Node 0', x: 300, y: 300},
+                            {name: 'Node 1', x: 800, y: 300},
+                            {name: 'all in one cell', x: 550, y: 100},
+                            {name: 'Node 3', x: 550, y: 500}
+                        ],
+                        links: [
+                            {source: 0, target: 1},
+                            {source: 1, target: 2},
+                            {source: 0, target: 3}
+                        ],
+                    }, {
+                        type: 'graph',
+                        id: 'graph_b',
+                        layout: 'none',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        // no coord, but use coord sys by data.
+                        symbolSize: 15,
+                        roam: true,
+                        label: {show: true, fontSize: 10},
+                        edgeSymbol: ['circle', 'arrow'],
+                        edgeSymbolSize: [4, 7],
+                        lineStyle: {opacity: 0.9, width: 2, curveness: 0},
+                        data: [
+                            {name: 'Node 0', value: ['T', 'A32']},
+                            {name: 'Node 1', value: ['O', 'A32']},
+                            {name: 'cross cells', value: ['O', 'A31']},
+                        ],
+                        links: [
+                            {source: 0, target: 1},
+                            {source: 1, target: 2},
+                            {source: 0, target: 3}
+                        ],
+                    }, {
+                        name: 'French Beef Cuts',
+                        id: 'Beef_cuts_France',
+                        type: 'map',
+                        map: 'Beef_cuts_France',
+                        coordinateSystem: 'matrix',
+                        coordinateSystemUsage: 'box',
+                        coord: ['X1', 'Y1'],
+                        roam: true,
+                        roamTrigger: 'global',
+                        clip: true,
+                        top: 35,
+                        bottom: 30,
+                        left: 5,
+                        right: 5,
+                        preserveAspect: true,
+                        aspectScale: 1,
+                        zoom: 1,
+                        // layoutSize: '30%',
+                        showLegendSymbol: false,
+                        emphasis: {
+                            label: {
+                                show: false
+                            }
+                        },
+                        data: [
+                            { name: 'Queue', value: 15 },
+                            { name: 'Langue', value: 35 },
+                            { name: 'Plat de joue', value: 15 },
+                            { name: 'Gros bout de poitrine', value: 25 },
+                            { name: 'Jumeau à pot-au-feu', value: 45 },
+                            { name: 'Onglet', value: 85 },
+                            { name: 'Plat de tranche', value: 25 },
+                            { name: 'Araignée', value: 15 },
+                            { name: 'Gîte à la noix', value: 55 },
+                            { name: 'Bavette d\'aloyau', value: 25 },
+                            { name: 'Tende de tranche', value: 65 },
+                            { name: 'Rond de gîte', value: 45 },
+                            { name: 'Bavettede de flanchet', value: 85 },
+                            { name: 'Flanchet', value: 35 },
+                            { name: 'Hampe', value: 75 },
+                            { name: 'Plat de côtes', value: 65 },
+                            { name: 'Tendron Milieu de poitrine', value: 65 },
+                            { name: 'Macreuse à pot-au-feu', value: 85 },
+                            { name: 'Rumsteck', value: 75 },
+                            { name: 'Faux-filet', value: 65 },
+                            { name: 'Côtes Entrecôtes', value: 55 },
+                            { name: 'Basses côtes', value: 45 },
+                            { name: 'Collier', value: 85 },
+                            { name: 'Jumeau à biftek', value: 15 },
+                            { name: 'Paleron', value: 65 },
+                            { name: 'Macreuse à bifteck', value: 45 },
+                            { name: 'Gîte', value: 85 },
+                            { name: 'Aiguillette baronne', value: 65 },
+                            { name: 'Filet', value: 95 },
+                        ]
+                    }, {
+                        type: 'map',
+                        map: 'czech_geo',
+                        coordinateSystem: 'matrix',
+                        coordinateSystemUsage: 'box',
+                        matrixId: 'matrix0',
+                        coord: ['X3', 'Y1'],
+                        // left: '50%',
+                        // right: 10,
+                        // layoutCenter: [10, 10],
+                        // layoutSize: 100,
+                    }, {
+                        type: 'map',
+                        geoId: 'czech_geo_component',
+                        id: 'czech_geo_series',
+                        geoIndex: 0,
+                        data: [
+                            {name: 'Praha', value: 23},
+                            {name: 'Plzeňský kraj', value: 51},
+                            {name: 'Středočeský kraj', value: 91}
+                        ]
+                    }, {
+                        type: 'bar',
+                        data: [1, 2, '-', 3, 0, 5, 7],
+                        coordinateSystem: 'polar',
+                        barMaxWidth: '50%',
+                        barMinHeight: 10
+                    }, {
+                        type: 'parallel',
+                        smooth: 0,
+                        lineStyle: {color: 'red'},
+                        data: (function () {
+                            function generate_data(n, m, lb, ub) {
+                                let s = [];
+                                for (let i = 0; i < n; i++) {
+                                    let vec = [];
+                                    for (let j = 0; j < m; j++) {
+                                        vec.push(lb + (Math.random() * (ub - lb)));
+                                    }
+                                    s.push(vec);
+                                }
+                                return s;
+                            }
+                            data = generate_data(20, 3, 0.0, 1.0);
+                            return data;
+                        })(),
+                    }, {
+                        type: 'radar',
+                        symbol: 'none',
+                        lineStyle: {
+                            color: 'rgba(180,100,120)',
+                            width: 1,
+                        },
+                        emphasis: {
+                            areaStyle: {
+                                color:'rgba(0,250,0,0.3)'
+                            }
+                        },
+                        data: (function () {
+                            const dataList = [];
+                            for (let i = 0; i < 10; i++) {
+                                dataList.push({
+                                    value:[
+                                        (40 - i) * 10,
+                                        (38 - i) * 4 + 60,
+                                        i * 15 + 10,
+                                        i * 30,
+                                        i * 50 / 2
+                                    ],
+                                    name: i + 2000 + ''
+                                });
+                            }
+                            return dataList;
+                        })()
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: function (val) {
+                            return val[1] / 2;
+                        },
+                        data: (function () {
+                            const dataList = [];
+                            for (let i = 0; i < 30; i++) {
+                                dataList.push([Math.random() * 100, Math.random() * 30]);
+                            }
+                            return dataList;
+                        })()
+                    }, {
+                        type: 'sankey',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['P', 'A2'],
+                        layout: 'none',
+                        roam: true,
+                        roamTrigger: null,
+                        // left: 50,
+                        // bottom: 20,
+                        // right: 50,
+                        scaleLimit: {min: 0.5, max: 1.5},
+                        emphasis: {focus: 'adjacency'},
+                        data: [
+                            {name: 'a'},
+                            {name: 'b'},
+                            {name: 'a1'},
+                            {name: 'a2'},
+                            {name: 'b1'},
+                            {name: 'c'}
+                        ],
+                        links: [
+                            {source: 'a', target: 'a1', value: 5},
+                            {source: 'a', target: 'a2', value: 3},
+                            {source: 'b', target: 'b1', value: 8},
+                            {source: 'a', target: 'b1', value: 3},
+                            {source: 'b1', target: 'a1', value: 1},
+                            {source: 'b1', target: 'c', value: 2},
+                        ]
+                    }, {
+                        type: 'tree',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: ['R2', 'A31'],
+                        roamTrigger: null,
+                        data: [{
+                            "name": "flare",
+                            "value": 111,
+                            "children": [
+                                {
+                                    "name": "flex",
+                                    "value": 222,
+                                    "children": [
+                                        {"name": "FlareVis", "value": 4116, symbolSize: 20}
+                                    ]
+                                },
+                                {
+                                    "name": "scale",
+                                    "value": 333,
+                                    "children": [
+                                        {"name": "IScaleMap", "value": 2105},
+                                        {"name": "LinearScale", "value": 1316},
+                                        {"name": "LogScale", "value": 3151},
+                                        {"name": "OrdinalScale", "value": 3770},
+                                        {"name": "QuantileScale", "value": 2435},
+                                        {"name": "QuantitativeScale", "value": 4839},
+                                        {"name": "RootScale", "value": 1756},
+                                        {"name": "Scale", "value": 4268},
+                                        {"name": "ScaleType", "value": 1821},
+                                        {"name": "TimeScale", "value": 5833}
+                                ]
+                                },
+                                {
+                                    "name": "display",
+                                    "value": 444,
+                                    "children": [
+                                        {"name": "DirtySprite", "value": 8833}
+                                ]
+                                }
+                            ]
+                        }],
+                        // top: '18%',
+                        // bottom: '14%',
+                        roam: true,
+                        // roam: 'scale',
+                        // roam: 'move',
+                        // layout: 'radial',
+                        symbol: 'emptyCircle',
+                        symbolSize: 7,
+                        label: {show: false},
+                        initialTreeDepth: 3,
+                        animationDurationUpdate: 750
+                    }, {
+                        type: 'treemap',
+                        coordinateSystem: 'matrix',
+                        matrixId: 'matrix1',
+                        coord: [['P', 'Q'], 'A3'],
+                        roamTrigger: null,
+                        visibleMin: 300,
+                        // animation: false,
+                        animationDurationUpdate: 2000,
+                        // data: data.children,
+                        data: [
+                            {
+                                name: 'a',
+                                value: 10,
+                                children: [{
+                                    name: 'a1',
+                                    value: 11,
+                                    children: [
+                                        {name: 'a11', value: 111},
+                                        {name: 'a111', value: 1111},
+                                        {name: 'a112', value: 1111},
+                                        {name: 'a113', value: 111},
+                                        {name: 'a114', value: 111},
+                                        {name: 'a115', value: 1100}
+                                    ]
+                                }
+                            ]},
+                            {
+                                name: 'b',
+                                value: 6,
+                                children: [{
+                                    name: 'b1',
+                                    value: 15,
+                                    chidren: [
+                                        {name: 'b11', value: 120}
+                                    ]
+                                }]
+                            }
+                        ],
+                        leafDepth: 1,
+                        nodeClick: 'link',
+                        levels: [{
+                            itemStyle: {
+                                borderColor: '#333',
+                                borderWidth: 4,
+                                gapWidth: 2
+                            }
+                        }, {
+                            itemStyle: {
+                                borderColor: '#aaa',
+                                gapWidth: 2,
+                                borderWidth: 2
+                            },
+                            colorSaturation: [0.2, 0.7]
+                        }]
+                    }], // End of series
+                };
+
+                var chart = testHelper.create(echarts, 'main_layout_components_series', {
+                    title: [
+                        'Declaratively lay out components(coord sys) and series.',
+                        'Roam trigger area should be only the cell'
+                    ],
+                    height: 550,
+                    option: option,
+                    inputsStyle: 'compact',
+                    draggable: true,
+                    // boundingRect: true,
+                    inputs: [
+                        {
+                            text: 'matrix.x show:',
+                            type: 'select',
+                            values: [true, false],
+                            onchange() {
+                                _xShowing = this.value;
+                                chart.setOption({
+                                    matrix: [{
+                                        x: {show: _xShowing},
+                                    }, {
+                                        x: {show: _xShowing},
+                                    }],
+                                });
+                            }
+                        },
+                        {
+                            text: 'matrix.y show:',
+                            type: 'select',
+                            values: [true, false],
+                            onchange() {
+                                _yShowing = this.value;
+                                chart.setOption({
+                                    matrix: [{
+                                        y: {show: _yShowing},
+                                    }, {
+                                        y: {show: _yShowing},
+                                    }],
+                                });
+                            }
+                        },
+                    ]
+                });
+
+
+            });
+
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var dates = ["2010", '2011', '2012', '2013'];
+            var option = {
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                grid: {
+                    coordinateSystem: 'matrix',
+                    coord: ['a', 'r'],
+                    containLabel: true,
+                    top: 10,
+                    bottom: 10,
+                },
+                matrix: {
+                    x: {data: ['a', 'b', 'c']},
+                    y: {data: ['r', 's', 't']},
+                    body: {
+                        data: [
+                            {coord: [null, 's'], coordClamp: true, mergeCells: true}
+                        ]
+                    }
+                },
+                options: [
+                    {
+                        series: [{
+                        data: [130, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                        }],
+                    }, {
+                        series: [{
+                        data: [140, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                        }],
+                    }, {
+                        series: [{
+                        data: [90, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                        }],
+                    }, {
+                        series: [{
+                        data: [50, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                        }],
+                    }
+                ],
+                timeline: {
+                    data: dates,
+                    loop: false,
+                    playInterval: 800,
+                    coordinateSystem: 'matrix',
+                    coord: ['a', 's'],
+                    top: 'center',
+                }
+            };
+
+            var chart = testHelper.create(echarts, 'main_layout_timeline', {
+                title: [
+                    'timline layout in matrix',
+                ],
+                option: option,
+                height: 300,
+            });
+
+        });
+        </script>
+
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+
+            var LARGE_TEXT_EN = `Thus, we have to figure out what kind of exist brexit isMoreover, for many years, people with brexit have been viewed as different. It is disappointing that, for me, the emergent rise of brexit may change my life. By contrasts, what could we do anyway to ahchieve brexit. Chiefly, rebecca West told us that, the trouble about man is twofold. He cannot learn truths which are too complicated; he forgets truths which are too simple. That solved my problem. It is important to note that If we think about it from a different point of view, for example, friedrich Nietzsche stated in his book that, i have forgotten my umbrella.  That aroused my imagination. Similarly, with these questions, let's take a closer look to brexit. Therefore, we generally say, if we grasped the key of the problem of brexit, everthing else will be easily solved. With respect to We have been thinking about brexit for a long time.Above all, under this inevitable circumstance situation, we have to solve brexit. It is important to note that As this subject continues to be looked down on people must realize that brexit are becoming more common in today’s world. Above all, does the government provide help for brexit? Besides, several studies of the effects of brexit on the human systems have failed to demonstrate these effects. Similarly, the evidence presented in this assignment has shown that, in particular, david Mamet concluded that, it's only words.. unless they're true. That inspired me. However, brexit has become increasingly evident among teens according to many scientists, however, as this subject continues to be looked down on people must realize that brexit are becoming more common in today’s world. In addition, for me, the emergent rise of brexit may change my life. On the other hand, brexit continues to be a relevant controversial issue in society today, as In comparison, what should we do to give rise to brexit, and what should we do to prevent brexit's happening. Alternatively, the problem lies in the difference of people raised by brexit, on the contrary, what is the key point of brexit? To look at another way, the evidence presented in this assignment has shown that, to look at another way, for brexit, the key point is how to express brexit. Furthermore, why does brexit happen? It is important to note that What is the key point of brexit? Chiefly, according to Orson Scott Card, eko brushed a tear from her eye, and Immo jeered at her, but father held up a hand. "Never mock a tender heart," he said. That solved my problem. To look at another way, if we think about it from a different point of view, alternatively, what is the key point of brexit? Furthermore, as this subject continues to be looked down on people must realize that brexit are becoming more common in today’s world. It is important to note that We have been thinking about brexit for a long time.Since that is so, for me, the emergent rise of brexit may change my life. Thus, we have to face an embarrassing situation, that is, in that case, now, solving brexit is becoming a more and more significant issue, in fact, several studies of the effects of brexit on the human systems have failed to demonstrate these effects. To look at another way, when facing this difficult choice of brexit, i rarely slept well. By contrasts, if we think about it from a different point of view, as in the following example, rebecca McClanahan argued that, the shortest distance between two points is always under construction. Which enlighten me. With respect to If brexit takes place in our daliy life, we have to consider its consequence. In that case, several studies of the effects of brexit on the human systems have failed to demonstrate these effects. Besides, as far as I know, on the other hand, in general, however, brexit continues to be a relevant controversial issue in society today, as Thus, under this inevitable circumstance situation, we have to solve brexit. It is disappointing that, as far as I know, it is disappointing that, the problem lies in the difference of people raised by brexit, similarly, after seeing this evidence, there is no way we can agree with brexit. In other words, we have been thinking about brexit for a long time.In comparison, several studies of the effects of brexit on the human systems have failed to demonstrate these effects. On the other hand, brexit has become increasingly evident among teens according to many scientists, alternatively, more current studies of people who take brexit heavely show no evidence of emotional damage. On the one hand, from my piont of view, brexit means a lot to me, and In particular, rebecca West told us that, the trouble about man is twofold. He cannot learn truths which are too complicated; he forgets truths which are too simple. Which enlighten me. In particular, according to Ljupka Cvetanova, smile and the world will laugh at you. That inspired me. In addition, several studies of the effects of brexit on the human systems have failed to demonstrate these effects. Namely, steve Wozniak told us that, never trust a computer you can't throw out a window. That solved my problem. Besides, why does brexit happen? Since that is so, for me, the emergent rise of brexit may change my life. On the one hand, in my opinion, in fact, what is the key point of brexit? Above all, when facing this difficult choice of brexit, i rarely slept well. Another way of viewing this is, modern vehement arguments against brexit alone become suspect. As in the following example, according to David Mamet, it's only words.. unless they're true. That solved my problem. Similarly, why does brexit happen? Another way of viewing this is, we have to face an embarrassing situation, that is, in that case, brexit continues to be a relevant controversial issue in society today, as By contrasts, in general, on the one hand, we generally say, if we grasped the key of the problem of brexit, everthing else will be easily solved. In fact, now, solving brexit is becoming a more and more significant issue, above all, with these questions, let's take a closer look to brexit. However, what is the key point of brexit? In comparison, brexit is a common condition among civilians in today’s society, so, thus, after seeing this evidence, there is no way we can agree with brexit. With respect to we have to face an embarrassing situation, that is, it is disappointing that, what could we do anyway to ahchieve brexit. It is important to note that When facing this difficult choice of brexit, i rarely slept well. In particular, kamand Kojouri showed us that, what you choose also chooses you. That solved my problem. By contrasts, some people may disagree with brexit, by contrasts, as this subject continues to be looked down on people must realize that brexit are becoming more common in today’s world. Since that is so, more current studies of people who take brexit heavely show no evidence of emotional damage. Alternatively, for brexit, the key point is how to express brexit. Since that is so, what if brexit happens, and what if brexit does not happen. Since that is so, every person has to face these problems caused by brexit, when facing these problems, in fact, more current studies of people who take brexit heavely show no evidence of emotional damage. To look at another way, we have to face an embarrassing situation, that is, in that case, the problem lies in the difference of people raised by brexit, similarly, is inevitable. In fact, for me, the emergent rise of brexit may change my life. In comparison, what should we do to give rise to brexit, and what should we do to prevent brexit's happening. It is important to note that As this subject continues to be looked down on people must realize that brexit are becoming more common in today’s world. It is important to note that brexit has become increasingly evident among teens according to many scientists, that is to say, james Thurber mentioned that, all human beings should try to learn before they die what they are running from, and to, and why. That solved my problem. Similarly, the consequece of brexit is of great significance to me, and to many other people. Chiefly, to quote from William Penn, all Excess is ill: but Drunkenness is of the worst Sort. It spoils Health, dismounts the Mind, and unmans Men: it reveals Secrets, is Quarrelsome, lascivious, impudent, dangerous and Mad. In fine, he that is drunk is not a Man: because he is so long void of Reason, that distinguishes a Man from a Beast. That inspired me. Therefore, with these questions, let's take a closer look to brexit. Since that is so, as far as I know, thus, for me, the emergent rise of brexit may change my life. Thus, for brexit, the key point is how to express brexit. Above all, now, solving brexit is becoming a more and more significant issue, in fact, in my opinion, furthermore, is inevitable. Namely, plato, symposium / Phaedrus stated in his book that, there is truth in wine and children. That inspired me. Above all, as this subject continues to be looked down on people must realize that brexit are becoming more common in today’s world. In fact, what is the key point of brexit? On the one hand, but these are not the most urgent issue, a more pressing issue about brexit is, alternatively, the problem lies in the difference of people raised by brexit, on the other hand, but these are not the most urgent issue, a more pressing issue about brexit is, in addition, the problem lies in the difference of people raised by brexit, thus, if brexit takes place in our daliy life, we have to consider its consequence. Another possibility is, to a certain extent, brexit is right. That is to say, james Thurber showed us that, all human beings should try to learn before they die what they are running from, and to, and why. Which enlighten me. In fact, in my opinion, namely, to quote from Comte de Lautréamont, we say sound things when we do not strive to say to say extraordinary ones. Which brought a new way of thinking it. `;
+            var _xDataAItem = {value: 'a'};
+            var _xData = [
+                {value: 'e', size: 20},
+                _xDataAItem,
+                {value: LARGE_TEXT_EN},
+                // 'c'
+            ];
+            var _yDataTItem = {value: 't'};
+            var _yData = [
+                'r', 's', _yDataTItem
+            ];
+            var _bodyCellCase1 = {
+                coord: ['a', 't'],
+                value: 'The quick brown fox jumps over the lazy dog.',
+                label: {color: 'red'},
+            };
+            var _bodyCellCase2 = {
+                coord: ['a', 'r'],
+                value: 'The quick {aa|brown} fox {bb|jumps} over the lazy dog.',
+                label: {
+                    rich: {
+                        aa: {fontSize: 26, color: '#fff', textBorderWidth: 3, textBorderColor: 'green'},
+                        bb: {color: 'green', backgroundColor: 'rgba(200,200,0,0.3)', padding: 10},
+                    }
+                },
+            };
+            var _bodyData = [
+                {
+                    coord: ['a', 's'],
+                    value: LARGE_TEXT_EN
+                },
+                _bodyCellCase1,
+                _bodyCellCase2,
+            ];
+
+            var dates = ["2010", '2011', '2012', '2013'];
+            var option = {
+                tooltip: {
+                    enterable: true,
+                    confine: true,
+                    extraCssText: [
+                        'width:200px;',
+                        'white-space:normal;',
+                        'word-wrap: break-word;',
+                        'overflow-wrap: break-word;',
+                        'word-wrap:break-word;',
+                        'overflow-wrap:break-word;',
+                    ].join('')
+                },
+                title: [{
+                    text: [
+                        '- expect: by default only text show tooltip, but cell border is silent.',
+                        '- expect: by default padding should be appropriate.'
+                    ].join('\n'),
+                    top: 5,
+                    left: 10,
+                    textStyle: {fontSize: 12, color: 'blue'},
+                }],
+                matrix: [{
+                    id: 'matrix0',
+                    left: 10,
+                    width: '80%',
+                    bottom: 20,
+                    tooltip: {show: true},
+                    x: {data: _xData},
+                    y: {data: _yData},
+                    body: {data: _bodyData},
+                }],
+            };
+
+            var chart = testHelper.create(echarts, 'main_text_overflow_and_tooltip', {
+                title: [
+                    'Cell text overflow and tooltip.',
+                ],
+                option: option,
+                height: 350,
+                // boundingRect: true,
+                draggable: true,
+                inputsStyle: 'compact',
+                inputs: [{
+                    type: 'select',
+                    text: 'text overflow:',
+                    values: ['break', 'truncate', 'breakAll', 'none', undefined],
+                    onchange() {
+                        const val = this.value;
+                        chart.setOption({
+                            matrix: {
+                                x: {label: {overflow: val}},
+                                y: {label: {overflow: val}},
+                                body: {label: {overflow: val}},
+                                corner: {label: {overflow: val}},
+                            },
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'text lineOverflow:',
+                    values: ['truncate', undefined],
+                    onchange() {
+                        const val = this.value;
+                        chart.setOption({
+                            matrix: {
+                                x: {label: {lineOverflow: val}},
+                                y: {label: {lineOverflow: val}},
+                                body: {label: {lineOverflow: val}},
+                                corner: {label: {lineOverflow: val}},
+                            },
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'cell.silent:',
+                    values: [undefined, true, false],
+                    onchange() {
+                        const silent = this.value;
+                        chart.setOption({
+                            matrix: {
+                                x: {silent},
+                                y: {silent},
+                                body: {silent},
+                                corner: {silent},
+                            },
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'label.silent:',
+                    values: [undefined, true, false],
+                    onchange() {
+                        const silent = this.value;
+                        chart.setOption({
+                            matrix: {
+                                x: {label: {silent}},
+                                y: {label: {silent}},
+                                body: {label: {silent}},
+                                corner: {label: {silent}},
+                            },
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'padding:',
+                    options: [{
+                        value: undefined
+                    }, {
+                        input: {
+                            type: 'range',
+                            min: -50,
+                            max: 50,
+                        }
+                    }],
+                    onchange() {
+                        var padding = this.value;
+                        chart.setOption({
+                            matrix: {
+                                x: {label: {padding}},
+                                y: {label: {padding}},
+                                body: {label: {padding}},
+                                corner: {label: {padding}},
+                            }
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: 'borderWidth:',
+                    options: [{
+                        value: undefined
+                    }, {
+                        input: {
+                            type: 'range',
+                            value: 1,
+                            min: -10,
+                            max: 50,
+                        }
+                    }],
+                    onchange() {
+                        const borderWidth = this.value;
+                        chart.setOption({
+                            matrix: {
+                                x: {itemStyle: {borderWidth}},
+                                y: {itemStyle: {borderWidth}},
+                                body: {itemStyle: {borderWidth}},
+                            },
+                        });
+                    }
+                }, {
+                    type: 'range',
+                    text: 'col a size(%):',
+                    min: 0,
+                    max: 100,
+                    value: 80,
+                    onchange: function () {
+                        const size = this.value + '%'
+                        _xDataAItem.size = size;
+                        chart.setOption({
+                            matrix: {x: {data: _xData}}
+                        });
+                    }
+                }, {
+                    type: 'range',
+                    text: 'row t size(%):',
+                    min: 0,
+                    max: 100,
+                    value: 80,
+                    onchange: function () {
+                        const size = this.value + '%'
+                        _yDataTItem.size = size;
+                        chart.setOption({
+                            matrix: {y: {data: _yData}}
+                        });
+                    }
+                }, {
+                    type: 'br',
+                }, {
+                    type: 'select',
+                    text: `cell ${testHelper.printObject(_bodyCellCase1.coord)} label.position:`,
+                    values: [
+                        'inside',
+                        'insideTop', 'insideLeft', 'insideRight', 'insideBottom',
+                        'insideTopLeft', 'insideTopRight', 'insideBottomLeft', 'insideBottomRight',
+                        'left', 'right', 'top', 'bottom',
+                    ],
+                    onchange() {
+                        var position = this.value;
+                        _bodyCellCase1.label.position = position;
+                        chart.setOption({
+                            matrix: {body: {data: _bodyData}}
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: `cell ${testHelper.printObject(_bodyCellCase1.coord)} label.rotate:`,
+                    options: [
+                        {value: undefined},
+                        {value: 90},
+                        {value: 180},
+                        {value: 270},
+                        {input: {type: 'range', min: -180, max: 180, value: 0}},
+                    ],
+                    onchange() {
+                        var rotate = this.value;
+                        _bodyCellCase1.label.rotate = rotate;
+                        chart.setOption({
+                            matrix: {body: {data: _bodyData}}
+                        });
+                    }
+                }, {
+                    type: 'br',
+                }, {
+                    type: 'select',
+                    text: `cell ${testHelper.printObject(_bodyCellCase1.coord)} label.align:`,
+                    values: [undefined, 'left', 'center', 'right'],
+                    onchange() {
+                        var textAlign = this.value;
+                        _bodyCellCase1.label.align = textAlign;
+                        chart.setOption({
+                            matrix: {body: {data: _bodyData}}
+                        });
+                    }
+                }, {
+                    type: 'select',
+                    text: `cell ${testHelper.printObject(_bodyCellCase1.coord)} label.verticalAlign:`,
+                    values: [undefined, 'top', 'middle', 'bottom'],
+                    onchange() {
+                        var verticalAlign = this.value;
+                        _bodyCellCase1.label.verticalAlign = verticalAlign;
+                        chart.setOption({
+                            matrix: {body: {data: _bodyData}}
+                        });
+                    }
+                }]
+            });
+
+        });
+        </script>
+
+
+
+
+
+
+
+
+
+    </body>
+</html>
+

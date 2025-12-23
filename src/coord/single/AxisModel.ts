@@ -23,7 +23,9 @@ import {AxisModelCommonMixin} from '../axisModelCommonMixin';
 import Single from './Single';
 import SingleAxis from './SingleAxis';
 import { AxisBaseOption } from '../axisCommonTypes';
-import { BoxLayoutOptionMixin, LayoutOrient } from '../../util/types';
+import {
+    BoxLayoutOptionMixin, ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin, LayoutOrient
+} from '../../util/types';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { mixin } from 'zrender/src/core/util';
 
@@ -33,7 +35,7 @@ export type SingleAxisOption = AxisBaseOption & BoxLayoutOptionMixin & {
     mainType?: 'singleAxis'
     position?: SingleAxisPosition
     orient?: LayoutOrient
-};
+} & ComponentOnCalendarOptionMixin & ComponentOnMatrixOptionMixin;
 
 class SingleAxisModel extends ComponentModel<SingleAxisOption>
     implements AxisBaseModel<SingleAxisOption> {
@@ -97,7 +99,11 @@ class SingleAxisModel extends ComponentModel<SingleAxisOption>
                 type: 'dashed',
                 opacity: 0.2
             }
-        }
+        },
+
+        jitter: 0,
+        jitterOverlap: true,
+        jitterMargin: 2,
     };
 }
 

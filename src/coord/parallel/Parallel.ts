@@ -185,8 +185,13 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
             each(this.dimensions, function (dim) {
                 const axis = this._axesMap.get(dim);
                 axis.scale.unionExtentFromData(data, data.mapDimension(dim));
-                axisHelper.niceScaleExtent(axis.scale, axis.model);
             }, this);
+        }, this);
+
+        // do after all series processed
+        each(this.dimensions, function (dim) {
+            const axis = this._axesMap.get(dim);
+            axisHelper.niceScaleExtent(axis.scale, axis.model);
         }, this);
     }
 
@@ -194,13 +199,8 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
      * Resize the parallel coordinate system.
      */
     resize(parallelModel: ParallelModel, api: ExtensionAPI): void {
-        this._rect = layoutUtil.getLayoutRect(
-            parallelModel.getBoxLayoutParams(),
-            {
-                width: api.getWidth(),
-                height: api.getHeight()
-            }
-        );
+        const refContainer = layoutUtil.createBoxLayoutReference(parallelModel, api).refContainer;
+        this._rect = layoutUtil.getLayoutRect(parallelModel.getBoxLayoutParams(), refContainer);
 
         this._layoutAxes();
     }

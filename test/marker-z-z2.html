@@ -1,0 +1,587 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+
+<body>
+    <div id="main1"></div>
+    <div id="main2"></div>
+    <div id="main3"></div>
+
+    <script>
+        require(["echarts"], function (echarts) {
+            var option = {
+                tooltip: {
+                    trigger: "axis",
+                },
+                legend: {},
+                toolbox: {
+                    show: true,
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: "none",
+                        },
+                        dataView: { readOnly: false },
+                        magicType: { type: ["line", "bar"] },
+                        restore: {},
+                        saveAsImage: {},
+                    },
+                },
+                xAxis: {
+                    type: "category",
+                    boundaryGap: false,
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                },
+                yAxis: {
+                    type: "value",
+                    axisLabel: {
+                        formatter: "{value} °C",
+                    },
+                },
+                series: [
+                    {
+                        name: "Highest",
+                        type: "line",
+                        data: [10, 11, 13, 11, 12, 12, 9],
+                        markPoint: {
+                            label: {
+                                normal: {
+                                    formatter: function (param) {
+                                        return (
+                                            param.name +
+                                            " " +
+                                            (param.value || "")
+                                        );
+                                    },
+                                    textStyle: {
+                                        color: "#000",
+                                        fontSize: 15,
+                                    },
+                                    position: "left",
+                                },
+                            },
+                            data: [
+                                {
+                                    name: "series[0]-red-z2:[3]",
+                                    extData: { a: 1, b: 2 },
+                                    x: 350,
+                                    y: 180,
+                                    z2: 3,
+                                    itemStyle: {
+                                        color: "red",
+                                    },
+                                },
+                                {
+                                    name: "series[0]-blue-z2:[1]",
+                                    extData: { a: 1, b: 2 },
+                                    x: 350,
+                                    y: 230,
+                                    z2: 1,
+                                    itemStyle: {
+                                        color: "blue",
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        name: "Lowest",
+                        type: "line",
+                        data: [1, -2, 2, 5, 3, 2, 0],
+                        markPoint: {
+                            label: {
+                                normal: {
+                                    formatter: function (param) {
+                                        return (
+                                            param.name +
+                                            " " +
+                                            (param.value || "")
+                                        );
+                                    },
+                                    textStyle: {
+                                        color: "#000",
+                                        fontSize: 15,
+                                    },
+                                    position: "left",
+                                },
+                            },
+                            data: [
+                                {
+                                    name: "series[1]-green-z2:[2]",
+                                    extData: { a: 1, b: 2 },
+                                    x: 350,
+                                    y: 205,
+                                    z2: 2,
+                                    itemStyle: {
+                                        color: "green",
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        name: "above",
+                        type: "line",
+                        z: 4,
+                        data: [6, 6, 6, 6, 6, 6, 6],
+                        markPoint: {
+                            z: 5,
+                            label: {
+                                normal: {
+                                    formatter: function (param) {
+                                        return (
+                                            param.name +
+                                            " " +
+                                            (param.value || "")
+                                        );
+                                    },
+                                    textStyle: {
+                                        color: "#000",
+                                        fontSize: 15,
+                                    },
+                                    position: "top",
+                                },
+                            },
+                            data: [
+                                {
+                                    name: "series[2]-green-z:[5]-above-the-line",
+                                    extData: { a: 1, b: 2 },
+                                    x: 500,
+                                    y: 210,
+                                    itemStyle: {
+                                        color: "green",
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        name: "under",
+                        type: "line",
+                        z: 4,
+                        data: [7, 7, 7, 7, 7, 7, 7],
+                        markPoint: {
+                            z: 0,
+                            label: {
+                                normal: {
+                                    formatter: function (param) {
+                                        return (
+                                            param.name +
+                                            " " +
+                                            (param.value || "")
+                                        );
+                                    },
+                                    textStyle: {
+                                        color: "#000",
+                                        fontSize: 15,
+                                    },
+                                    position: "bottom",
+                                },
+                            },
+                            data: [
+                                {
+                                    name: "series[3]-green-z:[0]-under-the-line",
+                                    extData: { a: 1, b: 2 },
+                                    x: 600,
+                                    y: 210,
+                                    itemStyle: {
+                                        color: "green",
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            };
+            var chart = testHelper.create(echarts, "main1", {
+                option,
+                title: ["MarkPoint z z2"],
+            });
+        });
+    </script>
+
+    <script>
+        require(["echarts"], function (echarts) {
+            var option = {
+                tooltip: {
+                    trigger: "axis",
+                },
+                legend: {},
+                toolbox: {
+                    show: true,
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: "none",
+                        },
+                        dataView: { readOnly: false },
+                        magicType: { type: ["line", "bar"] },
+                        restore: {},
+                        saveAsImage: {},
+                    },
+                },
+                xAxis: {
+                    type: "category",
+                    boundaryGap: false,
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                },
+                yAxis: {
+                    type: "value",
+                    axisLabel: {
+                        formatter: "{value} °C",
+                    },
+                },
+                series: [
+                    {
+                        name: "Highest",
+                        type: "line",
+                        data: [10, 11, 13, 11, 12, 12, 9],
+                        markLine: {
+                            data: [
+                                [
+                                    {
+                                        name: "series[0]-red-z2:[3]",
+                                        x: 200,
+                                        y: 50,
+                                        z2: 3,
+                                        label: {
+                                            position: "middle",
+                                        },
+                                        lineStyle: {
+                                            color: "red",
+                                            type: "solid",
+                                            width: 10,
+                                        },
+                                    },
+                                    {
+                                        x: 400,
+                                        y: 250,
+                                    },
+                                ],
+                                [
+                                    {
+                                        name: "series[0]-blue-z2:[1]",
+                                        x: 200,
+                                        y: 350,
+                                        z2: 1,
+                                        label: {
+                                            position: "middle",
+                                        },
+                                        lineStyle: {
+                                            color: "blue",
+                                            type: "solid",
+                                            width: 10,
+                                        },
+                                    },
+                                    {
+                                        x: 400,
+                                        y: 150,
+                                    },
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        name: "Lowest",
+                        type: "line",
+                        data: [1, -2, 2, 5, 3, 2, 0],
+                        markLine: {
+                            data: [
+                                [
+                                    {
+                                        name: "series[1]-green-z2:[2]",
+                                        x: 250,
+                                        y: 350,
+                                        z2: 2,
+                                        label: {
+                                            position: "middle",
+                                        },
+                                        lineStyle: {
+                                            color: "green",
+                                            type: "solid",
+                                            width: 10,
+                                        },
+                                    },
+                                    {
+                                        x: 250,
+                                        y: 50,
+                                    },
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        name: "above",
+                        type: "line",
+                        z: 4,
+                        data: [6, 6, 6, 6, 6, 6, 6],
+                        markLine: {
+                            z: 5,
+                            data: [
+                                [
+                                    {
+                                        name: "series[2]-green-z:[5]-above-the-line",
+                                        x: 500,
+                                        y: 300,
+                                        lineStyle: {
+                                            color: "green",
+                                            type: "solid",
+                                            width: 10,
+                                        },
+                                    },
+                                    {
+                                        x: 500,
+                                        y: 80,
+                                    },
+                                ]
+                            ],
+                        },
+                    },
+                    {
+                        name: "under",
+                        type: "line",
+                        z: 4,
+                        data: [7, 7, 7, 7, 7, 7, 7],
+                        markLine: {
+                            z: 0,
+                            label: {
+                                position: "start",
+                            },
+                            data: [
+                                [
+                                    {
+                                        name: "series[3]-green-z:[0]-under-the-line",
+                                        x: 600,
+                                        y: 300,
+                                        lineStyle: {
+                                            color: "green",
+                                            type: "solid",
+                                            width: 10,
+                                        }
+                                    },
+                                    {
+                                        x: 600,
+                                        y: 80,
+                                    },
+                                ]
+                            ],
+                        },
+                    },
+                ],
+            };
+            var chart = testHelper.create(echarts, "main2", {
+                option,
+                title: ["MarkLine z z2"],
+            });
+        });
+    </script>
+
+    <script>
+        require(["echarts"], function (echarts) {
+            var option = {
+                tooltip: {
+                    trigger: "axis",
+                },
+                legend: {},
+                toolbox: {
+                    show: true,
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: "none",
+                        },
+                        dataView: { readOnly: false },
+                        magicType: { type: ["line", "bar"] },
+                        restore: {},
+                        saveAsImage: {},
+                    },
+                },
+                xAxis: {
+                    type: "category",
+                    boundaryGap: false,
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                },
+                yAxis: {
+                    type: "value",
+                    axisLabel: {
+                        formatter: "{value} °C",
+                    },
+                },
+                series: [
+                    {
+                        name: "Highest",
+                        type: "line",
+                        data: [10, 11, 13, 11, 12, 12, 9],
+                        markArea: {
+                            data: [
+                                [
+                                    {
+                                        x: 200,
+                                        y: 70,
+                                        itemStyle: {
+                                            color: "red",
+                                        },
+                                        emphasis: {
+                                            label: {
+                                                position: "left",
+                                            },
+                                        },
+                                        label: {
+                                            position: "left",
+                                        },
+                                        z2: 3,
+                                        name: "series[0]-red-z2:[3]",
+                                    },
+                                    {
+                                        x: 300,
+                                        y: 170,
+                                    },
+                                ],
+                                [
+                                    {
+                                        x: 200,
+                                        y: 170,
+                                        itemStyle: {
+                                            color: "blue",
+                                        },
+                                        label: {
+                                            position: "left",
+                                        },
+                                        emphasis: {
+                                            label: {
+                                                position: "left",
+                                            },
+                                        },
+                                        z2: 1,
+                                        name: "series[0]-blue-z2:[1]",
+                                    },
+                                    {
+                                        x: 300,
+                                        y: 270,
+                                    },
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        name: "Lowest",
+                        type: "line",
+                        data: [1, -2, 2, 5, 3, 2, 0],
+                        markArea: {
+                            data: [
+                                [
+                                    {
+                                        x: 200,
+                                        y: 120,
+                                        itemStyle: {
+                                            color: "green",
+                                        },
+                                        emphasis: {
+                                            label: {
+                                                position: "left",
+                                            },
+                                        },
+                                        label: {
+                                            position: "left",
+                                        },
+                                        z2: 2,
+                                        name: "series[1]-green-z2:[2]",
+                                    },
+                                    {
+                                        x: 300,
+                                        y: 220,
+                                    },
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        name: "above",
+                        type: "line",
+                        z: 4,
+                        data: [6, 6, 6, 6, 6, 6, 6],
+                        markArea: {
+                            z: 5,
+                            data: [
+                                [
+                                    {
+                                        x: 350,
+                                        y: 70,
+                                        itemStyle: {
+                                            color: "green",
+                                        },
+                                        name: "series[2]-green-z:[5]-above-the-line",
+                                    },
+                                    {
+                                        x: 450,
+                                        y: 270,
+                                    },
+                                ],
+                            ],
+                        },
+                    },
+                    {
+                        name: "under",
+                        type: "line",
+                        z: 4,
+                        data: [7, 7, 7, 7, 7, 7, 7],
+                        markArea: {
+                            z: 0,
+                            data: [
+                                [
+                                    {
+                                        x: 500,
+                                        y: 70,
+                                        itemStyle: {
+                                            color: "green",
+                                        },
+                                        label: {
+                                            position: "bottom",
+                                        },
+                                        name: "series[3]-green-z:[0]-under-the-line",
+                                    },
+                                    {
+                                        x: 600,
+                                        y: 280,
+                                    },
+                                ],
+                            ],
+                        },
+                    },
+
+                ],
+            };
+            var chart = testHelper.create(echarts, "main3", {
+                option,
+                title: ["MarkArea z z2"],
+            });
+            console.log(chart)
+        });
+    </script>
+</body>
+
+</html>

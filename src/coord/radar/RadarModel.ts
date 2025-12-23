@@ -26,12 +26,15 @@ import {
     ComponentOption,
     CircleLayoutOptionMixin,
     LabelOption,
-    ColorString
+    ColorString,
+    ComponentOnCalendarOptionMixin,
+    ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import { AxisBaseOption, CategoryAxisBaseOption, ValueAxisBaseOption } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
 import Radar from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
+import tokens from '../../visual/tokens';
 
 const valueAxisDefault = axisDefault.value;
 
@@ -54,10 +57,15 @@ export interface RadarIndicatorOption {
     axisType?: 'value' | 'log'
 }
 
-export interface RadarOption extends ComponentOption, CircleLayoutOptionMixin {
+export interface RadarOption extends
+    ComponentOption, CircleLayoutOptionMixin,
+    ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
+
     mainType?: 'radar'
 
     startAngle?: number
+
+    clockwise?: boolean
 
     shape?: 'polygon' | 'circle'
 
@@ -105,6 +113,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
     optionUpdated() {
         const boundaryGap = this.get('boundaryGap');
         const splitNumber = this.get('splitNumber');
+        const clockwise = this.get('clockwise');
         const scale = this.get('scale');
         const axisLine = this.get('axisLine');
         const axisTick = this.get('axisTick');
@@ -134,6 +143,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
             const innerIndicatorOpt: InnerIndicatorAxisOption = zrUtil.merge(zrUtil.clone(indicatorOpt), {
                 boundaryGap: boundaryGap,
                 splitNumber: splitNumber,
+                clockwise: clockwise,
                 scale: scale,
                 axisLine: axisLine,
                 axisTick: axisTick,
@@ -182,12 +192,15 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
         center: ['50%', '50%'],
 
-        radius: '75%',
+        radius: '50%',
 
         startAngle: 90,
 
+        clockwise: false,
+
         axisName: {
-            show: true
+            show: true,
+            color: tokens.color.axisLabel
             // formatter: null
             // textStyle: {}
         },
@@ -206,7 +219,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
         axisLine: zrUtil.merge(
             {
                 lineStyle: {
-                    color: '#bbb'
+                    color: tokens.color.neutral20
                 }
             },
             valueAxisDefault.axisLine

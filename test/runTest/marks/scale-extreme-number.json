@@ -1,0 +1,10 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/21126",
+    "comment": "Fix that extreme small numbers can not be displayed in Cartesian due to the inappropriate rounding precision.",
+    "type": "New Feature",
+    "markedBy": "Ovilia",
+    "lastVersion": "6.0.0-beta.1",
+    "markTime": 1753238664192
+  }
+]

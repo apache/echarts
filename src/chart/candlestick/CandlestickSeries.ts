@@ -37,6 +37,7 @@ import SeriesData from '../../data/SeriesData';
 import Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 import { mixin } from 'zrender/src/core/util';
+import type Axis2D from '../../coord/cartesian/Axis2D';
 
 type CandlestickDataValue = OptionDataValue[];
 
@@ -158,6 +159,9 @@ class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
     }
 }
 
+interface CandlestickSeriesModel extends WhiskerBoxCommonMixin<CandlestickSeriesOption> {
+    getBaseAxis(): Axis2D
+}
 mixin(CandlestickSeriesModel, WhiskerBoxCommonMixin, true);
 
 export default CandlestickSeriesModel;

@@ -1,0 +1,10 @@
+[
+  {
+    "link": "https://github.com/apache/echarts/pull/20777",
+    "comment": "fix(tooltip): null value item on category axis should be able to show tooltip",
+    "type": "Bug Fixing",
+    "markedBy": "Ovilia",
+    "lastVersion": "5.6.0",
+    "markTime": 1750750525142
+  }
+]

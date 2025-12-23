@@ -25,7 +25,7 @@ import TreemapSeriesModel, { TreemapSeriesNodeItemOption, TreemapSeriesOption } 
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import { curry, defaults } from 'zrender/src/core/util';
-import { ZRElementEvent, BoxLayoutOptionMixin, ECElement } from '../../util/types';
+import { ZRElementEvent, ECElement } from '../../util/types';
 import Element from 'zrender/src/Element';
 import Model from '../../model/Model';
 import { convertOptionIdName } from '../../util/model';
@@ -41,11 +41,6 @@ interface OnSelectCallback {
 }
 
 interface LayoutParam {
-    pos: BoxLayoutOptionMixin
-    box: {
-        width: number,
-        height: number
-    }
     emptyItemWidth: number
     totalWidth: number
     renderList: {
@@ -87,29 +82,29 @@ class Breadcrumb {
         const textStyleModel = normalStyleModel.getModel('textStyle');
         const emphasisTextStyleModel = emphasisModel.getModel(['itemStyle', 'textStyle']);
 
+        const refContainer = layout.createBoxLayoutReference(seriesModel, api).refContainer;
+        const boxLayoutParams = {
+            left: model.get('left'),
+            right: model.get('right'),
+            top: model.get('top'),
+            bottom: model.get('bottom')
+        };
         const layoutParam: LayoutParam = {
-            pos: {
-                left: model.get('left'),
-                right: model.get('right'),
-                top: model.get('top'),
-                bottom: model.get('bottom')
-            },
-            box: {
-                width: api.getWidth(),
-                height: api.getHeight()
-            },
             emptyItemWidth: model.get('emptyItemWidth'),
             totalWidth: 0,
             renderList: []
         };
-
+        const availableSize = layout.getLayoutRect(
+            boxLayoutParams,
+            refContainer,
+        );
         this._prepare(targetNode, layoutParam, textStyleModel);
         this._renderContent(
-            seriesModel, layoutParam, normalStyleModel,
+            seriesModel, layoutParam, availableSize, normalStyleModel,
             emphasisModel, textStyleModel, emphasisTextStyleModel, onSelect
         );
 
-        layout.positionElement(thisGroup, layoutParam.pos, layoutParam.box);
+        layout.positionElement(thisGroup, boxLayoutParams, refContainer);
     }
 
     /**
@@ -139,6 +134,7 @@ class Breadcrumb {
     _renderContent(
         seriesModel: TreemapSeriesModel,
         layoutParam: LayoutParam,
+        availableSize: {width: number, height: number},
         normalStyleModel: BreadcrumbItemStyleModel,
         emphasisModel: BreadcrumbEmphasisItemStyleModel,
         textStyleModel: BreadcrumbTextStyleModel,
@@ -149,7 +145,6 @@ class Breadcrumb {
         let lastX = 0;
         const emptyItemWidth = layoutParam.emptyItemWidth;
         const height = seriesModel.get(['breadcrumb', 'height']);
-        const availableSize = layout.getAvailableSize(layoutParam.pos, layoutParam.box);
         let totalWidth = layoutParam.totalWidth;
         const renderList = layoutParam.renderList;
         const emphasisItemStyle = emphasisModel.getModel('itemStyle').getItemStyle();

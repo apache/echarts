@@ -37,6 +37,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main-unbounded-continuous"></div>
 
 
         <script>
@@ -82,5 +83,80 @@ under the License.
             });
 
         </script>
+
+
+
+        <script>
+
+            var option;
+
+            require([
+                'echarts'
+            ], function (echarts) {
+
+                var option = {
+                    tooltip: {
+                    },
+                    visualMap: {
+                        type: 'continuous',
+                        top: 'middle',
+                        calculable: true,
+                        min: 0,
+                        max: 1000,
+                        inRange: {
+                            color: ['red', 'blue']
+                        },
+                        outOfRange: {
+                            color: ['#999']
+                        },
+                    },
+                    xAxis: {
+                        type: 'value',
+                    },
+                    yAxis: {
+                        type: 'value',
+                    },
+                    series: [{
+                        type: 'scatter',
+                        itemStyle: {
+                            color: 'green'
+                        },
+                        data: [
+                            [10, 712],
+                            [20, 920],
+                            [10, 503],
+                            [40, 1020],
+                            [50, -100],
+                            [60, 420],
+                            [70, -10]
+                        ]
+                    }]
+                };
+
+                var chart = testHelper.create(echarts, 'main-unbounded-continuous', {
+                    option: option,
+                    title: [
+                        '**unboundedRange** in continuous visualMap.',
+                        'outliers (>= 1000 or <= 0) should be always be treated as out of range.',
+                    ],
+                    inputs: [
+                        {
+                            type: 'select',
+                            text: 'unboundedRange:',
+                            values: [true, false],
+                            onChange: function (value) {
+                                chart.setOption({
+                                    visualMap: {
+                                        unboundedRange: this.value
+                                    }
+                                });
+                            }
+                        }
+                    ]
+                });
+            });
+
+        </script>
+
     </body>
 </html>
