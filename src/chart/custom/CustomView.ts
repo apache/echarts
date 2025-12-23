@@ -754,7 +754,33 @@ function makeRenderItem(
      */
     function value(dim?: DimensionLoose, dataIndexInside?: number): ParsedValue {
         dataIndexInside == null && (dataIndexInside = currDataIndexInside);
-        return data.getStore().get(data.getDimensionIndex(dim || 0), dataIndexInside);
+        const dimIndex = data.getDimensionIndex(dim || 0);
+        if (dimIndex >= 0) {
+            const storeValue = data.getStore().get(dimIndex, dataIndexInside);
+            if (storeValue != null && !isNaN(storeValue as number)) {
+                return storeValue;
+            }
+        }
+        const rawItem = data.getRawDataItem(dataIndexInside);
+        if (rawItem && typeof rawItem === 'object' && !Array.isArray(rawItem)) {
+            if (typeof dim === 'string' && rawItem.hasOwnProperty(dim)) {
+                const value = (rawItem as any)[dim];
+                return (value === rawItem) ? undefined : value;
+            }
+            if (typeof dim === 'number') {
+                const dimensionInfo = data.getDimensionInfo(dim);
+                if (dimensionInfo && dimensionInfo.name && rawItem.hasOwnProperty(dimensionInfo.name)) {
+                    const value = (rawItem as any)[dimensionInfo.name];
+                    return (value === rawItem) ? undefined : value;
+                }
+                const keys = Object.keys(rawItem);
+                if (dim < keys.length) {
+                    const value = (rawItem as any)[keys[dim]];
+                    return (value === rawItem) ? undefined : value;
+                }
+            }
+        }
+        return undefined;
     }
 
     /**
