@@ -113,7 +113,7 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
 
     connectNulls?: boolean
 
-    showSymbol?: boolean
+    showSymbol?: 'single' | boolean
     // false | 'auto': follow the label interval strategy.
     // true: show all symbols.
     showAllSymbol?: 'auto' | boolean
@@ -202,6 +202,9 @@ class LineSeriesModel extends SeriesModel<LineSeriesOption> {
         symbolSize: 6,
         symbolRotate: null,
 
+        // true: show symbol
+        // false: hide symbol
+        // 'single':  will show symbol between null value.
         showSymbol: true,
         // `false`: follow the label interval strategy.
         // `true`: show all symbols.
