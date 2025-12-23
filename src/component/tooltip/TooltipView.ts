@@ -685,12 +685,39 @@ class TooltipView extends ComponentView {
             positionDefault ? { position: positionDefault } : null
         );
 
-        const tooltipTrigger = tooltipModel.get('trigger');
-        if (tooltipTrigger != null && tooltipTrigger !== 'item') {
+         const tooltipTrigger = tooltipModel.get('trigger');
+        if (tooltipTrigger === 'none' || tooltipTrigger === 'axis') {
             return;
         }
 
         const params = dataModel.getDataParams(dataIndex, dataType);
+        let hide: boolean = false;
+        const visualMap: any = ecModel.option.visualMap;
+            if (visualMap) {
+                visualMap.forEach((model: any) => {
+                    let value: any;
+                    switch (typeof model.dimension) {
+                        case 'string':
+                            value = data.getValues(dataIndex)[Array.prototype.indexOf(model.dimension)];
+                            break;
+                        case 'number':
+                            value = data.getValues(dataIndex)[model.dimension];
+                            break;
+                        default:
+                        return;
+                    }
+                    if (
+                        tooltipTrigger === 'activeItem'
+                        && (value < model.range[0] || value > model.range[1])
+                    ) {
+                        hide = true;
+                        return;
+                    }
+                });
+            }
+        if (hide) {
+            return;
+        }
         const markupStyleCreator = new TooltipMarkupStyleCreator();
         // Pre-create marker style for makers. Users can assemble richText
         // text in `formatter` callback and use those markers style.
