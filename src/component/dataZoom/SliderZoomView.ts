@@ -311,7 +311,7 @@ class SliderZoomView extends DataZoomView {
         const size = this._size;
         const barGroup = this._displayables.sliderGroup;
         const brushSelect = dataZoomModel.get('brushSelect');
-        const borderRadius = dataZoomModel.get('borderRadius');
+        const borderRadius = dataZoomModel.get('borderRadius') || 0;
 
         barGroup.add(new Rect({
             silent: true,
