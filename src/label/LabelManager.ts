@@ -444,9 +444,11 @@ class LabelManager {
         const height = api.getHeight();
 
         const labelList: LabelLayoutWithGeometry[] = [];
+
         each(this._labelList, inputItem => {
             if (!inputItem.defaultAttr.ignore) {
-                labelList.push(newLabelLayoutWithGeometry({}, inputItem));
+                const labelLayout = newLabelLayoutWithGeometry({}, inputItem);
+                labelList.push(labelLayout);
             }
         });
 
@@ -457,8 +459,88 @@ class LabelManager {
             return item.layoutOption.moveOverlap === 'shiftY';
         });
 
-        shiftLayoutOnXY(labelsNeedsAdjustOnX, 0, 0, width);
-        shiftLayoutOnXY(labelsNeedsAdjustOnY, 1, 0, height);
+        // Group labels by grid (not by series) so that labels of multiple series
+        // in the same grid avoid overlapping each other.
+        const labelsByGridX: Dictionary<LabelLayoutWithGeometry[]> = {};
+        const labelsByGridY: Dictionary<LabelLayoutWithGeometry[]> = {};
+
+        function getGridKey(inputItem: LabelLayoutWithGeometry): string {
+            const seriesModel = inputItem.seriesModel;
+            const gridId = (seriesModel as any).get('gridId');
+            const gridIndex = (seriesModel as any).get('gridIndex');
+            const master = seriesModel.coordinateSystem && (seriesModel.coordinateSystem as any).master;
+            // Prefer explicit gridId, then gridIndex, then master.uid as fallback
+            return gridId != null
+                ? `gid:${gridId}`
+                : gridIndex != null
+                    ? `gidx:${gridIndex}`
+                    : master && master.uid
+                        ? `gmaster:${master.uid}`
+                        : 'grid:default';
+        }
+
+        each(labelsNeedsAdjustOnX, function (item) {
+            const seriesModel = item.seriesModel;
+            if (seriesModel) {
+                const key = getGridKey(item);
+                if (!labelsByGridX[key]) {
+                    labelsByGridX[key] = [];
+                }
+                labelsByGridX[key].push(item);
+            }
+        });
+
+        each(labelsNeedsAdjustOnY, function (item) {
+            const seriesModel = item.seriesModel;
+            if (seriesModel) {
+                const key = getGridKey(item);
+                if (!labelsByGridY[key]) {
+                    labelsByGridY[key] = [];
+                }
+                labelsByGridY[key].push(item);
+            }
+        });
+
+        // Adjust labels for each grid with its bounds
+        each(labelsByGridX, function (gridLabels) {
+            const seriesModel = gridLabels[0].seriesModel;
+            if (!seriesModel) {
+                return;
+            }
+            const coordSys = seriesModel.coordinateSystem;
+            let minBound = 0;
+            let maxBound = width;
+
+            if (coordSys && coordSys.master && (coordSys.master as any).getRect) {
+                const gridRect = (coordSys.master as any).getRect();
+                if (gridRect) {
+                    minBound = gridRect.x;
+                    maxBound = gridRect.x + gridRect.width;
+                }
+            }
+
+            shiftLayoutOnXY(gridLabels, 0, minBound, maxBound);
+        });
+
+        each(labelsByGridY, function (gridLabels) {
+            const seriesModel = gridLabels[0].seriesModel;
+            if (!seriesModel) {
+                return;
+            }
+            const coordSys = seriesModel.coordinateSystem;
+            let minBound = 0;
+            let maxBound = height;
+
+            if (coordSys && coordSys.master && (coordSys.master as any).getRect) {
+                const gridRect = (coordSys.master as any).getRect();
+                if (gridRect) {
+                    minBound = gridRect.y;
+                    maxBound = gridRect.y + gridRect.height;
+                }
+            }
+
+            shiftLayoutOnXY(gridLabels, 1, minBound, maxBound);
+        });
 
         const labelsNeedsHideOverlap = filter(labelList, function (item) {
             return item.layoutOption.hideOverlap;

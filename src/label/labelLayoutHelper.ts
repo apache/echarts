@@ -19,6 +19,7 @@
 
 import ZRText from 'zrender/src/graphic/Text';
 import { LabelLayoutOption, NullUndefined } from '../util/types';
+import SeriesModel from '../model/Series';
 import {
     BoundingRect, OrientedBoundingRect, Polyline, WH, XY, ensureCopyRect, ensureCopyTransform, expandOrShrinkRect,
     isBoundingRectAxisAligned
@@ -37,6 +38,8 @@ interface LabelLayoutBase {
     labelLine?: Polyline | NullUndefined
     layoutOption?: LabelLayoutOption | NullUndefined
     priority: number
+    // Keep series model reference for later grouping without extra maps.
+    seriesModel?: SeriesModel
     // @see `SavedLabelAttr` in `LabelManager.ts`
     defaultAttr: {
         ignore?: boolean
@@ -65,7 +68,7 @@ interface LabelLayoutBase {
     suggestIgnore?: boolean;
 }
 const LABEL_LAYOUT_BASE_PROPS = [
-    'label', 'labelLine', 'layoutOption', 'priority', 'defaultAttr',
+    'label', 'labelLine', 'layoutOption', 'priority', 'seriesModel', 'defaultAttr',
     'marginForce', 'minMarginForce', 'marginDefault', 'suggestIgnore'
 ] as const;
 
