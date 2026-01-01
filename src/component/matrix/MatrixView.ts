@@ -31,6 +31,7 @@ import { LineShape } from 'zrender/src/graphic/shape/Line';
 import { subPixelOptimize } from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Group, Text, Rect, Line, XY, setTooltipConfig, expandOrShrinkRect } from '../../util/graphic';
 import { clearTmpModel, ListIterator } from '../../util/model';
+import { getECData } from '../../util/innerStore';
 import { clone, retrieve2, isFunction, isString } from 'zrender/src/core/util';
 import { formatTplSimple } from '../../util/format';
 import { invert } from 'zrender/src/core/matrix';
@@ -175,7 +176,8 @@ function renderDimensionCells(group: Group, matrixModel: MatrixModel, ecModel: G
                 shape,
                 dimCell.option.value,
                 Z2_DIMENSION_CELL_DEFAULT,
-                tooltipOption
+                tooltipOption,
+                dimIdx === 0 ? 'x' : 'y'
             );
         }
     }
@@ -246,12 +248,15 @@ function createBodyAndCorner(
                     shape,
                     bodyCornerCellOption ? bodyCornerCellOption.value : null,
                     Z2_BODY_CORNER_CELL_DEFAULT,
-                    tooltipOption
+                    tooltipOption,
+                    bodyCornerOptionRoot
                 );
             }
         }
     } // End of createBodyOrCornerCells
 }
+
+type MatrixTargetType = 'x' | 'y' | 'body' | 'corner';
 
 function createMatrixCell(
     xyLocator: MatrixXYLocator[],
@@ -266,6 +271,7 @@ function createMatrixCell(
     textValue: unknown,
     zrCellDefault: Z2CellDefault,
     tooltipOption: MatrixOption['tooltip'],
+    targetType: MatrixTargetType
 ): void {
     // Do not use getModel for handy performance optimization.
     _tmpCellItemStyleModel.option = cellOption ? cellOption.itemStyle : null;
@@ -361,12 +367,12 @@ function createMatrixCell(
     }
 
     // Set silent
+    const triggerEvent = matrixModel.get('triggerEvent');
     if (cellText) {
         let labelSilent = _tmpCellLabelModel.get('silent');
-        // auto, tooltip of text cells need silient: false, but non-text cells
-        // do not need a special cursor in most cases.
+        // By default, silent: false is needed for triggerEvent or tooltip interaction.
         if (labelSilent == null) {
-            labelSilent = !tooltipOptionShow;
+            labelSilent = !(triggerEvent || tooltipOptionShow);
         }
         cellText.silent = labelSilent;
         cellText.ignoreHostSilent = true;
@@ -380,6 +386,18 @@ function createMatrixCell(
         );
     }
     cellRect.silent = rectSilent;
+
+    if (triggerEvent && cellText) {
+        const eventData = {
+            componentType: 'matrix' as const,
+            componentIndex: matrixModel.componentIndex,
+            matrixIndex: matrixModel.componentIndex,
+            targetType: targetType,
+            name: textValue != null ? textValue + '' : null,
+            coord: xyLocator.slice()
+        };
+        getECData(cellText).eventData = eventData;
+    }
 
     clearTmpModel(_tmpCellModel);
     clearTmpModel(_tmpCellItemStyleModel);
