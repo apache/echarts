@@ -117,18 +117,27 @@ export function getStackedOnPoint(
     data: SeriesData,
     idx: number
 ) {
-    let value = NaN;
+    let stackedOverValue = NaN;
+    let stackResultValue = NaN;
     if (dataCoordInfo.stacked) {
-        value = data.get(data.getCalculationInfo('stackedOverDimension'), idx) as number;
+        stackedOverValue = data.get(
+            data.getCalculationInfo('stackedOverDimension'),
+            idx
+        ) as number;
+        stackResultValue = data.get(
+            data.getCalculationInfo('stackResultDimension'),
+            idx
+        ) as number;
     }
-    if (isNaN(value)) {
-        value = dataCoordInfo.valueStart;
+
+    if (isNaN(stackedOverValue) && !(dataCoordInfo.stacked && isNaN(stackResultValue))) {
+        stackedOverValue = dataCoordInfo.valueStart;
     }
 
     const baseDataOffset = dataCoordInfo.baseDataOffset;
     const stackedData = [];
     stackedData[baseDataOffset] = data.get(dataCoordInfo.baseDim, idx);
-    stackedData[1 - baseDataOffset] = value;
+    stackedData[1 - baseDataOffset] = stackedOverValue;
 
     return coordSys.dataToPoint(stackedData);
 }
