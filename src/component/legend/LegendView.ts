@@ -555,10 +555,24 @@ class LegendView extends ComponentView {
             const selectorPos = [-selectorRect.x, -selectorRect.y];
             const selectorButtonGap = legendModel.get('selectorButtonGap', true);
 
-            const orientIdx = legendModel.getOrient().index;
+
+
+            let orientIdx = legendModel.getOrient().index;
+
+            // safety check
+            if (orientIdx !== 0 && orientIdx !== 1) {
+                orientIdx = 0; // fallback to horizontal
+                }
+
+
+
+
             const wh: 'width' | 'height' = orientIdx === 0 ? 'width' : 'height';
             const hw: 'width' | 'height' = orientIdx === 0 ? 'height' : 'width';
             const yx: 'x' | 'y' = orientIdx === 0 ? 'y' : 'x';
+
+
+
 
             if (selectorPosition === 'end') {
                 selectorPos[orientIdx] += contentRect[wh] + selectorButtonGap;
