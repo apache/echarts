@@ -70,6 +70,10 @@ import { saveOldStyle } from '../../animation/basicTransition';
 import Element from 'zrender/src/Element';
 import { getSectorCornerRadius } from '../helper/sectorHelper';
 
+
+
+
+
 const mathMax = Math.max;
 const mathMin = Math.min;
 
@@ -85,10 +89,17 @@ type BarPossiblePath = Sector | Rect | Sausage;
 type CartesianCoordArea = ReturnType<Cartesian2D['getArea']>;
 type PolarCoordArea = ReturnType<Polar['getArea']>;
 
+
+
+
 type RealtimeSortConfig = {
     baseAxis: Axis2D;
     otherAxis: Axis2D;
 };
+
+
+
+
 // Return a number, based on which the ordinal sorted.
 type OrderMapping = (dataIndex: number) => number;
 
@@ -114,6 +125,8 @@ function getClipArea(coord: CoordSysOfBar, data: SeriesData) {
 
     return coordSysClipArea as PolarCoordArea | CartesianCoordArea;
 }
+
+
 
 class BarView extends ChartView {
     static type = 'bar' as const;
@@ -693,9 +706,15 @@ class BarView extends ChartView {
     }
 }
 
+
+
+
 interface Clipper {
     (coordSysBoundingRect: PolarCoordArea | CartesianCoordArea, layout: RectLayout | SectorLayout): boolean
 }
+
+
+
 const clip: {
     [key in 'cartesian2d' | 'polar']: Clipper
 } = {
@@ -772,6 +791,10 @@ const clip: {
     }
 };
 
+
+
+
+
 interface ElementCreator {
     (
         seriesModel: BarSeriesModel, data: SeriesData, newIndex: number,
@@ -782,6 +805,8 @@ interface ElementCreator {
         roundCap?: boolean
     ): BarPossiblePath
 }
+
+
 
 const elementCreator: {
     [key in 'polar' | 'cartesian2d']: ElementCreator
@@ -841,6 +866,8 @@ const elementCreator: {
     }
 };
 
+
+
 function shouldRealtimeSort(
     seriesModel: BarSeriesModel,
     coordSys: Cartesian2D | Polar
@@ -864,6 +891,9 @@ function shouldRealtimeSort(
         };
     }
 }
+
+
+
 
 function updateRealtimeAnimation(
     realtimeSortCfg: RealtimeSortConfig,
@@ -912,6 +942,8 @@ function updateRealtimeAnimation(
     }, axisAnimationModel, newIndex);
 }
 
+
+
 function checkPropertiesNotValid<T extends Record<string, any>>(obj: T, props: readonly (keyof T)[]) {
     for (let i = 0; i < props.length; i++) {
         if (!isFinite(obj[props[i]])) {
@@ -920,6 +952,8 @@ function checkPropertiesNotValid<T extends Record<string, any>>(obj: T, props: r
     }
     return false;
 }
+
+
 
 
 const rectPropties = ['x', 'y', 'width', 'height'] as const;
@@ -934,9 +968,16 @@ const isValidLayout: Record<'cartesian2d' | 'polar', (layout: RectLayout | Secto
     }
 } as const;
 
+
+
+
 interface GetLayout {
     (data: SeriesData, dataIndex: number, itemModel?: Model<BarDataItemOption>): RectLayout | SectorLayout
 }
+
+
+
+
 const getLayout: {
     [key in 'cartesian2d' | 'polar']: GetLayout
 } = {
@@ -975,11 +1016,19 @@ const getLayout: {
     }
 };
 
+
+
+
+
 function isZeroOnPolar(layout: SectorLayout) {
     return layout.startAngle != null
         && layout.endAngle != null
         && layout.startAngle === layout.endAngle;
 }
+
+
+
+
 
 function createPolarPositionMapping(isRadial: boolean)
     : (position: PolarBarLabelPosition) => SectorTextPosition {
@@ -998,6 +1047,10 @@ function createPolarPositionMapping(isRadial: boolean)
         };
     })(isRadial);
 }
+
+
+
+
 
 function updateStyle(
     el: BarPossiblePath,
@@ -1092,6 +1145,9 @@ function updateStyle(
     }
 }
 
+
+
+
 // In case width or height are too small.
 function getLineWidth(
     itemModel: Model<BarDataItemOption>,
@@ -1109,12 +1165,19 @@ function getLineWidth(
     return Math.min(lineWidth, width, height);
 }
 
+
+
+
 class LagePathShape {
     points: ArrayLike<number>;
 }
+
+
 interface LargePathProps extends PathProps {
     shape?: LagePathShape
 }
+
+
 class LargePath extends Path<LargePathProps> {
     type = 'largeBar';
 
@@ -1151,6 +1214,9 @@ class LargePath extends Path<LargePathProps> {
         }
     }
 }
+
+
+
 
 function createLarge(
     seriesModel: BarSeriesModel,
@@ -1209,12 +1275,17 @@ function createLarge(
     progressiveEls && progressiveEls.push(el);
 }
 
+
+
+
 // Use throttle to avoid frequently traverse to find dataIndex.
 const largePathUpdateDataIndex = throttle(function (this: LargePath, event: ZRElementEvent) {
     const largePath = this;
     const dataIndex = largePathFindDataIndex(largePath, event.offsetX, event.offsetY);
     getECData(largePath).dataIndex = dataIndex >= 0 ? dataIndex : null;
 }, 30, false);
+
+
 
 function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
     const baseDimIdx = largePath.baseDimIdx;
@@ -1246,6 +1317,9 @@ function largePathFindDataIndex(largePath: LargePath, x: number, y: number) {
     return -1;
 }
 
+
+
+
 function createBackgroundShape(
     isHorizontalOrRadial: boolean,
     layout: SectorLayout | RectLayout,
@@ -1275,6 +1349,9 @@ function createBackgroundShape(
     }
 }
 
+
+
+
 function createBackgroundEl(
     coord: CoordSysOfBar,
     isHorizontalOrRadial: boolean,
@@ -1288,6 +1365,9 @@ function createBackgroundEl(
     });
 }
 
+
+
+
 function getLabelPositionForHorizontal(layout: RectLayout, coordSys: CoordSysOfBar): 'top' | 'bottom' {
     if (layout.height === 0) {
         // For zero height, determine position based on axis inverse status
@@ -1297,6 +1377,8 @@ function getLabelPositionForHorizontal(layout: RectLayout, coordSys: CoordSysOfB
     return layout.height > 0 ? 'bottom' : 'top';
 }
 
+
+
 function getLabelPositionForVertical(layout: RectLayout, coordSys: CoordSysOfBar): 'left' | 'right' {
     if (layout.width === 0) {
         // For zero width, determine position based on axis inverse status
@@ -1305,5 +1387,7 @@ function getLabelPositionForVertical(layout: RectLayout, coordSys: CoordSysOfBar
     }
     return layout.width >= 0 ? 'right' : 'left';
 }
+
+
 
 export default BarView;
