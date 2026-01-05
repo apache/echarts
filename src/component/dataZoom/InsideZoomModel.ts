@@ -19,6 +19,7 @@
 
 import DataZoomModel, {DataZoomOption} from './DataZoomModel';
 import { inheritDefaultOption } from '../../util/component';
+import { RoamKeysSetting } from '../helper/RoamController';
 
 export interface InsideDataZoomOption extends DataZoomOption {
 
@@ -32,11 +33,11 @@ export interface InsideDataZoomOption extends DataZoomOption {
      */
     zoomLock?: boolean
 
-    zoomOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
+    zoomOnMouseWheel?: RoamKeysSetting
 
-    moveOnMouseMove?: boolean | 'shift' | 'ctrl' | 'alt'
+    moveOnMouseMove?: RoamKeysSetting
 
-    moveOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
+    moveOnMouseWheel?: RoamKeysSetting
 
     preventDefaultMouseMove?: boolean
 

@@ -29,6 +29,7 @@ import type Component from '../../model/Component';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { onIrrelevantElement } from './cursorHelper';
 import Displayable from 'zrender/src/graphic/Displayable';
+export type RoamKeysSetting = boolean | 'ctrl' | 'shift' | 'alt' | 'no-function-keys';
 
 
 export interface RoamOption {
@@ -46,9 +47,9 @@ export interface RoamOption {
     }
     api: ExtensionAPI
 
-    zoomOnMouseWheel?: boolean | 'ctrl' | 'shift' | 'alt'
-    moveOnMouseMove?: boolean | 'ctrl' | 'shift' | 'alt'
-    moveOnMouseWheel?: boolean | 'ctrl' | 'shift' | 'alt'
+    zoomOnMouseWheel?: RoamKeysSetting
+    moveOnMouseMove?: RoamKeysSetting
+    moveOnMouseWheel?: RoamKeysSetting
     /**
      * If fixed the page when pan
      */
@@ -565,16 +566,21 @@ function trigger<T extends RoamEventType>(
 //     moveOnMouseMove
 //     moveOnMouseWheel
 // }
-// The value can be: true / false / 'shift' / 'ctrl' / 'alt'.
+// The value can be: true / false / 'shift' / 'ctrl' / 'alt', 'no-function-keys'.
 function isAvailableBehavior(
     behaviorToCheck: RoamBehavior,
     e: ZRElementEvent,
     settings: Pick<RoamOption, RoamBehavior>
 ) {
+    if (!behaviorToCheck) return true;
     const setting = settings[behaviorToCheck];
-    return !behaviorToCheck || (
-        setting && (!isString(setting) || e.event[setting + 'Key' as 'shiftKey' | 'ctrlKey' | 'altKey'])
-    );
+    if (isString(setting)) {
+        const event = e.event;
+        return setting == 'no-function-keys' ?
+            !event.shiftKey && !event.ctrlKey && !event.altKey :
+            event[setting + 'Key' as 'shiftKey' | 'ctrlKey' | 'altKey'];
+    }
+    return setting;
 }
 
 export default RoamController;
