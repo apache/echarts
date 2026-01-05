@@ -27,30 +27,6 @@ Only these entries are officially exported to users:
 
 The other entries listed in the `"exports"` field of `package.json` make the internal files visible, but they are legacy usages, not recommended but not forbidden (for the sake of keeping backward compatible). These entries are made from the search in github about which internal files are imported.
 
-"Workaround for node disappearance bug (See Issue #20098 ). Disabling selection on parent nodes (Blob/Pool) prevents children from disappearing in v5 during hover events."https://github.com/apache/echarts/issues/20098#issue-2381601130
-
-const option = {
-series: [{
-type: 'treemap', // or 'graph'
-data: [
-{
-name: 'Parent Node (Blob)',
-upperLabel: { show: true },
-// Fix: Disable selection for parent nodes to prevent children from disappearing
-select: {
-disabled: true
-},
-children: [
-{ name: 'Child Node A', value: 100 },
-{ name: 'Child Node B', value: 200 }
-]
-}
-]
-}]
-};
-
-"To prevent child nodes from disappearing when a parent node (Blob/Pool) is selected in v5, explicitly set select: { disabled: true } for all nodes containing children. This bypasses the rendering glitch associated with upperLabel and selection states."
-
 ## File extension fully specified
 
 Since `v5.5.0`, `"type": "module"` and `"exports: {...}"` are added to `package.json`. When upgrading to `v5.5.0+`, if you meet some problems about "can not find/resolve xxx" when importing `echarts/i18n/xxx` or `echarts/theme/xxx` or some internal files, it probably because of the issue "file extension not fully specified". Please try to make the file extension fully specified (that is, `import 'xxx/xxx/xxx.js'` rather than `import 'xxx/xxx/xxx'`), or change the config of you bundler tools to support auto adding file extensions.
