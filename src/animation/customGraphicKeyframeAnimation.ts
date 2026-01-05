@@ -34,25 +34,16 @@ type AnimationKeyframe<T extends Record<string, any>> = T & {
     percent?: number    // 0 - 1
 };
 
-
-
 type StateToRestore = Dictionary<any>;
 const getStateToRestore = makeInner<StateToRestore, Element>();
 
 const KEYFRAME_EXCLUDE_KEYS = ['percent', 'easing', 'shape', 'style', 'extra'] as const;
-
-
-
-
 
 export interface ElementKeyframeAnimationOption<Props extends Record<string, any>> extends AnimationOption {
     // Animation configuration for keyframe based animation.
     loop?: boolean
     keyframes?: AnimationKeyframe<Props>[]
 }
-
-
-
 
 /**
  * Stop previous keyframe animation and restore the attributes.
@@ -64,10 +55,6 @@ export function stopPreviousKeyframeAnimationAndRestore(el: Element) {
     // Restore
     el.attr(getStateToRestore(el));
 }
-
-
-
-
 
 export function applyKeyframeAnimation<T extends Record<string, any>>(
     el: Element,

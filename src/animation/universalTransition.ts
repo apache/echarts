@@ -48,10 +48,6 @@ import { getAnimationConfig, getOldStyle } from './basicTransition';
 import Model from '../model/Model';
 import Displayable from 'zrender/src/graphic/Displayable';
 
-
-
-
-
 const DATA_COUNT_THRESHOLD = 1e4;
 const TRANSITION_NONE = 0;
 const TRANSITION_P2C = 1;
@@ -67,19 +63,12 @@ interface DiffItem {
     divide: UniversalTransitionOption['divideShape']
     dataIndex: number
 }
-
-
-
-
 interface TransitionSeries {
     dataGroupId: string
     data: SeriesData
     divide: UniversalTransitionOption['divideShape']
     groupIdDim?: DimensionLoose
 }
-
-
-
 
 function getDimension(data: SeriesData, visualDimension: string) {
     const dimensions = data.dimensions;
@@ -90,10 +79,6 @@ function getDimension(data: SeriesData, visualDimension: string) {
         }
     }
 }
-
-
-
-
 
 // get value by dimension. (only get value of itemGroupId or childGroupId, so convert it to string)
 function getValueByDimension(data: SeriesData, dataIndex: number, dimension: DimensionName) {
@@ -107,11 +92,6 @@ function getValueByDimension(data: SeriesData, dataIndex: number, dimension: Dim
         return value + '';
     }
 }
-
-
-
-
-
 
 function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string, isChild: boolean) {
     // try to get groupId from encode
@@ -134,10 +114,6 @@ function getGroupId(data: SeriesData, dataIndex: number, dataGroupId: string, is
     // try to use series.dataGroupId as groupId, otherwise use dataItem's id as groupId
     return (dataGroupId || data.getId(dataIndex));
 }
-
-
-
-
 
 // flatten all data items from different serieses into one arrary
 function flattenDataDiffItems(list: TransitionSeries[]) {
@@ -168,11 +144,6 @@ function flattenDataDiffItems(list: TransitionSeries[]) {
 }
 
 
-
-
-
-
-
 function fadeInElement(newEl: Element, newSeries: SeriesModel, newIndex: number) {
     newEl.traverse(el => {
         if (el instanceof Path) {
@@ -188,12 +159,6 @@ function fadeInElement(newEl: Element, newSeries: SeriesModel, newIndex: number)
         }
     });
 }
-
-
-
-
-
-
 function removeEl(el: Element) {
     if (el.parent) {
         // Bake parent transform to element.
@@ -203,10 +168,6 @@ function removeEl(el: Element) {
         el.parent.remove(el);
     }
 }
-
-
-
-
 function stopAnimation(el: Element) {
     el.stopAnimation();
     if (el.isGroup) {
@@ -215,11 +176,6 @@ function stopAnimation(el: Element) {
         });
     }
 }
-
-
-
-
-
 function animateElementStyles(el: Element, dataIndex: number, seriesModel: SeriesModel) {
     const animationConfig = getAnimationConfig('update', seriesModel, dataIndex);
     animationConfig && el.traverse(child => {
@@ -233,8 +189,6 @@ function animateElementStyles(el: Element, dataIndex: number, seriesModel: Serie
         }
     });
 }
-
-
 
 
 function isAllIdSame(oldDiffItems: DiffItem[], newDiffItems: DiffItem[]) {
@@ -251,11 +205,6 @@ function isAllIdSame(oldDiffItems: DiffItem[], newDiffItems: DiffItem[]) {
     }
     return true;
 }
-
-
-
-
-
 
 function transitionBetween(
     oldList: TransitionSeries[],
@@ -562,11 +511,6 @@ function transitionBetween(
     }
 }
 
-
-
-
-
-
 function getSeriesTransitionKey(series: SeriesModel) {
     const seriesKey = (series.getModel('universalTransition') as Model<UniversalTransitionOption>)
         .get('seriesKey');
@@ -577,10 +521,6 @@ function getSeriesTransitionKey(series: SeriesModel) {
     return seriesKey;
 }
 
-
-
-
-
 function convertArraySeriesKeyToString(seriesKey: string[] | string) {
     if (isArray(seriesKey)) {
         // Order independent.
@@ -589,19 +529,10 @@ function convertArraySeriesKeyToString(seriesKey: string[] | string) {
     return seriesKey;
 }
 
-
-
-
-
 interface SeriesTransitionBatch {
     oldSeries: TransitionSeries[]
     newSeries: TransitionSeries[]
 }
-
-
-
-
-
 
 function getDivideShapeFromData(data: SeriesData) {
     if (data.hostModel) {
@@ -610,11 +541,6 @@ function getDivideShapeFromData(data: SeriesData) {
             .get('divideShape');
     }
 }
-
-
-
-
-
 
 function findTransitionSeriesBatches(
     globalStore: GlobalStore,
@@ -748,10 +674,6 @@ function findTransitionSeriesBatches(
     return updateBatches;
 }
 
-
-
-
-
 function querySeries(series: SeriesModel[], finder: UpdateLifecycleTransitionSeriesFinder) {
     for (let i = 0; i < series.length; i++) {
         const found = finder.seriesIndex != null && finder.seriesIndex === series[i].seriesIndex
@@ -761,9 +683,6 @@ function querySeries(series: SeriesModel[], finder: UpdateLifecycleTransitionSer
         }
     }
 }
-
-
-
 
 function transitionSeriesFromOpt(
     transitionOpt: UpdateLifecycleTransitionItem,
@@ -801,11 +720,6 @@ function transitionSeriesFromOpt(
         transitionBetween(from, to, api);
     }
 }
-
-
-
-
-
 
 export function installUniversalTransition(registers: EChartsExtensionInstallRegisters) {
 

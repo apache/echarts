@@ -39,13 +39,9 @@ import { makeInner } from '../util/model';
 
 // Stored properties for further transition.
 
-
-
 export const transitionStore = makeInner<{
     oldStyle: Displayable['style']
 }, Displayable>();
-
-
 
 
 type AnimateOrSetPropsOption = {
@@ -55,8 +51,6 @@ type AnimateOrSetPropsOption = {
     removeOpt?: AnimationOption
     isFrom?: boolean;
 };
-
-
 
 /**
  * Return null if animation is disabled.
@@ -129,10 +123,6 @@ export function getAnimationConfig(
         return null;
     }
 }
-
-
-
-
 
 function animateOrSetProps<Props>(
     animationType: 'enter' | 'update' | 'leave',
@@ -210,9 +200,6 @@ function animateOrSetProps<Props>(
 
 
 
-
-
-
 /**
  * Update graphic element properties with or without animation according to the
  * configuration in series.
@@ -241,9 +228,6 @@ function animateOrSetProps<Props>(
     animateOrSetProps('update', el, props, animatableModel, dataIndex, cb, during);
 }
 
-
-
-
 export {updateProps};
 
 /**
@@ -265,10 +249,6 @@ export function initProps<Props extends ElementProps>(
     animateOrSetProps('enter', el, props, animatableModel, dataIndex, cb, during);
 }
 
-
-
-
-
 /**
  * If element is removed.
  * It can determine if element is having remove animation.
@@ -285,10 +265,6 @@ export function initProps<Props extends ElementProps>(
     }
     return false;
 }
-
-
-
-
 
 /**
  * Remove graphic element
@@ -309,9 +285,6 @@ export function removeElement<Props>(
     animateOrSetProps('leave', el, props, animatableModel, dataIndex, cb, during);
 }
 
-
-
-
 function fadeOutDisplayable(
     el: Displayable,
     animatableModel?: Model<AnimationOptionMixin>,
@@ -326,10 +299,6 @@ function fadeOutDisplayable(
         }
     }, animatableModel, dataIndex, done);
 }
-
-
-
-
 
 export function removeElementWithFadeOut(
     el: Element,
@@ -354,9 +323,6 @@ export function removeElementWithFadeOut(
     }
 }
 
-
-
-
 /**
  * Save old style for style transition in universalTransition module.
  * It's used when element will be reused in each render.
@@ -366,11 +332,6 @@ export function removeElementWithFadeOut(
 export function saveOldStyle(el: Displayable) {
     transitionStore(el).oldStyle = el.style;
 }
-
-
-
-
-
 
 export function getOldStyle(el: Displayable) {
     return transitionStore(el).oldStyle;

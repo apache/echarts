@@ -35,35 +35,17 @@ import { clonePath } from 'zrender/src/tool/path';
 import Model from '../model/Model';
 
 
-
-
-
-
-
 type DescendentElements = Element[];
 type DescendentPaths = Path[];
-
-
-
-
 
 function isMultiple(elements: DescendentElements | DescendentElements[]): elements is DescendentElements[] {
     return isArray(elements[0]);
 }
 
-
-
-
-
 interface MorphingBatch {
     one: Path;
     many: Path[];
 }
-
-
-
-
-
 
 function prepareMorphBatches(one: DescendentPaths, many: DescendentPaths[]) {
     const batches: MorphingBatch[] = [];
@@ -109,10 +91,6 @@ function prepareMorphBatches(one: DescendentPaths, many: DescendentPaths[]) {
     return batches;
 }
 
-
-
-
-
 const pathDividers: Record<UniversalTransitionOption['divideShape'], DividePath> = {
     clone(params) {
         const ret: Path[] = [];
@@ -128,10 +106,6 @@ const pathDividers: Record<UniversalTransitionOption['divideShape'], DividePath>
     // Use the default divider
     split: null
 };
-
-
-
-
 
 export function applyMorphAnimation(
     from: DescendentPaths | DescendentPaths[],
@@ -259,19 +233,12 @@ export function applyMorphAnimation(
     }
 }
 
-
-
-
 export function getPathList(
     elements: Element
 ): DescendentPaths;
 export function getPathList(
     elements: Element[]
 ): DescendentPaths[];
-
-
-
-
 export function getPathList(
     elements: Element | Element[]
 ): DescendentPaths | DescendentPaths[] {

@@ -38,11 +38,6 @@ import SeriesData from '../../data/SeriesData';
 import { BrushCommonSelectorsForSeries } from '../../component/brush/selector';
 import tokens from '../../visual/tokens';
 
-
-
-
-
-
 type PolarBarLabelPositionExtra = 'start' | 'insideStart' | 'middle' | 'end' | 'insideEnd';
 export type PolarBarLabelPosition = SeriesLabelOption['position'] | PolarBarLabelPositionExtra;
 
@@ -51,45 +46,24 @@ export type BarSeriesLabelOption = SeriesLabelOption<
     {positionExtra: PolarBarLabelPositionExtra | 'outside'}
 >;
 
-
-
-
-
 export interface BarStateOption<TCbParams = never> {
     itemStyle?: BarItemStyleOption<TCbParams>
     label?: BarSeriesLabelOption
 }
 
-
-
-
-
 interface BarStatesMixin {
     emphasis?: DefaultStatesMixinEmphasis
 }
-
-
-
-
 
 export interface BarItemStyleOption<TCbParams = never> extends ItemStyleOption<TCbParams> {
     // for polar bars, this is used for sector's cornerRadius
     borderRadius?: (number | string)[] | number | string
 }
-
-
-
-
-
 export interface BarDataItemOption extends BarStateOption,
     StatesOptionMixin<BarStateOption, BarStatesMixin>,
     OptionDataItemObject<OptionDataValue> {
     cursor?: string
 }
-
-
-
-
 
 export interface BarSeriesOption
     extends BaseBarSeriesOption<BarStateOption<CallbackDataParams>, BarStatesMixin>,
@@ -118,8 +92,6 @@ export interface BarSeriesOption
 
     realtimeSort?: boolean
 }
-
-
 
 class BarSeriesModel extends BaseBarSeriesModel<BarSeriesOption> {
     static type = 'series.bar';
