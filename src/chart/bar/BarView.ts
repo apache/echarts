@@ -800,9 +800,28 @@ const elementCreator: {
         rect.name = 'item';
 
         if (animationModel) {
+            const isStacked = seriesModel.get('stack') != null;
             const rectShape = rect.shape;
             const animateProperty = isHorizontal ? 'height' : 'width' as 'width' | 'height';
             rectShape[animateProperty] = 0;
+            if (isStacked) {
+                // if it's stacked, the bar will be animated from the
+                // 'bottom' of the value axis, regardless of 'inverse'
+                const stackAnimateProperty = isHorizontal ? 'y' : 'x' as 'y' | 'x';
+                const itemLayout = data.getItemLayout(newIndex);
+                // valueAxisStart is unset only when `large` is true,
+                // in which case this branch is not taken
+                const valueAxisStart = itemLayout.valueAxisStart;
+
+                // make sure we don't go beyond the grid
+                const coordSys = (seriesModel.coordinateSystem as Cartesian2D);
+                const valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+                const extentStart = valueAxis.getGlobalExtent()[0];
+                // compare with extentStart in the same direction as the stackAnimateProperty
+                const cmpFn = (valueAxis.inverse === isHorizontal) ? mathMax : mathMin;
+
+                rectShape[stackAnimateProperty] = cmpFn(valueAxisStart, extentStart);
+            }
         }
         return rect;
     },
