@@ -367,7 +367,7 @@ function createMatrixCell(
     }
 
     // Set silent
-    const triggerEvent = matrixModel.get('triggerEvent');
+    const triggerEvent = matrixModel.get('triggerEvent', true);
     if (cellText) {
         let labelSilent = _tmpCellLabelModel.get('silent');
         // By default, silent: false is needed for triggerEvent or tooltip interaction.
@@ -382,21 +382,26 @@ function createMatrixCell(
         rectSilent = (
             // If no background color in cell, set `rect.silent: false` will cause that only
             // the border response to mouse hovering, which is probably weird.
+            // So we deliberately make rect non-interactive if `silent` is not explicitly specified,
+            // even if `triggerEvent` is set as `true`.
             !cellRect.style || cellRect.style.fill === 'none' || !cellRect.style.fill
         );
     }
     cellRect.silent = rectSilent;
 
-    if (triggerEvent && cellText) {
+    // Both `cellRect` (typically non-transparent) and `cellText` may trigger events, depending on both
+    // `matrix.triggerEvent`, `matrix.xxx.silent` and `matrix.xxx.label.silent` settings.
+    if (triggerEvent && cellRect) {
         const eventData = {
             componentType: 'matrix' as const,
             componentIndex: matrixModel.componentIndex,
             matrixIndex: matrixModel.componentIndex,
             targetType: targetType,
-            name: textValue != null ? textValue + '' : null,
+            name: (cellText && cellText.style) ? cellText.style.text : undefined,
+            value: textValue,
             coord: xyLocator.slice()
         };
-        getECData(cellText).eventData = eventData;
+        getECData(cellRect).eventData = eventData;
     }
 
     clearTmpModel(_tmpCellModel);

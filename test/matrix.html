@@ -724,7 +724,7 @@ under the License.
                                 {coord: [0, 1], value: 2 },
                                 {coord: [0, 2], value: 3 },
                                 {coord: [1, 0], value: 4 },
-                                {coord: [1, 1], value: 5 },
+                                {coord: [1, 1], value: 5, itemStyle: {color: 'orange'} },
                                 {coord: [1, 2], value: 6 },
                                 {coord: [2, 0], value: null },
                                 {coord: [2, 1], value: null },
@@ -744,7 +744,37 @@ under the License.
                     title: [
                         'Events on matrix cell text'
                     ],
-                    option: option
+                    option: option,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'matrix.body.silent:',
+                        values: [undefined, true, false],
+                        onchange: function (value) {
+                            chart.setOption({
+                                matrix: {
+                                    body: {
+                                        silent: this.value,
+                                    }
+                                }
+                            });
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'matrix.body.label.silent:',
+                        values: [undefined, true, false],
+                        onchange: function (value) {
+                            chart.setOption({
+                                matrix: {
+                                    body: {
+                                        label: {
+                                            silent: this.value,
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }]
                 });
 
                 // Create event display div
