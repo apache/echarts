@@ -59,6 +59,7 @@ import {
 } from './labelLayoutHelper';
 import { labelInner, animateLabelValue } from './labelStyle';
 import { normalizeRadian } from 'zrender/src/contain/util';
+import { throttle } from '../util/throttle';
 
 interface LabelDesc {
     label: ZRText
@@ -194,16 +195,153 @@ function extendWithKeys(target: Dictionary<any>, source: Dictionary<any>, keys: 
 
 const LABEL_LAYOUT_PROPS = ['x', 'y', 'rotation'];
 
+/**
+ * Emphasis manager for handling label emphasis state changes
+ */
+class EmphasisManager {
+    // eslint-disable-next-line no-undef
+    private currentEmphasisLabels: Set<Element> = new Set();
+    private labelsNeedsHideOverlap: LabelLayoutWithGeometry[] = [];
+    // eslint-disable-next-line no-undef
+    private labelsNeedsHideOverlapSet: Set<Element> = new Set();
+    // eslint-disable-next-line no-undef
+    private originalStates: Map<Element, boolean> = new Map();
+
+    setLabelsNeedsHideOverlap(labels: LabelLayoutWithGeometry[]): void {
+        this.clear();
+        if (labels.length === 0) {
+            return;
+        }
+
+        this.labelsNeedsHideOverlap = labels;
+        labels.forEach(item => {
+            this.labelsNeedsHideOverlapSet.add(item.label);
+        });
+
+        // Record original ignore states only when needed
+        labels.forEach(item => {
+            this.originalStates.set(item.label, item.label.ignore);
+            if (item.labelLine) {
+                this.originalStates.set(item.labelLine, item.labelLine.ignore);
+            }
+        });
+    }
+
+    handleEmphasisChange(targetLabel: Element, isEnteringEmphasis: boolean): void {
+        // Early return if no labels need hideOverlap processing
+        if (this.labelsNeedsHideOverlap.length === 0) {
+            return;
+        }
+        // Only respond to labels that participates in hideOverlap.
+        if (!this.labelsNeedsHideOverlapSet.has(targetLabel)) {
+            return;
+        }
+
+        if (isEnteringEmphasis) {
+            this.currentEmphasisLabels.add(targetLabel);
+        }
+        else {
+            this.currentEmphasisLabels.delete(targetLabel);
+        }
+
+        if (this.currentEmphasisLabels.size === 0) {
+            // No emphasis labels, restore original state
+            this.restoreOriginalState();
+        }
+        else {
+            // Re-sort with emphasis labels first and call hideOverlap
+            this.reorderAndHideOverlap();
+        }
+    }
+
+    private reorderAndHideOverlap = throttle(() => {
+        if (this.labelsNeedsHideOverlap.length === 0) {
+            return;
+        }
+
+        // Create a copy for reordering
+        const reorderedLabels = [...this.labelsNeedsHideOverlap];
+
+        // Sort: emphasis labels first, then by original priority
+        reorderedLabels.sort((a, b) => {
+            const aIsEmphasis = this.currentEmphasisLabels.has(a.label) ? 1 : 0;
+            const bIsEmphasis = this.currentEmphasisLabels.has(b.label) ? 1 : 0;
+
+            // Emphasis labels come first
+            if (aIsEmphasis !== bIsEmphasis) {
+                return bIsEmphasis - aIsEmphasis;
+            }
+
+            // Then by original priority
+            return ((b.suggestIgnore ? 1 : 0) - (a.suggestIgnore ? 1 : 0))
+                || (b.priority - a.priority);
+        });
+
+        // First restore all to show state
+        reorderedLabels.forEach(item => {
+            item.label.ignore = false;
+            const emphasisState = item.label.ensureState('emphasis');
+            emphasisState.ignore = false;
+
+            if (item.labelLine) {
+                item.labelLine.ignore = false;
+                const lineEmphasisState = item.labelLine.ensureState('emphasis');
+                lineEmphasisState.ignore = false;
+            }
+        });
+
+        // Call hideOverlap with isOrdered = true
+        hideOverlap(reorderedLabels, true);
+    }, 16, true);
+
+    private restoreOriginalState = throttle(() => {
+        this.labelsNeedsHideOverlap.forEach(item => {
+            const originalIgnore = this.originalStates.get(item.label) ?? false;
+            item.label.ignore = originalIgnore;
+
+            // For emphasis state, use the original hideOverlap logic
+            const emphasisState = item.label.ensureState('emphasis');
+            emphasisState.ignore = originalIgnore;
+
+            if (item.labelLine) {
+                const originalLineIgnore = this.originalStates.get(item.labelLine) ?? false;
+                item.labelLine.ignore = originalLineIgnore;
+
+                const lineEmphasisState = item.labelLine.ensureState('emphasis');
+                lineEmphasisState.ignore = originalLineIgnore;
+            }
+        });
+    }, 16, true);
+
+    clear(): void {
+        // Cancel pending throttled tasks to avoid running with stale label references.
+        this.reorderAndHideOverlap.clear?.();
+        this.restoreOriginalState.clear?.();
+
+        this.currentEmphasisLabels.clear();
+        this.labelsNeedsHideOverlap = [];
+        this.labelsNeedsHideOverlapSet.clear();
+        this.originalStates.clear();
+    }
+}
+
+const hoverStateChangeStore = makeInner<{
+    originalOnHoverStateChange: ECElement['onHoverStateChange'];
+    wrapper: ECElement['onHoverStateChange'];
+}, ECElement>();
+
 class LabelManager {
 
     private _labelList: LabelDesc[] = [];
     private _chartViewList: ChartView[] = [];
+    private _emphasisManager: EmphasisManager = new EmphasisManager();
 
     constructor() {}
 
     clearLabels() {
         this._labelList = [];
         this._chartViewList = [];
+        this._emphasisManager.clear();
     }
 
     /**
@@ -323,6 +461,36 @@ class LabelManager {
             // Can only attach the text on the element with dataIndex
             if (textEl && !(textEl as ECElement).disableLabelLayout) {
                 this._addLabel(ecData.dataIndex, ecData.dataType, seriesModel, textEl, layoutOption);
+                // Add emphasis state change listener for hideOverlap labels.
+                // Avoid repeated wrapping and avoid capturing `textEl` in closure (it may be replaced on rerender).
+                const hostEl = child as ECElement;
+                const store = hoverStateChangeStore(hostEl);
+                if (!store.wrapper) {
+                    const labelManager = this;
+                    store.wrapper = function (this: ECElement, toState: string) {
+                        const original = store.originalOnHoverStateChange;
+                        original && original.call(this, toState);
+
+                        if (toState === 'emphasis' || toState === 'normal') {
+                            const labelEl = this.getTextContent();
+                            if (labelEl) {
+                                labelManager._emphasisManager.handleEmphasisChange(
+                                    labelEl,
+                                    toState === 'emphasis'
+                                );
+                            }
+                        }
+                    };
+                }
+
+                // If labelLayout is a callback, hideOverlap might be returned dynamically.
+                // Install the hook in that case as well. EmphasisManager will ignore irrelevant labels.
+                const shouldInstall = isFunction(layoutOption) || (layoutOption as LabelLayoutOption).hideOverlap;
+                if (shouldInstall && hostEl.onHoverStateChange !== store.wrapper) {
+                    // Keep original handler up-to-date but never nest wrappers.
+                    store.originalOnHoverStateChange = hostEl.onHoverStateChange;
+                    hostEl.onHoverStateChange = store.wrapper;
+                }
             }
         });
     }
@@ -466,6 +634,7 @@ class LabelManager {
 
         restoreIgnore(labelsNeedsHideOverlap);
         hideOverlap(labelsNeedsHideOverlap);
+        this._emphasisManager.setLabelsNeedsHideOverlap(labelsNeedsHideOverlap);
     }
 
     /**
