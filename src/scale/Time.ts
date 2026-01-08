@@ -306,8 +306,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     }
 
     parse(val: number | string | Date): number {
-        // val might be float.
-        return isNumber(val) ? val : +numberUtil.parseDate(val);
+        // `val` might be a float (e.g., calculated from percent), so call `round`.
+        return isNumber(val) ? Math.round(val) : +numberUtil.parseDate(val);
     }
 
     contain(val: number): boolean {
