@@ -21,33 +21,38 @@ under the License.
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <script src="lib/simpleRequire.js"></script>
-        <script src="lib/config.js"></script>
-        <script src="lib/facePrint.js"></script>
-    </head>
-    <body>
+        <link rel="stylesheet" href="lib/reset.css" />
+        <script src='lib/simpleRequire.js'></script>
+        <script src='lib/config.js'></script>
+        <script src='lib/testHelper.js'></script>
         <style>
-            html, body, #main {
+            .log-container {
+                position: absolute;
+                bottom: 0;
+                left: 0;
                 width: 100%;
                 height: 100%;
+                overflow: auto;
+                background-color: rgba(255, 255, 255, 0.7);
+                font-size: 12px;
+                pointer-events: none;
+            }
+            .log-container:empty {
+                display: none;
             }
         </style>
-        <div id="info"></div>
-        <div id="main"></div>
+    </head>
+    <body>
+        <div id='main0'></div>
         <script>
-
             require(['echarts'], function (echarts) {
-
-                var chart = echarts.init(document.getElementById('main'));
-
                 var xAxisData = [];
                 var data = [];
-
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
                     data.push(1);
                 }
-                chart.setOption({
+                var option = {
                     xAxis: {
                         data: xAxisData
                     },
@@ -56,9 +61,29 @@ under the License.
                             show: true
                         }
                     },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            var items = [];
+                            for (var i = 0; i < params.length; i++) {
+                                items.push(params[i].marker + 'Series ' + params[i].seriesIndex + ': ' + params[i].seriesName);
+                            }
+                            return items.join('<br/>');
+                        }
+                    },
                     series: [
                         {
-                            name: 'line',
+                            name: 'not set triggerEvent or triggerLineEvent',
+                            type: 'line',
+                            stack: 'a',
+                            stackOrder: 'seriesDesc',
+                            areaStyle: {},
+                            data: data.map(function (d) {
+                                return d * 2;
+                            })
+                        },
+                        {
+                            name: 'triggerLineEvent=true',
                             type: 'line',
                             areaStyle: {},
                             stack: 'a',
@@ -66,23 +91,98 @@ under the License.
                             triggerLineEvent: true
                         },
                         {
-                            name: 'line1',
+                            name: 'triggerEvent=true',
+                            type: 'line',
+                            areaStyle: {},
+                            stack: 'a',
+                            data: data.map(function (d) {
+                                return d * 1.5;
+                            }),
+                            triggerEvent: true
+                        },
+                        {
+                            name: 'triggerEvent=line',
+                            type: 'line',
+                            stack: 'a',
+                            lineStyle: {
+                                width: 3
+                            },
+                            areaStyle: {},
+                            data: data.map(function (d) {
+                                return d * 0.5;
+                            }),
+                            triggerEvent: 'line'
+                        },
+                        {
+                            name: 'triggerEvent=area',
                             type: 'line',
                             stack: 'a',
                             areaStyle: {},
                             data: data.map(function (d) {
-                                return d * 2;
-                            })
-                        },
+                                return d * 3;
+                            }),
+                            triggerEvent: 'area'
+                        }
+                    ]
+                };
+
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Click lines or area to see event triggered',
+                        'The series 1 does not trigger event',
+                        'The series 2 only triggers line event (via `triggerLineEvent: true`)',
+                        'The series 3 triggers both line and area event (via `triggerEvent: true`)',
+                        'The series 4 only triggers line event (via `triggerEvent: "line"`)',
+                        'The series 5 only triggers area event (via `triggerEvent: "area"`)'
+                    ],
+                    option: option,
+                    buttons: [
+                        {
+                            text: 'Disable All Events',
+                            onClick: function () {
+                                logDom.innerHTML = 'Disabled all events<br/>There should be <b>NO</b> more logs below<br/><br/>';
+                                chart.setOption({
+                                    series: [
+                                        {
+                                            triggerEvent: false,
+                                            triggerLineEvent: false
+                                        },
+                                        {
+                                            triggerEvent: false,
+                                            triggerLineEvent: false
+                                        },
+                                        {
+                                            triggerEvent: false,
+                                            triggerLineEvent: false
+                                        },
+                                        {
+                                            triggerEvent: false,
+                                            triggerLineEvent: false
+                                        },
+                                        {
+                                            triggerEvent: false,
+                                            triggerLineEvent: false
+                                        }
+                                    ]
+                                });
+                            }
+                        }
                     ]
                 });
 
+                var logDom = document.createElement('div');
+                logDom.className = 'log-container';
+                chart.getDom().appendChild(logDom);
+
                 chart.on('click', function (params) {
                     console.log(params);
-                });
-
-                chart.on('mouseover', function (params) {
-                    console.log(params);
+                    logDom.appendChild(document.createTextNode(JSON.stringify({
+                        seriesName: params.seriesName,
+                        seriesIndex: params.seriesIndex,
+                        selfType: params.selfType,
+                    })));
+                    logDom.appendChild(document.createElement('br'));
+                    logDom.scrollTop = logDom.scrollHeight;
                 });
             });
 

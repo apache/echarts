@@ -46,6 +46,7 @@ under the License.
         <div id="main4"></div>
         <div id="main5"></div>
         <div id="main6"></div>
+        <div id="main7"></div>
 
         <script>
 
@@ -478,6 +479,60 @@ under the License.
                     option: option
                 });
             });
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                const xValues = [100, 183, 218, 333, 478];
+                const xLabels = xValues.map((x) => x * 5);
+
+                option = {
+                xAxis: {
+                    type: 'value',
+                    axisLine: {
+                    show: true,
+                    onZeroAxisIndex: 1
+                    },
+                    axisTick: {
+                    show: true,
+                    customValues: xValues
+                    },
+                    axisLabel: {
+                    customValues: xValues,
+                    formatter: function (val, index) {
+                        return xLabels[index].toString();
+                    }
+                    }
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                    data: [
+                        [100, 160],
+                        [150, 240],
+                        [183, 145],
+                        [200, 234],
+                        [218, 228],
+                        [252, 301],
+                        [300, 145],
+                        [333, 223],
+                        [345, 157],
+                        [478, 270]
+                    ],
+                    type: 'line'
+                    }
+                ]
+                };
+                var chart = testHelper.create(echarts, 'main7', {
+                    title: 'Should be able to use index for custom values of axis label',
+                    option
+                });
+            });
+
         </script>
     </body>
 </html>

@@ -31,7 +31,8 @@ import { LineShape } from 'zrender/src/graphic/shape/Line';
 import { subPixelOptimize } from 'zrender/src/graphic/helper/subPixelOptimize';
 import { Group, Text, Rect, Line, XY, setTooltipConfig, expandOrShrinkRect } from '../../util/graphic';
 import { clearTmpModel, ListIterator } from '../../util/model';
-import { clone, retrieve2 } from 'zrender/src/core/util';
+import { clone, retrieve2, isFunction, isString } from 'zrender/src/core/util';
+import { formatTplSimple } from '../../util/format';
 import { invert } from 'zrender/src/core/matrix';
 import { MatrixBodyCorner, MatrixBodyOrCornerKind } from '../../coord/matrix/MatrixBodyCorner';
 import { setLabelStyle } from '../../label/labelStyle';
@@ -289,11 +290,32 @@ function createMatrixCell(
     let cellText: Text | NullUndefined;
 
     if (textValue != null) {
-        const text = textValue + '';
+        let text = textValue + '';
         _tmpCellLabelModel.option = cellOption ? cellOption.label : null;
         _tmpCellLabelModel.parentModel = parentLabelModel;
         // This is to accept `option.textStyle` as the default.
         _tmpCellLabelModel.ecModel = ecModel;
+
+        const formatter = _tmpCellLabelModel.getShallow('formatter');
+        if (formatter) {
+            const params = {
+                componentType: 'matrix' as const,
+                componentIndex: matrixModel.componentIndex,
+                name: text,
+                value: textValue as unknown,
+                coord: xyLocator.slice() as MatrixXYLocator[],
+                $vars: ['name', 'value', 'coord'] as const
+            };
+            if (isString(formatter)) {
+                text = formatTplSimple(formatter, params);
+            }
+            else if (isFunction(formatter)) {
+                const formattedText = formatter(params);
+                if (formattedText != null) {
+                    text = formattedText + '';
+                }
+            }
+        }
 
         setLabelStyle(
             cellRect,

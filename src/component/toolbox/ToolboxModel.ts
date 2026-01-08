@@ -147,7 +147,7 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         },
         emphasis: {
             iconStyle: {
-                borderColor: tokens.color.accent50
+                borderColor: tokens.color.accent70
             }
         },
         // textStyle: {},
