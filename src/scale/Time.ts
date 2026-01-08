@@ -206,8 +206,10 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         let upperUnitIndex = primaryTimeUnits.length - 1;
         let maxLevel = 0;
         each(ticks, tick => {
-            upperUnitIndex = Math.min(upperUnitIndex, indexOf(primaryTimeUnits, tick.time.upperTimeUnit));
-            maxLevel = Math.max(maxLevel, tick.time.level);
+            if (tick.time) {
+                upperUnitIndex = Math.min(upperUnitIndex, indexOf(primaryTimeUnits, tick.time.upperTimeUnit));
+                maxLevel = Math.max(maxLevel, tick.time.level);
+            }
         });
 
         if (scaleBreakHelper) {

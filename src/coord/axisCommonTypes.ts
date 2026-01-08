@@ -102,14 +102,14 @@ export interface AxisBaseOptionCommon extends ComponentOption,
      * + 'dataMin': use the min value in data.
      * + null/undefined: auto decide min value (consider pretty look and boundaryGap).
      */
-    min?: ScaleDataValue | 'dataMin' | ((extent: {min: number, max: number}) => ScaleDataValue);
+    min?: ScaleDataValue | 'dataMin' | ((extent: {min: number, max: number}) => ScaleDataValue | NullUndefined);
     /**
      * Max value of the axis. can be:
      * + ScaleDataValue
      * + 'dataMax': use the max value in data.
      * + null/undefined: auto decide max value (consider pretty look and boundaryGap).
      */
-    max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue);
+    max?: ScaleDataValue | 'dataMax' | ((extent: {min: number, max: number}) => ScaleDataValue | NullUndefined);
     startValue?: number;
 
     jitter?: number;
@@ -163,6 +163,20 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
      * Will be ignored if interval is set.
      */
     alignTicks?: boolean
+
+    /**
+     * Data min value to be included in axis extent calculation.
+     * The final min value will be the minimum of this value and the data min.
+     * Only works for value axis.
+     */
+    dataMin?: ScaleDataValue;
+
+    /**
+     * Data max value to be included in axis extent calculation.
+     * The final max value will be the maximum of this value and the data max.
+     * Only works for value axis.
+     */
+    dataMax?: ScaleDataValue;
 }
 
 export interface CategoryAxisBaseOption extends AxisBaseOptionCommon {

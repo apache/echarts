@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+<body>
+    <style>
+        .split {
+            line-height: 60px;
+            height: 60px;
+            background: #ddd;
+            text-align: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .main {
+            height: 600px;
+        }
+    </style>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            function createCase(title, index, caseRenderer) {
+                const caseRoot = document.createElement("div");
+                caseRoot.setAttribute('id', `case${index}`);
+                caseRoot.innerHTML = `
+                    <div class="split">${title}</div>
+                    <div id="main${index}" class="main"></div>
+                `;
+                document.body.appendChild(caseRoot);
+                const main = caseRoot.querySelector('.main');
+                if (!main) {
+                    return;
+                }
+                const chart = echarts.init(main);
+                caseRenderer(chart);
+            }
+
+            createCase('seriesTargets: map different dimensions to different series', 0, function (chart) {
+                chart.setOption({
+                    tooltip: {},
+                    dataset: {
+                        source: [
+                            ['product', '2015', '2016', '2017'],
+                            ['Matcha Latte', 43.3, 85.8, 93.7],
+                            ['Milk Tea', 83.1, 73.4, 55.1],
+                            ['Cheese Cocoa', 86.4, 65.2, 82.5],
+                            ['Walnut Brownie', 72.4, 53.9, 39.1]
+                        ]
+                    },
+                    xAxis: { type: 'category' },
+                    yAxis: {},
+                    series: [{ type: 'bar' }, { type: 'bar' }, { type: 'bar' }],
+                    visualMap: {
+                        type: 'piecewise',
+                        min: 30,
+                        max: 100,
+                        seriesTargets: [
+                            { seriesIndex: 0, dimension: 1 },
+                            { seriesIndex: 1, dimension: 2 },
+                            { seriesIndex: 2, dimension: 3 }
+                        ]
+                    }
+                });
+            });
+
+            createCase('seriesTargets: using seriesId to target specific series', 1, function (chart) {
+                chart.setOption({
+                    tooltip: {},
+                    dataset: {
+                        source: [
+                            ['product', 'sales', 'profit', 'growth'],
+                            ['Product A', 120, 45, 12],
+                            ['Product B', 200, 80, 25],
+                            ['Product C', 150, 60, 18],
+                            ['Product D', 80, 30, 8]
+                        ]
+                    },
+                    xAxis: { type: 'category' },
+                    yAxis: {},
+                    series: [
+                        { type: 'bar', id: 'sales-bar', name: 'Sales' },
+                        { type: 'bar', id: 'profit-bar', name: 'Profit' },
+                        { type: 'bar', id: 'growth-bar', name: 'Growth' }
+                    ],
+                    visualMap: {
+                        type: 'continuous',
+                        min: 0,
+                        max: 200,
+                        seriesTargets: [
+                            { seriesId: 'sales-bar', dimension: 1 },
+                            { seriesId: 'profit-bar', dimension: 2 },
+                            { seriesId: 'growth-bar', dimension: 3 }
+                        ]
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

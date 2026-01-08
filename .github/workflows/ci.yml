@@ -48,7 +48,7 @@ jobs:
       - name: Collect changed files
         run: |
           mkdir ~/tmp/
-          git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} --diff-filter=ACM --name-only --relative '*src/**/*.ts' > ~/tmp/changed_files
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.sha }} --diff-filter=ACM --name-only --relative '*src/*.ts' '*src/**/*.ts' > ~/tmp/changed_files
           echo -e "Changed files: \n$(cat ~/tmp/changed_files)"
 
       - name: Lint

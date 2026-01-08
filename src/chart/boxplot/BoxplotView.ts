@@ -46,7 +46,7 @@ class BoxplotView extends ChartView {
             group.removeAll();
         }
 
-        const constDim = seriesModel.get('layout') === 'horizontal' ? 1 : 0;
+        const constDim = seriesModel.getWhiskerBoxesLayout() === 'horizontal' ? 1 : 0;
 
         data.diff(oldData)
             .add(function (newIdx) {

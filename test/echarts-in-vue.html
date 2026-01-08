@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="https://registry.npmmirror.com/vue/2.6.0/files/dist/vue.min.js"></script>
+        <script>
+            window.Vue2 = window.Vue;
+            window.Vue = null
+        </script>
+        <script src="https://registry.npmmirror.com/vue/3.5.22/files/dist/vue.global.prod.js"></script>
+        <script>
+            window.Vue3 = window.Vue;
+            window.Vue = null
+        </script>
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                line-height: 18px;
+            }
+        </style>
+
+
+        <div id="main0"></div>
+        <div id="main1"></div>
+        <div id="main2"></div>
+        <div id="main3"></div>
+        <div id="main4"></div>
+        <div id="main5"></div>
+        <div id="main6"></div>
+
+        <script>
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                xAxis:{
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: 'Direct',
+                        type: 'bar',
+                        data: [10, 52, 200, 334, 390, 330, 220]
+                    }
+                ]
+            };
+
+            require([
+                'echarts',
+            ], function (echarts) {
+                const chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Wrap echarts instance using Vue3 **ref**',
+                        'Should **show** the tooltip'
+                    ],
+                    option
+                });
+                const { ref } = window.Vue3;
+                const chartInstance = ref(chart);
+                const isSame = chartInstance.value === chart;
+                chartInstance.value.setOption({
+                    title: {
+                        text: `is the same chart instance object: ${isSame}`,
+                        textStyle: {
+                            color: isSame ? 'green' : 'red'
+                        }
+                    }
+                });
+                setTimeout(() => {
+                    chartInstance.value.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: 0,
+                        dataIndex: 2
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Wrap echarts instance using Vue3 **shallowRef**',
+                        'Should **show** the tooltip'
+                    ],
+                    option
+                });
+                const { shallowRef } = window.Vue3;
+                const chartInstance = shallowRef(chart);
+                const isSame = chartInstance.value === chart;
+                chartInstance.value.setOption({
+                    title: {
+                        text: `is the same chart instance object: ${isSame}`,
+                        textStyle: {
+                            color: isSame ? 'green' : 'red'
+                        }
+                    }
+                });
+                setTimeout(() => {
+                    chartInstance.value.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: 0,
+                        dataIndex: 2
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Wrap echarts instance using Vue3 **reactive**',
+                        'Should **show** the tooltip'
+                    ],
+                    option
+                });
+                const { reactive } = window.Vue3;
+                const chartInstance = reactive(chart);
+                const isSame = chartInstance === chart;
+                chartInstance.setOption({
+                    title: {
+                        text: `is the same chart instance object: ${isSame}`,
+                        textStyle: {
+                            color: isSame ? 'green' : 'red'
+                        }
+                    }
+                });
+                setTimeout(() => {
+                    chartInstance.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: 0,
+                        dataIndex: 2
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const chart = testHelper.create(echarts, 'main3', {
+                    title: [
+                        'Wrap echarts instance using Vue3 **shallowReactive**',
+                        'Should **show** the tooltip'
+                    ],
+                    option
+                });
+                const { shallowReactive } = window.Vue3;
+                const chartInstance = shallowReactive(chart);
+                const isSame = chartInstance === chart;
+                chartInstance.setOption({
+                    title: {
+                        text: `is the same chart instance object: ${isSame}`,
+                        textStyle: {
+                            color: isSame ? 'green' : 'red'
+                        }
+                    }
+                });
+                setTimeout(() => {
+                    chartInstance.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: 0,
+                        dataIndex: 2
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const chart = testHelper.create(echarts, 'main4', {
+                    title: [
+                        'Wrap echarts instance using Vue3 **markRaw**',
+                        'Should **show** the tooltip'
+                    ],
+                    option
+                });
+                const { markRaw } = window.Vue3;
+                const chartInstance = markRaw(chart);
+                const isSame = chartInstance === chart;
+                chartInstance.setOption({
+                    title: {
+                        text: `is the same chart instance object: ${isSame}`,
+                        textStyle: {
+                            color: isSame ? 'green' : 'red'
+                        }
+                    }
+                });
+                setTimeout(() => {
+                    chartInstance.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: 0,
+                        dataIndex: 2
+                    });
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const chart = testHelper.create(echarts, 'main5', {
+                    title: [
+                        'Mount echarts instance using Vue2 **data**',
+                        'Should **show** the tooltip'
+                    ]
+                });
+                chart.dispose();
+                new window.Vue2({
+                    el: '#main5 .test-chart',
+                    template: `<div class="test-chart" ref="chartDom"></div>`,
+                    data() {
+                        return {
+                            chartInstance: null
+                        }
+                    },
+                    mounted() {
+                        const chart = echarts.init(this.$refs.chartDom);
+                        this.chartInstance = chart;
+                        this.chartInstance.setOption(option);
+                        const isSame = this.chartInstance === chart;
+                        this.chartInstance.setOption({
+                            title: {
+                                text: [
+                                    `is the same chart instance object: ${isSame}`,
+                                    `is being deeply proxied: ${!!this.chartInstance._model.option.__ob__}`
+                                ].join('\n'),
+                                textStyle: {
+                                    color: isSame ? 'green' : 'red'
+                                }
+                            }
+                        });
+                        setTimeout(() => {
+                            this.chartInstance.dispatchAction({
+                                type: 'showTip',
+                                seriesIndex: 0,
+                                dataIndex: 2
+                            });
+                        });
+                    }
+                })
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+                const chart = testHelper.create(echarts, 'main6', {
+                    title: [
+                        'Wrap echarts instance using Vue2 **observable**',
+                        'Should **show** the tooltip'
+                    ],
+                   option
+                });
+                const { observable } = window.Vue2;
+                const chartInstance = observable(chart);
+                const isSame = chartInstance === chart;
+                chartInstance.setOption({
+                    title: {
+                        text: [
+                            `is the same chart instance object: ${isSame}`,
+                            `is being deeply proxied: ${!!chartInstance._model.option.__ob__}`
+                        ].join('\n'),
+                        textStyle: {
+                            color: isSame ? 'green' : 'red'
+                        }
+                    }
+                });
+                setTimeout(() => {
+                    chartInstance.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: 0,
+                        dataIndex: 2
+                    });
+                });
+            });
+        </script>
+
+    </body>
+</html>
+

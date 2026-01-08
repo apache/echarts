@@ -52,10 +52,10 @@ import { setStatesStylesFromModel, setStatesFlag, toggleHoverEmphasis, SPECIAL_S
 import Model from '../../model/Model';
 import { setLabelStyle, getLabelStatesModels, labelInner } from '../../label/labelStyle';
 import { getDefaultLabel, getDefaultInterpolatedLabel } from '../helper/labelHelper';
-
 import { getECData } from '../../util/innerStore';
 import { createFloat32Array } from '../../util/vendor';
 import { convertToColorString } from '../../util/format';
+import { warnDeprecated } from '../../util/styleCompat';
 import { lerp } from 'zrender/src/tool/color';
 import Element from 'zrender/src/Element';
 
@@ -621,7 +621,7 @@ class LineView extends ChartView {
     _endLabel: graphic.Text;
 
     _polyline: ECPolyline;
-    _polygon: ECPolygon;
+    _polygon?: ECPolygon;
 
     _stackedOnPoints: ArrayLike<number>;
     _points: ArrayLike<number>;
@@ -920,21 +920,31 @@ class LineView extends ChartView {
         this._step = step;
         this._valueOrigin = valueOrigin;
 
-        if (seriesModel.get('triggerLineEvent')) {
-            this.packEventData(seriesModel, polyline);
-            polygon && this.packEventData(seriesModel, polygon);
+        const triggerEvent = seriesModel.get('triggerEvent');
+        const triggerLineEvent = seriesModel.get('triggerLineEvent');
+
+        if (__DEV__) {
+            triggerLineEvent && warnDeprecated('triggerLineEvent', 'Use the `triggerEvent` option instead.');
         }
+
+        const shouldTriggerLineEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'line';
+        const shouldTriggerAreaEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'area';
+
+        this.packEventData(seriesModel, polyline, shouldTriggerLineEvent);
+        polygon && this.packEventData(seriesModel, polygon, shouldTriggerAreaEvent);
     }
 
-    private packEventData(seriesModel: LineSeriesModel, el: Element) {
-        getECData(el).eventData = {
+    private packEventData(seriesModel: LineSeriesModel, el: Element, enable: boolean) {
+        getECData(el).eventData = enable ? {
             componentType: 'series',
             componentSubType: 'line',
             componentIndex: seriesModel.componentIndex,
             seriesIndex: seriesModel.seriesIndex,
             seriesName: seriesModel.name,
-            seriesType: 'line'
-        };
+            seriesType: 'line',
+            // for determining this event is triggered by area or line
+            selfType: el === this._polygon ? 'area' : 'line'
+        } : null;
     }
 
     highlight(

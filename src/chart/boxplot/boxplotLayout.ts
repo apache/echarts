@@ -144,7 +144,7 @@ function layoutSingleSeries(seriesModel: BoxplotSeriesModel, offset: number, box
     const coordSys = seriesModel.coordinateSystem;
     const data = seriesModel.getData();
     const halfWidth = boxWidth / 2;
-    const cDimIdx = seriesModel.get('layout') === 'horizontal' ? 0 : 1;
+    const cDimIdx = seriesModel.getWhiskerBoxesLayout() === 'horizontal' ? 0 : 1;
     const vDimIdx = 1 - cDimIdx;
     const coordDims = ['x', 'y'];
     const cDim = data.mapDimension(coordDims[cDimIdx]);
