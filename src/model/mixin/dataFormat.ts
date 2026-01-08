@@ -140,11 +140,12 @@ export class DataFormatMixin {
         if (zrUtil.isFunction(formatter)) {
             params.status = status;
             params.dimensionIndex = labelDimIndex;
-
-            const sectorShape = data.getItemLayout(dataIndex);
-            const midAngle = (sectorShape.startAngle + sectorShape.endAngle) / 2;
-            const nx = Math.cos(midAngle);
-            params.labelSide = nx > 0 ? 'right' : 'left';
+            if (params.seriesType === 'pie') {
+                const sectorShape = data.getItemLayout(dataIndex);
+                const midAngle = (sectorShape.startAngle + sectorShape.endAngle) / 2;
+                const nx = Math.cos(midAngle);
+                params.labelSide = nx > 0 ? 'right' : 'left';
+            }
             return formatter(params);
         }
         else if (zrUtil.isString(formatter)) {
