@@ -17,12 +17,14 @@
 * under the License.
 */
 
-import {getPrecision, round, nice, quantityExponent} from '../util/number';
+import {getPrecision, round, nice, quantityExponent, mathPow, mathMax, mathRound} from '../util/number';
 import IntervalScale from './Interval';
 import LogScale from './Log';
 import type Scale from './Scale';
 import { bind } from 'zrender/src/core/util';
 import type { ScaleBreakContext } from './break';
+import TimeScale from './Time';
+import { NullUndefined } from '../util/types';
 
 type intervalScaleNiceTicksResult = {
     interval: number,
@@ -30,19 +32,39 @@ type intervalScaleNiceTicksResult = {
     niceTickExtent: [number, number]
 };
 
-export function isValueNice(val: number) {
-    const exp10 = Math.pow(10, quantityExponent(Math.abs(val)));
-    const f = Math.abs(val / exp10);
-    return f === 0
-        || f === 1
-        || f === 2
-        || f === 3
-        || f === 5;
-}
+/**
+ * See also method `nice` in `src/util/number.ts`.
+ */
+// export function isValueNice(val: number) {
+//     const exp10 = Math.pow(10, quantityExponent(Math.abs(val)));
+//     const f = Math.abs(round(val / exp10, 0));
+//     return f === 0
+//         || f === 1
+//         || f === 2
+//         || f === 3
+//         || f === 5;
+// }
 
 export function isIntervalOrLogScale(scale: Scale): scale is LogScale | IntervalScale {
-    return scale.type === 'interval' || scale.type === 'log';
+    return isIntervalScale(scale) || isLogScale(scale);
 }
+
+export function isIntervalScale(scale: Scale): scale is IntervalScale {
+    return scale.type === 'interval';
+}
+
+export function isTimeScale(scale: Scale): scale is TimeScale {
+    return scale.type === 'time';
+}
+
+export function isLogScale(scale: Scale): scale is LogScale {
+    return scale.type === 'log';
+}
+
+export function isOrdinalScale(scale: Scale): boolean {
+    return scale.type === 'ordinal';
+}
+
 /**
  * @param extent Both extent[0] and extent[1] should be valid number.
  *               Should be extent[0] < extent[1].
@@ -65,7 +87,6 @@ export function intervalScaleNiceTicks(
     if (maxInterval != null && interval > maxInterval) {
         interval = result.interval = maxInterval;
     }
-    // Tow more digital for tick.
     const precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
     const niceTickExtent = result.niceTickExtent = [
@@ -73,15 +94,22 @@ export function intervalScaleNiceTicks(
         round(Math.floor(extent[1] / interval) * interval, precision)
     ];
 
-    fixExtent(niceTickExtent, extent);
+    fixNiceExtent(niceTickExtent, extent);
 
     return result;
 }
 
-export function increaseInterval(interval: number) {
-    const exp10 = Math.pow(10, quantityExponent(interval));
-    // Increase interval
-    let f = interval / exp10;
+/**
+ * The input `niceInterval` should be generated
+ * from `nice` method in `src/util/number.ts`, or
+ * from `increaseInterval` itself.
+ */
+export function increaseInterval(niceInterval: number) {
+    const exponent = quantityExponent(niceInterval);
+    // No rounding error in Math.pow(10, xxx).
+    const exp10 = mathPow(10, exponent);
+    // Fix IEEE 754 float rounding error
+    let f = mathRound(niceInterval / exp10);
     if (!f) {
         f = 1;
     }
@@ -94,16 +122,17 @@ export function increaseInterval(interval: number) {
     else { // f is 1 or 5
         f *= 2;
     }
-    return round(f * exp10);
+    // Fix IEEE 754 float rounding error
+    return round(f * exp10, -exponent);
 }
 
-/**
- * @return interval precision
- */
-export function getIntervalPrecision(interval: number): number {
+export function getIntervalPrecision(niceInterval: number): number {
     // Tow more digital for tick.
-    return getPrecision(interval) + 2;
+    // NOTE: `2` was introduced in commit `af2a2a9f6303081d7c3b52f0a38add07b4c6e0c7`;
+    // it works on "nice" interval, but seems not necessarily mathematically required.
+    return getPrecision(niceInterval) + 2;
 }
+
 
 function clamp(
     niceTickExtent: [number, number], idx: number, extent: [number, number]
@@ -112,7 +141,7 @@ function clamp(
 }
 
 // In some cases (e.g., splitNumber is 1), niceTickExtent may be out of extent.
-export function fixExtent(
+export function fixNiceExtent(
     niceTickExtent: [number, number], extent: [number, number]
 ): void {
     !isFinite(niceTickExtent[0]) && (niceTickExtent[0] = extent[0]);
@@ -172,4 +201,71 @@ export function logTransform(base: number, extent: number[], noClampNegative?: b
         Math.log(noClampNegative ? extent[0] : Math.max(0, extent[0])) / loggedBase,
         Math.log(noClampNegative ? extent[1] : Math.max(0, extent[1])) / loggedBase
     ];
+}
+
+export function powTransform(base: number, extent: number[]): [number, number] {
+    return [
+        mathPow(base, extent[0]),
+        mathPow(base, extent[1])
+    ];
+}
+
+/**
+ * A valid extent is:
+ *  - No non-finite number.
+ *  - `extent[0] < extent[1]`.
+ *
+ * [NOTICE]: The input `rawExtent` can only be:
+ *  - All non-finite numbers or `NaN`; or
+ *  - `[Infinity, -Infinity]` (A typical initial extent with no data.)
+ *  (Improve it when needed.)
+ */
+export function intervalScaleEnsureValidExtent(
+    rawExtent: number[],
+    opt: {
+        fixMax?: boolean
+    }
+): number[] {
+    const extent = rawExtent.slice();
+    // If extent start and end are same, expand them
+    if (extent[0] === extent[1]) {
+        if (extent[0] !== 0) {
+            // Expand extent
+            // Note that extents can be both negative. See #13154
+            const expandSize = Math.abs(extent[0]);
+            // In the fowllowing case
+            //      Axis has been fixed max 100
+            //      Plus data are all 100 and axis extent are [100, 100].
+            // Extend to the both side will cause expanded max is larger than fixed max.
+            // So only expand to the smaller side.
+            if (!opt.fixMax) {
+                extent[1] += expandSize / 2;
+                extent[0] -= expandSize / 2;
+            }
+            else {
+                extent[0] -= expandSize / 2;
+            }
+        }
+        else {
+            extent[1] = 1;
+        }
+    }
+    const span = extent[1] - extent[0];
+    // If there are no data and extent are [Infinity, -Infinity]
+    if (!isFinite(span)) {
+        extent[0] = 0;
+        extent[1] = 1;
+    }
+    else if (span < 0) {
+        extent.reverse();
+    }
+
+    return extent;
+}
+
+export function ensureValidSplitNumber(
+    rawSplitNumber: number | NullUndefined, defaultSplitNumber: number
+): number {
+    rawSplitNumber = rawSplitNumber || defaultSplitNumber;
+    return mathRound(mathMax(rawSplitNumber, 1));
 }
