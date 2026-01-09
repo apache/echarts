@@ -464,25 +464,15 @@ class LabelManager {
         const labelsByGridX: Dictionary<LabelLayoutWithGeometry[]> = {};
         const labelsByGridY: Dictionary<LabelLayoutWithGeometry[]> = {};
 
-        function getGridKey(inputItem: LabelLayoutWithGeometry): string {
-            const seriesModel = inputItem.seriesModel;
-            const gridId = (seriesModel as any).get('gridId');
-            const gridIndex = (seriesModel as any).get('gridIndex');
-            const master = seriesModel.coordinateSystem && (seriesModel.coordinateSystem as any).master;
-            // Prefer explicit gridId, then gridIndex, then master.uid as fallback
-            return gridId != null
-                ? `gid:${gridId}`
-                : gridIndex != null
-                    ? `gidx:${gridIndex}`
-                    : master && master.uid
-                        ? `gmaster:${master.uid}`
-                        : 'grid:default';
+        function getGridName(inputItem: LabelLayoutWithGeometry): string {
+            const seriesMaster = inputItem?.seriesModel?.coordinateSystem?.master as any;
+            return seriesMaster?.name || 'grid_default';
         }
 
         each(labelsNeedsAdjustOnX, function (item) {
             const seriesModel = item.seriesModel;
             if (seriesModel) {
-                const key = getGridKey(item);
+                const key = getGridName(item);
                 if (!labelsByGridX[key]) {
                     labelsByGridX[key] = [];
                 }
@@ -493,7 +483,7 @@ class LabelManager {
         each(labelsNeedsAdjustOnY, function (item) {
             const seriesModel = item.seriesModel;
             if (seriesModel) {
-                const key = getGridKey(item);
+                const key = getGridName(item);
                 if (!labelsByGridY[key]) {
                     labelsByGridY[key] = [];
                 }

@@ -338,6 +338,8 @@ export function shiftLayoutOnXY(
     const len = list.length;
     const xyDim = XY[xyDimIdx];
     const sizeDim = WH[xyDimIdx];
+    const otherDim = XY[xyDimIdx ? 0 : 1];
+    const otherSizeDim = WH[xyDimIdx ? 0 : 1];
 
     if (len < 2) {
         return false;
@@ -347,27 +349,58 @@ export function shiftLayoutOnXY(
         return a.rect[xyDim] - b.rect[xyDim];
     });
 
-    let lastPos = 0;
-    let delta;
     let adjusted = false;
 
-    // const shifts = [];
+    // 仅在跨两个维度都重叠时才认为需要沿当前维度分散。
+    // 使用扫线维护同一维度重叠的活动集合，避免宽度（或高度）无交集时误偏移。
+    const active: {
+        end: number
+        otherStart: number
+        otherEnd: number
+    }[] = [];
     let totalShifts = 0;
     for (let i = 0; i < len; i++) {
         const item = list[i];
         const rect = item.rect;
-        delta = rect[xyDim] - lastPos;
+        const start = rect[xyDim];
+        const otherStart = rect[otherDim];
+        const otherEnd = otherStart + rect[otherSizeDim];
+
+        // 移除在当前维度上已无交集的活动项
+        for (let j = active.length - 1; j >= 0; j--) {
+            if (active[j].end <= start) {
+                active.splice(j, 1);
+            }
+        }
+
+        // 找到与当前矩形在另一维度也有交集的最大尾部位置
+        let maxOverlapEnd = start;
+        for (let j = 0; j < active.length; j++) {
+            const act = active[j];
+            const overlapOther = otherStart < act.otherEnd && otherEnd > act.otherStart;
+            if (overlapOther) {
+                if (act.end > maxOverlapEnd) {
+                    maxOverlapEnd = act.end;
+                }
+            }
+        }
+
+        const delta = start - maxOverlapEnd;
         if (delta < 0) {
-            // shiftForward(i, len, -delta);
-            rect[xyDim] -= delta;
-            item.label[xyDim] -= delta;
+            const shift = -delta;
+            rect[xyDim] += shift;
+            item.label[xyDim] += shift;
+            totalShifts += shift;
             adjusted = true;
         }
-        const shift = Math.max(-delta, 0);
-        // shifts.push(shift);
-        totalShifts += shift;
 
-        lastPos = rect[xyDim] + rect[sizeDim];
+        // 将（可能已移动的）当前矩形加入活动集
+        const newStart = rect[xyDim];
+        active.push({
+            end: newStart + rect[sizeDim],
+            otherStart,
+            otherEnd
+        });
     }
     if (totalShifts > 0 && balanceShift) {
         // Shift back to make the distribution more equally.
@@ -437,10 +470,25 @@ export function shiftLayoutOnXY(
         const gaps: number[] = [];
         let totalGaps = 0;
         for (let i = 1; i < len; i++) {
-            const prevItemRect = list[i - 1].rect;
-            const gap = Math.max(list[i].rect[xyDim] - prevItemRect[xyDim] - prevItemRect[sizeDim], 0);
-            gaps.push(gap);
-            totalGaps += gap;
+            const currRect = list[i].rect;
+            let minGap = Infinity;
+            for (let j = 0; j < i; j++) {
+                const prevRect = list[j].rect;
+                const overlapOther = currRect[otherDim] < prevRect[otherDim] + prevRect[otherSizeDim]
+                    && currRect[otherDim] + currRect[otherSizeDim] > prevRect[otherDim];
+                if (overlapOther) {
+                    const gap = currRect[xyDim] - (prevRect[xyDim] + prevRect[sizeDim]);
+                    if (gap < minGap) {
+                        minGap = gap;
+                    }
+                }
+            }
+            if (minGap === Infinity) {
+                minGap = 0;
+            }
+            minGap = Math.max(minGap, 0);
+            gaps.push(minGap);
+            totalGaps += minGap;
         }
         if (!totalGaps) {
             return;
