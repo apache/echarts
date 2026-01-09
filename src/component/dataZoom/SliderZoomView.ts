@@ -22,7 +22,7 @@ import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
 import * as throttle from '../../util/throttle';
 import DataZoomView from './DataZoomView';
-import { linearMap, asc, parsePercent } from '../../util/number';
+import { linearMap, asc, parsePercent, round } from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
@@ -35,7 +35,7 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
+import { getAxisMainType, collectReferCoordSysModelInfo, getAlignTo } from './helper';
 import { enableHoverEmphasis } from '../../util/states';
 import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
@@ -44,6 +44,8 @@ import Displayable from 'zrender/src/graphic/Displayable';
 import { createTextStyle } from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
 import tokens from '../../visual/tokens';
+import type AxisProxy from './AxisProxy';
+import { isOrdinalScale, isTimeScale } from '../../scale/helper';
 
 const Rect = graphic.Rect;
 
@@ -816,30 +818,35 @@ class SliderZoomView extends DataZoomView {
 
     private _updateDataInfo(nonRealtime?: boolean) {
         const dataZoomModel = this.dataZoomModel;
-        const displaybles = this._displayables;
-        const handleLabels = displaybles.handleLabels;
+        const displayables = this._displayables;
+        const handleLabels = displayables.handleLabels;
         const orient = this._orient;
         let labelTexts = ['', ''];
 
-        // FIXME
-        // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
         if (dataZoomModel.get('showDetail')) {
             const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
 
             if (axisProxy) {
-                const axis = axisProxy.getAxisModel().axis;
                 const range = this._range;
 
-                const dataInterval = nonRealtime
+                let dataInterval: [number, number];
+                if (nonRealtime) {
                     // See #4434, data and axis are not processed and reset yet in non-realtime mode.
-                    ? axisProxy.calculateDataWindow({
-                        start: range[0], end: range[1]
-                    }).valueWindow
-                    : axisProxy.getDataValueWindow();
+                    let calcWinInput = {start: range[0], end: range[1]};
+                    const alignTo = getAlignTo(dataZoomModel, axisProxy);
+                    if (alignTo) {
+                        const alignToWindow = alignTo.calculateDataWindow(calcWinInput).percentInverted;
+                        calcWinInput = {start: alignToWindow[0], end: alignToWindow[1]};
+                    }
+                    dataInterval = axisProxy.calculateDataWindow(calcWinInput).value;
+                }
+                else {
+                    dataInterval = axisProxy.getWindow().value;
+                }
 
                 labelTexts = [
-                    this._formatLabel(dataInterval[0], axis),
-                    this._formatLabel(dataInterval[1], axis)
+                    this._formatLabel(dataInterval[0], axisProxy),
+                    this._formatLabel(dataInterval[1], axisProxy)
                 ];
             }
         }
@@ -854,7 +861,7 @@ class SliderZoomView extends DataZoomView {
             // Text should not transform by barGroup.
             // Ignore handlers transform
             const barTransform = graphic.getTransform(
-                displaybles.handles[handleIndex].parent, this.group
+                displayables.handles[handleIndex].parent, this.group
             );
             const direction = graphic.transformDirection(
                 handleIndex === 0 ? 'right' : 'left', barTransform
@@ -877,27 +884,26 @@ class SliderZoomView extends DataZoomView {
         }
     }
 
-    private _formatLabel(value: ParsedValue, axis: Axis) {
+    private _formatLabel(value: number, axisProxy: AxisProxy) {
         const dataZoomModel = this.dataZoomModel;
         const labelFormatter = dataZoomModel.get('labelFormatter');
 
         let labelPrecision = dataZoomModel.get('labelPrecision');
         if (labelPrecision == null || labelPrecision === 'auto') {
-            labelPrecision = axis.getPixelPrecision();
+            labelPrecision = axisProxy.getWindow().valuePrecision;
         }
 
-        const valueStr = (value == null || isNaN(value as number))
+        const scale = axisProxy.getAxisModel().axis.scale;
+        const valueStr = (value == null || isNaN(value))
             ? ''
-            // FIXME Glue code
-            : (axis.type === 'category' || axis.type === 'time')
-                ? axis.scale.getLabel({
-                    value: Math.round(value as number)
-                })
-                // param of toFixed should less then 20.
-                : (value as number).toFixed(Math.min(labelPrecision as number, 20));
+            : (isOrdinalScale(scale) || isTimeScale(scale))
+            ? scale.getLabel({value: Math.round(value)})
+            : isFinite(labelPrecision)
+            ? round(value, labelPrecision, true)
+            : value + '';
 
         return isFunction(labelFormatter)
-            ? labelFormatter(value as number, valueStr)
+            ? labelFormatter(value, valueStr)
             : isString(labelFormatter)
                 ? labelFormatter.replace('{value}', valueStr)
                 : valueStr;

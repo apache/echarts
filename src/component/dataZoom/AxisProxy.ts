@@ -17,13 +17,15 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
-import * as numberUtil from '../../util/number';
+import {clone, defaults, each, map} from 'zrender/src/core/util';
+import {
+    asc, getAcceptableTickPrecision, linearMap, mathAbs, mathCeil, mathFloor, mathMax, mathMin, round
+} from '../../util/number';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
 import SeriesModel from '../../model/Series';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import { Dictionary } from '../../util/types';
+import { Dictionary, NullUndefined } from '../../util/types';
 // TODO Polar?
 import DataZoomModel from './DataZoomModel';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
@@ -31,15 +33,25 @@ import { unionAxisExtentFromData } from '../../coord/axisHelper';
 import { ensureScaleRawExtentInfo } from '../../coord/scaleRawExtentInfo';
 import { getAxisMainType, isCoordSupported, DataZoomAxisDimension } from './helper';
 import { SINGLE_REFERRING } from '../../util/model';
+import { isOrdinalScale, isTimeScale } from '../../scale/helper';
 
-const each = zrUtil.each;
-const asc = numberUtil.asc;
 
 interface MinMaxSpan {
     minSpan: number
     maxSpan: number
     minValueSpan: number
     maxValueSpan: number
+}
+
+interface AxisProxyWindow {
+    value: [number, number];
+    percent: [number, number];
+    // Percent invert from "value window", which may be slightly different from "percent window" due to some
+    // handling such as rounding. The difference may be magnified in cases like "alignTicks", so we use
+    // `percentInverted` in these cases.
+    // But we retain the original input percent in `percent` whenever possible, since they have been used in views.
+    percentInverted: [number, number];
+    valuePrecision: number;
 }
 
 /**
@@ -56,13 +68,16 @@ class AxisProxy {
     private _dimName: DataZoomAxisDimension;
     private _axisIndex: number;
 
-    private _valueWindow: [number, number];
-    private _percentWindow: [number, number];
+    private _window: AxisProxyWindow;
 
     private _dataExtent: [number, number];
 
     private _minMaxSpan: MinMaxSpan;
 
+    /**
+     * The host `dataZoom` model. An axis may be controlled by multiple `dataZoom`s,
+     * but only the first declared `dataZoom` is the host.
+     */
     private _dataZoomModel: DataZoomModel;
 
     constructor(
@@ -94,17 +109,10 @@ class AxisProxy {
     }
 
     /**
-     * @return Value can only be NaN or finite value.
+     * @return `getWindow().value` can only have NaN or finite value.
      */
-    getDataValueWindow() {
-        return this._valueWindow.slice() as [number, number];
-    }
-
-    /**
-     * @return {Array.<number>}
-     */
-    getDataPercentWindow() {
-        return this._percentWindow.slice() as [number, number];
+    getWindow(): AxisProxyWindow {
+        return clone(this._window);
     }
 
     getTargetSeriesModels() {
@@ -128,26 +136,31 @@ class AxisProxy {
     }
 
     getMinMaxSpan() {
-        return zrUtil.clone(this._minMaxSpan);
+        return clone(this._minMaxSpan);
     }
 
     /**
+     * [CAVEAT] Keep this method pure, so that it can be called multiple times.
+     *
      * Only calculate by given range and this._dataExtent, do not change anything.
      */
-    calculateDataWindow(opt?: {
-        start?: number
-        end?: number
-        startValue?: number | string | Date
-        endValue?: number | string | Date
-    }) {
+    calculateDataWindow(
+        opt: {
+            start?: number // percent, 0 ~ 100
+            end?: number // percent, 0 ~ 100
+            startValue?: number | string | Date
+            endValue?: number | string | Date
+        }
+    ): AxisProxyWindow {
         const dataExtent = this._dataExtent;
-        const axisModel = this.getAxisModel();
-        const scale = axisModel.axis.scale;
+        const axis = this.getAxisModel().axis;
+        const scale = axis.scale;
         const rangePropMode = this._dataZoomModel.getRangePropMode();
         const percentExtent = [0, 100];
         const percentWindow = [] as unknown as [number, number];
         const valueWindow = [] as unknown as [number, number];
         let hasPropModeValue;
+        const needRound = [false, false];
 
         each(['start', 'end'] as const, function (prop, idx) {
             let boundPercent = opt[prop];
@@ -169,24 +182,19 @@ class AxisProxy {
 
             if (rangePropMode[idx] === 'percent') {
                 boundPercent == null && (boundPercent = percentExtent[idx]);
-                // Use scale.parse to math round for category or time axis.
-                boundValue = scale.parse(numberUtil.linearMap(
-                    boundPercent, percentExtent, dataExtent
-                ));
+                boundValue = linearMap(boundPercent, percentExtent, dataExtent);
+                needRound[idx] = true;
             }
             else {
                 hasPropModeValue = true;
+                // NOTE: `scale.parse` can also round input for 'time' or 'ordinal' scale.
                 boundValue = boundValue == null ? dataExtent[idx] : scale.parse(boundValue);
                 // Calculating `percent` from `value` may be not accurate, because
-                // This calculation can not be inversed, because all of values that
+                // This calculation can not be inverted, because all of values that
                 // are overflow the `dataExtent` will be calculated to percent '100%'
-                boundPercent = numberUtil.linearMap(
-                    boundValue, dataExtent, percentExtent
-                );
+                boundPercent = linearMap(boundValue, dataExtent, percentExtent);
             }
 
-            // valueWindow[idx] = round(boundValue);
-            // percentWindow[idx] = round(boundPercent);
             // fallback to extent start/end when parsed value or percent is invalid
             valueWindow[idx] = boundValue == null || isNaN(boundValue)
                 ? dataExtent[idx]
@@ -199,11 +207,17 @@ class AxisProxy {
         asc(valueWindow);
         asc(percentWindow);
 
-        // The windows from user calling of `dispatchAction` might be out of the extent,
-        // or do not obey the `min/maxSpan`, `min/maxValueSpan`. But we don't restrict window
-        // by `zoomLock` here, because we see `zoomLock` just as a interaction constraint,
-        // where API is able to initialize/modify the window size even though `zoomLock`
-        // specified.
+        // The windows specified from `dispatchAction` or `setOption` may:
+        //  (1) be out of the extent, or
+        //  (2) do not comply with `minSpan/maxSpan`, `minValueSpan/maxValueSpan`.
+        // So we clamp them here.
+        // But we don't restrict window by `zoomLock` here, because we see `zoomLock` just as a
+        // interaction constraint, where API is able to initialize/modify the window size even
+        // though `zoomLock` specified.
+        // PENDING: For historical reason, the option design is partially incompatible:
+        //  If `option.start` and `option.endValue` are specified, and when we choose whether
+        //  `min/maxValueSpan` or `minSpan/maxSpan` is applied, neither one is intuitive.
+        //  (Currently using `minValueSpan/maxValueSpan`.)
         const spans = this._minMaxSpan;
         hasPropModeValue
             ? restrictSet(valueWindow, percentWindow, dataExtent, percentExtent, false)
@@ -223,14 +237,67 @@ class AxisProxy {
                 spans['max' + suffix as 'maxSpan' | 'maxValueSpan']
             );
             for (let i = 0; i < 2; i++) {
-                toWindow[i] = numberUtil.linearMap(fromWindow[i], fromExtent, toExtent, true);
-                toValue && (toWindow[i] = scale.parse(toWindow[i]));
+                toWindow[i] = linearMap(fromWindow[i], fromExtent, toExtent, true);
+                if (toValue) {
+                    toWindow[i] = toWindow[i];
+                    needRound[i] = true;
+                }
+            }
+            simplyEnsureAsc(toWindow);
+        }
+
+        // - In 'time' and 'ordinal' scale, rounding by 0 is required.
+        // - In 'interval' and 'log' scale, we round values for acceptable display with acceptable accuracy loose.
+        //  "Values" can be rounded only if they are generated from `percent`, since user-specified "value"
+        //  should be respected, and `DataZoomSelect` already performs its own rounding.
+        // - Currently we only round "value" but not "percent", since there is no need so far.
+        // - MEMO: See also #3228 and commit a89fd0d7f1833ecf08a4a5b7ecf651b4a0d8da41
+        // - PENDING: The rounding result may slightly overflow the restriction from `min/maxSpan`,
+        //  but it is acceptable so far.
+        const isScaleOrdinalOrTime = isOrdinalScale(scale) || isTimeScale(scale);
+        // Typically pxExtent has been ready in coordSys create. (See `create` of `Grid.ts`)
+        const pxExtent = axis.getExtent();
+        // NOTICE: this pxSpan may be not accurate yet due to "outerBounds" logic, but acceptable.
+        const pxSpan = mathAbs(pxExtent[1] - pxExtent[0]);
+        const precision = isScaleOrdinalOrTime
+            ? 0
+            : getAcceptableTickPrecision(valueWindow[1] - valueWindow[0], pxSpan, 0.5);
+        each([[0, mathCeil], [1, mathFloor]] as const, function ([idx, ceilOrFloor]) {
+            if (!needRound[idx] || !isFinite(precision)) {
+                return;
+            }
+            valueWindow[idx] = round(valueWindow[idx], precision);
+            valueWindow[idx] = mathMin(dataExtent[1], mathMax(dataExtent[0], valueWindow[idx])); // Clamp.
+            if (percentWindow[idx] === percentExtent[idx]) {
+                // When `percent` is 0 or 100, `value` must be `dataExtent[0]` or `dataExtent[1]`
+                // regardless of the calculated precision.
+                // NOTE: `percentWindow` is never over [0, 100] at this moment.
+                valueWindow[idx] = dataExtent[idx];
+                if (isScaleOrdinalOrTime) {
+                    // In case that dataExtent[idx] is not an integer (may occur since it comes from user input)
+                    valueWindow[idx] = ceilOrFloor(valueWindow[idx]);
+                }
+            }
+        });
+        simplyEnsureAsc(valueWindow);
+
+        const percentInvertedWindow = [
+            linearMap(valueWindow[0], dataExtent, percentExtent, true),
+            linearMap(valueWindow[1], dataExtent, percentExtent, true),
+        ] as [number, number];
+        simplyEnsureAsc(percentInvertedWindow);
+
+        function simplyEnsureAsc(window: number[]): void {
+            if (window[0] > window[1]) {
+                window[0] = window[1];
             }
         }
 
         return {
-            valueWindow: valueWindow,
-            percentWindow: percentWindow
+            value: valueWindow,
+            percent: percentWindow,
+            percentInverted: percentInvertedWindow,
+            valuePrecision: precision,
         };
     }
 
@@ -239,8 +306,8 @@ class AxisProxy {
      * so it is recommended to be called in "process stage" but not "model init
      * stage".
      */
-    reset(dataZoomModel: DataZoomModel) {
-        if (dataZoomModel !== this._dataZoomModel) {
+    reset(dataZoomModel: DataZoomModel, alignToPercentInverted: [number, number] | NullUndefined) {
+        if (!this.hostedBy(dataZoomModel)) {
             return;
         }
 
@@ -251,24 +318,28 @@ class AxisProxy {
         // `calculateDataWindow` uses min/maxSpan.
         this._updateMinMaxSpan();
 
-        const dataWindow = this.calculateDataWindow(dataZoomModel.settledOption);
-
-        this._valueWindow = dataWindow.valueWindow;
-        this._percentWindow = dataWindow.percentWindow;
+        let opt = dataZoomModel.settledOption;
+        if (alignToPercentInverted) {
+            opt = defaults({
+                start: alignToPercentInverted[0],
+                end: alignToPercentInverted[1],
+            }, opt);
+        }
+        this._window = this.calculateDataWindow(opt);
 
         // Update axis setting then.
         this._setAxisModel();
     }
 
     filterData(dataZoomModel: DataZoomModel, api: ExtensionAPI) {
-        if (dataZoomModel !== this._dataZoomModel) {
+        if (!this.hostedBy(dataZoomModel)) {
             return;
         }
 
         const axisDim = this._dimName;
         const seriesModels = this.getTargetSeriesModels();
         const filterMode = dataZoomModel.get('filterMode');
-        const valueWindow = this._valueWindow;
+        const valueWindow = this._window.value;
 
         if (filterMode === 'none') {
             return;
@@ -305,7 +376,7 @@ class AxisProxy {
 
             if (filterMode === 'weakFilter') {
                 const store = seriesData.getStore();
-                const dataDimIndices = zrUtil.map(dataDims, dim => seriesData.getDimensionIndex(dim), seriesData);
+                const dataDimIndices = map(dataDims, dim => seriesData.getDimensionIndex(dim), seriesData);
                 seriesData.filterSelf(function (dataIndex) {
                     let leftOut;
                     let rightOut;
@@ -368,12 +439,12 @@ class AxisProxy {
 
             // minValueSpan and maxValueSpan has higher priority than minSpan and maxSpan
             if (valueSpan != null) {
-                percentSpan = numberUtil.linearMap(
+                percentSpan = linearMap(
                     dataExtent[0] + valueSpan, dataExtent, [0, 100], true
                 );
             }
             else if (percentSpan != null) {
-                valueSpan = numberUtil.linearMap(
+                valueSpan = linearMap(
                     percentSpan, [0, 100], dataExtent, true
                 ) - dataExtent[0];
             }
@@ -387,27 +458,22 @@ class AxisProxy {
 
         const axisModel = this.getAxisModel();
 
-        const percentWindow = this._percentWindow;
-        const valueWindow = this._valueWindow;
-
-        if (!percentWindow) {
+        const window = this._window;
+        if (!window) {
             return;
         }
-
-        // [0, 500]: arbitrary value, guess axis extent.
-        let precision = numberUtil.getPixelPrecision(valueWindow, [0, 500]);
-        precision = Math.min(precision, 20);
+        const {percent, value} = window;
 
         // For value axis, if min/max/scale are not set, we just use the extent obtained
         // by series data, which may be a little different from the extent calculated by
         // `axisHelper.getScaleExtent`. But the different just affects the experience a
         // little when zooming. So it will not be fixed until some users require it strongly.
         const rawExtentInfo = axisModel.axis.scale.rawExtentInfo;
-        if (percentWindow[0] !== 0) {
-            rawExtentInfo.setDeterminedMinMax('min', +valueWindow[0].toFixed(precision));
+        if (percent[0] !== 0) {
+            rawExtentInfo.setDeterminedMinMax('min', value[0]);
         }
-        if (percentWindow[1] !== 100) {
-            rawExtentInfo.setDeterminedMinMax('max', +valueWindow[1].toFixed(precision));
+        if (percent[1] !== 100) {
+            rawExtentInfo.setDeterminedMinMax('max', value[1]);
         }
         rawExtentInfo.freeze();
     }

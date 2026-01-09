@@ -18,7 +18,7 @@
 */
 
 import {each, map} from 'zrender/src/core/util';
-import {linearMap, getPixelPrecision, round} from '../util/number';
+import {linearMap, round} from '../util/number';
 import {
     createAxisTicks,
     createAxisLabels,
@@ -80,6 +80,9 @@ class Axis {
     // `inverse` can be inferred by `extent` unless `extent[0] === extent[1]`.
     inverse: AxisBaseOption['inverse'] = false;
 
+    // Injected outside
+    alignTo: Axis;
+
 
     constructor(dim: DimensionName, scale: Scale, extent: [number, number]) {
         this.dim = dim;
@@ -109,16 +112,6 @@ class Axis {
      */
     getExtent(): [number, number] {
         return this._extent.slice() as [number, number];
-    }
-
-    /**
-     * Get precision used for formatting
-     */
-    getPixelPrecision(dataExtent?: [number, number]): number {
-        return getPixelPrecision(
-            dataExtent || this.scale.getExtent(),
-            this._extent
-        );
     }
 
     /**

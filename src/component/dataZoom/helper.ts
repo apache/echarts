@@ -17,13 +17,14 @@
 * under the License.
 */
 
-import { Payload } from '../../util/types';
+import { NullUndefined, Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import DataZoomModel from './DataZoomModel';
 import { indexOf, createHashMap, assert, HashMap } from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
+import type AxisProxy from './AxisProxy';
 
 
 export interface DataZoomPayloadBatchItem {
@@ -42,6 +43,10 @@ export interface DataZoomReferCoordSysInfo {
     // different dataZooms.
     axisModels: AxisBaseModel[];
 }
+
+export type DataZoomExtendedAxisBaseModel = AxisBaseModel & {
+    __dzAxisProxy: AxisProxy
+};
 
 export const DATA_ZOOM_AXIS_DIMENSIONS = [
     'x', 'y', 'radius', 'angle', 'single'
@@ -204,4 +209,23 @@ export function collectReferCoordSysModelInfo(dataZoomModel: DataZoomModel): {
     });
 
     return coordSysInfoWrap;
+}
+
+export function getAxisProxyFromModel(axisModel: AxisBaseModel): AxisProxy | NullUndefined {
+    return axisModel && (axisModel as DataZoomExtendedAxisBaseModel).__dzAxisProxy;
+}
+
+/**
+ * NOTICE: If `axis_a` aligns to `axis_b`, but they are not controlled by
+ * the same `dataZoom`, do not consider `axis_b` as `alignTo` and
+ * then do not input it into `AxisProxy#reset`.
+ */
+export function getAlignTo(dataZoomModel: DataZoomModel, axisProxy: AxisProxy): AxisProxy | NullUndefined {
+    const alignToAxis = axisProxy.getAxisModel().axis.alignTo;
+    return (
+        alignToAxis && dataZoomModel.getAxisProxy(
+            alignToAxis.dim as DataZoomAxisDimension,
+            alignToAxis.model.componentIndex
+        )
+    ) ? getAxisProxyFromModel(alignToAxis.model) : null;
 }
