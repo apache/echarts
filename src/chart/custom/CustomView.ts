@@ -983,10 +983,10 @@ el && data.setItemGraphicEl(dataIndex, el);
 
 //  FIX START
 if (
-    el &&
-    el.states &&
-    el.states.emphasis &&
-    !elOption.emphasisDisabled
+    el
+    && el.states
+    && el.states.emphasis
+    && !elOption.emphasisDisabled
 ) {
     el.silent = false;
     el.ignore = false;
