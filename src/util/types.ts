@@ -1540,11 +1540,11 @@ export interface CommonTooltipOption<FormatterParams> {
     formatter?: string | TooltipFormatterCallback<FormatterParams>
 
     /**
-     * Formatter of value.
-     *
-     * Will be ignored if tooltip.formatter is specified.
-     */
-    valueFormatter?: (value: OptionDataValue | OptionDataValue[], dataIndex: number) => string
+ * Formatter of value.
+ *
+ * Will be ignored if tooltip.formatter is specified.
+ */
+valueFormatter?: (value: OptionDataValue | OptionDataValue[], dataIndex: number, name?: string) => string | string[]
     /**
      * Absolution pixel [x, y] array. Or relative percent string [x, y] array.
      * If trigger is 'item'. position can be set to 'inside' / 'top' / 'left' / 'right' / 'bottom',

@@ -324,7 +324,7 @@ function buildNameValue(
     const noMarker = !fragment.markerType;
     const name = fragment.name;
     const useUTC = ctx.useUTC;
-    const valueFormatter = fragment.valueFormatter || ctx.valueFormatter || ((value) => {
+    const valueFormatter = fragment.valueFormatter || ctx.valueFormatter || ((value, dataIndex, name) => { // Added params here
         value = isArray(value) ? value : [value];
         return map(value as unknown[], (val, idx) => makeValueReadable(
             val, isArray(valueTypeOption) ? valueTypeOption[idx] : valueTypeOption, useUTC
@@ -347,8 +347,8 @@ function buildNameValue(
         : makeValueReadable(name, 'ordinal', useUTC);
     const valueTypeOption = fragment.valueType;
     const readableValueList = noValue
-        ? []
-        : valueFormatter(fragment.value as OptionDataValue, fragment.dataIndex);
+    ? []
+    : valueFormatter(fragment.value as OptionDataValue, fragment.dataIndex, fragment.name); // Added fragment.name
     const valueAlignRight = !noMarker || !noName;
     // It little weird if only value next to marker but far from marker.
     const valueCloseToMarker = !noMarker && noName;
