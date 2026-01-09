@@ -81,24 +81,26 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     const polar = this;
     const angleAxis = polar.getAngleAxis();
     const radiusAxis = polar.getRadiusAxis();
+    const angleScale = angleAxis.scale;
+    const radiusScale = radiusAxis.scale;
     // Reset scale
-    angleAxis.scale.setExtent(Infinity, -Infinity);
-    radiusAxis.scale.setExtent(Infinity, -Infinity);
+    angleScale.setExtent(Infinity, -Infinity);
+    radiusScale.setExtent(Infinity, -Infinity);
 
     ecModel.eachSeries(function (seriesModel) {
         if (seriesModel.coordinateSystem === polar) {
             const data = seriesModel.getData();
             zrUtil.each(getDataDimensionsOnAxis(data, 'radius'), function (dim) {
-                radiusAxis.scale.unionExtentFromData(data, dim);
+                radiusScale.unionExtentFromData(data, dim);
             });
             zrUtil.each(getDataDimensionsOnAxis(data, 'angle'), function (dim) {
-                angleAxis.scale.unionExtentFromData(data, dim);
+                angleScale.unionExtentFromData(data, dim);
             });
         }
     });
 
-    niceScaleExtent(angleAxis.scale, angleAxis.model);
-    niceScaleExtent(radiusAxis.scale, radiusAxis.model);
+    niceScaleExtent(angleScale, angleAxis.model, angleScale.getExtent());
+    niceScaleExtent(radiusScale, radiusAxis.model, radiusScale.getExtent());
 
     // Fix extent of category angle axis
     if (angleAxis.type === 'category' && !angleAxis.onBand) {

@@ -117,7 +117,7 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     /**
      * [CAVEAT]: It should not be overridden!
      */
-    _innerUnionExtent(other: [number, number]): void {
+    _innerUnionExtent(other: number[]): void {
         const extent = this._extent;
         // Considered that number could be NaN and should not write into the extent.
         this._innerSetExtent(

@@ -106,7 +106,7 @@ export function intervalScaleNiceTicks(
  */
 export function increaseInterval(niceInterval: number) {
     const exponent = quantityExponent(niceInterval);
-    // No rounding error in Math.pow(10, xxx).
+    // No rounding error in Math.pow(10, integer).
     const exp10 = mathPow(10, exponent);
     // Fix IEEE 754 float rounding error
     let f = mathRound(niceInterval / exp10);
@@ -200,13 +200,6 @@ export function logTransform(base: number, extent: number[], noClampNegative?: b
         //  Just keep it as is, getting a NaN to make some previous cases works by coincidence.
         Math.log(noClampNegative ? extent[0] : Math.max(0, extent[0])) / loggedBase,
         Math.log(noClampNegative ? extent[1] : Math.max(0, extent[1])) / loggedBase
-    ];
-}
-
-export function powTransform(base: number, extent: number[]): [number, number] {
-    return [
-        mathPow(base, extent[0]),
-        mathPow(base, extent[1])
     ];
 }
 

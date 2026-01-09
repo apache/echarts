@@ -23,13 +23,13 @@
  * <https://en.wikipedia.org/wiki/Parallel_coordinates>
  */
 
-import * as zrUtil from 'zrender/src/core/util';
+import {each, createHashMap, clone} from 'zrender/src/core/util';
 import * as matrix from 'zrender/src/core/matrix';
 import * as layoutUtil from '../../util/layout';
 import * as axisHelper from '../../coord/axisHelper';
 import ParallelAxis from './ParallelAxis';
 import * as graphic from '../../util/graphic';
-import * as numberUtil from '../../util/number';
+import {mathCeil, mathFloor, mathMax, mathMin, mathPI, round} from '../../util/number';
 import sliderMove from '../../component/helper/sliderMove';
 import ParallelModel, { ParallelLayoutDirection } from './ParallelModel';
 import GlobalModel from '../../model/Global';
@@ -41,13 +41,6 @@ import SeriesData from '../../data/SeriesData';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 
-const each = zrUtil.each;
-const mathMin = Math.min;
-const mathMax = Math.max;
-const mathFloor = Math.floor;
-const mathCeil = Math.ceil;
-const round = numberUtil.round;
-const PI = Math.PI;
 
 interface ParallelCoordinateSystemLayoutInfo {
     layout: ParallelLayoutDirection;
@@ -85,7 +78,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
     /**
      * key: dimension
      */
-    private _axesMap = zrUtil.createHashMap<ParallelAxis>();
+    private _axesMap = createHashMap<ParallelAxis>();
 
     /**
      * key: dimension
@@ -191,7 +184,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         // do after all series processed
         each(this.dimensions, function (dim) {
             const axis = this._axesMap.get(dim);
-            axisHelper.niceScaleExtent(axis.scale, axis.model);
+            axisHelper.niceScaleExtent(axis.scale, axis.model, axis.scale.getExtent());
         }, this);
     }
 
@@ -304,7 +297,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
                 }
             };
             const rotationTable = {
-                horizontal: PI / 2,
+                horizontal: mathPI / 2,
                 vertical: 0
             };
 
@@ -373,7 +366,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         const dataDimensions = [] as DimensionName[];
         const axisModels = [] as ParallelAxisModel[];
 
-        zrUtil.each(dimensions, function (axisDim) {
+        each(dimensions, function (axisDim) {
             dataDimensions.push(data.mapDimension(axisDim));
             axisModels.push(axesMap.get(axisDim).model);
         });
@@ -433,7 +426,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
      * Get axis layout.
      */
     getAxisLayout(dim: DimensionName): ParallelAxisLayoutInfo {
-        return zrUtil.clone(this._axesLayout[dim]);
+        return clone(this._axesLayout[dim]);
     }
 
     /**

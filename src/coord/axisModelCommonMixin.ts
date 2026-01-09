@@ -31,8 +31,7 @@ interface AxisModelCommonMixin<Opt extends AxisBaseOption> extends Pick<Model<Op
 class AxisModelCommonMixin<Opt extends AxisBaseOption> {
 
     getNeedCrossZero(): boolean {
-        const option = this.option as ValueAxisBaseOption;
-        return !option.scale;
+        return !(this.option as ValueAxisBaseOption).scale;
     }
 
     /**

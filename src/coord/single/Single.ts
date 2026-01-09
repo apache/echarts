@@ -99,10 +99,12 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.coordinateSystem === this) {
                 const data = seriesModel.getData();
+                const axis = this._axis;
+                const scale = axis.scale;
                 each(data.mapDimensionsAll(this.dimension), function (dim) {
-                    this._axis.scale.unionExtentFromData(data, dim);
-                }, this);
-                axisHelper.niceScaleExtent(this._axis.scale, this._axis.model);
+                    scale.unionExtentFromData(data, dim);
+                });
+                axisHelper.niceScaleExtent(scale, axis.model, scale.getExtent());
             }
         }, this);
     }

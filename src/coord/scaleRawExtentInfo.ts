@@ -21,8 +21,11 @@ import { assert, isArray, eqNaN, isFunction } from 'zrender/src/core/util';
 import Scale from '../scale/Scale';
 import { AxisBaseModel } from './AxisBaseModel';
 import { parsePercent } from 'zrender/src/contain/text';
-import { AxisBaseOption, CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from './axisCommonTypes';
+import {
+    AxisBaseOption, CategoryAxisBaseOption, NumericAxisBaseOptionCommon, ValueAxisBaseOption
+} from './axisCommonTypes';
 import { ScaleDataValue } from '../util/types';
+import { isIntervalScale, isLogScale, isOrdinalScale, isTimeScale } from '../scale/helper';
 
 
 export interface ScaleRawExtentResult {
@@ -32,19 +35,27 @@ export interface ScaleRawExtentResult {
     // a little (say, "nice strategy", e.g., niceScale, boundaryGap).
     // Ensure `min`/`max` be finite number or NaN here.
     // (not to be null/undefined) `NaN` means min/max axis is blank.
-    readonly min: number;
-    readonly max: number;
-    // `minFixed`/`maxFixed` marks that `min`/`max` should be used
-    // in the final extent without other "nice strategy".
+    min: number;
+    max: number;
+
+    // `minFixed`/`maxFixed` marks that:
+    //  - `xxxAxis.min/max` are user specified, or
+    //  - `minDetermined/maxDetermined` are `true`
+    // so it should be used directly in the final extent without any other "nice strategy".
     readonly minFixed: boolean;
     readonly maxFixed: boolean;
+
+    // Typically set by `dataZoom` when its start/end is not 0%/100%.
+    readonly minDetermined: boolean;
+    readonly maxDetermined: boolean;
+
     // Mark that the axis should be blank.
     readonly isBlank: boolean;
 }
 
 export class ScaleRawExtentInfo {
 
-    private _needCrossZero: boolean;
+    private _needCrossZero: ValueAxisBaseOption['scale'];
     private _isOrdinal: boolean;
     private _axisDataLen: number;
     private _boundaryGapInner: number[];
@@ -62,6 +73,7 @@ export class ScaleRawExtentInfo {
     private _dataMin: number;
     private _dataMax: number;
 
+    // Typically specified by `dataZoom` when its start/end is not 0%/100%.
     // Highest priority if specified.
     private _determinedMin: number;
     private _determinedMax: number;
@@ -76,10 +88,10 @@ export class ScaleRawExtentInfo {
     constructor(
         scale: Scale,
         model: AxisBaseModel,
-        // Usually: data extent from all series on this axis.
-        originalExtent: number[]
+        // Typically: data extent from all series on this axis.
+        dataExtent: number[]
     ) {
-        this._prepareParams(scale, model, originalExtent);
+        this._prepareParams(scale, model, dataExtent);
     }
 
     /**
@@ -98,10 +110,10 @@ export class ScaleRawExtentInfo {
         this._dataMin = dataExtent[0];
         this._dataMax = dataExtent[1];
 
-        const isOrdinal = this._isOrdinal = scale.type === 'ordinal';
-        this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
+        const isOrdinal = this._isOrdinal = isOrdinalScale(scale);
+        this._needCrossZero = isIntervalScale(scale) && model.getNeedCrossZero && model.getNeedCrossZero();
 
-        if (scale.type === 'interval' || scale.type === 'log' || scale.type === 'time') {
+        if (isIntervalScale(scale) || isLogScale(scale) || isTimeScale(scale)) {
             // Process custom dataMin/dataMax
             const dataMinRaw = (model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('dataMin', true);
             if (dataMinRaw != null) {
@@ -255,15 +267,22 @@ export class ScaleRawExtentInfo {
             // If so, here `minFixed`/`maxFixed` need to be set.
         }
 
+        // NOTE: Switching `min/maxFixed` probably leads to abrupt extent changes when draging a `dataZoom`
+        // handle, since minFixed/maxFixed impact the "nice extent" and "nice ticks" calculation. Consider
+        // the case that dataZoom `start` is greater than 0% but its `end` is 100%, (or vice versa), we
+        // currently only set `minFixed` as `true` but remain `maxFixed` as `false` to avoid unnecessary
+        // abrupt change. Incidentally, the effect is not unacceptable if we set both `min/maxFixed` as `true`.
         const determinedMin = this._determinedMin;
         const determinedMax = this._determinedMax;
+        let minDetermined = false;
+        let maxDetermined = false;
         if (determinedMin != null) {
             min = determinedMin;
-            minFixed = true;
+            minFixed = minDetermined = true;
         }
         if (determinedMax != null) {
             max = determinedMax;
-            maxFixed = true;
+            maxFixed = maxDetermined = true;
         }
 
         // Ensure min/max be finite number or NaN here. (not to be null/undefined)
@@ -273,7 +292,9 @@ export class ScaleRawExtentInfo {
             max: max,
             minFixed: minFixed,
             maxFixed: maxFixed,
-            isBlank: isBlank
+            minDetermined: minDetermined,
+            maxDetermined: maxDetermined,
+            isBlank: isBlank,
         };
     }
 
@@ -323,8 +344,11 @@ const DATA_MIN_MAX_ATTR = { min: '_dataMin', max: '_dataMax' } as const;
 export function ensureScaleRawExtentInfo(
     scale: Scale,
     model: AxisBaseModel,
-    // Usually: data extent from all series on this axis.
-    originalExtent: number[]
+    // Typically: data extent from all series on this axis.
+    // FIXME:
+    //  Refactor: only the first input `dataExtent` is used but it is determined by the
+    //  caller, which is error-prone.
+    dataExtent: number[]
 ): ScaleRawExtentInfo {
 
     // Do not permit to recreate.
@@ -333,7 +357,7 @@ export function ensureScaleRawExtentInfo(
         return rawExtentInfo;
     }
 
-    rawExtentInfo = new ScaleRawExtentInfo(scale, model, originalExtent);
+    rawExtentInfo = new ScaleRawExtentInfo(scale, model, dataExtent);
     // @ts-ignore
     scale.rawExtentInfo = rawExtentInfo;
 

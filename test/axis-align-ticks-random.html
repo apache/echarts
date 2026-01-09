@@ -83,6 +83,8 @@ under the License.
             'echarts'
         ], function (echarts) {
 
+            const __EC_OPTIONS_FOR_DEBUG = window.__EC_OPTIONS_FOR_DEBUG = {};
+
 
             function makeOption(leftMin, leftMax, rightMin, rightMax, splitNumber) {
 
@@ -145,11 +147,13 @@ under the License.
             }
 
             function makeTestCharts(containerId, leftMin, leftMax, rightMin, rightMax) {
+                __EC_OPTIONS_FOR_DEBUG[containerId] = [];
                 const container = document.querySelector(containerId);
                 for (let i = 0; i < 15; i++) {
                     const dom = document.createElement('div');
                     dom.className = 'chart';
                     const option = makeOption(leftMin, leftMax, rightMin, rightMax);
+                    __EC_OPTIONS_FOR_DEBUG[containerId].push(option);
                     container.appendChild(dom);
                     const chart = echarts.init(dom);
                     chart.setOption(option);

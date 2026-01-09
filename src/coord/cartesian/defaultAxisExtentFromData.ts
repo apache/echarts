@@ -241,7 +241,7 @@ function shrinkAxisExtent(axisRecordMap: HashMap<AxisRecord>) {
         if (tarAxisExtent) {
             const rawExtentResult = axisRecord.rawExtentResult;
             const rawExtentInfo = axisRecord.rawExtentInfo;
-            // Shink the original extent.
+            // Shrink the original extent.
             if (!rawExtentResult.minFixed && tarAxisExtent[0] > rawExtentResult.min) {
                 rawExtentInfo.modifyDataMinMax('min', tarAxisExtent[0]);
             }

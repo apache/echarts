@@ -288,10 +288,13 @@ export function getPixelPrecision(dataExtent: [number, number], pixelExtent: [nu
  * "data" is linearly mapped to pixel according to the ratio determined by `dataSpan` and `pxSpan`.
  * The diff from the original "data" to the rounded "data" (with the result precision) should be
  * equal or less than `pxDiffAcceptable`, which is typically `1` pixel.
- * And the result precision should be as small as possible.
+ * And the result precision should be as small as possible for a concise display.
  *
- * [NOTICE]: using arbitrary parameters is not preferable -- a discernible misalign (e.g., over 1px)
- *  may occur, especially when `splitLine` displayed.
+ * [NOTICE]: using arbitrary parameters is NOT preferable - a discernible misalign (e.g., over 1px)
+ *  may occur, especially when `splitLine` is displayed.
+ *
+ * PENDING: Only linear case is addressed for now; other mapping methods (like log) will not be
+ *  covered until necessary.
  */
 export function getAcceptableTickPrecision(
     // Typically, `Math.abs(dataExtent[1] - dataExtent[0])`.
@@ -574,7 +577,7 @@ export function nice(
     //  e.g., if `val` is `0`,
     //      The result is `1`.
     const exponent = quantityExponent(val);
-    // No rounding error in Math.pow(10, xxx).
+    // No rounding error in Math.pow(10, integer).
     const exp10 = mathPow(10, exponent);
     const f = val / exp10;
 

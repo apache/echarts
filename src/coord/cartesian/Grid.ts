@@ -32,6 +32,7 @@ import {
     getDataDimensionsOnAxis,
     isNameLocationCenter,
     shouldAxisShow,
+    retrieveAxisBreaksOption,
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
@@ -124,50 +125,32 @@ class Grid implements CoordinateSystemMaster {
         this._updateScale(ecModel, this.model);
 
         function updateAxisTicks(axes: Record<number, Axis2D>) {
-            let alignTo: Axis2D;
             // Axis is added in order of axisIndex.
             const axesIndices = keys(axes);
-            const len = axesIndices.length;
-            if (!len) {
-                return;
-            }
             const axisNeedsAlign: Axis2D[] = [];
-            // Process once and calculate the ticks for those don't use alignTicks.
-            for (let i = len - 1; i >= 0; i--) {
-                const idx = +axesIndices[i];    // Convert to number.
-                const axis = axes[idx];
-                const model = axis.model as AxisBaseModel<NumericAxisBaseOptionCommon>;
-                const scale = axis.scale;
-                if (// Only value and log axis without interval support alignTicks.
-                    isIntervalOrLogScale(scale)
-                    && model.get('alignTicks')
-                    && model.get('interval') == null
-                ) {
+
+            for (let i = axesIndices.length - 1; i >= 0; i--) { // Reverse order
+                const axis = axes[+axesIndices[i]];
+                if (axis.alignTo) {
                     axisNeedsAlign.push(axis);
                 }
                 else {
-                    niceScaleExtent(scale, model);
-                    if (isIntervalOrLogScale(scale)) {  // Can only align to interval or log axis.
-                        alignTo = axis;
-                    }
+                    niceScaleExtent(axis.scale, axis.model, axis.scale.getExtent());
                 }
             };
-            // All axes has set alignTicks. Pick the first one.
-            // PENDING. Should we find the axis that both set interval, min, max and align to this one?
-            if (axisNeedsAlign.length) {
-                if (!alignTo) {
-                    alignTo = axisNeedsAlign.pop();
-                    niceScaleExtent(alignTo.scale, alignTo.model);
+            each(axisNeedsAlign, axis => {
+                if (incapableOfAlignNeedFallback(axis, axis.alignTo as Axis2D)) {
+                    niceScaleExtent(axis.scale, axis.model, axis.scale.getExtent());
                 }
-
-                each(axisNeedsAlign, axis => {
+                else {
                     alignScaleTicks(
                         axis.scale as IntervalScale | LogScale,
+                        axis.scale.getExtent(),
                         axis.model,
-                        alignTo.scale as IntervalScale | LogScale
+                        axis.alignTo.scale as IntervalScale | LogScale
                     );
-                });
-            }
+                }
+            });
         }
 
         updateAxisTicks(axesMap.x);
@@ -450,6 +433,9 @@ class Grid implements CoordinateSystemMaster {
             });
         });
 
+        prepareAlignToInCoordSysCreate(axesMap.x);
+        prepareAlignToInCoordSysCreate(axesMap.y);
+
         function createAxisCreator(dimName: Cartesian2DDimensionName) {
             return function (axisModel: CartesianAxisModel, idx: number): void {
                 if (!isAxisUsedInTheGrid(axisModel, gridModel)) {
@@ -697,6 +683,66 @@ function fixAxisOnZero(
 function canOnZeroToAxis(axis: Axis2D): boolean {
     return axis && axis.type !== 'category' && axis.type !== 'time' && ifAxisCrossZero(axis);
 }
+
+/**
+ * [CAVEAT] This method is called before data processing stage.
+ *  Do not rely on any info that is determined afterward.
+ */
+function prepareAlignToInCoordSysCreate(axes: Record<number, Axis2D>): void {
+    // Axis is added in order of axisIndex.
+    const axesIndices = keys(axes);
+
+    let alignTo: Axis2D;
+    const axisNeedsAlign: Axis2D[] = [];
+
+    for (let i = axesIndices.length - 1; i >= 0; i--) { // Reverse order
+        const axis = axes[+axesIndices[i]];
+        if (
+            isIntervalOrLogScale(axis.scale)
+            // NOTE: `scale.hasBreaks()` is not available at this moment. Check it later.
+            && retrieveAxisBreaksOption(axis.model) == null
+            // NOTE: `scale.getTicks()` is not available at this moment. Check it later.
+        ) {
+            // Request `alignTicks`.
+            if ((axis.model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('alignTicks')
+                && (axis.model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('interval') == null
+            ) {
+                axisNeedsAlign.push(axis);
+            }
+            else {
+                // `alignTo` the last one that does not request `alignTicks`
+                // (This rule is retained for backward compat).
+                alignTo = axis;
+            }
+        }
+    };
+    // If all axes has set alignTicks, pick the first one as alignTo.
+    // PENDING. Should we find the axis that both set interval, min, max and align to this one?
+    // PENDING. Should we allow specifying alignTo via ec option?
+    if (!alignTo) {
+        alignTo = axisNeedsAlign.pop();
+    }
+    if (alignTo) {
+        each(axisNeedsAlign, function (axis) {
+            axis.alignTo = alignTo;
+        });
+    }
+}
+
+/**
+ *  This is just a defence code. They are unlikely to be actually `true`,
+ *  since these cases have been addressed in `prepareAlignToInCoordSysCreate`.
+ *
+ *  Can not be called BEFORE "nice" performed.
+ */
+function incapableOfAlignNeedFallback(targetAxis: Axis2D, alignTo: Axis2D): boolean {
+    return targetAxis.scale.hasBreaks()
+        || alignTo.scale.hasBreaks()
+        // Normally ticks length are more than 2 even when axis is blank.
+        // But still guard for corner cases and possible changes.
+        || alignTo.scale.getTicks().length < 2;
+}
+
 
 function updateAxisTransform(axis: Axis2D, coordBase: number) {
     const axisExtent = axis.getExtent();

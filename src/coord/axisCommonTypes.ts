@@ -210,10 +210,10 @@ export interface ValueAxisBaseOption extends NumericAxisBaseOptionCommon {
 
     /**
      * Optional value can be:
-     * + `false`: always include value 0.
+     * + `false`: always include value 0 if not conflict with `axis.min/max` setting.
      * + `true`: the axis may not contain zero position.
      */
-     scale?: boolean;
+    scale?: boolean;
 }
 export interface LogAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'log';

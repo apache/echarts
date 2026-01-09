@@ -96,19 +96,12 @@ export function createScale(dataExtent: number[], option: object | AxisBaseModel
     const scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
     scale.setExtent(dataExtent[0], dataExtent[1]);
 
-    axisHelper.niceScaleExtent(scale, axisModel as AxisBaseModel);
+    axisHelper.niceScaleExtent(scale, axisModel as AxisBaseModel, scale.getExtent());
     return scale;
 }
 
 /**
- * Mixin common methods to axis model,
- *
- * Include methods
- * `getFormattedLabels() => Array.<string>`
- * `getCategories() => Array.<string>`
- * `getMin(origin: boolean) => number`
- * `getMax(origin: boolean) => number`
- * `getNeedCrossZero() => boolean`
+ * Mixin common methods to axis model
  */
 export function mixinAxisModelCommonMethods(Model: Model) {
     zrUtil.mixin(Model, AxisModelCommonMixin);

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
+            }
+        </style>
+
+
+        <!-- <div id="main_cartesian_0_integerData"></div>
+        <div id="main_cartesian_0_floatData"></div>
+        <div id="main_cartesian_fix_min_max"></div>
+        <div id="main_cartesian_yAxis_dataZoom"></div>
+        <div id="main_radar_0"></div> -->
+        <div id="main_cartesian_0_logIntegerData"></div>
+
+
+
+        <script>
+            function create_case_main_cartesian_0(echarts, domId, title, testData) {
+
+                const scatterLeftData = [[1, 35], [100, 200], [500, 50]];
+                let _ctx = {
+                    persistent_option: {}
+                };
+
+                function resetCtx() {
+                    _ctx.case_option = {};
+                }
+
+                function createOption() {
+                    return {
+                        tooltip: {},
+                        grid: {
+                            top: 50,
+                            bottom: 50,
+                            // outerBoundsMode: 'none',
+                        },
+                        xAxis: {
+                            max: 1300
+                        },
+                        yAxis: [{
+                            id: 'left',
+                            min: _ctx.case_option.yAxis__left__min,
+                            max: _ctx.case_option.yAxis__left__max,
+                            scale: _ctx.case_option.yAxis__left__scale,
+                            splitNumber: _ctx.persistent_option.yAxis__left__splitNumber,
+                            // alignTicks: true,
+                        }, {
+                            id: 'right',
+                            type: testData.rightYAxisType || 'value',
+                            alignTicks: true,
+                            min: _ctx.case_option.yAxis__right__min,
+                            max: _ctx.case_option.yAxis__right__max,
+                            scale: _ctx.case_option.yAxis__right__scale,
+                            splitLine: {show: false},
+                        }],
+                        legend: {
+                            top: 5
+                        },
+                        series: [{
+                            type: 'scatter',
+                            name: 'scatterLeft',
+                            label: {show: true, position: 'top'},
+                            yAxisIndex: 0,
+                            data: scatterLeftData,
+                        }, {
+                            type: 'scatter',
+                            name: 'scatterRight',
+                            label: {show: true, position: 'top'},
+                            yAxisIndex: 1,
+                            data: testData.scatterRightData,
+                        }]
+                    };
+                }
+
+                let _recreateChartTimeout;
+                function scheduleRecreateChart() {
+                    if (_recreateChartTimeout != null) {
+                        return;
+                    }
+                    _recreateChartTimeout = setTimeout(function () {
+                        _recreateChartTimeout = null;
+                        chart.setOption(createOption(), {notMerge: true});
+                    }, 0);
+                }
+
+                const TEST_CASE_LIST = [
+                    {
+                        text: 'defaults',
+                        value: {
+                            version: '1.0.0',
+                            operations: [],
+                        },
+                    },
+                    {
+                        text: 'only rightYAxis.max is set',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1767869651040,
+                            operations: [{id: '__inputs|right yAxis max:|', op: 'select', args: [1]}],
+                            endTime: 1767869653618
+                        }
+                    },
+                    {
+                        text: 'only rightYAxis.min is set positive',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1767869713876,
+                            operations: [{id: '__inputs|right yAxis min:|', op: 'select', args: [1]}],
+                            endTime: 1767869718229
+                        }
+                    },
+                    {
+                        text: 'only rightYAxis.min is set negative',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1767869748667,
+                            operations: [{id: '__inputs|right yAxis min:|', op: 'select', args: [2]}],
+                            endTime: 1767869753233
+                        }
+                    },
+                    {
+                        text: 'only rightYAxis.scale is true',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1767870099308,
+                            operations: [{id: '__inputs|right yAxis scale:|', op: 'select', args: [1]}],
+                            endTime: 1767870104613
+                        }
+                    },
+                    {
+                        text: 'only leftYAxis.min is set',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1766947619748,
+                            operations: [{id: '__inputs|left yAxis min:|', op: 'select', args: [1]}],
+                            endTime: 1766947634626
+                        }
+                    },
+                    {
+                        text: 'only leftYAxis.max is set',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1766907841989,
+                            operations: [{id: '__inputs|left yAxis max:|', op: 'select', args: [1]}],
+                            endTime: 1766907871908
+                        }
+                    },
+                    {
+                        text: 'only leftYAxis.max, rightYAxis.min are set',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1766907958986,
+                            operations: [
+                                {id: '__inputs|left yAxis max:|', op: 'select', args: [1]},
+                                {id: '__inputs|right yAxis min:|', op: 'select', args: [1]}
+                            ],
+                            endTime: 1766907973682
+                        }
+                    },
+                    {
+                        text: 'only rightYAxis.min/max are set',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1766951919872,
+                            operations: [
+                                {id: '__inputs|right yAxis min:|', op: 'select', args: [1]},
+                                {id: '__inputs|right yAxis max:|', op: 'select', args: [1]}
+                            ],
+                            endTime: 1766951924713
+                        }
+                    },
+                    {
+                        text: 'only leftYAxis.max, rightYAxis.min/max are set',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1766908018145,
+                            operations: [
+                                {id: '__inputs|left yAxis max:|', op: 'select', args: [1]},
+                                {id: '__inputs|right yAxis min:|', op: 'select', args: [1]},
+                                {id: '__inputs|right yAxis max:|', op: 'select', args: [1]}
+                            ],
+                            endTime: 1766908026098
+                        }
+                    },
+                    {
+                        text: 'only leftYAxis.min/max, rightYAxis.minmax are set',
+                        value: {
+                            version: '1.0.0',
+                            startTime: 1766948681354,
+                            operations: [
+                                {id: '__inputs|left yAxis min:|', op: 'select', args: [1]},
+                                {id: '__inputs|left yAxis max:|', op: 'select', args: [1]},
+                                {id: '__inputs|right yAxis min:|', op: 'select', args: [1]},
+                                {id: '__inputs|right yAxis max:|', op: 'select', args: [1]}
+                            ],
+                            endTime: 1766948688107
+                        }
+                    },
+                ];
+
+                resetCtx();
+
+                var chart = testHelper.create(echarts, domId, {
+                    title: [
+                        title,
+                        `The right yAxis aligns to the left yAxis`,
+                        `Both left/right yAxis may have **min/max/scale** specified.`,
+                        `scatterLeft **${testHelper.printObject(scatterLeftData)}** should display.`,
+                        `scatterRight **${testHelper.printObject(testData.scatterRightData)}** should display.`,
+                        'xAxis should be in a proper position.'
+                    ],
+                    option: createOption(),
+                    height: 300,
+                    saveInputsInitialState: true,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'quick test cases:',
+                        prevent: {
+                            recordInputs: true,
+                            inputsState: true
+                        },
+                        options: TEST_CASE_LIST,
+                        onchange() {
+                            chart.__testHelper.restoreInputsToInitialState();
+                            resetCtx();
+                            scheduleRecreateChart();
+                            chart.__testHelper.replayInputs(this.value);
+                        }
+                    }, {
+                        type: 'br'
+                    }, {
+                        text: 'stop recording inputs and copy to clipboard',
+                        prevent: {
+                            recordInputs: true,
+                            inputsState: true
+                        },
+                        onclick() {
+                            chart.__testHelper.recordInputs({
+                                action: 'stop',
+                                printObjectOpt: {
+                                    marginLeft: 8,
+                                    lineBreakMaxColumn: 100
+                                }
+                            });
+                            chart.__testHelper.restoreInputsToInitialState();
+                            resetCtx();
+                            chart.__testHelper.recordInputs({
+                                action: 'start',
+                            });
+                        }
+                    }, {
+                        text: 'test quick cases for each left yAxis splitNumber:',
+                        type: 'select',
+                        values: [undefined, 0, 1, 2, 3, 4, 9],
+                        prevent: {
+                            recordInputs: true,
+                            inputsState: true
+                        },
+                        onchange: function () {
+                            _ctx.persistent_option.yAxis__left__splitNumber = this.value;
+                            scheduleRecreateChart();
+                        }
+                    }, {
+                        type: 'hr'
+                    }, {
+                        text: 'left yAxis min:',
+                        type: 'select',
+                        values: testData.inputs.leftYAxisMin,
+                        onchange: function () {
+                            _ctx.case_option.yAxis__left__min = this.value;
+                            scheduleRecreateChart();
+                        }
+                    }, {
+                        text: 'left yAxis max:',
+                        type: 'select',
+                        values: testData.inputs.leftYAxisMax,
+                        onchange: function () {
+                            _ctx.case_option.yAxis__left__max = this.value;
+                            scheduleRecreateChart();
+                        }
+                    }, {
+                        text: 'left yAxis scale:',
+                        type: 'select',
+                        values: [false, true],
+                        onchange: function () {
+                            _ctx.case_option.yAxis__left__scale = this.value;
+                            scheduleRecreateChart();
+                        }
+                    }, {
+                        type: 'hr'
+                    }, {
+                        text: 'right yAxis min:',
+                        type: 'select',
+                        values: testData.inputs.rightYAxisMin,
+                        onchange: function () {
+                            _ctx.case_option.yAxis__right__min = this.value;
+                            scheduleRecreateChart();
+                        }
+                    }, {
+                        text: 'right yAxis max:',
+                        type: 'select',
+                        values: testData.inputs.rightYAxisMax,
+                        onchange: function () {
+                            _ctx.case_option.yAxis__right__max = this.value;
+                            scheduleRecreateChart();
+                        }
+                    }, {
+                        text: 'right yAxis scale:',
+                        type: 'select',
+                        values: [false, true],
+                        onchange: function () {
+                            _ctx.case_option.yAxis__right__scale = this.value;
+                            scheduleRecreateChart();
+                        }
+                    }]
+
+                }); // End of `testHelper.create`
+
+                if (chart) {
+                    chart.__testHelper.recordInputs({
+                        action: 'start',
+                    });
+                }
+
+            } // End of `create_case_main_cartesian_0`
+        </script>
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                const TEST_DATA_INTEGER = {
+                    scatterRightData: [[1000, 201212], [1200, 211200]],
+                    inputs: {
+                        leftYAxisMin: [undefined, 12.379],
+                        leftYAxisMax: [undefined, 219.791],
+                        rightYAxisMin: [undefined, 1013.33, -1000],
+                        rightYAxisMax: [undefined, 231739],
+                    },
+                };
+                create_case_main_cartesian_0(
+                    echarts,
+                    'main_cartesian_0_integerData',
+                    'The right series are integer Data',
+                    TEST_DATA_INTEGER
+                );
+            }); // End of `require`
+        </script>
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                const TEST_DATA_FLOAT = {
+                    // float data less than 1e-10, to test the precision of axis tick calculation.
+                    scatterRightData: [[1000, 0.00000000000201212], [1200, 0.00000000000211200]],
+                    inputs: {
+                        leftYAxisMin: [undefined, 12.379],
+                        leftYAxisMax: [undefined, 219.791],
+                        rightYAxisMin: [undefined, 0.0000000000000101333, -0.00000000000001000],
+                        rightYAxisMax: [undefined, 0.00000000000231739],
+                    },
+                };
+                create_case_main_cartesian_0(
+                    echarts,
+                    'main_cartesian_0_floatData',
+                    'The right series are Float Data',
+                    TEST_DATA_FLOAT
+                );
+            }); // End of `require`
+        </script>
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts /*, data */) {
+                var yAxisMin = 2000;
+                var yAxisMax = 5000.3747;
+
+                function createOption() {
+                    return {
+                        tooltip: {},
+                        grid: {
+                            top: 50,
+                            bottom: 50,
+                        },
+                        xAxis: {
+                            max: 1300
+                        },
+                        yAxis: [{
+                            id: 'left',
+                            splitNumber: 3,
+                        }, {
+                            id: 'right',
+                            min: yAxisMin,
+                            max: yAxisMax,
+                            // axisLabel: {hideOverlap: false},
+                            alignTicks: true
+                        }],
+                        legend: {
+                            top: 5
+                        },
+                        series: [{
+                            type: 'scatter',
+                            name: 'scatterLeft',
+                            label: {show: true, position: 'top'},
+                            yAxisIndex: 0,
+                            data: [[1, 0], [1, 10], [1, 20], [1, 30]]
+                        }, {
+                            type: 'scatter',
+                            name: 'scatterRight',
+                            label: {show: true, position: 'top'},
+                            yAxisIndex: 1,
+                            data: [[1000, 3000], [1200, yAxisMax]]
+                        }]
+                    };
+                }
+
+                var chart = testHelper.create(echarts, 'main_cartesian_fix_min_max', {
+                    title: [
+                        `The right yAxis aligns to the left yAxis.`,
+                        `The right yAxis has **min: ${yAxisMin}, max: ${yAxisMax}**.`,
+                        `The right yAxis should display min/max correctly with proper percision.`,
+                    ],
+                    option: createOption(),
+                    height: 300,
+                }); // End of `testHelper.create`
+            }); // End of `require`
+        </script>
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts /*, data */) {
+                var RIGHT_Y_AXIS_LABEL_FORMATTER = {
+                    'precision_8': function (value) {
+                        return value.toFixed(8);
+                    }
+                };
+                var dataMap = {
+                    big_data: [[1000, 3000], [1200, 50003747]],
+                    small_data: [[1000, 0.0003000], [1200, 0.00050003747]]
+                };
+
+                var _ctx = {
+                    seriesData: dataMap.big_data,
+                    rightYAxisFormatterKind: undefined,
+                    dataZoomEnd: undefined,
+                    realtime: true,
+                    gridHeight: 260,
+                };
+
+                function createOption() {
+
+                    return {
+                        tooltip: {},
+                        grid: {
+                            top: 50,
+                            height: _ctx.gridHeight,
+                            right: 140,
+                        },
+                        xAxis: {
+                            max: 1300
+                        },
+                        yAxis: [{
+                            id: 'left',
+                            splitNumber: 3,
+                        }, {
+                            id: 'right',
+                            // axisLabel: {hideOverlap: false},
+                            axisLabel: {
+                                formatter: RIGHT_Y_AXIS_LABEL_FORMATTER[_ctx.rightYAxisFormatterKind]
+                            },
+                            alignTicks: true
+                        }],
+                        legend: {
+                            top: 5
+                        },
+                        dataZoom: {
+                            yAxisIndex: 'all',
+                            end: _ctx.dataZoomEnd,
+                            realtime: _ctx.realtime,
+                        },
+                        series: [{
+                            type: 'scatter',
+                            name: 'scatterLeft',
+                            label: {show: true, position: 'top'},
+                            yAxisIndex: 0,
+                            data: [[1, 0], [1, 10], [1, 20], [1, 30]]
+                        }, {
+                            type: 'scatter',
+                            name: 'scatterRight',
+                            label: {show: true, position: 'top'},
+                            yAxisIndex: 1,
+                            data: _ctx.seriesData
+                        }]
+                    };
+                }
+
+                var chart = testHelper.create(echarts, 'main_cartesian_yAxis_dataZoom', {
+                    title: [
+                        `dataZoom controls all yAxes.`,
+                        `The right yAxis aligns to the left yAxis.`,
+                        `All series data should be displayed when dataZoom is full.`,
+                    ],
+                    option: createOption(),
+                    height: 300,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'dataZoom.realtime:',
+                        values: [true, false],
+                        onchange: function () {
+                            _ctx.realtime = this.value;
+                            chart.setOption(createOption(), {notMerge: true});
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'seriesData:',
+                        values: [dataMap.big_data, dataMap.small_data],
+                        onchange: function () {
+                            _ctx.seriesData = this.value;
+                            chart.setOption(createOption(), {notMerge: true});
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'grid.height:',
+                        values: [_ctx.gridHeight, 5, 0],
+                        onchange: function () {
+                            _ctx.gridHeight = this.value;
+                            chart.setOption(createOption(), {notMerge: true});
+                        }
+                    }, {
+                        type: 'br'
+                    }, {
+                        type: 'select',
+                        text: 'rightYAxisFormatter:',
+                        values: [undefined, 'precision_8'],
+                        onchange: function () {
+                            _ctx.rightYAxisFormatterKind = this.value;
+                            chart.setOption(createOption(), {notMerge: true});
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'dataZoomEnd:',
+                        values: [undefined, 91, 90.5],
+                        onchange: function () {
+                            _ctx.dataZoomEnd = this.value;
+                            chart.setOption(createOption(), {notMerge: true});
+                        }
+                    }]
+                }); // End of `testHelper.create`
+            }); // End of `require`
+        </script>
+
+
+
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                const RAW_INDICATOR = [
+                    {name: 'Zt'},
+                    {name: 'Uy'},
+                    {name: 'Sw'},
+                    {name: 'Lk'},
+                    {name: 'Eq'},
+                    {name: 'Pr'}
+                ];
+                const INDICATOR_MIN = {
+                    'Zt': 26,
+                    'Uy': 0,
+                    'Sw': 0.000035987,
+                    'Lk': 17,
+                    'Eq': 76,
+                    'Pr': -28,
+                };
+                const INDICATOR_MAX = {
+                    'Zt': 28,
+                    'Uy': 10,
+                    'Sw': 0.000095,
+                    'Lk': 18,
+                    'Eq': 82,
+                    'Pr': 35,
+                };
+                const DEFAULT_SPLIT_NUMBER = 5;
+
+                const _ctx = {
+                    min: INDICATOR_MIN,
+                    max: INDICATOR_MAX,
+                    splitNumber: DEFAULT_SPLIT_NUMBER,
+                };
+
+                function createOption() {
+                    // This case is originally from #3753.
+                    const indicator = RAW_INDICATOR.map(rawItem => {
+                        const item = {name: rawItem.name};
+                        if (_ctx.min) {
+                            item.min = _ctx.min[item.name];
+                        }
+                        if (_ctx.max) {
+                            item.max = _ctx.max[item.name];
+                        }
+                        return item;
+                    });
+
+                    return {
+                        legend: {
+                            left: 20,
+                            top: 'middle',
+                            data: ['Result']
+                        },
+                        radar: {
+                            radius: '80%',
+                            indicator: indicator,
+                            splitNumber: _ctx.splitNumber,
+                            axisLabel: {
+                                show: true,
+                            },
+                        },
+                        series: [{
+                            type: 'radar',
+                            data: [{
+                                value: [28, 9.49, 0.000078219876, 17.84, 76, 34.57],
+                                name: 'Result',
+                                label: {
+                                    show: true,
+                                    color: 'red',
+                                    formatter:function(params) {
+                                        return params.value;
+                                    }
+                                }
+                            }]
+                        }]
+                    };
+                }
+
+                var chart = testHelper.create(echarts, 'main_radar_0', {
+                    title: [
+                        `All radar axes should be aligned.`,
+                        `All radar axes may have **min/max** specified.`,
+                        `min max of each axes should be displayed correctly.`,
+                        `axis tick precision should be proper.`,
+                    ],
+                    option: createOption(),
+                    height: 500,
+                    saveInputsInitialState: true,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        text: 'indicator.min:',
+                        type: 'select',
+                        values: [INDICATOR_MIN, undefined],
+                        onchange: function () {
+                            _ctx.min = this.value;
+                            chart.setOption(createOption());
+                        }
+                    }, {
+                        text: 'indicator.max:',
+                        type: 'select',
+                        values: [INDICATOR_MAX, undefined],
+                        onchange: function () {
+                            _ctx.max = this.value;
+                            chart.setOption(createOption());
+                        }
+                    }, {
+                        text: 'splitNumber:',
+                        type: 'select',
+                        values: [DEFAULT_SPLIT_NUMBER, 4, 3],
+                        onchange: function () {
+                            _ctx.splitNumber = this.value;
+                            chart.setOption(createOption());
+                        }
+                    }]
+
+                }); // End of `testHelper.create`
+
+            }); // End of `require`
+        </script>
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                const TEST_DATA_INTEGER = {
+                    scatterRightData: [[1000, 201212], [1200, 211200]],
+                    rightYAxisType: 'log',
+                    inputs: {
+                        leftYAxisMin: [undefined, 12.379],
+                        leftYAxisMax: [undefined, 219.791],
+                        rightYAxisMin: [undefined, 1013.33, -1000],
+                        rightYAxisMax: [undefined, 231739],
+                    },
+                };
+                create_case_main_cartesian_0(
+                    echarts,
+                    'main_cartesian_0_logIntegerData',
+                    'The right yAxis is "log"; the right series are integer Data',
+                    TEST_DATA_INTEGER
+                );
+            }); // End of `require`
+        </script>
+
+
+    </body>
+</html>
+

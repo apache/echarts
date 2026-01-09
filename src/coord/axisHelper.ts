@@ -46,26 +46,35 @@ import CartesianAxisModel from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
 import { Dictionary, DimensionName, ScaleTick } from '../util/types';
-import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
+import { ensureScaleRawExtentInfo, ScaleRawExtentResult } from './scaleRawExtentInfo';
 import { parseTimeAxisLabelFormatter } from '../util/time';
 import { getScaleBreakHelper } from '../scale/break';
 import { error } from '../util/log';
+import { isIntervalScale, isTimeScale } from '../scale/helper';
 
 
 type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
 
 /**
- * Get axis scale extent before niced.
+ * Prepare axis scale extent before niced.
  * Item of returned array can only be number (including Infinity and NaN).
  *
- * Caution:
- * Precondition of calling this method:
- * The scale extent has been initialized using series data extent via
- * `scale.setExtent` or `scale.unionExtentFromData`;
+ * CAVEAT:
+ *  This function has side-effect.
+ *
+ * FIXME:
+ *  Refector to decouple `unionExtentFromData` and irregular value handling from `scale`.
+ *  Merge `unionAxisExtentFromData` and `unionExtentFromData`.
+ *  Refector `ensureScaleRawExtentInfo`.
  */
-export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
-    const scaleType = scale.type;
-    const rawExtentResult = ensureScaleRawExtentInfo(scale, model, scale.getExtent()).calculate();
+export function adoptScaleExtentOptionAndPrepare(
+    scale: Scale,
+    model: AxisBaseModel,
+    // Typically: data extent from all series on this axis.
+    // Can be obtained by `scale.unionExtentFromData(); scale.getExtent()`;
+    dataExtent: number[]
+): ScaleRawExtentResult {
+    const rawExtentResult = ensureScaleRawExtentInfo(scale, model, dataExtent).calculate();
 
     scale.setBlank(rawExtentResult.isBlank);
 
@@ -82,7 +91,7 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
     // (4) Consider other chart types using `barGrid`?
     // See #6728, #4862, `test/bar-overflow-time-plot.html`
     const ecModel = model.ecModel;
-    if (ecModel && (scaleType === 'time' /* || scaleType === 'interval' */)) {
+    if (ecModel && (isTimeScale(scale) /* || scaleType === 'interval' */)) {
         const barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
         let isBaseAxisAndHasBarSeries = false;
 
@@ -102,13 +111,10 @@ export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
         }
     }
 
-    return {
-        extent: [min, max],
-        // "fix" means "fixed", the value should not be
-        // changed in the subsequent steps.
-        fixMin: rawExtentResult.minFixed,
-        fixMax: rawExtentResult.maxFixed
-    };
+    rawExtentResult.min = min;
+    rawExtentResult.max = max;
+
+    return rawExtentResult;
 }
 
 function adjustScaleForOverflow(
@@ -151,32 +157,25 @@ function adjustScaleForOverflow(
     return {min: min, max: max};
 }
 
-// Precondition of calling this method:
-// The scale extent has been initialized using series data extent via
-// `scale.setExtent` or `scale.unionExtentFromData`;
 export function niceScaleExtent(
     scale: Scale,
-    inModel: AxisBaseModel
-) {
+    inModel: AxisBaseModel,
+    // Typically: data extent from all series on this axis, which can be obtained by
+    //  `scale.unionExtentFromData(...); scale.getExtent();`.
+    dataExtent: number[],
+): void {
     const model = inModel as AxisBaseModel<LogAxisBaseOption>;
-    const extentInfo = getScaleExtent(scale, model);
-    const extent = extentInfo.extent;
-    const splitNumber = model.get('splitNumber');
+    const extentInfo = adoptScaleExtentOptionAndPrepare(scale, model, dataExtent);
 
-    if (scale instanceof LogScale) {
-        scale.base = model.get('logBase');
-    }
-
-    const scaleType = scale.type;
-    const interval = model.get('interval');
-    const isIntervalOrTime = scaleType === 'interval' || scaleType === 'time';
+    const isInterval = isIntervalScale(scale);
+    const isIntervalOrTime = isInterval || isTimeScale(scale);
 
     scale.setBreaksFromOption(retrieveAxisBreaksOption(model));
-    scale.setExtent(extent[0], extent[1]);
+    scale.setExtent(extentInfo.min, extentInfo.max);
     scale.calcNiceExtent({
-        splitNumber: splitNumber,
-        fixMin: extentInfo.fixMin,
-        fixMax: extentInfo.fixMax,
+        splitNumber: model.get('splitNumber'),
+        fixMin: extentInfo.minFixed,
+        fixMax: extentInfo.maxFixed,
         minInterval: isIntervalOrTime ? model.get('minInterval') : null,
         maxInterval: isIntervalOrTime ? model.get('maxInterval') : null
     });
@@ -185,36 +184,35 @@ export function niceScaleExtent(
     // is not good enough. He can specify the interval. It is often appeared
     // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
     // to be 60.
-    // FIXME
-    if (interval != null) {
-        (scale as IntervalScale).setInterval && (scale as IntervalScale).setInterval(interval);
+    // In `xxxAxis.type: 'log'`, ec option `xxxAxis.interval` requires a logarithm-applied
+    // value rather than a value in the raw scale.
+    const interval = model.get('interval');
+    if (interval != null && (scale as IntervalScale).setInterval) {
+        (scale as IntervalScale).setInterval({interval});
     }
 }
 
-/**
- * @param axisType Default retrieve from model.type
- */
-export function createScaleByModel(model: AxisBaseModel, axisType?: string): Scale {
-    axisType = axisType || model.get('type');
-    if (axisType) {
-        switch (axisType) {
-            // Buildin scale
-            case 'category':
-                return new OrdinalScale({
-                    ordinalMeta: model.getOrdinalMeta
-                        ? model.getOrdinalMeta()
-                        : model.getCategories(),
-                    extent: [Infinity, -Infinity]
-                });
-            case 'time':
-                return new TimeScale({
-                    locale: model.ecModel.getLocaleModel(),
-                    useUTC: model.ecModel.get('useUTC'),
-                });
-            default:
-                // case 'value'/'interval', 'log', or others.
-                return new (Scale.getClass(axisType) || IntervalScale)();
-        }
+export function createScaleByModel(model: AxisBaseModel): Scale {
+    const axisType = model.get('type');
+    switch (axisType) {
+        case 'category':
+            return new OrdinalScale({
+                ordinalMeta: model.getOrdinalMeta
+                    ? model.getOrdinalMeta()
+                    : model.getCategories(),
+                extent: [Infinity, -Infinity]
+            });
+        case 'time':
+            return new TimeScale({
+                locale: model.ecModel.getLocaleModel(),
+                useUTC: model.ecModel.get('useUTC'),
+            });
+        case 'log':
+            // See also #3749
+            return new LogScale((model as AxisBaseModel<LogAxisBaseOption>).get('logBase'));
+        default:
+            // case 'value'/'interval', or others.
+            return new (Scale.getClass(axisType) || IntervalScale)();
     }
 }
 
@@ -303,7 +301,6 @@ export function getAxisRawValue<TIsCategory extends boolean>(axis: Axis, tick: S
 
 /**
  * @param model axisLabelModel or axisTickModel
- * @return {number|String} Can be null|'auto'|number|function
  */
 export function getOptionCategoryInterval(
     model: Model<AxisBaseOption['axisLabel']>
