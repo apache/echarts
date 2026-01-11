@@ -24,7 +24,7 @@ import InsideZoomModel from './InsideZoomModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { bind } from 'zrender/src/core/util';
-import RoamController, {RoamEventParams} from '../helper/RoamController';
+import RoamController, { RoamEventParams } from '../helper/RoamController';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import Polar from '../../coord/polar/Polar';
 import SingleAxis from '../../coord/single/SingleAxis';
@@ -39,6 +39,8 @@ class InsideZoomView extends DataZoomView {
      * 'throttle' is used in this.dispatchAction, so we save range
      * to avoid missing some 'pan' info.
      */
+    private lastX: number = 0;
+    private lastY: number = 0;
     range: number[];
 
     render(dataZoomModel: InsideZoomModel, ecModel: GlobalModel, api: ExtensionAPI) {
@@ -75,6 +77,70 @@ class InsideZoomView extends DataZoomView {
         roams.disposeCoordSysRecordIfNeeded(this.api, this.dataZoomModel as InsideZoomModel);
         this.range = null;
     }
+
+    private handleZoom(e: RoamEventParams['zoom']) {
+        // Handle zoom logic
+        // Update lastX and lastY
+        this.lastX = e.originX;
+        this.lastY = e.originY;
+    }
+
+    private handlePan(e: RoamEventParams['pan']) {
+        // Handle pan logic
+        // Update lastX and lastY based on pan logic
+        this.lastX = e.newX;
+        this.lastY = e.newY;
+    }
+
+    private handleScrollMove(coordSysInfo: DataZoomReferCoordSysInfo,
+        coordSysMainType: DataZoomCoordSysMainType, controller: RoamController,
+        e: RoamEventParams['scrollMove']) {
+        // Assume center points are located at the center of the view
+        const centerX = 0.5;
+        const centerY = 0.5;
+
+        // Copy the current range (horizontal)
+        const rangeX = this.range.slice() as [number, number];
+        // Copy the current range (vertical)
+        const rangeY = this.range.slice() as [number, number];
+
+        // Scaling factor, where 0.1 is the speed coefficient
+        const scale = 1 + e.scrollDelta * 0.1;
+
+        // Calculate the new range in the horizontal direction
+        const fixPointX = (rangeX[1] - rangeX[0]) * centerX + rangeX[0];
+        rangeX[0] = (rangeX[0] - fixPointX) * scale + fixPointX;
+        rangeX[1] = (rangeX[1] - fixPointX) * scale + fixPointX;
+
+        // Calculate the new range in the vertical direction
+        const fixPointY = (rangeY[1] - rangeY[0]) * centerY + rangeY[0];
+        rangeY[0] = (rangeY[0] - fixPointY) * scale + fixPointY;
+        rangeY[1] = (rangeY[1] - fixPointY) * scale + fixPointY;
+
+        // Limit the range not to exceed 0 to 100
+        rangeX[0] = Math.max(0, rangeX[0]);
+        rangeX[1] = Math.min(100, rangeX[1]);
+        rangeY[0] = Math.max(0, rangeY[0]);
+        rangeY[1] = Math.min(100, rangeY[1]);
+
+        // Update the range and trigger chart update
+        if (this.range[0] !== rangeX[0] || this.range[1] !== rangeX[1]
+            || this.range[0] !== rangeY[0] || this.range[1] !== rangeY[1]) {
+            // Update X range (adjust according to actual application)
+            this.range = rangeX;
+            // Trigger data zoom action
+            this.api.dispatchAction({
+                type: 'dataZoom',
+                start: rangeX[0],
+                end: rangeX[1],
+                start2: rangeY[0], // Additional range control (for vertical direction)
+                end2: rangeY[1]
+            });
+        }
+    }
+
+
+
 }
 
 interface DataZoomGetRangeHandler<
@@ -111,7 +177,7 @@ const getRangeHandlers: {
             directionInfo.signal > 0
                 ? (directionInfo.pixelStart + directionInfo.pixelLength - directionInfo.pixel)
                 : (directionInfo.pixel - directionInfo.pixelStart)
-            ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
+        ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
         const scale = Math.max(1 / e.scale, 0);
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
@@ -141,12 +207,12 @@ const getRangeHandlers: {
 
     scrollMove: makeMover(
         function (range, axisModel, coordSysInfo, coordSysMainType, controller, e: RoamEventParams['scrollMove']
-    ) {
-        const directionInfo = getDirectionInfo[coordSysMainType](
-            [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordSysInfo
-        );
-        return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
-    })
+        ) {
+            const directionInfo = getDirectionInfo[coordSysMainType](
+                [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordSysInfo
+            );
+            return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
+        })
 };
 
 export type DataZoomGetRangeHandlers = typeof getRangeHandlers;
@@ -158,7 +224,7 @@ function makeMover(
         coordSysInfo: DataZoomReferCoordSysInfo,
         coordSysMainType: DataZoomCoordSysMainType,
         controller: RoamController,
-        e: RoamEventParams['scrollMove']| RoamEventParams['pan']
+        e: RoamEventParams['scrollMove'] | RoamEventParams['pan']
     ) => number
 ) {
     return function (
@@ -166,7 +232,7 @@ function makeMover(
         coordSysInfo: DataZoomReferCoordSysInfo,
         coordSysMainType: DataZoomCoordSysMainType,
         controller: RoamController,
-        e: RoamEventParams['scrollMove']| RoamEventParams['pan']
+        e: RoamEventParams['scrollMove'] | RoamEventParams['pan']
     ): [number, number] {
         const lastRange = this.range;
         const range = lastRange.slice() as [number, number];
