@@ -16727,27 +16727,7 @@
           } else {
             if (lowerTpl == null) {
               lowerTpl = defaultFormatterSeed[lowestUnit];
-            }
-            // Generate the dict by the rule as follows:
-            // If the user specify (or by default):
-            //  {formatter: {
-            //      year: '{yyyy}',
-            //      month: '{MMM}',
-            //      day: '{d}',
-            //      ...
-            //  }}
-            // Concat them to make the final dictionary:
-            //  {formatter: {
-            //      year: {year: ['{yyyy}']},
-            //      month: {year: ['{yyyy} {MMM}'], month: ['{MMM}']},
-            //      day: {year: ['{yyyy} {MMM} {d}'], month: ['{MMM} {d}'], day: ['{d}']}
-            //      ...
-            //  }}
-            // And then add `{primary|...}` to each array if from default template.
-            // This strategy is convinient for user configurating and works for most cases.
-            // If bad cases encountered, users can specify the entire dictionary themselves
-            // instead of going through this logic.
-            else if (!primaryTimeUnitFormatterMatchers[upperUnit].test(lowerTpl)) {
+            } else if (!primaryTimeUnitFormatterMatchers[upperUnit].test(lowerTpl)) {
               lowerTpl = dict[upperUnit][upperUnit][0] + " " + lowerTpl;
             }
             tplArr = [lowerTpl];
@@ -16795,21 +16775,157 @@
           return 'second';
       }
     }
+    function getTimeZoneOffsetMinutes(timeZone, utcMs) {
+      var _a;
+      var dtf = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        // @ts-expect-error: Test
+        timeZoneName: 'shortOffset'
+      });
+      var parts = dtf.formatToParts(new Date(utcMs));
+      var tzName = ((_a = parts.find(function (p) {
+        return p.type === 'timeZoneName';
+      })) === null || _a === void 0 ? void 0 : _a.value) || 'GMT';
+      // examples: "GMT+2", "GMT+02", "GMT+02:00", "UTC+1"
+      var m = tzName.match(/([+-])(\d{1,2})(?::?(\d{2}))?/i);
+      if (!m) {
+        return 0;
+      }
+      var sign = m[1] === '-' ? -1 : 1;
+      var hh = parseInt(m[2], 10);
+      var mm = m[3] ? parseInt(m[3], 10) : 0;
+      return sign * (hh * 60 + mm);
+    }
+    function getZonedParts(timeZone, utcMs) {
+      var dtf = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        // @ts-expect-error: Test
+        fractionalSecondDigits: 3,
+        hourCycle: 'h23'
+      });
+      var parts = dtf.formatToParts(new Date(utcMs));
+      var map = {};
+      for (var _i = 0, parts_1 = parts; _i < parts_1.length; _i++) {
+        var p = parts_1[_i];
+        if (p.type !== 'literal') {
+          map[p.type] = p.value;
+        }
+      }
+      return {
+        year: +map.year,
+        month: +map.month,
+        day: +map.day,
+        hour: +map.hour,
+        minute: +map.minute,
+        second: +map.second,
+        millisecond: +(map.fractionalSecond || '0')
+      };
+    }
+    function getZonedWeekdayIndex(timeZone, utcMs) {
+      var _a;
+      // en-US short weekday: Sun, Mon, Tue, Wed, Thu, Fri, Sat
+      var wd = new Intl.DateTimeFormat('en-US', {
+        timeZone: timeZone,
+        weekday: 'short'
+      }).format(new Date(utcMs));
+      var wdMap = {
+        Sun: 0,
+        Mon: 1,
+        Tue: 2,
+        Wed: 3,
+        Thu: 4,
+        Fri: 5,
+        Sat: 6
+      };
+      return (_a = wdMap[wd]) !== null && _a !== void 0 ? _a : 0;
+    }
+    function zonedPartsToUtcMs(timeZone, p) {
+      // Start with naive UTC guess for those fields, then correct by the timezone offset.
+      var utcGuess = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second, p.millisecond);
+      for (var i = 0; i < 3; i++) {
+        var offMin = getTimeZoneOffsetMinutes(timeZone, utcGuess);
+        var corrected = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second, p.millisecond) - offMin * 60000;
+        if (corrected === utcGuess) {
+          break;
+        }
+        utcGuess = corrected;
+      }
+      // Handle DST gaps (non-existent local times) by moving forward until parts match.
+      var wantKey = p.year + "-" + p.month + "-" + p.day + " " + p.hour + ":" + p.minute + ":" + p.second + "." + p.millisecond;
+      for (var j = 0; j < 120; j++) {
+        // up to 2 hours worst-case safety
+        var got = getZonedParts(timeZone, utcGuess);
+        var gotKey = got.year + "-" + got.month + "-" + got.day + " " + got.hour + ":" + got.minute + ":" + got.second + "." + got.millisecond;
+        if (gotKey === wantKey) {
+          return utcGuess;
+        }
+        utcGuess += 60000; // +1 minute
+      }
+      return utcGuess;
+    }
+    function addZonedParts(p, add) {
+      // Use a UTC Date as a pure calendar arithmetic engine (no local tz impact)
+      var d = new Date(Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second, p.millisecond));
+      if (add.year) d.setUTCFullYear(d.getUTCFullYear() + add.year);
+      if (add.month) d.setUTCMonth(d.getUTCMonth() + add.month);
+      if (add.day) d.setUTCDate(d.getUTCDate() + add.day);
+      if (add.hour) d.setUTCHours(d.getUTCHours() + add.hour);
+      if (add.minute) d.setUTCMinutes(d.getUTCMinutes() + add.minute);
+      if (add.second) d.setUTCSeconds(d.getUTCSeconds() + add.second);
+      if (add.millisecond) d.setUTCMilliseconds(d.getUTCMilliseconds() + add.millisecond);
+      return {
+        year: d.getUTCFullYear(),
+        month: d.getUTCMonth() + 1,
+        day: d.getUTCDate(),
+        hour: d.getUTCHours(),
+        minute: d.getUTCMinutes(),
+        second: d.getUTCSeconds(),
+        millisecond: d.getUTCMilliseconds()
+      };
+    }
     function format(
     // Note: The result based on `isUTC` are totally different, which can not be just simply
     // substituted by the result without `isUTC`. So we make the param `isUTC` mandatory.
-    time, template, isUTC, lang) {
+    time, template, isUTC, lang, timeZone) {
       var date = parseDate(time);
-      var y = date[fullYearGetterName(isUTC)]();
-      var M = date[monthGetterName(isUTC)]() + 1;
+      var y;
+      var M;
+      var d;
+      var e;
+      var H;
+      var m;
+      var s;
+      var S;
+      if (timeZone) {
+        var parts = getZonedParts(timeZone, date.getTime());
+        y = parts.year;
+        M = parts.month;
+        d = parts.day;
+        H = parts.hour;
+        m = parts.minute;
+        s = parts.second;
+        S = parts.millisecond;
+        e = getZonedWeekdayIndex(timeZone, date.getTime());
+      } else {
+        y = date[fullYearGetterName(isUTC)]();
+        M = date[monthGetterName(isUTC)]() + 1;
+        d = date[dateGetterName(isUTC)]();
+        e = date['get' + (isUTC ? 'UTC' : '') + 'Day']();
+        H = date[hoursGetterName(isUTC)]();
+        m = date[minutesGetterName(isUTC)]();
+        s = date[secondsGetterName(isUTC)]();
+        S = date[millisecondsGetterName(isUTC)]();
+      }
       var q = Math.floor((M - 1) / 3) + 1;
-      var d = date[dateGetterName(isUTC)]();
-      var e = date['get' + (isUTC ? 'UTC' : '') + 'Day']();
-      var H = date[hoursGetterName(isUTC)]();
       var h = (H - 1) % 12 + 1;
-      var m = date[minutesGetterName(isUTC)]();
-      var s = date[secondsGetterName(isUTC)]();
-      var S = date[millisecondsGetterName(isUTC)]();
       var a = H >= 12 ? 'pm' : 'am';
       var A = a.toUpperCase();
       var localeModel = lang instanceof Model ? lang : getLocaleModel(lang || SYSTEM_LANG) || getDefaultLocaleModel();
@@ -16820,7 +16936,7 @@
       var dayOfWeekAbbr = timeModel.get('dayOfWeekAbbr');
       return (template || '').replace(/{a}/g, a + '').replace(/{A}/g, A + '').replace(/{yyyy}/g, y + '').replace(/{yy}/g, pad(y % 100 + '', 2)).replace(/{Q}/g, q + '').replace(/{MMMM}/g, month[M - 1]).replace(/{MMM}/g, monthAbbr[M - 1]).replace(/{MM}/g, pad(M, 2)).replace(/{M}/g, M + '').replace(/{dd}/g, pad(d, 2)).replace(/{d}/g, d + '').replace(/{eeee}/g, dayOfWeek[e]).replace(/{ee}/g, dayOfWeekAbbr[e]).replace(/{e}/g, e + '').replace(/{HH}/g, pad(H, 2)).replace(/{H}/g, H + '').replace(/{hh}/g, pad(h + '', 2)).replace(/{h}/g, h + '').replace(/{mm}/g, pad(m, 2)).replace(/{m}/g, m + '').replace(/{ss}/g, pad(s, 2)).replace(/{s}/g, s + '').replace(/{SSS}/g, pad(S, 3)).replace(/{S}/g, S + '');
     }
-    function leveledFormat(tick, idx, formatter, lang, isUTC) {
+    function leveledFormat(tick, idx, formatter, lang, isUTC, timeZone) {
       var template = null;
       if (isString(formatter)) {
         // Single formatter for all units at all levels
@@ -16828,7 +16944,7 @@
       } else if (isFunction(formatter)) {
         var extra = {
           time: tick.time,
-          level: tick.time.level
+          level: tick.time ? tick.time.level : 0
         };
         var scaleBreakHelper = getScaleBreakHelper();
         if (scaleBreakHelper) {
@@ -16842,20 +16958,36 @@
           template = leveledTplArr[Math.min(tickTime.level, leveledTplArr.length - 1)] || '';
         } else {
           // tick may be from customTicks or timeline therefore no tick.time.
-          var unit = getUnitFromValue(tick.value, isUTC);
+          var unit = getUnitFromValue(tick.value, isUTC, timeZone);
           template = formatter[unit][unit][0];
         }
       }
-      return format(new Date(tick.value), template, isUTC, lang);
+      return format(new Date(tick.value), template, isUTC, lang, timeZone);
     }
-    function getUnitFromValue(value, isUTC) {
+    function getUnitFromValue(value, isUTC, timeZone) {
       var date = parseDate(value);
-      var M = date[monthGetterName(isUTC)]() + 1;
-      var d = date[dateGetterName(isUTC)]();
-      var h = date[hoursGetterName(isUTC)]();
-      var m = date[minutesGetterName(isUTC)]();
-      var s = date[secondsGetterName(isUTC)]();
-      var S = date[millisecondsGetterName(isUTC)]();
+      var M;
+      var d;
+      var h;
+      var m;
+      var s;
+      var S;
+      if (timeZone) {
+        var p = getZonedParts(timeZone, date.getTime());
+        M = p.month;
+        d = p.day;
+        h = p.hour;
+        m = p.minute;
+        s = p.second;
+        S = p.millisecond;
+      } else {
+        M = date[monthGetterName(isUTC)]() + 1;
+        d = date[dateGetterName(isUTC)]();
+        h = date[hoursGetterName(isUTC)]();
+        m = date[minutesGetterName(isUTC)]();
+        s = date[secondsGetterName(isUTC)]();
+        S = date[millisecondsGetterName(isUTC)]();
+      }
       var isSecond = S === 0;
       var isMinute = isSecond && s === 0;
       var isHour = isMinute && m === 0;
@@ -16878,38 +17010,6 @@
         return 'millisecond';
       }
     }
-    // export function getUnitValue(
-    //     value: number | Date,
-    //     unit: TimeUnit,
-    //     isUTC: boolean
-    // ) : number {
-    //     const date = zrUtil.isNumber(value)
-    //         ? numberUtil.parseDate(value)
-    //         : value;
-    //     unit = unit || getUnitFromValue(value, isUTC);
-    //     switch (unit) {
-    //         case 'year':
-    //             return date[fullYearGetterName(isUTC)]();
-    //         case 'half-year':
-    //             return date[monthGetterName(isUTC)]() >= 6 ? 1 : 0;
-    //         case 'quarter':
-    //             return Math.floor((date[monthGetterName(isUTC)]() + 1) / 4);
-    //         case 'month':
-    //             return date[monthGetterName(isUTC)]();
-    //         case 'day':
-    //             return date[dateGetterName(isUTC)]();
-    //         case 'half-day':
-    //             return date[hoursGetterName(isUTC)]() / 24;
-    //         case 'hour':
-    //             return date[hoursGetterName(isUTC)]();
-    //         case 'minute':
-    //             return date[minutesGetterName(isUTC)]();
-    //         case 'second':
-    //             return date[secondsGetterName(isUTC)]();
-    //         case 'millisecond':
-    //             return date[millisecondsGetterName(isUTC)]();
-    //     }
-    // }
     /**
      * e.g.,
      * If timeUnit is 'year', return the Jan 1st 00:00:00 000 of that year.
@@ -16917,20 +17017,25 @@
      *
      * @return The input date.
      */
-    function roundTime(date, timeUnit, isUTC) {
-      switch (timeUnit) {
-        case 'year':
-          date[monthSetterName(isUTC)](0);
-        case 'month':
-          date[dateSetterName(isUTC)](1);
-        case 'day':
-          date[hoursSetterName(isUTC)](0);
-        case 'hour':
-          date[minutesSetterName(isUTC)](0);
-        case 'minute':
-          date[secondsSetterName(isUTC)](0);
-        case 'second':
-          date[millisecondsSetterName(isUTC)](0);
+    function roundTime(date, timeUnit, isUTC, timeZone) {
+      if (timeZone) {
+        var p = getZonedParts(timeZone, date.getTime());
+        switch (timeUnit) {
+          case 'year':
+            p.month = 1;
+          case 'month':
+            p.day = 1;
+          case 'day':
+            p.hour = 0;
+          case 'hour':
+            p.minute = 0;
+          case 'minute':
+            p.second = 0;
+          case 'second':
+            p.millisecond = 0;
+        }
+        date.setTime(zonedPartsToUtcMs(timeZone, p));
+        return date;
       }
       return date;
     }
@@ -22589,8 +22694,8 @@
        * Data iteration
        * @param ctx default this
        * @example
-       *  list.each('x', function (x, idx) {});
-       *  list.each(['x', 'y'], function (x, y, idx) {});
+       *  list.each(0, function (x, idx) {});
+       *  list.each([0, 1], function (x, y, idx) {});
        *  list.each(function (idx) {})
        */
       DataStore.prototype.each = function (dims, cb) {
@@ -25233,6 +25338,16 @@
       toolbox: {
         iconStyle: {
           borderColor: color$2.accent50
+        },
+        feature: {
+          dataView: {
+            backgroundColor: backgroundColor,
+            textColor: color$2.primary,
+            textareaColor: color$2.background,
+            textareaBorderColor: color$2.border,
+            buttonColor: color$2.accent50,
+            buttonTextColor: color$2.neutral00
+          }
         }
       },
       tooltip: {
@@ -27338,6 +27453,8 @@
         // Can't dispatch action during rendering procedure
         _this._pendingActions = [];
         opts = opts || {};
+        // mark the echarts instance as raw in Vue 3 to prevent the object being converted to be a proxy.
+        _this.__v_skip = true;
         _this._dom = dom;
         var defaultRenderer = 'canvas';
         var defaultCoarsePointer = 'auto';
@@ -32923,12 +33040,14 @@
        */
       TimeScale.prototype.getLabel = function (tick) {
         var useUTC = this.getSetting('useUTC');
-        return format(tick.value, fullLeveledFormatter[getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))] || fullLeveledFormatter.second, useUTC, this.getSetting('locale'));
+        var timeZone = this.getSetting('timezone');
+        return format(tick.value, fullLeveledFormatter[getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))] || fullLeveledFormatter.second, useUTC, this.getSetting('locale'), timeZone);
       };
       TimeScale.prototype.getFormattedLabel = function (tick, idx, labelFormatter) {
         var isUTC = this.getSetting('useUTC');
         var lang = this.getSetting('locale');
-        return leveledFormat(tick, idx, labelFormatter, lang, isUTC);
+        var timeZone = this.getSetting('timezone');
+        return leveledFormat(tick, idx, labelFormatter, lang, isUTC, timeZone);
       };
       /**
        * @override
@@ -32944,11 +33063,12 @@
           return ticks;
         }
         var useUTC = this.getSetting('useUTC');
+        var timeZone = this.getSetting('timezone');
         if (scaleBreakHelper && opt.breakTicks === 'only_break') {
           getScaleBreakHelper().addBreaksToTicks(ticks, this._brkCtx.breaks, this._extent);
           return ticks;
         }
-        var extent0Unit = getUnitFromValue(extent[1], useUTC);
+        var extent0Unit = getUnitFromValue(extent[1], useUTC, timeZone);
         ticks.push({
           value: extent[0],
           time: {
@@ -32957,9 +33077,9 @@
             lowerTimeUnit: extent0Unit
           }
         });
-        var innerTicks = getIntervalTicks(this._minLevelUnit, this._approxInterval, useUTC, extent, this._getExtentSpanWithBreaks(), this._brkCtx);
+        var innerTicks = getIntervalTicks(this._minLevelUnit, this._approxInterval, useUTC, extent, this._getExtentSpanWithBreaks(), this._brkCtx, timeZone);
         ticks = ticks.concat(innerTicks);
-        var extent1Unit = getUnitFromValue(extent[1], useUTC);
+        var extent1Unit = getUnitFromValue(extent[1], useUTC, timeZone);
         ticks.push({
           value: extent[1],
           time: {
@@ -32972,8 +33092,10 @@
         var upperUnitIndex = primaryTimeUnits.length - 1;
         var maxLevel = 0;
         each(ticks, function (tick) {
-          upperUnitIndex = Math.min(upperUnitIndex, indexOf(primaryTimeUnits, tick.time.upperTimeUnit));
-          maxLevel = Math.max(maxLevel, tick.time.level);
+          if (tick.time) {
+            upperUnitIndex = Math.min(upperUnitIndex, indexOf(primaryTimeUnits, tick.time.upperTimeUnit));
+            maxLevel = Math.max(maxLevel, tick.time.level);
+          }
         });
         if (scaleBreakHelper) {
           getScaleBreakHelper().pruneTicksByBreak(opt.pruneByBreak, ticks, this._brkCtx.breaks, function (item) {
@@ -32983,10 +33105,10 @@
         if (scaleBreakHelper && opt.breakTicks !== 'none') {
           getScaleBreakHelper().addBreaksToTicks(ticks, this._brkCtx.breaks, this._extent, function (trimmedBrk) {
             // @see `parseTimeAxisLabelFormatterDictionary`.
-            var lowerBrkUnitIndex = Math.max(indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmin, isUTC)), indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmax, isUTC)));
+            var lowerBrkUnitIndex = Math.max(indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmin, isUTC, timeZone)), indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmax, isUTC, timeZone)));
             var upperBrkUnitIndex = 0;
             for (var unitIdx = 0; unitIdx < primaryTimeUnits.length; unitIdx++) {
-              if (!isPrimaryUnitValueAndGreaterSame(primaryTimeUnits[unitIdx], trimmedBrk.vmin, trimmedBrk.vmax, isUTC)) {
+              if (!isPrimaryUnitValueAndGreaterSame(primaryTimeUnits[unitIdx], trimmedBrk.vmin, trimmedBrk.vmax, isUTC, timeZone)) {
                 upperBrkUnitIndex = unitIdx;
                 break;
               }
@@ -33064,101 +33186,12 @@
     // Format                           interval
     ['second', ONE_SECOND], ['minute', ONE_MINUTE], ['hour', ONE_HOUR], ['quarter-day', ONE_HOUR * 6], ['half-day', ONE_HOUR * 12], ['day', ONE_DAY * 1.2], ['half-week', ONE_DAY * 3.5], ['week', ONE_DAY * 7], ['month', ONE_DAY * 31], ['quarter', ONE_DAY * 95], ['half-year', ONE_YEAR / 2], ['year', ONE_YEAR] // 1Y
     ];
-    function isPrimaryUnitValueAndGreaterSame(unit, valueA, valueB, isUTC) {
-      return roundTime(new Date(valueA), unit, isUTC).getTime() === roundTime(new Date(valueB), unit, isUTC).getTime();
+    function isPrimaryUnitValueAndGreaterSame(unit, valueA, valueB, isUTC, timeZone) {
+      return roundTime(new Date(valueA), unit, isUTC, timeZone).getTime() === roundTime(new Date(valueB), unit, isUTC, timeZone).getTime();
     }
-    // function isUnitValueSame(
-    //     unit: PrimaryTimeUnit,
-    //     valueA: number,
-    //     valueB: number,
-    //     isUTC: boolean
-    // ): boolean {
-    //     const dateA = numberUtil.parseDate(valueA) as any;
-    //     const dateB = numberUtil.parseDate(valueB) as any;
-    //     const isSame = (unit: PrimaryTimeUnit) => {
-    //         return getUnitValue(dateA, unit, isUTC)
-    //             === getUnitValue(dateB, unit, isUTC);
-    //     };
-    //     const isSameYear = () => isSame('year');
-    //     // const isSameHalfYear = () => isSameYear() && isSame('half-year');
-    //     // const isSameQuater = () => isSameYear() && isSame('quarter');
-    //     const isSameMonth = () => isSameYear() && isSame('month');
-    //     const isSameDay = () => isSameMonth() && isSame('day');
-    //     // const isSameHalfDay = () => isSameDay() && isSame('half-day');
-    //     const isSameHour = () => isSameDay() && isSame('hour');
-    //     const isSameMinute = () => isSameHour() && isSame('minute');
-    //     const isSameSecond = () => isSameMinute() && isSame('second');
-    //     const isSameMilliSecond = () => isSameSecond() && isSame('millisecond');
-    //     switch (unit) {
-    //         case 'year':
-    //             return isSameYear();
-    //         case 'month':
-    //             return isSameMonth();
-    //         case 'day':
-    //             return isSameDay();
-    //         case 'hour':
-    //             return isSameHour();
-    //         case 'minute':
-    //             return isSameMinute();
-    //         case 'second':
-    //             return isSameSecond();
-    //         case 'millisecond':
-    //             return isSameMilliSecond();
-    //     }
-    // }
-    // const primaryUnitGetters = {
-    //     year: fullYearGetterName(),
-    //     month: monthGetterName(),
-    //     day: dateGetterName(),
-    //     hour: hoursGetterName(),
-    //     minute: minutesGetterName(),
-    //     second: secondsGetterName(),
-    //     millisecond: millisecondsGetterName()
-    // };
-    // const primaryUnitUTCGetters = {
-    //     year: fullYearGetterName(true),
-    //     month: monthGetterName(true),
-    //     day: dateGetterName(true),
-    //     hour: hoursGetterName(true),
-    //     minute: minutesGetterName(true),
-    //     second: secondsGetterName(true),
-    //     millisecond: millisecondsGetterName(true)
-    // };
-    // function moveTick(date: Date, unitName: TimeUnit, step: number, isUTC: boolean) {
-    //     step = step || 1;
-    //     switch (getPrimaryTimeUnit(unitName)) {
-    //         case 'year':
-    //             date[fullYearSetterName(isUTC)](date[fullYearGetterName(isUTC)]() + step);
-    //             break;
-    //         case 'month':
-    //             date[monthSetterName(isUTC)](date[monthGetterName(isUTC)]() + step);
-    //             break;
-    //         case 'day':
-    //             date[dateSetterName(isUTC)](date[dateGetterName(isUTC)]() + step);
-    //             break;
-    //         case 'hour':
-    //             date[hoursSetterName(isUTC)](date[hoursGetterName(isUTC)]() + step);
-    //             break;
-    //         case 'minute':
-    //             date[minutesSetterName(isUTC)](date[minutesGetterName(isUTC)]() + step);
-    //             break;
-    //         case 'second':
-    //             date[secondsSetterName(isUTC)](date[secondsGetterName(isUTC)]() + step);
-    //             break;
-    //         case 'millisecond':
-    //             date[millisecondsSetterName(isUTC)](date[millisecondsGetterName(isUTC)]() + step);
-    //             break;
-    //     }
-    //     return date.getTime();
-    // }
-    // const DATE_INTERVALS = [[8, 7.5], [4, 3.5], [2, 1.5]];
-    // const MONTH_INTERVALS = [[6, 5.5], [3, 2.5], [2, 1.5]];
-    // const MINUTES_SECONDS_INTERVALS = [[30, 30], [20, 20], [15, 15], [10, 10], [5, 5], [2, 2]];
     function getDateInterval(approxInterval, daysInMonth) {
       approxInterval /= ONE_DAY;
-      return approxInterval > 16 ? 16
-      // Math.floor(daysInMonth / 2) + 1  // In this case we only want one tick between two months.
-      : approxInterval > 7.5 ? 7 // TODO week 7 or day 8?
+      return approxInterval > 16 ? 16 : approxInterval > 7.5 ? 7 // TODO week 7 or day 8?
       : approxInterval > 3.5 ? 4 : approxInterval > 1.5 ? 2 : 1;
     }
     function getMonthInterval(approxInterval) {
@@ -33179,9 +33212,9 @@
     }
     // e.g., if the input unit is 'day', start calculate ticks from the first day of
     // that month to make ticks "nice".
-    function getFirstTimestampOfUnit(timestamp, unitName, isUTC) {
+    function getFirstTimestampOfUnit(timestamp, unitName, isUTC, timeZone) {
       var upperUnitIdx = Math.max(0, indexOf(primaryTimeUnits, unitName) - 1);
-      return roundTime(new Date(timestamp), primaryTimeUnits[upperUnitIdx], isUTC).getTime();
+      return roundTime(new Date(timestamp), primaryTimeUnits[upperUnitIdx], isUTC, timeZone).getTime();
     }
     function createEstimateNiceMultiple(setMethodName, dateMethodInterval) {
       var tmpDate = new Date(0);
@@ -33195,17 +33228,61 @@
         return Math.max(0, Math.round((targetValue - tickVal) / approxTimeInterval));
       };
     }
-    function getIntervalTicks(bottomUnitName, approxInterval, isUTC, extent, extentSpanWithBreaks, brkCtx) {
+    function getIntervalTicks(bottomUnitName, approxInterval, isUTC, extent, extentSpanWithBreaks, brkCtx, timeZone) {
       var safeLimit = 10000;
       var unitNames = timeUnits;
       var iter = 0;
-      function addTicksInSpan(interval, minTimestamp, maxTimestamp, getMethodName, setMethodName, isDate, out) {
-        var estimateNiceMultiple = createEstimateNiceMultiple(setMethodName, interval);
+      function stepInTimeZone(dateTime, unitName, interval) {
+        // Step by *wall clock* in the specified timezone.
+        var p = getZonedParts(timeZone, dateTime);
+        var nextParts;
+        switch (getPrimaryTimeUnit(unitName)) {
+          case 'year':
+            nextParts = addZonedParts(p, {
+              year: interval
+            });
+            break;
+          case 'month':
+            nextParts = addZonedParts(p, {
+              month: interval
+            });
+            break;
+          case 'day':
+            nextParts = addZonedParts(p, {
+              day: interval
+            });
+            break;
+          case 'hour':
+            nextParts = addZonedParts(p, {
+              hour: interval
+            });
+            break;
+          case 'minute':
+            nextParts = addZonedParts(p, {
+              minute: interval
+            });
+            break;
+          case 'second':
+            nextParts = addZonedParts(p, {
+              second: interval
+            });
+            break;
+          case 'millisecond':
+            nextParts = addZonedParts(p, {
+              millisecond: interval
+            });
+            break;
+        }
+        return zonedPartsToUtcMs(timeZone, nextParts);
+      }
+      function addTicksInSpan(interval, minTimestamp, maxTimestamp, getMethodName, setMethodName, isDate, out, unitName) {
+        var estimateNiceMultiple = timeZone ? function (tickVal, targetValue) {
+          var next = stepInTimeZone(tickVal, unitName, interval);
+          var stepMs = Math.max(1, next - tickVal);
+          return Math.max(0, Math.round((targetValue - tickVal) / stepMs));
+        } : createEstimateNiceMultiple(setMethodName, interval);
         var dateTime = minTimestamp;
         var date = new Date(dateTime);
-        // if (isDate) {
-        //     d -= 1; // Starts with 0;   PENDING
-        // }
         while (dateTime < maxTimestamp && dateTime <= extent[1]) {
           out.push({
             value: dateTime
@@ -33216,13 +33293,23 @@
             }
             break;
           }
-          date[setMethodName](date[getMethodName]() + interval);
-          dateTime = date.getTime();
-          if (brkCtx) {
-            var moreMultiple = brkCtx.calcNiceTickMultiple(dateTime, estimateNiceMultiple);
-            if (moreMultiple > 0) {
-              date[setMethodName](date[getMethodName]() + moreMultiple * interval);
-              dateTime = date.getTime();
+          if (timeZone) {
+            dateTime = stepInTimeZone(dateTime, unitName, interval);
+            if (brkCtx) {
+              var moreMultiple = brkCtx.calcNiceTickMultiple(dateTime, estimateNiceMultiple);
+              if (moreMultiple > 0) {
+                dateTime = stepInTimeZone(dateTime, unitName, moreMultiple * interval);
+              }
+            }
+          } else {
+            date[setMethodName](date[getMethodName]() + interval);
+            dateTime = date.getTime();
+            if (brkCtx) {
+              var moreMultiple = brkCtx.calcNiceTickMultiple(dateTime, estimateNiceMultiple);
+              if (moreMultiple > 0) {
+                date[setMethodName](date[getMethodName]() + moreMultiple * interval);
+                dateTime = date.getTime();
+              }
             }
           }
         }
@@ -33235,12 +33322,12 @@
       function addLevelTicks(unitName, lastLevelTicks, levelTicks) {
         var newAddedTicks = [];
         var isFirstLevel = !lastLevelTicks.length;
-        if (isPrimaryUnitValueAndGreaterSame(getPrimaryTimeUnit(unitName), extent[0], extent[1], isUTC)) {
+        if (isPrimaryUnitValueAndGreaterSame(getPrimaryTimeUnit(unitName), extent[0], extent[1], isUTC, timeZone)) {
           return;
         }
         if (isFirstLevel) {
           lastLevelTicks = [{
-            value: getFirstTimestampOfUnit(extent[0], unitName, isUTC)
+            value: getFirstTimestampOfUnit(extent[0], unitName, isUTC, timeZone)
           }, {
             value: extent[1]
           }];
@@ -33303,7 +33390,7 @@
           // iteration. e.g., when three levels of ticks is displayed, which can be caused by
           // data zoom and axis breaks. Thus trim them here.
           if (endTick >= extent[0] && startTick <= extent[1]) {
-            addTicksInSpan(interval, startTick, endTick, getterName, setterName, isDate, newAddedTicks);
+            addTicksInSpan(interval, startTick, endTick, getterName, setterName, isDate, newAddedTicks, unitName);
           }
           if (unitName === 'year' && levelTicks.length > 1 && i === 0) {
             // Add nearest years to the left extent.
@@ -33372,7 +33459,7 @@
       for (var i = 0; i < levelsTicksInExtent.length; ++i) {
         var levelTicks = levelsTicksInExtent[i];
         for (var k = 0; k < levelTicks.length; ++k) {
-          var unit = getUnitFromValue(levelTicks[k].value, isUTC);
+          var unit = getUnitFromValue(levelTicks[k].value, isUTC, timeZone);
           ticks.push({
             value: levelTicks[k].value,
             time: {
@@ -33558,6 +33645,17 @@
         this._dataMax = dataExtent[1];
         var isOrdinal = this._isOrdinal = scale.type === 'ordinal';
         this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
+        if (scale.type === 'interval' || scale.type === 'log' || scale.type === 'time') {
+          // Process custom dataMin/dataMax
+          var dataMinRaw = model.get('dataMin', true);
+          if (dataMinRaw != null) {
+            this._dataMinNum = parseAxisModelMinMax(scale, dataMinRaw);
+          }
+          var dataMaxRaw = model.get('dataMax', true);
+          if (dataMaxRaw != null) {
+            this._dataMaxNum = parseAxisModelMinMax(scale, dataMaxRaw);
+          }
+        }
         var axisMinValue = model.get('min', true);
         if (axisMinValue == null) {
           axisMinValue = model.get('startValue', true);
@@ -33619,6 +33717,15 @@
         var isOrdinal = this._isOrdinal;
         var dataMin = this._dataMin;
         var dataMax = this._dataMax;
+        // Include custom dataMin/dataMax in calculation
+        // If dataMin is set and less than current data minimum, update the minimum value
+        if (this._dataMinNum != null && isFinite(dataMin) && this._dataMinNum < dataMin) {
+          dataMin = this._dataMinNum;
+        }
+        // If dataMax is set and greater than current data maximum, update the maximum value
+        if (this._dataMaxNum != null && isFinite(dataMax) && this._dataMaxNum > dataMax) {
+          dataMax = this._dataMaxNum;
+        }
         var axisDataLen = this._axisDataLen;
         var boundaryGapInner = this._boundaryGapInner;
         var span = !isOrdinal ? dataMax - dataMin || Math.abs(dataMin) : null;
@@ -33869,7 +33976,8 @@
           case 'time':
             return new TimeScale({
               locale: model.ecModel.getLocaleModel(),
-              useUTC: model.ecModel.get('useUTC')
+              useUTC: model.ecModel.get('useUTC'),
+              timezone: 'Europe/Berlin'
             });
           default:
             // case 'value'/'interval', 'log', or others.
@@ -34633,12 +34741,12 @@
           return val >= extent_1[0] && val <= extent_1[1];
         });
         return {
-          labels: map(ticks, function (numval) {
+          labels: map(ticks, function (numval, index) {
             var tick = {
               value: numval
             };
             return {
-              formattedLabel: labelFormatter_1(tick),
+              formattedLabel: labelFormatter_1(tick, index),
               rawLabel: axis.scale.getLabel(tick),
               tickValue: numval,
               time: undefined,
@@ -35397,13 +35505,10 @@
       stateObj.ignore = ignore;
       // Set smooth
       var smooth = stateModel.get('smooth');
-      if (smooth && smooth === true) {
-        smooth = 0.3;
-      }
+      smooth = smooth === true ? 0.3 : Math.max(+smooth, 0) || 0;
       stateObj.shape = stateObj.shape || {};
-      if (smooth > 0) {
-        stateObj.shape.smooth = smooth;
-      }
+      // always set the `smooth` property
+      stateObj.shape.smooth = smooth;
       var styleObj = stateModel.getModel('lineStyle').getLineStyle();
       isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
     }
@@ -38534,7 +38639,11 @@
         universalTransition: {
           divideShape: 'clone'
         },
-        triggerLineEvent: false
+        /**
+         * @deprecated
+         */
+        triggerLineEvent: false,
+        triggerEvent: false
       };
       return LineSeriesModel;
     }(SeriesModel);
@@ -39668,6 +39777,119 @@
       return coordSys.type === type;
     }
 
+    var deprecatedLogs = {};
+    /**
+     * Whether need to call `convertEC4CompatibleStyle`.
+     */
+    function isEC4CompatibleStyle(style, elType, hasOwnTextContentOption, hasOwnTextConfig) {
+      // Since echarts5, `RectText` is separated from its host element and style.text
+      // does not exist any more. The compat work brings some extra burden on performance.
+      // So we provide:
+      // `legacy: true` force make compat.
+      // `legacy: false`, force do not compat.
+      // `legacy` not set: auto detect whether legacy.
+      //     But in this case we do not compat (difficult to detect and rare case):
+      //     Because custom series and graphic component support "merge", users may firstly
+      //     only set `textStrokeWidth` style or secondly only set `text`.
+      return style && (style.legacy || style.legacy !== false && !hasOwnTextContentOption && !hasOwnTextConfig && elType !== 'tspan'
+      // Difficult to detect whether legacy for a "text" el.
+      && (elType === 'text' || hasOwn(style, 'text')));
+    }
+    /**
+     * `EC4CompatibleStyle` is style that might be in echarts4 format or echarts5 format.
+     * @param hostStyle The properties might be modified.
+     * @return If be text el, `textContentStyle` and `textConfig` will not be returned.
+     *         Otherwise a `textContentStyle` and `textConfig` will be created, whose props area
+     *         retried from the `hostStyle`.
+     */
+    function convertFromEC4CompatibleStyle(hostStyle, elType, isNormal) {
+      var srcStyle = hostStyle;
+      var textConfig;
+      var textContent;
+      var textContentStyle;
+      if (elType === 'text') {
+        textContentStyle = srcStyle;
+      } else {
+        textContentStyle = {};
+        hasOwn(srcStyle, 'text') && (textContentStyle.text = srcStyle.text);
+        hasOwn(srcStyle, 'rich') && (textContentStyle.rich = srcStyle.rich);
+        hasOwn(srcStyle, 'textFill') && (textContentStyle.fill = srcStyle.textFill);
+        hasOwn(srcStyle, 'textStroke') && (textContentStyle.stroke = srcStyle.textStroke);
+        hasOwn(srcStyle, 'fontFamily') && (textContentStyle.fontFamily = srcStyle.fontFamily);
+        hasOwn(srcStyle, 'fontSize') && (textContentStyle.fontSize = srcStyle.fontSize);
+        hasOwn(srcStyle, 'fontStyle') && (textContentStyle.fontStyle = srcStyle.fontStyle);
+        hasOwn(srcStyle, 'fontWeight') && (textContentStyle.fontWeight = srcStyle.fontWeight);
+        textContent = {
+          type: 'text',
+          style: textContentStyle,
+          // ec4 does not support rectText trigger.
+          // And when text position is different in normal and emphasis
+          // => hover text trigger emphasis;
+          // => text position changed, leave mouse pointer immediately;
+          // That might cause incorrect state.
+          silent: true
+        };
+        textConfig = {};
+        var hasOwnPos = hasOwn(srcStyle, 'textPosition');
+        if (isNormal) {
+          textConfig.position = hasOwnPos ? srcStyle.textPosition : 'inside';
+        } else {
+          hasOwnPos && (textConfig.position = srcStyle.textPosition);
+        }
+        hasOwn(srcStyle, 'textPosition') && (textConfig.position = srcStyle.textPosition);
+        hasOwn(srcStyle, 'textOffset') && (textConfig.offset = srcStyle.textOffset);
+        hasOwn(srcStyle, 'textRotation') && (textConfig.rotation = srcStyle.textRotation);
+        hasOwn(srcStyle, 'textDistance') && (textConfig.distance = srcStyle.textDistance);
+      }
+      convertEC4CompatibleRichItem(textContentStyle, hostStyle);
+      each(textContentStyle.rich, function (richItem) {
+        convertEC4CompatibleRichItem(richItem, richItem);
+      });
+      return {
+        textConfig: textConfig,
+        textContent: textContent
+      };
+    }
+    /**
+     * The result will be set to `out`.
+     */
+    function convertEC4CompatibleRichItem(out, richItem) {
+      if (!richItem) {
+        return;
+      }
+      // (1) For simplicity, make textXXX properties (deprecated since ec5) has
+      // higher priority. For example, consider in ec4 `borderColor: 5, textBorderColor: 10`
+      // on a rect means `borderColor: 4` on the rect and `borderColor: 10` on an attached
+      // richText in ec5.
+      // (2) `out === richItem` if and only if `out` is text el or rich item.
+      // So we can overwrite existing props in `out` since textXXX has higher priority.
+      richItem.font = richItem.textFont || richItem.font;
+      hasOwn(richItem, 'textStrokeWidth') && (out.lineWidth = richItem.textStrokeWidth);
+      hasOwn(richItem, 'textAlign') && (out.align = richItem.textAlign);
+      hasOwn(richItem, 'textVerticalAlign') && (out.verticalAlign = richItem.textVerticalAlign);
+      hasOwn(richItem, 'textLineHeight') && (out.lineHeight = richItem.textLineHeight);
+      hasOwn(richItem, 'textWidth') && (out.width = richItem.textWidth);
+      hasOwn(richItem, 'textHeight') && (out.height = richItem.textHeight);
+      hasOwn(richItem, 'textBackgroundColor') && (out.backgroundColor = richItem.textBackgroundColor);
+      hasOwn(richItem, 'textPadding') && (out.padding = richItem.textPadding);
+      hasOwn(richItem, 'textBorderColor') && (out.borderColor = richItem.textBorderColor);
+      hasOwn(richItem, 'textBorderWidth') && (out.borderWidth = richItem.textBorderWidth);
+      hasOwn(richItem, 'textBorderRadius') && (out.borderRadius = richItem.textBorderRadius);
+      hasOwn(richItem, 'textBoxShadowColor') && (out.shadowColor = richItem.textBoxShadowColor);
+      hasOwn(richItem, 'textBoxShadowBlur') && (out.shadowBlur = richItem.textBoxShadowBlur);
+      hasOwn(richItem, 'textBoxShadowOffsetX') && (out.shadowOffsetX = richItem.textBoxShadowOffsetX);
+      hasOwn(richItem, 'textBoxShadowOffsetY') && (out.shadowOffsetY = richItem.textBoxShadowOffsetY);
+    }
+    function warnDeprecated(deprecated, insteadApproach) {
+      if ("development" !== 'production') {
+        var key = deprecated + '^_^' + insteadApproach;
+        if (!deprecatedLogs[key]) {
+          console.warn("[ECharts] DEPRECATED: \"" + deprecated + "\" has been deprecated. " + insteadApproach);
+          deprecatedLogs[key] = true;
+        }
+      }
+    }
+
     function isPointsSame(points1, points2) {
       if (points1.length !== points2.length) {
         return;
@@ -39712,7 +39934,7 @@
       return isNumber(smooth) ? smooth : smooth ? 0.5 : 0;
     }
     function getStackedOnPoints(coordSys, data, dataCoordInfo) {
-      if (!dataCoordInfo.valueDim) {
+      if (dataCoordInfo.valueDim == null) {
         return [];
       }
       var len = data.count();
@@ -40299,20 +40521,27 @@
         this._points = points;
         this._step = step;
         this._valueOrigin = valueOrigin;
-        if (seriesModel.get('triggerLineEvent')) {
-          this.packEventData(seriesModel, polyline);
-          polygon && this.packEventData(seriesModel, polygon);
+        var triggerEvent = seriesModel.get('triggerEvent');
+        var triggerLineEvent = seriesModel.get('triggerLineEvent');
+        if ("development" !== 'production') {
+          triggerLineEvent && warnDeprecated('triggerLineEvent', 'Use the `triggerEvent` option instead.');
         }
+        var shouldTriggerLineEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'line';
+        var shouldTriggerAreaEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'area';
+        this.packEventData(seriesModel, polyline, shouldTriggerLineEvent);
+        polygon && this.packEventData(seriesModel, polygon, shouldTriggerAreaEvent);
       };
-      LineView.prototype.packEventData = function (seriesModel, el) {
-        getECData(el).eventData = {
+      LineView.prototype.packEventData = function (seriesModel, el, enable) {
+        getECData(el).eventData = enable ? {
           componentType: 'series',
           componentSubType: 'line',
           componentIndex: seriesModel.componentIndex,
           seriesIndex: seriesModel.seriesIndex,
           seriesName: seriesModel.name,
-          seriesType: 'line'
-        };
+          seriesType: 'line',
+          // for determining this event is triggered by area or line
+          selfType: el === this._polygon ? 'area' : 'line'
+        } : null;
       };
       LineView.prototype.highlight = function (seriesModel, ecModel, api, payload) {
         var data = seriesModel.getData();
@@ -41970,7 +42199,7 @@
       el.useStyle(style);
       var cursorStyle = itemModel.getShallow('cursor');
       cursorStyle && el.attr('cursor', cursorStyle);
-      var labelPositionOutside = isPolar ? isHorizontalOrRadial ? layout.r >= layout.r0 ? 'endArc' : 'startArc' : layout.endAngle >= layout.startAngle ? 'endAngle' : 'startAngle' : isHorizontalOrRadial ? layout.height >= 0 ? 'bottom' : 'top' : layout.width >= 0 ? 'right' : 'left';
+      var labelPositionOutside = isPolar ? isHorizontalOrRadial ? layout.r >= layout.r0 ? 'endArc' : 'startArc' : layout.endAngle >= layout.startAngle ? 'endAngle' : 'startAngle' : isHorizontalOrRadial ? getLabelPositionForHorizontal(layout, seriesModel.coordinateSystem) : getLabelPositionForVertical(layout, seriesModel.coordinateSystem);
       var labelStatesModels = getLabelStatesModels(itemModel);
       setLabelStyle(el, labelStatesModels, {
         labelFetcher: seriesModel,
@@ -42155,6 +42384,22 @@
         silent: true,
         z2: 0
       });
+    }
+    function getLabelPositionForHorizontal(layout, coordSys) {
+      if (layout.height === 0) {
+        // For zero height, determine position based on axis inverse status
+        var valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+        return valueAxis.inverse ? 'bottom' : 'top';
+      }
+      return layout.height > 0 ? 'bottom' : 'top';
+    }
+    function getLabelPositionForVertical(layout, coordSys) {
+      if (layout.width === 0) {
+        // For zero width, determine position based on axis inverse status
+        var valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+        return valueAxis.inverse ? 'left' : 'right';
+      }
+      return layout.width >= 0 ? 'right' : 'left';
     }
 
     function install$3(registers) {
@@ -42743,13 +42988,13 @@
         } else if (rotate === 'radial' || rotate === true) {
           var radialAngle = nx < 0 ? -midAngle + PI : -midAngle;
           labelRotate = radialAngle;
-        } else if (rotate === 'tangential' && labelPosition !== 'outside' && labelPosition !== 'outer') {
+        } else if (rotate === 'tangential' || rotate === 'tangential-noflip' && labelPosition !== 'outside' && labelPosition !== 'outer') {
           var rad = Math.atan2(nx, ny);
           if (rad < 0) {
             rad = PI * 2 + rad;
           }
           var isDown = ny > 0;
-          if (isDown) {
+          if (isDown && rotate !== 'tangential-noflip') {
             rad = PI + rad;
           }
           labelRotate = rad - PI;
@@ -48332,109 +48577,6 @@
       return GraphicComponentModel;
     }(ComponentModel);
 
-    /**
-     * Whether need to call `convertEC4CompatibleStyle`.
-     */
-    function isEC4CompatibleStyle(style, elType, hasOwnTextContentOption, hasOwnTextConfig) {
-      // Since echarts5, `RectText` is separated from its host element and style.text
-      // does not exist any more. The compat work brings some extra burden on performance.
-      // So we provide:
-      // `legacy: true` force make compat.
-      // `legacy: false`, force do not compat.
-      // `legacy` not set: auto detect whether legacy.
-      //     But in this case we do not compat (difficult to detect and rare case):
-      //     Because custom series and graphic component support "merge", users may firstly
-      //     only set `textStrokeWidth` style or secondly only set `text`.
-      return style && (style.legacy || style.legacy !== false && !hasOwnTextContentOption && !hasOwnTextConfig && elType !== 'tspan'
-      // Difficult to detect whether legacy for a "text" el.
-      && (elType === 'text' || hasOwn(style, 'text')));
-    }
-    /**
-     * `EC4CompatibleStyle` is style that might be in echarts4 format or echarts5 format.
-     * @param hostStyle The properties might be modified.
-     * @return If be text el, `textContentStyle` and `textConfig` will not be returned.
-     *         Otherwise a `textContentStyle` and `textConfig` will be created, whose props area
-     *         retried from the `hostStyle`.
-     */
-    function convertFromEC4CompatibleStyle(hostStyle, elType, isNormal) {
-      var srcStyle = hostStyle;
-      var textConfig;
-      var textContent;
-      var textContentStyle;
-      if (elType === 'text') {
-        textContentStyle = srcStyle;
-      } else {
-        textContentStyle = {};
-        hasOwn(srcStyle, 'text') && (textContentStyle.text = srcStyle.text);
-        hasOwn(srcStyle, 'rich') && (textContentStyle.rich = srcStyle.rich);
-        hasOwn(srcStyle, 'textFill') && (textContentStyle.fill = srcStyle.textFill);
-        hasOwn(srcStyle, 'textStroke') && (textContentStyle.stroke = srcStyle.textStroke);
-        hasOwn(srcStyle, 'fontFamily') && (textContentStyle.fontFamily = srcStyle.fontFamily);
-        hasOwn(srcStyle, 'fontSize') && (textContentStyle.fontSize = srcStyle.fontSize);
-        hasOwn(srcStyle, 'fontStyle') && (textContentStyle.fontStyle = srcStyle.fontStyle);
-        hasOwn(srcStyle, 'fontWeight') && (textContentStyle.fontWeight = srcStyle.fontWeight);
-        textContent = {
-          type: 'text',
-          style: textContentStyle,
-          // ec4 does not support rectText trigger.
-          // And when text position is different in normal and emphasis
-          // => hover text trigger emphasis;
-          // => text position changed, leave mouse pointer immediately;
-          // That might cause incorrect state.
-          silent: true
-        };
-        textConfig = {};
-        var hasOwnPos = hasOwn(srcStyle, 'textPosition');
-        if (isNormal) {
-          textConfig.position = hasOwnPos ? srcStyle.textPosition : 'inside';
-        } else {
-          hasOwnPos && (textConfig.position = srcStyle.textPosition);
-        }
-        hasOwn(srcStyle, 'textPosition') && (textConfig.position = srcStyle.textPosition);
-        hasOwn(srcStyle, 'textOffset') && (textConfig.offset = srcStyle.textOffset);
-        hasOwn(srcStyle, 'textRotation') && (textConfig.rotation = srcStyle.textRotation);
-        hasOwn(srcStyle, 'textDistance') && (textConfig.distance = srcStyle.textDistance);
-      }
-      convertEC4CompatibleRichItem(textContentStyle, hostStyle);
-      each(textContentStyle.rich, function (richItem) {
-        convertEC4CompatibleRichItem(richItem, richItem);
-      });
-      return {
-        textConfig: textConfig,
-        textContent: textContent
-      };
-    }
-    /**
-     * The result will be set to `out`.
-     */
-    function convertEC4CompatibleRichItem(out, richItem) {
-      if (!richItem) {
-        return;
-      }
-      // (1) For simplicity, make textXXX properties (deprecated since ec5) has
-      // higher priority. For example, consider in ec4 `borderColor: 5, textBorderColor: 10`
-      // on a rect means `borderColor: 4` on the rect and `borderColor: 10` on an attached
-      // richText in ec5.
-      // (2) `out === richItem` if and only if `out` is text el or rich item.
-      // So we can overwrite existing props in `out` since textXXX has higher priority.
-      richItem.font = richItem.textFont || richItem.font;
-      hasOwn(richItem, 'textStrokeWidth') && (out.lineWidth = richItem.textStrokeWidth);
-      hasOwn(richItem, 'textAlign') && (out.align = richItem.textAlign);
-      hasOwn(richItem, 'textVerticalAlign') && (out.verticalAlign = richItem.textVerticalAlign);
-      hasOwn(richItem, 'textLineHeight') && (out.lineHeight = richItem.textLineHeight);
-      hasOwn(richItem, 'textWidth') && (out.width = richItem.textWidth);
-      hasOwn(richItem, 'textHeight') && (out.height = richItem.textHeight);
-      hasOwn(richItem, 'textBackgroundColor') && (out.backgroundColor = richItem.textBackgroundColor);
-      hasOwn(richItem, 'textPadding') && (out.padding = richItem.textPadding);
-      hasOwn(richItem, 'textBorderColor') && (out.borderColor = richItem.textBorderColor);
-      hasOwn(richItem, 'textBorderWidth') && (out.borderWidth = richItem.textBorderWidth);
-      hasOwn(richItem, 'textBorderRadius') && (out.borderRadius = richItem.textBorderRadius);
-      hasOwn(richItem, 'textBoxShadowColor') && (out.shadowColor = richItem.textBoxShadowColor);
-      hasOwn(richItem, 'textBoxShadowBlur') && (out.shadowBlur = richItem.textBoxShadowBlur);
-      hasOwn(richItem, 'textBoxShadowOffsetX') && (out.shadowOffsetX = richItem.textBoxShadowOffsetX);
-      hasOwn(richItem, 'textBoxShadowOffsetY') && (out.shadowOffsetY = richItem.textBoxShadowOffsetY);
-    }
-
     var LEGACY_TRANSFORM_PROPS_MAP = {
       position: ['x', 'y'],
       scale: ['scaleX', 'scaleY'],
@@ -50480,7 +50622,7 @@
         },
         emphasis: {
           iconStyle: {
-            borderColor: tokens.color.accent50
+            borderColor: tokens.color.accent70
           }
         },
         // textStyle: {},
@@ -53522,6 +53664,11 @@
         var ecModel = this._ecModel;
         var api = this._api;
         var triggerOn = tooltipModel.get('triggerOn');
+        if (tooltipModel.get('trigger') !== 'axis') {
+          // _lastDataByCoordSys and _cbParamsList are used for axis tooltip only.
+          this._lastDataByCoordSys = null;
+          this._cbParamsList = null;
+        }
         // Try to keep the tooltip show when refreshing
         if (this._lastX != null && this._lastY != null
         // When user is willing to control tooltip totally using API,
@@ -53643,6 +53790,7 @@
           tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
         }
         this._lastX = this._lastY = this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
         if (payload.from !== this.uid) {
           this._hide(makeDispatchAction$1(payload, api));
         }
@@ -53694,6 +53842,7 @@
             return;
           }
           this._lastDataByCoordSys = null;
+          this._cbParamsList = null;
           var seriesDispatcher_1;
           var cmptDispatcher_1;
           findEventDispatcher(el, function (target) {
@@ -53722,6 +53871,7 @@
           }
         } else {
           this._lastDataByCoordSys = null;
+          this._cbParamsList = null;
           this._hide(dispatchAction);
         }
       };
@@ -54079,6 +54229,7 @@
         // FIXME
         // duplicated hideTip if manuallyHideTip is called from dispatchAction.
         this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
         dispatchAction({
           type: 'hideTip',
           from: this.uid
@@ -54091,6 +54242,10 @@
         clear(this, '_updatePosition');
         this._tooltipContent.dispose();
         unregister('itemTooltip', api);
+        this._tooltipContent = null;
+        this._tooltipModel = null;
+        this._lastDataByCoordSys = null;
+        this._cbParamsList = null;
       };
       TooltipView.type = 'tooltip';
       return TooltipView;
@@ -58607,8 +58762,10 @@
         });
         // Position barGroup
         var rect = thisGroup.getBoundingRect([sliderGroup]);
-        thisGroup.x = location.x - rect.x;
-        thisGroup.y = location.y - rect.y;
+        var rectX = isNaN(rect.x) ? 0 : rect.x;
+        var rectY = isNaN(rect.y) ? 0 : rect.y;
+        thisGroup.x = location.x - rectX;
+        thisGroup.y = location.y - rectY;
         thisGroup.markRedraw();
       };
       SliderZoomView.prototype._getViewExtent = function () {

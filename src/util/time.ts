@@ -202,25 +202,6 @@ function parseTimeAxisLabelFormatterDictionary(
                 if (lowerTpl == null) {
                     lowerTpl = defaultFormatterSeed[lowestUnit];
                 }
-                // Generate the dict by the rule as follows:
-                // If the user specify (or by default):
-                //  {formatter: {
-                //      year: '{yyyy}',
-                //      month: '{MMM}',
-                //      day: '{d}',
-                //      ...
-                //  }}
-                // Concat them to make the final dictionary:
-                //  {formatter: {
-                //      year: {year: ['{yyyy}']},
-                //      month: {year: ['{yyyy} {MMM}'], month: ['{MMM}']},
-                //      day: {year: ['{yyyy} {MMM} {d}'], month: ['{MMM} {d}'], day: ['{d}']}
-                //      ...
-                //  }}
-                // And then add `{primary|...}` to each array if from default template.
-                // This strategy is convinient for user configurating and works for most cases.
-                // If bad cases encountered, users can specify the entire dictionary themselves
-                // instead of going through this logic.
                 else if (!primaryTimeUnitFormatterMatchers[upperUnit].test(lowerTpl)) {
                     lowerTpl = `${dict[upperUnit][upperUnit][0]} ${lowerTpl}`;
                 }
@@ -274,22 +255,198 @@ export function getDefaultFormatPrecisionOfInterval(timeUnit: PrimaryTimeUnit): 
     }
 }
 
+/**
+ * Timezone-aware helpers.
+ *
+ * NOTE: These are used for axis ticks/rounding to properly step through DST
+ * boundaries in the requested IANA timezone (e.g. "Europe/London").
+ */
+export type ZonedParts = {
+    year: number;
+    month: number; // 1-12
+    day: number; // 1-31
+    hour: number; // 0-23
+    minute: number;
+    second: number;
+    millisecond: number;
+};
+
+function getTimeZoneOffsetMinutes(timeZone: string, utcMs: number): number {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        // @ts-expect-error: Test
+        timeZoneName: 'shortOffset'
+    });
+
+    const parts = dtf.formatToParts(new Date(utcMs));
+    const tzName = parts.find(p => p.type === 'timeZoneName')?.value || 'GMT';
+
+    // examples: "GMT+2", "GMT+02", "GMT+02:00", "UTC+1"
+    const m = tzName.match(/([+-])(\d{1,2})(?::?(\d{2}))?/i);
+    if (!m) {
+        return 0;
+    }
+    const sign = m[1] === '-' ? -1 : 1;
+    const hh = parseInt(m[2], 10);
+    const mm = m[3] ? parseInt(m[3], 10) : 0;
+    return sign * (hh * 60 + mm);
+}
+
+export function getZonedParts(timeZone: string, utcMs: number): ZonedParts {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        // @ts-expect-error: Test
+        fractionalSecondDigits: 3,
+        hourCycle: 'h23'
+    });
+
+    const parts = dtf.formatToParts(new Date(utcMs));
+    const map: Record<string, string> = {};
+    for (const p of parts) {
+        if (p.type !== 'literal') {
+            map[p.type] = p.value;
+        }
+    }
+
+    return {
+        year: +map.year,
+        month: +map.month,
+        day: +map.day,
+        hour: +map.hour,
+        minute: +map.minute,
+        second: +map.second,
+        millisecond: +(map.fractionalSecond || '0')
+    };
+}
+
+function getZonedWeekdayIndex(timeZone: string, utcMs: number): number {
+    // en-US short weekday: Sun, Mon, Tue, Wed, Thu, Fri, Sat
+    const wd = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(new Date(utcMs));
+    const wdMap: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    return wdMap[wd] ?? 0;
+}
+
+export function zonedPartsToUtcMs(timeZone: string, p: ZonedParts): number {
+    // Start with naive UTC guess for those fields, then correct by the timezone offset.
+    let utcGuess = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second, p.millisecond);
+
+    for (let i = 0; i < 3; i++) {
+        const offMin = getTimeZoneOffsetMinutes(timeZone, utcGuess);
+        const corrected = Date.UTC(
+            p.year, p.month - 1, p.day,
+            p.hour, p.minute, p.second, p.millisecond
+        ) - offMin * 60000;
+        if (corrected === utcGuess) {
+            break;
+        }
+        utcGuess = corrected;
+    }
+
+    // Handle DST gaps (non-existent local times) by moving forward until parts match.
+    const wantKey = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}:${p.second}.${p.millisecond}`;
+    for (let j = 0; j < 120; j++) { // up to 2 hours worst-case safety
+        const got = getZonedParts(timeZone, utcGuess);
+        const gotKey = `${got.year}-${got.month}-${got.day} ${got.hour}:${got.minute}:${got.second}.${got.millisecond}`;
+        if (gotKey === wantKey) {
+            return utcGuess;
+        }
+        utcGuess += 60000; // +1 minute
+    }
+
+    return utcGuess;
+}
+
+export function addZonedParts(p: ZonedParts, add: Partial<Pick<ZonedParts,
+    'year'|'month'|'day'|'hour'|'minute'|'second'|'millisecond'
+>>): ZonedParts {
+    // Use a UTC Date as a pure calendar arithmetic engine (no local tz impact)
+    const d = new Date(Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second, p.millisecond));
+
+    if (add.year) {
+d.setUTCFullYear(d.getUTCFullYear() + add.year);
+}
+    if (add.month) {
+d.setUTCMonth(d.getUTCMonth() + add.month);
+}
+    if (add.day) {
+d.setUTCDate(d.getUTCDate() + add.day);
+}
+    if (add.hour) {
+d.setUTCHours(d.getUTCHours() + add.hour);
+}
+    if (add.minute) {
+d.setUTCMinutes(d.getUTCMinutes() + add.minute);
+}
+    if (add.second) {
+d.setUTCSeconds(d.getUTCSeconds() + add.second);
+}
+    if (add.millisecond) {
+d.setUTCMilliseconds(d.getUTCMilliseconds() + add.millisecond);
+}
+
+    return {
+        year: d.getUTCFullYear(),
+        month: d.getUTCMonth() + 1,
+        day: d.getUTCDate(),
+        hour: d.getUTCHours(),
+        minute: d.getUTCMinutes(),
+        second: d.getUTCSeconds(),
+        millisecond: d.getUTCMilliseconds()
+    };
+}
+
 export function format(
     // Note: The result based on `isUTC` are totally different, which can not be just simply
     // substituted by the result without `isUTC`. So we make the param `isUTC` mandatory.
-    time: unknown, template: string, isUTC: boolean, lang?: string | Model<LocaleOption>
+    time: unknown,
+    template: string,
+    isUTC: boolean,
+    lang?: string | Model<LocaleOption>,
+    timeZone?: string
 ): string {
     const date = numberUtil.parseDate(time);
-    const y = date[fullYearGetterName(isUTC)]();
-    const M = date[monthGetterName(isUTC)]() + 1;
+
+    let y: number;
+    let M: number;
+    let d: number;
+    let e: number;
+    let H: number;
+    let m: number;
+    let s: number;
+    let S: number;
+
+    if (timeZone) {
+        const parts = getZonedParts(timeZone, date.getTime());
+        y = parts.year;
+        M = parts.month;
+        d = parts.day;
+        H = parts.hour;
+        m = parts.minute;
+        s = parts.second;
+        S = parts.millisecond;
+        e = getZonedWeekdayIndex(timeZone, date.getTime());
+    }
+    else {
+        y = date[fullYearGetterName(isUTC)]();
+        M = date[monthGetterName(isUTC)]() + 1;
+        d = date[dateGetterName(isUTC)]();
+        e = date['get' + (isUTC ? 'UTC' : '') + 'Day' as 'getDay' | 'getUTCDay']();
+        H = date[hoursGetterName(isUTC)]();
+        m = date[minutesGetterName(isUTC)]();
+        s = date[secondsGetterName(isUTC)]();
+        S = date[millisecondsGetterName(isUTC)]();
+    }
+
     const q = Math.floor((M - 1) / 3) + 1;
-    const d = date[dateGetterName(isUTC)]();
-    const e = date['get' + (isUTC ? 'UTC' : '') + 'Day' as 'getDay' | 'getUTCDay']();
-    const H = date[hoursGetterName(isUTC)]();
     const h = (H - 1) % 12 + 1;
-    const m = date[minutesGetterName(isUTC)]();
-    const s = date[secondsGetterName(isUTC)]();
-    const S = date[millisecondsGetterName(isUTC)]();
     const a = H >= 12 ? 'pm' : 'am';
     const A = a.toUpperCase();
 
@@ -333,7 +490,8 @@ export function leveledFormat(
     idx: number,
     formatter: TimeAxisLabelFormatterParsed,
     lang: string | Model<LocaleOption>,
-    isUTC: boolean
+    isUTC: boolean,
+    timeZone?: string
 ) {
     let template = null;
     if (zrUtil.isString(formatter)) {
@@ -359,25 +517,45 @@ export function leveledFormat(
         }
         else {
             // tick may be from customTicks or timeline therefore no tick.time.
-            const unit = getUnitFromValue(tick.value, isUTC);
+            const unit = getUnitFromValue(tick.value, isUTC, timeZone);
             template = formatter[unit][unit][0];
         }
     }
 
-    return format(new Date(tick.value), template, isUTC, lang);
+    return format(new Date(tick.value), template, isUTC, lang, timeZone);
 }
 
 export function getUnitFromValue(
     value: number | string | Date,
-    isUTC: boolean
+    isUTC: boolean,
+    timeZone?: string
 ): PrimaryTimeUnit {
     const date = numberUtil.parseDate(value);
-    const M = (date as any)[monthGetterName(isUTC)]() + 1;
-    const d = (date as any)[dateGetterName(isUTC)]();
-    const h = (date as any)[hoursGetterName(isUTC)]();
-    const m = (date as any)[minutesGetterName(isUTC)]();
-    const s = (date as any)[secondsGetterName(isUTC)]();
-    const S = (date as any)[millisecondsGetterName(isUTC)]();
+
+    let M: number;
+    let d: number;
+    let h: number;
+    let m: number;
+    let s: number;
+    let S: number;
+
+    if (timeZone) {
+        const p = getZonedParts(timeZone, date.getTime());
+        M = p.month;
+        d = p.day;
+        h = p.hour;
+        m = p.minute;
+        s = p.second;
+        S = p.millisecond;
+    }
+    else {
+        M = (date as any)[monthGetterName(isUTC)]() + 1;
+        d = (date as any)[dateGetterName(isUTC)]();
+        h = (date as any)[hoursGetterName(isUTC)]();
+        m = (date as any)[minutesGetterName(isUTC)]();
+        s = (date as any)[secondsGetterName(isUTC)]();
+        S = (date as any)[millisecondsGetterName(isUTC)]();
+    }
 
     const isSecond = S === 0;
     const isMinute = isSecond && s === 0;
@@ -409,40 +587,6 @@ export function getUnitFromValue(
     }
 }
 
-// export function getUnitValue(
-//     value: number | Date,
-//     unit: TimeUnit,
-//     isUTC: boolean
-// ) : number {
-//     const date = zrUtil.isNumber(value)
-//         ? numberUtil.parseDate(value)
-//         : value;
-//     unit = unit || getUnitFromValue(value, isUTC);
-
-//     switch (unit) {
-//         case 'year':
-//             return date[fullYearGetterName(isUTC)]();
-//         case 'half-year':
-//             return date[monthGetterName(isUTC)]() >= 6 ? 1 : 0;
-//         case 'quarter':
-//             return Math.floor((date[monthGetterName(isUTC)]() + 1) / 4);
-//         case 'month':
-//             return date[monthGetterName(isUTC)]();
-//         case 'day':
-//             return date[dateGetterName(isUTC)]();
-//         case 'half-day':
-//             return date[hoursGetterName(isUTC)]() / 24;
-//         case 'hour':
-//             return date[hoursGetterName(isUTC)]();
-//         case 'minute':
-//             return date[minutesGetterName(isUTC)]();
-//         case 'second':
-//             return date[secondsGetterName(isUTC)]();
-//         case 'millisecond':
-//             return date[millisecondsGetterName(isUTC)]();
-//     }
-// }
-
 /**
  * e.g.,
  * If timeUnit is 'year', return the Jan 1st 00:00:00 000 of that year.
@@ -450,20 +594,40 @@ export function getUnitFromValue(
  *
  * @return The input date.
  */
-export function roundTime(date: Date, timeUnit: PrimaryTimeUnit, isUTC: boolean): Date {
+export function roundTime(date: Date, timeUnit: PrimaryTimeUnit, isUTC: boolean, timeZone?: string): Date {
+    if (timeZone) {
+        const p = getZonedParts(timeZone, date.getTime());
+        switch (timeUnit) {
+            case 'year':
+                p.month = 1;
+            case 'month':
+                p.day = 1;
+            case 'day':
+                p.hour = 0;
+            case 'hour':
+                p.minute = 0;
+            case 'minute':
+                p.second = 0;
+            case 'second':
+                p.millisecond = 0;
+        }
+        date.setTime(zonedPartsToUtcMs(timeZone, p));
+        return date;
+    }
+
     switch (timeUnit) {
         case 'year':
-            date[monthSetterName(isUTC)](0);
+            date;
         case 'month':
-            date[dateSetterName(isUTC)](1);
+            date;
         case 'day':
-            date[hoursSetterName(isUTC)](0);
+            date;
         case 'hour':
-            date[minutesSetterName(isUTC)](0);
+            date;
         case 'minute':
-            date[secondsSetterName(isUTC)](0);
+            date;
         case 'second':
-            date[millisecondsSetterName(isUTC)](0);
+            date;
     }
     return date;
 }
