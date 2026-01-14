@@ -371,26 +371,26 @@ export function addZonedParts(p: ZonedParts, add: Partial<Pick<ZonedParts,
     const d = new Date(Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second, p.millisecond));
 
     if (add.year) {
-d.setUTCFullYear(d.getUTCFullYear() + add.year);
-}
+        d.setUTCFullYear(d.getUTCFullYear() + add.year);
+    }
     if (add.month) {
-d.setUTCMonth(d.getUTCMonth() + add.month);
-}
+        d.setUTCMonth(d.getUTCMonth() + add.month);
+    }
     if (add.day) {
-d.setUTCDate(d.getUTCDate() + add.day);
-}
+        d.setUTCDate(d.getUTCDate() + add.day);
+    }
     if (add.hour) {
-d.setUTCHours(d.getUTCHours() + add.hour);
-}
+        d.setUTCHours(d.getUTCHours() + add.hour);
+    }
     if (add.minute) {
-d.setUTCMinutes(d.getUTCMinutes() + add.minute);
-}
+        d.setUTCMinutes(d.getUTCMinutes() + add.minute);
+    }
     if (add.second) {
-d.setUTCSeconds(d.getUTCSeconds() + add.second);
-}
+        d.setUTCSeconds(d.getUTCSeconds() + add.second);
+    }
     if (add.millisecond) {
-d.setUTCMilliseconds(d.getUTCMilliseconds() + add.millisecond);
-}
+        d.setUTCMilliseconds(d.getUTCMilliseconds() + add.millisecond);
+    }
 
     return {
         year: d.getUTCFullYear(),
