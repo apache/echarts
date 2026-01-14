@@ -399,6 +399,7 @@ function createEl(elOption: CustomElementOption): Element {
         el = new Clz();
     }
 
+    customInnerStore(el).option = elOption;
     customInnerStore(el).customGraphicType = graphicType;
     el.name = elOption.name;
 
