@@ -254,8 +254,6 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     calcNiceExtent(
         opt?: {
             splitNumber?: number,
-            fixMin?: boolean,
-            fixMax?: boolean,
             minInterval?: number,
             maxInterval?: number
         }

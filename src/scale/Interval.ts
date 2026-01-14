@@ -24,7 +24,7 @@ import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
 import * as helper from './helper';
 import {ScaleTick, ParsedAxisBreakList, ScaleDataValue, NullUndefined} from '../util/types';
 import { getScaleBreakHelper } from './break';
-import { assert } from 'zrender/src/core/util';
+import { assert, retrieve2 } from 'zrender/src/core/util';
 
 class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> extends Scale<SETTING> {
 
@@ -34,13 +34,30 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
     // Step is calculated in adjustExtent.
     protected _interval: number = 0;
     protected _intervalPrecision: number = 2;
-    // `_intervalCount` effectively specifies the number of "nice segment". This is for special cases,
-    // such as `alignTo: true` and min max are fixed. In this case, `_interval` may be specified with
-    // a "not-nice" value and needs to be rounded with `_intervalPrecision` for better appearance. Then
-    // merely accumulating `_interval` may generate incorrect number of ticks. So `_intervalCount` is
-    // required to specify the expected tick number.
+    protected _extentPrecision: number[] = [];
+    /**
+     * `_intervalCount` effectively specifies the number of "nice segments". This is for special cases,
+     * such as `alignTicks: true` and min max are fixed. In this case, `_interval` may be specified with
+     * a "not-nice" value and needs to be rounded with `_intervalPrecision` for better appearance. Then
+     * merely accumulating `_interval` may generate incorrect number of ticks due to cumulative errors.
+     * So `_intervalCount` is required to specify the expected nice ticks number.
+     * Should ensure `_intervalCount >= -1`,
+     *  where `-1` means no nice tick (e.g., `_extent: [5.2, 5.8], _interval: 1`),
+     *  and `0` means only one nice tick (e.g., `_extent: [5, 5.8], _interval: 1`).
+     * @see setInterval
+     */
     private _intervalCount: number | NullUndefined = undefined;
-    // Should ensure: `_extent[0] <= _niceExtent[0] && _niceExtent[1] <= _extent[1]`
+    /**
+     * Should ensure:
+     *  `_extent[0] <= _niceExtent[0] && _niceExtent[1] <= _extent[1]`
+     * But NOTICE:
+     *  `_niceExtent[0] - _niceExtent[1] <= _interval`, rather than always `< 0`,
+     *  because `_niceExtent` is typically calculated by
+     *  `[ Math.ceil(_extent[0] / _interval) * _interval, Math.floor(_extent[1] / _interval) * _interval ]`.
+     *  e.g., `_extent: [5.2, 5.8]` with interval `1` will get `_niceExtent: [6, 5]`.
+     *  e.g., `_extent: [5, 5.8]` with interval `1` will get `_niceExtent: [5, 5]`.
+     * @see setInterval
+     */
     protected _niceExtent: [number, number];
 
 
@@ -90,53 +107,43 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
     /**
      * @final override is DISALLOWED.
      */
-    setInterval({interval, intervalCount, intervalPrecision, niceExtent}: {
+    setInterval({interval, intervalCount, intervalPrecision, extentPrecision, niceExtent}: {
         interval?: number | NullUndefined;
+        // See comments of `_intervalCount`.
         intervalCount?: number | NullUndefined;
         intervalPrecision?: number | NullUndefined;
+        extentPrecision?: number[] | NullUndefined;
         niceExtent?: number[];
     }): void {
-        const intervalCountSpecified = intervalCount != null;
+        const extent = this._extent;
+
         if (__DEV__) {
             assert(interval != null);
-            if (intervalCountSpecified) {
+            if (intervalCount != null) {
                 assert(
-                    intervalCount > 0
+                    intervalCount >= -1
                     && intervalPrecision != null
                     // Do not support intervalCount on axis break currently.
                     && !this.hasBreaks()
                 );
             }
-        }
-
-        const extent = this._extent;
-        if (__DEV__) {
             if (niceExtent != null) {
-                assert(
-                    isFinite(niceExtent[0]) && isFinite(niceExtent[1])
-                    && extent[0] <= niceExtent[0] && niceExtent[1] <= extent[1]
-                );
+                assert(isFinite(niceExtent[0]) && isFinite(niceExtent[1]));
+                assert(extent[0] <= niceExtent[0] && niceExtent[1] <= extent[1]);
+                assert(round(niceExtent[0] - niceExtent[1], getPrecision(interval)) <= interval);
             }
         }
-        niceExtent = this._niceExtent = niceExtent != null
-            ? niceExtent.slice() as [number, number]
+
+        // Set or clear
+        this._niceExtent =
+            niceExtent != null ? niceExtent.slice() as [number, number]
             // Dropped the auto calculated niceExtent and use user-set extent.
             // We assume users want to set both interval and extent to get a better result.
             : extent.slice() as [number, number];
-
         this._interval = interval;
-
-        if (!intervalCountSpecified) {
-            // This is for cases of "nice" interval.
-            this._intervalCount = undefined; // Clear
-            this._intervalPrecision = helper.getIntervalPrecision(interval);
-        }
-        else {
-            // This is for cases of "not-nice" interval, typically min max are fixed and
-            // axis alignment is required.
-            this._intervalCount = intervalCount;
-            this._intervalPrecision = intervalPrecision;
-        }
+        this._intervalCount = intervalCount;
+        this._intervalPrecision = retrieve2(intervalPrecision, helper.getIntervalPrecision(interval));
+        this._extentPrecision = extentPrecision || [];
     }
 
     /**
@@ -191,13 +198,17 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             ;
             niceTickIdx++
         ) {
+            // Consider case `_extent: [5.2, 5.8], _niceExtent: [6, 5], interval: 1`,
+            //  `_intervalCount` makes sense iff `-1`.
+            // Consider case `_extent: [5, 5.8], _niceExtent: [5, 5], interval: 1`,
+            //  `_intervalCount` makes sense iff `0`.
             if (intervalCount == null) {
-                if (tick > niceTickExtent[1]) {
+                if (tick > niceTickExtent[1] || !isFinite(tick) || !isFinite(niceTickExtent[1])) {
                     break;
                 }
             }
             else {
-                if (niceTickIdx > intervalCount) { // ticks number should be `intervalCount + 1`
+                if (niceTickIdx > intervalCount) { // nice ticks number should be `intervalCount + 1`
                     break;
                 }
                 // Consider cumulative error, especially caused by rounding, the last nice
@@ -398,12 +409,13 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
     calcNiceExtent(opt: {
         splitNumber: number, // By default 5.
         // Do not modify the original extent[0]/extent[1] except for an invalid extent.
-        fixMin?: boolean,
-        fixMax?: boolean,
+        fixMinMax?: boolean[], // [fixMin, fixMax]
         minInterval?: number,
         maxInterval?: number
     }): void {
-        let extent = helper.intervalScaleEnsureValidExtent(this._extent, opt);
+        const fixMinMax = opt.fixMinMax || [];
+
+        let extent = helper.intervalScaleEnsureValidExtent(this._extent, fixMinMax);
 
         this._innerSetExtent(extent[0], extent[1]);
         extent = this._extent.slice() as [number, number];
@@ -412,10 +424,10 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         const interval = this._interval;
         const intervalPrecition = this._intervalPrecision;
 
-        if (!opt.fixMin) {
+        if (!fixMinMax[0]) {
             extent[0] = round(mathFloor(extent[0] / interval) * interval, intervalPrecition);
         }
-        if (!opt.fixMax) {
+        if (!fixMinMax[1]) {
             extent[1] = round(mathCeil(extent[1] / interval) * interval, intervalPrecition);
         }
         this._innerSetExtent(extent[0], extent[1]);

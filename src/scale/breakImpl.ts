@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { assert, clone, each, find, isString, map, trim } from 'zrender/src/core/util';
+import { assert, clone, each, find, isString, map, retrieve2, trim } from 'zrender/src/core/util';
 import {
     NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
     AxisBreakOptionIdentifierInAxis, ScaleTick, VisualAxisBreak,
@@ -25,8 +25,9 @@ import {
 import { error } from '../util/log';
 import type Scale from './Scale';
 import { ScaleBreakContext, AxisBreakParsingResult, registerScaleBreakHelperImpl, ParamPruneByBreak } from './break';
-import { round as fixRound } from '../util/number';
+import { getPrecision, mathMax, mathMin, mathRound } from '../util/number';
 import { AxisLabelFormatterExtraParams } from '../coord/axisCommonTypes';
+import { getExtentPrecision, logScaleLogTick, logScaleLogTickPair, logScalePowTick } from './helper';
 
 /**
  * @caution
@@ -83,7 +84,7 @@ class ScaleBreakContextImpl implements ScaleBreakContext {
                 const multiple = estimateNiceMultiple(tickVal, brk.vmax);
                 if (__DEV__) {
                     // If not, it may cause dead loop or not nice tick.
-                    assert(multiple >= 0 && Math.round(multiple) === multiple);
+                    assert(multiple >= 0 && mathRound(multiple) === multiple);
                 }
                 return multiple;
             }
@@ -320,7 +321,7 @@ function updateAxisBreakGapReal(
         if (gapParsed.type === 'tpPrct') {
             brk.gapReal = gapPrctSum !== 0
                 // prctBrksGapRealSum is supposed to be non-negative but add a safe guard
-                ? Math.max(prctBrksGapRealSum, 0) * gapParsed.val / gapPrctSum : 0;
+                ? mathMax(prctBrksGapRealSum, 0) * gapParsed.val / gapPrctSum : 0;
         }
         if (gapParsed.type === 'tpAbs') {
             brk.gapReal = gapParsed.val;
@@ -430,8 +431,8 @@ function clampBreakByExtent(
     brk: ParsedAxisBreak,
     scaleExtent: [number, number]
 ): NullUndefined | ParsedAxisBreak {
-    const vmin = Math.max(brk.vmin, scaleExtent[0]);
-    const vmax = Math.min(brk.vmax, scaleExtent[1]);
+    const vmin = mathMax(brk.vmin, scaleExtent[0]);
+    const vmax = mathMin(brk.vmax, scaleExtent[1]);
     return (
             vmin < vmax
             || (vmin === vmax && vmin > scaleExtent[0] && vmin < scaleExtent[1])
@@ -619,46 +620,47 @@ function retrieveAxisBreakPairs<TItem, TReturnIdx extends boolean>(
     return result;
 }
 
-function getTicksLogTransformBreak(
+function getTicksPowBreak(
     tick: ScaleTick,
     logBase: number,
     logOriginalBreaks: ParsedAxisBreakList,
-    fixRoundingError: (val: number, originalVal: number) => number
+    extent: number[],
+    extentPrecision: (number | NullUndefined)[],
 ): {
-    brkRoundingCriterion: number;
+    tickPowValue: number;
     vBreak: VisualAxisBreak | NullUndefined;
-} {
-    let vBreak: VisualAxisBreak | NullUndefined;
-    let brkRoundingCriterion: number;
-
-    if (tick.break) {
-        const brk = tick.break.parsedBreak;
-        const originalBreak = find(logOriginalBreaks, brk => identifyAxisBreak(
-            brk.breakOption, tick.break.parsedBreak.breakOption
-        ));
-        const vmin = fixRoundingError(Math.pow(logBase, brk.vmin), originalBreak.vmin);
-        const vmax = fixRoundingError(Math.pow(logBase, brk.vmax), originalBreak.vmax);
-        const gapParsed = {
-            type: brk.gapParsed.type,
-            val: brk.gapParsed.type === 'tpAbs'
-                ? fixRound(Math.pow(logBase, brk.vmin + brk.gapParsed.val)) - vmin
-                : brk.gapParsed.val,
-        };
-        vBreak = {
-            type: tick.break.type,
-            parsedBreak: {
-                breakOption: brk.breakOption,
-                vmin,
-                vmax,
-                gapParsed,
-                gapReal: brk.gapReal,
-            }
-        };
-        brkRoundingCriterion = originalBreak[tick.break.type];
+    // Return: If not found, return null/undefined.
+} | NullUndefined {
+    if (!tick.break) {
+        return;
     }
 
+    const brk = tick.break.parsedBreak;
+    const originalBreak = find(logOriginalBreaks, brk => identifyAxisBreak(
+        brk.breakOption, tick.break.parsedBreak.breakOption
+    ));
+    const minPrecision = getExtentPrecision(brk.vmin, extent, extentPrecision);
+    const maxPrecision = getExtentPrecision(brk.vmax, extent, extentPrecision);
+    // NOTE: `tick.break` may be clamped by scale extent. For consistency we always
+    // pow back, or heuristically use the user input original break to obtain an
+    // acceptable rounding precision for display.
+    const vmin = logScalePowTick(brk.vmin, logBase, retrieve2(minPrecision, getPrecision(originalBreak.vmin)));
+    const vmax = logScalePowTick(brk.vmax, logBase, retrieve2(maxPrecision, getPrecision(originalBreak.vmax)));
+    const parsedBreak = {
+        vmin,
+        vmax,
+        // They are not changed by extent clamping.
+        breakOption: brk.breakOption,
+        gapParsed: clone(originalBreak.gapParsed),
+        gapReal: brk.gapReal,
+    };
+    const vBreak = {
+        type: tick.break.type,
+        parsedBreak,
+    };
+
     return {
-        brkRoundingCriterion,
+        tickPowValue: parsedBreak[vBreak.type],
         vBreak,
     };
 }
@@ -675,14 +677,12 @@ function logarithmicParseBreaksFromOption(
     const parsedOriginal = parseAxisBreakOption(breakOptionList, parse, opt);
 
     const parsedLogged = parseAxisBreakOption(breakOptionList, parse, opt);
-    const loggedBase = Math.log(logBase);
     parsedLogged.breaks = map(parsedLogged.breaks, brk => {
-        const vmin = Math.log(brk.vmin) / loggedBase;
-        const vmax = Math.log(brk.vmax) / loggedBase;
+        const [vmin, vmax] = logScaleLogTickPair([brk.vmin, brk.vmax], logBase, true);
         const gapParsed = {
             type: brk.gapParsed.type,
             val: brk.gapParsed.type === 'tpAbs'
-                ? (Math.log(brk.vmin + brk.gapParsed.val) / loggedBase) - vmin
+                ? logScaleLogTick(brk.vmin + brk.gapParsed.val, logBase, true) - vmin
                 : brk.gapParsed.val,
         };
         return {
@@ -722,7 +722,7 @@ export function installScaleBreakHelper(): void {
         identifyAxisBreak,
         serializeAxisBreakIdentifier,
         retrieveAxisBreakPairs,
-        getTicksLogTransformBreak,
+        getTicksPowBreak,
         logarithmicParseBreaksFromOption,
         makeAxisLabelFormatterParamBreak,
     });

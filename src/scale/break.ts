@@ -114,15 +114,16 @@ export type ScaleBreakHelper = {
     ): (
         TReturnIdx extends false ? TItem[][] : number[][]
     );
-    getTicksLogTransformBreak(
+    getTicksPowBreak(
         tick: ScaleTick,
         logBase: number,
         logOriginalBreaks: ParsedAxisBreakList,
-        fixRoundingError: (val: number, originalVal: number) => number
+        extent: number[],
+        extentPrecision: (number | NullUndefined)[],
     ): {
-        brkRoundingCriterion: number | NullUndefined;
+        tickPowValue: number | NullUndefined;
         vBreak: VisualAxisBreak | NullUndefined;
-    };
+    } | NullUndefined;
     logarithmicParseBreaksFromOption(
         breakOptionList: AxisBreakOption[],
         logBase: number,

@@ -38,10 +38,11 @@ export interface ScaleRawExtentResult {
     min: number;
     max: number;
 
-    // `minFixed`/`maxFixed` marks that:
-    //  - `xxxAxis.min/max` are user specified, or
-    //  - `minDetermined/maxDetermined` are `true`
-    // so it should be used directly in the final extent without any other "nice strategy".
+    // `minFixed`/`maxFixed` is `true` iff:
+    //  - ec option `xxxAxis.min/max` are specified, or
+    //  - `scaleRawExtentResult.minDetermined/maxDetermined` are `true`
+    // They typically suggest axes to use `scaleRawExtentResult.min/max` directly
+    // as their bounds, instead of expanding the extent by some "nice strategy".
     readonly minFixed: boolean;
     readonly maxFixed: boolean;
 
@@ -51,6 +52,7 @@ export interface ScaleRawExtentResult {
 
     // Mark that the axis should be blank.
     readonly isBlank: boolean;
+    readonly needCrossZero: boolean;
 }
 
 export class ScaleRawExtentInfo {
@@ -250,7 +252,8 @@ export class ScaleRawExtentInfo {
             || (isOrdinal && !axisDataLen);
 
         // If data extent modified, need to recalculated to ensure cross zero.
-        if (this._needCrossZero) {
+        const needCrossZero = this._needCrossZero;
+        if (needCrossZero) {
             // Axis is over zero and min is not set
             if (min > 0 && max > 0 && !minFixed) {
                 min = 0;
@@ -295,6 +298,7 @@ export class ScaleRawExtentInfo {
             minDetermined: minDetermined,
             maxDetermined: maxDetermined,
             isBlank: isBlank,
+            needCrossZero: needCrossZero,
         };
     }
 

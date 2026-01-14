@@ -17,7 +17,11 @@
 * under the License.
 */
 
-import {getPrecision, round, nice, quantityExponent, mathPow, mathMax, mathRound} from '../util/number';
+import {
+    getPrecision, round, nice, quantityExponent,
+    mathPow, mathMax, mathRound,
+    mathLog, mathAbs, mathFloor, mathCeil, mathMin
+} from '../util/number';
 import IntervalScale from './Interval';
 import LogScale from './Log';
 import type Scale from './Scale';
@@ -89,12 +93,10 @@ export function intervalScaleNiceTicks(
     }
     const precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
-    const niceTickExtent = result.niceTickExtent = [
-        round(Math.ceil(extent[0] / interval) * interval, precision),
-        round(Math.floor(extent[1] / interval) * interval, precision)
+    result.niceTickExtent = [
+        round(mathCeil(extent[0] / interval) * interval, precision),
+        round(mathFloor(extent[1] / interval) * interval, precision)
     ];
-
-    fixNiceExtent(niceTickExtent, extent);
 
     return result;
 }
@@ -131,26 +133,6 @@ export function getIntervalPrecision(niceInterval: number): number {
     // NOTE: `2` was introduced in commit `af2a2a9f6303081d7c3b52f0a38add07b4c6e0c7`;
     // it works on "nice" interval, but seems not necessarily mathematically required.
     return getPrecision(niceInterval) + 2;
-}
-
-
-function clamp(
-    niceTickExtent: [number, number], idx: number, extent: [number, number]
-): void {
-    niceTickExtent[idx] = Math.max(Math.min(niceTickExtent[idx], extent[1]), extent[0]);
-}
-
-// In some cases (e.g., splitNumber is 1), niceTickExtent may be out of extent.
-export function fixNiceExtent(
-    niceTickExtent: [number, number], extent: [number, number]
-): void {
-    !isFinite(niceTickExtent[0]) && (niceTickExtent[0] = extent[0]);
-    !isFinite(niceTickExtent[1]) && (niceTickExtent[1] = extent[1]);
-    clamp(niceTickExtent, 0, extent);
-    clamp(niceTickExtent, 1, extent);
-    if (niceTickExtent[0] > niceTickExtent[1]) {
-        niceTickExtent[0] = niceTickExtent[1];
-    }
 }
 
 export function contain(val: number, extent: [number, number]): boolean {
@@ -192,15 +174,77 @@ function scale(
     return val * (extent[1] - extent[0]) + extent[0];
 }
 
-export function logTransform(base: number, extent: number[], noClampNegative?: boolean): [number, number] {
-    const loggedBase = Math.log(base);
+/**
+ * @see logScaleLogTick
+ */
+export function logScaleLogTickPair(
+    pair: number[],
+    base: number,
+    noClampNegative?: boolean
+): [number, number] {
     return [
-        // log(negative) is NaN, so safe guard here.
-        // PENDING: But even getting a -Infinity still does not make sense in extent.
-        //  Just keep it as is, getting a NaN to make some previous cases works by coincidence.
-        Math.log(noClampNegative ? extent[0] : Math.max(0, extent[0])) / loggedBase,
-        Math.log(noClampNegative ? extent[1] : Math.max(0, extent[1])) / loggedBase
+        logScaleLogTick(pair[0], base, noClampNegative),
+        logScaleLogTick(pair[1], base, noClampNegative)
     ];
+}
+
+export function logScaleLogTick(
+    val: number,
+    base: number,
+    noClampNegative?: boolean
+): number {
+    // log(negative) is NaN, so safe guard here.
+    // PENDING: But even getting a -Infinity still does not make sense in extent.
+    //  Just keep it as is, getting a NaN to make some previous cases works by coincidence.
+    return mathLog(noClampNegative ? val : mathMax(0, val)) / mathLog(base);
+    // NOTE: rounding error may happen above, typically expecting `log10(1000)` but actually
+    // getting `2.9999999999999996`, but generally it does not matter since they are not
+    // used to display.
+}
+
+/**
+ * @see logScalePowTick
+ */
+export function logScalePowTickPair(
+    linearPair: number[],
+    base: number,
+    precisionPair: (number | NullUndefined)[],
+): [number, number] {
+    return [
+        logScalePowTick(linearPair[0], base, precisionPair[0]),
+        logScalePowTick(linearPair[1], base, precisionPair[1])
+    ] as [number, number];
+}
+
+/**
+ * Cumulative rounding errors cause the logarithm operation to become non-invertible by simply exponentiation.
+ *  - `Math.pow(10, integer)` itself has no rounding error. But,
+ *  - If `linearTickVal` is generated internally by `calcNiceTicks`, it may be still "not nice" (not an integer)
+ *    when it is `extent[i]`.
+ *  - If `linearTickVal` is generated outside (e.g., by `alignScaleTicks`) and set by `setExtent`,
+ *    `logScaleLogTickPair` may already have introduced rounding errors even for "nice" values.
+ * But invertible is required when the original `extent[i]` need to be respected, or "nice" ticks need to be
+ * displayed instead of something like `5.999999999999999`, which is addressed in this function by providing
+ * a `precision`.
+ * See also `#4158`.
+ */
+export function logScalePowTick(
+    // `tickVal` should be in the linear space.
+    linearTickVal: number,
+    base: number,
+    precision: number | NullUndefined,
+): number {
+
+    // NOTE: Even when min/max is required to be fixed, `pow(base, tickVal)` is not necessarily equal to
+    // `originalPowExtent[0]`/`[1]`. e.g., when `originalPowExtent` is a invalid extent but
+    // `tickVal` has been adjusted to make it valid. So we always use `Math.pow`.
+    let powVal = mathPow(base, linearTickVal);
+
+    if (precision != null) {
+        powVal = round(powVal, precision);
+    }
+
+    return powVal;
 }
 
 /**
@@ -215,9 +259,7 @@ export function logTransform(base: number, extent: number[], noClampNegative?: b
  */
 export function intervalScaleEnsureValidExtent(
     rawExtent: number[],
-    opt: {
-        fixMax?: boolean
-    }
+    fixMinMax: boolean[],
 ): number[] {
     const extent = rawExtent.slice();
     // If extent start and end are same, expand them
@@ -225,13 +267,13 @@ export function intervalScaleEnsureValidExtent(
         if (extent[0] !== 0) {
             // Expand extent
             // Note that extents can be both negative. See #13154
-            const expandSize = Math.abs(extent[0]);
+            const expandSize = mathAbs(extent[0]);
             // In the fowllowing case
             //      Axis has been fixed max 100
             //      Plus data are all 100 and axis extent are [100, 100].
             // Extend to the both side will cause expanded max is larger than fixed max.
             // So only expand to the smaller side.
-            if (!opt.fixMax) {
+            if (!fixMinMax[1]) {
                 extent[1] += expandSize / 2;
                 extent[0] -= expandSize / 2;
             }
@@ -261,4 +303,14 @@ export function ensureValidSplitNumber(
 ): number {
     rawSplitNumber = rawSplitNumber || defaultSplitNumber;
     return mathRound(mathMax(rawSplitNumber, 1));
+}
+
+export function getExtentPrecision(
+    val: number,
+    extent: number[],
+    extentPrecision: (number | NullUndefined)[],
+): number | NullUndefined {
+    return val === extent[0] ? extentPrecision[0]
+        : val === extent[1] ? extentPrecision[1]
+        : null;
 }

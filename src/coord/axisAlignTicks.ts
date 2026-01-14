@@ -19,7 +19,8 @@
 
 import {
     getAcceptableTickPrecision,
-    mathAbs, mathCeil, mathFloor, mathMax, nice, NICE_MODE_MIN, round
+    getPrecision,
+    mathAbs, mathCeil, mathFloor, mathMax, mathRound, nice, NICE_MODE_MIN, quantity, round
 } from '../util/number';
 import IntervalScale from '../scale/Interval';
 import { adoptScaleExtentOptionAndPrepare } from './axisHelper';
@@ -28,7 +29,7 @@ import LogScale from '../scale/Log';
 import { warn } from '../util/log';
 import {
     increaseInterval, isLogScale, getIntervalPrecision, intervalScaleEnsureValidExtent,
-    logTransform,
+    logScaleLogTickPair,
 } from '../scale/helper';
 import { assert } from 'zrender/src/core/util';
 import { NullUndefined } from '../util/types';
@@ -42,7 +43,9 @@ export function alignScaleTicks(
 ): void {
     const isTargetLogScale = isLogScale(targetScale);
     const alignToScaleLinear = isLogScale(alignToScale) ? alignToScale.linearStub : alignToScale;
+    const targetScaleLinear = isTargetLogScale ? targetScale.linearStub : targetScale;
 
+    const targetLogScaleBase = (targetScale as LogScale).base;
     const alignToTicks = alignToScaleLinear.getTicks();
     const alignToExpNiceTicks = alignToScaleLinear.getTicks({expandToNicedExtent: true});
     const alignToSegCount = alignToTicks.length - 1;
@@ -67,16 +70,16 @@ export function alignScaleTicks(
     // matching exactly to ticks of `alignTo` scale.
 
     // Adjust min, max based on the extent of alignTo. When min or max is set in alignTo scale
-    let t0: number; // diff ratio on min irregular segment. 0 <= t0 < 1
-    let t1: number; // diff ratio on max irregular segment. 0 <= t1 < 1
-    let alignToRegularSegCount: number; // >= 1
+    let t0: number; // diff ratio on min not-nice segment. 0 <= t0 < 1
+    let t1: number; // diff ratio on max not-nice segment. 0 <= t1 < 1
+    let alignToNiceSegCount: number; // >= 1
     // Consider ticks of `alignTo`, only these cases below may occur:
     if (alignToSegCount === 1) {
         // `alignToTicks` is like:
         //  |--|
         // In this case, we make the corresponding 2 target ticks "nice".
         t0 = t1 = 0;
-        alignToRegularSegCount = 1;
+        alignToNiceSegCount = 1;
     }
     else if (alignToSegCount === 2) {
         // `alignToTicks` is like:
@@ -84,16 +87,16 @@ export function alignScaleTicks(
         //  |-----|-| or
         //  |-----|-----|
         // Notices that nice ticks do not necessarily exist in this case.
-        // In this case, we choose the larger segment as the "regular segment" and
+        // In this case, we choose the larger segment as the "nice segment" and
         // the corresponding target ticks are made "nice".
         const interval0 = mathAbs(alignToTicks[0].value - alignToTicks[1].value);
         const interval1 = mathAbs(alignToTicks[1].value - alignToTicks[2].value);
         t0 = t1 = 0;
         if (interval0 === interval1) {
-            alignToRegularSegCount = 2;
+            alignToNiceSegCount = 2;
         }
         else {
-            alignToRegularSegCount = 1;
+            alignToNiceSegCount = 1;
             if (interval0 < interval1) {
                 t0 = interval0 / interval1;
             }
@@ -107,9 +110,9 @@ export function alignScaleTicks(
         //  |-|-----|-----|-| or
         //  |-----|-----|-| or
         //  |-|-----|-----| or ...
-        // At least one regular segment is present, and irregular segments are only present on
+        // At least one nice segment is present, and not-nice segments are only present on
         // the start and/or the end.
-        // In this case, ticks corresponding to regular segments are made "nice".
+        // In this case, ticks corresponding to nice segments are made "nice".
         const alignToInterval = alignToScaleLinear.getInterval();
         t0 = (
             1 - (alignToTicks[0].value - alignToExpNiceTicks[0].value) / alignToInterval
@@ -117,28 +120,36 @@ export function alignScaleTicks(
         t1 = (
             1 - (alignToExpNiceTicks[alignToSegCount].value - alignToTicks[alignToSegCount].value) / alignToInterval
         ) % 1;
-        alignToRegularSegCount = alignToSegCount - (t0 ? 1 : 0) - (t1 ? 1 : 0);
+        alignToNiceSegCount = alignToSegCount - (t0 ? 1 : 0) - (t1 ? 1 : 0);
     }
 
     if (__DEV__) {
-        assert(alignToRegularSegCount >= 1);
+        assert(alignToNiceSegCount >= 1);
     }
 
     const targetExtentInfo = adoptScaleExtentOptionAndPrepare(targetScale, targetAxisModel, targetDataExtent);
 
-    // NOTE: If `dataZoom` has either start/end not 0% or 100% (indicated by `min/maxDetermined`), we consider
-    // both min and max fixed; otherwise the result is probably unexpected if we expand the extent out of
-    // the original min/max, e.g., the expanded extent may cross zero.
+    // NOTE:
+    //  Consider a case:
+    //      dataZoom controls all Y axes;
+    //      dataZoom end is 90% (maxFixed: true, maxDetermined: true);
+    //      but dataZoom start is 0% (minFixed: false, minDetermined: false);
+    //  In this case,
+    //      `Interval#calcNiceTicks` only uses `targetExtentInfo.max` as the upper bound but may expand the
+    //      lower bound to a "nice" tick and can get an acceptable result.
+    //      But `alignScaleTicks` has to use both `targetExtentInfo.min/max` as the bounds without any expansion,
+    //      otherwise the lower bound may become negative unexpectedly for all positive series data.
     const hasMinMaxDetermined = targetExtentInfo.minDetermined || targetExtentInfo.maxDetermined;
-    const targetMinFixed = targetExtentInfo.minFixed || hasMinMaxDetermined;
-    const targetMaxFixed = targetExtentInfo.maxFixed || hasMinMaxDetermined;
-    // MEMO:
-    //  - When only `xxxAxis.min` or `xxxAxis.max` is fixed, even "nice" interval can be calculated, ticks
-    //    accumulated based on `min`/`max` can be "nice" only if `min` or `max` is "nice".
-    //  - Generating a "nice" interval in this case may cause the extent have both positive and negative ticks,
-    //    which may be not preferable for all positive (very common) or all negative series data. But it can be
-    //    simply resolved by specifying `xxxAxis.min: 0`/`xxxAxis.max: 0`, so we do not specially handle this
-    //    case here.
+    const targetMinMaxFixed = [
+        targetExtentInfo.minFixed || hasMinMaxDetermined,
+        targetExtentInfo.maxFixed || hasMinMaxDetermined
+    ];
+    // MEMO: When only `xxxAxis.min` or `xxxAxis.max` is fixed,
+    //  - Even a "nice" interval can be calculated, ticks accumulated based on `min`/`max` can be "nice" only if
+    //    `min` or `max` is a "nice" number.
+    //  - Generating a "nice" interval may cause the extent have both positive and negative ticks, which may be
+    //    not preferable for all positive (very common) or all negative series data. But it can be simply resolved
+    //    by specifying `xxxAxis.min: 0`/`xxxAxis.max: 0`, so we do not specially handle this case here.
     //  Therefore, we prioritize generating "nice" interval over preventing from crossing zero.
     //  e.g., if series data are all positive and the max data is `11739`,
     //      If setting `yAxis.max: 'dataMax'`, ticks may be like:
@@ -148,11 +159,15 @@ export function alignScaleTicks(
     //      If setting `yAxis.max: 12000, yAxis.min: 0`, ticks may be like:
     //          `12000, 9000, 6000, 3000, 0` ("nice")
 
-    let targetExtent = [targetExtentInfo.min, targetExtentInfo.max];
+    let targetRawExtent = [targetExtentInfo.min, targetExtentInfo.max];
     if (isTargetLogScale) {
-        targetExtent = logTransform(targetScale.base, targetExtent);
+        targetRawExtent = logScaleLogTickPair(targetRawExtent, targetLogScaleBase);
     }
-    targetExtent = intervalScaleEnsureValidExtent(targetExtent, {fixMax: targetMaxFixed});
+    const targetExtent = intervalScaleEnsureValidExtent(targetRawExtent, targetMinMaxFixed);
+    const targetMinMaxChanged = [
+        targetExtent[0] !== targetRawExtent[0],
+        targetExtent[1] !== targetRawExtent[1]
+    ];
 
     let min: number;
     let max: number;
@@ -172,9 +187,9 @@ export function alignScaleTicks(
                 break;
             }
             interval = isTargetLogScale
-                // TODO: A guardcode to avoid infinite loop, but probably it
-                // should be guranteed by `LogScale` itself.
-                ? interval * mathMax(targetScale.base, 2)
+                // TODO: `mathMax(base, 2)` is a guardcode to avoid infinite loop,
+                // but probably it should be guranteed by `LogScale` itself.
+                ? interval * mathMax(targetLogScaleBase, 2)
                 : increaseInterval(interval);
             intervalPrecision = getIntervalPrecision(interval);
         }
@@ -185,11 +200,24 @@ export function alignScaleTicks(
         }
     }
 
+    function updateMinFromMinNice() {
+        min = round(minNice - interval * t0, intervalPrecision);
+    }
+    function updateMaxFromMaxNice() {
+        max = round(maxNice + interval * t1, intervalPrecision);
+    }
+    function updateMinNiceFromMinT0Interval() {
+        minNice = t0 ? round(min + interval * t0, intervalPrecision) : min;
+    }
+    function updateMaxNiceFromMaxT1Interval() {
+        maxNice = t1 ? round(max - interval * t1, intervalPrecision) : max;
+    }
+
     // NOTE: The new calculated `min`/`max` must NOT shrink the original extent; otherwise some series
     // data may be outside of the extent. They can expand the original extent slightly to align with
     // ticks of `alignTo`. In this case, more blank space is added but visually fine.
 
-    if (targetMinFixed && targetMaxFixed) {
+    if (targetMinMaxFixed[0] && targetMinMaxFixed[1]) {
         // Both `min` and `max` are specified (via dataZoom or ec option; consider both Cartesian, radar and
         // other possible axes). In this case, "nice" ticks can hardly be calculated, but reasonable ticks should
         // still be calculated whenever possible, especially `intervalPrecision` should be tuned for better
@@ -197,90 +225,114 @@ export function alignScaleTicks(
 
         min = targetExtent[0];
         max = targetExtent[1];
-        intervalCount = alignToRegularSegCount;
-        const rawInterval = (max - min) / (alignToRegularSegCount + t0 + t1);
+        intervalCount = alignToNiceSegCount;
+        interval = (max - min) / (alignToNiceSegCount + t0 + t1);
         // Typically axis pixel extent is ready here. See `create` in `Grid.ts`.
         const axisPxExtent = targetAxisModel.axis.getExtent();
         // NOTICE: this pxSpan may be not accurate yet due to "outerBounds" logic, but acceptable so far.
         const pxSpan = mathAbs(axisPxExtent[1] - axisPxExtent[0]);
-        // We imperically choose `pxDiffAcceptable` as `0.5 / alignToRegularSegCount` for reduce cumulative
+        // We imperically choose `pxDiffAcceptable` as `0.5 / alignToNiceSegCount` for reduce cumulative
         // error, otherwise a discernible misalign (> 1px) may occur.
         // PENDING: We do not find a acceptable precision for LogScale here.
         //  Theoretically it can be addressed but introduce more complexity. Is it necessary?
-        intervalPrecision = getAcceptableTickPrecision(max - min, pxSpan, 0.5 / alignToRegularSegCount);
-        interval = round(rawInterval, intervalPrecision);
-        maxNice = t1 ? round(max - rawInterval * t1, intervalPrecision) : max;
-        minNice = t0 ? round(min + rawInterval * t0, intervalPrecision) : min;
+        intervalPrecision = getAcceptableTickPrecision(max - min, pxSpan, 0.5 / alignToNiceSegCount);
+        updateMinNiceFromMinT0Interval();
+        updateMaxNiceFromMaxT1Interval();
+        interval = round(interval, intervalPrecision);
     }
     else {
         // Make a minimal enough `interval`, increase it later.
         // It is a similar logic as `IntervalScale#calcNiceTicks` and `LogScale#calcNiceTicks`.
         // Axis break is not supported, which is guranteed by the caller of this function.
-        interval = nice((targetExtent[1] - targetExtent[0]) / alignToRegularSegCount, NICE_MODE_MIN);
+        const targetSpan = targetExtent[1] - targetExtent[0];
+        interval = isTargetLogScale
+            ? mathMax(quantity(targetSpan), 1)
+            : nice(targetSpan / alignToNiceSegCount, NICE_MODE_MIN);
         intervalPrecision = getIntervalPrecision(interval);
 
-        if (targetMinFixed) {
+        if (targetMinMaxFixed[0]) {
             min = targetExtent[0];
             loopIncreaseInterval(function () {
-                minNice = t0 ? round(min + interval * t0, intervalPrecision) : min;
-                maxNice = round(minNice + interval * alignToRegularSegCount, intervalPrecision);
-                max = round(maxNice + interval * t1, intervalPrecision);
+                updateMinNiceFromMinT0Interval();
+                maxNice = round(minNice + interval * alignToNiceSegCount, intervalPrecision);
+                updateMaxFromMaxNice();
                 if (max >= targetExtent[1]) {
                     return true;
                 }
             });
         }
-        else if (targetMaxFixed) {
+        else if (targetMinMaxFixed[1]) {
             max = targetExtent[1];
             loopIncreaseInterval(function () {
-                maxNice = t1 ? round(max - interval * t1, intervalPrecision) : max;
-                minNice = round(maxNice - interval * alignToRegularSegCount, intervalPrecision);
-                min = round(minNice - interval * t0, intervalPrecision);
+                updateMaxNiceFromMaxT1Interval();
+                minNice = round(maxNice - interval * alignToNiceSegCount, intervalPrecision);
+                updateMinFromMinNice();
                 if (min <= targetExtent[0]) {
                     return true;
                 }
             });
         }
         else {
-            // Currently we simply lay out ticks of the target scale to the "regular segments" of `alignTo`
-            // scale for "nice". If unexpected cases occur in future, the strategy can be tuned precisely
-            // (e.g., make use of irregular segments).
             loopIncreaseInterval(function () {
-                // Consider cases that all positive or all negative, try not to cross zero, which is
-                // preferable in most cases.
-                if (targetExtent[1] <= 0) {
-                    maxNice = round(mathCeil(targetExtent[1] / interval) * interval, intervalPrecision);
-                    minNice = round(maxNice - interval * alignToRegularSegCount, intervalPrecision);
-                    if (minNice <= targetExtent[0]) {
-                        return true;
+                minNice = round(mathCeil(targetExtent[0] / interval) * interval, intervalPrecision);
+                maxNice = round(mathFloor(targetExtent[1] / interval) * interval, intervalPrecision);
+                // NOTE:
+                //  - `maxNice - minNice >= -interval` here.
+                //  - While `interval` increases, `currIntervalCount` decreases, minimum `-1`.
+                const currIntervalCount = mathRound((maxNice - minNice) / interval);
+                if (currIntervalCount <= alignToNiceSegCount) {
+                    const moreCount = alignToNiceSegCount - currIntervalCount;
+                    // Consider cases that negative series data do not make sense (or vice versa), users can
+                    // simply specify `xxxAxis.min/max: 0` to achieve that. But we still optimize it for some
+                    // common default cases whenever possible, especially when ec option `xxxAxis.scale: false`
+                    // (the default), it is usually unexpected if negative (or positive) ticks are introduced.
+                    let moreCountPair: number[];
+                    const needCrossZero = targetExtentInfo.needCrossZero;
+                    if (needCrossZero && targetExtent[0] === 0) {
+                        // 0 has been included in extent and all positive.
+                        moreCountPair = [0, moreCount];
                     }
-                }
-                else {
-                    minNice = round(mathFloor(targetExtent[0] / interval) * interval, intervalPrecision);
-                    maxNice = round(minNice + interval * alignToRegularSegCount, intervalPrecision);
-                    if (maxNice >= targetExtent[1]) {
+                    else if (needCrossZero && targetExtent[1] === 0) {
+                        // 0 has been included in extent and all negative.
+                        moreCountPair = [moreCount, 0];
+                    }
+                    else {
+                        // Try to arrange tick in the middle as possible corresponding to the given `alignTo`
+                        // ticks, which is especially preferable in `LogScale`.
+                        const lessHalfCount = mathFloor(moreCount / 2);
+                        moreCountPair = moreCount % 2 === 0 ? [lessHalfCount, lessHalfCount]
+                            : (min + max) < (targetExtent[0] + targetExtent[1]) ? [lessHalfCount, lessHalfCount + 1]
+                            : [lessHalfCount + 1, lessHalfCount];
+                    }
+                    minNice = round(minNice - interval * moreCountPair[0], intervalPrecision);
+                    maxNice = round(maxNice + interval * moreCountPair[1], intervalPrecision);
+                    updateMinFromMinNice();
+                    updateMaxFromMaxNice();
+                    if (min <= targetExtent[0] && max >= targetExtent[1]) {
                         return true;
                     }
                 }
             });
-            min = round(minNice - interval * t0, intervalPrecision);
-            max = round(maxNice + interval * t1, intervalPrecision);
         }
-
-        intervalPrecision = null; // Clear for the calling of `setInterval`.
     }
 
-    if (isTargetLogScale) {
-        min = targetScale.powTick(min, 0, null);
-        max = targetScale.powTick(max, 1, null);
-    }
+    const extentPrecision = isTargetLogScale
+        ? [
+            (targetMinMaxFixed[0] && !targetMinMaxChanged[0])
+                ? getPrecision(min) : null,
+            (targetMinMaxFixed[1] && !targetMinMaxChanged[1])
+                ? getPrecision(max) : null
+        ]
+        : [];
+
     // NOTE: Must in setExtent -> setInterval order.
-    targetScale.setExtent(min, max);
-    targetScale.setInterval({
+    targetScaleLinear.setExtent(min, max);
+    targetScaleLinear.setInterval({
         // Even in LogScale, `interval` should not be in log space.
         interval,
         intervalCount,
         intervalPrecision,
-        niceExtent: [minNice, maxNice]
+        extentPrecision,
+        niceExtent: [minNice, maxNice],
     });
 }

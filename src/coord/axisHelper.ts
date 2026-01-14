@@ -174,8 +174,7 @@ export function niceScaleExtent(
     scale.setExtent(extentInfo.min, extentInfo.max);
     scale.calcNiceExtent({
         splitNumber: model.get('splitNumber'),
-        fixMin: extentInfo.minFixed,
-        fixMax: extentInfo.maxFixed,
+        fixMinMax: [extentInfo.minFixed, extentInfo.maxFixed],
         minInterval: isIntervalOrTime ? model.get('minInterval') : null,
         maxInterval: isIntervalOrTime ? model.get('maxInterval') : null
     });
@@ -337,6 +336,9 @@ export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): Dime
     return zrUtil.keys(dataDimMap);
 }
 
+/**
+ * FIXME: refactor - merge with `Scale#unionExtentFromData`
+ */
 export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, axisDim: string): void {
     if (data) {
         zrUtil.each(getDataDimensionsOnAxis(data, axisDim), function (dim) {

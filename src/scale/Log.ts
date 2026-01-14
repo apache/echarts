@@ -21,7 +21,8 @@ import * as zrUtil from 'zrender/src/core/util';
 import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
 import {
     mathFloor, mathCeil, mathPow, mathLog,
-    round, quantity, getPrecision
+    round, quantity, getPrecision,
+    mathMax,
 } from '../util/number';
 
 // Use some method of IntervalScale
@@ -31,14 +32,18 @@ import {
     ScaleTick,
     NullUndefined
 } from '../util/types';
-import { ensureValidSplitNumber, fixNiceExtent, getIntervalPrecision, logTransform } from './helper';
+import {
+    ensureValidSplitNumber, getIntervalPrecision,
+    logScalePowTickPair, logScalePowTick, logScaleLogTickPair,
+    getExtentPrecision
+} from './helper';
 import SeriesData from '../data/SeriesData';
 import { getScaleBreakHelper } from './break';
 
 
 const LINEAR_STUB_METHODS = [
-    'getExtent', 'getTicks', 'getInterval'
-    // Keep no setting method to mitigate vulnerability.
+    'getExtent', 'getTicks', 'getInterval',
+    'setExtent', 'setInterval',
 ] as const;
 
 /**
@@ -46,7 +51,8 @@ const LINEAR_STUB_METHODS = [
  *  - The supper class (`IntervalScale`) and its member fields (such as `this._extent`,
  *    `this._interval`, `this._niceExtent`) provides linear tick arrangement (logarithm applied).
  *  - `_originalScale` (`IntervalScale`) is used to save some original info
- *    (before logarithm applied, such as raw extent).
+ *    (before logarithm applied, such as raw extent; but may be still invalid, and not sync to the
+ *     calculated ("nice") extent).
  */
 class LogScale extends IntervalScale {
 
@@ -56,9 +62,6 @@ class LogScale extends IntervalScale {
     readonly base: number;
 
     private _originalScale = new IntervalScale();
-
-    // `[fixMin, fixMax]`
-    private _fixMinMax: boolean[] = [false, false];
 
     linearStub: Pick<IntervalScale, (typeof LINEAR_STUB_METHODS)[number]>;
 
@@ -84,29 +87,34 @@ class LogScale extends IntervalScale {
      * @param Whether expand the ticks to niced extent.
      */
     getTicks(opt?: ScaleGetTicksOpt): ScaleTick[] {
-        const extent = this._extent;
+        const base = this.base;
+        const originalScale = this._originalScale;
         const scaleBreakHelper = getScaleBreakHelper();
+        const extent = this._extent;
+        const extentPrecision = this._extentPrecision;
 
         return zrUtil.map(super.getTicks(opt || {}), function (tick) {
-            let vBreak;
-            let brkRoundingCriterion;
-            if (scaleBreakHelper) {
-                const transformed = scaleBreakHelper.getTicksLogTransformBreak(
-                    tick,
-                    this.base,
-                    this._originalScale._innerGetBreaks(),
-                    fixRoundingError
-                );
-                vBreak = transformed.vBreak;
-                brkRoundingCriterion = transformed.brkRoundingCriterion;
-            }
-
             const val = tick.value;
-            const powVal = this.powTick(
+            let powVal = logScalePowTick(
                 val,
-                val === extent[1] ? 1 : val === extent[0] ? 0 : null,
-                brkRoundingCriterion
+                base,
+                getExtentPrecision(val, extent, extentPrecision)
             );
+
+            let vBreak;
+            if (scaleBreakHelper) {
+                const brkPowResult = scaleBreakHelper.getTicksPowBreak(
+                    tick,
+                    base,
+                    originalScale._innerGetBreaks(),
+                    extent,
+                    extentPrecision
+                );
+                if (brkPowResult) {
+                    vBreak = brkPowResult.vBreak;
+                    powVal = brkPowResult.tickPowValue;
+                }
+            }
 
             return {
                 value: powVal,
@@ -122,53 +130,23 @@ class LogScale extends IntervalScale {
     setExtent(start: number, end: number): void {
         // [CAVEAT]: If modifying this logic, must sync to `_initLinearStub`.
         this._originalScale.setExtent(start, end);
-        const loggedExtent = logTransform(this.base, [start, end]);
+        const loggedExtent = logScaleLogTickPair([start, end], this.base);
         super.setExtent(loggedExtent[0], loggedExtent[1]);
     }
 
     getExtent() {
         const extent = super.getExtent();
-        return [
-            this.powTick(extent[0], 0, null),
-            this.powTick(extent[1], 1, null)
-        ] as [number, number];
+        return logScalePowTickPair(
+            extent,
+            this.base,
+            this._extentPrecision
+        );
     }
 
     unionExtentFromData(data: SeriesData, dim: DimensionName | DimensionLoose): void {
         this._originalScale.unionExtentFromData(data, dim);
-        const loggedOther = logTransform(this.base, data.getApproximateExtent(dim), true);
+        const loggedOther = logScaleLogTickPair(data.getApproximateExtent(dim), this.base, true);
         this._innerUnionExtent(loggedOther);
-    }
-
-    /**
-     * fixMin/Max and rounding error are addressed.
-     */
-    powTick(
-        // `val` should be in the linear space.
-        val: number,
-        // `0`: `value` is `min`;
-        // `1`: `value` is `max`;
-        // `NullUndefined`: others.
-        extentIdx: 0 | 1 | NullUndefined,
-        fallbackRoundingCriterion: number | NullUndefined
-    ): number {
-        // NOTE: `Math.pow(10, integer)` has no rounding error.
-        // PENDING: other base?
-        let powVal = mathPow(this.base, val);
-
-        // Fix #4158
-        // NOTE: Even when `fixMin/Max` is `true`, `pow(base, this._extent[0]/[1])` may be still
-        // not equal to `this._originalScale.getExtent()[0]`/`[1]` in invalid extent case.
-        // So we always call `Math.pow`.
-        const roundingCriterion = this._fixMinMax[extentIdx]
-            ? this._originalScale.getExtent()[extentIdx]
-            : fallbackRoundingCriterion;
-
-        if (roundingCriterion != null) {
-            powVal = fixRoundingError(powVal, roundingCriterion);
-        }
-
-        return powVal;
     }
 
     /**
@@ -183,7 +161,9 @@ class LogScale extends IntervalScale {
             return;
         }
 
-        let interval = quantity(span);
+        // Interval should be integer
+        let interval = mathMax(quantity(span), 1);
+
         const err = splitNumber / span * interval;
 
         // Filter ticks to get closer to the desired count.
@@ -192,18 +172,11 @@ class LogScale extends IntervalScale {
             interval *= 10;
         }
 
-        // Interval should be integer
-        while (!isNaN(interval) && Math.abs(interval) < 1 && Math.abs(interval) > 0) {
-            interval *= 10;
-        }
-
         const intervalPrecision = getIntervalPrecision(interval);
         const niceExtent = [
             round(mathCeil(extent[0] / interval) * interval, intervalPrecision),
             round(mathFloor(extent[1] / interval) * interval, intervalPrecision)
         ] as [number, number];
-
-        fixNiceExtent(niceExtent, extent);
 
         this._interval = interval;
         this._intervalPrecision = intervalPrecision;
@@ -214,14 +187,20 @@ class LogScale extends IntervalScale {
 
     calcNiceExtent(opt: {
         splitNumber: number,
-        fixMin?: boolean,
-        fixMax?: boolean,
+        fixMinMax?: boolean[],
         minInterval?: number,
         maxInterval?: number
     }): void {
+        const oldExtent = this._extent.slice() as [number, number];
         super.calcNiceExtent(opt);
+        const newExtent = this._extent;
 
-        this._fixMinMax = [!!opt.fixMin, !!opt.fixMax];
+        this._extentPrecision = [
+            (opt.fixMinMax && opt.fixMinMax[0] && oldExtent[0] === newExtent[0])
+                ? getPrecision(newExtent[0]) : null,
+            (opt.fixMinMax && opt.fixMinMax[1] && oldExtent[1] === newExtent[1])
+                ? getPrecision(newExtent[1]) : null
+        ];
     }
 
     contain(val: number): boolean {
@@ -256,11 +235,6 @@ class LogScale extends IntervalScale {
     }
 
 }
-
-function fixRoundingError(val: number, originalVal: number): number {
-    return round(val, getPrecision(originalVal));
-}
-
 
 Scale.registerClass(LogScale);
 

@@ -42,12 +42,13 @@ under the License.
         </style>
 
 
-        <!-- <div id="main_cartesian_0_integerData"></div>
+        <div id="main_cartesian_0_integerData"></div>
         <div id="main_cartesian_0_floatData"></div>
         <div id="main_cartesian_fix_min_max"></div>
         <div id="main_cartesian_yAxis_dataZoom"></div>
-        <div id="main_radar_0"></div> -->
+        <div id="main_radar_0"></div>
         <div id="main_cartesian_0_logIntegerData"></div>
+        <div id="main_cartesian_middle_preferable"></div>
 
 
 
@@ -734,11 +735,101 @@ under the License.
                 create_case_main_cartesian_0(
                     echarts,
                     'main_cartesian_0_logIntegerData',
-                    'The right yAxis is "log"; the right series are integer Data',
+                    'The right yAxis is **"log"**; the right series are integer Data',
                     TEST_DATA_INTEGER
                 );
             }); // End of `require`
         </script>
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts /*, data */) {
+                _ctx = {
+                    rightYAxisScale: true,
+                    rightSeriesMax: 4000,
+                    rightSeriesMin: 3099,
+                };
+
+                function createOption() {
+                    return {
+                        tooltip: {},
+                        grid: {
+                            top: 50,
+                            bottom: 50,
+                        },
+                        xAxis: {
+                            max: 1300
+                        },
+                        yAxis: [{
+                            id: 'left',
+                            splitNumber: 5,
+                        }, {
+                            id: 'right',
+                            alignTicks: true,
+                            scale: _ctx.rightYAxisScale,
+                        }],
+                        legend: {
+                            top: 5
+                        },
+                        series: [{
+                            type: 'line',
+                            name: 'lineLeft',
+                            label: {show: true, position: 'top'},
+                            yAxisIndex: 0,
+                            data: [[10, 0], [20, 10], [30, 20], [40, 30]]
+                        }, {
+                            type: 'line',
+                            name: 'lineRight',
+                            label: {show: true, position: 'top'},
+                            yAxisIndex: 1,
+                            data: [[1000, _ctx.rightSeriesMin], [1200, _ctx.rightSeriesMax]]
+                        }]
+                    };
+                }
+                function updateOption() {
+                    chart.setOption(createOption(), {notMerge: true});
+                }
+
+                var chart = testHelper.create(echarts, 'main_cartesian_middle_preferable', {
+                    title: [
+                        `The right yAxis aligns to the left yAxis.`,
+                        `The right series should be laid out at the **middle of Y** whenever possible.`,
+                    ],
+                    option: createOption(),
+                    height: 300,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'rightYAxis.scale:',
+                        values: [true, false],
+                        onchange: function () {
+                            _ctx.rightYAxisScale = this.value;
+                            updateOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'rightSeries.min:',
+                        values: [_ctx.rightSeriesMin, 3000, 3010],
+                        onchange: function () {
+                            _ctx.rightSeriesMin = this.value;
+                            updateOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'rightSeries.max:',
+                        values: [_ctx.rightSeriesMax, 4001, 4190],
+                        onchange: function () {
+                            _ctx.rightSeriesMax = this.value;
+                            updateOption();
+                        }
+                    }]
+                }); // End of `testHelper.create`
+            }); // End of `require`
+        </script>
+
 
 
     </body>

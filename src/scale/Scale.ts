@@ -244,13 +244,7 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     ): void;
 
     abstract calcNiceExtent(
-        opt?: {
-            splitNumber?: number,
-            fixMin?: boolean,
-            fixMax?: boolean,
-            minInterval?: number,
-            maxInterval?: number
-        }
+        opt?: {}
     ): void;
 
     /**
