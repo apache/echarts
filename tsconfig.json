@@ -1,7 +1,8 @@
 {
     "compilerOptions": {
         "target": "ES3",
-
+        
+        "skipLibCheck": true,
         "noImplicitAny": true,
         "noImplicitThis": true,
         "strictBindCallApply": true,
