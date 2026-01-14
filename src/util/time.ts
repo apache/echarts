@@ -32,6 +32,7 @@ import {NullUndefined, ScaleTick} from './types';
 import { getDefaultLocaleModel, getLocaleModel, SYSTEM_LANG, LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 import { getScaleBreakHelper } from '../scale/break';
+import { TZDate } from '@date-fns/tz';
 
 export const ONE_SECOND = 1000;
 export const ONE_MINUTE = ONE_SECOND * 60;
@@ -277,9 +278,9 @@ export function getDefaultFormatPrecisionOfInterval(timeUnit: PrimaryTimeUnit): 
 export function format(
     // Note: The result based on `isUTC` are totally different, which can not be just simply
     // substituted by the result without `isUTC`. So we make the param `isUTC` mandatory.
-    time: unknown, template: string, isUTC: boolean, lang?: string | Model<LocaleOption>
+    time: unknown, template: string, isUTC: boolean, lang?: string | Model<LocaleOption>, timeZone?: string
 ): string {
-    const date = numberUtil.parseDate(time);
+    const date = numberUtil.parseDate(time, timeZone);
     const y = date[fullYearGetterName(isUTC)]();
     const M = date[monthGetterName(isUTC)]() + 1;
     const q = Math.floor((M - 1) / 3) + 1;
@@ -333,7 +334,8 @@ export function leveledFormat(
     idx: number,
     formatter: TimeAxisLabelFormatterParsed,
     lang: string | Model<LocaleOption>,
-    isUTC: boolean
+    isUTC: boolean,
+    timeZone?: string
 ) {
     let template = null;
     if (zrUtil.isString(formatter)) {
@@ -359,19 +361,20 @@ export function leveledFormat(
         }
         else {
             // tick may be from customTicks or timeline therefore no tick.time.
-            const unit = getUnitFromValue(tick.value, isUTC);
+            const unit = getUnitFromValue(tick.value, isUTC, timeZone);
             template = formatter[unit][unit][0];
         }
     }
 
-    return format(new Date(tick.value), template, isUTC, lang);
+    return format(new TZDate(tick.value, timeZone), template, isUTC, lang);
 }
 
 export function getUnitFromValue(
     value: number | string | Date,
-    isUTC: boolean
+    isUTC: boolean,
+    timeZone?: string
 ): PrimaryTimeUnit {
-    const date = numberUtil.parseDate(value);
+    const date = numberUtil.parseDate(value, timeZone);
     const M = (date as any)[monthGetterName(isUTC)]() + 1;
     const d = (date as any)[dateGetterName(isUTC)]();
     const h = (date as any)[hoursGetterName(isUTC)]();

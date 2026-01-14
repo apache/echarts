@@ -72,7 +72,7 @@ import {
     JSDateSetterNames,
     getUnitFromValue,
     primaryTimeUnits,
-    roundTime
+    roundTime,
 } from '../util/time';
 import * as scaleHelper from './helper';
 import IntervalScale from './Interval';
@@ -84,6 +84,7 @@ import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 import { each, filter, indexOf, isNumber, map } from 'zrender/src/core/util';
 import { ScaleBreakContext, getScaleBreakHelper } from './break';
+import { TZDate } from '@date-fns/tz';
 
 // FIXME 公用？
 const bisect = function (
@@ -107,6 +108,7 @@ const bisect = function (
 type TimeScaleSetting = {
     locale: Model<LocaleOption>;
     useUTC: boolean;
+    timezone?: string; // IANA timezone (e.g. "Europe/London")
     modelAxisBreaks?: AxisBreakOption[];
 };
 
@@ -128,13 +130,15 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
      */
     getLabel(tick: TimeScaleTick): string {
         const useUTC = this.getSetting('useUTC');
+        const timeZone = this.getSetting('timezone');
         return format(
             tick.value,
             fullLeveledFormatter[
                 getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))
             ] || fullLeveledFormatter.second,
             useUTC,
-            this.getSetting('locale')
+            this.getSetting('locale'),
+            timeZone
         );
     }
 
@@ -145,7 +149,8 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
     ): string {
         const isUTC = this.getSetting('useUTC');
         const lang = this.getSetting('locale');
-        return leveledFormat(tick, idx, labelFormatter, lang, isUTC);
+        const timeZone = this.getSetting('timezone');
+        return leveledFormat(tick, idx, labelFormatter, lang, isUTC, timeZone);
     }
 
     /**
@@ -165,13 +170,14 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         }
 
         const useUTC = this.getSetting('useUTC');
+        const timeZone = this.getSetting('timezone');
 
         if (scaleBreakHelper && opt.breakTicks === 'only_break') {
             getScaleBreakHelper().addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent);
             return ticks;
         }
 
-        const extent0Unit = getUnitFromValue(extent[1], useUTC);
+        const extent0Unit = getUnitFromValue(extent[1], useUTC, timeZone);
         ticks.push({
             value: extent[0],
             time: {
@@ -187,12 +193,13 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             useUTC,
             extent,
             this._getExtentSpanWithBreaks(),
-            this._brkCtx
+            this._brkCtx,
+            timeZone
         );
 
         ticks = ticks.concat(innerTicks);
 
-        const extent1Unit = getUnitFromValue(extent[1], useUTC);
+        const extent1Unit = getUnitFromValue(extent[1], useUTC, timeZone);
         ticks.push({
             value: extent[1],
             time: {
@@ -226,13 +233,13 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             getScaleBreakHelper().addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent, trimmedBrk => {
                 // @see `parseTimeAxisLabelFormatterDictionary`.
                 const lowerBrkUnitIndex = Math.max(
-                    indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmin, isUTC)),
-                    indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmax, isUTC)),
+                    indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmin, isUTC, timeZone)),
+                    indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmax, isUTC, timeZone)),
                 );
                 let upperBrkUnitIndex = 0;
                 for (let unitIdx = 0; unitIdx < primaryTimeUnits.length; unitIdx++) {
                     if (!isPrimaryUnitValueAndGreaterSame(
-                        primaryTimeUnits[unitIdx], trimmedBrk.vmin, trimmedBrk.vmax, isUTC
+                        primaryTimeUnits[unitIdx], trimmedBrk.vmin, trimmedBrk.vmax, isUTC, timeZone
                     )) {
                         upperBrkUnitIndex = unitIdx;
                         break;
@@ -351,10 +358,11 @@ function isPrimaryUnitValueAndGreaterSame(
     unit: PrimaryTimeUnit,
     valueA: number,
     valueB: number,
-    isUTC: boolean
+    isUTC: boolean,
+    timeZone?: string
 ): boolean {
-    return roundTime(new Date(valueA), unit, isUTC).getTime()
-        === roundTime(new Date(valueB), unit, isUTC).getTime();
+    return roundTime(new TZDate(valueA, timeZone), unit, isUTC).getTime()
+        === roundTime(new TZDate(valueB, timeZone), unit, isUTC).getTime();
 }
 
 // function isUnitValueSame(
@@ -492,9 +500,9 @@ function getMillisecondsInterval(approxInterval: number) {
 
 // e.g., if the input unit is 'day', start calculate ticks from the first day of
 // that month to make ticks "nice".
-function getFirstTimestampOfUnit(timestamp: number, unitName: TimeUnit, isUTC: boolean) {
+function getFirstTimestampOfUnit(timestamp: number, unitName: TimeUnit, isUTC: boolean, timeZone?: string) {
     const upperUnitIdx = Math.max(0, indexOf(primaryTimeUnits, unitName) - 1);
-    return roundTime(new Date(timestamp), primaryTimeUnits[upperUnitIdx], isUTC).getTime();
+    return roundTime(new TZDate(timestamp, timeZone), primaryTimeUnits[upperUnitIdx], isUTC).getTime();
 }
 
 function createEstimateNiceMultiple(
@@ -524,6 +532,7 @@ function getIntervalTicks(
     extent: number[],
     extentSpanWithBreaks: number,
     brkCtx: ScaleBreakContext | NullUndefined,
+    timeZone?: string
 ): TimeScaleTick[] {
     const safeLimit = 10000;
     const unitNames = timeUnits;
@@ -548,7 +557,7 @@ function getIntervalTicks(
         const estimateNiceMultiple = createEstimateNiceMultiple(setMethodName, interval);
 
         let dateTime = minTimestamp;
-        const date = new Date(dateTime);
+        const date = new TZDate(dateTime, timeZone);
 
         // if (isDate) {
         //     d -= 1; // Starts with 0;   PENDING
@@ -593,13 +602,13 @@ function getIntervalTicks(
         const newAddedTicks: ScaleTick[] = [];
         const isFirstLevel = !lastLevelTicks.length;
 
-        if (isPrimaryUnitValueAndGreaterSame(getPrimaryTimeUnit(unitName), extent[0], extent[1], isUTC)) {
+        if (isPrimaryUnitValueAndGreaterSame(getPrimaryTimeUnit(unitName), extent[0], extent[1], isUTC, timeZone)) {
             return;
         }
 
         if (isFirstLevel) {
             lastLevelTicks = [{
-                value: getFirstTimestampOfUnit(extent[0], unitName, isUTC),
+                value: getFirstTimestampOfUnit(extent[0], unitName, isUTC, timeZone),
             }, {
                 value: extent[1]
             }];
@@ -742,7 +751,7 @@ function getIntervalTicks(
     for (let i = 0; i < levelsTicksInExtent.length; ++i) {
         const levelTicks = levelsTicksInExtent[i];
         for (let k = 0; k < levelTicks.length; ++k) {
-            const unit = getUnitFromValue(levelTicks[k].value, isUTC);
+            const unit = getUnitFromValue(levelTicks[k].value, isUTC, timeZone);
             ticks.push({
                 value: levelTicks[k].value,
                 time: {
