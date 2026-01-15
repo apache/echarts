@@ -271,28 +271,37 @@ under the License.
 
             <script>
                 require(['echarts'], function (echarts) {
+                    var categories = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    var data = [50, 80, 70, 20, 30, 10, 100];
+                    var testDataIndex = 4;
                     var option = {
                         animation: false,
                         tooltip: {
                             position: 'top',
-                            valueFormatter: (_, dataIndex) => 'dataIndex: ' + dataIndex
+                            valueFormatter: (value, dataIndex) => {
+                                if (value === data[testDataIndex] && dataIndex !== testDataIndex) {
+                                    return '❌ Error: dataIndex not matched, got ' + dataIndex + ', expected ' + testDataIndex;
+                                }
+                                return 'dataIndex: ' + dataIndex;
+                            }
                         },
                         xAxis: {
                             type: 'category',
-                            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                            data: categories
                         },
                         yAxis: {
                             type: 'value'
                         },
                         dataZoom: [{
                             type: 'slider',
+                            startValue: 2
                         }, {
                             type: 'inside',
                         }],
                         series: [
                             {
                                 type: 'bar',
-                                data: [50, 80, 70, 20, 30, 10, 100]
+                                data: data
                             }
                         ]
                     };
@@ -306,7 +315,7 @@ under the License.
 
                     chart.dispatchAction({
                         type: 'showTip',
-                        dataIndex: 4,
+                        dataIndex: testDataIndex,
                         seriesIndex: 0
                     });
                 });
