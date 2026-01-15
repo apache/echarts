@@ -284,6 +284,11 @@ under the License.
                         yAxis: {
                             type: 'value'
                         },
+                        dataZoom: [{
+                            type: 'slider',
+                        }, {
+                            type: 'inside',
+                        }],
                         series: [
                             {
                                 type: 'bar',
@@ -293,7 +298,9 @@ under the License.
                     };
 
                     var chart = testHelper.create(echarts, 'main3', {
-                        title: ['dataIndex in valueFormatter'],
+                        title: [
+                            'dataIndex in valueFormatter should be consistent when dataZoom is used'
+                        ],
                         option: option
                     });
 
