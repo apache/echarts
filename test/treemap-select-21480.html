@@ -1,0 +1,40 @@
+﻿<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>treemap select 21480</title>
+  <style>
+    html, body, #main { width: 100%; height: 100%; margin: 0; }
+  </style>
+</head>
+<body>
+  <div id="main"></div>
+  <script src="../dist/echarts.js"></script>
+  <script>
+    const chart = echarts.init(document.getElementById('main'));
+    chart.setOption({
+      series: [{
+        type: 'treemap',
+        selectedMode: 'single',
+        roam: false,
+        nodeClick: false,
+        select: { itemStyle: { borderWidth: 4 } },
+        data: [
+          { name: 'same', value: 10 },
+          { name: 'same', value: 20 },
+          { name: 'same', value: 30 },
+          { name: 'same', value: 40 }
+        ]
+      }]
+    });
+
+    chart.dispatchAction({
+      type: 'select',
+      seriesIndex: 0,
+      dataIndex: 3
+    });
+    console.log('selectedMap:', chart.getOption().series[0].selectedMap);
+    console.log('selectedIndices:', chart.getModel().getSeriesByIndex(0).getSelectedDataIndices());
+  </script>
+</body>
+</html>
