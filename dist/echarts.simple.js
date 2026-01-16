@@ -16447,7 +16447,7 @@
       } else if (isFunction(formatter)) {
         var extra = {
           time: tick.time,
-          level: tick.time.level
+          level: tick.time ? tick.time.level : 0
         };
         var scaleBreakHelper = getScaleBreakHelper();
         if (scaleBreakHelper) {
@@ -21978,8 +21978,8 @@
        * Data iteration
        * @param ctx default this
        * @example
-       *  list.each('x', function (x, idx) {});
-       *  list.each(['x', 'y'], function (x, y, idx) {});
+       *  list.each(0, function (x, idx) {});
+       *  list.each([0, 1], function (x, y, idx) {});
        *  list.each(function (idx) {})
        */
       DataStore.prototype.each = function (dims, cb) {
@@ -22634,7 +22634,7 @@
 
     var inner$1 = makeInner();
     function getSelectionKey(data, dataIndex) {
-      return data.getName(dataIndex) || data.getId(dataIndex);
+      return data.getId(dataIndex);
     }
     var SERIES_UNIVERSAL_TRANSITION_PROP = '__universalTransitionEnabled';
     var SeriesModel = /** @class */function (_super) {
@@ -24250,6 +24250,16 @@
       toolbox: {
         iconStyle: {
           borderColor: color$2.accent50
+        },
+        feature: {
+          dataView: {
+            backgroundColor: backgroundColor,
+            textColor: color$2.primary,
+            textareaColor: color$2.background,
+            textareaBorderColor: color$2.border,
+            buttonColor: color$2.accent50,
+            buttonTextColor: color$2.neutral00
+          }
         }
       },
       tooltip: {
@@ -26355,6 +26365,8 @@
         // Can't dispatch action during rendering procedure
         _this._pendingActions = [];
         opts = opts || {};
+        // mark the echarts instance as raw in Vue 3 to prevent the object being converted to be a proxy.
+        _this.__v_skip = true;
         _this._dom = dom;
         var defaultRenderer = 'canvas';
         var defaultCoarsePointer = 'auto';
@@ -31969,8 +31981,10 @@
         var upperUnitIndex = primaryTimeUnits.length - 1;
         var maxLevel = 0;
         each(ticks, function (tick) {
-          upperUnitIndex = Math.min(upperUnitIndex, indexOf(primaryTimeUnits, tick.time.upperTimeUnit));
-          maxLevel = Math.max(maxLevel, tick.time.level);
+          if (tick.time) {
+            upperUnitIndex = Math.min(upperUnitIndex, indexOf(primaryTimeUnits, tick.time.upperTimeUnit));
+            maxLevel = Math.max(maxLevel, tick.time.level);
+          }
         });
         return ticks;
       };
@@ -32516,6 +32530,17 @@
         this._dataMax = dataExtent[1];
         var isOrdinal = this._isOrdinal = scale.type === 'ordinal';
         this._needCrossZero = scale.type === 'interval' && model.getNeedCrossZero && model.getNeedCrossZero();
+        if (scale.type === 'interval' || scale.type === 'log' || scale.type === 'time') {
+          // Process custom dataMin/dataMax
+          var dataMinRaw = model.get('dataMin', true);
+          if (dataMinRaw != null) {
+            this._dataMinNum = parseAxisModelMinMax(scale, dataMinRaw);
+          }
+          var dataMaxRaw = model.get('dataMax', true);
+          if (dataMaxRaw != null) {
+            this._dataMaxNum = parseAxisModelMinMax(scale, dataMaxRaw);
+          }
+        }
         var axisMinValue = model.get('min', true);
         if (axisMinValue == null) {
           axisMinValue = model.get('startValue', true);
@@ -32577,6 +32602,15 @@
         var isOrdinal = this._isOrdinal;
         var dataMin = this._dataMin;
         var dataMax = this._dataMax;
+        // Include custom dataMin/dataMax in calculation
+        // If dataMin is set and less than current data minimum, update the minimum value
+        if (this._dataMinNum != null && isFinite(dataMin) && this._dataMinNum < dataMin) {
+          dataMin = this._dataMinNum;
+        }
+        // If dataMax is set and greater than current data maximum, update the maximum value
+        if (this._dataMaxNum != null && isFinite(dataMax) && this._dataMaxNum > dataMax) {
+          dataMax = this._dataMaxNum;
+        }
         var axisDataLen = this._axisDataLen;
         var boundaryGapInner = this._boundaryGapInner;
         var span = !isOrdinal ? dataMax - dataMin || Math.abs(dataMin) : null;
@@ -33571,12 +33605,12 @@
           return val >= extent_1[0] && val <= extent_1[1];
         });
         return {
-          labels: map(ticks, function (numval) {
+          labels: map(ticks, function (numval, index) {
             var tick = {
               value: numval
             };
             return {
-              formattedLabel: labelFormatter_1(tick),
+              formattedLabel: labelFormatter_1(tick, index),
               rawLabel: axis.scale.getLabel(tick),
               tickValue: numval,
               time: undefined,
@@ -34335,13 +34369,10 @@
       stateObj.ignore = ignore;
       // Set smooth
       var smooth = stateModel.get('smooth');
-      if (smooth && smooth === true) {
-        smooth = 0.3;
-      }
+      smooth = smooth === true ? 0.3 : Math.max(+smooth, 0) || 0;
       stateObj.shape = stateObj.shape || {};
-      if (smooth > 0) {
-        stateObj.shape.smooth = smooth;
-      }
+      // always set the `smooth` property
+      stateObj.shape.smooth = smooth;
       var styleObj = stateModel.getModel('lineStyle').getLineStyle();
       isNormal ? labelLine.useStyle(styleObj) : stateObj.style = styleObj;
     }
@@ -35869,7 +35900,11 @@
         universalTransition: {
           divideShape: 'clone'
         },
-        triggerLineEvent: false
+        /**
+         * @deprecated
+         */
+        triggerLineEvent: false,
+        triggerEvent: false
       };
       return LineSeriesModel;
     }(SeriesModel);
@@ -37003,6 +37038,17 @@
       return coordSys.type === type;
     }
 
+    var deprecatedLogs = {};
+    function warnDeprecated(deprecated, insteadApproach) {
+      if ("development" !== 'production') {
+        var key = deprecated + '^_^' + insteadApproach;
+        if (!deprecatedLogs[key]) {
+          console.warn("[ECharts] DEPRECATED: \"" + deprecated + "\" has been deprecated. " + insteadApproach);
+          deprecatedLogs[key] = true;
+        }
+      }
+    }
+
     function isPointsSame(points1, points2) {
       if (points1.length !== points2.length) {
         return;
@@ -37047,7 +37093,7 @@
       return isNumber(smooth) ? smooth : smooth ? 0.5 : 0;
     }
     function getStackedOnPoints(coordSys, data, dataCoordInfo) {
-      if (!dataCoordInfo.valueDim) {
+      if (dataCoordInfo.valueDim == null) {
         return [];
       }
       var len = data.count();
@@ -37634,20 +37680,27 @@
         this._points = points;
         this._step = step;
         this._valueOrigin = valueOrigin;
-        if (seriesModel.get('triggerLineEvent')) {
-          this.packEventData(seriesModel, polyline);
-          polygon && this.packEventData(seriesModel, polygon);
+        var triggerEvent = seriesModel.get('triggerEvent');
+        var triggerLineEvent = seriesModel.get('triggerLineEvent');
+        if ("development" !== 'production') {
+          triggerLineEvent && warnDeprecated('triggerLineEvent', 'Use the `triggerEvent` option instead.');
         }
+        var shouldTriggerLineEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'line';
+        var shouldTriggerAreaEvent = triggerLineEvent === true || triggerEvent === true || triggerEvent === 'area';
+        this.packEventData(seriesModel, polyline, shouldTriggerLineEvent);
+        polygon && this.packEventData(seriesModel, polygon, shouldTriggerAreaEvent);
       };
-      LineView.prototype.packEventData = function (seriesModel, el) {
-        getECData(el).eventData = {
+      LineView.prototype.packEventData = function (seriesModel, el, enable) {
+        getECData(el).eventData = enable ? {
           componentType: 'series',
           componentSubType: 'line',
           componentIndex: seriesModel.componentIndex,
           seriesIndex: seriesModel.seriesIndex,
           seriesName: seriesModel.name,
-          seriesType: 'line'
-        };
+          seriesType: 'line',
+          // for determining this event is triggered by area or line
+          selfType: el === this._polygon ? 'area' : 'line'
+        } : null;
       };
       LineView.prototype.highlight = function (seriesModel, ecModel, api, payload) {
         var data = seriesModel.getData();
@@ -39305,7 +39358,7 @@
       el.useStyle(style);
       var cursorStyle = itemModel.getShallow('cursor');
       cursorStyle && el.attr('cursor', cursorStyle);
-      var labelPositionOutside = isPolar ? isHorizontalOrRadial ? layout.r >= layout.r0 ? 'endArc' : 'startArc' : layout.endAngle >= layout.startAngle ? 'endAngle' : 'startAngle' : isHorizontalOrRadial ? layout.height >= 0 ? 'bottom' : 'top' : layout.width >= 0 ? 'right' : 'left';
+      var labelPositionOutside = isPolar ? isHorizontalOrRadial ? layout.r >= layout.r0 ? 'endArc' : 'startArc' : layout.endAngle >= layout.startAngle ? 'endAngle' : 'startAngle' : isHorizontalOrRadial ? getLabelPositionForHorizontal(layout, seriesModel.coordinateSystem) : getLabelPositionForVertical(layout, seriesModel.coordinateSystem);
       var labelStatesModels = getLabelStatesModels(itemModel);
       setLabelStyle(el, labelStatesModels, {
         labelFetcher: seriesModel,
@@ -39490,6 +39543,22 @@
         silent: true,
         z2: 0
       });
+    }
+    function getLabelPositionForHorizontal(layout, coordSys) {
+      if (layout.height === 0) {
+        // For zero height, determine position based on axis inverse status
+        var valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+        return valueAxis.inverse ? 'bottom' : 'top';
+      }
+      return layout.height > 0 ? 'bottom' : 'top';
+    }
+    function getLabelPositionForVertical(layout, coordSys) {
+      if (layout.width === 0) {
+        // For zero width, determine position based on axis inverse status
+        var valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+        return valueAxis.inverse ? 'left' : 'right';
+      }
+      return layout.width >= 0 ? 'right' : 'left';
     }
 
     function install$2(registers) {
@@ -40078,13 +40147,13 @@
         } else if (rotate === 'radial' || rotate === true) {
           var radialAngle = nx < 0 ? -midAngle + PI : -midAngle;
           labelRotate = radialAngle;
-        } else if (rotate === 'tangential' && labelPosition !== 'outside' && labelPosition !== 'outer') {
+        } else if (rotate === 'tangential' || rotate === 'tangential-noflip' && labelPosition !== 'outside' && labelPosition !== 'outer') {
           var rad = Math.atan2(nx, ny);
           if (rad < 0) {
             rad = PI * 2 + rad;
           }
           var isDown = ny > 0;
-          if (isDown) {
+          if (isDown && rotate !== 'tangential-noflip') {
             rad = PI + rad;
           }
           labelRotate = rad - PI;
