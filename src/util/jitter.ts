@@ -61,7 +61,7 @@ export function fixJitter(
 ): number {
     if (fixedAxis instanceof Axis2D) {
         const scaleType = fixedAxis.scale.type;
-        if (scaleType !== 'category' && scaleType !== 'ordinal') {
+        if (scaleType !== 'ordinal') {
             return floatCoord;
         }
     }

@@ -20,7 +20,7 @@
 import {
     getPrecision, round, nice, quantityExponent,
     mathPow, mathMax, mathRound,
-    mathLog, mathAbs, mathFloor, mathCeil, mathMin
+    mathLog, mathAbs, mathFloor, mathCeil
 } from '../util/number';
 import IntervalScale from './Interval';
 import LogScale from './Log';
@@ -34,6 +34,13 @@ type intervalScaleNiceTicksResult = {
     interval: number,
     intervalPrecision: number,
     niceTickExtent: [number, number]
+};
+
+export type IntervalScaleGetLabelOpt = {
+    // If 'auto', use nice precision.
+    precision?: 'auto' | number,
+    // `true`: returns 1.50 but not 1.5 if precision is 2.
+    pad?: boolean
 };
 
 /**
@@ -286,7 +293,7 @@ export function intervalScaleEnsureValidExtent(
         }
     }
     const span = extent[1] - extent[0];
-    // If there are no data and extent are [Infinity, -Infinity]
+    // If there are no series data, extent may be `[Infinity, -Infinity]` here.
     if (!isFinite(span)) {
         extent[0] = 0;
         extent[1] = 1;

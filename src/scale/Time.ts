@@ -75,7 +75,6 @@ import {
     roundTime
 } from '../util/time';
 import * as scaleHelper from './helper';
-import IntervalScale from './Interval';
 import Scale, { ScaleGetTicksOpt } from './Scale';
 import {TimeScaleTick, ScaleTick, AxisBreakOption, NullUndefined} from '../util/types';
 import {TimeAxisLabelFormatterParsed} from '../coord/axisCommonTypes';
@@ -84,6 +83,8 @@ import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 import { each, filter, indexOf, isNumber, map } from 'zrender/src/core/util';
 import { ScaleBreakContext, getScaleBreakHelper } from './break';
+import type { ScaleCalcNiceMethod } from '../coord/axisNiceTicks';
+import { getMinorTicks } from './minorTicks';
 
 // FIXME 公用？
 const bisect = function (
@@ -110,12 +111,13 @@ type TimeScaleSetting = {
     modelAxisBreaks?: AxisBreakOption[];
 };
 
-class TimeScale extends IntervalScale<TimeScaleSetting> {
+class TimeScale extends Scale<TimeScaleSetting> {
 
     static type = 'time';
-    readonly type = 'time';
+    readonly type = 'time' as const;
 
     private _approxInterval: number;
+    private _interval: number = 0;
 
     private _minLevelUnit: TimeUnit;
 
@@ -186,7 +188,7 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             this._approxInterval,
             useUTC,
             extent,
-            this._getExtentSpanWithBreaks(),
+            this.getBreaksElapsedExtentSpan(),
             this._brkCtx
         );
 
@@ -251,56 +253,23 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         return ticks;
     }
 
-    calcNiceExtent(
-        opt?: {
-            splitNumber?: number,
-            minInterval?: number,
-            maxInterval?: number
-        }
-    ): void {
-        const extent = this.getExtent();
-        // If extent start and end are same, expand them
-        if (extent[0] === extent[1]) {
-            // Expand extent
-            extent[0] -= ONE_DAY;
-            extent[1] += ONE_DAY;
-        }
-        // If there are no data and extent are [Infinity, -Infinity]
-        if (extent[1] === -Infinity && extent[0] === Infinity) {
-            const d = new Date();
-            extent[1] = +new Date(d.getFullYear(), d.getMonth(), d.getDate());
-            extent[0] = extent[1] - ONE_DAY;
-        }
-        this._innerSetExtent(extent[0], extent[1]);
-
-        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
+    getMinorTicks(splitNumber: number): number[][] {
+        return getMinorTicks(
+            this,
+            splitNumber,
+            this.innerGetBreaks(),
+            this._interval
+        );
     }
 
-    calcNiceTicks(approxTickNum: number, minInterval: number, maxInterval: number): void {
-        approxTickNum = approxTickNum || 10;
-
-        const span = this._getExtentSpanWithBreaks();
-        this._approxInterval = span / approxTickNum;
-
-        if (minInterval != null && this._approxInterval < minInterval) {
-            this._approxInterval = minInterval;
-        }
-        if (maxInterval != null && this._approxInterval > maxInterval) {
-            this._approxInterval = maxInterval;
-        }
-
-        const scaleIntervalsLen = scaleIntervals.length;
-        const idx = Math.min(
-            bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen),
-            scaleIntervalsLen - 1
-        );
-
-        // Interval that can be used to calculate ticks
-        this._interval = scaleIntervals[idx][1];
-        this._intervalPrecision = scaleHelper.getIntervalPrecision(this._interval);
-        // Min level used when picking ticks from top down.
-        // We check one more level to avoid the ticks are to sparse in some case.
-        this._minLevelUnit = scaleIntervals[Math.max(idx - 1, 0)][0];
+    setTimeInterval(opt: {
+        interval: number;
+        approxInterval: number;
+        minLevelUnit: TimeUnit;
+    }): void {
+        this._interval = opt.interval;
+        this._approxInterval = opt.approxInterval;
+        this._minLevelUnit = opt.minLevelUnit;
     }
 
     parse(val: number | string | Date): number {
@@ -576,7 +545,7 @@ function getIntervalTicks(
             }
         }
 
-        // This extra tick is for calcuating ticks of next level. Will not been added to the final result
+        // This extra tick is for calculating ticks of next level. Will not been added to the final result
         out.push({
             value: dateTime,
             notAdd: true
@@ -764,6 +733,53 @@ function getIntervalTicks(
     return result;
 }
 
+export const timeScaleCalcNice: ScaleCalcNiceMethod = function (scale: TimeScale, opt) {
+    const extent = scale.getExtent();
+    // If extent start and end are same, expand them
+    if (extent[0] === extent[1]) {
+        // Expand extent
+        extent[0] -= ONE_DAY;
+        extent[1] += ONE_DAY;
+    }
+    // If there are no data and extent are [Infinity, -Infinity]
+    if (extent[1] === -Infinity && extent[0] === Infinity) {
+        const d = new Date();
+        extent[1] = +new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        extent[0] = extent[1] - ONE_DAY;
+    }
+    scale.setExtent(extent[0], extent[1]);
+
+    const splitNumber = scaleHelper.ensureValidSplitNumber(opt.splitNumber, 10);
+    const span = scale.getBreaksElapsedExtentSpan();
+    let approxInterval = span / splitNumber;
+
+    const minInterval = opt.minInterval;
+    const maxInterval = opt.maxInterval;
+    if (minInterval != null && approxInterval < minInterval) {
+        approxInterval = minInterval;
+    }
+    if (maxInterval != null && approxInterval > maxInterval) {
+        approxInterval = maxInterval;
+    }
+
+    const scaleIntervalsLen = scaleIntervals.length;
+    const idx = Math.min(
+        bisect(scaleIntervals, approxInterval, 0, scaleIntervalsLen),
+        scaleIntervalsLen - 1
+    );
+
+    // Interval that can be used to calculate ticks
+    const interval = scaleIntervals[idx][1];
+    // Min level used when picking ticks from top down.
+    // We check one more level to avoid the ticks are to sparse in some case.
+    const minLevelUnit = scaleIntervals[Math.max(idx - 1, 0)][0];
+
+    scale.setTimeInterval({
+        approxInterval,
+        interval,
+        minLevelUnit
+    });
+};
 
 Scale.registerClass(TimeScale);
 

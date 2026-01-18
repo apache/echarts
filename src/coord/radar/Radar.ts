@@ -174,7 +174,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         const splitNumber = radarModel.get('splitNumber');
         const dummyScale = new IntervalScale();
         dummyScale.setExtent(0, splitNumber);
-        dummyScale.setInterval({interval: 1});
+        dummyScale.setConfig({interval: 1});
         // Force all the axis fixing the maxSplitNumber.
         each(indicatorAxes, function (indicatorAxis, idx) {
             alignScaleTicks(

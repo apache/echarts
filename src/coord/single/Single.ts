@@ -34,6 +34,7 @@ import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
+import { scaleCalcNice } from '../axisNiceTicks';
 
 export const singleDimensions = ['single'];
 /**
@@ -104,7 +105,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
                 each(data.mapDimensionsAll(this.dimension), function (dim) {
                     scale.unionExtentFromData(data, dim);
                 });
-                axisHelper.niceScaleExtent(scale, axis.model, scale.getExtent());
+                scaleCalcNice(scale, axis.model, scale.getExtent());
             }
         }, this);
     }

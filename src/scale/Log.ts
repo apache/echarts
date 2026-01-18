@@ -20,80 +20,58 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
 import {
-    mathFloor, mathCeil, mathPow, mathLog,
-    round, quantity, getPrecision,
-    mathMax,
+    mathPow, mathLog,
 } from '../util/number';
 
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
 import {
-    DimensionLoose, DimensionName, ParsedAxisBreakList, AxisBreakOption,
+    DimensionLoose, DimensionName, AxisBreakOption,
     ScaleTick,
-    NullUndefined
+    NullUndefined,
+    ScaleDataValue
 } from '../util/types';
 import {
-    ensureValidSplitNumber, getIntervalPrecision,
     logScalePowTickPair, logScalePowTick, logScaleLogTickPair,
-    getExtentPrecision
+    getExtentPrecision,
+    IntervalScaleGetLabelOpt,
+    logScaleLogTick,
 } from './helper';
 import SeriesData from '../data/SeriesData';
 import { getScaleBreakHelper } from './break';
+import { getMinorTicks } from './minorTicks';
 
 
-const LINEAR_STUB_METHODS = [
-    'getExtent', 'getTicks', 'getInterval',
-    'setExtent', 'setInterval',
-] as const;
-
-/**
- * IMPL_MEMO:
- *  - The supper class (`IntervalScale`) and its member fields (such as `this._extent`,
- *    `this._interval`, `this._niceExtent`) provides linear tick arrangement (logarithm applied).
- *  - `_originalScale` (`IntervalScale`) is used to save some original info
- *    (before logarithm applied, such as raw extent; but may be still invalid, and not sync to the
- *     calculated ("nice") extent).
- */
-class LogScale extends IntervalScale {
+class LogScale extends Scale {
 
     static type = 'log';
-    readonly type = 'log';
+    readonly type = 'log' as const;
 
     readonly base: number;
 
-    private _originalScale = new IntervalScale();
-
-    linearStub: Pick<IntervalScale, (typeof LINEAR_STUB_METHODS)[number]>;
+    // `_originalScale` is used to save some original info (before logarithm
+    // applied, such as raw extent; but may be still invalid, and not sync
+    // to the calculated ("nice") extent).
+    private _originalScale: IntervalScale;
+    // `linearStub` provides linear tick arrangement (logarithm applied).
+    readonly linearStub: IntervalScale;
 
     constructor(logBase: number | NullUndefined, settings?: ScaleSettingDefault) {
-        super(settings);
+        super();
+        this._originalScale = new IntervalScale();
+        this.linearStub = new IntervalScale(settings);
         this.base = zrUtil.retrieve2(logBase, 10);
-        this._initLinearStub();
     }
 
-    private _initLinearStub(): void {
-        // TODO: Refactor -- This impl is error-prone. And the use of `prototype` should be removed.
-        const intervalScaleProto = IntervalScale.prototype;
-        const logScale = this;
-        const stub = logScale.linearStub = {} as LogScale['linearStub'];
-        zrUtil.each(LINEAR_STUB_METHODS, function (methodName) {
-            stub[methodName] = function () {
-                return (intervalScaleProto[methodName] as any).apply(logScale, arguments);
-            };
-        });
-    }
-
-    /**
-     * @param Whether expand the ticks to niced extent.
-     */
     getTicks(opt?: ScaleGetTicksOpt): ScaleTick[] {
         const base = this.base;
         const originalScale = this._originalScale;
         const scaleBreakHelper = getScaleBreakHelper();
-        const extent = this._extent;
-        const extentPrecision = this._extentPrecision;
+        const linearStub = this.linearStub;
+        const extent = linearStub.getExtent();
+        const extentPrecision = linearStub.getConfig().extentPrecision;
 
-        return zrUtil.map(super.getTicks(opt || {}), function (tick) {
+        return zrUtil.map(linearStub.getTicks(opt || {}), function (tick) {
             const val = tick.value;
             let powVal = logScalePowTick(
                 val,
@@ -106,7 +84,7 @@ class LogScale extends IntervalScale {
                 const brkPowResult = scaleBreakHelper.getTicksPowBreak(
                     tick,
                     base,
-                    originalScale._innerGetBreaks(),
+                    originalScale.innerGetBreaks(),
                     extent,
                     extentPrecision
                 );
@@ -123,98 +101,65 @@ class LogScale extends IntervalScale {
         }, this);
     }
 
-    protected _getNonTransBreaks(): ParsedAxisBreakList {
-        return this._originalScale._innerGetBreaks();
+    getMinorTicks(splitNumber: number): number[][] {
+        return getMinorTicks(
+            this,
+            splitNumber,
+            this._originalScale.innerGetBreaks(),
+            // NOTE: minor ticks are in the log scale value to visually hint users "logarithm".
+            this.linearStub.getConfig().interval
+        );
+    }
+
+    getLabel(
+        data: ScaleTick,
+        opt?: IntervalScaleGetLabelOpt
+    ) {
+        return this.linearStub.getLabel(data, opt);
     }
 
     setExtent(start: number, end: number): void {
         // [CAVEAT]: If modifying this logic, must sync to `_initLinearStub`.
         this._originalScale.setExtent(start, end);
         const loggedExtent = logScaleLogTickPair([start, end], this.base);
-        super.setExtent(loggedExtent[0], loggedExtent[1]);
+        this.linearStub.setExtent(loggedExtent[0], loggedExtent[1]);
     }
 
     getExtent() {
-        const extent = super.getExtent();
+        const linearStub = this.linearStub;
         return logScalePowTickPair(
-            extent,
+            linearStub.getExtent(),
             this.base,
-            this._extentPrecision
+            linearStub.getConfig().extentPrecision
         );
+    }
+
+    isInExtent(value: number): boolean {
+        return this.linearStub.isInExtent(logScaleLogTick(value, this.base));
     }
 
     unionExtentFromData(data: SeriesData, dim: DimensionName | DimensionLoose): void {
         this._originalScale.unionExtentFromData(data, dim);
         const loggedOther = logScaleLogTickPair(data.getApproximateExtent(dim), this.base, true);
-        this._innerUnionExtent(loggedOther);
+        this.linearStub.innerUnionExtent(loggedOther);
     }
 
-    /**
-     * Update interval and extent of intervals for nice ticks
-     * @param splitNumber default 10 Given approx tick number
-     */
-    calcNiceTicks(splitNumber: number): void {
-        splitNumber = ensureValidSplitNumber(splitNumber, 10);
-        const extent = this._extent.slice() as [number, number];
-        const span = this._getExtentSpanWithBreaks();
-        if (!isFinite(span) || span <= 0) {
-            return;
-        }
-
-        // Interval should be integer
-        let interval = mathMax(quantity(span), 1);
-
-        const err = splitNumber / span * interval;
-
-        // Filter ticks to get closer to the desired count.
-        if (err <= 0.5) {
-            // TODO: support other bases other than 10?
-            interval *= 10;
-        }
-
-        const intervalPrecision = getIntervalPrecision(interval);
-        const niceExtent = [
-            round(mathCeil(extent[0] / interval) * interval, intervalPrecision),
-            round(mathFloor(extent[1] / interval) * interval, intervalPrecision)
-        ] as [number, number];
-
-        this._interval = interval;
-        this._intervalPrecision = intervalPrecision;
-        this._niceExtent = niceExtent;
-
-        // [CAVEAT]: If updating this impl, need to sync it to `axisAlignTicks.ts`.
-    }
-
-    calcNiceExtent(opt: {
-        splitNumber: number,
-        fixMinMax?: boolean[],
-        minInterval?: number,
-        maxInterval?: number
-    }): void {
-        const oldExtent = this._extent.slice() as [number, number];
-        super.calcNiceExtent(opt);
-        const newExtent = this._extent;
-
-        this._extentPrecision = [
-            (opt.fixMinMax && opt.fixMinMax[0] && oldExtent[0] === newExtent[0])
-                ? getPrecision(newExtent[0]) : null,
-            (opt.fixMinMax && opt.fixMinMax[1] && oldExtent[1] === newExtent[1])
-                ? getPrecision(newExtent[1]) : null
-        ];
+    parse(val: ScaleDataValue): number {
+        return this.linearStub.parse(val);
     }
 
     contain(val: number): boolean {
         val = mathLog(val) / mathLog(this.base);
-        return super.contain(val);
+        return this.linearStub.contain(val);
     }
 
     normalize(val: number): number {
         val = mathLog(val) / mathLog(this.base);
-        return super.normalize(val);
+        return this.linearStub.normalize(val);
     }
 
     scale(val: number): number {
-        val = super.scale(val);
+        val = this.linearStub.scale(val);
         return mathPow(this.base, val);
     }
 
@@ -230,8 +175,8 @@ class LogScale extends IntervalScale {
             this.base,
             zrUtil.bind(this.parse, this)
         );
-        this._originalScale._innerSetBreak(parsedOriginal);
-        this._innerSetBreak(parsedLogged);
+        this._originalScale.innerSetBreak(parsedOriginal);
+        this.linearStub.innerSetBreak(parsedLogged);
     }
 
 }

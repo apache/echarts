@@ -113,7 +113,7 @@ export function alignScaleTicks(
         // At least one nice segment is present, and not-nice segments are only present on
         // the start and/or the end.
         // In this case, ticks corresponding to nice segments are made "nice".
-        const alignToInterval = alignToScaleLinear.getInterval();
+        const alignToInterval = alignToScaleLinear.getConfig().interval;
         t0 = (
             1 - (alignToTicks[0].value - alignToExpNiceTicks[0].value) / alignToInterval
         ) % 1;
@@ -282,23 +282,28 @@ export function alignScaleTicks(
                 const currIntervalCount = mathRound((maxNice - minNice) / interval);
                 if (currIntervalCount <= alignToNiceSegCount) {
                     const moreCount = alignToNiceSegCount - currIntervalCount;
-                    // Consider cases that negative series data do not make sense (or vice versa), users can
-                    // simply specify `xxxAxis.min/max: 0` to achieve that. But we still optimize it for some
-                    // common default cases whenever possible, especially when ec option `xxxAxis.scale: false`
-                    // (the default), it is usually unexpected if negative (or positive) ticks are introduced.
+                    // Consider cases that negative tick do not make sense (or vice versa), users can simply
+                    // specify `xxxAxis.min/max: 0` to avoid negative. But we still automatically handle it
+                    // for some common cases whenever possible:
+                    //  - When ec option is `xxxAxis.scale: false` (the default), it is usually unexpected if
+                    //    negative (or positive) ticks are introduced.
+                    //  - In LogScale, series data are usually either all > 1 or all < 1, rather than both,
+                    //    that is, logarithm result is typically either all positive or all negative.
                     let moreCountPair: number[];
-                    const needCrossZero = targetExtentInfo.needCrossZero;
-                    if (needCrossZero && targetExtent[0] === 0) {
+                    const mayEnhanceZero = targetExtentInfo.needCrossZero || isTargetLogScale;
+                    // `bounds < 0` or `bounds > 0` may require more complex handling, so we only auto handle
+                    // `bounds === 0`.
+                    if (mayEnhanceZero && targetExtent[0] === 0) {
                         // 0 has been included in extent and all positive.
                         moreCountPair = [0, moreCount];
                     }
-                    else if (needCrossZero && targetExtent[1] === 0) {
+                    else if (mayEnhanceZero && targetExtent[1] === 0) {
                         // 0 has been included in extent and all negative.
                         moreCountPair = [moreCount, 0];
                     }
                     else {
-                        // Try to arrange tick in the middle as possible corresponding to the given `alignTo`
-                        // ticks, which is especially preferable in `LogScale`.
+                        // Try to center ticks in axis space whenever possible, which is especially preferable
+                        // in `LogScale`.
                         const lessHalfCount = mathFloor(moreCount / 2);
                         moreCountPair = moreCount % 2 === 0 ? [lessHalfCount, lessHalfCount]
                             : (min + max) < (targetExtent[0] + targetExtent[1]) ? [lessHalfCount, lessHalfCount + 1]
@@ -325,9 +330,9 @@ export function alignScaleTicks(
         ]
         : [];
 
-    // NOTE: Must in setExtent -> setInterval order.
+    // NOTE: Must in setExtent -> setConfigs order.
     targetScaleLinear.setExtent(min, max);
-    targetScaleLinear.setInterval({
+    targetScaleLinear.setConfig({
         // Even in LogScale, `interval` should not be in log space.
         interval,
         intervalCount,

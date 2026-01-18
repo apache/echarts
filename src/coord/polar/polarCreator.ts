@@ -24,7 +24,6 @@ import Polar, { polarDimensions } from './Polar';
 import {parsePercent} from '../../util/number';
 import {
     createScaleByModel,
-    niceScaleExtent,
     getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
 
@@ -41,6 +40,7 @@ import { SINGLE_REFERRING } from '../../util/model';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { createBoxLayoutReference } from '../../util/layout';
+import { scaleCalcNice } from '../axisNiceTicks';
 
 /**
  * Resize method bound to the polar
@@ -99,8 +99,8 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
         }
     });
 
-    niceScaleExtent(angleScale, angleAxis.model, angleScale.getExtent());
-    niceScaleExtent(radiusScale, radiusAxis.model, radiusScale.getExtent());
+    scaleCalcNice(angleScale, angleAxis.model, angleScale.getExtent());
+    scaleCalcNice(radiusScale, radiusAxis.model, radiusScale.getExtent());
 
     // Fix extent of category angle axis
     if (angleAxis.type === 'category' && !angleAxis.onBand) {

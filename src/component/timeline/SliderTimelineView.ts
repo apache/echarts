@@ -23,7 +23,7 @@ import * as graphic from '../../util/graphic';
 import { createTextStyle } from '../../label/labelStyle';
 import * as layout from '../../util/layout';
 import TimelineView from './TimelineView';
-import TimelineAxis from './TimelineAxis';
+import TimelineAxis, { TimelineAxisType } from './TimelineAxis';
 import {createSymbol, normalizeSymbolOffset, normalizeSymbolSize} from '../../util/symbol';
 import * as numberUtil from '../../util/number';
 import GlobalModel from '../../model/Global';
@@ -35,10 +35,6 @@ import TimelineModel, { TimelineDataItemOption, TimelineCheckpointStyle } from '
 import { TimelineChangePayload, TimelinePlayChangePayload } from './timelineAction';
 import Model from '../../model/Model';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
-import Scale from '../../scale/Scale';
-import OrdinalScale from '../../scale/Ordinal';
-import TimeScale from '../../scale/Time';
-import IntervalScale from '../../scale/Interval';
 import { VectorArray } from 'zrender/src/core/vector';
 import { parsePercent } from 'zrender/src/contain/text';
 import { makeInner } from '../../util/model';
@@ -46,6 +42,9 @@ import { getECData } from '../../util/innerStore';
 import { enableHoverEmphasis } from '../../util/states';
 import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 import Displayable from 'zrender/src/graphic/Displayable';
+import { createScaleByModel } from '../../coord/axisHelper';
+import { OptionAxisType } from '../../coord/axisCommonTypes';
+import { scaleCalcNiceReal } from '../../coord/axisNiceTicks';
 
 const PI = Math.PI;
 
@@ -338,9 +337,12 @@ class SliderTimelineView extends TimelineView {
 
     private _createAxis(layoutInfo: LayoutInfo, timelineModel: SliderTimelineModel) {
         const data = timelineModel.getData();
-        const axisType = timelineModel.get('axisType');
+        let axisType = timelineModel.get('axisType') || timelineModel.get('type') as TimelineAxisType;
+        if (axisType !== 'category' && axisType !== 'time') {
+            axisType = 'value';
+        }
 
-        const scale = createScaleByModel(timelineModel, axisType);
+        const scale = createScaleByModel(timelineModel, axisType as OptionAxisType);
 
         // Customize scale. The `tickValue` is `dataIndex`.
         scale.getTicks = function () {
@@ -351,7 +353,7 @@ class SliderTimelineView extends TimelineView {
 
         const dataExtent = data.getDataExtent('value');
         scale.setExtent(dataExtent[0], dataExtent[1]);
-        scale.calcNiceTicks();
+        scaleCalcNiceReal(scale, {fixMinMax: [true, true]});
 
         const axis = new TimelineAxis('value', scale, layoutInfo.axisExtent as [number, number], axisType);
         axis.model = timelineModel;
@@ -726,28 +728,6 @@ class SliderTimelineView extends TimelineView {
                         'progress', labelDataIndexStore(tickLabels[i]).dataIndex <= currentIndex
                     );
             }
-        }
-    }
-}
-
-function createScaleByModel(model: SliderTimelineModel, axisType?: string): Scale {
-    axisType = axisType || model.get('type');
-    if (axisType) {
-        switch (axisType) {
-            // Buildin scale
-            case 'category':
-                return new OrdinalScale({
-                    ordinalMeta: model.getCategories(),
-                    extent: [Infinity, -Infinity]
-                });
-            case 'time':
-                return new TimeScale({
-                    locale: model.ecModel.getLocaleModel(),
-                    useUTC: model.ecModel.get('useUTC')
-                });
-            default:
-                // default to be value
-                return new IntervalScale();
         }
     }
 }

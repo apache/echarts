@@ -36,9 +36,10 @@ import {
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 import { bind } from 'zrender/src/core/util';
 import { ScaleBreakContext, AxisBreakParsingResult, getScaleBreakHelper, ParamPruneByBreak } from './break';
+import { AxisScaleType } from '../coord/axisCommonTypes';
 
 export type ScaleGetTicksOpt = {
-    // Whether expand the ticks to niced extent.
+    // Whether expand the ticks to nice extent.
     expandToNicedExtent?: boolean;
     pruneByBreak?: ParamPruneByBreak;
     // - not specified or undefined(default): insert the breaks as items into the tick array.
@@ -54,16 +55,16 @@ export type ScaleSettingDefault = Dictionary<unknown>;
 
 abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> {
 
-    type: string;
+    type: AxisScaleType;
 
     private _setting: SETTING;
 
-    // [CAVEAT]: Should update only by `_innerSetExtent`!
+    // [CAVEAT]: Should update only by `setExtent`!
     // Make sure that extent[0] always <= extent[1].
     protected _extent: [number, number];
 
-    // FIXME: Effectively, both logorithmic scale and break scale are numeric axis transformation
-    //  mechanisms. However, for historical reason, logorithmic scale is implemented as a subclass,
+    // FIXME: Effectively, both logarithmic scale and break scale are numeric axis transformation
+    //  mechanisms. However, for historical reason, logarithmic scale is implemented as a subclass,
     //  while break scale is implemented inside the base class `Scale`. If more transformations
     //  need to be introduced in futher, we should probably refactor them for better orthogonal
     //  composition. (e.g. use decorator-like patterns rather than the current class inheritance?)
@@ -86,6 +87,9 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
         }
     }
 
+    /**
+     * @final NEVER override!
+     */
     getSetting<KEY extends keyof SETTING>(name: KEY): SETTING[KEY] {
         return this._setting[name];
     }
@@ -115,22 +119,19 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     abstract scale(val: number): number;
 
     /**
-     * [CAVEAT]: It should not be overridden!
+     * @final NEVER override!
      */
-    _innerUnionExtent(other: number[]): void {
+    innerUnionExtent(other: number[]): void {
         const extent = this._extent;
         // Considered that number could be NaN and should not write into the extent.
-        this._innerSetExtent(
+        this.setExtent(
             other[0] < extent[0] ? other[0] : extent[0],
             other[1] > extent[1] ? other[1] : extent[1]
         );
     }
 
-    /**
-     * Set extent from data
-     */
     unionExtentFromData(data: SeriesData, dim: DimensionName | DimensionLoose): void {
-        this._innerUnionExtent(data.getApproximateExtent(dim));
+        this.innerUnionExtent(data.getApproximateExtent(dim));
     }
 
     /**
@@ -142,13 +143,6 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     }
 
     setExtent(start: number, end: number): void {
-        this._innerSetExtent(start, end);
-    }
-
-    /**
-     * [CAVEAT]: It should not be overridden!
-     */
-    protected _innerSetExtent(start: number, end: number): void {
         const thisExtent = this._extent;
         if (!isNaN(start)) {
             thisExtent[0] = start;
@@ -167,53 +161,63 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     ): void {
         const scaleBreakHelper = getScaleBreakHelper();
         if (scaleBreakHelper) {
-            this._innerSetBreak(
+            this.innerSetBreak(
                 scaleBreakHelper.parseAxisBreakOption(breakOptionList, bind(this.parse, this))
             );
         }
     }
 
     /**
-     * [CAVEAT]: It should not be overridden!
+     * @final NEVER override!
      */
-    _innerSetBreak(parsed: AxisBreakParsingResult) {
-        if (this._brkCtx) {
-            this._brkCtx.setBreaks(parsed);
-            this._calculator.updateMethods(this._brkCtx);
-            this._brkCtx.update(this._extent);
+    innerSetBreak(parsed: AxisBreakParsingResult) {
+        const brkCtx = this._brkCtx;
+        if (brkCtx) {
+            brkCtx.setBreaks(parsed);
+            this._calculator.updateMethods(brkCtx);
+            brkCtx.update(this._extent);
         }
     }
 
     /**
-     * [CAVEAT]: It should not be overridden!
+     * @final NEVER override!
      */
-    _innerGetBreaks(): ParsedAxisBreakList {
-        return this._brkCtx ? this._brkCtx.breaks : [];
+    innerGetBreaks(): ParsedAxisBreakList {
+        const brkCtx = this._brkCtx;
+        return brkCtx ? brkCtx.breaks : [];
     }
 
     /**
      * Do not expose the internal `_breaks` unless necessary.
+     *
+     * @final NEVER override!
      */
     hasBreaks(): boolean {
-        return this._brkCtx ? this._brkCtx.hasBreaks() : false;
-    }
-
-    protected _getExtentSpanWithBreaks() {
-        return (this._brkCtx && this._brkCtx.hasBreaks())
-            ? this._brkCtx.getExtentSpan()
-            : this._extent[1] - this._extent[0];
+        const brkCtx = this._brkCtx;
+        return brkCtx ? brkCtx.hasBreaks() : false;
     }
 
     /**
-     * If value is in extent range
+     * @final NEVER override!
      */
-    isInExtentRange(value: number): boolean {
-        return this._extent[0] <= value && this._extent[1] >= value;
+    getBreaksElapsedExtentSpan() {
+        const brkCtx = this._brkCtx;
+        const extent = this._extent;
+        return (brkCtx && brkCtx.hasBreaks())
+            ? brkCtx.getExtentSpan()
+            : extent[1] - extent[0];
+    }
+
+    isInExtent(value: number): boolean {
+        const extent = this._extent;
+        return extent[0] <= value && extent[1] >= value;
     }
 
     /**
      * When axis extent depends on data and no data exists,
      * axis ticks should not be drawn, which is named 'blank'.
+     *
+     * @final NEVER override!
      */
     isBlank(): boolean {
         return this._isBlank;
@@ -222,30 +226,12 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     /**
      * When axis extent depends on data and no data exists,
      * axis ticks should not be drawn, which is named 'blank'.
+     *
+     * @final NEVER override!
      */
     setBlank(isBlank: boolean) {
         this._isBlank = isBlank;
     }
-
-    /**
-     * Update interval and extent of intervals for nice ticks
-     *
-     * @param splitNumber Approximated tick numbers. Optional.
-     *        The implementation of `niceTicks` should decide tick numbers
-     *        whether `splitNumber` is given.
-     * @param minInterval Optional.
-     * @param maxInterval Optional.
-     */
-    abstract calcNiceTicks(
-        // FIXME:TS make them in a "opt", the same with `niceExtent`?
-        splitNumber?: number,
-        minInterval?: number,
-        maxInterval?: number
-    ): void;
-
-    abstract calcNiceExtent(
-        opt?: {}
-    ): void;
 
     /**
      * @return label of the tick.

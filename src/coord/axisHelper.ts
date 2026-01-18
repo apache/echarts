@@ -41,6 +41,7 @@ import {
     AxisLabelCategoryFormatter,
     AxisLabelValueFormatter,
     AxisLabelFormatterExtraParams,
+    OptionAxisType,
 } from './axisCommonTypes';
 import CartesianAxisModel from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
@@ -50,7 +51,8 @@ import { ensureScaleRawExtentInfo, ScaleRawExtentResult } from './scaleRawExtent
 import { parseTimeAxisLabelFormatter } from '../util/time';
 import { getScaleBreakHelper } from '../scale/break';
 import { error } from '../util/log';
-import { isIntervalScale, isTimeScale } from '../scale/helper';
+import { isTimeScale } from '../scale/helper';
+import { AxisModelExtendedInCreator } from './axisModelCreator';
 
 
 type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
@@ -157,43 +159,22 @@ function adjustScaleForOverflow(
     return {min: min, max: max};
 }
 
-export function niceScaleExtent(
-    scale: Scale,
-    inModel: AxisBaseModel,
-    // Typically: data extent from all series on this axis, which can be obtained by
-    //  `scale.unionExtentFromData(...); scale.getExtent();`.
-    dataExtent: number[],
-): void {
-    const model = inModel as AxisBaseModel<LogAxisBaseOption>;
-    const extentInfo = adoptScaleExtentOptionAndPrepare(scale, model, dataExtent);
-
-    const isInterval = isIntervalScale(scale);
-    const isIntervalOrTime = isInterval || isTimeScale(scale);
-
-    scale.setBreaksFromOption(retrieveAxisBreaksOption(model));
-    scale.setExtent(extentInfo.min, extentInfo.max);
-    scale.calcNiceExtent({
-        splitNumber: model.get('splitNumber'),
-        fixMinMax: [extentInfo.minFixed, extentInfo.maxFixed],
-        minInterval: isIntervalOrTime ? model.get('minInterval') : null,
-        maxInterval: isIntervalOrTime ? model.get('maxInterval') : null
-    });
-
-    // If some one specified the min, max. And the default calculated interval
-    // is not good enough. He can specify the interval. It is often appeared
-    // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
-    // to be 60.
-    // In `xxxAxis.type: 'log'`, ec option `xxxAxis.interval` requires a logarithm-applied
-    // value rather than a value in the raw scale.
-    const interval = model.get('interval');
-    if (interval != null && (scale as IntervalScale).setInterval) {
-        (scale as IntervalScale).setInterval({interval});
-    }
-}
-
-export function createScaleByModel(model: AxisBaseModel): Scale {
-    const axisType = model.get('type');
-    switch (axisType) {
+export function createScaleByModel(
+    model:
+        Model<
+            // Expect `Pick<AxisBaseOptionCommon, 'type'>`,
+            // but be lenient for user's invalid input.
+            {type?: string}
+            & Pick<LogAxisBaseOption, 'logBase'>
+        >
+        & Partial<Pick<
+            AxisModelExtendedInCreator,
+            'getOrdinalMeta' | 'getCategories'
+        >>,
+    axisType?: OptionAxisType
+): Scale {
+    const type = axisType || model.get('type');
+    switch (type) {
         case 'category':
             return new OrdinalScale({
                 ordinalMeta: model.getOrdinalMeta
@@ -208,10 +189,10 @@ export function createScaleByModel(model: AxisBaseModel): Scale {
             });
         case 'log':
             // See also #3749
-            return new LogScale((model as AxisBaseModel<LogAxisBaseOption>).get('logBase'));
+            return new LogScale(model.get('logBase'));
         default:
             // case 'value'/'interval', or others.
-            return new (Scale.getClass(axisType) || IntervalScale)();
+            return new (Scale.getClass(type) || IntervalScale)();
     }
 }
 

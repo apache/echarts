@@ -34,6 +34,9 @@ import type { PrimaryTimeUnit } from '../util/time';
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
 export type OptionAxisType = keyof typeof AXIS_TYPES;
 
+// `scale/Ordinal` | `scale/Interval` | `scale/Log` | `scale/Time`
+export type AxisScaleType = 'ordinal' | 'interval' | 'log' | 'time';
+
 export interface AxisBaseOptionCommon extends ComponentOption,
     AnimationOptionMixin {
     type?: OptionAxisType;

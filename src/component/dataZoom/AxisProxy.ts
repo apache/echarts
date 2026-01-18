@@ -458,11 +458,7 @@ class AxisProxy {
 
         const axisModel = this.getAxisModel();
 
-        const window = this._window;
-        if (!window) {
-            return;
-        }
-        const {percent, value} = window;
+        const {percent, value} = this._window;
 
         // For value axis, if min/max/scale are not set, we just use the extent obtained
         // by series data, which may be a little different from the extent calculated by

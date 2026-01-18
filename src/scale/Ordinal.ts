@@ -45,7 +45,7 @@ type OrdinalScaleSetting = {
 class OrdinalScale extends Scale<OrdinalScaleSetting> {
 
     static type = 'ordinal';
-    readonly type = 'ordinal';
+    readonly type = 'ordinal' as const;
 
     private _ordinalMeta: OrdinalMeta;
 
@@ -268,7 +268,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * @override
      * If value is in extent range
      */
-    isInExtentRange(value: OrdinalNumber): boolean {
+    isInExtent(value: OrdinalNumber): boolean {
         value = this._getTickNumber(value);
         return this._extent[0] <= value && this._extent[1] >= value;
     }
@@ -276,10 +276,6 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     getOrdinalMeta(): OrdinalMeta {
         return this._ordinalMeta;
     }
-
-    calcNiceTicks() {}
-
-    calcNiceExtent() {}
 
 }
 

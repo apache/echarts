@@ -28,7 +28,6 @@ import {BoxLayoutReferenceResult, createBoxLayoutReference, getLayoutRect, Layou
 import {
     createScaleByModel,
     ifAxisCrossZero,
-    niceScaleExtent,
     getDataDimensionsOnAxis,
     isNameLocationCenter,
     shouldAxisShow,
@@ -71,6 +70,7 @@ import { error, log } from '../../util/log';
 import { AxisTickLabelComputingKind } from '../axisTickLabelBuilder';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
 import { mathMax, parsePositionSizeOption } from '../../util/number';
+import { scaleCalcNice } from '../axisNiceTicks';
 
 type Cartesian2DDimensionName = 'x' | 'y';
 
@@ -135,12 +135,12 @@ class Grid implements CoordinateSystemMaster {
                     axisNeedsAlign.push(axis);
                 }
                 else {
-                    niceScaleExtent(axis.scale, axis.model, axis.scale.getExtent());
+                    scaleCalcNice(axis.scale, axis.model, axis.scale.getExtent());
                 }
             };
             each(axisNeedsAlign, axis => {
                 if (incapableOfAlignNeedFallback(axis, axis.alignTo as Axis2D)) {
-                    niceScaleExtent(axis.scale, axis.model, axis.scale.getExtent());
+                    scaleCalcNice(axis.scale, axis.model, axis.scale.getExtent());
                 }
                 else {
                     alignScaleTicks(

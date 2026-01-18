@@ -38,6 +38,7 @@ import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getECData } from '../../util/innerStore';
 import { createTextStyle as innerCreateTextStyle } from '../../label/labelStyle';
 import { DisplayState, TextCommonOption } from '../../util/types';
+import { scaleCalcNice } from '../../coord/axisNiceTicks';
 
 /**
  * Create a multi dimension List structure from seriesModel.
@@ -96,7 +97,7 @@ export function createScale(dataExtent: number[], option: object | AxisBaseModel
     const scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
     scale.setExtent(dataExtent[0], dataExtent[1]);
 
-    axisHelper.niceScaleExtent(scale, axisModel as AxisBaseModel, scale.getExtent());
+    scaleCalcNice(scale, axisModel as AxisBaseModel, scale.getExtent());
     return scale;
 }
 

@@ -40,6 +40,7 @@ import ParallelAxisModel, { ParallelActiveState } from './AxisModel';
 import SeriesData from '../../data/SeriesData';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
+import { scaleCalcNice } from '../axisNiceTicks';
 
 
 interface ParallelCoordinateSystemLayoutInfo {
@@ -184,7 +185,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
         // do after all series processed
         each(this.dimensions, function (dim) {
             const axis = this._axesMap.get(dim);
-            axisHelper.niceScaleExtent(axis.scale, axis.model, axis.scale.getExtent());
+            scaleCalcNice(axis.scale, axis.model, axis.scale.getExtent());
         }, this);
     }
 
