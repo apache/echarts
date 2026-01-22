@@ -238,6 +238,7 @@ export interface SetOptionOpts {
 export interface ResizeOpts {
     width?: number | 'auto', // Can be 'auto' (the same as null/undefined)
     height?: number | 'auto', // Can be 'auto' (the same as null/undefined)
+    devicePixelRatio?: number,
     animation?: AnimationOption
     silent?: boolean // by default false.
 };
@@ -1364,7 +1365,14 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
-        this._zr.resize(opts);
+        // Default to use window.devicePixelRatio to handle browser zoom changes.
+        const zrResizeOpts = opts ? extend({}, opts) : {};
+        if (zrResizeOpts.devicePixelRatio == null && env.hasGlobalWindow) {
+            /* eslint-disable-next-line */
+            zrResizeOpts.devicePixelRatio = window.devicePixelRatio;
+        }
+
+        this._zr.resize(zrResizeOpts);
 
         const ecModel = this._model;
 
