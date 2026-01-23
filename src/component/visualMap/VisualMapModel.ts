@@ -462,6 +462,16 @@ class VisualMapModel<Opts extends VisualMapOption = VisualMapOption> extends Com
             return data.getDimensionIndex(optDim);
         }
 
+        // First, try to use the dimension encoded as 'value' if it exists
+        // This respects the series' encode configuration
+        const valueDimName = data.mapDimension('value');
+        if (valueDimName != null && valueDimName !== '') {
+            const dimIndex = data.getDimensionIndex(valueDimName);
+            if (dimIndex >= 0) {
+                return dimIndex;
+            }
+        }
+
         const dimNames = data.dimensions;
         for (let i = dimNames.length - 1; i >= 0; i--) {
             const dimName = dimNames[i];
