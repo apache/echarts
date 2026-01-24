@@ -74,7 +74,7 @@ import {
     primaryTimeUnits,
     roundTime
 } from '../util/time';
-import * as scaleHelper from './helper';
+import { contain, ensureValidSplitNumber } from './helper';
 import Scale, { ScaleGetTicksOpt } from './Scale';
 import {TimeScaleTick, ScaleTick, AxisBreakOption, NullUndefined} from '../util/types';
 import {TimeAxisLabelFormatterParsed} from '../coord/axisCommonTypes';
@@ -128,7 +128,7 @@ class TimeScale extends Scale<TimeScaleSetting> {
     /**
      * Get label is mainly for other components like dataZoom, tooltip.
      */
-    getLabel(tick: TimeScaleTick): string {
+    getLabel(tick: ScaleTick): string {
         const useUTC = this.getSetting('useUTC');
         return format(
             tick.value,
@@ -278,7 +278,7 @@ class TimeScale extends Scale<TimeScaleSetting> {
     }
 
     contain(val: number): boolean {
-        return scaleHelper.contain(val, this._extent);
+        return contain(val, this._extent);
     }
 
     normalize(val: number): number {
@@ -749,7 +749,7 @@ export const timeScaleCalcNice: ScaleCalcNiceMethod = function (scale: TimeScale
     }
     scale.setExtent(extent[0], extent[1]);
 
-    const splitNumber = scaleHelper.ensureValidSplitNumber(opt.splitNumber, 10);
+    const splitNumber = ensureValidSplitNumber(opt.splitNumber, 10);
     const span = scale.getBreaksElapsedExtentSpan();
     let approxInterval = span / splitNumber;
 

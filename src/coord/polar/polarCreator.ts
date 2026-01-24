@@ -24,7 +24,6 @@ import Polar, { polarDimensions } from './Polar';
 import {parsePercent} from '../../util/number';
 import {
     createScaleByModel,
-    getDataDimensionsOnAxis
 } from '../../coord/axisHelper';
 
 import PolarModel from './PolarModel';
@@ -41,6 +40,9 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { createBoxLayoutReference } from '../../util/layout';
 import { scaleCalcNice } from '../axisNiceTicks';
+import {
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild, axisExtentInfoRequireBuild
+} from '../scaleRawExtentInfo';
 
 /**
  * Resize method bound to the polar
@@ -81,26 +83,12 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     const polar = this;
     const angleAxis = polar.getAngleAxis();
     const radiusAxis = polar.getRadiusAxis();
-    const angleScale = angleAxis.scale;
-    const radiusScale = radiusAxis.scale;
-    // Reset scale
-    angleScale.setExtent(Infinity, -Infinity);
-    radiusScale.setExtent(Infinity, -Infinity);
 
-    ecModel.eachSeries(function (seriesModel) {
-        if (seriesModel.coordinateSystem === polar) {
-            const data = seriesModel.getData();
-            zrUtil.each(getDataDimensionsOnAxis(data, 'radius'), function (dim) {
-                radiusScale.unionExtentFromData(data, dim);
-            });
-            zrUtil.each(getDataDimensionsOnAxis(data, 'angle'), function (dim) {
-                angleScale.unionExtentFromData(data, dim);
-            });
-        }
-    });
+    axisExtentInfoFinalBuild(ecModel, angleAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+    axisExtentInfoFinalBuild(ecModel, radiusAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
 
-    scaleCalcNice(angleScale, angleAxis.model, angleScale.getExtent());
-    scaleCalcNice(radiusScale, radiusAxis.model, radiusScale.getExtent());
+    scaleCalcNice(angleAxis);
+    scaleCalcNice(radiusAxis);
 
     // Fix extent of category angle axis
     if (angleAxis.type === 'category' && !angleAxis.onBand) {
@@ -135,7 +123,6 @@ function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
     axisModel.axis = axis;
     axis.model = axisModel as AngleAxisModel | RadiusAxisModel;
 }
-
 
 const polarCreator = {
 
@@ -185,7 +172,11 @@ const polarCreator = {
                         );
                     }
                 }
-                seriesModel.coordinateSystem = polarModel.coordinateSystem;
+                const polar = seriesModel.coordinateSystem = polarModel.coordinateSystem;
+                if (polar) {
+                    axisExtentInfoRequireBuild(polar.getRadiusAxis(), seriesModel, null);
+                    axisExtentInfoRequireBuild(polar.getAngleAxis(), seriesModel, null);
+                }
             }
         });
 

@@ -17,16 +17,38 @@
 * under the License.
 */
 
-import { assert, isArray, eqNaN, isFunction } from 'zrender/src/core/util';
+import { assert, isArray, eqNaN, isFunction, each, HashMap } from 'zrender/src/core/util';
 import Scale from '../scale/Scale';
 import { AxisBaseModel } from './AxisBaseModel';
 import { parsePercent } from 'zrender/src/contain/text';
 import {
     AxisBaseOption, CategoryAxisBaseOption, NumericAxisBaseOptionCommon, ValueAxisBaseOption
 } from './axisCommonTypes';
-import { ScaleDataValue } from '../util/types';
+import { DimensionIndex, DimensionName, NullUndefined, ScaleDataValue } from '../util/types';
 import { isIntervalScale, isLogScale, isOrdinalScale, isTimeScale } from '../scale/helper';
+import type Axis from './Axis';
+import type SeriesModel from '../model/Series';
+import { makeInner, initExtentForUnion } from '../util/model';
+import { getDataDimensionsOnAxis, unionExtent } from './axisHelper';
+import {
+    getCoordForCoordSysUsageKindBox
+} from '../core/CoordinateSystem';
+import GlobalModel from '../model/Global';
 
+
+const axisSeriesInner = makeInner<{
+    extent: number[];
+    seriesList: SeriesModel[];
+    dimIdxInCoord: number;
+}, Axis>();
+
+export const AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE = 1;
+export const AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM = 2;
+const AXIS_EXTENT_INFO_BUILD_FROM_EMPTY = 3;
+export type AxisExtentInfoBuildFrom =
+    typeof AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE
+    | typeof AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM
+    | typeof AXIS_EXTENT_INFO_BUILD_FROM_EMPTY;
 
 export interface ScaleRawExtentResult {
     // `min`/`max` defines data available range, determined by
@@ -37,6 +59,9 @@ export interface ScaleRawExtentResult {
     // (not to be null/undefined) `NaN` means min/max axis is blank.
     min: number;
     max: number;
+
+    dataMin: number;
+    dataMax: number;
 
     // `minFixed`/`maxFixed` is `true` iff:
     //  - ec option `xxxAxis.min/max` are specified, or
@@ -80,12 +105,12 @@ export class ScaleRawExtentInfo {
     private _determinedMin: number;
     private _determinedMax: number;
 
-    // Make that the `rawExtentInfo` can not be modified any more.
-    readonly frozen: boolean;
-
     // custom dataMin/dataMax
     private _dataMinNum: number;
     private _dataMaxNum: number;
+
+    // Injected outside
+    readonly from: AxisExtentInfoBuildFrom;
 
     constructor(
         scale: Scale,
@@ -187,9 +212,9 @@ export class ScaleRawExtentInfo {
 
     /**
      * Calculate extent by prepared parameters.
-     * This method has no external dependency and can be called duplicatedly,
+     * This method has no external dependency and can be called repeatedly,
      * getting the same result.
-     * If parameters changed, should call this method to recalcuate.
+     * If parameters changed, should call this method to recalculate.
      */
     calculate(): ScaleRawExtentResult {
         // Notice: When min/max is not set (that is, when there are null/undefined,
@@ -293,6 +318,8 @@ export class ScaleRawExtentInfo {
         return {
             min: min,
             max: max,
+            dataMin: dataMin,
+            dataMax: dataMax,
             minFixed: minFixed,
             maxFixed: maxFixed,
             minDetermined: minDetermined,
@@ -302,74 +329,177 @@ export class ScaleRawExtentInfo {
         };
     }
 
-    modifyDataMinMax(minMaxName: 'min' | 'max', val: number): void {
-        if (__DEV__) {
-            assert(!this.frozen);
-        }
-        this[DATA_MIN_MAX_ATTR[minMaxName]] = val;
-    }
+    // modifyDataMinMax(minMaxName: 'min' | 'max', val: number): void {
+    //     this[DATA_MIN_MAX_ATTR[minMaxName]] = val;
+    // }
 
     setDeterminedMinMax(minMaxName: 'min' | 'max', val: number): void {
         const attr = DETERMINED_MIN_MAX_ATTR[minMaxName];
         if (__DEV__) {
-            assert(
-                !this.frozen
-                // Earse them usually means logic flaw.
-                && (this[attr] == null)
-            );
+            assert(this[attr] == null);
         }
         this[attr] = val;
-    }
-
-    freeze() {
-        // @ts-ignore
-        this.frozen = true;
     }
 }
 
 const DETERMINED_MIN_MAX_ATTR = { min: '_determinedMin', max: '_determinedMax' } as const;
-const DATA_MIN_MAX_ATTR = { min: '_dataMin', max: '_dataMax' } as const;
+// const DATA_MIN_MAX_ATTR = { min: '_dataMin', max: '_dataMax' } as const;
 
-/**
- * Get scale min max and related info only depends on model settings.
- * This method can be called after coordinate system created.
- * For example, in data processing stage.
- *
- * Scale extent info probably be required multiple times during a workflow.
- * For example:
- * (1) `dataZoom` depends it to get the axis extent in "100%" state.
- * (2) `processor/extentCalculator` depends it to make sure whether axis extent is specified.
- * (3) `coordSys.update` use it to finally decide the scale extent.
- * But the callback of `min`/`max` should not be called multiple times.
- * The code below should not be implemented repeatedly either.
- * So we cache the result in the scale instance, which will be recreated at the beginning
- * of the workflow (because `scale` instance will be recreated each round of the workflow).
- */
-export function ensureScaleRawExtentInfo(
-    scale: Scale,
-    model: AxisBaseModel,
-    // Typically: data extent from all series on this axis.
-    // FIXME:
-    //  Refactor: only the first input `dataExtent` is used but it is determined by the
-    //  caller, which is error-prone.
-    dataExtent: number[]
-): ScaleRawExtentInfo {
-
-    // Do not permit to recreate.
-    let rawExtentInfo = scale.rawExtentInfo;
-    if (rawExtentInfo) {
-        return rawExtentInfo;
-    }
-
-    rawExtentInfo = new ScaleRawExtentInfo(scale, model, dataExtent);
-    // @ts-ignore
-    scale.rawExtentInfo = rawExtentInfo;
-
-    return rawExtentInfo;
-}
-
-export function parseAxisModelMinMax(scale: Scale, minMax: ScaleDataValue): number {
+function parseAxisModelMinMax(scale: Scale, minMax: ScaleDataValue): number {
     return minMax == null ? null
         : eqNaN(minMax) ? NaN
         : scale.parse(minMax);
+}
+
+/**
+ * @usage
+ *  class SomeCoordSys {
+ *      static create() {
+ *          ecModel.eachSeries(function (seriesModel) {
+ *              axisExtentInfoRequireBuild(axis1, seriesModel, ...);
+ *              axisExtentInfoRequireBuild(axis2, seriesModel, ...);
+ *              // ...
+ *          });
+ *      }
+ *      update() {
+ *          axisExtentInfoFinalBuild(axis1);
+ *          axisExtentInfoFinalBuild(axis2);
+ *      }
+ *  }
+ *  class AxisProxy {
+ *      reset() {
+ *          axisExtentInfoFinalBuild(axis1);
+ *      }
+ *  }
+ *
+ * NOTICE:
+ *  - `axisExtentInfoRequireBuild` should be typically called in:
+ *      - Coord sys create method.
+ *  - `axisExtentInfoFinalBuild` should be typically called in:
+ *      - `dataZoom` processor. It require processing like:
+ *          1. Filter series data by dataZoom1;
+ *          2. Union the filtered data and init the extent of the orthogonal axes, which is the 100% of dataZoom2;
+ *          3. Filter series data by dataZoom2;
+ *          4. ...
+ *      - Coord sys update method, for other axes that not covered by `dataZoom`.
+ *          NOTE: If `dataZoom` exists can covers this series, this data and its extent
+ *          has been dataZoom-filtered. Therefore this handling should not before dataZoom.
+ *  - The callback of `min`/`max` in ec option should NOT be called multiple times,
+ *      therefore, we initialize `ScaleRawExtentInfo` uniformly in `axisExtentInfoFinalBuild`.
+ */
+export function axisExtentInfoRequireBuild(
+    axis: Axis,
+    seriesModel: SeriesModel,
+    // coordSysDimIdxMap is required only for `boxCoordinateSystem`.
+    coordSysDimIdxMap: HashMap<DimensionIndex, DimensionName> | NullUndefined
+): void {
+    const axisStore = axisSeriesInner(axis);
+    if (!axisStore.extent) {
+        axisStore.extent = initExtentForUnion();
+        axisStore.seriesList = [];
+    }
+    axisStore.seriesList.push(seriesModel);
+    if (seriesModel.boxCoordinateSystem) {
+        // This supports union extent on case like: pie (or other similar series)
+        // lays out on cartesian2d.
+        if (__DEV__) {
+            assert(coordSysDimIdxMap);
+        }
+        axisStore.dimIdxInCoord = coordSysDimIdxMap.get(axis.dim);
+        if (__DEV__) {
+            assert(axisStore.dimIdxInCoord >= 0);
+        }
+    }
+}
+
+/**
+ * @see {axisExtentInfoRequireBuild}
+ */
+export function axisExtentInfoFinalBuild(
+    ecModel: GlobalModel,
+    axis: Axis,
+    from: AxisExtentInfoBuildFrom
+): void {
+    const scale = axis.scale;
+    const axisStore = axisSeriesInner(axis);
+    const extent = axisStore.extent;
+
+    if (scale.rawExtentInfo) {
+        if (__DEV__) {
+            // Check for incorrect impl - the duplicated calling of this method is only allowed in
+            // one case that first dataZoom than coord sys update.
+            assert(scale.rawExtentInfo.from !== from);
+        }
+        return;
+    }
+
+    each(axisStore.seriesList, function (seriesModel) {
+        // Legend-filtered series need to be ignored since series are registered before `legendFilter`.
+        if (ecModel.isSeriesFiltered(seriesModel)) {
+            return;
+        }
+        if (seriesModel.boxCoordinateSystem) {
+            // This supports union extent on case like: pie (or other similar series)
+            // lays out on cartesian2d.
+            const {coord} = getCoordForCoordSysUsageKindBox(seriesModel);
+            let val: number | NullUndefined;
+            const dimIdx = axisStore.dimIdxInCoord;
+            // Only `[val1, val2]` case needs to be supported currently.
+            if (isArray(coord)) {
+                const coordItem = coord[dimIdx];
+                if (coordItem != null && !isArray(coordItem)) {
+                    val = axis.scale.parse(coordItem);
+                    unionExtent(extent, val);
+                }
+            }
+        }
+        else if (seriesModel.coordinateSystem) {
+            // NOTE: This data may have been filtered by dataZoom on orthogonal axes.
+            const data = seriesModel.getData();
+            if (data) {
+                each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
+                    const seriesExtent = data.getApproximateExtent(dim);
+                    unionExtent(extent, seriesExtent[0]);
+                    unionExtent(extent, seriesExtent[1]);
+                });
+            }
+        }
+
+    });
+
+    const rawExtentInfo = new ScaleRawExtentInfo(scale, axis.model, extent);
+    injectScaleRawExtentInfo(scale, rawExtentInfo, from);
+
+    // PENDING: Is it necessary? See `adoptScaleExtentOptionAndPrepare`,
+    // need scale extent in `makeColumnLayout`.
+    const result = rawExtentInfo.calculate();
+    scale.setExtent(result.min, result.max);
+
+    axisStore.seriesList = axisStore.extent = null; // Clean up
+}
+
+export function ensureScaleRawExtentInfo(
+    {scale, model}: {scale: Scale; model: AxisBaseModel;}
+): ScaleRawExtentInfo {
+    if (!scale.rawExtentInfo) {
+        // `rawExtentInfo` may not be created in cases such as no series declared or extra useless
+        // axes declared in ec option. In this case we still create a default one for that empty axis.
+        injectScaleRawExtentInfo(
+            scale,
+            new ScaleRawExtentInfo(scale, model, initExtentForUnion()),
+            AXIS_EXTENT_INFO_BUILD_FROM_EMPTY
+        );
+    }
+    return scale.rawExtentInfo;
+}
+
+function injectScaleRawExtentInfo(
+    scale: Scale,
+    scaleRawExtentInfo: ScaleRawExtentInfo,
+    from: AxisExtentInfoBuildFrom
+): void {
+    // @ts-ignore
+    scale.rawExtentInfo = scaleRawExtentInfo;
+    // @ts-ignore
+    scaleRawExtentInfo.from = from;
 }

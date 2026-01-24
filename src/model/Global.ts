@@ -184,7 +184,7 @@ class GlobalModel extends Model<ECUnitOption> {
      * Key: seriesIndex.
      * Keep consistent with `_seriesIndices`.
      */
-    private _seriesIndicesMap: HashMap<any>;
+    private _seriesIndicesMap: HashMap<number, number>;
 
     /**
      * Model for store update payload
@@ -810,9 +810,6 @@ echarts.use([${seriesImportName}]);`);
 
     /**
      * Iterate raw series before filtered.
-     *
-     * @param {Function} cb
-     * @param {*} context
      */
     eachRawSeries<T>(
         cb: (this: T, series: SeriesModel, rawSeriesIndex: number) => void,
@@ -874,7 +871,7 @@ echarts.use([${seriesImportName}]);`);
         }, this);
 
         this._seriesIndices = newSeriesIndices;
-        this._seriesIndicesMap = createHashMap(newSeriesIndices);
+        this._seriesIndicesMap = createHashMap<number, number>(newSeriesIndices);
     }
 
     restoreData(payload?: Payload): void {
@@ -915,7 +912,7 @@ echarts.use([${seriesImportName}]);`);
                 // series may have been removed by `replaceMerge`.
                 series && seriesIndices.push(series.componentIndex);
             });
-            ecModel._seriesIndicesMap = createHashMap(seriesIndices);
+            ecModel._seriesIndicesMap = createHashMap<number, number>(seriesIndices);
         };
 
         assertSeriesInitialized = function (ecModel: GlobalModel): void {

@@ -29,6 +29,7 @@ import { DataProvider } from './helper/dataProvider';
 import { parseDataValue } from './helper/dataValueHelper';
 import OrdinalMeta from './OrdinalMeta';
 import { shouldRetrieveDataByName, Source } from './Source';
+import { initExtentForUnion } from '../util/model';
 
 const UNDEFINED = 'undefined';
 /* global Float64Array, Int32Array, Uint32Array, Uint16Array */
@@ -115,9 +116,7 @@ function getIndicesCtor(rawCount: number): DataArrayLikeConstructor {
     // The possible max value in this._indicies is always this._rawCount despite of filtering.
     return rawCount > 65535 ? CtorUint32Array : CtorUint16Array;
 };
-function getInitialExtent(): [number, number] {
-    return [Infinity, -Infinity];
-};
+
 function cloneChunk(originalChunk: DataValueChunk): DataValueChunk {
     const Ctor = originalChunk.constructor;
     // Only shallow clone is enough when Array.
@@ -263,7 +262,7 @@ class DataStore {
         calcDimNameToIdx.set(dimName, calcDimIdx);
 
         this._chunks[calcDimIdx] = new dataCtors[type || 'float'](this._rawCount);
-        this._rawExtent[calcDimIdx] = getInitialExtent();
+        this._rawExtent[calcDimIdx] = initExtentForUnion();
 
         return calcDimIdx;
     }
@@ -282,7 +281,7 @@ class DataStore {
         if (offset === 0) {
             // We need to reset the rawExtent if collect is from start.
             // Because this dimension may be guessed as number and calcuating a wrong extent.
-            rawExtents[dimIdx] = getInitialExtent();
+            rawExtents[dimIdx] = initExtentForUnion();
         }
 
         const dimRawExtent = rawExtents[dimIdx];
@@ -386,7 +385,7 @@ class DataStore {
         for (let i = 0; i < dimLen; i++) {
             const dim = dimensions[i];
             if (!rawExtent[i]) {
-                rawExtent[i] = getInitialExtent();
+                rawExtent[i] = initExtentForUnion();
             }
             prepareStore(chunks, i, dim.type, end, append);
         }
@@ -596,7 +595,7 @@ class DataStore {
     }
 
     /**
-     * Data filter.
+     * [NOTICE]: Performance-sensitive for large data.
      */
     filter(
         dims: DimensionIndex[],
@@ -817,7 +816,7 @@ class DataStore {
         const rawExtent = target._rawExtent;
 
         for (let i = 0; i < dims.length; i++) {
-            rawExtent[dims[i]] = getInitialExtent();
+            rawExtent[dims[i]] = initExtentForUnion();
         }
 
         for (let dataIndex = 0; dataIndex < dataCount; dataIndex++) {
@@ -1044,7 +1043,7 @@ class DataStore {
 
         const dimStore = targetStorage[dimension];
         const len = this.count();
-        const rawExtentOnDim = target._rawExtent[dimension] = getInitialExtent();
+        const rawExtentOnDim = target._rawExtent[dimension] = initExtentForUnion();
 
         const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize));
 
@@ -1133,7 +1132,7 @@ class DataStore {
     getDataExtent(dim: DimensionIndex): [number, number] {
         // Make sure use concrete dim as cache name.
         const dimData = this._chunks[dim];
-        const initialExtent = getInitialExtent();
+        const initialExtent = initExtentForUnion();
 
         if (!dimData) {
             return initialExtent;

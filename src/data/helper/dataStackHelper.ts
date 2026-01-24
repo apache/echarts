@@ -123,9 +123,6 @@ export function enableDataStack(
         byIndex = true;
     }
 
-    // Add stack dimension, they can be both calculated by coordinate system in `unionExtent`.
-    // That put stack logic in List is for using conveniently in echarts extensions, but it
-    // might not be a good way.
     if (stackedDimInfo) {
         // Use a weird name that not duplicated with other names.
         // Also need to use seriesModel.id as postfix because different

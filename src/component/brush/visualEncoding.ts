@@ -32,6 +32,7 @@ import SeriesModel from '../../model/Series';
 import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
 import { ZRenderType } from 'zrender/src/zrender';
 import { BrushType, BrushDimensionMinMax } from '../helper/BrushController';
+import { initExtentForUnion } from '../../util/model';
 
 type BrushVisualState = 'inBrush' | 'outOfBrush';
 
@@ -319,7 +320,7 @@ const boundingRectBuilders: Partial<Record<BrushType, AreaBoundingRectBuilder>> 
         const range = area.range as BrushDimensionMinMax[];
 
         for (let i = 0, len = range.length; i < len; i++) {
-            minMax = minMax || [[Infinity, -Infinity], [Infinity, -Infinity]];
+            minMax = minMax || [initExtentForUnion(), initExtentForUnion()];
             const rg = range[i];
             rg[0] < minMax[0][0] && (minMax[0][0] = rg[0]);
             rg[0] > minMax[0][1] && (minMax[0][1] = rg[0]);

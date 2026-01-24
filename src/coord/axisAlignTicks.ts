@@ -19,31 +19,27 @@
 
 import {
     getAcceptableTickPrecision,
-    getPrecision,
     mathAbs, mathCeil, mathFloor, mathMax, mathRound, nice, NICE_MODE_MIN, quantity, round
 } from '../util/number';
 import IntervalScale from '../scale/Interval';
-import { adoptScaleExtentOptionAndPrepare } from './axisHelper';
+import { adoptScaleExtentOptionAndPrepare, updateIntervalOrLogScaleForNiceOrAligned } from './axisHelper';
 import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
 import { warn } from '../util/log';
 import {
     increaseInterval, isLogScale, getIntervalPrecision, intervalScaleEnsureValidExtent,
-    logScaleLogTickPair,
+    logScaleLogTick,
 } from '../scale/helper';
 import { assert } from 'zrender/src/core/util';
-import { NullUndefined } from '../util/types';
 
 
 export function alignScaleTicks(
     targetScale: IntervalScale | LogScale,
-    targetDataExtent: number[],
     targetAxisModel: AxisBaseModel,
     alignToScale: IntervalScale | LogScale
 ): void {
     const isTargetLogScale = isLogScale(targetScale);
     const alignToScaleLinear = isLogScale(alignToScale) ? alignToScale.linearStub : alignToScale;
-    const targetScaleLinear = isTargetLogScale ? targetScale.linearStub : targetScale;
 
     const targetLogScaleBase = (targetScale as LogScale).base;
     const alignToTicks = alignToScaleLinear.getTicks();
@@ -127,7 +123,7 @@ export function alignScaleTicks(
         assert(alignToNiceSegCount >= 1);
     }
 
-    const targetExtentInfo = adoptScaleExtentOptionAndPrepare(targetScale, targetAxisModel, targetDataExtent);
+    const targetExtentInfo = adoptScaleExtentOptionAndPrepare(targetScale, targetAxisModel);
 
     // NOTE:
     //  Consider a case:
@@ -160,20 +156,19 @@ export function alignScaleTicks(
     //          `12000, 9000, 6000, 3000, 0` ("nice")
 
     let targetRawExtent = [targetExtentInfo.min, targetExtentInfo.max];
+    const targetRawPowExtent = targetRawExtent;
     if (isTargetLogScale) {
-        targetRawExtent = logScaleLogTickPair(targetRawExtent, targetLogScaleBase);
+        targetRawExtent = [
+            logScaleLogTick(targetRawExtent[0], targetLogScaleBase, false),
+            logScaleLogTick(targetRawExtent[1], targetLogScaleBase, false)
+        ];
     }
     const targetExtent = intervalScaleEnsureValidExtent(targetRawExtent, targetMinMaxFixed);
-    const targetMinMaxChanged = [
-        targetExtent[0] !== targetRawExtent[0],
-        targetExtent[1] !== targetRawExtent[1]
-    ];
 
     let min: number;
     let max: number;
     let interval: number;
     let intervalPrecision: number;
-    let intervalCount: number | NullUndefined;
     let maxNice: number;
     let minNice: number;
 
@@ -225,7 +220,6 @@ export function alignScaleTicks(
 
         min = targetExtent[0];
         max = targetExtent[1];
-        intervalCount = alignToNiceSegCount;
         interval = (max - min) / (alignToNiceSegCount + t0 + t1);
         // Typically axis pixel extent is ready here. See `create` in `Grid.ts`.
         const axisPxExtent = targetAxisModel.axis.getExtent();
@@ -321,23 +315,22 @@ export function alignScaleTicks(
         }
     }
 
-    const extentPrecision = isTargetLogScale
-        ? [
-            (targetMinMaxFixed[0] && !targetMinMaxChanged[0])
-                ? getPrecision(min) : null,
-            (targetMinMaxFixed[1] && !targetMinMaxChanged[1])
-                ? getPrecision(max) : null
-        ]
-        : [];
-
-    // NOTE: Must in setExtent -> setConfigs order.
-    targetScaleLinear.setExtent(min, max);
-    targetScaleLinear.setConfig({
-        // Even in LogScale, `interval` should not be in log space.
-        interval,
-        intervalCount,
-        intervalPrecision,
-        extentPrecision,
-        niceExtent: [minNice, maxNice],
-    });
+    updateIntervalOrLogScaleForNiceOrAligned(
+        targetScale,
+        targetMinMaxFixed,
+        targetRawExtent,
+        [min, max],
+        targetRawPowExtent,
+        {
+            // NOTE: Even in LogScale, `interval` should not be in log space.
+            interval,
+            // Force ticks count, otherwise cumulative error may cause more unexpected ticks to be generated.
+            // Though the overlapping tick labels may be auto-ignored, but probably unexpected, e.g., the min
+            // tick label is ignored but the secondary min tick label is shown, which is unexpected when
+            // `axis.min` is user-specified or dataZoom-specified.
+            intervalCount: alignToNiceSegCount,
+            intervalPrecision,
+            niceExtent: [minNice, maxNice],
+        },
+    );
 }

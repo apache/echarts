@@ -21,31 +21,26 @@
 import {round, mathRound, mathMin, getPrecision} from '../util/number';
 import {addCommas} from '../util/format';
 import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
-import * as helper from './helper';
+import { contain, getIntervalPrecision, IntervalScaleGetLabelOpt } from './helper';
 import {ScaleTick, ScaleDataValue, NullUndefined} from '../util/types';
 import { getScaleBreakHelper } from './break';
 import { assert, clone } from 'zrender/src/core/util';
 import { getMinorTicks } from './minorTicks';
 
 
-type IntervalScaleConfig = {
+export type IntervalScaleConfig = {
     interval: IntervalScaleConfigParsed['interval'];
     intervalPrecision?: IntervalScaleConfigParsed['intervalPrecision'] | NullUndefined;
-    extentPrecision?: IntervalScaleConfigParsed['extentPrecision'] | NullUndefined;
     intervalCount?: IntervalScaleConfigParsed['intervalCount'] | NullUndefined;
     niceExtent?: IntervalScaleConfigParsed['niceExtent'] | NullUndefined;
 };
 
-type IntervalScaleConfigParsed = {
+export type IntervalScaleConfigParsed = {
     /**
      * Step of ticks.
      */
     interval: number;
     intervalPrecision: number;
-    /**
-     * Precisions of `_extent[0]` and `_extent[1]`.
-     */
-    extentPrecision: (number | NullUndefined)[];
     /**
      * `_intervalCount` effectively specifies the number of "nice segments". This is for special cases,
      * such as `alignTicks: true` and min max are fixed. In this case, `_interval` may be specified with
@@ -86,7 +81,6 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         this._cfg = {
             interval: 0,
             intervalPrecision: 2,
-            extentPrecision: [],
             intervalCount: undefined,
             niceExtent: undefined,
         };
@@ -120,7 +114,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
     }
 
     contain(val: number): boolean {
-        return helper.contain(val, this._extent);
+        return contain(val, this._extent);
     }
 
     normalize(val: number): number {
@@ -166,9 +160,8 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             cfg.niceExtent = extent.slice() as [number, number];
         }
         if (cfg.intervalPrecision == null) {
-            cfg.intervalPrecision = helper.getIntervalPrecision(cfg.interval);
+            cfg.intervalPrecision = getIntervalPrecision(cfg.interval);
         }
-        cfg.extentPrecision = cfg.extentPrecision || [];
     }
 
     /**
@@ -323,7 +316,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
      */
     getLabel(
         data: ScaleTick,
-        opt?: helper.IntervalScaleGetLabelOpt
+        opt?: IntervalScaleGetLabelOpt
     ): string {
         if (data == null) {
             return '';

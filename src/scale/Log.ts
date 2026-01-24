@@ -19,25 +19,21 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
-import {
-    mathPow, mathLog,
-} from '../util/number';
 
 // Use some method of IntervalScale
 import IntervalScale from './Interval';
 import {
-    DimensionLoose, DimensionName, AxisBreakOption,
+    AxisBreakOption,
     ScaleTick,
     NullUndefined,
     ScaleDataValue
 } from '../util/types';
 import {
-    logScalePowTickPair, logScalePowTick, logScaleLogTickPair,
-    getExtentPrecision,
+    logScalePowTick,
     IntervalScaleGetLabelOpt,
+    contain,
     logScaleLogTick,
 } from './helper';
-import SeriesData from '../data/SeriesData';
 import { getScaleBreakHelper } from './break';
 import { getMinorTicks } from './minorTicks';
 
@@ -49,44 +45,49 @@ class LogScale extends Scale {
 
     readonly base: number;
 
-    // `_originalScale` is used to save some original info (before logarithm
-    // applied, such as raw extent; but may be still invalid, and not sync
-    // to the calculated ("nice") extent).
-    private _originalScale: IntervalScale;
-    // `linearStub` provides linear tick arrangement (logarithm applied).
+    /**
+     * `powStub` is used to save original values, i.e., values before logarithm
+     * applied, such as raw extent and raw breaks.
+     * NOTE: Logarithm transform is probably not inversible by rounding error, which
+     * may cause min/max tick is displayed like `5.999999999999999`. The extent in
+     * powStub is used to get the original precise extent for this issue.
+     *
+     * [CAVEAT] `powStub` and `linearStub` should be modified synchronously.
+     */
+    readonly powStub: IntervalScale;
+    /**
+     * `linearStub` provides linear tick arrangement (logarithm applied).
+     * @see {powStub}
+     */
     readonly linearStub: IntervalScale;
 
     constructor(logBase: number | NullUndefined, settings?: ScaleSettingDefault) {
         super();
-        this._originalScale = new IntervalScale();
+        this.powStub = new IntervalScale();
         this.linearStub = new IntervalScale(settings);
         this.base = zrUtil.retrieve2(logBase, 10);
     }
 
     getTicks(opt?: ScaleGetTicksOpt): ScaleTick[] {
         const base = this.base;
-        const originalScale = this._originalScale;
+        const powStub = this.powStub;
         const scaleBreakHelper = getScaleBreakHelper();
         const linearStub = this.linearStub;
-        const extent = linearStub.getExtent();
-        const extentPrecision = linearStub.getConfig().extentPrecision;
+        const linearExtent = linearStub.getExtent();
+        const powExtent = powStub.getExtent();
 
         return zrUtil.map(linearStub.getTicks(opt || {}), function (tick) {
             const val = tick.value;
-            let powVal = logScalePowTick(
-                val,
-                base,
-                getExtentPrecision(val, extent, extentPrecision)
-            );
+            let powVal = logScalePowTick(val, base, linearExtent, powExtent);
 
             let vBreak;
             if (scaleBreakHelper) {
                 const brkPowResult = scaleBreakHelper.getTicksPowBreak(
                     tick,
                     base,
-                    originalScale.innerGetBreaks(),
-                    extent,
-                    extentPrecision
+                    powStub.innerGetBreaks(),
+                    linearExtent,
+                    powExtent,
                 );
                 if (brkPowResult) {
                     vBreak = brkPowResult.vBreak;
@@ -105,7 +106,7 @@ class LogScale extends Scale {
         return getMinorTicks(
             this,
             splitNumber,
-            this._originalScale.innerGetBreaks(),
+            this.powStub.innerGetBreaks(),
             // NOTE: minor ticks are in the log scale value to visually hint users "logarithm".
             this.linearStub.getConfig().interval
         );
@@ -119,29 +120,15 @@ class LogScale extends Scale {
     }
 
     setExtent(start: number, end: number): void {
-        // [CAVEAT]: If modifying this logic, must sync to `_initLinearStub`.
-        this._originalScale.setExtent(start, end);
-        const loggedExtent = logScaleLogTickPair([start, end], this.base);
-        this.linearStub.setExtent(loggedExtent[0], loggedExtent[1]);
-    }
-
-    getExtent() {
-        const linearStub = this.linearStub;
-        return logScalePowTickPair(
-            linearStub.getExtent(),
-            this.base,
-            linearStub.getConfig().extentPrecision
+        this.powStub.setExtent(start, end);
+        this.linearStub.setExtent(
+            logScaleLogTick(start, this.base, false),
+            logScaleLogTick(end, this.base, false)
         );
     }
 
-    isInExtent(value: number): boolean {
-        return this.linearStub.isInExtent(logScaleLogTick(value, this.base));
-    }
-
-    unionExtentFromData(data: SeriesData, dim: DimensionName | DimensionLoose): void {
-        this._originalScale.unionExtentFromData(data, dim);
-        const loggedOther = logScaleLogTickPair(data.getApproximateExtent(dim), this.base, true);
-        this.linearStub.innerUnionExtent(loggedOther);
+    getExtent() {
+        return this.powStub.getExtent();
     }
 
     parse(val: ScaleDataValue): number {
@@ -149,18 +136,17 @@ class LogScale extends Scale {
     }
 
     contain(val: number): boolean {
-        val = mathLog(val) / mathLog(this.base);
-        return this.linearStub.contain(val);
+        return contain(val, this.getExtent());
     }
 
     normalize(val: number): number {
-        val = mathLog(val) / mathLog(this.base);
-        return this.linearStub.normalize(val);
+        return this.linearStub.normalize(logScaleLogTick(val, this.base, true));
     }
 
     scale(val: number): number {
-        val = this.linearStub.scale(val);
-        return mathPow(this.base, val);
+        // PENDING: Input `linearStub.getExtent()` and `powStub.getExtent()` may
+        // break monotonicity. Do not do it until real problems found.
+        return logScalePowTick(this.linearStub.scale(val), this.base, null, null);
     }
 
     setBreaksFromOption(
@@ -175,7 +161,7 @@ class LogScale extends Scale {
             this.base,
             zrUtil.bind(this.parse, this)
         );
-        this._originalScale.innerSetBreak(parsedOriginal);
+        this.powStub.innerSetBreak(parsedOriginal);
         this.linearStub.innerSetBreak(parsedLogged);
     }
 

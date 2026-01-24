@@ -97,7 +97,7 @@ export function createScale(dataExtent: number[], option: object | AxisBaseModel
     const scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
     scale.setExtent(dataExtent[0], dataExtent[1]);
 
-    scaleCalcNice(scale, axisModel as AxisBaseModel, scale.getExtent());
+    scaleCalcNice({scale, model: axisModel as AxisBaseModel});
     return scale;
 }
 

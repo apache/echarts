@@ -28,7 +28,8 @@ import {
     isString,
     indexOf,
     isStringSafe,
-    isNumber
+    isNumber,
+    hasOwn
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -720,7 +721,7 @@ export function queryDataIndex(data: SeriesData, payload: Payload & {
  * Notice: Serialization is not supported.
  *
  * For example:
- * let inner = zrUitl.makeInner();
+ * let inner = makeInner();
  *
  * function some1(hostObj) {
  *      inner(hostObj).someProperty = 1212;
@@ -732,10 +733,8 @@ export function queryDataIndex(data: SeriesData, payload: Payload & {
  *      fields.someProperty2 = 'xx';
  *      ...
  * }
- *
- * @return {Function}
  */
-export function makeInner<T, Host extends object>() {
+export function makeInner<T extends object, Host extends object>() {
     const key = '__ec_inner_' + innerUniqueIndex++;
     return function (hostObj: Host): T {
         return (hostObj as any)[key] || ((hostObj as any)[key] = {});
@@ -1173,3 +1172,28 @@ export function clearTmpModel(model: Model): void {
     // Clear to avoid memory leak.
     model.option = model.parentModel = model.ecModel = null;
 }
+
+export function initExtentForUnion(): [number, number] {
+    return [Infinity, -Infinity];
+}
+
+/**
+ * A util for ensuring the callback is called only once.
+ * @usage
+ *  const callOnlyOnce = makeCallOnlyOnce(); // Should be static (ESM top level).
+ *  function someFunc(hostObj) {
+ *      callOnlyOnce(hostObj, function () {
+ *          // Do something immediately and only once for hostObj.
+ *      }
+ *  }
+ */
+export function makeCallOnlyOnce<Host extends object>() {
+    const key = '__ec_once_' + onceUniqueIndex++;
+    return function (hostObj: Host, cb: () => void) {
+        if (!hasOwn(hostObj, key)) {
+            (hostObj as any)[key] = 1;
+            cb();
+        }
+    };
+}
+let onceUniqueIndex = getRandomIdBase();

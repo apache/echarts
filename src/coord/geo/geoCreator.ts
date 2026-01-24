@@ -96,8 +96,8 @@ function resizeGeo(this: Geo, geoModel: ComponentModel<GeoOption | MapSeriesOpti
     const centerOption = geoModel.get('layoutCenter');
     const sizeOption = geoModel.get('layoutSize');
 
-    // Laying out geo on `dataCoordSys`, such as cartesian, works theoretically but not supported yet.
-    // Therefore here we only handle cases that laying out on `boxCoordSys`, such as matrix/calendar.
+    // Laying out geo on Cartesian works theoretically but not supported yet.
+    // Currently, we only support to lay out on matrix/calendar.
     const {refContainer} = layout.createBoxLayoutReference(geoModel, api);
 
     const aspect = rect.width / rect.height * this.aspectScale;

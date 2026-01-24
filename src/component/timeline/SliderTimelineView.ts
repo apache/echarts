@@ -44,7 +44,7 @@ import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { createScaleByModel } from '../../coord/axisHelper';
 import { OptionAxisType } from '../../coord/axisCommonTypes';
-import { scaleCalcNiceReal } from '../../coord/axisNiceTicks';
+import { scaleCalcNiceDirectly } from '../../coord/axisNiceTicks';
 
 const PI = Math.PI;
 
@@ -353,7 +353,7 @@ class SliderTimelineView extends TimelineView {
 
         const dataExtent = data.getDataExtent('value');
         scale.setExtent(dataExtent[0], dataExtent[1]);
-        scaleCalcNiceReal(scale, {fixMinMax: [true, true]});
+        scaleCalcNiceDirectly(scale, {fixMinMax: [true, true]});
 
         const axis = new TimelineAxis('value', scale, layoutInfo.axisExtent as [number, number], axisType);
         axis.model = timelineModel;

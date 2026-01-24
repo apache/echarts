@@ -153,12 +153,15 @@ export const dependencies = {
 const TEST_FRAME_REMAIN_TIME = 1;
 
 const PRIORITY_PROCESSOR_SERIES_FILTER = 800;
-// Some data processors depends on the stack result dimension (to calculate data extent).
-// So data stack stage should be in front of data processing stage.
+// In the current impl, "data stack" will modifies the original "series data extent". Some data
+// processors rely on the stack result dimension to calculate extents. So data stack
+// should be in front of other data processors.
 const PRIORITY_PROCESSOR_DATASTACK = 900;
-// "Data filter" will block the stream, so it should be
-// put at the beginning of data processing.
+// `PRIORITY_PROCESSOR_FILTER` is typically used by `dataZoom` (see `AxisProxy`), which relies
+// on the initialized "axis extent".
 const PRIORITY_PROCESSOR_FILTER = 1000;
+// NOTICE: These "data processors" (especially, data filters) above may block the stream, so they
+// should be put at the beginning of data processing.
 const PRIORITY_PROCESSOR_DEFAULT = 2000;
 const PRIORITY_PROCESSOR_STATISTIC = 5000;
 
@@ -168,7 +171,7 @@ const PRIORITY_VISUAL_GLOBAL = 2000;
 const PRIORITY_VISUAL_CHART = 3000;
 const PRIORITY_VISUAL_COMPONENT = 4000;
 // Visual property in data. Greater than `PRIORITY_VISUAL_COMPONENT` to enable to
-// overwrite the viusal result of component (like `visualMap`)
+// overwrite the visual result of component (like `visualMap`)
 // using data item specific setting (like itemStyle.xxx on data item)
 const PRIORITY_VISUAL_CHART_DATA_CUSTOM = 4500;
 // Greater than `PRIORITY_VISUAL_CHART_DATA_CUSTOM` to enable to layout based on
@@ -180,8 +183,8 @@ const PRIORITY_VISUAL_DECAL = 7000;
 
 export const PRIORITY = {
     PROCESSOR: {
-        FILTER: PRIORITY_PROCESSOR_FILTER,
         SERIES_FILTER: PRIORITY_PROCESSOR_SERIES_FILTER,
+        FILTER: PRIORITY_PROCESSOR_FILTER,
         STATISTIC: PRIORITY_PROCESSOR_STATISTIC
     },
     VISUAL: {

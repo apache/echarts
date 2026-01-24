@@ -26,7 +26,7 @@
 
 import Scale from './Scale';
 import OrdinalMeta from '../data/OrdinalMeta';
-import * as scaleHelper from './helper';
+import { contain } from './helper';
 import {
     OrdinalRawValue,
     OrdinalNumber,
@@ -36,6 +36,7 @@ import {
 } from '../util/types';
 import { CategoryAxisBaseOption } from '../coord/axisCommonTypes';
 import { isArray, map, isObject, isString } from 'zrender/src/core/util';
+import { mathMin, mathRound } from '../util/number';
 
 type OrdinalScaleSetting = {
     ordinalMeta?: OrdinalMeta | CategoryAxisBaseOption['data'];
@@ -91,7 +92,13 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      *     1, // ordinalNumber: 5, yValue: 220
      * ]
      * ```
-     * The index of this array is from `0` to `ordinalMeta.categories.length`.
+     * NOTICE:
+     *  - The index of `_ordinalNumbersByTick` is "tick number", i.e., `tick.value`,
+     *    rather than the index of `scale.getTicks()`, though commonly they are the same,
+     *    except that the `_extent[0]` is delibrately set to be not zero.
+     *  - Currently we only support that the index of `_ordinalNumbersByTick` is
+     *    from `0` to `ordinalMeta.categories.length - 1`.
+     *  - `OrdinalNumber` is always from `0` to `ordinalMeta.categories.length - 1`.
      *
      * @see `Ordinal['getRawOrdinalNumber']`
      * @see `OrdinalSortInfo`
@@ -100,7 +107,8 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
 
     /**
      * This is the inverted map of `_ordinalNumbersByTick`.
-     * The index of this array is from `0` to `ordinalMeta.categories.length`.
+     * The index is `OrdinalNumber`, which is from `0` to `ordinalMeta.categories.length - 1`.
+     * after `_ticksByOrdinalNumber` is initialized.
      *
      * @see `Ordinal['_ordinalNumbersByTick']`
      * @see `Ordinal['_getTickNumber']`
@@ -135,16 +143,18 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         return isString(val)
             ? this._ordinalMeta.getOrdinal(val)
             // val might be float.
-            : Math.round(val);
+            : mathRound(val);
     }
 
     contain(val: OrdinalNumber): boolean {
-        return scaleHelper.contain(val, this._extent)
+        return contain(this._getTickNumber(val), this._extent)
             && val >= 0 && val < this._ordinalMeta.categories.length;
     }
 
     /**
-     * Normalize given rank or name to linear [0, 1]
+     * Normalize given rank or name to linear [0, 1].
+     * `normalize` and `scale` are typically used to map data to pixel.
+     *
      * @param val raw ordinal number.
      * @return normalized value in [0, 1].
      */
@@ -154,11 +164,13 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     }
 
     /**
+     * @see {normalize}
+     *
      * @param val normalized value in [0, 1].
      * @return raw ordinal number.
      */
     scale(val: number): OrdinalNumber {
-        val = Math.round(this._calculator.scale(val, this._extent));
+        val = mathRound(this._calculator.scale(val, this._extent));
         return this.getRawOrdinalNumber(val);
     }
 
@@ -198,9 +210,8 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
         // Unnecessary support negative tick in `realtimeSort`.
         let tickNum = 0;
         const allCategoryLen = this._ordinalMeta.categories.length;
-        for (const len = Math.min(allCategoryLen, infoOrdinalNumbers.length); tickNum < len; ++tickNum) {
-            const ordinalNumber = infoOrdinalNumbers[tickNum];
-            ordinalsByTick[tickNum] = ordinalNumber;
+        for (const len = mathMin(allCategoryLen, infoOrdinalNumbers.length); tickNum < len; ++tickNum) {
+            const ordinalNumber = ordinalsByTick[tickNum] = infoOrdinalNumbers[tickNum];
             ticksByOrdinal[ordinalNumber] = tickNum;
         }
         // Handle that `series.data` only covers part of the `axis.category.data`.
@@ -209,7 +220,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
             while (ticksByOrdinal[unusedOrdinal] != null) {
                 unusedOrdinal++;
             };
-            ordinalsByTick.push(unusedOrdinal);
+            ordinalsByTick[tickNum] = unusedOrdinal;
             ticksByOrdinal[unusedOrdinal] = tickNum;
         }
     }
@@ -226,8 +237,7 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
     /**
      * @usage
      * ```js
-     * const ordinalNumber = ordinalScale.getRawOrdinalNumber(tickVal);
-     *
+     * const ordinalNumber = ordinalScale.getRawOrdinalNumber(tick.value);
      * // case0
      * const rawOrdinalValue = axisModel.getCategories()[ordinalNumber];
      * // case1
@@ -236,11 +246,11 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
      * const coord = axis.dataToCoord(ordinalNumber);
      * ```
      *
-     * @param {OrdinalNumber} tickNumber index of display
+     * @param tickNumber This is `scale.getTicks()[i].value`.
      */
     getRawOrdinalNumber(tickNumber: number): OrdinalNumber {
         const ordinalNumbersByTick = this._ordinalNumbersByTick;
-        // tickNumber may be out of range, e.g., when axis max is larger than `ordinalMeta.categories.length`.,
+        // tickNumber may be out of range, e.g., when axis max is larger than `ordinalMeta.categories.length`,
         // where ordinal numbers are used as tick value directly.
         return (ordinalNumbersByTick && tickNumber >= 0 && tickNumber < ordinalNumbersByTick.length)
             ? ordinalNumbersByTick[tickNumber]
@@ -262,15 +272,6 @@ class OrdinalScale extends Scale<OrdinalScaleSetting> {
 
     count(): number {
         return this._extent[1] - this._extent[0] + 1;
-    }
-
-    /**
-     * @override
-     * If value is in extent range
-     */
-    isInExtent(value: OrdinalNumber): boolean {
-        value = this._getTickNumber(value);
-        return this._extent[0] <= value && this._extent[1] >= value;
     }
 
     getOrdinalMeta(): OrdinalMeta {

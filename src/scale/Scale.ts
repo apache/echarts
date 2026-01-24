@@ -20,11 +20,8 @@
 
 import * as clazzUtil from '../util/clazz';
 import { Dictionary } from 'zrender/src/core/types';
-import SeriesData from '../data/SeriesData';
 import {
-    DimensionName,
     ScaleDataValue,
-    DimensionLoose,
     ScaleTick,
     AxisBreakOption,
     NullUndefined,
@@ -37,6 +34,7 @@ import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
 import { bind } from 'zrender/src/core/util';
 import { ScaleBreakContext, AxisBreakParsingResult, getScaleBreakHelper, ParamPruneByBreak } from './break';
 import { AxisScaleType } from '../coord/axisCommonTypes';
+import { initExtentForUnion } from '../util/model';
 
 export type ScaleGetTicksOpt = {
     // Whether expand the ticks to nice extent.
@@ -60,7 +58,8 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     private _setting: SETTING;
 
     // [CAVEAT]: Should update only by `setExtent`!
-    // Make sure that extent[0] always <= extent[1].
+    // The caller of `setExtent()` should ensure `extent[0] <= extent[1]`,
+    // but it is initialized as [Infinity, -Infinity].
     protected _extent: [number, number];
 
     // FIXME: Effectively, both logarithmic scale and break scale are numeric axis transformation
@@ -75,11 +74,12 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     private _isBlank: boolean;
 
     // Inject
-    readonly rawExtentInfo: ScaleRawExtentInfo;
+    // MUST only visit by `ensureScaleRawExtentInfo()`, as it may be null/undefined.
+    readonly rawExtentInfo: ScaleRawExtentInfo | NullUndefined;
 
     constructor(setting?: SETTING) {
         this._setting = setting || {} as SETTING;
-        this._extent = [Infinity, -Infinity];
+        this._extent = initExtentForUnion();
         const scaleBreakHelper = getScaleBreakHelper();
         if (scaleBreakHelper) {
             this._brkCtx = scaleBreakHelper.createScaleBreakContext();
@@ -119,24 +119,12 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     abstract scale(val: number): number;
 
     /**
-     * @final NEVER override!
-     */
-    innerUnionExtent(other: number[]): void {
-        const extent = this._extent;
-        // Considered that number could be NaN and should not write into the extent.
-        this.setExtent(
-            other[0] < extent[0] ? other[0] : extent[0],
-            other[1] > extent[1] ? other[1] : extent[1]
-        );
-    }
-
-    unionExtentFromData(data: SeriesData, dim: DimensionName | DimensionLoose): void {
-        this.innerUnionExtent(data.getApproximateExtent(dim));
-    }
-
-    /**
      * Get a new slice of extent.
      * Extent is always in increase order.
+     *
+     * [NOTICE]:
+     *  In ec workflow, `getExtent()` is finally determined on `coordSys#update` stage,
+     *  and `ensureScaleRawExtentInfo()` is used before `coordSys#update` stage.
      */
     getExtent(): [number, number] {
         return this._extent.slice() as [number, number];
@@ -206,11 +194,6 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
         return (brkCtx && brkCtx.hasBreaks())
             ? brkCtx.getExtentSpan()
             : extent[1] - extent[0];
-    }
-
-    isInExtent(value: number): boolean {
-        const extent = this._extent;
-        return extent[0] <= value && extent[1] >= value;
     }
 
     /**

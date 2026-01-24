@@ -31,6 +31,9 @@ import { ParsedModelFinder } from '../../util/model';
 import { map, each, isString, isNumber } from 'zrender/src/core/util';
 import { alignScaleTicks } from '../axisAlignTicks';
 import { createBoxLayoutReference } from '../../util/layout';
+import {
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild, axisExtentInfoRequireBuild
+} from '../scaleRawExtentInfo';
 
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {
@@ -155,31 +158,16 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
     update(ecModel: GlobalModel, api: ExtensionAPI) {
         const indicatorAxes = this._indicatorAxes;
         const radarModel = this._model;
-        each(indicatorAxes, function (indicatorAxis) {
-            indicatorAxis.scale.setExtent(Infinity, -Infinity);
-        });
-        ecModel.eachSeriesByType('radar', function (radarSeries, idx) {
-            if (radarSeries.get('coordinateSystem') !== 'radar'
-                // @ts-ignore
-                || ecModel.getComponent('radar', radarSeries.get('radarIndex')) !== radarModel
-            ) {
-                return;
-            }
-            const data = radarSeries.getData();
-            each(indicatorAxes, function (indicatorAxis) {
-                indicatorAxis.scale.unionExtentFromData(data, data.mapDimension(indicatorAxis.dim));
-            });
-        }, this);
 
         const splitNumber = radarModel.get('splitNumber');
         const dummyScale = new IntervalScale();
         dummyScale.setExtent(0, splitNumber);
         dummyScale.setConfig({interval: 1});
         // Force all the axis fixing the maxSplitNumber.
-        each(indicatorAxes, function (indicatorAxis, idx) {
+        each(indicatorAxes, function (indicatorAxis) {
+            axisExtentInfoFinalBuild(ecModel, indicatorAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
             alignScaleTicks(
                 indicatorAxis.scale as IntervalScale,
-                indicatorAxis.scale.getExtent(),
                 indicatorAxis.model,
                 dummyScale
             );
@@ -214,7 +202,12 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
             if (radarSeries.get('coordinateSystem') === 'radar') {
                 // Inject coordinate system
                 // @ts-ignore
-                radarSeries.coordinateSystem = radarList[radarSeries.get('radarIndex') || 0];
+                const radar = radarSeries.coordinateSystem = radarList[radarSeries.get('radarIndex') || 0];
+                if (radar) {
+                    each(radar.getIndicatorAxes(), function (indicatorAxis) {
+                        axisExtentInfoRequireBuild(indicatorAxis, radarSeries, null);
+                    });
+                }
             }
         });
         return radarList;

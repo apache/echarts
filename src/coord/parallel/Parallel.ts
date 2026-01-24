@@ -41,6 +41,9 @@ import SeriesData from '../../data/SeriesData';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { scaleCalcNice } from '../axisNiceTicks';
+import {
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild
+} from '../scaleRawExtentInfo';
 
 
 interface ParallelCoordinateSystemLayoutInfo {
@@ -143,7 +146,11 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
      * Update axis scale after data processed
      */
     update(ecModel: GlobalModel, api: ExtensionAPI): void {
-        this._updateAxesFromSeries(this._model, ecModel);
+        each(this.dimensions, function (dim) {
+            const axis = this._axesMap.get(dim);
+            axisExtentInfoFinalBuild(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleCalcNice(axis);
+        }, this);
     }
 
     containPoint(point: number[]): boolean {
@@ -162,31 +169,6 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
 
     getModel(): ParallelModel {
         return this._model;
-    }
-
-    /**
-     * Update properties from series
-     */
-    private _updateAxesFromSeries(parallelModel: ParallelModel, ecModel: GlobalModel): void {
-        ecModel.eachSeries(function (seriesModel) {
-
-            if (!parallelModel.contains(seriesModel, ecModel)) {
-                return;
-            }
-
-            const data = seriesModel.getData();
-
-            each(this.dimensions, function (dim) {
-                const axis = this._axesMap.get(dim);
-                axis.scale.unionExtentFromData(data, data.mapDimension(dim));
-            }, this);
-        }, this);
-
-        // do after all series processed
-        each(this.dimensions, function (dim) {
-            const axis = this._axesMap.get(dim);
-            scaleCalcNice(axis.scale, axis.model, axis.scale.getExtent());
-        }, this);
     }
 
     /**

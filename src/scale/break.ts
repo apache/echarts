@@ -117,9 +117,9 @@ export type ScaleBreakHelper = {
     getTicksPowBreak(
         tick: ScaleTick,
         logBase: number,
-        logOriginalBreaks: ParsedAxisBreakList,
-        extent: number[],
-        extentPrecision: (number | NullUndefined)[],
+        powBreaks: ParsedAxisBreakList,
+        linearExtent: number[],
+        powExtent: number[],
     ): {
         tickPowValue: number | NullUndefined;
         vBreak: VisualAxisBreak | NullUndefined;

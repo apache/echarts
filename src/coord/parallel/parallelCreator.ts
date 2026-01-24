@@ -19,7 +19,7 @@
 
 
 /**
- * Parallel coordinate system creater.
+ * Parallel coordinate system creator.
  */
 
 import Parallel from './Parallel';
@@ -29,6 +29,8 @@ import ParallelModel from './ParallelModel';
 import { CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
 import { SINGLE_REFERRING } from '../../util/model';
+import { each } from 'zrender/src/core/util';
+import {axisExtentInfoRequireBuild} from '../scaleRawExtentInfo';
 
 function createParallelCoordSys(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster[] {
     const coordSysList: CoordinateSystemMaster[] = [];
@@ -51,12 +53,18 @@ function createParallelCoordSys(ecModel: GlobalModel, api: ExtensionAPI): Coordi
             const parallelModel = seriesModel.getReferringComponents(
                 'parallel', SINGLE_REFERRING
             ).models[0] as ParallelModel;
-            seriesModel.coordinateSystem = parallelModel.coordinateSystem;
+            const parallel = seriesModel.coordinateSystem = parallelModel.coordinateSystem;
+            if (parallel) {
+                each(parallel.dimensions, function (dim) {
+                    axisExtentInfoRequireBuild(parallel.getAxis(dim), seriesModel, null);
+                });
+            }
         }
     });
 
     return coordSysList;
 }
+
 const parallelCoordSysCreator = {
     create: createParallelCoordSys
 };

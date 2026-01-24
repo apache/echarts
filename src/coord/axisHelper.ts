@@ -19,7 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import OrdinalScale from '../scale/Ordinal';
-import IntervalScale from '../scale/Interval';
+import IntervalScale, { IntervalScaleConfig } from '../scale/Interval';
 import Scale from '../scale/Scale';
 import {
     prepareLayoutBarSeries,
@@ -46,37 +46,28 @@ import {
 import CartesianAxisModel from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
-import { Dictionary, DimensionName, ScaleTick } from '../util/types';
+import { Dictionary, DimensionName, NullUndefined, ScaleTick } from '../util/types';
 import { ensureScaleRawExtentInfo, ScaleRawExtentResult } from './scaleRawExtentInfo';
 import { parseTimeAxisLabelFormatter } from '../util/time';
 import { getScaleBreakHelper } from '../scale/break';
 import { error } from '../util/log';
-import { isTimeScale } from '../scale/helper';
+import { extentDiffers, isLogScale, isOrdinalScale, isTimeScale, logScalePowTick } from '../scale/helper';
 import { AxisModelExtendedInCreator } from './axisModelCreator';
+import { initExtentForUnion } from '../util/model';
 
 
 type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
 
 /**
- * Prepare axis scale extent before niced.
+ * Prepare axis scale extent before "nice".
  * Item of returned array can only be number (including Infinity and NaN).
- *
- * CAVEAT:
- *  This function has side-effect.
- *
- * FIXME:
- *  Refector to decouple `unionExtentFromData` and irregular value handling from `scale`.
- *  Merge `unionAxisExtentFromData` and `unionExtentFromData`.
- *  Refector `ensureScaleRawExtentInfo`.
  */
 export function adoptScaleExtentOptionAndPrepare(
     scale: Scale,
     model: AxisBaseModel,
-    // Typically: data extent from all series on this axis.
-    // Can be obtained by `scale.unionExtentFromData(); scale.getExtent()`;
-    dataExtent: number[]
 ): ScaleRawExtentResult {
-    const rawExtentResult = ensureScaleRawExtentInfo(scale, model, dataExtent).calculate();
+
+    const rawExtentResult = ensureScaleRawExtentInfo({scale, model}).calculate();
 
     scale.setBlank(rawExtentResult.isBlank);
 
@@ -125,23 +116,20 @@ function adjustScaleForOverflow(
     model: CartesianAxisModel,  // Only support cartesian coord yet.
     barWidthAndOffset: BarWidthAndOffset
 ) {
-
     // Get Axis Length
     const axisExtent = model.axis.getExtent();
     const axisLength = Math.abs(axisExtent[1] - axisExtent[0]);
 
     // Get bars on current base axis and calculate min and max overflow
     const barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
-    if (barsOnCurrentAxis === undefined) {
+    if (barsOnCurrentAxis == null) {
         return {min: min, max: max};
     }
 
     let minOverflow = Infinity;
-    zrUtil.each(barsOnCurrentAxis, function (item) {
-        minOverflow = Math.min(item.offset, minOverflow);
-    });
     let maxOverflow = -Infinity;
     zrUtil.each(barsOnCurrentAxis, function (item) {
+        minOverflow = Math.min(item.offset, minOverflow);
         maxOverflow = Math.max(item.offset + item.width, maxOverflow);
     });
     minOverflow = Math.abs(minOverflow);
@@ -180,7 +168,7 @@ export function createScaleByModel(
                 ordinalMeta: model.getOrdinalMeta
                     ? model.getOrdinalMeta()
                     : model.getCategories(),
-                extent: [Infinity, -Infinity]
+                extent: initExtentForUnion()
             });
         case 'time':
             return new TimeScale({
@@ -276,7 +264,8 @@ export function getAxisRawValue<TIsCategory extends boolean>(axis: Axis, tick: S
     // In category axis with data zoom, tick is not the original
     // index of axis.data. So tick should not be exposed to user
     // in category axis.
-    return axis.type === 'category' ? axis.scale.getLabel(tick) : tick.value as any;
+    const scale = axis.scale;
+    return (isOrdinalScale(scale) ? scale.getLabel(tick) : tick.value) as any;
 }
 
 /**
@@ -317,17 +306,10 @@ export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): Dime
     return zrUtil.keys(dataDimMap);
 }
 
-/**
- * FIXME: refactor - merge with `Scale#unionExtentFromData`
- */
-export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, axisDim: string): void {
-    if (data) {
-        zrUtil.each(getDataDimensionsOnAxis(data, axisDim), function (dim) {
-            const seriesExtent = data.getApproximateExtent(dim);
-            seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
-            seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
-        });
-    }
+export function unionExtent(dataExtent: number[], val: number | NullUndefined): void {
+    // Considered that number could be NaN and should not write into the extent.
+    val < dataExtent[0] && (dataExtent[0] = val);
+    val > dataExtent[1] && (dataExtent[1] = val);
 }
 
 export function isNameLocationCenter(nameLocation: AxisBaseOptionCommon['nameLocation']) {
@@ -363,4 +345,38 @@ function isSupportAxisBreak(axis: Axis): boolean {
     // The polar radius axis can also support break feasibly. Do not do it until the requirements are met.
     return (axis.dim === 'x' || axis.dim === 'y' || axis.dim === 'z' || axis.dim === 'single')
         && axis.type !== 'category';
+}
+
+export function updateIntervalOrLogScaleForNiceOrAligned(
+    scale: IntervalScale | LogScale,
+    fixMinMax: boolean[],
+    originalLinearExtent: number[],
+    newLinearExtent: number[],
+    originalPowExtent: number[],
+    cfg: IntervalScaleConfig
+): void {
+    const isTargetLogScale = isLogScale(scale);
+    const linearStub = isTargetLogScale ? scale.linearStub : scale;
+    linearStub.setExtent(newLinearExtent[0], newLinearExtent[1]);
+    if (isTargetLogScale) {
+        // Sync linearStub extent to powStub.
+        const powStub = scale.powStub;
+        let minPow = logScalePowTick(newLinearExtent[0], scale.base, null, null);
+        let maxPow = logScalePowTick(newLinearExtent[1], scale.base, null, null);
+        // Log transform is probably not inversible by rounding error, which causes min/max tick may be
+        // displayed as `5.999999999999999` unexpectedly when min/max are required to be fixed (specified
+        // by users or by dataZoom). Therefore we set `powStub` with the `originalPowExtent`. But we remain
+        // linearStub unchanged to avoid breaking its monotonicity between niceExtent and extent, since
+        // `originalPowExtent` is almost the same as `pow(originalLinearExtent)` here.
+        const extentChanged = extentDiffers(originalLinearExtent, newLinearExtent);
+        // NOTE: extent may still be changed even when min/max are required fixed, e.g., in invalid case.
+        if (fixMinMax[0] && !extentChanged[0]) {
+            minPow = originalPowExtent[0];
+        }
+        if (fixMinMax[1] && !extentChanged[1]) {
+            maxPow = originalPowExtent[1];
+        }
+        powStub.setExtent(minPow, maxPow);
+    }
+    linearStub.setConfig(cfg);
 }

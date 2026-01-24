@@ -38,7 +38,8 @@ import { Dictionary } from '../../util/types';
 import {
     ModelFinderObject, ModelFinder,
     parseFinder as modelUtilParseFinder,
-    ParsedModelFinderKnown
+    ParsedModelFinderKnown,
+    initExtentForUnion
 } from '../../util/model';
 
 type COORD_CONVERTS_INDEX = 0 | 1;
@@ -442,7 +443,7 @@ const coordConvert: Record<BrushType, ConvertCoord> = {
         values: BrushDimensionMinMax[],
         xyMinMax: BrushDimensionMinMax[]
     } {
-        const xyMinMax = [[Infinity, -Infinity], [Infinity, -Infinity]];
+        const xyMinMax = [initExtentForUnion(), initExtentForUnion()];
         const values = map(rangeOrCoordRange, function (item) {
             const p = to ? coordSys.pointToData(item, clamp) : coordSys.dataToPoint(item, clamp);
             xyMinMax[0][0] = Math.min(xyMinMax[0][0], p[0]);

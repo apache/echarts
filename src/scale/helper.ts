@@ -22,13 +22,14 @@ import {
     mathPow, mathMax, mathRound,
     mathLog, mathAbs, mathFloor, mathCeil
 } from '../util/number';
-import IntervalScale from './Interval';
-import LogScale from './Log';
+import type IntervalScale from './Interval';
+import type LogScale from './Log';
 import type Scale from './Scale';
 import { bind } from 'zrender/src/core/util';
 import type { ScaleBreakContext } from './break';
-import TimeScale from './Time';
+import type TimeScale from './Time';
 import { NullUndefined } from '../util/types';
+import type OrdinalScale from './Ordinal';
 
 type intervalScaleNiceTicksResult = {
     interval: number,
@@ -56,7 +57,7 @@ export type IntervalScaleGetLabelOpt = {
 //         || f === 5;
 // }
 
-export function isIntervalOrLogScale(scale: Scale): scale is LogScale | IntervalScale {
+export function isIntervalOrLogScale(scale: Scale): scale is (LogScale | IntervalScale) {
     return isIntervalScale(scale) || isLogScale(scale);
 }
 
@@ -72,7 +73,7 @@ export function isLogScale(scale: Scale): scale is LogScale {
     return scale.type === 'log';
 }
 
-export function isOrdinalScale(scale: Scale): boolean {
+export function isOrdinalScale(scale: Scale): scale is OrdinalScale {
     return scale.type === 'ordinal';
 }
 
@@ -142,7 +143,7 @@ export function getIntervalPrecision(niceInterval: number): number {
     return getPrecision(niceInterval) + 2;
 }
 
-export function contain(val: number, extent: [number, number]): boolean {
+export function contain(val: number, extent: number[]): boolean {
     return val >= extent[0] && val <= extent[1];
 }
 
@@ -166,7 +167,7 @@ export class ScaleCalculator {
 function normalize(
     val: number,
     extent: [number, number],
-    // Dont use optional arguments for performance consideration here.
+    // Don't use optional arguments for performance consideration here.
 ): number {
     if (extent[1] === extent[0]) {
         return 0.5;
@@ -182,23 +183,12 @@ function scale(
 }
 
 /**
- * @see logScaleLogTick
+ * NOTE: if `val` is `NaN`, return `NaN`.
  */
-export function logScaleLogTickPair(
-    pair: number[],
-    base: number,
-    noClampNegative?: boolean
-): [number, number] {
-    return [
-        logScaleLogTick(pair[0], base, noClampNegative),
-        logScaleLogTick(pair[1], base, noClampNegative)
-    ];
-}
-
 export function logScaleLogTick(
     val: number,
     base: number,
-    noClampNegative?: boolean
+    noClampNegative: boolean
 ): number {
     // log(negative) is NaN, so safe guard here.
     // PENDING: But even getting a -Infinity still does not make sense in extent.
@@ -210,48 +200,30 @@ export function logScaleLogTick(
 }
 
 /**
- * @see logScalePowTick
- */
-export function logScalePowTickPair(
-    linearPair: number[],
-    base: number,
-    precisionPair: (number | NullUndefined)[],
-): [number, number] {
-    return [
-        logScalePowTick(linearPair[0], base, precisionPair[0]),
-        logScalePowTick(linearPair[1], base, precisionPair[1])
-    ] as [number, number];
-}
-
-/**
  * Cumulative rounding errors cause the logarithm operation to become non-invertible by simply exponentiation.
  *  - `Math.pow(10, integer)` itself has no rounding error. But,
  *  - If `linearTickVal` is generated internally by `calcNiceTicks`, it may be still "not nice" (not an integer)
  *    when it is `extent[i]`.
  *  - If `linearTickVal` is generated outside (e.g., by `alignScaleTicks`) and set by `setExtent`,
- *    `logScaleLogTickPair` may already have introduced rounding errors even for "nice" values.
+ *    `logScaleLogTick` may already have introduced rounding errors even for "nice" values.
  * But invertible is required when the original `extent[i]` need to be respected, or "nice" ticks need to be
- * displayed instead of something like `5.999999999999999`, which is addressed in this function by providing
- * a `precision`.
+ * displayed instead of something like `5.999999999999999`, which is addressed in this function.
  * See also `#4158`.
+ *
+ * [CAUTION]:
+ *  Monotonicity may be broken on extent ends - callers must make sure it does not matter.
  */
 export function logScalePowTick(
     // `tickVal` should be in the linear space.
     linearTickVal: number,
     base: number,
-    precision: number | NullUndefined,
+    linearExtent: number[] | NullUndefined,
+    powExtent: number[] | NullUndefined,
 ): number {
-
-    // NOTE: Even when min/max is required to be fixed, `pow(base, tickVal)` is not necessarily equal to
-    // `originalPowExtent[0]`/`[1]`. e.g., when `originalPowExtent` is a invalid extent but
-    // `tickVal` has been adjusted to make it valid. So we always use `Math.pow`.
-    let powVal = mathPow(base, linearTickVal);
-
-    if (precision != null) {
-        powVal = round(powVal, precision);
-    }
-
-    return powVal;
+    const hasExt = linearExtent && powExtent;
+    return (hasExt && linearTickVal === linearExtent[0]) ? powExtent[0]
+        : (hasExt && linearTickVal === linearExtent[1]) ? powExtent[1]
+        : mathPow(base, linearTickVal);
 }
 
 /**
@@ -305,19 +277,13 @@ export function intervalScaleEnsureValidExtent(
     return extent;
 }
 
+export function extentDiffers(extent1: number[], extent2: number[]): boolean[] {
+    return [extent1[0] !== extent2[0], extent1[1] !== extent2[1]];
+}
+
 export function ensureValidSplitNumber(
     rawSplitNumber: number | NullUndefined, defaultSplitNumber: number
 ): number {
     rawSplitNumber = rawSplitNumber || defaultSplitNumber;
     return mathRound(mathMax(rawSplitNumber, 1));
-}
-
-export function getExtentPrecision(
-    val: number,
-    extent: number[],
-    extentPrecision: (number | NullUndefined)[],
-): number | NullUndefined {
-    return val === extent[0] ? extentPrecision[0]
-        : val === extent[1] ? extentPrecision[1]
-        : null;
 }

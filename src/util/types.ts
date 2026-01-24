@@ -340,6 +340,8 @@ export interface StageHandler {
     seriesType?: string;
     /**
      * Indicate that the task will be only piped in the pipeline of the returned series.
+     * Called in "prepare" stage, before coord sys creation.
+     * It is available for both `reset` and `overallReset`.
      */
     getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
 
@@ -421,12 +423,20 @@ export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
 
 /**
- * @usage For example,
- * ```js
- * { ordinalNumbers: [2, 5, 3, 4] }
- * ```
- * means that ordinal 2 should be displayed on tick 0,
- * ordinal 5 should be displayed on tick 1, ...
+ * @usage
+ * For example,
+ *  ```js
+ *  { ordinalNumbers: [2, 5, 3, 4] }
+ *  ```
+ *  means that "ordinal number" 2 should be displayed on `tick.value` 0,
+ *  "ordinal number" 5 should be displayed on `tick.value` 1, ...
+ * NOTICE:
+ *  - The index/key of `ordinalNumbers` is "tick.value" rather than the index of
+ *    `scale.getTicks()`, though in most cases they are the same, except that the
+ *    `axis.min` is delibrately set to be not zero.
+ *  - The value of `ordinalNumbers` must be a valid `OrdinalNumber`;
+ *    null/undefined is not supported.
+ *  - `OrdinalNumber` is always from `0` to `ordinalMeta.categories.length - 1`.
  */
 export type OrdinalSortInfo = {
     ordinalNumbers: OrdinalNumber[];
@@ -1761,8 +1771,10 @@ export interface ComponentOption {
 }
 
 /**
- * - "data": Use it as "dataCoordSys", each data item is laid out based on a coord sys.
- * - "box": Use it as "boxCoordSys", the overall bounding rect or anchor point is calculated based on a coord sys.
+ * - "data": Each data item is laid out based on a coord sys.
+ *   See `COORD_SYS_USAGE_KIND_DATA`.
+ * - "box": The overall bounding rect or anchor point is calculated based on a coord sys.
+ *   See `COORD_SYS_USAGE_KIND_BOX`.
  *   e.g.,
  *      grid rect (cartesian rect) is calculate based on matrix/calendar coord sys;
  *      pie center is calculated based on calendar/cartesian;

@@ -29,11 +29,10 @@ import { Dictionary, NullUndefined } from '../../util/types';
 // TODO Polar?
 import DataZoomModel from './DataZoomModel';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { unionAxisExtentFromData } from '../../coord/axisHelper';
-import { ensureScaleRawExtentInfo } from '../../coord/scaleRawExtentInfo';
 import { getAxisMainType, isCoordSupported, DataZoomAxisDimension } from './helper';
-import { SINGLE_REFERRING } from '../../util/model';
+import { initExtentForUnion, SINGLE_REFERRING } from '../../util/model';
 import { isOrdinalScale, isTimeScale } from '../../scale/helper';
+import { AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, axisExtentInfoFinalBuild, ensureScaleRawExtentInfo } from '../../coord/scaleRawExtentInfo';
 
 
 interface MinMaxSpan {
@@ -142,7 +141,7 @@ class AxisProxy {
     /**
      * [CAVEAT] Keep this method pure, so that it can be called multiple times.
      *
-     * Only calculate by given range and this._dataExtent, do not change anything.
+     * Only calculate by given range and cumulative series data extent, do not change anything.
      */
     calculateDataWindow(
         opt: {
@@ -311,9 +310,20 @@ class AxisProxy {
             return;
         }
 
-        const targetSeries = this.getTargetSeriesModels();
-        // Culculate data window and data extent, and record them.
-        this._dataExtent = calculateDataExtent(this, this._dimName, targetSeries);
+        // It is important to get "consistent" extent when more then one axes is
+        // controlled by a `dataZoom`, otherwise those axes will not be synchronized
+        // when zooming. But it is difficult to know what is "consistent", considering
+        // axes have different type or even different meanings (For example, two
+        // time axes are used to compare data of the same date in different years).
+        // So basically dataZoom just obtains extent by series.data (in category axis
+        // extent can be obtained from axis.data).
+        // Nevertheless, user can set min/max/scale on axes to make extent of axes
+        // consistent.
+        const axis = this.getAxisModel().axis;
+        axisExtentInfoFinalBuild(this.ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
+        const rawExtentInfo = ensureScaleRawExtentInfo(axis)
+        const rawExtentResult = rawExtentInfo.calculate();
+        this._dataExtent = [rawExtentResult.min, rawExtentResult.max];
 
         // `calculateDataWindow` uses min/maxSpan.
         this._updateMinMaxSpan();
@@ -325,10 +335,18 @@ class AxisProxy {
                 end: alignToPercentInverted[1],
             }, opt);
         }
-        this._window = this.calculateDataWindow(opt);
+        const {percent, value} = this._window = this.calculateDataWindow(opt);
 
-        // Update axis setting then.
-        this._setAxisModel();
+        // For value axis, if min/max/scale are not set, we just use the extent obtained
+        // by series data, which may be a little different from the extent calculated by
+        // `axisHelper.getScaleExtent`. But the different just affects the experience a
+        // little when zooming. So it will not be fixed until some users require it strongly.
+        if (percent[0] !== 0) {
+            rawExtentInfo.setDeterminedMinMax('min', value[0]);
+        }
+        if (percent[1] !== 100) {
+            rawExtentInfo.setDeterminedMinMax('max', value[1]);
+        }
     }
 
     filterData(dataZoomModel: DataZoomModel, api: ExtensionAPI) {
@@ -349,8 +367,8 @@ class AxisProxy {
         // Toolbox may has dataZoom injected. And if there are stacked bar chart
         // with NaN data, NaN will be filtered and stack will be wrong.
         // So we need to force the mode to be set empty.
-        // In fect, it is not a big deal that do not support filterMode-'filter'
-        // when using toolbox#dataZoom, utill tooltip#dataZoom support "single axis
+        // In fact, it is not a big deal that do not support filterMode-'filter'
+        // when using toolbox#dataZoom, util tooltip#dataZoom support "single axis
         // selection" some day, which might need "adapt to data extent on the
         // otherAxis", which is disabled by filterMode-'empty'.
         // But currently, stack has been fixed to based on value but not index,
@@ -453,48 +471,6 @@ class AxisProxy {
             minMaxSpan[minMax + 'ValueSpan' as 'minValueSpan' | 'maxValueSpan'] = valueSpan;
         }, this);
     }
-
-    private _setAxisModel() {
-
-        const axisModel = this.getAxisModel();
-
-        const {percent, value} = this._window;
-
-        // For value axis, if min/max/scale are not set, we just use the extent obtained
-        // by series data, which may be a little different from the extent calculated by
-        // `axisHelper.getScaleExtent`. But the different just affects the experience a
-        // little when zooming. So it will not be fixed until some users require it strongly.
-        const rawExtentInfo = axisModel.axis.scale.rawExtentInfo;
-        if (percent[0] !== 0) {
-            rawExtentInfo.setDeterminedMinMax('min', value[0]);
-        }
-        if (percent[1] !== 100) {
-            rawExtentInfo.setDeterminedMinMax('max', value[1]);
-        }
-        rawExtentInfo.freeze();
-    }
-}
-
-function calculateDataExtent(axisProxy: AxisProxy, axisDim: string, seriesModels: SeriesModel[]) {
-    const dataExtent = [Infinity, -Infinity];
-
-    each(seriesModels, function (seriesModel) {
-        unionAxisExtentFromData(dataExtent, seriesModel.getData(), axisDim);
-    });
-
-    // It is important to get "consistent" extent when more then one axes is
-    // controlled by a `dataZoom`, otherwise those axes will not be synchronized
-    // when zooming. But it is difficult to know what is "consistent", considering
-    // axes have different type or even different meanings (For example, two
-    // time axes are used to compare data of the same date in different years).
-    // So basically dataZoom just obtains extent by series.data (in category axis
-    // extent can be obtained from axis.data).
-    // Nevertheless, user can set min/max/scale on axes to make extent of axes
-    // consistent.
-    const axisModel = axisProxy.getAxisModel();
-    const rawExtentResult = ensureScaleRawExtentInfo(axisModel.axis.scale, axisModel, dataExtent).calculate();
-
-    return [rawExtentResult.min, rawExtentResult.max] as [number, number];
 }
 
 export default AxisProxy;

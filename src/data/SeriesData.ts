@@ -676,14 +676,6 @@ class SeriesData<
     }
 
     /**
-     * PENDING: In fact currently this function is only used to short-circuit
-     * the calling of `scale.unionExtentFromData` when data have been filtered by modules
-     * like "dataZoom". `scale.unionExtentFromData` is used to calculate data extent for series on
-     * an axis, but if a "axis related data filter module" is used, the extent of the axis have
-     * been fixed and no need to calling `scale.unionExtentFromData` actually.
-     * But if we add "custom data filter" in future, which is not "axis related", this method may
-     * be still needed.
-     *
      * Optimize for the scenario that data is filtered by a given extent.
      * Consider that if data amount is more than hundreds of thousand,
      * extent calculation will cost more than 10ms and the cache will

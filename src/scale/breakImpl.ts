@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { assert, clone, each, find, isString, map, retrieve2, trim } from 'zrender/src/core/util';
+import { assert, clone, each, find, isString, map, trim } from 'zrender/src/core/util';
 import {
     NullUndefined, ParsedAxisBreak, ParsedAxisBreakList, AxisBreakOption,
     AxisBreakOptionIdentifierInAxis, ScaleTick, VisualAxisBreak,
@@ -25,9 +25,10 @@ import {
 import { error } from '../util/log';
 import type Scale from './Scale';
 import { ScaleBreakContext, AxisBreakParsingResult, registerScaleBreakHelperImpl, ParamPruneByBreak } from './break';
-import { getPrecision, mathMax, mathMin, mathRound } from '../util/number';
+import { mathMax, mathMin, mathRound } from '../util/number';
 import { AxisLabelFormatterExtraParams } from '../coord/axisCommonTypes';
-import { getExtentPrecision, logScaleLogTick, logScaleLogTickPair, logScalePowTick } from './helper';
+import { logScaleLogTick, logScalePowTick } from './helper';
+import { initExtentForUnion } from '../util/model';
 
 /**
  * @caution
@@ -42,7 +43,7 @@ class ScaleBreakContextImpl implements ScaleBreakContext {
     // [CAVEAT]: Should update only by `ScaleBreakContext#update`!
     // They are the values that scaleExtent[0] and scaleExtent[1] are mapped to a numeric axis
     // that breaks are applied, primarily for optimization of `Scale#normalize`.
-    private _elapsedExtent: [number, number] = [Infinity, -Infinity];
+    private _elapsedExtent: [number, number] = initExtentForUnion();
 
     setBreaks(parsed: AxisBreakParsingResult): void {
         // @ts-ignore
@@ -623,9 +624,9 @@ function retrieveAxisBreakPairs<TItem, TReturnIdx extends boolean>(
 function getTicksPowBreak(
     tick: ScaleTick,
     logBase: number,
-    logOriginalBreaks: ParsedAxisBreakList,
-    extent: number[],
-    extentPrecision: (number | NullUndefined)[],
+    powBreaks: ParsedAxisBreakList,
+    linearExtent: number[],
+    powExtent: number[],
 ): {
     tickPowValue: number;
     vBreak: VisualAxisBreak | NullUndefined;
@@ -636,22 +637,18 @@ function getTicksPowBreak(
     }
 
     const brk = tick.break.parsedBreak;
-    const originalBreak = find(logOriginalBreaks, brk => identifyAxisBreak(
+    const powBreak = find(powBreaks, brk => identifyAxisBreak(
         brk.breakOption, tick.break.parsedBreak.breakOption
     ));
-    const minPrecision = getExtentPrecision(brk.vmin, extent, extentPrecision);
-    const maxPrecision = getExtentPrecision(brk.vmax, extent, extentPrecision);
-    // NOTE: `tick.break` may be clamped by scale extent. For consistency we always
-    // pow back, or heuristically use the user input original break to obtain an
-    // acceptable rounding precision for display.
-    const vmin = logScalePowTick(brk.vmin, logBase, retrieve2(minPrecision, getPrecision(originalBreak.vmin)));
-    const vmax = logScalePowTick(brk.vmax, logBase, retrieve2(maxPrecision, getPrecision(originalBreak.vmax)));
+    // NOTE: `tick.break` may have been clamped by scale extent.
+    const vmin = logScalePowTick(brk.vmin, logBase, linearExtent, powExtent);
+    const vmax = logScalePowTick(brk.vmax, logBase, linearExtent, powExtent);
     const parsedBreak = {
         vmin,
         vmax,
         // They are not changed by extent clamping.
         breakOption: brk.breakOption,
-        gapParsed: clone(originalBreak.gapParsed),
+        gapParsed: clone(powBreak.gapParsed),
         gapReal: brk.gapReal,
     };
     const vBreak = {
@@ -678,7 +675,8 @@ function logarithmicParseBreaksFromOption(
 
     const parsedLogged = parseAxisBreakOption(breakOptionList, parse, opt);
     parsedLogged.breaks = map(parsedLogged.breaks, brk => {
-        const [vmin, vmax] = logScaleLogTickPair([brk.vmin, brk.vmax], logBase, true);
+        const vmin = logScaleLogTick(brk.vmin, logBase, true);
+        const vmax = logScaleLogTick(brk.vmax, logBase, true);
         const gapParsed = {
             type: brk.gapParsed.type,
             val: brk.gapParsed.type === 'tpAbs'

@@ -38,6 +38,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { TreeNode } from '../../data/Tree';
 import Model from '../../model/Model';
 import { TreemapRenderPayload, TreemapMovePayload, TreemapZoomToNodePayload } from './treemapAction';
+import { initExtentForUnion } from '../../util/model';
 
 const mathMax = Math.max;
 const mathMin = Math.min;
@@ -464,7 +465,7 @@ function statistic(
     }
     // Other dimension.
     else {
-        dataExtent = [Infinity, -Infinity];
+        dataExtent = initExtentForUnion();
         each(children, function (child) {
             const value = child.getValue(dimension) as number;
             value < dataExtent[0] && (dataExtent[0] = value);

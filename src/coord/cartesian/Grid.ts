@@ -28,7 +28,6 @@ import {BoxLayoutReferenceResult, createBoxLayoutReference, getLayoutRect, Layou
 import {
     createScaleByModel,
     ifAxisCrossZero,
-    getDataDimensionsOnAxis,
     isNameLocationCenter,
     shouldAxisShow,
     retrieveAxisBreaksOption,
@@ -45,17 +44,14 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { NullUndefined, ScaleDataValue } from '../../util/types';
-import SeriesData from '../../data/SeriesData';
-import OrdinalScale from '../../scale/Ordinal';
 import {
     findAxisModels,
     createCartesianAxisViewCommonPartBuilder,
     updateCartesianAxisViewCommonPartBuilder,
-    isCartesian2DInjectedAsDataCoordSys
 } from './cartesianAxisHelper';
 import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
-import { isIntervalOrLogScale } from '../../scale/helper';
+import { isIntervalOrLogScale, isOrdinalScale } from '../../scale/helper';
 import { alignScaleTicks } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
@@ -71,6 +67,12 @@ import { AxisTickLabelComputingKind } from '../axisTickLabelBuilder';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
 import { mathMax, parsePositionSizeOption } from '../../util/number';
 import { scaleCalcNice } from '../axisNiceTicks';
+import { createDimNameMap } from '../../data/helper/SeriesDataSchema';
+import type Axis from '../Axis';
+import {
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild, axisExtentInfoRequireBuild
+} from '../scaleRawExtentInfo';
+
 
 type Cartesian2DDimensionName = 'x' | 'y';
 
@@ -108,6 +110,7 @@ class Grid implements CoordinateSystemMaster {
     // For deciding which dimensions to use when creating list data
     static dimensions = cartesian2DDimensions;
     readonly dimensions = cartesian2DDimensions;
+    static dimIdxMap = createDimNameMap(cartesian2DDimensions);
 
     constructor(gridModel: GridModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._initCartesian(gridModel, ecModel, api);
@@ -122,7 +125,13 @@ class Grid implements CoordinateSystemMaster {
 
         const axesMap = this._axesMap;
 
-        this._updateScale(ecModel, this.model);
+        each(this._axesList, function (axis) {
+            axisExtentInfoFinalBuild(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            const scale = axis.scale;
+            if (isOrdinalScale(scale)) {
+                scale.setSortInfo(axis.model.get('categorySortInfo'));
+            }
+        });
 
         function updateAxisTicks(axes: Record<number, Axis2D>) {
             // Axis is added in order of axisIndex.
@@ -135,17 +144,16 @@ class Grid implements CoordinateSystemMaster {
                     axisNeedsAlign.push(axis);
                 }
                 else {
-                    scaleCalcNice(axis.scale, axis.model, axis.scale.getExtent());
+                    scaleCalcNice(axis);
                 }
             };
             each(axisNeedsAlign, axis => {
                 if (incapableOfAlignNeedFallback(axis, axis.alignTo as Axis2D)) {
-                    scaleCalcNice(axis.scale, axis.model, axis.scale.getExtent());
+                    scaleCalcNice(axis);
                 }
                 else {
                     alignScaleTicks(
                         axis.scale as IntervalScale | LogScale,
-                        axis.scale.getExtent(),
                         axis.model,
                         axis.alignTo.scale as IntervalScale | LogScale
                     );
@@ -248,13 +256,13 @@ class Grid implements CoordinateSystemMaster {
                 layoutRef
             );
             // console.timeEnd('buildAxesView_determine');
-        } // End of beforeDataProcessing
 
-        each(this._coordsList, function (coord) {
-            // Calculate affine matrix to accelerate the data to point transform.
-            // If all the axes scales are time or value.
-            coord.calcAffineTransform();
-        });
+            each(this._coordsList, function (coord) {
+                // Calculate affine matrix to accelerate the data to point transform.
+                // If all the axes scales are time or value.
+                coord.calcAffineTransform();
+            });
+        } // End of beforeDataProcessing
     }
 
     getAxis(dim: Cartesian2DDimensionName, axisIndex?: number): Axis2D {
@@ -492,53 +500,6 @@ class Grid implements CoordinateSystemMaster {
     }
 
     /**
-     * Update cartesian properties from series.
-     */
-    private _updateScale(ecModel: GlobalModel, gridModel: GridModel): void {
-        // Reset scale
-        each(this._axesList, function (axis) {
-            axis.scale.setExtent(Infinity, -Infinity);
-            if (axis.type === 'category') {
-                const categorySortInfo = axis.model.get('categorySortInfo');
-                (axis.scale as OrdinalScale).setSortInfo(categorySortInfo);
-            }
-        });
-
-        ecModel.eachSeries(function (seriesModel) {
-            // If pie (or other similar series) use cartesian2d, the unionExtent logic below is
-            // wrong, therefore skip it temporarily. See also in `defaultAxisExtentFromData.ts`.
-            // TODO: support union extent in this case.
-            if (isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
-                const axesModelMap = findAxisModels(seriesModel);
-                const xAxisModel = axesModelMap.xAxisModel;
-                const yAxisModel = axesModelMap.yAxisModel;
-
-                if (!isAxisUsedInTheGrid(xAxisModel, gridModel)
-                    || !isAxisUsedInTheGrid(yAxisModel, gridModel)
-                ) {
-                    return;
-                }
-
-                const cartesian = this.getCartesian(
-                    xAxisModel.componentIndex, yAxisModel.componentIndex
-                );
-                const data = seriesModel.getData();
-                const xAxis = cartesian.getAxis('x');
-                const yAxis = cartesian.getAxis('y');
-
-                unionExtent(data, xAxis);
-                unionExtent(data, yAxis);
-            }
-        }, this);
-
-        function unionExtent(data: SeriesData, axis: Axis2D): void {
-            each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
-                axis.scale.unionExtentFromData(data, dim);
-            });
-        }
-    }
-
-    /**
      * @param dim 'x' or 'y' or 'auto' or null/undefined
      */
     getTooltipAxes(dim: Cartesian2DDimensionName | 'auto'): {
@@ -575,6 +536,9 @@ class Grid implements CoordinateSystemMaster {
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
+            let xAxis: Axis;
+            let yAxis: Axis;
+
             injectCoordSysByOption({
                 targetModel: seriesModel,
                 coordSysType: 'cartesian2d',
@@ -585,6 +549,8 @@ class Grid implements CoordinateSystemMaster {
                 const axesModelMap = findAxisModels(seriesModel);
                 const xAxisModel = axesModelMap.xAxisModel;
                 const yAxisModel = axesModelMap.yAxisModel;
+                xAxis = xAxisModel.axis;
+                yAxis = yAxisModel.axis;
 
                 const gridModel = xAxisModel.getCoordSysModel();
 
@@ -609,7 +575,12 @@ class Grid implements CoordinateSystemMaster {
                     xAxisModel.componentIndex, yAxisModel.componentIndex
                 );
             }
-        });
+            if (xAxis && yAxis) {
+                axisExtentInfoRequireBuild(xAxis, seriesModel, Grid.dimIdxMap);
+                axisExtentInfoRequireBuild(yAxis, seriesModel, Grid.dimIdxMap);
+            }
+
+        }, this);
 
         return grids;
     }
@@ -963,7 +934,7 @@ function createOrUpdateAxesView(
 
 function prepareOuterBounds(
     gridModel: GridModel,
-    rawRridRect: BoundingRect,
+    rawGridRect: BoundingRect,
     layoutRef: BoxLayoutReferenceResult,
 ): {
     outerBoundsRect: BoundingRect | NullUndefined
@@ -973,7 +944,7 @@ function prepareOuterBounds(
     let outerBoundsRect: BoundingRect | NullUndefined;
     const optionOuterBoundsMode = gridModel.get('outerBoundsMode', true);
     if (optionOuterBoundsMode === 'same') {
-        outerBoundsRect = rawRridRect.clone();
+        outerBoundsRect = rawGridRect.clone();
     }
     else if (optionOuterBoundsMode == null || optionOuterBoundsMode === 'auto') {
         outerBoundsRect = getLayoutRect(
@@ -1003,10 +974,10 @@ function prepareOuterBounds(
 
     const outerBoundsClamp = [
         parsePositionSizeOption(
-            retrieve2(gridModel.get('outerBoundsClampWidth', true), OUTER_BOUNDS_CLAMP_DEFAULT[0]), rawRridRect.width
+            retrieve2(gridModel.get('outerBoundsClampWidth', true), OUTER_BOUNDS_CLAMP_DEFAULT[0]), rawGridRect.width
         ),
         parsePositionSizeOption(
-            retrieve2(gridModel.get('outerBoundsClampHeight', true), OUTER_BOUNDS_CLAMP_DEFAULT[1]), rawRridRect.height
+            retrieve2(gridModel.get('outerBoundsClampHeight', true), OUTER_BOUNDS_CLAMP_DEFAULT[1]), rawGridRect.height
         )
     ];
 

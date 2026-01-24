@@ -21,16 +21,17 @@ import { assert, noop } from 'zrender/src/core/util';
 import {
     ensureValidSplitNumber, getIntervalPrecision,
     intervalScaleEnsureValidExtent,
-    isIntervalScale, isTimeScale
+    isIntervalScale, isLogScale, isTimeScale,
 } from '../scale/helper';
-import IntervalScale from '../scale/Interval';
-import { getPrecision, mathCeil, mathFloor, mathMax, nice, quantity, round } from '../util/number';
+import IntervalScale, { IntervalScaleConfigParsed } from '../scale/Interval';
+import { mathCeil, mathFloor, mathMax, nice, quantity, round } from '../util/number';
 import type { AxisBaseModel } from './AxisBaseModel';
-import type { AxisScaleType, LogAxisBaseOption } from './axisCommonTypes';
-import { adoptScaleExtentOptionAndPrepare, retrieveAxisBreaksOption } from './axisHelper';
+import type { AxisScaleType, NumericAxisBaseOptionCommon } from './axisCommonTypes';
+import {
+    adoptScaleExtentOptionAndPrepare, retrieveAxisBreaksOption, updateIntervalOrLogScaleForNiceOrAligned
+} from './axisHelper';
 import { timeScaleCalcNice } from '../scale/Time';
 import type LogScale from '../scale/Log';
-import { NullUndefined } from '../util/types';
 import Scale from '../scale/Scale';
 
 
@@ -40,59 +41,54 @@ type LinearIntervalScaleStubCalcNiceTicks = (
     scale: IntervalScale,
     opt: Pick<ScaleCalcNiceMethodOpt, 'splitNumber' | 'minInterval' | 'maxInterval'>
 ) => {
-    intervalPrecision: number;
-    interval: number;
-    niceExtent: number[];
+    interval: IntervalScaleConfigParsed['interval'];
+    intervalPrecision: IntervalScaleConfigParsed['intervalPrecision'];
+    niceExtent: IntervalScaleConfigParsed['niceExtent'];
 };
 
-type LinearIntervalScaleStubCalcExtentPrecision = (
-    oldExtent: number[],
-    newExtent: number[],
-    opt: Pick<ScaleCalcNiceMethodOpt, 'fixMinMax'>
-) => (
-    (number | NullUndefined)[] | NullUndefined
-);
-
-function linearIntervalScaleStubCalcNice(
-    linearIntervalScaleStub: IntervalScale,
+function intervalLogScaleCalcNice(
+    scale: IntervalScale | LogScale,
     opt: ScaleCalcNiceMethodOpt,
-    opt2: {
-        calcNiceTicks: LinearIntervalScaleStubCalcNiceTicks;
-        calcExtentPrecision: LinearIntervalScaleStubCalcExtentPrecision;
-    }
 ): void {
     // [CAVEAT]: If updating this impl, need to sync it to `axisAlignTicks.ts`.
 
+    const isTargetLogScale = isLogScale(scale);
+    const linearStub = isTargetLogScale ? scale.linearStub : scale;
+
     const fixMinMax = opt.fixMinMax || [];
-    const oldExtent = linearIntervalScaleStub.getExtent();
+    const oldPowExtent = isTargetLogScale ? scale.getExtent() : null;
+    const oldLinearExtent = linearStub.getExtent();
 
-    let extent = intervalScaleEnsureValidExtent(oldExtent.slice(), fixMinMax);
+    let newLinearExtent = intervalScaleEnsureValidExtent(oldLinearExtent, fixMinMax);
 
-    linearIntervalScaleStub.setExtent(extent[0], extent[1]);
-    extent = linearIntervalScaleStub.getExtent();
+    linearStub.setExtent(newLinearExtent[0], newLinearExtent[1]);
+    newLinearExtent = linearStub.getExtent();
 
-    const {
-        interval,
-        intervalPrecision,
-        niceExtent,
-    } = opt2.calcNiceTicks(linearIntervalScaleStub, opt);
+    let config: ReturnType<LinearIntervalScaleStubCalcNiceTicks>;
+    if (isTargetLogScale) {
+        config = logScaleCalcNiceTicks(linearStub, opt);
+    }
+    else {
+        config = intervalScaleCalcNiceTicks(linearStub, opt);
+    }
+    const interval = config.interval;
+    const intervalPrecision = config.intervalPrecision;
 
     if (!fixMinMax[0]) {
-        extent[0] = round(mathFloor(extent[0] / interval) * interval, intervalPrecision);
+        newLinearExtent[0] = round(mathFloor(newLinearExtent[0] / interval) * interval, intervalPrecision);
     }
     if (!fixMinMax[1]) {
-        extent[1] = round(mathCeil(extent[1] / interval) * interval, intervalPrecision);
+        newLinearExtent[1] = round(mathCeil(newLinearExtent[1] / interval) * interval, intervalPrecision);
     }
 
-    const extentPrecision = opt2.calcExtentPrecision(oldExtent, extent, opt);
-
-    linearIntervalScaleStub.setExtent(extent[0], extent[1]);
-    linearIntervalScaleStub.setConfig({
-        interval,
-        intervalPrecision,
-        niceExtent,
-        extentPrecision
-    });
+    updateIntervalOrLogScaleForNiceOrAligned(
+        scale,
+        fixMinMax,
+        oldLinearExtent,
+        newLinearExtent,
+        oldPowExtent,
+        config,
+    );
 }
 
 // ------ END: LinearIntervalScaleStub Nice ------
@@ -127,15 +123,6 @@ const intervalScaleCalcNiceTicks: LinearIntervalScaleStubCalcNiceTicks = functio
     ];
 
     return {interval, intervalPrecision, niceExtent};
-};
-
-const intervalScaleCalcNice: ScaleCalcNiceMethod = function (
-    scale: IntervalScale, opt
-) {
-    linearIntervalScaleStubCalcNice(scale, opt, {
-        calcNiceTicks: intervalScaleCalcNiceTicks,
-        calcExtentPrecision: noop as unknown as LinearIntervalScaleStubCalcExtentPrecision,
-    });
 };
 
 // ------ END: IntervalScale Nice ------
@@ -176,25 +163,6 @@ const logScaleCalcNiceTicks: LinearIntervalScaleStubCalcNiceTicks = function (
     return {intervalPrecision, interval, niceExtent};
 };
 
-const logScaleCalcExtentPrecision: LinearIntervalScaleStubCalcExtentPrecision = function (
-    oldExtent, newExtent, opt
-) {
-    return [
-        (opt.fixMinMax && opt.fixMinMax[0] && oldExtent[0] === newExtent[0])
-            ? getPrecision(newExtent[0]) : null,
-        (opt.fixMinMax && opt.fixMinMax[1] && oldExtent[1] === newExtent[1])
-            ? getPrecision(newExtent[1]) : null
-    ];
-};
-
-const logScaleCalcNice: ScaleCalcNiceMethod = function (scale: LogScale, opt): void {
-    // NOTE: Calculate nice only on linearStub of LogScale.
-    linearIntervalScaleStubCalcNice(scale.linearStub, opt, {
-        calcNiceTicks: logScaleCalcNiceTicks,
-        calcExtentPrecision: logScaleCalcExtentPrecision,
-    });
-};
-
 // ------ END: LogScale Nice ------
 
 
@@ -219,16 +187,13 @@ type ScaleCalcNiceMethodOpt = {
     fixMinMax?: boolean[];
 };
 
-export function scaleCalcNice(
+export function scaleCalcNice(opt: {
     scale: Scale,
-    // scale: Scale,
-    inModel: AxisBaseModel,
-    // Typically: data extent from all series on this axis, which can be obtained by
-    //  `scale.unionExtentFromData(...); scale.getExtent();`.
-    dataExtent: number[],
-): void {
-    const model = inModel as AxisBaseModel<LogAxisBaseOption>;
-    const extentInfo = adoptScaleExtentOptionAndPrepare(scale, model, dataExtent);
+    model: AxisBaseModel,
+}): void {
+    const scale = opt.scale;
+    const model = opt.model as AxisBaseModel<NumericAxisBaseOptionCommon>;
+    const extentInfo = adoptScaleExtentOptionAndPrepare(scale, model);
 
     const isInterval = isIntervalScale(scale);
     const isIntervalOrTime = isInterval || isTimeScale(scale);
@@ -236,7 +201,7 @@ export function scaleCalcNice(
     scale.setBreaksFromOption(retrieveAxisBreaksOption(model));
     scale.setExtent(extentInfo.min, extentInfo.max);
 
-    scaleCalcNiceReal(scale, {
+    scaleCalcNiceDirectly(scale, {
         splitNumber: model.get('splitNumber'),
         fixMinMax: [extentInfo.minFixed, extentInfo.maxFixed],
         minInterval: isIntervalOrTime ? model.get('minInterval') : null,
@@ -255,7 +220,7 @@ export function scaleCalcNice(
     }
 }
 
-export function scaleCalcNiceReal(
+export function scaleCalcNiceDirectly(
     scale: ScaleForCalcNice,
     opt: ScaleCalcNiceMethodOpt
 ): void {
@@ -263,8 +228,8 @@ export function scaleCalcNiceReal(
 }
 
 const scaleCalcNiceMethods: Record<AxisScaleType, ScaleCalcNiceMethod> = {
-    interval: intervalScaleCalcNice,
-    log: logScaleCalcNice,
+    interval: intervalLogScaleCalcNice,
+    log: intervalLogScaleCalcNice,
     time: timeScaleCalcNice,
     ordinal: noop,
 };

@@ -24,7 +24,6 @@
 import SingleAxis from './SingleAxis';
 import * as axisHelper from '../axisHelper';
 import {createBoxLayoutReference, getLayoutRect} from '../../util/layout';
-import {each} from 'zrender/src/core/util';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -35,6 +34,9 @@ import { ScaleDataValue } from '../../util/types';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { scaleCalcNice } from '../axisNiceTicks';
+import {
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild
+} from '../scaleRawExtentInfo';
 
 export const singleDimensions = ['single'];
 /**
@@ -97,17 +99,9 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      * Update axis scale after data processed
      */
     update(ecModel: GlobalModel, api: ExtensionAPI) {
-        ecModel.eachSeries(function (seriesModel) {
-            if (seriesModel.coordinateSystem === this) {
-                const data = seriesModel.getData();
-                const axis = this._axis;
-                const scale = axis.scale;
-                each(data.mapDimensionsAll(this.dimension), function (dim) {
-                    scale.unionExtentFromData(data, dim);
-                });
-                scaleCalcNice(scale, axis.model, scale.getExtent());
-            }
-        }, this);
+        const axis = this._axis;
+        axisExtentInfoFinalBuild(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+        scaleCalcNice(axis);
     }
 
     /**
