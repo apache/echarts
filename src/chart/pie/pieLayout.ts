@@ -165,7 +165,7 @@ export default function pieLayout(
 
         // Some sector is constrained by minAngle and padAngle
         // Rest sectors needs recalculate angle
-        if (restAngle < PI2 && validDataCount) {
+        if (restAngle < angleRange && validDataCount) {
             // Average the angle if rest angle is not enough after all angles is
             // Constrained by minAngle and padAngle
             if (restAngle <= 1e-3) {
