@@ -119,6 +119,8 @@ class SliderZoomView extends DataZoomView {
 
     private _brushing: boolean;
 
+    private _isOverDataInfoTriggerArea: boolean;
+
     private _dataShadowInfo: {
         thisAxis: Axis
         series: SeriesModel
@@ -611,8 +613,8 @@ class SliderZoomView extends DataZoomView {
                 draggable: true,
                 drift: bind(this._onDragMove, this, handleIndex),
                 ondragend: bind(this._onDragEnd, this),
-                onmouseover: bind(this._showDataInfo, this, true),
-                onmouseout: bind(this._showDataInfo, this, false),
+                onmouseover: bind(this._onOverDataInfoTriggerArea, this, true),
+                onmouseout: bind(this._onOverDataInfoTriggerArea, this, false),
                 z2: 5
             });
 
@@ -707,12 +709,12 @@ class SliderZoomView extends DataZoomView {
 
         actualMoveZone.attr({
             draggable: true,
-            cursor: 'default',
-            drift: bind(this._onDragMove, this, 'all'),
-            ondragstart: bind(this._showDataInfo, this, true),
-            ondragend: bind(this._onDragEnd, this),
-            onmouseover: bind(this._showDataInfo, this, true),
-            onmouseout: bind(this._showDataInfo, this, false)
+            cursor: 'grab',
+            drift: bind(this._onActualMoveZoneDrift, this),
+            ondragstart: bind(this._onActualMoveZoneDragStart, this),
+            ondragend: bind(this._onActualMoveZoneDragEnd, this),
+            onmouseover: bind(this._onOverDataInfoTriggerArea, this, true),
+            onmouseout: bind(this._onOverDataInfoTriggerArea, this, false)
         });
     }
 
@@ -909,6 +911,11 @@ class SliderZoomView extends DataZoomView {
                 : valueStr;
     }
 
+    private _onOverDataInfoTriggerArea(isOver: boolean): void {
+        this._isOverDataInfoTriggerArea = isOver;
+        this._showDataInfo(isOver);
+    }
+
     /**
      * @param isEmphasis true: show, false: hide
      */
@@ -929,6 +936,21 @@ class SliderZoomView extends DataZoomView {
         // Highlight move handle
         displayables.moveHandle
             && this.api[toShow ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
+    }
+
+    private _onActualMoveZoneDrift(dx: number, dy: number, event: ZRElementEvent) {
+        this.api.getZr().setCursorStyle('grabbing');
+        this._onDragMove('all', dx, dy, event);
+    }
+
+    private _onActualMoveZoneDragStart(event: ZRElementEvent) {
+        (event.target as Displayable).attr('cursor', 'grabbing');
+        this._showDataInfo(true);
+    }
+
+    private _onActualMoveZoneDragEnd(event: ZRElementEvent) {
+        (event.target as Displayable).attr('cursor', 'grab');
+        this._onDragEnd();
     }
 
     private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
@@ -954,7 +976,11 @@ class SliderZoomView extends DataZoomView {
 
     private _onDragEnd() {
         this._dragging = false;
-        this._showDataInfo(false);
+
+        if (!this._isOverDataInfoTriggerArea) {
+            // Drag end may occur on draggable bars, where data info should be still shown.
+            this._showDataInfo(false);
+        }
 
         // While in realtime mode and stream mode, dispatch action when
         // drag end will cause the whole view rerender, which is unnecessary.
