@@ -119,11 +119,14 @@ class LogScale extends Scale {
         return this.linearStub.getLabel(data, opt);
     }
 
+    /**
+     * NOTICE: The caller should ensure `start` and `end` are both non-negative.
+     */
     setExtent(start: number, end: number): void {
         this.powStub.setExtent(start, end);
         this.linearStub.setExtent(
-            logScaleLogTick(start, this.base, false),
-            logScaleLogTick(end, this.base, false)
+            logScaleLogTick(start, this.base),
+            logScaleLogTick(end, this.base)
         );
     }
 
@@ -140,7 +143,7 @@ class LogScale extends Scale {
     }
 
     normalize(val: number): number {
-        return this.linearStub.normalize(logScaleLogTick(val, this.base, true));
+        return this.linearStub.normalize(logScaleLogTick(val, this.base));
     }
 
     scale(val: number): number {

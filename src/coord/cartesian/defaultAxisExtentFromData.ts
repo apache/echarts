@@ -23,7 +23,7 @@ import SeriesModel from '../../model/Series';
 import {
     isCartesian2DDeclaredSeries, findAxisModels, isCartesian2DInjectedAsDataCoordSys
 } from './cartesianAxisHelper';
-import { getDataDimensionsOnAxis, unionExtent } from '../axisHelper';
+import { getDataDimensionsOnAxis } from '../axisHelper';
 import { AxisBaseModel } from '../AxisBaseModel';
 import type Axis from '../Axis';
 import GlobalModel from '../../model/Global';
@@ -31,7 +31,7 @@ import { Dictionary } from '../../util/types';
 import {
     AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, ensureScaleRawExtentInfo, ScaleRawExtentInfo, ScaleRawExtentResult
 } from '../scaleRawExtentInfo';
-import { initExtentForUnion } from '../../util/model';
+import { initExtentForUnion, unionExtent } from '../../util/model';
 
 /**
  * @obsolete

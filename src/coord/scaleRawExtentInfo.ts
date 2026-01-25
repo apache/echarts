@@ -28,8 +28,8 @@ import { DimensionIndex, DimensionName, NullUndefined, ScaleDataValue } from '..
 import { isIntervalScale, isLogScale, isOrdinalScale, isTimeScale } from '../scale/helper';
 import type Axis from './Axis';
 import type SeriesModel from '../model/Series';
-import { makeInner, initExtentForUnion } from '../util/model';
-import { getDataDimensionsOnAxis, unionExtent } from './axisHelper';
+import { makeInner, initExtentForUnion, unionExtent } from '../util/model';
+import { getDataDimensionsOnAxis } from './axisHelper';
 import {
     getCoordForCoordSysUsageKindBox
 } from '../core/CoordinateSystem';
@@ -83,7 +83,7 @@ export interface ScaleRawExtentResult {
 export class ScaleRawExtentInfo {
 
     private _needCrossZero: ValueAxisBaseOption['scale'];
-    private _isOrdinal: boolean;
+    private _scale: Scale;
     private _axisDataLen: number;
     private _boundaryGapInner: number[];
 
@@ -118,26 +118,14 @@ export class ScaleRawExtentInfo {
         // Typically: data extent from all series on this axis.
         dataExtent: number[]
     ) {
-        this._prepareParams(scale, model, dataExtent);
-    }
+        this._scale = scale;
 
-    /**
-     * Parameters depending on outside (like model, user callback)
-     * are prepared and fixed here.
-     */
-    private _prepareParams(
-        scale: Scale,
-        model: AxisBaseModel,
-        // Usually: data extent from all series on this axis.
-        dataExtent: number[]
-    ) {
         if (dataExtent[1] < dataExtent[0]) {
             dataExtent = [NaN, NaN];
         }
         this._dataMin = dataExtent[0];
         this._dataMax = dataExtent[1];
 
-        const isOrdinal = this._isOrdinal = isOrdinalScale(scale);
         this._needCrossZero = isIntervalScale(scale) && model.getNeedCrossZero && model.getNeedCrossZero();
 
         if (isIntervalScale(scale) || isLogScale(scale) || isTimeScale(scale)) {
@@ -181,7 +169,7 @@ export class ScaleRawExtentInfo {
             this._modelMaxNum = parseAxisModelMinMax(scale, modelMaxRaw);
         }
 
-        if (isOrdinal) {
+        if (isOrdinalScale(scale)) {
             // FIXME: there is a flaw here: if there is no "block" data processor like `dataZoom`,
             // and progressive rendering is using, here the category result might just only contain
             // the processed chunk rather than the entire result.
@@ -227,7 +215,8 @@ export class ScaleRawExtentInfo {
         //      be the result that originalExtent enlarged by boundaryGap.
         // (3) If no data, it should be ensured that `scale.setBlank` is set.
 
-        const isOrdinal = this._isOrdinal;
+        const scale = this._scale;
+        const isOrdinal = isOrdinalScale(scale);
         let dataMin = this._dataMin;
         let dataMax = this._dataMax;
 
@@ -313,6 +302,11 @@ export class ScaleRawExtentInfo {
             maxFixed = maxDetermined = true;
         }
 
+        if (isLogScale(scale)) {
+            min = clampForLogScale(min);
+            max = clampForLogScale(max);
+        }
+
         // Ensure min/max be finite number or NaN here. (not to be null/undefined)
         // `NaN` means min/max axis is blank.
         return {
@@ -337,6 +331,9 @@ export class ScaleRawExtentInfo {
         const attr = DETERMINED_MIN_MAX_ATTR[minMaxName];
         if (__DEV__) {
             assert(this[attr] == null);
+        }
+        if (isLogScale(this._scale)) {
+            val = clampForLogScale(val);
         }
         this[attr] = val;
     }
@@ -457,8 +454,9 @@ export function axisExtentInfoFinalBuild(
             // NOTE: This data may have been filtered by dataZoom on orthogonal axes.
             const data = seriesModel.getData();
             if (data) {
+                const filter = isLogScale(scale) ? {g: 0} : null;
                 each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
-                    const seriesExtent = data.getApproximateExtent(dim);
+                    const seriesExtent = data.getApproximateExtent(dim, filter);
                     unionExtent(extent, seriesExtent[0]);
                     unionExtent(extent, seriesExtent[1]);
                 });
@@ -502,4 +500,10 @@ function injectScaleRawExtentInfo(
     scale.rawExtentInfo = scaleRawExtentInfo;
     // @ts-ignore
     scaleRawExtentInfo.from = from;
+}
+
+export function clampForLogScale(val: number) {
+    // Avoid `NaN` for log scale.
+    // See also `DataStore#getDataExtent`.
+    return val < 0 ? 0 : val;
 }

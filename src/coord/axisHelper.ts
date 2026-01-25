@@ -46,8 +46,8 @@ import {
 import CartesianAxisModel from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
-import { Dictionary, DimensionName, NullUndefined, ScaleTick } from '../util/types';
-import { ensureScaleRawExtentInfo, ScaleRawExtentResult } from './scaleRawExtentInfo';
+import { Dictionary, DimensionName, ScaleTick } from '../util/types';
+import { clampForLogScale, ensureScaleRawExtentInfo, ScaleRawExtentResult } from './scaleRawExtentInfo';
 import { parseTimeAxisLabelFormatter } from '../util/time';
 import { getScaleBreakHelper } from '../scale/break';
 import { error } from '../util/log';
@@ -102,6 +102,11 @@ export function adoptScaleExtentOptionAndPrepare(
             min = adjustedScale.min;
             max = adjustedScale.max;
         }
+    }
+
+    if (isLogScale(scale)) {
+        min = clampForLogScale(min);
+        max = clampForLogScale(max);
     }
 
     rawExtentResult.min = min;
@@ -304,12 +309,6 @@ export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): Dime
         dataDimMap[getStackedDimension(data, dataDim)] = true;
     });
     return zrUtil.keys(dataDimMap);
-}
-
-export function unionExtent(dataExtent: number[], val: number | NullUndefined): void {
-    // Considered that number could be NaN and should not write into the extent.
-    val < dataExtent[0] && (dataExtent[0] = val);
-    val > dataExtent[1] && (dataExtent[1] = val);
 }
 
 export function isNameLocationCenter(nameLocation: AxisBaseOptionCommon['nameLocation']) {

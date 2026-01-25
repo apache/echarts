@@ -27,7 +27,7 @@ import * as graphic from '../../util/graphic';
 import * as modelUtil from '../../util/model';
 import { ECPolyline, ECPolygon } from './poly';
 import ChartView from '../../view/Chart';
-import { prepareDataCoordInfo, getStackedOnPoint } from './helper';
+import { prepareDataCoordInfo, getStackedOnPoint, isPointIllegal } from './helper';
 import { createGridClipPath, createPolarClipPath } from '../helper/createClipPathFromCoordSys';
 import LineSeriesModel, { LineSeriesOption } from './LineSeries';
 import type GlobalModel from '../../model/Global';
@@ -84,42 +84,33 @@ function isPointsSame(points1: ArrayLike<number>, points2: ArrayLike<number>) {
     return true;
 }
 
-function bboxFromPoints(points: ArrayLike<number>) {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+function xyExtentFromPoints(points: ArrayLike<number>) {
+    const xExtent = modelUtil.initExtentForUnion();
+    const yExtent = modelUtil.initExtentForUnion();
 
     for (let i = 0; i < points.length;) {
         const x = points[i++];
         const y = points[i++];
-        if (!isNaN(x)) {
-            minX = Math.min(x, minX);
-            maxX = Math.max(x, maxX);
-        }
-        if (!isNaN(y)) {
-            minY = Math.min(y, minY);
-            maxY = Math.max(y, maxY);
+        if (!isPointIllegal(x, y)) {
+            modelUtil.unionExtent(xExtent, x);
+            modelUtil.unionExtent(yExtent, y);
         }
     }
-    return [
-        [minX, minY],
-        [maxX, maxY]
-    ];
+    return [xExtent, yExtent];
 }
 
 function getBoundingDiff(points1: ArrayLike<number>, points2: ArrayLike<number>): number {
 
-    const [min1, max1] = bboxFromPoints(points1);
-    const [min2, max2] = bboxFromPoints(points2);
+    const [xExtent1, yExtent1] = xyExtentFromPoints(points1);
+    const [xExtent2, yExtent2] = xyExtentFromPoints(points2);
 
     // Get a max value from each corner of two boundings.
     return Math.max(
-        Math.abs(min1[0] - min2[0]),
-        Math.abs(min1[1] - min2[1]),
+        Math.abs(xExtent1[0] - xExtent2[0]),
+        Math.abs(yExtent1[0] - yExtent2[0]),
 
-        Math.abs(max1[0] - max2[0]),
-        Math.abs(max1[1] - max2[1])
+        Math.abs(xExtent1[1] - xExtent2[1]),
+        Math.abs(yExtent1[1] - yExtent2[1])
     );
 }
 
@@ -181,7 +172,7 @@ function turnPointsIntoStep(
              * should stay the same as the lines above. See #20021
              */
             const reference = basePoints || points;
-            if (!isNaN(reference[i]) && !isNaN(reference[i + 1])) {
+            if (!isPointIllegal(reference[i], reference[i + 1])) {
                 filteredPoints.push(points[i], points[i + 1]);
             }
         }
@@ -447,15 +438,10 @@ function canShowAllSymbolForCategory(
     return true;
 }
 
-
-function isPointNull(x: number, y: number) {
-    return isNaN(x) || isNaN(y);
-}
-
 function getLastIndexNotNull(points: ArrayLike<number>) {
     let len = points.length / 2;
     for (; len > 0; len--) {
-        if (!isPointNull(points[len * 2 - 2], points[len * 2 - 1])) {
+        if (!isPointIllegal(points[len * 2 - 2], points[len * 2 - 1])) {
             break;
         }
     }
@@ -477,7 +463,7 @@ function getIndexRange(points: ArrayLike<number>, xOrY: number, dim: 'x' | 'y') 
     let nextIndex = -1;
     for (let i = 0; i < len; i++) {
         b = points[i * 2 + dimIdx];
-        if (isNaN(b) || isNaN(points[i * 2 + 1 - dimIdx])) {
+        if (isPointIllegal(b, points[i * 2 + 1 - dimIdx])) {
             continue;
         }
         if (i === 0) {
@@ -965,7 +951,7 @@ class LineView extends ChartView {
                 // Create a temporary symbol if it is not exists
                 const x = points[dataIndex * 2];
                 const y = points[dataIndex * 2 + 1];
-                if (isNaN(x) || isNaN(y)) {
+                if (isPointIllegal(x, y)) {
                     // Null data
                     return;
                 }

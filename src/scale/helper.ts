@@ -183,20 +183,23 @@ function scale(
 }
 
 /**
- * NOTE: if `val` is `NaN`, return `NaN`.
+ * NOTE:
+ *  - If `val` is `NaN`, return `NaN`.
+ *  - If `val` is `0`, return `-Infinity`.
+ *  - If `val` is negative, return `NaN`.
+ *
+ * @see {DataStore#getDataExtent} It handles non-positive values for logarithm scale.
  */
 export function logScaleLogTick(
     val: number,
     base: number,
-    noClampNegative: boolean
 ): number {
-    // log(negative) is NaN, so safe guard here.
-    // PENDING: But even getting a -Infinity still does not make sense in extent.
-    //  Just keep it as is, getting a NaN to make some previous cases works by coincidence.
-    return mathLog(noClampNegative ? val : mathMax(0, val)) / mathLog(base);
-    // NOTE: rounding error may happen above, typically expecting `log10(1000)` but actually
-    // getting `2.9999999999999996`, but generally it does not matter since they are not
-    // used to display.
+    // NOTE:
+    //  - rounding error may happen above, typically expecting `log10(1000)` but actually
+    //    getting `2.9999999999999996`, but generally it does not matter since they are not
+    //    used to display.
+    //  - Consider backward compatibility and other log bases, do not use `Math.log10`.
+    return mathLog(val) / mathLog(base);
 }
 
 /**

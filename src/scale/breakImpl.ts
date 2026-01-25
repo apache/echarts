@@ -675,12 +675,12 @@ function logarithmicParseBreaksFromOption(
 
     const parsedLogged = parseAxisBreakOption(breakOptionList, parse, opt);
     parsedLogged.breaks = map(parsedLogged.breaks, brk => {
-        const vmin = logScaleLogTick(brk.vmin, logBase, true);
-        const vmax = logScaleLogTick(brk.vmax, logBase, true);
+        const vmin = logScaleLogTick(brk.vmin, logBase);
+        const vmax = logScaleLogTick(brk.vmax, logBase);
         const gapParsed = {
             type: brk.gapParsed.type,
             val: brk.gapParsed.type === 'tpAbs'
-                ? logScaleLogTick(brk.vmin + brk.gapParsed.val, logBase, true) - vmin
+                ? logScaleLogTick(brk.vmin + brk.gapParsed.val, logBase) - vmin
                 : brk.gapParsed.val,
         };
         return {

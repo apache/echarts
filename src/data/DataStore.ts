@@ -21,6 +21,7 @@ import { assert, clone, createHashMap, isFunction, keys, map, reduce } from 'zre
 import {
     DimensionIndex,
     DimensionName,
+    NullUndefined,
     OptionDataItem,
     ParsedValue,
     ParsedValueNumeric
@@ -71,6 +72,9 @@ type FilterCb1 = (x: ParsedValue, idx: number) => boolean;
 type FilterCb = (...args: any) => boolean;
 // type MapArrayCb = (...args: any) => any;
 type MapCb = (...args: any) => ParsedValue | ParsedValue[];
+
+// g: greater than, ge: greater equal, l: less than, le: less equal
+export type DataStoreExtentFilter = {g?: number; ge?: number; l?: number; le?: number;};
 
 export type DimValueGetter = (
     this: DataStore,
@@ -163,7 +167,9 @@ class DataStore {
     // It will not be calculated until needed.
     private _rawExtent: [number, number][] = [];
 
-    private _extent: [number, number][] = [];
+    // structure:
+    //  `const extentOnFilterOnDimension = this._extent[dim][extentFilterKey]`
+    private _extent: Record<string, [number, number]>[] = [];
 
     // Indices stores the indices of data subset after filtered.
     // This data subset will be used in chart.
@@ -829,7 +835,7 @@ class DataStore {
 
             let retValue = cb && cb.apply(null, values);
             if (retValue != null) {
-                // a number or string (in oridinal dimension)?
+                // a number or string (in ordinal dimension)?
                 if (typeof retValue !== 'object') {
                     tmpRetValue[0] = retValue;
                     retValue = tmpRetValue;
@@ -1126,10 +1132,10 @@ class DataStore {
         }
     }
 
-    /**
-     * Get extent of data in one dimension
-     */
-    getDataExtent(dim: DimensionIndex): [number, number] {
+    getDataExtent(
+        dim: DimensionIndex,
+        filter: DataStoreExtentFilter | NullUndefined
+    ): [number, number] {
         // Make sure use concrete dim as cache name.
         const dimData = this._chunks[dim];
         const initialExtent = initExtentForUnion();
@@ -1144,33 +1150,74 @@ class DataStore {
         // Consider the most cases when using data zoom, `getDataExtent`
         // happened before filtering. We cache raw extent, which is not
         // necessary to be cleared and recalculated when restore data.
-        const useRaw = !this._indices;
-        let dimExtent: [number, number];
-
+        const useRaw = !this._indices && !filter;
         if (useRaw) {
             return this._rawExtent[dim].slice() as [number, number];
         }
-        dimExtent = this._extent[dim];
+
+        // NOTE:
+        //  - In logarithm axis, zero should be excluded, therefore the `extent[0]` should be less or equal
+        //    than the min positive data item, which requires the special handling here.
+        //  - "Filter non-positive values for logarithm axis" can also be implemented in a data processor
+        //    but that requires more complicated code to not break all streams under the current architecture,
+        //    therefore we simply implement it here.
+        //  - Performance is sensitive for large data, therefore inline filters rather than cb is used here.
+
+        const thisExtent = this._extent;
+        const dimExtentRecord = thisExtent[dim] || (thisExtent[dim] = {});
+        let filterKey = '';
+        let filterG = -Infinity;
+        let filterGE = -Infinity;
+        let filterL = Infinity;
+        let filterLE = Infinity;
+        if (filter) {
+            if (filter.g != null) {
+                filterKey += 'G' + filter.g;
+                filterG = filter.g;
+            }
+            if (filter.ge != null) {
+                filterKey += 'GE' + filter.ge;
+                filterGE = filter.ge;
+            }
+            if (filter.l != null) {
+                filterKey += 'L' + filter.l;
+                filterL = filter.l;
+            }
+            if (filter.le != null) {
+                filterKey += 'LE' + filter.le;
+                filterLE = filter.le;
+            }
+        }
+        const dimExtent = dimExtentRecord[filterKey];
         if (dimExtent) {
             return dimExtent.slice() as [number, number];
         }
-        dimExtent = initialExtent;
 
-        let min = dimExtent[0];
-        let max = dimExtent[1];
+        let min = initialExtent[0];
+        let max = initialExtent[1];
 
+        // NOTICE: Performance sensitive on large data.
         for (let i = 0; i < currEnd; i++) {
             const rawIdx = this.getRawIndex(i);
             const value = dimData[rawIdx] as ParsedValueNumeric;
-            value < min && (min = value);
-            value > max && (max = value);
+            if (filter) {
+                if (value <= filterG
+                    || value < filterGE
+                    || value >= filterL
+                    || value > filterLE
+                ) {
+                    continue;
+                }
+            }
+            if (value < min) {
+                min = value;
+            }
+            if (value > max) {
+                max = value;
+            }
         }
 
-        dimExtent = [min, max];
-
-        this._extent[dim] = dimExtent;
-
-        return dimExtent;
+        return (dimExtentRecord[filterKey] = [min, max]);
     }
 
     /**

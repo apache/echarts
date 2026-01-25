@@ -537,6 +537,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     restoreData() {
+        // See `dataTaskReset`.
         this.dataTask.dirty();
     }
 

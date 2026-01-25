@@ -1178,6 +1178,15 @@ export function initExtentForUnion(): [number, number] {
 }
 
 /**
+ * Suppose `extent` is initialized as `initExtentForUnion()`.
+ */
+export function unionExtent(extent: number[], val: number | NullUndefined): void {
+    // Considered that number could be NaN and should not write into the extent.
+    val < extent[0] && (extent[0] = val);
+    val > extent[1] && (extent[1] = val);
+}
+
+/**
  * A util for ensuring the callback is called only once.
  * @usage
  *  const callOnlyOnce = makeCallOnlyOnce(); // Should be static (ESM top level).

@@ -27,7 +27,7 @@ import DataDiffer from './DataDiffer';
 import {DataProvider, DefaultDataProvider} from './helper/dataProvider';
 import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
 import SeriesDimensionDefine from './SeriesDimensionDefine';
-import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/types';
+import {ArrayLike, Dictionary, FunctionPropertyNames, NullUndefined} from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
@@ -44,7 +44,7 @@ import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import {isSourceInstance, Source} from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
-import DataStore, { DataStoreDimensionDefine, DimValueGetter } from './DataStore';
+import DataStore, { DataStoreDimensionDefine, DataStoreExtentFilter, DimValueGetter } from './DataStore';
 import { isSeriesDataSchema, SeriesDataSchema } from './helper/SeriesDataSchema';
 
 const isObject = zrUtil.isObject;
@@ -681,8 +681,11 @@ class SeriesData<
      * extent calculation will cost more than 10ms and the cache will
      * be erased because of the filtering.
      */
-    getApproximateExtent(dim: SeriesDimensionLoose): [number, number] {
-        return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim));
+    getApproximateExtent(
+        dim: SeriesDimensionLoose,
+        filter: DataStoreExtentFilter | NullUndefined
+    ): [number, number] {
+        return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim), filter);
     }
 
     /**
@@ -789,7 +792,7 @@ class SeriesData<
     }
 
     getDataExtent(dim: DimensionLoose): [number, number] {
-        return this._store.getDataExtent(this._getStoreDimIndex(dim));
+        return this._store.getDataExtent(this._getStoreDimIndex(dim), null);
     }
 
     getSum(dim: DimensionLoose): number {

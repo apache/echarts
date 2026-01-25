@@ -159,8 +159,8 @@ export function alignScaleTicks(
     const targetRawPowExtent = targetRawExtent;
     if (isTargetLogScale) {
         targetRawExtent = [
-            logScaleLogTick(targetRawExtent[0], targetLogScaleBase, false),
-            logScaleLogTick(targetRawExtent[1], targetLogScaleBase, false)
+            logScaleLogTick(targetRawExtent[0], targetLogScaleBase),
+            logScaleLogTick(targetRawExtent[1], targetLogScaleBase)
         ];
     }
     const targetExtent = intervalScaleEnsureValidExtent(targetRawExtent, targetMinMaxFixed);
