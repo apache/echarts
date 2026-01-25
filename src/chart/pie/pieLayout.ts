@@ -118,18 +118,16 @@ export default function pieLayout(
             if (roseType !== 'area') {
                 angle = (sum === 0 && stillShowZeroSum)
                     ? unitRadian : (value * unitRadian);
+                if (angle < minAndPadAngle) {
+                    angle = minAndPadAngle;
+                    restAngle -= minAndPadAngle;
+                }
+                else {
+                    valueSumLargerThanMinAngle += value;
+                }
             }
             else {
                 angle = angleRange / validDataCount;
-            }
-
-
-            if (angle < minAndPadAngle) {
-                angle = minAndPadAngle;
-                restAngle -= minAndPadAngle;
-            }
-            else {
-                valueSumLargerThanMinAngle += value;
             }
 
             const endAngle = currentAngle + dir * angle;
@@ -165,7 +163,7 @@ export default function pieLayout(
 
         // Some sector is constrained by minAngle and padAngle
         // Rest sectors needs recalculate angle
-        if (restAngle < angleRange && validDataCount) {
+        if (restAngle < PI2 && validDataCount && roseType !== 'area') {
             // Average the angle if rest angle is not enough after all angles is
             // Constrained by minAngle and padAngle
             if (restAngle <= 1e-3) {
