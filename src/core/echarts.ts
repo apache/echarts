@@ -1365,14 +1365,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             return;
         }
 
-        // Default to use window.devicePixelRatio to handle browser zoom changes.
-        const zrResizeOpts = opts ? extend({}, opts) : {};
-        if (zrResizeOpts.devicePixelRatio == null && env.hasGlobalWindow) {
-            /* eslint-disable-next-line */
-            zrResizeOpts.devicePixelRatio = window.devicePixelRatio;
-        }
-
-        this._zr.resize(zrResizeOpts);
+        this._zr.resize(opts);
 
         const ecModel = this._model;
 
