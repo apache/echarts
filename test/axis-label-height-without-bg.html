@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="lib/reset.css">
+    </head>
+    <body>
+        <style>
+            .chart {
+                height: 400px;
+                border: 1px solid #ccc;
+                margin: 20px;
+            }
+        </style>
+
+        <script>
+            require(['echarts'], function (echarts) {
+                
+                // Test 1: axisLabel.height without backgroundColor
+                var option1 = {
+                    title: {
+                        text: 'Test 1: axisLabel.height WITHOUT backgroundColor (Issue #21504)',
+                        left: 'center'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisLabel: {
+                            height: 30,
+                            overflow: 'truncate',
+                            color: 'red'
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            height: 20,
+                            overflow: 'truncate',
+                            color: 'blue'
+                        }
+                    },
+                    series: [{
+                        data: [120, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                    }]
+                };
+
+                var chart1 = testHelper.create(echarts, 'main1', {
+                    title: 'axisLabel.height should work WITHOUT backgroundColor',
+                    option: option1,
+                    height: 400
+                });
+
+                // Test 2: axisLabel.height WITH backgroundColor (for comparison)
+                var option2 = {
+                    title: {
+                        text: 'Test 2: axisLabel.height WITH backgroundColor (for comparison)',
+                        left: 'center'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        axisLabel: {
+                            height: 30,
+                            overflow: 'truncate',
+                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                            color: 'red'
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        axisLabel: {
+                            height: 20,
+                            overflow: 'truncate',
+                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                            color: 'blue'
+                        }
+                    },
+                    series: [{
+                        data: [120, 200, 150, 80, 70, 110, 130],
+                        type: 'bar'
+                    }]
+                };
+
+                var chart2 = testHelper.create(echarts, 'main2', {
+                    title: 'axisLabel.height WITH backgroundColor (should look similar to Test 1)',
+                    option: option2,
+                    height: 400
+                });
+
+                // Test 3: Long labels with height constraint
+                var option3 = {
+                    title: {
+                        text: 'Test 3: Long labels with height constraint (no background)',
+                        left: 'center'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Very Long Label Monday', 'Very Long Label Tuesday', 'Very Long Label Wednesday', 
+                               'Very Long Label Thursday', 'Very Long Label Friday', 'Very Long Label Saturday', 'Very Long Label Sunday'],
+                        axisLabel: {
+                            height: 25,
+                            width: 80,
+                            overflow: 'truncate',
+                            interval: 0,
+                            rotate: 45
+                        }
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        data: [120, 200, 150, 80, 70, 110, 130],
+                        type: 'line'
+                    }]
+                };
+
+                var chart3 = testHelper.create(echarts, 'main3', {
+                    title: 'Long labels should be truncated by height constraint',
+                    option: option3,
+                    height: 400
+                });
+
+            });
+        </script>
+    </body>
+</html>
