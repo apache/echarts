@@ -734,7 +734,7 @@ function getIntervalTicks(
     }
 
     const levelsTicksInExtent = filter(map(levelsTicks, levelTicks => {
-        return filter(levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1] && !tick.notAdd);
+        return filter(levelTicks, tick => tick.value > extent[0] && tick.value < extent[1] && !tick.notAdd);
     }), levelTicks => levelTicks.length > 0);
 
     const ticks: TimeScaleTick[] = [];
