@@ -249,7 +249,7 @@ class GlobalModel extends Model<ECUnitOption> {
     }
 
     private _resetOption(
-        type: 'recreate' | 'timeline' | 'media',
+        type: 'recreate' | 'timeline' | 'media' | 'theme',
         opt: InnerSetOptionOpts
     ): boolean {
         let optionChanged = false;
@@ -283,6 +283,13 @@ class GlobalModel extends Model<ECUnitOption> {
         // If we really need to modify a props in each `MediaUnit['option']`, use the full version
         // (`{baseOption, media}`) in `setOption`.
         // For `timeline`, the case is the same.
+        if (type === 'theme') {
+            const themeOption = this._theme.option;
+            if (themeOption) {
+                mergeTheme(this.option, themeOption, true);
+                optionChanged = true;
+            }
+        }
 
         if (!type || type === 'recreate' || type === 'timeline') {
             const timelineOption = optionManager.getTimelineOption(this);
@@ -321,7 +328,6 @@ class GlobalModel extends Model<ECUnitOption> {
         const replaceMergeMainTypeMap = opt && opt.replaceMergeMainTypeMap;
 
         resetSourceDefaulter(this);
-
         // If no component class, merge directly.
         // For example: color, animaiton options, etc.
         each(newOption, function (componentOption, mainType: ComponentMainType) {
@@ -547,7 +553,7 @@ echarts.use([${seriesImportName}]);`);
 
     setTheme(theme: object) {
         this._theme = new Model(theme);
-        this._resetOption('recreate', null);
+        this._resetOption('theme', null);
     }
 
     getTheme(): Model {
@@ -1011,7 +1017,7 @@ function isNotTargetSeries(seriesModel: SeriesModel, payload: Payload): boolean 
     }
 }
 
-function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
+function mergeTheme(option: ECUnitOption, theme: ThemeOption, preserveUserOptions?: boolean): void {
     // PENDING
     // NOT use `colorLayer` in theme if option has `color`
     const notMergeColorLayer = option.color && !option.colorLayer;
@@ -1029,7 +1035,9 @@ function mergeTheme(option: ECUnitOption, theme: ThemeOption): void {
             if (typeof themeItem === 'object') {
                 option[name] = !option[name]
                     ? clone(themeItem)
-                    : merge(option[name], themeItem, false);
+                    : preserveUserOptions
+                        ? merge(themeItem, option[name], false) // User options have higher priority
+                        : merge(option[name], themeItem, false); // Theme has higher priority
             }
             else {
                 if (option[name] == null) {
