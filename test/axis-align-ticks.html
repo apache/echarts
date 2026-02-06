@@ -44,6 +44,8 @@ under the License.
         <div id="main4"></div>
         <div id="main5"></div>
         <div id="main6"></div>
+        <div id="main7"></div>
+        <div id="main8"></div>
 
 
 
@@ -401,6 +403,355 @@ under the License.
                 var chart = testHelper.create(echarts, 'main5', {
                     title: [
                         'Should always been aligned in dataZoom'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                    },
+                    yAxis: [
+                        {
+                            name: 'yAxis1',
+                            type: 'value',
+                            position: 'left',
+                            alignTicks: true
+                        },
+                        {
+                            name: 'yAxis2',
+                            type: 'value',
+                            position: 'right',
+                            alignTicks: true
+                        }
+                    ],
+                    series: [
+                        {
+                            yAxisIndex: 0,
+                            data: [0, 0, 0, 33000000, 0, 0, 0],
+                            type: 'line'
+                        },
+                        {
+                            yAxisIndex: 1,
+                            data: [-1.0, 0, 0, 0, 1.7, 0, 0],
+                            type: 'line'
+                        }
+                    ]
+                };
+                var chart = testHelper.create(echarts, 'main6', {
+                    title: [
+                        'The precision of the max tick of yAxis2 **should be the same with other ticks**',
+                        'Its value should be **1.8** (not 1.79999999999999998)'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        <script>
+            require([
+                'echarts'
+            ], function (echarts) {
+				var option = {
+				  series: [
+					{
+					  name: 'a收益率(%)',
+					  type: 'line',
+					  yAxisIndex: 1,
+					  data: [
+						'-1.08',
+						'1.07',
+						'-0.85',
+						'-',
+						'-',
+						'-0.05',
+						'1.75',
+						'1.23',
+						'0.92',
+						'1.40',
+						'-',
+						'-',
+						'1.36',
+						'0.56',
+						'1.61',
+						'-1.33',
+						'-1.04',
+						'-',
+						'-',
+						'-',
+						'-',
+						'-0.33',
+						'-0.81',
+						'-1.08',
+						'-',
+						'-',
+						'-3.04',
+						'-2.41',
+						'-4.37',
+						'-2.73'
+					  ],
+					  connectNulls: true
+					},
+					{
+					  nameProp: 'gbBRtnCumulative',
+					  name: 'b收益率(%)',
+					  type: 'line',
+					  yAxisIndex: 1,
+					  data: [
+						'1.33',
+						'1.33',
+						'0.78',
+						'-',
+						'-',
+						'2.67',
+						'3.90',
+						'3.47',
+						'3.42',
+						'4.33',
+						'-',
+						'-',
+						'3.87',
+						'2.32',
+						'1.28',
+						'0.04',
+						'1.05',
+						'-',
+						'-',
+						'-',
+						'-',
+						'0.34',
+						'0.99',
+						'0.91',
+						'-',
+						'-',
+						'1.49',
+						'1.63',
+						'0.59',
+						'1.26'
+					  ],
+					  connectNulls: true
+					},
+					{
+					  name: 'a总净值(亿元)',
+					  type: 'line',
+					  yAxisIndex: 0,
+					  data: [
+						'0.48',
+						'0.49',
+						'0.49',
+						'0.49',
+						'0.49',
+						'0.49',
+						'0.60',
+						'0.60',
+						'0.59',
+						'0.60',
+						'0.60',
+						'0.60',
+						'0.60',
+						'0.63',
+						'0.64',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.62',
+						'0.61',
+						'0.61',
+						'0.60',
+						'0.61'
+					  ],
+					  connectNulls: true,
+					  symbol: 'none',
+					  areaStyle: { opacity: 0.3 },
+					  lineStyle: { width: 0 }
+					}
+				  ],
+				  xAxis: [
+					{
+					  type: 'category',
+					  data: [
+						'2021-09-01',
+						'2021-09-02',
+						'2021-09-03',
+						'2021-09-04',
+						'2021-09-05',
+						'2021-09-06',
+						'2021-09-07',
+						'2021-09-08',
+						'2021-09-09',
+						'2021-09-10',
+						'2021-09-11',
+						'2021-09-12',
+						'2021-09-13',
+						'2021-09-14',
+						'2021-09-15',
+						'2021-09-16',
+						'2021-09-17',
+						'2021-09-18',
+						'2021-09-19',
+						'2021-09-20',
+						'2021-09-21',
+						'2021-09-22',
+						'2021-09-23',
+						'2021-09-24',
+						'2021-09-25',
+						'2021-09-26',
+						'2021-09-27',
+						'2021-09-28',
+						'2021-09-29',
+						'2021-09-30'
+					  ]
+					}
+				  ],
+				  yAxis: [
+					{
+					  type: 'value',
+					  name: 'yAxis1',
+					  alignTicks: true,
+					  scale: true,
+					  nameTextStyle: { align: 'center' }
+					},
+					{
+					  type: 'value',
+					  name: 'yAxis2',
+					  scale: true,
+					  nameTextStyle: { align: 'center' }
+					}
+				  ]
+				};
+                var chart = testHelper.create(echarts, 'main7', {
+                    title: [
+                        'The precision of the max tick of yAxis1 **should be the same with other ticks**',
+                        'Its value should be **0.66** (not 0.6599999999999999)'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+		<script>
+            require([
+                'echarts'
+            ], function (echarts) {
+                var option = {
+				  grid: {
+					containLabel: true,
+					left: '6%',
+					right: '5%',
+					top: 60,
+					bottom: '5%'
+				  },
+				  xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					data: [
+					  '2023-11-24',
+					  '2023-12-01',
+					  '2023-12-08',
+					  '2023-12-15',
+					  '2023-12-22',
+					  '2023-12-29',
+					  '2024-01-05',
+					  '2024-01-12',
+					  '2024-01-19',
+					  '2024-01-26',
+					  '2024-02-02',
+					  '2024-02-09',
+					  '2024-02-23',
+					  '2024-03-01',
+					  '2024-03-08',
+					  '2024-03-15',
+					  '2024-03-22',
+					  '2024-03-29',
+					  '2024-04-05',
+					  '2024-04-12',
+					  '2024-04-19',
+					  '2024-04-26',
+					  '2024-05-03',
+					  '2024-05-10',
+					  '2024-05-17',
+					  '2024-05-24'
+					]
+				  },
+				  yAxis: [
+					{
+					  type: 'value',
+					  scale: true,
+					  name: 'yAxis1',
+					  alignTicks: true
+					},
+					{
+					  type: 'value',
+					  scale: true,
+					  name: 'yAxis2',
+					  yAxisIndex: 1
+					}
+				  ],
+				  series: [
+					{
+					  name: 'series1',
+					  data: [
+						3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8,
+						3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.8, 3.77
+					  ],
+					  type: 'line',
+					  symbol: 'none',
+					  yAxisIndex: 0
+					},
+					{
+					  name: 'series2',
+					  data: [
+						0.37,
+						0.36,
+						0.36,
+						0.23,
+						0.26,
+						0.26,
+						0.26,
+						0.46,
+						0.48,
+						0.48,
+						0.51,
+						0.51,
+						0.51,
+						0.53,
+						0.53,
+						0.53,
+						0.58,
+						0.51,
+						0.47,
+						0.51,
+						0.51,
+						0.5,
+						0.49,
+						0.49,
+						0.43,
+						'-'
+					  ],
+					  type: 'line',
+					  yAxisIndex: 1,
+					  connectNulls: true,
+					  symbol: 'none'
+					}
+				  ]
+				};
+                var chart = testHelper.create(echarts, 'main8', {
+                    title: [
+                        'The tick labels of yAxis1 **SHOULD NOT** take too much space when **grid.containLabel: true**'
                     ],
                     option: option
                 });
