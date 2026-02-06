@@ -119,6 +119,7 @@
   "graphic-draggable": 1,
   "graphic-transition": 3,
   "heatmap": 2,
+  "heatmap-click": 1,
   "heatmap-gap-bug": 1,
   "heatmap-map": 1,
   "homepage3": 1,
