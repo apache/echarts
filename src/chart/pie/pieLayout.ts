@@ -38,6 +38,7 @@ export default function pieLayout(
     ecModel.eachSeriesByType(seriesType, function (seriesModel: PieSeriesModel) {
         const data = seriesModel.getData();
         const valueDim = data.mapDimension('value');
+        const roseType = seriesModel.get('roseType');
 
         const { cx, cy, r, r0, viewRect } = getCircleLayout(seriesModel, api);
 
@@ -52,22 +53,56 @@ export default function pieLayout(
         const minAndPadAngle = minAngle + padAngle;
 
         let validDataCount = 0;
-        data.each(valueDim, function (value: number) {
-            !isNaN(value) && validDataCount++;
+        data.each(valueDim, function (value: number | number[]) {
+            let val = value;
+            if (roseType === 'mixed' && Array.isArray(value) && value.length >= 2) {
+                val = value[1]; // Use the second value for angle calculation in mixed mode
+            }
+            !isNaN(val as number) && validDataCount++;
         });
 
-        const sum = data.getSum(valueDim);
+        // Calculate sum manually for mixed roseType to handle array values
+        let sum = 0;
+        if (roseType === 'mixed') {
+            data.each(valueDim, function (value: number | number[]) {
+                if (Array.isArray(value) && value.length >= 2) {
+                    sum += isNaN(value[1]) ? 0 : value[1]; // Use the second value for angle calculation
+                } else {
+                    sum += isNaN(value as number) ? 0 : (value as number);
+                }
+            });
+        } else {
+            sum = data.getSum(valueDim);
+        }
+
         // Sum may be 0
         let unitRadian = Math.PI / (sum || validDataCount) * 2;
 
         const clockwise = seriesModel.get('clockwise');
 
-        const roseType = seriesModel.get('roseType');
         const stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
         // [0...max]
-        const extent = data.getDataExtent(valueDim);
-        extent[0] = 0;
+        let extent = [0, 0];
+        if (roseType === 'mixed') {
+            // Calculate extent manually for mixed roseType to handle array values
+            let max = -Infinity;
+            data.each(valueDim, function (value: number | number[]) {
+                let val;
+                if (Array.isArray(value) && value.length >= 2) {
+                    val = value[0]; // Use the first value for radius calculation
+                } else {
+                    val = value as number;
+                }
+                if (!isNaN(val)) {
+                    max = Math.max(max, val);
+                }
+            });
+            extent = [0, max];
+        } else {
+            extent = data.getDataExtent(valueDim);
+            extent[0] = 0;
+        }
 
         const dir = clockwise ? 1 : -1;
         const angles = [startAngle, endAngle];
@@ -96,9 +131,18 @@ export default function pieLayout(
         // Requird by `pieLabelLayout`.
         data.setLayout({ viewRect, r });
 
-        data.each(valueDim, function (value: number, idx: number) {
+        data.each(valueDim, function (value: number | number[], idx: number) {
             let angle;
-            if (isNaN(value)) {
+            let radiusValue = value;
+            let angleValue = value;
+
+            // Handle array values for mixed roseType
+            if (roseType === 'mixed' && Array.isArray(value) && value.length >= 2) {
+                radiusValue = value[0]; // First value controls radius
+                angleValue = value[1]; // Second value controls angle
+            }
+
+            if (isNaN(radiusValue as number)) {
                 data.setItemLayout(idx, {
                     angle: NaN,
                     startAngle: NaN,
@@ -115,12 +159,13 @@ export default function pieLayout(
             }
 
             // FIXME 兼容 2.0 但是 roseType 是 area 的时候才是这样？
-            if (roseType !== 'area') {
-                angle = (sum === 0 && stillShowZeroSum)
-                    ? unitRadian : (value * unitRadian);
+            if (roseType === 'area') {
+                angle = angleRange / validDataCount;
             }
             else {
-                angle = angleRange / validDataCount;
+                // For 'radius' and 'mixed' types, angle is proportional to value
+                angle = (sum === 0 && stillShowZeroSum)
+                    ? unitRadian : ((angleValue as number) * unitRadian);
             }
 
 
@@ -129,7 +174,12 @@ export default function pieLayout(
                 restAngle -= minAndPadAngle;
             }
             else {
-                valueSumLargerThanMinAngle += value;
+                // For mixed roseType, use the second value for angle calculation
+                if (roseType === 'mixed' && Array.isArray(value) && value.length >= 2) {
+                    valueSumLargerThanMinAngle += value[1];
+                } else {
+                    valueSumLargerThanMinAngle += value as number;
+                }
             }
 
             const endAngle = currentAngle + dir * angle;
@@ -156,7 +206,7 @@ export default function pieLayout(
                 cy: cy,
                 r0: r0,
                 r: roseType
-                    ? linearMap(value, extent, [r0, r])
+                    ? linearMap(radiusValue as number, extent, [r0, r])
                     : r
             });
 
@@ -170,8 +220,12 @@ export default function pieLayout(
             // Constrained by minAngle and padAngle
             if (restAngle <= 1e-3) {
                 const angle = angleRange / validDataCount;
-                data.each(valueDim, function (value: number, idx: number) {
-                    if (!isNaN(value)) {
+                data.each(valueDim, function (value: number | number[], idx: number) {
+                    let val = value;
+                    if (roseType === 'mixed' && Array.isArray(value) && value.length >= 2) {
+                        val = value[1]; // Use the second value for angle calculation in mixed mode
+                    }
+                    if (!isNaN(val as number)) {
                         const layout = data.getItemLayout(idx);
                         layout.angle = angle;
 
@@ -195,11 +249,15 @@ export default function pieLayout(
             else {
                 unitRadian = restAngle / valueSumLargerThanMinAngle;
                 currentAngle = startAngle;
-                data.each(valueDim, function (value: number, idx: number) {
-                    if (!isNaN(value)) {
+                data.each(valueDim, function (value: number | number[], idx: number) {
+                    let angleValue = value;
+                    if (roseType === 'mixed' && Array.isArray(value) && value.length >= 2) {
+                        angleValue = value[1]; // Use the second value for angle calculation in mixed mode
+                    }
+                    if (!isNaN(angleValue as number)) {
                         const layout = data.getItemLayout(idx);
                         const angle = layout.angle === minAndPadAngle
-                            ? minAndPadAngle : value * unitRadian;
+                            ? minAndPadAngle : (angleValue as number) * unitRadian;
 
                         let actualStartAngle = 0;
                         let actualEndAngle = 0;
