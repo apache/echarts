@@ -189,20 +189,26 @@ class HeatmapView extends ChartView {
             const xAxis = coordSys.getAxis('x');
             const yAxis = coordSys.getAxis('y');
 
-            if (__DEV__) {
-                if (!(xAxis.type === 'category' && yAxis.type === 'category')) {
-                    throw new Error('Heatmap on cartesian must have two category axes');
-                }
-                if (!(xAxis.onBand && yAxis.onBand)) {
-                    throw new Error('Heatmap on cartesian must have two axes with boundaryGap true');
-                }
-            }
-
-            // add 0.5px to avoid the gaps
-            width = xAxis.getBandWidth() + .5;
-            height = yAxis.getBandWidth() + .5;
             xAxisExtent = xAxis.scale.getExtent();
             yAxisExtent = yAxis.scale.getExtent();
+
+            if (xAxis.type === 'category' && xAxis.onBand) {
+                width = xAxis.getBandWidth() + .5;
+            } else {
+                const xGlobalExtent = xAxis.getGlobalExtent();
+                const xSpan = Math.abs(xGlobalExtent[1] - xGlobalExtent[0]);
+                const xDataSpan = Math.abs(xAxisExtent[1] - xAxisExtent[0]);
+                width = xDataSpan > 0 ? xSpan / xDataSpan : 0;
+            }
+
+            if (yAxis.type === 'category' && yAxis.onBand) {
+                height = yAxis.getBandWidth() + .5;
+            } else {
+                const yGlobalExtent = yAxis.getGlobalExtent();
+                const ySpan = Math.abs(yGlobalExtent[1] - yGlobalExtent[0]);
+                const yDataSpan = Math.abs(yAxisExtent[1] - yAxisExtent[0]);
+                height = yDataSpan > 0 ? ySpan / yDataSpan : 0;
+            }
         }
 
         const group = this.group;
