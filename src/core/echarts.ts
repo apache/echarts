@@ -238,6 +238,7 @@ export interface SetOptionOpts {
 export interface ResizeOpts {
     width?: number | 'auto', // Can be 'auto' (the same as null/undefined)
     height?: number | 'auto', // Can be 'auto' (the same as null/undefined)
+    devicePixelRatio?: number,
     animation?: AnimationOption
     silent?: boolean // by default false.
 };
