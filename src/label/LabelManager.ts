@@ -457,8 +457,30 @@ class LabelManager {
             return item.layoutOption.moveOverlap === 'shiftY';
         });
 
-        shiftLayoutOnXY(labelsNeedsAdjustOnX, 0, 0, width);
-        shiftLayoutOnXY(labelsNeedsAdjustOnY, 1, 0, height);
+        // Get coordinate system bounds for cartesian systems
+        const getCoordSysBounds = (labels: LabelLayoutWithGeometry[], xyDimIdx: 0 | 1) => {
+            if (labels.length === 0) {
+                return { min: 0, max: xyDimIdx === 0 ? width : height };
+            }
+            // Try to get bounds from the first label's series coordinate system
+            const firstLabel = labels[0];
+            const coordSys = firstLabel.seriesModel && firstLabel.seriesModel.coordinateSystem;
+            if (coordSys && coordSys.type === 'cartesian2d') {
+                const area = (coordSys as any).getArea();
+                if (area) {
+                    return xyDimIdx === 0
+                        ? { min: area.x, max: area.x + area.width }
+                        : { min: area.y, max: area.y + area.height };
+                }
+            }
+            return { min: 0, max: xyDimIdx === 0 ? width : height };
+        };
+
+        const xBounds = getCoordSysBounds(labelsNeedsAdjustOnX, 0);
+        const yBounds = getCoordSysBounds(labelsNeedsAdjustOnY, 1);
+
+        shiftLayoutOnXY(labelsNeedsAdjustOnX, 0, xBounds.min, xBounds.max);
+        shiftLayoutOnXY(labelsNeedsAdjustOnY, 1, yBounds.min, yBounds.max);
 
         const labelsNeedsHideOverlap = filter(labelList, function (item) {
             return item.layoutOption.hideOverlap;
