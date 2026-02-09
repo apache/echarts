@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
-        "target": "ES3",
+        // ES3 has been bandoned.
+        "target": "ES6",
 
         "noImplicitAny": true,
         "noImplicitThis": true,
