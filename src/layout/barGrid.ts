@@ -485,14 +485,19 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
             const baseDimIdx = data.getDimensionIndex(data.mapDimension(baseAxis.dim));
             const drawBackground = seriesModel.get('showBackground', true);
             const valueDim = data.mapDimension(valueAxis.dim);
-            const stackResultDim = data.getCalculationInfo('stackResultDimension');
-            const stacked = isDimensionStacked(data, valueDim) && !!data.getCalculationInfo('stackedOnSeries');
             const isValueAxisH = valueAxis.isHorizontal();
             const valueAxisStart = getValueAxisStart(baseAxis, valueAxis);
             const isLarge = isInLargeMode(seriesModel);
             const barMinHeight = seriesModel.get('barMinHeight') || 0;
 
+            // Determine stacked dimensions.
+            const stackResultDim = data.getCalculationInfo('stackResultDimension');
             const stackedDimIdx = stackResultDim && data.getDimensionIndex(stackResultDim);
+            const stackedOverDim = data.getCalculationInfo('stackedOverDimension');
+            const stackedOverDimIdx = stackedOverDim && data.getDimensionIndex(stackedOverDim);
+            const isPercentStackEnabled = seriesModel.get('stackPercent');
+            const stacked = isPercentStackEnabled
+            || (isDimensionStacked(data, valueDim) && !!data.getCalculationInfo('stackedOnSeries'));
 
             // Layout info.
             const columnWidth = data.getLayout('size');
@@ -521,7 +526,16 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         // Because of the barMinHeight, we can not use the value in
                         // stackResultDimension directly.
                         if (stacked) {
-                            stackStartValue = +value - (store.get(valueDimIdx, dataIndex) as number);
+                            if (isPercentStackEnabled) {
+                                // When percentStack is true, use the normalized bottom edge (stackedOverDimension)
+                                // as the start value of the bar segment.
+                                stackStartValue = store.get(stackedOverDimIdx, dataIndex);
+                            }
+                            else {
+                                // For standard (non-percent) stack, subtract the original value from the
+                                // stacked total to compute the bar segment's start value.
+                                stackStartValue = +value - (store.get(valueDimIdx, dataIndex) as number);
+                            }
                         }
 
                         let x;

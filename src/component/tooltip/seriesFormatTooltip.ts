@@ -65,6 +65,14 @@ export function defaultSeriesFormatTooltip(opt: {
         const dimInfo = data.getDimensionInfo(tooltipDims[0]);
         sortParam = inlineValue = retrieveRawValue(data, dataIndex, tooltipDims[0]);
         inlineValueType = dimInfo.type;
+        const isPercentStackEnabled = data.getCalculationInfo('isPercentStackEnabled');
+        if (isPercentStackEnabled) {
+            // Append the normalized value (as a percent of the total stack) when stackPercent is true.
+            const params = series.getDataParams(dataIndex);
+            if (params.percent != null) {
+                inlineValue = `${inlineValue} (${params.percent}%)`;
+            }
+        }
     }
     else {
         sortParam = inlineValue = isValueArr ? value[0] : value;
