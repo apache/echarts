@@ -18,133 +18,367 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
         <script src="lib/testHelper.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="stylesheet" href="lib/reset.css">
+        <!-- <script src="lib/canteen.js"></script> -->
+        <!-- <script src="lib/draggable.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            .chart {
-                height: 400px;
-                border: 1px solid #ccc;
-                margin: 20px;
+            html {
+                /* Fix the line-height to integer to avoid it varying across clients and
+                   causing visual test failures. Some clients may not support fractional px. */
+                line-height: 18px;
             }
         </style>
 
+
+        <div id="main0"></div>
+
+
+        <div id="main1"></div>
+
+
+        <div id="main2"></div>
+
+
+
+
+
         <script>
-            require(['echarts'], function (echarts) {
-                
-                // Test 1: axisLabel.height without backgroundColor
-                var option1 = {
-                    title: {
-                        text: 'Test 1: axisLabel.height WITHOUT backgroundColor (Issue #21504)',
-                        left: 'center'
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        axisLabel: {
-                            height: 30,
-                            overflow: 'truncate',
-                            color: 'red'
-                        }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        axisLabel: {
-                            height: 20,
-                            overflow: 'truncate',
-                            color: 'blue'
-                        }
-                    },
-                    series: [{
-                        data: [120, 200, 150, 80, 70, 110, 130],
-                        type: 'bar'
-                    }]
+
+            require([
+                'echarts',
+                // 'data/flight.json'
+                // 'theme/dark.js', // auto register if load.
+            ], function (echarts /*, data */) {
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: {
+                        type: 'scatter',
+                        symbolSize: 50,
+                        label: {show: true, position: 'top'},
+                        data: [[1, 2], [100, 200], [500, 50]]
+                    }
                 };
 
-                var chart1 = testHelper.create(echarts, 'main1', {
-                    title: 'axisLabel.height should work WITHOUT backgroundColor',
-                    option: option1,
-                    height: 400
-                });
+                var chart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Test Case Description of main0',
+                        '(Muliple lines and **emphasis** are supported in description)'
+                    ],
+                    option: option,
 
-                // Test 2: axisLabel.height WITH backgroundColor (for comparison)
-                var option2 = {
-                    title: {
-                        text: 'Test 2: axisLabel.height WITH backgroundColor (for comparison)',
-                        left: 'center'
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                        axisLabel: {
-                            height: 30,
-                            overflow: 'truncate',
-                            backgroundColor: 'rgba(255, 0, 0, 0.1)',
-                            color: 'red'
+                    // ==============================================================
+                    // !      Delete the content below if you do not need them      !
+
+                    // -------------------------- Optional settings: --------------------------
+                    // height: 400,         // Optional. Specify a different chart height.
+                    // draggable: true,     // Optional. Add a draggable button to mutify the chart size.
+                    //                      //           This feature require "test/lib/draggable.js"
+                    // recordCanvas: true,  // Optional. Record canvas instructions. (for debug)
+                    //                      //           This feature requires "test/lib/canteen.js"
+                    // boundingRect: true,  // Optional. Show boundingRects of zrender elements (for debug).
+                    //
+                    // ------------------- Inputs (button/range/select/br/hr): ----------------
+                    // inputsHeight: 30,    // Optional. Fix the height of inputs area (scrollable if overflow)
+                    inputsStyle: 'compact', // Optional.
+                    inputs: [               // Optional. The following are sample inputs:
+                        {
+                            type: 'select',
+                            text: '(delete me if no need) boundingRect:',
+                            values: [false, true, undefined, {color: 'rgba(255,0,0,0.8)', silent: false}],
+                            onchange: function () {
+                                chart.__testHelper.boundingRect(this.value);
+                            }
+                        },
+                        {
+                            type: 'range',
+                            text: '(delete me if no need) symbolSize:',
+                            // min: -100, // Optional.
+                            // max: 100, // Optional.
+                            // value: 50, // Optional.
+                            onchange: function () {
+                                console.log('range changed:', this.value);
+                                chart.setOption({series: {symbolSize: this.value}});
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: '(delete me if no need) (range embedded select) grid.left:',
+                            options: [
+                                {value: undefined},
+                                {value: 30},
+                                {input: {type: 'range', min: -300, max: 300, value: 50}}
+                            ],
+                            onchange: function () {
+                                var newVal = this.value;
+                                console.log('select 2 changed:', newVal);
+                                chart.setOption({grid: {left: newVal}});
+                            }
+                        },
+                        {
+                            type: 'br', // line break
+                        },
+                        {
+                            text: '(delete me if no need) print failures to screen',
+                            onclick: function () {
+                                testHelper.printAssert('main0', function (assert) {
+                                    assert(true);
+                                });
+                            }
+                        },
+                        {
+                            text: '(delete me if no need) copy option to clipboard',
+                            onclick: function () {
+                                // console.log(testHelper.printObject(option));
+                                testHelper.clipboard(option);
+                            }
                         }
-                    },
-                    yAxis: {
-                        type: 'value',
-                        axisLabel: {
-                            height: 20,
-                            overflow: 'truncate',
-                            backgroundColor: 'rgba(0, 0, 255, 0.1)',
-                            color: 'blue'
-                        }
-                    },
-                    series: [{
-                        data: [120, 200, 150, 80, 70, 110, 130],
-                        type: 'bar'
-                    }]
-                };
 
-                var chart2 = testHelper.create(echarts, 'main2', {
-                    title: 'axisLabel.height WITH backgroundColor (should look similar to Test 1)',
-                    option: option2,
-                    height: 400
-                });
+                    ] // End of `inputs`
 
-                // Test 3: Long labels with height constraint
-                var option3 = {
-                    title: {
-                        text: 'Test 3: Long labels with height constraint (no background)',
-                        left: 'center'
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: ['Very Long Label Monday', 'Very Long Label Tuesday', 'Very Long Label Wednesday', 
-                               'Very Long Label Thursday', 'Very Long Label Friday', 'Very Long Label Saturday', 'Very Long Label Sunday'],
-                        axisLabel: {
-                            height: 25,
-                            width: 80,
-                            overflow: 'truncate',
-                            interval: 0,
-                            rotate: 45
-                        }
-                    },
-                    yAxis: {
-                        type: 'value'
-                    },
-                    series: [{
-                        data: [120, 200, 150, 80, 70, 110, 130],
-                        type: 'line'
-                    }]
-                };
+                    // !      Delete the content above if you do not need them      !
+                    // ==============================================================
 
-                var chart3 = testHelper.create(echarts, 'main3', {
-                    title: 'Long labels should be truncated by height constraint',
-                    option: option3,
-                    height: 400
-                });
 
-            });
+                }); // End of `testHelper.create`
+
+            }); // End of `require`
+
+
         </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                // 'data/flight.json'
+                // 'theme/dark.js', // auto register if load.
+            ], function (echarts /*, data */) {
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: {
+                        type: 'scatter',
+                        symbolSize: 50,
+                        label: {show: true, position: 'top'},
+                        data: [[1, 2], [100, 200], [500, 50]]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Test Case Description of main1',
+                        '(Muliple lines and **emphasis** are supported in description)'
+                    ],
+                    option: option,
+
+                    // ==============================================================
+                    // !      Delete the content below if you do not need them      !
+
+                    // -------------------------- Optional settings: --------------------------
+                    // height: 400,         // Optional. Specify a different chart height.
+                    // draggable: true,     // Optional. Add a draggable button to mutify the chart size.
+                    //                      //           This feature require "test/lib/draggable.js"
+                    // recordCanvas: true,  // Optional. Record canvas instructions. (for debug)
+                    //                      //           This feature requires "test/lib/canteen.js"
+                    // boundingRect: true,  // Optional. Show boundingRects of zrender elements (for debug).
+                    //
+                    // ------------------- Inputs (button/range/select/br/hr): ----------------
+                    // inputsHeight: 30,    // Optional. Fix the height of inputs area (scrollable if overflow)
+                    inputsStyle: 'compact', // Optional.
+                    inputs: [               // Optional. The following are sample inputs:
+                        {
+                            type: 'select',
+                            text: '(delete me if no need) boundingRect:',
+                            values: [false, true, undefined, {color: 'rgba(255,0,0,0.8)', silent: false}],
+                            onchange: function () {
+                                chart.__testHelper.boundingRect(this.value);
+                            }
+                        },
+                        {
+                            type: 'range',
+                            text: '(delete me if no need) symbolSize:',
+                            // min: -100, // Optional.
+                            // max: 100, // Optional.
+                            // value: 50, // Optional.
+                            onchange: function () {
+                                console.log('range changed:', this.value);
+                                chart.setOption({series: {symbolSize: this.value}});
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: '(delete me if no need) (range embedded select) grid.left:',
+                            options: [
+                                {value: undefined},
+                                {value: 30},
+                                {input: {type: 'range', min: -300, max: 300, value: 50}}
+                            ],
+                            onchange: function () {
+                                var newVal = this.value;
+                                console.log('select 2 changed:', newVal);
+                                chart.setOption({grid: {left: newVal}});
+                            }
+                        },
+                        {
+                            type: 'br', // line break
+                        },
+                        {
+                            text: '(delete me if no need) print failures to screen',
+                            onclick: function () {
+                                testHelper.printAssert('main1', function (assert) {
+                                    assert(true);
+                                });
+                            }
+                        },
+                        {
+                            text: '(delete me if no need) copy option to clipboard',
+                            onclick: function () {
+                                // console.log(testHelper.printObject(option));
+                                testHelper.clipboard(option);
+                            }
+                        }
+
+                    ] // End of `inputs`
+
+                    // !      Delete the content above if you do not need them      !
+                    // ==============================================================
+
+
+                }); // End of `testHelper.create`
+
+            }); // End of `require`
+
+
+        </script>
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                // 'data/flight.json'
+                // 'theme/dark.js', // auto register if load.
+            ], function (echarts /*, data */) {
+
+                var option = {
+                    xAxis: {},
+                    yAxis: {},
+                    series: {
+                        type: 'scatter',
+                        symbolSize: 50,
+                        label: {show: true, position: 'top'},
+                        data: [[1, 2], [100, 200], [500, 50]]
+                    }
+                };
+
+                var chart = testHelper.create(echarts, 'main2', {
+                    title: [
+                        'Test Case Description of main2',
+                        '(Muliple lines and **emphasis** are supported in description)'
+                    ],
+                    option: option,
+
+                    // ==============================================================
+                    // !      Delete the content below if you do not need them      !
+
+                    // -------------------------- Optional settings: --------------------------
+                    // height: 400,         // Optional. Specify a different chart height.
+                    // draggable: true,     // Optional. Add a draggable button to mutify the chart size.
+                    //                      //           This feature require "test/lib/draggable.js"
+                    // recordCanvas: true,  // Optional. Record canvas instructions. (for debug)
+                    //                      //           This feature requires "test/lib/canteen.js"
+                    // boundingRect: true,  // Optional. Show boundingRects of zrender elements (for debug).
+                    //
+                    // ------------------- Inputs (button/range/select/br/hr): ----------------
+                    // inputsHeight: 30,    // Optional. Fix the height of inputs area (scrollable if overflow)
+                    inputsStyle: 'compact', // Optional.
+                    inputs: [               // Optional. The following are sample inputs:
+                        {
+                            type: 'select',
+                            text: '(delete me if no need) boundingRect:',
+                            values: [false, true, undefined, {color: 'rgba(255,0,0,0.8)', silent: false}],
+                            onchange: function () {
+                                chart.__testHelper.boundingRect(this.value);
+                            }
+                        },
+                        {
+                            type: 'range',
+                            text: '(delete me if no need) symbolSize:',
+                            // min: -100, // Optional.
+                            // max: 100, // Optional.
+                            // value: 50, // Optional.
+                            onchange: function () {
+                                console.log('range changed:', this.value);
+                                chart.setOption({series: {symbolSize: this.value}});
+                            }
+                        },
+                        {
+                            type: 'select',
+                            text: '(delete me if no need) (range embedded select) grid.left:',
+                            options: [
+                                {value: undefined},
+                                {value: 30},
+                                {input: {type: 'range', min: -300, max: 300, value: 50}}
+                            ],
+                            onchange: function () {
+                                var newVal = this.value;
+                                console.log('select 2 changed:', newVal);
+                                chart.setOption({grid: {left: newVal}});
+                            }
+                        },
+                        {
+                            type: 'br', // line break
+                        },
+                        {
+                            text: '(delete me if no need) print failures to screen',
+                            onclick: function () {
+                                testHelper.printAssert('main2', function (assert) {
+                                    assert(true);
+                                });
+                            }
+                        },
+                        {
+                            text: '(delete me if no need) copy option to clipboard',
+                            onclick: function () {
+                                // console.log(testHelper.printObject(option));
+                                testHelper.clipboard(option);
+                            }
+                        }
+
+                    ] // End of `inputs`
+
+                    // !      Delete the content above if you do not need them      !
+                    // ==============================================================
+
+
+                }); // End of `testHelper.create`
+
+            }); // End of `require`
+
+
+        </script>
+
+
     </body>
 </html>
+
