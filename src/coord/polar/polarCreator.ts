@@ -85,6 +85,8 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     angleAxis.scale.setExtent(Infinity, -Infinity);
     radiusAxis.scale.setExtent(Infinity, -Infinity);
 
+    let hasConnectEnds = false;
+
     ecModel.eachSeries(function (seriesModel) {
         if (seriesModel.coordinateSystem === polar) {
             const data = seriesModel.getData();
@@ -94,6 +96,11 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
             zrUtil.each(getDataDimensionsOnAxis(data, 'angle'), function (dim) {
                 angleAxis.scale.unionExtentFromData(data, dim);
             });
+
+            // Check if any series uses connectEnds (for line series in polar)
+            if ((seriesModel as any).get('connectEnds')) {
+                hasConnectEnds = true;
+            }
         }
     });
 
@@ -103,9 +110,20 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     // Fix extent of category angle axis
     if (angleAxis.type === 'category' && !angleAxis.onBand) {
         const extent = angleAxis.getExtent();
-        const diff = 360 / (angleAxis.scale as OrdinalScale).count();
-        angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
-        angleAxis.setExtent(extent[0], extent[1]);
+        const count = (angleAxis.scale as OrdinalScale).count();
+        const diff = 360 / count;
+
+        if (hasConnectEnds) {
+            // When connectEnds is true, we want the axis to span full 360 degrees
+            // but we need to extend the scale's data extent so that points are
+            // distributed as if there's one more category, allowing proper connection
+            const scaleExtent = angleAxis.scale.getExtent();
+            angleAxis.scale.setExtent(scaleExtent[0], scaleExtent[1] + 1);
+        }
+        else {
+            angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
+            angleAxis.setExtent(extent[0], extent[1]);
+        }
     }
 }
 
