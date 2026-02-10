@@ -117,16 +117,46 @@
       "require": "./dist/echarts.js",
       "default": "./index.js"
     },
-    "./core": "./core.js",
-    "./core.js": "./core.js",
-    "./charts": "./charts.js",
-    "./charts.js": "./charts.js",
-    "./components": "./components.js",
-    "./components.js": "./components.js",
-    "./features": "./features.js",
-    "./features.js": "./features.js",
-    "./renderers": "./renderers.js",
-    "./renderers.js": "./renderers.js",
+    "./charts": {
+      "import": "./charts.js",
+      "types": "./types/dist/charts.d.ts"
+    },
+    "./charts.js": {
+      "import": "./charts.js",
+      "types": "./types/dist/charts.d.ts"
+    },
+    "./components": {
+      "import": "./components.js",
+      "types": "./types/dist/components.d.ts"
+    },
+    "./components.js": {
+      "import": "./components.js",
+      "types": "./types/dist/components.d.ts"
+    },
+    "./core": {
+      "import": "./core.js",
+      "types": "./types/dist/core.d.ts"
+    },
+    "./core.js": {
+      "import": "./core.js",
+      "types": "./types/dist/core.d.ts"
+    },
+    "./features": {
+      "import": "./features.js",
+      "types": "./types/dist/features.d.ts"
+    },
+    "./features.js": {
+      "import": "./features.js",
+      "types": "./types/dist/features.d.ts"
+    },
+    "./renderers": {
+      "import": "./renderers.js",
+      "types": "./types/dist/renderers.d.ts"
+    },
+    "./renderers.js": {
+      "import": "./renderers.js",
+      "types": "./types/dist/renderers.d.ts"
+    },
     "./index.blank": "./index.blank.js",
     "./index.blank.js": "./index.blank.js",
     "./index.common": "./index.common.js",
