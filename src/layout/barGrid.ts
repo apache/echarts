@@ -607,7 +607,13 @@ function isInLargeMode(seriesModel: BarSeriesModel) {
 function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D) {
     let startValue = valueAxis.model.get('startValue');
     if (!startValue) {
-        startValue = 0;
+        const valueAxisScaleExtent = valueAxis.scale.getExtent();
+        if (valueAxisScaleExtent && valueAxisScaleExtent[0]) {
+            startValue = valueAxisScaleExtent[0];
+        }
+        else {
+            startValue = 0;
+        }
     }
     return valueAxis.toGlobalCoord(
         valueAxis.dataToCoord(

@@ -40,6 +40,7 @@ under the License.
 
 
         <div id="main0"></div>
+        <div id="main1"></div>
 
         <script>
 
@@ -79,5 +80,41 @@ under the License.
 
         </script>
 
+
+        <script>
+
+            // See <https://github.com/ecomfe/echarts/issues/7412>
+            // Thanks to <https://github.com/CrazyShipOne>
+
+            var chart;
+            var myChart;
+            var option;
+
+            require([
+                'echarts'/*, 'map/js/china' */
+            ], function (echarts) {
+                option = {
+                    xAxis: {
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu']
+                    },
+                    yAxis: {
+                        type: "log",
+                    },
+                    series: [{
+                        data: [10, 100, 1000, 10000],
+                        type: 'bar',
+                        barMinHeight: 20
+                    }]
+                };
+
+                chart = myChart = testHelper.create(echarts, 'main1', {
+                    title: 'bar in log axis with **barMinHeight**',
+                    option: option,
+                    info: option
+                });
+            });
+
+        </script>
     </body>
 </html>
