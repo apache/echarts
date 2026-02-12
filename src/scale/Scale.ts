@@ -134,6 +134,18 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
     }
 
     /**
+     * Update extent by value
+     */
+    unionExtentByValue(value: number): void {
+        const extent = this._extent;
+        // Considered that number could be NaN and should not write into the extent.
+        this._innerSetExtent(
+            value < extent[0] ? value : extent[0],
+            value > extent[1] ? value : extent[1]
+        );
+    }
+
+    /**
      * Get a new slice of extent.
      * Extent is always in increase order.
      */
