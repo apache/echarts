@@ -977,16 +977,31 @@ function createOrUpdateItem(
         return;
     }
     const el = doCreateOrUpdateEl(api, existsEl, dataIndex, elOption, seriesModel, group);
-    el && data.setItemGraphicEl(dataIndex, el);
+el && data.setItemGraphicEl(dataIndex, el);
 
-    el && toggleHoverEmphasis(
-        el,
-        elOption.focus,
-        elOption.blurScope,
-        elOption.emphasisDisabled
-    );
 
-    return el;
+
+//  FIX START
+if (
+    el
+    && el.states
+    && el.states.emphasis
+    && !elOption.emphasisDisabled
+) {
+    el.silent = false;
+    el.ignore = false;
+}
+// FIX END
+
+el && toggleHoverEmphasis(
+    el,
+    elOption.focus,
+    elOption.blurScope,
+    elOption.emphasisDisabled
+);
+
+return el;
+
 }
 
 function doCreateOrUpdateEl(
