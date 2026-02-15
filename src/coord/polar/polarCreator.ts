@@ -100,12 +100,17 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     niceScaleExtent(angleAxis.scale, angleAxis.model);
     niceScaleExtent(radiusAxis.scale, radiusAxis.model);
 
-    // Fix extent of category angle axis
+    // Fix extent of category angle axis when no boundaryGap
     if (angleAxis.type === 'category' && !angleAxis.onBand) {
         const extent = angleAxis.getExtent();
-        const diff = 360 / (angleAxis.scale as OrdinalScale).count();
-        angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
-        angleAxis.setExtent(extent[0], extent[1]);
+        let spanAngle = (extent[1] - extent[0]) * (angleAxis.inverse ? -1 : 1);
+        const pieces = (angleAxis.scale as OrdinalScale).count();
+        // spanLimit is the maximum span angle when no boundaryGap
+        const spanLimit = 360 - 360 / pieces;
+        if (spanAngle >= spanLimit) {
+            extent[1] = extent[0] + (angleAxis.inverse ? -1 : 1) * spanLimit;
+            angleAxis.setExtent(extent[0], extent[1]);
+        }
     }
 }
 
