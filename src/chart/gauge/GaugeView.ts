@@ -22,7 +22,7 @@ import * as graphic from '../../util/graphic';
 import { setStatesStylesFromModel, toggleHoverEmphasis } from '../../util/states';
 import {createTextStyle, setLabelValueAnimation, animateLabelValue} from '../../label/labelStyle';
 import ChartView from '../../view/Chart';
-import {parsePercent, round, linearMap} from '../../util/number';
+import {parsePercent, round, linearMap, DEFAULT_PRECISION_FOR_ROUNDING_ERROR} from '../../util/number';
 import GaugeSeriesModel, { GaugeDataItemOption } from './GaugeSeries';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -272,7 +272,7 @@ class GaugeView extends ChartView {
                 const distance = labelModel.get('distance') + splitLineDistance;
 
                 const label = formatLabel(
-                    round(i / splitNumber * (maxVal - minVal) + minVal),
+                    round(i / splitNumber * (maxVal - minVal) + minVal, DEFAULT_PRECISION_FOR_ROUNDING_ERROR),
                     labelModel.get('formatter')
                 );
                 const autoColor = getColor(i / splitNumber);

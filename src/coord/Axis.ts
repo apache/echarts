@@ -28,12 +28,12 @@ import {
     createAxisLabelsComputingContext,
 } from './axisTickLabelBuilder';
 import Scale, { ScaleGetTicksOpt } from '../scale/Scale';
-import { DimensionName, NullUndefined, ScaleDataValue, ScaleTick } from '../util/types';
+import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
-import { isIntervalOrTimeScale, isOrdinalScale } from '../scale/helper';
+import { isOrdinalScale } from '../scale/helper';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -351,8 +351,8 @@ function fixOnBandTicksCoords(
     function littleThan(a: number, b: number): boolean {
         // Avoid rounding error cause calculated tick coord different with extent.
         // It may cause an extra unnecessary tick added.
-        a = round(a);
-        b = round(b);
+        a = round(a, 10);
+        b = round(b, 10);
         return inverse ? a > b : a < b;
     }
 }

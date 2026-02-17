@@ -36,6 +36,9 @@ const RADIAN_EPSILON = 1e-4;
 // the ES3~ES6 spec (0 <= n <= 20) for backward and cross-platform compatibility.
 const TO_FIXED_SUPPORTED_PRECISION_MAX = 20;
 
+// For rounding error like `2.9999999999999996`, with respect to IEEE754 64bit float.
+export const DEFAULT_PRECISION_FOR_ROUNDING_ERROR = 14;
+
 function _trim(str: string): string {
     return str.replace(/^\s+|\s+$/g, '');
 }
@@ -190,14 +193,14 @@ export function parsePositionSizeOption(option: unknown, percentBase: number, pe
  *              Since: ` quantityExponent(val) = floor(log10(abs(val))) `
  *              Hence: ` precision ~= floor(EXP52B10 - 1 - quantityExponent(val))
  */
-export function round(x: number | string, precision?: number): number;
+export function round(x: number | string, precision: number): number;
 export function round(x: number | string, precision: number, returnStr: false): number;
 export function round(x: number | string, precision: number, returnStr: true): string;
-export function round(x: number | string, precision?: number, returnStr?: boolean): string | number {
-    if (precision == null) {
-        // FIXME: the default precision should not be provided, since there is no universally adaptable
-        //  precision. The caller need to input a precision according to the scenarios.
-        precision = 10;
+export function round(x: number | string, precision: number, returnStr?: boolean): string | number {
+    if (__DEV__) {
+        // NOTICE: We should not provided a default precision, since there is no universally adaptable
+        // precision. The caller need to input a precision according to the scenarios.
+        zrUtil.assert(precision != null);
     }
     if (isNaN(precision)) {
         // precision utils (such as getAcceptableTickPrecision) may return NaN.
@@ -208,6 +211,16 @@ export function round(x: number | string, precision?: number, returnStr?: boolea
     // PENDING: 1.005.toFixed(2) is '1.00' rather than '1.01'
     x = (+x).toFixed(precision);
     return (returnStr ? x : +x);
+}
+
+export function roundLegacy(x: number | string, precision?: number): number;
+export function roundLegacy(x: number | string, precision: number, returnStr: false): number;
+export function roundLegacy(x: number | string, precision: number, returnStr: true): string;
+export function roundLegacy(x: number | string, precision?: number, returnStr?: boolean): string | number {
+    if (precision == null) {
+        precision = 10;
+    }
+    return round(x, precision, returnStr as any);
 }
 
 /**
