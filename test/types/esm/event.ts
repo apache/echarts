@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import * as echarts from '../../';
+import * as echarts from 'echarts';
 
 const dom = document.createElement('div');
 dom.className = 'chart';
@@ -26,12 +26,22 @@ const chart: echarts.EChartsType = echarts.init(dom);
 
 const option: echarts.EChartsOption = {
     series: [{
-        type: 'bar',
-        emphasis: {
-            itemStyle: {
-                color: 'red'
-            }
-        }
+        type: 'bar'
     }]
 };
 chart.setOption(option);
+
+chart.on('click', function (params) {
+    console.log(params.name);
+    this.off('click');
+});
+
+chart.on('rendered', function (params) {
+    console.log(params.elapsedTime);
+    this.off('rendered');
+});
+
+chart.getZr().on('click', function (params) {
+    console.log(params.offsetX);
+    this.off('click');
+});

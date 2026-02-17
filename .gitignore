@@ -171,6 +171,9 @@ node_modules
 
 test/data/map/tool
 test/data/map/raw
+
+/test/types/package-lock.json
+
 theme/thumb
 pre-publish-tmp
 todo

@@ -18,6 +18,8 @@
 */
 
 // This file is for providing types when import whole module.
+// components/charts/renderers/... do not need to be exported here,
+// since this is only used for the standalone export.
 
 export * from './core';
 export * from './option';

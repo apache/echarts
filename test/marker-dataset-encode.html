@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <!-- <script src="ut/lib/canteen.js"></script> -->
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <div id="main0"></div>
+        <div id="main1"></div>
+
+        <script>
+        require([
+            'echarts',
+        ], async function (echarts) {
+            var option;
+
+            const upColor = '#ec0000';
+			const upBorderColor = '#8A0000';
+			const downColor = '#00da3c';
+			const downBorderColor = '#008F28';
+			const dataCount = 1000;
+			const data = generateOHLC(dataCount);
+			option = {
+			  dataset: {
+				source: data
+			  },
+			  title: {
+				text: 'Data Amount: ' + echarts.format.addCommas(dataCount)
+			  },
+			  xAxis: [
+				{
+				  type: 'time',
+				  boundaryGap: false,
+				  // inverse: true,
+				  axisLine: { onZero: false },
+				  splitLine: { show: false },
+				  min: 'dataMin',
+				  max: 'dataMax'
+				},
+				{
+				}
+			  ],
+			  yAxis: [
+				{
+				  scale: true,
+				  splitArea: {
+					show: true
+				  }
+				}
+			  ],
+			  dataZoom: [
+				{
+				  type: 'inside',
+				  start: 0,
+				  end: 100
+				}
+			  ],
+
+			  series: [
+				{
+				   "name": "Candles",
+				  type: 'candlestick',
+				  encode: {
+					x: 6,
+					y: [1, 4, 3, 2]
+				  },
+				  markLine: {
+					data: [
+					  [
+						{
+						  name: 'marker line',
+						  xAxis: '2011-01-01T10:50:00Z',
+						  yAxis: data[300][1],
+						  label: {
+							position: 'start'
+						  }
+						},
+						{
+						  xAxis: '2011-01-01T11:55:00Z',
+						  yAxis: data[700][1]
+						}
+					  ]
+					]
+				  },
+				  markPoint: {
+					data: [
+						{
+							value: 'markerPoint',
+							yAxis: data[100][1],
+							xAxis: data[100][6],
+						}, 
+					],
+				  },
+				  markArea: {
+					data: [
+						[
+							{
+								name: '平均值到最大值',
+								type: 'average'
+							},
+							{
+								type: 'max'
+							}
+						],
+					],
+				  }
+				}
+			  ]
+			};
+			function generateOHLC(count) {
+			  let data = [];
+			  let xValue = +new Date(2011, 0, 1);
+			  let minute = 60 * 1000;
+			  let baseValue = Math.random() * 12000;
+			  let boxVals = new Array(4);
+			  let dayRange = 12;
+			  for (let i = 0; i < count; i++) {
+				baseValue = baseValue + Math.random() * 20 - 10;
+				for (let j = 0; j < 4; j++) {
+				  boxVals[j] = (Math.random() - 0.5) * dayRange + baseValue;
+				}
+				boxVals.sort();
+				let openIdx = Math.round(Math.random() * 3);
+				let closeIdx = Math.round(Math.random() * 2);
+				if (closeIdx === openIdx) {
+				  closeIdx++;
+				}
+				let volumn = boxVals[3] * (1000 + Math.random() * 500);
+				// ['open', 'close', 'lowest', 'highest', 'volumn']
+				// [1, 4, 3, 2]
+				data[i] = [
+				  0,
+				  +boxVals[openIdx].toFixed(2),
+				  +boxVals[3].toFixed(2),
+				  +boxVals[0].toFixed(2),
+				  +boxVals[closeIdx].toFixed(2),
+				  +volumn.toFixed(0),
+				  echarts.format.formatTime('yyyy-MM-ddThh:mm:ssZ', (xValue += minute)),
+				  getSign(data, i, +boxVals[openIdx], +boxVals[closeIdx], 4) // sign
+				];
+			  }
+			  return data;
+			  function getSign(data, dataIndex, openVal, closeVal, closeDimIdx) {
+				var sign;
+				if (openVal > closeVal) {
+				  sign = -1;
+				} else if (openVal < closeVal) {
+				  sign = 1;
+				} else {
+				  sign =
+					dataIndex > 0
+					  ? // If close === open, compare with close of last record
+						data[dataIndex - 1][closeDimIdx] <= closeVal
+						? 1
+						: -1
+					  : // No record of previous, set to be positive
+						1;
+				}
+				return sign;
+			  }
+			};
+
+            var chart = testHelper.create(echarts, 'main0', {
+                title: [
+                    'MarkLine should be displayed'
+                ],
+                option: option
+            });
+        });
+        </script>
+
+        <script>
+            require([
+                'echarts',
+            ], async function (echarts) {
+                var option = {
+				  dataset: {
+					source: [
+					  ['score', 'amount', 'product'],
+					  [89.3, 58212, 'Matcha Latte'],
+					  [57.1, 78254, 'Milk Tea'],
+					  [74.4, 41032, 'Cheese Cocoa'],
+					  [50.1, 12755, 'Cheese Brownie'],
+					  [89.7, 20145, 'Matcha Cocoa'],
+					  [68.1, 79146, 'Tea'],
+					  [19.6, 91852, 'Orange Juice'],
+					  [10.6, 101852, 'Lemon Juice'],
+					  [32.7, 20112, 'Walnut Brownie']
+					]
+				  },
+				  xAxis: { type: 'category' },
+				  yAxis: {
+					type: 'value'
+				  },
+				  series: [
+					{
+					  type: 'bar',
+					  encode: {
+						x: 'product',
+						y: 'amount'
+					  },
+					  markLine: {
+						data: [
+						  {
+							name: '平均线',
+							type: 'average'
+						  }
+						]
+					  },
+					  markPoint: {
+						data: [
+							{
+								value: '固定 x 像素位置',
+								yAxis: 80000,
+								x: '30%',
+							}, 
+						],
+					  },
+					  markArea: {
+						data: [
+							[
+								{
+									name: '平均值到最大值',
+									type: 'average'
+								},
+								{
+									type: 'max'
+								}
+							],
+							[
+								{
+									name: '10000~20000',
+									yAxis: 10000
+								},
+								{
+									yAxis: 20000
+								}
+							]
+						],
+					  }
+					}
+				  ]
+				};
+
+                var chart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Marker line/point/area should be displayed'
+                    ],
+                    option: option
+                });
+            });
+        </script>
+
+        
+    </body>
+</html>

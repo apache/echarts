@@ -130,10 +130,8 @@ export function createAxisLabels(axis: Axis, ctx: AxisLabelsComputingContext): {
         const tickNumbers = tickValuesToNumbers(axis, custom);
         const ticks = zrUtil.filter(tickNumbers, val => val >= extent[0] && val <= extent[1]);
         return {
-            labels: zrUtil.map(ticks, numval => {
+            labels: zrUtil.map(ticks, (numval, index) => {
                 const tick = {value: numval};
-                const index = ticks.indexOf(numval);
-
                 return {
                     formattedLabel: labelFormatter(tick, index),
                     rawLabel: axis.scale.getLabel(tick),

@@ -17,4 +17,6 @@
 * under the License.
 */
 
-export * from './types/dist/components';
+// A pseudo `.js` to redirect to `.d.ts`.
+export * from './types/dist/components.js';
+// See section "TypeScript entries" in `echarts/package.README.md` for more details.

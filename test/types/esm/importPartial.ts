@@ -17,33 +17,33 @@
 * under the License.
 */
 
-import {init, use, ComposeOption} from '../../core';
+import {init, use, ComposeOption} from 'echarts/core';
 import {
     BarChart,
     BarSeriesOption,
     LineChart,
     LineSeriesOption
-} from '../../charts';
+} from 'echarts/charts';
 import {
     GridComponent,
     GridComponentOption,
-
     DataZoomComponent,
     DataZoomComponentOption,
-} from '../../components';
+} from 'echarts/components';
 import {
     CanvasRenderer
-} from '../../renderers';
+} from 'echarts/renderers';
 
 use([BarChart, LineChart, GridComponent, DataZoomComponent, CanvasRenderer]);
 
 type Option = ComposeOption<
-    GridComponentOption | DataZoomComponentOption
-    | BarSeriesOption | LineSeriesOption
+    GridComponentOption
+    | DataZoomComponentOption
+    | BarSeriesOption
+    | LineSeriesOption
 >;
 
-const option: Option= {
-    // xAxis and yAxis should been add as dependencies
+const option: Option = {
     xAxis: {
         min: 0,
         max: 10

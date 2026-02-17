@@ -378,32 +378,43 @@ async function readFilePaths({patterns, cwd}) {
 async function bundleDTS() {
 
     const outDir = nodePath.resolve(__dirname, '../types/dist');
-    const commonConfig = {
-        onwarn(warning, rollupWarn) {
-            // Not warn circular dependency
-            if (warning.code !== 'CIRCULAR_DEPENDENCY') {
-                rollupWarn(warning);
-            }
-        },
-        plugins: [
-            dts({
-                respectExternal: true
-            })
-//             {
-//                 generateBundle(options, bundle) {
-//                     for (let chunk of Object.values(bundle)) {
-//                         chunk.code = `
-// type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
-// ${chunk.code}`
-//                     }
-//                 }
-//             }
-        ]
-    };
+
+    function createCommonConfig(opt) {
+        return {
+            onwarn(warning, rollupWarn) {
+                // Not warn circular dependency
+                if (warning.code !== 'CIRCULAR_DEPENDENCY') {
+                    rollupWarn(warning);
+                }
+            },
+            plugins: [
+                dts({
+                    respectExternal: true,
+                    // - `package.json` `{"type": "module"}` requires explicit file extensions in
+                    //  imports; otherwise `tsc` reports error TS(2834).
+                    // - When importing a `.d.ts`, a proper solution can be
+                    //  `import {xxx} from "./yyy.js"` instead of `from "./yyy.d.ts"`; otherwise
+                    //  `tsc` reports error TS(2846).
+                    // Use `explicitFileExtension: "js"` to use `.js` as the extension of a import paths.
+                    explicitFileExtension: 'js',
+                    umdExportName: opt.umdExportName,
+                })
+    //             {
+    //                 generateBundle(options, bundle) {
+    //                     for (let chunk of Object.values(bundle)) {
+    //                         chunk.code = `
+    // type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+    // ${chunk.code}`
+    //                     }
+    //                 }
+    //             }
+            ]
+        };
+    }
 
     // Bundle chunks.
     const parts = [
-        'core', 'charts', 'components', 'renderers', 'option', 'features'
+        'all', 'core', 'charts', 'components', 'renderers', 'option', 'features'
     ];
     const inputs = {};
     parts.forEach(partName => {
@@ -412,26 +423,38 @@ async function bundleDTS() {
 
     const bundle = await rollup.rollup({
         input: inputs,
-        ...commonConfig
+        ...createCommonConfig({})
     });
-    let idx = 1;
     await bundle.write({
         dir: outDir,
         minifyInternalExports: false,
         manualChunks: (id) => {
-            // Only create one chunk.
+            // Only create one chunk. All of the public entries should import from 'shared.d.ts';
+            // otherwise TS error 2442 (Types have separate declarations of a private property)
+            // may occur.
             return 'shared';
         },
         chunkFileNames: 'shared.d.ts'
     });
 
-    // Bundle all in one
-    const bundleAllInOne = await rollup.rollup({
+    // Bundle a single, self-contained ESM `echarts/types/dist/echarts.d.ts` with no imports,
+    // for online type checkers (e.g., echarts-examples) usage.
+    const bundleStandaloneESM = await rollup.rollup({
         input: nodePath.resolve(__dirname, `../types/src/export/all.d.ts`),
-        ...commonConfig
+        ...createCommonConfig({})
     });
-    await bundleAllInOne.write({
+    await bundleStandaloneESM.write({
         file: nodePath.resolve(outDir, 'echarts.d.ts')
+    });
+
+    // Bundle a UMD `echarts/types/dist/echarts.d.cts`.
+    // See section "TypeScript entries" in `echarts/package.README.md` for more details.
+    const bundleStandaloneCJS = await rollup.rollup({
+        input: nodePath.resolve(__dirname, `../types/src/export/all.d.ts`),
+        ...createCommonConfig({umdExportName: 'echarts'})
+    });
+    await bundleStandaloneCJS.write({
+        file: nodePath.resolve(outDir, 'echarts.d.cts')
     });
 }
 
@@ -451,8 +474,9 @@ function generateEntries() {
             fs.writeFileSync(nodePath.join(__dirname, `../${entryPath}.js`), jsCode, 'utf-8');
         }
 
-        // Make the d.ts in the same dir as .js, so that the can be found by tsc.
-        // package.json "types" in "exports" does not always seam to work.
+        // Create xxx.d.ts in the same dir with xxx.js, so that they can be found by `tsc`.
+        // This way is more reliable than using "types" field in `package.json` "exports"
+        // considering older versions of `tsc`.
         const dtsCode = fs.readFileSync(nodePath.join(__dirname, `/template/${entryPath}.d.ts`), 'utf-8');
         fs.writeFileSync(nodePath.join(__dirname, `../${entryPath}.d.ts`), dtsCode, 'utf-8');
     });

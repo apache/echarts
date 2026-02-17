@@ -317,22 +317,18 @@ class SeriesData<
                 invertedIndicesMap[dimensionName] = [];
             }
 
-            let dimIdx = i;
-            if (zrUtil.isNumber(dimensionInfo.storeDimIndex)) {
-                dimIdx = dimensionInfo.storeDimIndex;
-            }
-            if (otherDims.itemName === 0) {
-                this._nameDimIdx = dimIdx;
-            }
-            if (otherDims.itemId === 0) {
-                this._idDimIdx = dimIdx;
-            }
-
             if (__DEV__) {
                 zrUtil.assert(assignStoreDimIdx || dimensionInfo.storeDimIndex >= 0);
             }
             if (assignStoreDimIdx) {
                 dimensionInfo.storeDimIndex = i;
+            }
+
+            if (otherDims.itemName === 0) {
+                this._nameDimIdx = dimensionInfo.storeDimIndex;
+            }
+            if (otherDims.itemId === 0) {
+                this._idDimIdx = dimensionInfo.storeDimIndex;
             }
         }
 
