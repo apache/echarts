@@ -25,11 +25,11 @@ import {
 import type IntervalScale from './Interval';
 import type LogScale from './Log';
 import type Scale from './Scale';
-import { bind } from 'zrender/src/core/util';
-import type { ScaleBreakContext } from './break';
 import type TimeScale from './Time';
 import { NullUndefined } from '../util/types';
 import type OrdinalScale from './Ordinal';
+import type { ScaleExtentFixMinMax } from '../coord/scaleRawExtentInfo';
+import { isValidNumberForExtent } from '../util/model';
 
 type intervalScaleNiceTicksResult = {
     interval: number,
@@ -59,6 +59,10 @@ export type IntervalScaleGetLabelOpt = {
 
 export function isIntervalOrLogScale(scale: Scale): scale is (LogScale | IntervalScale) {
     return isIntervalScale(scale) || isLogScale(scale);
+}
+
+export function isIntervalOrTimeScale(scale: Scale): scale is (IntervalScale | TimeScale) {
+    return isIntervalScale(scale) || isTimeScale(scale);
 }
 
 export function isIntervalScale(scale: Scale): scale is IntervalScale {
@@ -143,44 +147,18 @@ export function getIntervalPrecision(niceInterval: number): number {
     return getPrecision(niceInterval) + 2;
 }
 
-export function contain(val: number, extent: number[]): boolean {
-    return val >= extent[0] && val <= extent[1];
-}
-
-export class ScaleCalculator {
-
-    normalize: (val: number, extent: [number, number]) => number = normalize;
-    scale: (val: number, extent: [number, number]) => number = scale;
-
-    updateMethods(brkCtx: ScaleBreakContext) {
-        if (brkCtx.hasBreaks()) {
-            this.normalize = bind(brkCtx.normalize, brkCtx);
-            this.scale = bind(brkCtx.scale, brkCtx);
-        }
-        else {
-            this.normalize = normalize;
-            this.scale = scale;
-        }
-    }
-}
-
-function normalize(
-    val: number,
-    extent: [number, number],
-    // Don't use optional arguments for performance consideration here.
-): number {
-    if (extent[1] === extent[0]) {
-        return 0.5;
-    }
-    return (val - extent[0]) / (extent[1] - extent[0]);
-}
-
-function scale(
-    val: number,
-    extent: [number, number],
-): number {
-    return val * (extent[1] - extent[0]) + extent[0];
-}
+/**
+ * Lookup table to avoid rounding error - if the value before transformed is in `lookup.from[i]`,
+ * return `lookup.to[i]` directly without transform.
+ * Rounding errors typically arise in logarithm transform, which can cause the tick to be displayed
+ * like `5.999999999999999` when it is expected to be `6`.
+ */
+export type ValueTransformLookupOpt = {
+    lookup?: {
+        from: number[];
+        to: number[];
+    } | NullUndefined;
+};
 
 /**
  * NOTE:
@@ -207,7 +185,7 @@ export function logScaleLogTick(
  *  - `Math.pow(10, integer)` itself has no rounding error. But,
  *  - If `linearTickVal` is generated internally by `calcNiceTicks`, it may be still "not nice" (not an integer)
  *    when it is `extent[i]`.
- *  - If `linearTickVal` is generated outside (e.g., by `alignScaleTicks`) and set by `setExtent`,
+ *  - If `linearTickVal` is generated outside (e.g., by `scaleCalcAlign`) and set by `setExtent`,
  *    `logScaleLogTick` may already have introduced rounding errors even for "nice" values.
  * But invertible is required when the original `extent[i]` need to be respected, or "nice" ticks need to be
  * displayed instead of something like `5.999999999999999`, which is addressed in this function.
@@ -220,28 +198,27 @@ export function logScalePowTick(
     // `tickVal` should be in the linear space.
     linearTickVal: number,
     base: number,
-    linearExtent: number[] | NullUndefined,
-    powExtent: number[] | NullUndefined,
+    opt: ValueTransformLookupOpt | NullUndefined
 ): number {
-    const hasExt = linearExtent && powExtent;
-    return (hasExt && linearTickVal === linearExtent[0]) ? powExtent[0]
-        : (hasExt && linearTickVal === linearExtent[1]) ? powExtent[1]
-        : mathPow(base, linearTickVal);
+    const lookup = opt && opt.lookup;
+    if (lookup) {
+        for (let i = 0; i < lookup.from.length; i++) {
+            if (linearTickVal === lookup.from[i]) {
+                return lookup.to[i];
+            }
+        }
+    }
+    return mathPow(base, linearTickVal);
 }
 
 /**
- * A valid extent is:
- *  - No non-finite number.
- *  - `extent[0] < extent[1]`.
- *
- * [NOTICE]: The input `rawExtent` can only be:
- *  - All non-finite numbers or `NaN`; or
- *  - `[Infinity, -Infinity]` (A typical initial extent with no data.)
- *  (Improve it when needed.)
+ * For `IntervalScale`, convert `rawExtent` to:
+ *  - Be no non-finite number.
+ *  - Be `extent[0] < extent[1]`; no equal, which brings convenience to "nice" calculation.
  */
 export function intervalScaleEnsureValidExtent(
     rawExtent: number[],
-    fixMinMax: boolean[],
+    fixMinMax: ScaleExtentFixMinMax,
 ): number[] {
     const extent = rawExtent.slice();
     // If extent start and end are same, expand them
@@ -267,13 +244,12 @@ export function intervalScaleEnsureValidExtent(
             extent[1] = 1;
         }
     }
-    const span = extent[1] - extent[0];
-    // If there are no series data, extent may be `[Infinity, -Infinity]` here.
-    if (!isFinite(span)) {
+    // For example, if there are no series data, extent may be `[Infinity, -Infinity]` here.
+    if (!isValidNumberForExtent(extent[0]) || !isValidNumberForExtent(extent[1])) {
         extent[0] = 0;
         extent[1] = 1;
     }
-    else if (span < 0) {
+    if (extent[1] < extent[0]) {
         extent.reverse();
     }
 

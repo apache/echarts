@@ -1802,6 +1802,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     return;
                 }
 
+                modelUtil.resetCachePerECUpdate(ecModel);
                 ecModel.setUpdatePayload(payload);
 
                 scheduler.restoreData(ecModel, payload);

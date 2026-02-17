@@ -52,7 +52,7 @@ import {
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
-import GridModel from '../coord/cartesian/GridModel';
+import type GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
 import { error, warn } from './log';
 import type Model from '../model/Model';
@@ -1178,12 +1178,72 @@ export function initExtentForUnion(): [number, number] {
 }
 
 /**
- * Suppose `extent` is initialized as `initExtentForUnion()`.
+ * NOTICE:
+ *  - The input `val` must be a number - type checking is not performed.
+ *  - `extent` should be initialized as `initExtentForUnion()`.
  */
-export function unionExtent(extent: number[], val: number | NullUndefined): void {
-    // Considered that number could be NaN and should not write into the extent.
-    val < extent[0] && (extent[0] = val);
-    val > extent[1] && (extent[1] = val);
+export function unionExtentFromNumber(extent: number[], val: number | NullUndefined): void {
+    if (isValidNumberForExtent(val)) {
+        val < extent[0] && (extent[0] = val);
+        val > extent[1] && (extent[1] = val);
+    }
+}
+
+/**
+ * NOTICE:
+ *  - The input `val` must be a number - type checking is not performed.
+ *  - `extent` should be initialized as `initExtentForUnion()`.
+ */
+export function unionExtentStartFromNumber(extent: number[], val: number | NullUndefined): void {
+    if (isValidNumberForExtent(val) && val < extent[0]) {
+        extent[0] = val;
+    }
+}
+
+/**
+ * NOTICE:
+ *  - The input `val` must be a number - type checking is not performed.
+ *  - `extent` should be initialized as `initExtentForUnion()`.
+ */
+export function unionExtentEndFromNumber(extent: number[], val: number | NullUndefined): void {
+    if (isValidNumberForExtent(val) && val > extent[1]) {
+        extent[1] = val;
+    }
+}
+
+/**
+ * NOTICE:
+ *  - `extent` should be initialized as `initExtentForUnion()`.
+ */
+export function unionExtentFromExtent(tarExtent: number[], srcExtent: number[]): void {
+    // Accept both or neither.
+    if (isValidBoundsForExtent(srcExtent[0], srcExtent[1])) {
+        srcExtent[0] < tarExtent[0] && (tarExtent[0] = srcExtent[0]);
+        srcExtent[1] > tarExtent[1] && (tarExtent[1] = srcExtent[1]);
+    }
+}
+
+/**
+ * PENDING: `Infinity` from user data is not necessarily meaningless, but visualizing it requires
+ * special handling and it will not be supported until required. So we simply ignore it here.
+ */
+export function isValidNumberForExtent(val: number | NullUndefined): boolean {
+    // Considered that number could be `NaN` and `Infinity` and should not write into the extent.
+    // Note that `Infinity` is the initialized value from `initExtentForUnion` and may be inputted.
+    return val != null && isFinite(val);
+}
+
+export function isValidBoundsForExtent(start: number, end: number): boolean {
+    return isValidNumberForExtent(start) && isValidNumberForExtent(end) && start <= end;
+}
+
+/**
+ * `extent` should be initialized by `initExtentForUnion()`, and unioned by `unionExtent()`.
+ */
+export function extentHasValue(extent: number[]): boolean {
+    // Also considered extent may have `NaN` and `Infinity`.
+    const span = extent[1] - extent[0];
+    return isFinite(span) && span >= 0;
 }
 
 /**
@@ -1206,3 +1266,25 @@ export function makeCallOnlyOnce<Host extends object>() {
     };
 }
 let onceUniqueIndex = getRandomIdBase();
+
+
+const ecModelCacheInner = makeInner<{
+    perECUpdate: GlobalModelCachePerECUpdate;
+}, GlobalModel>();
+
+/**
+ * Reset on each time `updateMethods.update` (i.e., full update) is called.
+ * It is mainly used for cache.
+ */
+export type GlobalModelCachePerECUpdate = {};
+
+/**
+ * CAVEAT: Can only be called by `echarts.ts`
+ */
+export function resetCachePerECUpdate(ecModel: GlobalModel): void {
+    ecModelCacheInner(ecModel).perECUpdate = {};
+}
+
+export function getCachePerECUpdate(ecModel: GlobalModel): GlobalModelCachePerECUpdate {
+    return ecModelCacheInner(ecModel).perECUpdate;
+}

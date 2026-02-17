@@ -342,7 +342,7 @@ function makeAutoCategoryInterval(axis: Axis, ctx: AxisLabelsComputingContext): 
 
 /**
  * Calculate interval for category axis ticks and labels.
- * Use a stretegy to try to avoid overlapping.
+ * Use a strategy to try to avoid overlapping.
  * To get precise result, at least one of `getRotate` and `isHorizontal`
  * should be implemented in axis.
  */

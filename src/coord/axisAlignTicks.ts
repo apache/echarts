@@ -22,24 +22,42 @@ import {
     mathAbs, mathCeil, mathFloor, mathMax, mathRound, nice, NICE_MODE_MIN, quantity, round
 } from '../util/number';
 import IntervalScale from '../scale/Interval';
-import { adoptScaleExtentOptionAndPrepare, updateIntervalOrLogScaleForNiceOrAligned } from './axisHelper';
-import { AxisBaseModel } from './AxisBaseModel';
 import LogScale from '../scale/Log';
+import type Scale from '../scale/Scale';
+import { updateIntervalOrLogScaleForNiceOrAligned } from './axisHelper';
 import { warn } from '../util/log';
 import {
     increaseInterval, isLogScale, getIntervalPrecision, intervalScaleEnsureValidExtent,
-    logScaleLogTick,
 } from '../scale/helper';
 import { assert } from 'zrender/src/core/util';
+import { adoptScaleRawExtentInfoAndPrepare } from './scaleRawExtentInfo';
+import { hasBreaks } from '../scale/break';
+import type Axis from './Axis';
 
 
-export function alignScaleTicks(
-    targetScale: IntervalScale | LogScale,
-    targetAxisModel: AxisBaseModel,
+/**
+ * NOTE: See the summary of the process of extent determination in the comment of `scaleMapper.setExtent`.
+ */
+export function scaleCalcAlign(
+    targetAxis: Axis,
     alignToScale: IntervalScale | LogScale
 ): void {
+
+    const targetScale = targetAxis.scale as (IntervalScale | LogScale) & Scale;
+    const targetAxisModel = targetAxis.model;
+    if (__DEV__) {
+        assert(targetScale && targetAxisModel
+            && (targetScale instanceof IntervalScale || targetScale instanceof LogScale)
+            && (alignToScale instanceof IntervalScale || alignToScale instanceof LogScale)
+        );
+    }
+    const targetExtentInfo = adoptScaleRawExtentInfoAndPrepare(
+        targetScale, targetAxisModel, targetAxisModel.ecModel, targetAxis, null
+    );
+
     const isTargetLogScale = isLogScale(targetScale);
-    const alignToScaleLinear = isLogScale(alignToScale) ? alignToScale.linearStub : alignToScale;
+    const alignToScaleLinear = isLogScale(alignToScale) ? alignToScale.intervalStub : alignToScale;
+    const targetIntervalStub = isTargetLogScale ? targetScale.intervalStub : targetScale;
 
     const targetLogScaleBase = (targetScale as LogScale).base;
     const alignToTicks = alignToScaleLinear.getTicks();
@@ -48,7 +66,7 @@ export function alignScaleTicks(
 
     if (__DEV__) {
         // This is guards for future changes of `Interval#getTicks`.
-        assert(!alignToScale.hasBreaks() && !targetScale.hasBreaks());
+        assert(!hasBreaks(alignToScale) && !hasBreaks(targetScale));
         assert(alignToSegCount > 0); // Ticks length >= 2 even on a blank scale.
         assert(alignToExpNiceTicks.length === alignToTicks.length);
         assert(alignToTicks[0].value <= alignToTicks[alignToSegCount].value);
@@ -123,22 +141,21 @@ export function alignScaleTicks(
         assert(alignToNiceSegCount >= 1);
     }
 
-    const targetExtentInfo = adoptScaleExtentOptionAndPrepare(targetScale, targetAxisModel);
-
     // NOTE:
     //  Consider a case:
-    //      dataZoom controls all Y axes;
-    //      dataZoom end is 90% (maxFixed: true, maxDetermined: true);
-    //      but dataZoom start is 0% (minFixed: false, minDetermined: false);
+    //    dataZoom controls all Y axes;
+    //    dataZoom end is 90% (maxFixed: true, dataZoomFixMinMax[0]: true);
+    //    but dataZoom start is 0% (minFixed: false, dataZoomFixMinMax[1]: false);
     //  In this case,
-    //      `Interval#calcNiceTicks` only uses `targetExtentInfo.max` as the upper bound but may expand the
+    //    - `Interval#calcNiceTicks` only uses `targetExtentInfo.max` as the upper bound, but expand the
     //      lower bound to a "nice" tick and can get an acceptable result.
-    //      But `alignScaleTicks` has to use both `targetExtentInfo.min/max` as the bounds without any expansion,
-    //      otherwise the lower bound may become negative unexpectedly for all positive series data.
-    const hasMinMaxDetermined = targetExtentInfo.minDetermined || targetExtentInfo.maxDetermined;
+    //    - `scaleCalcAlign` has to use both `targetExtentInfo.min/max` as the bounds without any expansion,
+    //      otherwise the lower bound may become negative unexpectedly, especially for all positive series data.
+    const dataZoomFixMinMax = targetExtentInfo.zoomFixMM;
+    const hasDataZoomFixMinMax = dataZoomFixMinMax[0] || dataZoomFixMinMax[1];
     const targetMinMaxFixed = [
-        targetExtentInfo.minFixed || hasMinMaxDetermined,
-        targetExtentInfo.maxFixed || hasMinMaxDetermined
+        targetExtentInfo.fixMM[0] || hasDataZoomFixMinMax,
+        targetExtentInfo.fixMM[1] || hasDataZoomFixMinMax
     ];
     // MEMO: When only `xxxAxis.min` or `xxxAxis.max` is fixed,
     //  - Even a "nice" interval can be calculated, ticks accumulated based on `min`/`max` can be "nice" only if
@@ -155,15 +172,9 @@ export function alignScaleTicks(
     //      If setting `yAxis.max: 12000, yAxis.min: 0`, ticks may be like:
     //          `12000, 9000, 6000, 3000, 0` ("nice")
 
-    let targetRawExtent = [targetExtentInfo.min, targetExtentInfo.max];
-    const targetRawPowExtent = targetRawExtent;
-    if (isTargetLogScale) {
-        targetRawExtent = [
-            logScaleLogTick(targetRawExtent[0], targetLogScaleBase),
-            logScaleLogTick(targetRawExtent[1], targetLogScaleBase)
-        ];
-    }
-    const targetExtent = intervalScaleEnsureValidExtent(targetRawExtent, targetMinMaxFixed);
+    const targetOldOutermostExtent = (targetScale as Scale).getExtent();
+    const targetOldIntervalExtent = targetIntervalStub.getExtent();
+    const targetExtent = intervalScaleEnsureValidExtent(targetOldIntervalExtent, targetMinMaxFixed);
 
     let min: number;
     let max: number;
@@ -190,7 +201,7 @@ export function alignScaleTicks(
         }
         if (__DEV__) {
             if (loopGuard >= LOOP_MAX) {
-                warn('incorrect impl in `alignScaleTicks`.');
+                warn('incorrect impl in `scaleCalcAlign`.');
             }
         }
     }
@@ -222,17 +233,19 @@ export function alignScaleTicks(
         max = targetExtent[1];
         interval = (max - min) / (alignToNiceSegCount + t0 + t1);
         // Typically axis pixel extent is ready here. See `create` in `Grid.ts`.
-        const axisPxExtent = targetAxisModel.axis.getExtent();
+        const axisPxExtent = targetAxis.getExtent();
         // NOTICE: this pxSpan may be not accurate yet due to "outerBounds" logic, but acceptable so far.
         const pxSpan = mathAbs(axisPxExtent[1] - axisPxExtent[0]);
         // We imperically choose `pxDiffAcceptable` as `0.5 / alignToNiceSegCount` for reduce cumulative
         // error, otherwise a discernible misalign (> 1px) may occur.
         // PENDING: We do not find a acceptable precision for LogScale here.
         //  Theoretically it can be addressed but introduce more complexity. Is it necessary?
-        intervalPrecision = getAcceptableTickPrecision(max - min, pxSpan, 0.5 / alignToNiceSegCount);
+        intervalPrecision = getAcceptableTickPrecision([max, min], pxSpan, 0.5 / alignToNiceSegCount);
         updateMinNiceFromMinT0Interval();
         updateMaxNiceFromMaxT1Interval();
-        interval = round(interval, intervalPrecision);
+        if (isFinite(intervalPrecision)) {
+            interval = round(interval, intervalPrecision);
+        }
     }
     else {
         // Make a minimal enough `interval`, increase it later.
@@ -318,9 +331,9 @@ export function alignScaleTicks(
     updateIntervalOrLogScaleForNiceOrAligned(
         targetScale,
         targetMinMaxFixed,
-        targetRawExtent,
+        targetOldIntervalExtent,
         [min, max],
-        targetRawPowExtent,
+        targetOldOutermostExtent,
         {
             // NOTE: Even in LogScale, `interval` should not be in log space.
             interval,
@@ -333,4 +346,8 @@ export function alignScaleTicks(
             niceExtent: [minNice, maxNice],
         },
     );
+
+    if (__DEV__) {
+        (targetScale as Scale).freeze();
+    }
 }

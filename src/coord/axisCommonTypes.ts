@@ -29,6 +29,7 @@ import {
     LabelCommonOption,
 } from '../util/types';
 import type { PrimaryTimeUnit } from '../util/time';
+import { BaseBarSeriesSubType } from '../layout/barGrid';
 
 
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
@@ -134,13 +135,23 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     }
 }
 
+/**
+ * The gap at both ends of the axis. `[GAP, GAP]`.
+ */
+type NumericAxisBoundaryGapOption = [NumericAxisBoundaryGapOptionItemLoose, NumericAxisBoundaryGapOptionItemLoose];
+// It can be an absolute pixel number (like `35`), or percent (like `'30%'`)
+type NumericAxisBoundaryGapOptionItemValue = number | string | NullUndefined;
+export type NumericAxisBoundaryGapOptionItemLoose =
+    NumericAxisBoundaryGapOptionItemValue | NumericAxisBoundaryGapOptionItem;
+export type NumericAxisBoundaryGapOptionItem = {
+    value?: NumericAxisBoundaryGapOptionItemValue | NullUndefined;
+    // The axis contains the series shapes if possible, instead of overlowing at the edges.
+    containShape?: Partial<Record<BaseBarSeriesSubType, boolean>> | boolean | NullUndefined;
+};
+
 export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
-    /*
-     * The gap at both ends of the axis.
-     * [GAP, GAP], where
-     * `GAP` can be an absolute pixel number (like `35`), or percent (like `'30%'`)
-     */
-    boundaryGap?: [number | string, number | string]
+
+    boundaryGap?: NumericAxisBoundaryGapOption;
 
     /**
      * AxisTick and axisLabel and splitLine are calculated based on splitNumber.
@@ -170,14 +181,12 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     /**
      * Data min value to be included in axis extent calculation.
      * The final min value will be the minimum of this value and the data min.
-     * Only works for value axis.
      */
     dataMin?: ScaleDataValue;
 
     /**
      * Data max value to be included in axis extent calculation.
      * The final max value will be the maximum of this value and the data max.
-     * Only works for value axis.
      */
     dataMax?: ScaleDataValue;
 }
@@ -233,7 +242,7 @@ interface AxisNameTextStyleOption extends LabelCommonOption {
 
 interface AxisLineOption {
     show?: boolean | 'auto',
-    onZero?: boolean,
+    onZero?: boolean | 'auto',
     onZeroAxisIndex?: number,
     // The arrow at both ends the the axis.
     symbol?: string | [string, string],

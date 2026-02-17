@@ -59,6 +59,13 @@ import { PrimaryTimeUnit } from './time';
 export {Dictionary};
 
 export type RendererType = 'canvas' | 'svg';
+/**
+ * NOTICE: For historical reason, echarts and zrender have not enabled TS config
+ * `strictNullChecks` yet. Therefore, a explicitly declared `NullUndefined` can
+ * indicate a variable can be `null` or `undefined` without more investigation,
+ * but a variable without `NullUndefined` may also be `null` or `undefined`,
+ * which has to be determined by the implementation.
+ */
 export type NullUndefined = null | undefined;
 
 export type LayoutOrient = 'vertical' | 'horizontal';
@@ -718,6 +725,8 @@ export type ECUnitOption = {
     hoverLayerThreshold?: number
 
     legacyViewCoordSysCenterBase?: boolean
+    // A temporary guard in case that some unexpected effect occurs after axis impl refactoring.
+    legacyMinMaxDontInverseAxis?: boolean
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 

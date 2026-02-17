@@ -29,12 +29,15 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { ScaleDataValue } from '../../util/types';
 import { ParsedModelFinder } from '../../util/model';
 import { map, each, isString, isNumber } from 'zrender/src/core/util';
-import { alignScaleTicks } from '../axisAlignTicks';
+import { scaleCalcAlign } from '../axisAlignTicks';
 import { createBoxLayoutReference } from '../../util/layout';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild, axisExtentInfoRequireBuild
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoReallyCreate, scaleRawExtentInfoRequireCreate
 } from '../scaleRawExtentInfo';
+import { ensureValidSplitNumber } from '../../scale/helper';
 
+
+export const RADAR_DEFAULT_SPLIT_NUMBER = 5;
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {
 
@@ -159,18 +162,14 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         const indicatorAxes = this._indicatorAxes;
         const radarModel = this._model;
 
-        const splitNumber = radarModel.get('splitNumber');
+        const splitNumber = ensureValidSplitNumber(radarModel.get('splitNumber'), RADAR_DEFAULT_SPLIT_NUMBER);
         const dummyScale = new IntervalScale();
         dummyScale.setExtent(0, splitNumber);
         dummyScale.setConfig({interval: 1});
         // Force all the axis fixing the maxSplitNumber.
         each(indicatorAxes, function (indicatorAxis) {
-            axisExtentInfoFinalBuild(ecModel, indicatorAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
-            alignScaleTicks(
-                indicatorAxis.scale as IntervalScale,
-                indicatorAxis.model,
-                dummyScale
-            );
+            scaleRawExtentInfoReallyCreate(ecModel, indicatorAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleCalcAlign(indicatorAxis, dummyScale);
         });
     }
 
@@ -205,7 +204,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
                 const radar = radarSeries.coordinateSystem = radarList[radarSeries.get('radarIndex') || 0];
                 if (radar) {
                     each(radar.getIndicatorAxes(), function (indicatorAxis) {
-                        axisExtentInfoRequireBuild(indicatorAxis, radarSeries, null);
+                        scaleRawExtentInfoRequireCreate(indicatorAxis, radarSeries);
                     });
                 }
             }

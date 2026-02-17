@@ -35,7 +35,7 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoReallyCreate
 } from '../scaleRawExtentInfo';
 
 export const singleDimensions = ['single'];
@@ -76,11 +76,12 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
 
         const dim = this.dimension;
 
+        const axisType = axisHelper.determineAxisType(axisModel);
         const axis = new SingleAxis(
             dim,
-            axisHelper.createScaleByModel(axisModel),
+            axisHelper.createScaleByModel(axisModel, axisType, true),
             [0, 0],
-            axisModel.get('type'),
+            axisType,
             axisModel.get('position')
         );
 
@@ -100,7 +101,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      */
     update(ecModel: GlobalModel, api: ExtensionAPI) {
         const axis = this._axis;
-        axisExtentInfoFinalBuild(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+        scaleRawExtentInfoReallyCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
         scaleCalcNice(axis);
     }
 

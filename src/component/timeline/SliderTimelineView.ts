@@ -342,7 +342,7 @@ class SliderTimelineView extends TimelineView {
             axisType = 'value';
         }
 
-        const scale = createScaleByModel(timelineModel, axisType as OptionAxisType);
+        const scale = createScaleByModel(timelineModel, axisType, false);
 
         // Customize scale. The `tickValue` is `dataIndex`.
         scale.getTicks = function () {

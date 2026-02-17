@@ -30,7 +30,7 @@ import { CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
 import { SINGLE_REFERRING } from '../../util/model';
 import { each } from 'zrender/src/core/util';
-import {axisExtentInfoRequireBuild} from '../scaleRawExtentInfo';
+import {scaleRawExtentInfoRequireCreate} from '../scaleRawExtentInfo';
 
 function createParallelCoordSys(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster[] {
     const coordSysList: CoordinateSystemMaster[] = [];
@@ -56,7 +56,7 @@ function createParallelCoordSys(ecModel: GlobalModel, api: ExtensionAPI): Coordi
             const parallel = seriesModel.coordinateSystem = parallelModel.coordinateSystem;
             if (parallel) {
                 each(parallel.dimensions, function (dim) {
-                    axisExtentInfoRequireBuild(parallel.getAxis(dim), seriesModel, null);
+                    scaleRawExtentInfoRequireCreate(parallel.getAxis(dim), seriesModel);
                 });
             }
         }

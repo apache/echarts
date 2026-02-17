@@ -59,7 +59,7 @@ const defaultOption: AxisBaseOption = {
 
     axisLine: {
         show: true,
-        onZero: true,
+        onZero: 'auto',
         onZeroAxisIndex: null,
         lineStyle: {
             color: tokens.color.axisLine,

@@ -23,70 +23,65 @@ import {
     intervalScaleEnsureValidExtent,
     isIntervalScale, isLogScale, isTimeScale,
 } from '../scale/helper';
-import IntervalScale, { IntervalScaleConfigParsed } from '../scale/Interval';
+import IntervalScale, { IntervalScaleConfig } from '../scale/Interval';
 import { mathCeil, mathFloor, mathMax, nice, quantity, round } from '../util/number';
 import type { AxisBaseModel } from './AxisBaseModel';
 import type { AxisScaleType, NumericAxisBaseOptionCommon } from './axisCommonTypes';
 import {
-    adoptScaleExtentOptionAndPrepare, retrieveAxisBreaksOption, updateIntervalOrLogScaleForNiceOrAligned
+    updateIntervalOrLogScaleForNiceOrAligned
 } from './axisHelper';
-import { timeScaleCalcNice } from '../scale/Time';
+import { calcNiceForTimeScale } from '../scale/Time';
 import type LogScale from '../scale/Log';
 import Scale from '../scale/Scale';
+import {
+    adoptScaleExtentKindMapping, adoptScaleRawExtentInfoAndPrepare,
+    ScaleExtentFixMinMax
+} from './scaleRawExtentInfo';
+import { getScaleLinearSpanEffective } from '../scale/scaleMapper';
+import { NullUndefined } from '../util/types';
+import type GlobalModel from '../model/Global';
+import type Axis from './Axis';
 
 
 // ------ START: LinearIntervalScaleStub Nice ------
 
-type LinearIntervalScaleStubCalcNiceTicks = (
-    scale: IntervalScale,
-    opt: Pick<ScaleCalcNiceMethodOpt, 'splitNumber' | 'minInterval' | 'maxInterval'>
-) => {
-    interval: IntervalScaleConfigParsed['interval'];
-    intervalPrecision: IntervalScaleConfigParsed['intervalPrecision'];
-    niceExtent: IntervalScaleConfigParsed['niceExtent'];
-};
-
-function intervalLogScaleCalcNice(
+function calcNiceForIntervalOrLogScale(
     scale: IntervalScale | LogScale,
     opt: ScaleCalcNiceMethodOpt,
 ): void {
     // [CAVEAT]: If updating this impl, need to sync it to `axisAlignTicks.ts`.
 
     const isTargetLogScale = isLogScale(scale);
-    const linearStub = isTargetLogScale ? scale.linearStub : scale;
+    const intervalStub = isTargetLogScale ? scale.intervalStub : scale;
 
     const fixMinMax = opt.fixMinMax || [];
-    const oldPowExtent = isTargetLogScale ? scale.getExtent() : null;
-    const oldLinearExtent = linearStub.getExtent();
+    const oldOutermostExtent = isTargetLogScale ? scale.getExtent() : null;
+    const oldIntervalExtent = intervalStub.getExtent();
 
-    let newLinearExtent = intervalScaleEnsureValidExtent(oldLinearExtent, fixMinMax);
+    let newIntervalExtent = intervalScaleEnsureValidExtent(oldIntervalExtent, fixMinMax);
 
-    linearStub.setExtent(newLinearExtent[0], newLinearExtent[1]);
-    newLinearExtent = linearStub.getExtent();
+    intervalStub.setExtent(newIntervalExtent[0], newIntervalExtent[1]);
+    newIntervalExtent = intervalStub.getExtent();
 
-    let config: ReturnType<LinearIntervalScaleStubCalcNiceTicks>;
-    if (isTargetLogScale) {
-        config = logScaleCalcNiceTicks(linearStub, opt);
-    }
-    else {
-        config = intervalScaleCalcNiceTicks(linearStub, opt);
-    }
+    const config = isTargetLogScale
+        ? logScaleCalcNiceTicks(intervalStub, opt)
+        : intervalScaleCalcNiceTicks(intervalStub, opt);
     const interval = config.interval;
     const intervalPrecision = config.intervalPrecision;
 
     if (!fixMinMax[0]) {
-        newLinearExtent[0] = round(mathFloor(newLinearExtent[0] / interval) * interval, intervalPrecision);
+        newIntervalExtent[0] = round(mathFloor(newIntervalExtent[0] / interval) * interval, intervalPrecision);
     }
     if (!fixMinMax[1]) {
-        newLinearExtent[1] = round(mathCeil(newLinearExtent[1] / interval) * interval, intervalPrecision);
+        newIntervalExtent[1] = round(mathCeil(newIntervalExtent[1] / interval) * interval, intervalPrecision);
     }
 
     updateIntervalOrLogScaleForNiceOrAligned(
         scale,
         fixMinMax,
-        oldLinearExtent,
-        newLinearExtent,
-        oldPowExtent,
+        oldIntervalExtent,
+        newIntervalExtent,
+        oldOutermostExtent,
         config,
     );
 }
@@ -96,13 +91,16 @@ function intervalLogScaleCalcNice(
 
 // ------ START: IntervalScale Nice ------
 
-const intervalScaleCalcNiceTicks: LinearIntervalScaleStubCalcNiceTicks = function (scale, opt) {
+function intervalScaleCalcNiceTicks(
+    scale: IntervalScale,
+    opt: Pick<ScaleCalcNiceMethodOpt, 'splitNumber' | 'minInterval' | 'maxInterval'>
+): IntervalScaleConfig {
     const splitNumber = ensureValidSplitNumber(opt.splitNumber, 5);
-    const extent = scale.getExtent();
-    const span = scale.getBreaksElapsedExtentSpan();
+    // Use the span in the innermost linear space to calculate nice ticks.
+    const span = getScaleLinearSpanEffective(scale);
 
     if (__DEV__) {
-        assert(isFinite(span) && span > 0); // It should be ensured by `intervalScaleEnsureValidExtent`.
+        assert(isFinite(span) && span > 0); // It should have been ensured by `intervalScaleEnsureValidExtent`.
     }
 
     const minInterval = opt.minInterval;
@@ -116,7 +114,8 @@ const intervalScaleCalcNiceTicks: LinearIntervalScaleStubCalcNiceTicks = functio
         interval = maxInterval;
     }
     const intervalPrecision = getIntervalPrecision(interval);
-    // Nice extent inside original extent
+    const extent = scale.getExtent();
+    // By design, the `niceExtent` is inside the original extent
     const niceExtent = [
         round(mathCeil(extent[0] / interval) * interval, intervalPrecision),
         round(mathFloor(extent[1] / interval) * interval, intervalPrecision)
@@ -130,14 +129,18 @@ const intervalScaleCalcNiceTicks: LinearIntervalScaleStubCalcNiceTicks = functio
 
 // ------ START: LogScale Nice ------
 
-const logScaleCalcNiceTicks: LinearIntervalScaleStubCalcNiceTicks = function (
-    linearStub: IntervalScale, opt
-) {
+function logScaleCalcNiceTicks(
+    intervalStub: IntervalScale,
+    opt: Pick<ScaleCalcNiceMethodOpt, 'splitNumber' | 'minInterval' | 'maxInterval'>
+): IntervalScaleConfig {
     // [CAVEAT]: If updating this impl, need to sync it to `axisAlignTicks.ts`.
 
     const splitNumber = ensureValidSplitNumber(opt.splitNumber, 10);
-    const extent = linearStub.getExtent();
-    const span = linearStub.getBreaksElapsedExtentSpan();
+    // Find nice ticks in the "logarithmic space". Notice that "logarithmic space" is a middle space
+    // rather than the innermost linear space when axis breaks exist.
+    const intervalExtent = intervalStub.getExtent();
+    // But use the span in the innermost linear space to calculate nice ticks.
+    const span = getScaleLinearSpanEffective(intervalStub);
 
     if (__DEV__) {
         assert(isFinite(span) && span > 0); // It should be ensured by `intervalScaleEnsureValidExtent`.
@@ -155,9 +158,11 @@ const logScaleCalcNiceTicks: LinearIntervalScaleStubCalcNiceTicks = function (
     }
 
     const intervalPrecision = getIntervalPrecision(interval);
+    // For LogScale, we use a `niceExtent` in the "logarithmic space" rather than
+    // the original "pow space", because it is used in `intervalStub.getTicks()` thereafter.
     const niceExtent = [
-        round(mathCeil(extent[0] / interval) * interval, intervalPrecision),
-        round(mathFloor(extent[1] / interval) * interval, intervalPrecision)
+        round(mathCeil(intervalExtent[0] / interval) * interval, intervalPrecision),
+        round(mathFloor(intervalExtent[1] / interval) * interval, intervalPrecision)
     ] as [number, number];
 
     return {intervalPrecision, interval, niceExtent};
@@ -169,44 +174,49 @@ const logScaleCalcNiceTicks: LinearIntervalScaleStubCalcNiceTicks = function (
 // ------ START: scaleCalcNice Entry ------
 
 export type ScaleCalcNiceMethod = (
-    scale: ScaleForCalcNice,
+    scale: Scale,
     opt: ScaleCalcNiceMethodOpt
 ) => void;
-
-type ScaleForCalcNice = Pick<
-    Scale,
-    'type' | 'setExtent' | 'getExtent' | 'getBreaksElapsedExtentSpan'
->;
 
 type ScaleCalcNiceMethodOpt = {
     splitNumber?: number;
     minInterval?: number;
     maxInterval?: number;
-    // `[fixMin, fixMax]`. If `true`, the original `extent[0]`/`extent[1]`
-    // will not be modified, except for an invalid extent.
-    fixMinMax?: boolean[];
+    fixMinMax?: ScaleExtentFixMinMax;
 };
 
-export function scaleCalcNice(opt: {
+/**
+ * NOTE: See the summary of the process of extent determination in the comment of `scaleMapper.setExtent`.
+ */
+export function scaleCalcNice(
+    axisLike: {
+        scale: Scale,
+        model: AxisBaseModel,
+    },
+): void {
+    const scale = axisLike.scale;
+    const model = axisLike.model as AxisBaseModel<NumericAxisBaseOptionCommon>;
+
+    const axis = model.axis;
+    const ecModel = model.ecModel;
+    if (__DEV__) {
+        assert(axis && ecModel);
+    }
+
+    scaleCalcNice2(scale, model, axis, ecModel, null);
+}
+
+export function scaleCalcNice2(
     scale: Scale,
-    model: AxisBaseModel,
-}): void {
-    const scale = opt.scale;
-    const model = opt.model as AxisBaseModel<NumericAxisBaseOptionCommon>;
-    const extentInfo = adoptScaleExtentOptionAndPrepare(scale, model);
+    model: AxisBaseModel<NumericAxisBaseOptionCommon>,
+    // Some call from external source, such as echarts-gl, may have no `axis` and `ecModel`,
+    // but has `externalDataExtent`.
+    axis: Axis | NullUndefined,
+    ecModel: GlobalModel | NullUndefined,
+    externalDataExtent: number[] | NullUndefined
+): void {
 
-    const isInterval = isIntervalScale(scale);
-    const isIntervalOrTime = isInterval || isTimeScale(scale);
-
-    scale.setBreaksFromOption(retrieveAxisBreaksOption(model));
-    scale.setExtent(extentInfo.min, extentInfo.max);
-
-    scaleCalcNiceDirectly(scale, {
-        splitNumber: model.get('splitNumber'),
-        fixMinMax: [extentInfo.minFixed, extentInfo.maxFixed],
-        minInterval: isIntervalOrTime ? model.get('minInterval') : null,
-        maxInterval: isIntervalOrTime ? model.get('maxInterval') : null
-    });
+    const rawExtentResult = adoptScaleRawExtentInfoAndPrepare(scale, model, ecModel, axis, externalDataExtent);
 
     // If some one specified the min, max. And the default calculated interval
     // is not good enough. He can specify the interval. It is often appeared
@@ -218,19 +228,36 @@ export function scaleCalcNice(opt: {
     if (interval != null && (scale as IntervalScale).setConfig) {
         (scale as IntervalScale).setConfig({interval});
     }
+    else {
+        const isIntervalOrTime = isIntervalScale(scale) || isTimeScale(scale);
+        scaleCalcNiceDirectly(scale, {
+            splitNumber: model.get('splitNumber'),
+            fixMinMax: rawExtentResult.fixMM,
+            minInterval: isIntervalOrTime ? model.get('minInterval') : null,
+            maxInterval: isIntervalOrTime ? model.get('maxInterval') : null
+        });
+    }
+
+    if (axis && ecModel) {
+        adoptScaleExtentKindMapping(scale, rawExtentResult);
+    }
+
+    if (__DEV__) {
+        scale.freeze();
+    }
 }
 
 export function scaleCalcNiceDirectly(
-    scale: ScaleForCalcNice,
+    scale: Scale,
     opt: ScaleCalcNiceMethodOpt
 ): void {
     scaleCalcNiceMethods[scale.type](scale, opt);
 }
 
 const scaleCalcNiceMethods: Record<AxisScaleType, ScaleCalcNiceMethod> = {
-    interval: intervalLogScaleCalcNice,
-    log: intervalLogScaleCalcNice,
-    time: timeScaleCalcNice,
+    interval: calcNiceForIntervalOrLogScale,
+    log: calcNiceForIntervalOrLogScale,
+    time: calcNiceForTimeScale,
     ordinal: noop,
 };
 

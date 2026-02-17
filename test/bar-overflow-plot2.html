@@ -1,0 +1,185 @@
+
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+
+        <div id="main_onZero" class="chart"></div>
+
+
+
+        <script type="text/javascript">
+            require(['echarts'], function (echarts) {
+
+                var _ctx = {
+                    // Historically, true by default.
+                    yAxisOnZero: 'unspecified',
+                    useDataZoom: true,
+                };
+
+                function createData() {
+                    var MIN_X = 0;
+                    var MAX_X = 0.0035;
+                    var actualMinX = Infinity;
+                    var data0 = [];
+                    var data1 = [];
+                    var bar_partially_negative = [];
+
+                    var last = 360;
+                    var lastDelta = 20;
+                    var dataSet = {bar_a: [], bar_b: [], bar_partially_negative: []};
+                    var minXSet = {bar_a: Infinity, bar_b: Infinity, bar_partially_negative: Infinity};
+
+                    for (var i = MIN_X; i <= MAX_X; i += 0.0001) {
+                        lastDelta += (Math.random() - 0.5) * 5;
+                        last += lastDelta;
+                        addItem(
+                            'bar_a', i, last
+                        );
+                        addItem(
+                            'bar_b', i, Math.max(90, last - Math.random() * 700)
+                        );
+                        addItem(
+                            'bar_partially_negative', i - Math.round((MAX_X - MIN_X) / 2), Math.max(70, last + Math.random() * 600)
+                        );
+                    }
+                    function addItem(prop, x, y) {
+                        dataSet[prop].push([x, y]);
+                        minXSet[prop] = Math.min(minXSet[prop], x);
+                    }
+
+                    return {dataSet, minXSet};
+                }
+
+                var _data = createData();
+
+                function createOption() {
+                    var option = {
+                        grid: {
+                            top: 50,
+                            bottom: 100,
+                            show: true,
+                            backgroundColor: '#fee',
+                            borderWidth: 0,
+                        },
+                        legend: {
+                            top: 5,
+                            selected: {
+                                'bar_partially_negative': false,
+                            },
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        dataZoom: _ctx.useDataZoom
+                            ? [{
+                                type: 'slider',
+                            }, {
+                                type: 'inside',
+                            }]
+                            : undefined,
+                        xAxis: {
+                            type: 'value',
+                            splitLine: {
+                                show: false
+                            },
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine: {
+                            },
+                            splitLine: {
+                                show: false
+                            }
+                        },
+                        series: [{
+                            name: 'bar_a',
+                            type: 'bar',
+                            // barMaxWidth: 10,
+                            data: _data.dataSet.bar_a
+                        }, {
+                            name: 'bar_b',
+                            type: 'bar',
+                            // barMaxWidth: 10,
+                            data: _data.dataSet.bar_b
+                        }, {
+                            name: 'bar_partially_negative',
+                            type: 'bar',
+                            // barMaxWidth: 10,
+                            data: _data.dataSet.bar_partially_negative
+                        }]
+                    };
+
+                    if (_ctx.yAxisOnZero !== 'unspecified') {
+                        option.yAxis.axisLine.onZero = _ctx.yAxisOnZero;
+                    }
+
+                    return option;
+                }
+
+                function updateChart() {
+                    myChart.setOption(createOption(), {notMerge: true});
+                }
+
+                var myChart = testHelper.create(echarts, 'main_onZero', {
+                    title: [
+                        'Check yAxis onZero to xAxis (xAxis is value axis).',
+                        `series data min value is **${testHelper.printObject(_data.minXSet)}**`,
+                    ],
+                    option: createOption(),
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'yAxis.axisLine.onZero:',
+                        values: [_ctx.yAxisOnZero, true, false, undefined, 'auto'],
+                        onchange: function () {
+                            _ctx.yAxisOnZero = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'useDataZoom:',
+                        values: [_ctx.useDataZoom, false],
+                        onchange: function () {
+                            _ctx.useDataZoom = this.value;
+                            updateChart();
+                        }
+                    }]
+                });
+            })
+        </script>
+
+
+
+    </body>
+</html>

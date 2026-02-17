@@ -28,11 +28,14 @@ import Grid from './Grid';
 import Scale from '../../scale/Scale';
 import { invert } from 'zrender/src/core/matrix';
 import { applyTransform } from 'zrender/src/core/vector';
+import { getScaleExtentForMappingUnsafe } from '../../scale/scaleMapper';
+import { hasBreaks } from '../../scale/break';
 
 export const cartesian2DDimensions = ['x', 'y'];
 
 function canCalculateAffineTransform(scale: Scale) {
-    return (scale.type === 'interval' || scale.type === 'time') && !scale.hasBreaks();
+    // Only supported on linear space.
+    return (scale.type === 'interval' || scale.type === 'time') && !hasBreaks(scale);
 }
 
 class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
@@ -62,8 +65,8 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
             return;
         }
 
-        const xScaleExtent = xAxisScale.getExtent();
-        const yScaleExtent = yAxisScale.getExtent();
+        const xScaleExtent = getScaleExtentForMappingUnsafe(xAxisScale, null);
+        const yScaleExtent = getScaleExtentForMappingUnsafe(yAxisScale, null);
 
         const start = this.dataToPoint([xScaleExtent[0], yScaleExtent[0]]);
         const end = this.dataToPoint([xScaleExtent[1], yScaleExtent[1]]);

@@ -28,7 +28,7 @@ import SingleAxisModel from './AxisModel';
 import SeriesModel from '../../model/Series';
 import { SeriesOption } from '../../util/types';
 import { SINGLE_REFERRING } from '../../util/model';
-import {axisExtentInfoRequireBuild} from '../scaleRawExtentInfo';
+import { scaleRawExtentInfoRequireCreate } from '../scaleRawExtentInfo';
 
 /**
  * Create single coordinate system and inject it into seriesModel.
@@ -56,7 +56,7 @@ function create(ecModel: GlobalModel, api: ExtensionAPI) {
             ).models[0] as SingleAxisModel;
             const single = seriesModel.coordinateSystem = singleAxisModel && singleAxisModel.coordinateSystem;
             if (single) {
-                axisExtentInfoRequireBuild(single.getAxis(), seriesModel, null);
+                scaleRawExtentInfoRequireCreate(single.getAxis(), seriesModel);
             }
         }
     });

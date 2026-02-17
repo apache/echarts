@@ -17,28 +17,43 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
-import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
-
-// Use some method of IntervalScale
+import Scale, { ScaleGetTicksOpt } from './Scale';
 import IntervalScale from './Interval';
 import {
-    AxisBreakOption,
     ScaleTick,
     NullUndefined,
-    ScaleDataValue
+    AxisBreakOption
 } from '../util/types';
 import {
     logScalePowTick,
     IntervalScaleGetLabelOpt,
-    contain,
     logScaleLogTick,
+    ValueTransformLookupOpt,
 } from './helper';
-import { getScaleBreakHelper } from './break';
+import { getBreaksUnsafe, getScaleBreakHelper, ParseAxisBreakOptionInwardTransformOut } from './break';
 import { getMinorTicks } from './minorTicks';
+import {
+    DecoratedScaleMapperMethods, decorateScaleMapper, enableScaleMapperFreeze, SCALE_EXTENT_KIND_EFFECTIVE,
+    SCALE_MAPPER_DEPTH_OUT_OF_BREAK,
+    ScaleMapperTransformOutOpt
+} from './scaleMapper';
+import { map } from 'zrender/src/core/util';
+import { isValidBoundsForExtent } from '../util/model';
 
 
-class LogScale extends Scale {
+type LogScaleSetting = {
+    logBase: number | NullUndefined;
+    breakOption: AxisBreakOption[] | NullUndefined;
+};
+
+const LOOKUP_IDX_EXTENT_START = 0;
+const LOOKUP_IDX_EXTENT_END = 1;
+const LOOKUP_IDX_BREAK_START = 2;
+
+/**
+ * @final NEVER inherit me!
+ */
+class LogScale extends Scale<LogScale> {
 
     static type = 'log';
     readonly type = 'log' as const;
@@ -52,46 +67,71 @@ class LogScale extends Scale {
      * may cause min/max tick is displayed like `5.999999999999999`. The extent in
      * powStub is used to get the original precise extent for this issue.
      *
-     * [CAVEAT] `powStub` and `linearStub` should be modified synchronously.
+     * [CAVEAT] `powStub` and `intervalStub` should be modified synchronously.
      */
     readonly powStub: IntervalScale;
     /**
-     * `linearStub` provides linear tick arrangement (logarithm applied).
+     * `intervalStub` provides linear tick arrangement (logarithm applied).
      * @see {powStub}
      */
-    readonly linearStub: IntervalScale;
+    readonly intervalStub: IntervalScale;
 
-    constructor(logBase: number | NullUndefined, settings?: ScaleSettingDefault) {
+    private _lookup: ValueTransformLookupOpt['lookup'];
+
+
+    constructor(setting: LogScaleSetting) {
         super();
-        this.powStub = new IntervalScale();
-        this.linearStub = new IntervalScale(settings);
-        this.base = zrUtil.retrieve2(logBase, 10);
+        this.parse = IntervalScale.parse;
+        this.base = setting.logBase || 10;
+
+        const lookupFrom: number[] = [];
+        const lookupTo: number[] = [];
+        const lookup = this._lookup = {from: lookupFrom, to: lookupTo};
+        lookupFrom[LOOKUP_IDX_EXTENT_START] =
+            lookupFrom[LOOKUP_IDX_EXTENT_END] =
+            lookupTo[LOOKUP_IDX_EXTENT_START] =
+            lookupTo[LOOKUP_IDX_EXTENT_END] = NaN;
+
+        decorateScaleMapper(this, LogScale.mapperMethods);
+
+        const scaleBreakHelper = getScaleBreakHelper();
+        const breakOption = setting.breakOption;
+        const out: ParseAxisBreakOptionInwardTransformOut = {lookup};
+        if (scaleBreakHelper) {
+            scaleBreakHelper.parseAxisBreakOptionInwardTransform(
+                breakOption, this, {noNegative: true}, LOOKUP_IDX_BREAK_START, out
+            );
+        }
+        this.powStub = new IntervalScale({breakParsed: out.original});
+        this.intervalStub = new IntervalScale({breakParsed: out.transformed});
+
+        enableScaleMapperFreeze(this, this.intervalStub);
     }
 
     getTicks(opt?: ScaleGetTicksOpt): ScaleTick[] {
         const base = this.base;
         const powStub = this.powStub;
         const scaleBreakHelper = getScaleBreakHelper();
-        const linearStub = this.linearStub;
-        const linearExtent = linearStub.getExtent();
+        const intervalStub = this.intervalStub;
+        const intervalExtent = intervalStub.getExtent();
         const powExtent = powStub.getExtent();
+        const powOpt: ValueTransformLookupOpt = {lookup: {from: intervalExtent, to: powExtent}};
 
-        return zrUtil.map(linearStub.getTicks(opt || {}), function (tick) {
+        return map(intervalStub.getTicks(opt || {}), function (tick) {
             const val = tick.value;
-            let powVal = logScalePowTick(val, base, linearExtent, powExtent);
+            let powVal = logScalePowTick(val, base, powOpt);
 
             let vBreak;
             if (scaleBreakHelper) {
-                const brkPowResult = scaleBreakHelper.getTicksPowBreak(
+                const brkPowResult = scaleBreakHelper.getTicksBreakOutwardTransform(
+                    this,
                     tick,
-                    base,
-                    powStub.innerGetBreaks(),
-                    linearExtent,
-                    powExtent,
+                    getBreaksUnsafe(powStub),
+                    this._lookup,
                 );
                 if (brkPowResult) {
                     vBreak = brkPowResult.vBreak;
-                    powVal = brkPowResult.tickPowValue;
+                    powVal = brkPowResult.tickVal;
                 }
             }
 
@@ -106,9 +146,9 @@ class LogScale extends Scale {
         return getMinorTicks(
             this,
             splitNumber,
-            this.powStub.innerGetBreaks(),
+            getBreaksUnsafe(this.powStub),
             // NOTE: minor ticks are in the log scale value to visually hint users "logarithm".
-            this.linearStub.getConfig().interval
+            this.intervalStub.getConfig().interval
         );
     }
 
@@ -116,60 +156,110 @@ class LogScale extends Scale {
         data: ScaleTick,
         opt?: IntervalScaleGetLabelOpt
     ) {
-        return this.linearStub.getLabel(data, opt);
+        return this.intervalStub.getLabel(data, opt);
     }
 
-    /**
-     * NOTICE: The caller should ensure `start` and `end` are both non-negative.
-     */
-    setExtent(start: number, end: number): void {
-        this.powStub.setExtent(start, end);
-        this.linearStub.setExtent(
-            logScaleLogTick(start, this.base),
-            logScaleLogTick(end, this.base)
-        );
-    }
+    static mapperMethods: DecoratedScaleMapperMethods<LogScale> = {
 
-    getExtent() {
-        return this.powStub.getExtent();
-    }
+        normalize(val) {
+            return this.intervalStub.normalize(logScaleLogTick(val, this.base));
+        },
 
-    parse(val: ScaleDataValue): number {
-        return this.linearStub.parse(val);
-    }
+        scale(val) {
+            // PENDING: Input `intervalStub.getExtent()` and `powStub.getExtent()` may
+            // break monotonicity. Do not do it until real problems found.
+            return logScalePowTick(this.intervalStub.scale(val), this.base, null);
+        },
 
-    contain(val: number): boolean {
-        return contain(val, this.getExtent());
-    }
+        transformIn(val, opt) {
+            val = logScaleLogTick(val, this.base);
+            return (opt && opt.depth === SCALE_MAPPER_DEPTH_OUT_OF_BREAK)
+                ? val
+                : this.intervalStub.transformIn(val, opt);
+        },
 
-    normalize(val: number): number {
-        return this.linearStub.normalize(logScaleLogTick(val, this.base));
-    }
+        transformOut(val, opt) {
+            const depth = opt ? opt.depth : null;
+            tmpTransformOutOpt1.depth = depth;
+            tmpTransformOutOpt2.lookup = this._lookup;
+            return logScalePowTick(
+                (depth === SCALE_MAPPER_DEPTH_OUT_OF_BREAK)
+                    ? val
+                    : this.intervalStub.transformOut(val, tmpTransformOutOpt1),
+                this.base,
+                tmpTransformOutOpt2
+            );
+        },
 
-    scale(val: number): number {
-        // PENDING: Input `linearStub.getExtent()` and `powStub.getExtent()` may
-        // break monotonicity. Do not do it until real problems found.
-        return logScalePowTick(this.linearStub.scale(val), this.base, null, null);
-    }
+        contain(val) {
+            return this.powStub.contain(val);
+        },
 
-    setBreaksFromOption(
-        breakOptionList: AxisBreakOption[],
-    ): void {
-        const scaleBreakHelper = getScaleBreakHelper();
-        if (!scaleBreakHelper) {
-            return;
-        }
-        const { parsedOriginal, parsedLogged } = scaleBreakHelper.logarithmicParseBreaksFromOption(
-            breakOptionList,
-            this.base,
-            zrUtil.bind(this.parse, this)
-        );
-        this.powStub.innerSetBreak(parsedOriginal);
-        this.linearStub.innerSetBreak(parsedLogged);
-    }
+        /**
+         * NOTICE: The caller should ensure `start` and `end` are both non-negative.
+         */
+        setExtent(start, end) {
+            this.setExtent2(SCALE_EXTENT_KIND_EFFECTIVE, start, end);
+        },
+
+        setExtent2(kind, start, end) {
+            if (!isValidBoundsForExtent(start, end)
+                || start <= 0 || end <= 0
+            ) {
+                return;
+            }
+            let lookupTo = tmpNotUsedArr;
+            let lookupFrom = tmpNotUsedArr;
+            if (kind === SCALE_EXTENT_KIND_EFFECTIVE) {
+                const lookup = this._lookup;
+                lookupTo = lookup.to;
+                lookupFrom = lookup.from;
+            }
+            this.powStub.setExtent2(
+                kind,
+                (lookupTo[LOOKUP_IDX_EXTENT_START] = start),
+                (lookupTo[LOOKUP_IDX_EXTENT_END] = end)
+            );
+            const base = this.base;
+            this.intervalStub.setExtent2(
+                kind,
+                (lookupFrom[LOOKUP_IDX_EXTENT_START] = logScaleLogTick(start, base)),
+                (lookupFrom[LOOKUP_IDX_EXTENT_END] = logScaleLogTick(end, base))
+            );
+        },
+
+        getSeriesExtentFilter() {
+            return {g: 0};
+        },
+
+        sanitizeExtent(extent, dataExtent) {
+            if (isValidBoundsForExtent(extent[0], extent[1])
+                && isValidBoundsForExtent(dataExtent[0], dataExtent[1])
+            ) {
+                // `DataStore` has ensured that `dataExtent` is valid for LogScale.
+                extent[0] <= 0 && (extent[0] = dataExtent[0]);
+                extent[1] <= 0 && (extent[1] = dataExtent[0]);
+            }
+        },
+
+        getExtent() {
+            return this.powStub.getExtent();
+        },
+
+        getExtentUnsafe(kind, depth) {
+            return depth === null
+                ? this.powStub.getExtentUnsafe(kind, null)
+                : this.intervalStub.getExtentUnsafe(kind, depth);
+        },
+
+    };
 
 }
 
 Scale.registerClass(LogScale);
+
+const tmpTransformOutOpt1: ScaleMapperTransformOutOpt = {};
+const tmpTransformOutOpt2: ValueTransformLookupOpt = {};
+const tmpNotUsedArr: number[] = [];
 
 export default LogScale;

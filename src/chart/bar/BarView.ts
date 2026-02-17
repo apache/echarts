@@ -96,10 +96,10 @@ function getClipArea(coord: CoordSysOfBar, data: SeriesData) {
     const coordSysClipArea = coord.getArea && coord.getArea();
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         const baseAxis = coord.getBaseAxis();
-        // When boundaryGap is false or using time axis. bar may exceed the grid.
+        // When boundaryGap is false in category axis, bar may exceed the grid.
         // We should not clip this part.
         // See test/bar2.html
-        if (baseAxis.type !== 'category' || !baseAxis.onBand) {
+        if (baseAxis.type === 'category' && !baseAxis.onBand) {
             const expandWidth = data.getLayout('bandWidth');
             if (baseAxis.isHorizontal()) {
                 (coordSysClipArea as CartesianCoordArea).x -= expandWidth;
@@ -225,6 +225,7 @@ class BarView extends ChartView {
         group.removeClipPath();
         // We don't use clipPath in normal mode because we needs a perfect animation
         // And don't want the label are clipped.
+        // Instead, `Clipper` is used in normal mode.
 
         const roundCap = seriesModel.get('roundCap', true);
 

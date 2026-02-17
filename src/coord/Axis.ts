@@ -28,11 +28,12 @@ import {
     createAxisLabelsComputingContext,
 } from './axisTickLabelBuilder';
 import Scale, { ScaleGetTicksOpt } from '../scale/Scale';
-import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
+import { DimensionName, NullUndefined, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
+import { isIntervalOrTimeScale, isOrdinalScale } from '../scale/helper';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -48,7 +49,7 @@ export interface AxisTickCoord {
  * Base class of Axis.
  *
  * Lifetime: recreate for each main process.
- * [NOTICE]: Some caches is stored on the axis instance (see `axisTickLabelBuilder.ts`)
+ * [NOTICE]: Some caches is stored on the axis instance (e.g., `axisTickLabelBuilder.ts`, `scaleRawExtentInfo.ts`),
  *  which is based on this lifetime.
  */
 class Axis {
@@ -75,6 +76,7 @@ class Axis {
 
     // Injected outside
     model: AxisBaseModel;
+    // NOTICE: Must ensure `true` is only available on 'category' axis.
     onBand: CategoryAxisBaseOption['boundaryGap'] = false;
     // Make sure that `extent[0] > extent[1]` only if `inverse: true`.
     // `inverse` can be inferred by `extent` unless `extent[0] === extent[1]`.
@@ -82,6 +84,8 @@ class Axis {
 
     // Injected outside
     alignTo: Axis;
+    // Injected outside.
+    suggestNotOnZeroOfMe: boolean;
 
 
     constructor(dim: DimensionName, scale: Scale, extent: [number, number]) {
@@ -127,32 +131,16 @@ class Axis {
      * Convert data to coord. Data is the rank if it has an ordinal scale
      */
     dataToCoord(data: ScaleDataValue, clamp?: boolean): number {
-        let extent = this._extent;
         const scale = this.scale;
         data = scale.normalize(scale.parse(data));
-
-        if (this.onBand && scale.type === 'ordinal') {
-            extent = extent.slice() as [number, number];
-            fixExtentWithBands(extent, (scale as OrdinalScale).count());
-        }
-
-        return linearMap(data, NORMALIZED_EXTENT, extent, clamp);
+        return linearMap(data, NORMALIZED_EXTENT, makeExtentWithBands(this), clamp);
     }
 
     /**
      * Convert coord to data. Data is the rank if it has an ordinal scale
      */
     coordToData(coord: number, clamp?: boolean): number {
-        let extent = this._extent;
-        const scale = this.scale;
-
-        if (this.onBand && scale.type === 'ordinal') {
-            extent = extent.slice() as [number, number];
-            fixExtentWithBands(extent, (scale as OrdinalScale).count());
-        }
-
-        const t = linearMap(coord, extent, NORMALIZED_EXTENT, clamp);
-
+        const t = linearMap(coord, makeExtentWithBands(this), NORMALIZED_EXTENT, clamp);
         return this.scale.scale(t);
     }
 
@@ -191,7 +179,7 @@ class Axis {
         const ticksCoords = map(ticks, function (tickVal) {
             return {
                 coord: this.dataToCoord(
-                    this.scale.type === 'ordinal'
+                    isOrdinalScale(this.scale)
                         ? (this.scale as OrdinalScale).getRawOrdinalNumber(tickVal)
                         : tickVal
                 ),
@@ -209,7 +197,7 @@ class Axis {
     }
 
     getMinorTicksCoords(): AxisTickCoord[][] {
-        if (this.scale.type === 'ordinal') {
+        if (isOrdinalScale(this.scale)) {
             // Category axis doesn't support minor ticks
             return [];
         }
@@ -287,12 +275,15 @@ class Axis {
 
 }
 
-function fixExtentWithBands(extent: [number, number], nTick: number): void {
-    const size = extent[1] - extent[0];
-    const len = nTick;
-    const margin = size / len / 2;
-    extent[0] += margin;
-    extent[1] -= margin;
+function makeExtentWithBands(axis: Axis): number[] {
+    const extent = axis.getExtent();
+    if (axis.onBand) {
+        const size = extent[1] - extent[0];
+        const margin = size / (axis.scale as OrdinalScale).count() / 2;
+        extent[0] += margin;
+        extent[1] -= margin;
+    }
+    return extent;
 }
 
 // If axis has labels [1, 2, 3, 4]. Bands on the axis are

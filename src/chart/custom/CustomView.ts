@@ -25,7 +25,10 @@ import * as graphicUtil from '../../util/graphic';
 import { setDefaultStateProxy, toggleHoverEmphasis } from '../../util/states';
 import * as labelStyleHelper from '../../label/labelStyle';
 import {getDefaultLabel} from '../helper/labelHelper';
-import {getLayoutOnAxis} from '../../layout/barGrid';
+import {
+    BarGridLayoutOptionForCustomSeries, BarGridLayoutResultForCustomSeries,
+    getLayoutOnAxis
+} from '../../layout/barGrid';
 import DataDiffer from '../../data/DataDiffer';
 import Model from '../../model/Model';
 import ChartView from '../../view/Chart';
@@ -43,7 +46,7 @@ import {
     ECElement,
     DisplayStateNonNormal,
     OrdinalRawValue,
-    InnerDecalObject
+    InnerDecalObject,
 } from '../../util/types';
 import Element, { ElementTextConfig } from 'zrender/src/Element';
 import prepareCartesian2d from '../../coord/cartesian/prepareCustom';
@@ -90,7 +93,8 @@ import CustomSeriesModel, {
     CustomPathOption,
     CustomRootElementOption,
     CustomSeriesOption,
-    CustomCompoundPathOption
+    CustomCompoundPathOption,
+    CustomSeriesRenderItemCoordinateSystemAPI
 } from './CustomSeries';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import {
@@ -916,8 +920,8 @@ function makeRenderItem(
      * @return If not support, return undefined.
      */
     function barLayout(
-        opt: Omit<Parameters<typeof getLayoutOnAxis>[0], 'axis'>
-    ): ReturnType<typeof getLayoutOnAxis> {
+        opt: BarGridLayoutOptionForCustomSeries
+    ): BarGridLayoutResultForCustomSeries {
         if (coordSys.type === 'cartesian2d') {
             const baseAxis = coordSys.getBaseAxis() as Axis2D;
             return getLayoutOnAxis(defaults({axis: baseAxis}, opt));

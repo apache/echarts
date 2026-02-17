@@ -42,7 +42,7 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoReallyCreate
 } from '../scaleRawExtentInfo';
 
 
@@ -121,11 +121,12 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
             const axisIndex = parallelAxisIndex[idx];
             const axisModel = ecModel.getComponent('parallelAxis', axisIndex) as ParallelAxisModel;
 
+            const axisType = axisHelper.determineAxisType(axisModel);
             const axis = this._axesMap.set(dim, new ParallelAxis(
                 dim,
-                axisHelper.createScaleByModel(axisModel),
+                axisHelper.createScaleByModel(axisModel, axisType, false),
                 [0, 0],
-                axisModel.get('type'),
+                axisType,
                 axisIndex
             ));
 
@@ -148,7 +149,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
     update(ecModel: GlobalModel, api: ExtensionAPI): void {
         each(this.dimensions, function (dim) {
             const axis = this._axesMap.get(dim);
-            axisExtentInfoFinalBuild(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleRawExtentInfoReallyCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
             scaleCalcNice(axis);
         }, this);
     }

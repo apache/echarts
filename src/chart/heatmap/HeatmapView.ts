@@ -241,10 +241,10 @@ class HeatmapView extends ChartView {
                 if (isNaN(data.get(dataDims[2], idx) as number)
                     || isNaN(dataDimX as number)
                     || isNaN(dataDimY as number)
-                    || dataDimX < xAxisExtent[0]
-                    || dataDimX > xAxisExtent[1]
-                    || dataDimY < yAxisExtent[0]
-                    || dataDimY > yAxisExtent[1]
+                    || (dataDimX as number) < xAxisExtent[0]
+                    || (dataDimX as number) > xAxisExtent[1]
+                    || (dataDimY as number) < yAxisExtent[0]
+                    || (dataDimY as number) > yAxisExtent[1]
                 ) {
                     continue;
                 }

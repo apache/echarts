@@ -20,12 +20,18 @@
 
 import {round, mathRound, mathMin, getPrecision} from '../util/number';
 import {addCommas} from '../util/format';
-import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
-import { contain, getIntervalPrecision, IntervalScaleGetLabelOpt } from './helper';
-import {ScaleTick, ScaleDataValue, NullUndefined} from '../util/types';
-import { getScaleBreakHelper } from './break';
+import Scale, { ScaleGetTicksOpt } from './Scale';
+import { getIntervalPrecision, IntervalScaleGetLabelOpt } from './helper';
+import {ScaleTick, ScaleDataValue, NullUndefined, AxisBreakOption} from '../util/types';
+import {
+    AxisBreakParsingResult, getBreaksUnsafe, getScaleBreakHelper, hasBreaks, simplyParseBreakOption
+} from './break';
 import { assert, clone } from 'zrender/src/core/util';
 import { getMinorTicks } from './minorTicks';
+import {
+    getScaleExtentForTickUnsafe,
+    initBreakOrLinearMapper, ScaleMapperGeneric
+} from './scaleMapper';
 
 
 export type IntervalScaleConfig = {
@@ -35,7 +41,7 @@ export type IntervalScaleConfig = {
     niceExtent?: IntervalScaleConfigParsed['niceExtent'] | NullUndefined;
 };
 
-export type IntervalScaleConfigParsed = {
+type IntervalScaleConfigParsed = {
     /**
      * Step of ticks.
      */
@@ -62,13 +68,23 @@ export type IntervalScaleConfigParsed = {
      *  `[ Math.ceil(_extent[0] / _interval) * _interval, Math.floor(_extent[1] / _interval) * _interval ]`.
      *  e.g., `_extent: [5.2, 5.8]` with interval `1` will get `_niceExtent: [6, 5]`.
      *  e.g., `_extent: [5, 5.8]` with interval `1` will get `_niceExtent: [5, 5]`.
+     *  e.g., `_extent: [5.7, 5.7]` with interval `1` will get `_niceExtent: [6, 5]`.
      * @see setInterval
      */
     niceExtent: number[] | NullUndefined;
 };
 
+type IntervalScaleSetting = {
+    // Either `breakOption` or `parsedBreaks` can be specified.
+    breakOption?: AxisBreakOption[] | NullUndefined;
+    breakParsed?: AxisBreakParsingResult | NullUndefined;
+};
 
-class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> extends Scale<SETTING> {
+/**
+ * @final NEVER inherit me!
+ */
+interface IntervalScale extends ScaleMapperGeneric<IntervalScale> {}
+class IntervalScale extends Scale<IntervalScale> {
 
     static type = 'interval';
     type = 'interval' as const;
@@ -76,8 +92,19 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
     private _cfg: IntervalScaleConfigParsed;
 
 
-    constructor(setting?: SETTING) {
-        super(setting);
+    constructor(setting?: IntervalScaleSetting) {
+        super();
+
+        this.parse = IntervalScale.parse;
+
+        setting = setting || {};
+
+        const breakParsed = simplyParseBreakOption(this, setting);
+
+        const res = initBreakOrLinearMapper(this, breakParsed, null);
+        // @ts-ignore
+        this.brk = res.brk;
+
         this._cfg = {
             interval: 0,
             intervalPrecision: 2,
@@ -86,7 +113,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         };
     }
 
-    parse(val: ScaleDataValue): number {
+    static parse(val: ScaleDataValue): number {
         // `Scale#parse` (and its overrids) are typically applied at the axis values input
         // in echarts option. e.g., `axis.min/max`, `dataZoom.min/max`, etc.
         // but `series.data` is not included, which uses `dataValueHelper.ts`#`parseDataValue`.
@@ -113,27 +140,12 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             : Number(val);
     }
 
-    contain(val: number): boolean {
-        return contain(val, this._extent);
-    }
-
-    normalize(val: number): number {
-        return this._calculator.normalize(val, this._extent);
-    }
-
-    scale(val: number): number {
-        return this._calculator.scale(val, this._extent);
-    }
-
     getConfig(): IntervalScaleConfigParsed {
         return clone(this._cfg);
     }
 
-    /**
-     * @final override is DISALLOWED.
-     */
     setConfig(cfg: IntervalScaleConfig): void {
-        const extent = this._extent;
+        const extent = getScaleExtentForTickUnsafe(this);
 
         if (__DEV__) {
             assert(cfg.interval != null);
@@ -142,7 +154,7 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
                     cfg.intervalCount >= -1
                     && cfg.intervalPrecision != null
                     // Do not support intervalCount on axis break currently.
-                    && !this.hasBreaks()
+                    && !hasBreaks(this)
                 );
             }
             if (cfg.niceExtent != null) {
@@ -166,17 +178,17 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
 
     /**
      * In ascending order.
-     *
-     * @final override is DISALLOWED.
      */
     getTicks(opt?: ScaleGetTicksOpt): ScaleTick[] {
         opt = opt || {};
         const cfg = this._cfg;
         const interval = cfg.interval;
-        const extent = this._extent;
+        const extent = getScaleExtentForTickUnsafe(this);
         const niceExtent = cfg.niceExtent;
         const intervalPrecision = cfg.intervalPrecision;
         const scaleBreakHelper = getScaleBreakHelper();
+        const brk = this.brk;
+        const brkAvailable = scaleBreakHelper && brk;
 
         const ticks = [] as ScaleTick[];
         // If interval is 0, return [];
@@ -184,8 +196,8 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             return ticks;
         }
 
-        if (opt.breakTicks === 'only_break' && scaleBreakHelper) {
-            scaleBreakHelper.addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent);
+        if (opt.breakTicks === 'only_break' && brkAvailable) {
+            scaleBreakHelper.addBreaksToTicks(ticks, brk.breaks, extent);
             return ticks;
         }
 
@@ -249,8 +261,8 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             // Avoid rounding error
             tick = round(tick + interval, intervalPrecision);
 
-            if (this._brkCtx) {
-                const moreMultiple = this._brkCtx.calcNiceTickMultiple(tick, estimateNiceMultiple);
+            if (brk) {
+                const moreMultiple = brk.calcNiceTickMultiple(tick, estimateNiceMultiple);
                 if (moreMultiple >= 0) {
                     tick = round(tick + moreMultiple * interval, intervalPrecision);
                 }
@@ -282,38 +294,32 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             }
         }
 
-        if (scaleBreakHelper) {
+        if (brkAvailable) {
             scaleBreakHelper.pruneTicksByBreak(
                 opt.pruneByBreak,
                 ticks,
-                this._brkCtx!.breaks,
+                brk.breaks,
                 item => item.value,
                 cfg.interval,
-                this._extent
+                extent
             );
         }
-        if (opt.breakTicks !== 'none' && scaleBreakHelper) {
-            scaleBreakHelper.addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent);
+        if (brkAvailable && opt.breakTicks !== 'none') {
+            scaleBreakHelper.addBreaksToTicks(ticks, brk.breaks, extent);
         }
 
         return ticks;
     }
 
-    /**
-     * @final override is DISALLOWED.
-     */
     getMinorTicks(splitNumber: number): number[][] {
         return getMinorTicks(
             this,
             splitNumber,
-            this.innerGetBreaks(),
+            getBreaksUnsafe(this),
             this._cfg.interval
         );
     }
 
-    /**
-     * @final override is DISALLOWED.
-     */
     getLabel(
         data: ScaleTick,
         opt?: IntervalScaleGetLabelOpt

@@ -92,8 +92,8 @@ function xyExtentFromPoints(points: ArrayLike<number>) {
         const x = points[i++];
         const y = points[i++];
         if (!isPointIllegal(x, y)) {
-            modelUtil.unionExtent(xExtent, x);
-            modelUtil.unionExtent(yExtent, y);
+            modelUtil.unionExtentFromNumber(xExtent, x);
+            modelUtil.unionExtentFromNumber(yExtent, y);
         }
     }
     return [xExtent, yExtent];

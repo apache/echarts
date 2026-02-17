@@ -19,22 +19,16 @@
 
 
 import * as clazzUtil from '../util/clazz';
-import { Dictionary } from 'zrender/src/core/types';
 import {
     ScaleDataValue,
     ScaleTick,
-    AxisBreakOption,
     NullUndefined,
-    ParsedAxisBreakList,
 } from '../util/types';
-import {
-    ScaleCalculator
-} from './helper';
 import { ScaleRawExtentInfo } from '../coord/scaleRawExtentInfo';
-import { bind } from 'zrender/src/core/util';
-import { ScaleBreakContext, AxisBreakParsingResult, getScaleBreakHelper, ParamPruneByBreak } from './break';
+import { BreakScaleMapper, ParamPruneByBreak } from './break';
 import { AxisScaleType } from '../coord/axisCommonTypes';
-import { initExtentForUnion } from '../util/model';
+import { ScaleMapperGeneric } from './scaleMapper';
+
 
 export type ScaleGetTicksOpt = {
     // Whether expand the ticks to nice extent.
@@ -49,152 +43,41 @@ export type ScaleGetTicksOpt = {
     breakTicks?: 'only_break' | 'none' | NullUndefined;
 };
 
-export type ScaleSettingDefault = Dictionary<unknown>;
-
-abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> {
+/**
+ * @see ScaleMapper for the hierarchy structure.
+ */
+interface Scale<This = unknown> extends ScaleMapperGeneric<This> {}
+abstract class Scale<
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    This = unknown // Just required for keeping identical to `interface Scale<This>`.
+> {
 
     type: AxisScaleType;
 
-    private _setting: SETTING;
-
-    // [CAVEAT]: Should update only by `setExtent`!
-    // The caller of `setExtent()` should ensure `extent[0] <= extent[1]`,
-    // but it is initialized as [Infinity, -Infinity].
-    protected _extent: [number, number];
-
-    // FIXME: Effectively, both logarithmic scale and break scale are numeric axis transformation
-    //  mechanisms. However, for historical reason, logarithmic scale is implemented as a subclass,
-    //  while break scale is implemented inside the base class `Scale`. If more transformations
-    //  need to be introduced in futher, we should probably refactor them for better orthogonal
-    //  composition. (e.g. use decorator-like patterns rather than the current class inheritance?)
-    protected _brkCtx: ScaleBreakContext | NullUndefined;
-
-    protected _calculator: ScaleCalculator = new ScaleCalculator();
+    /**
+     * CAUTION: Do not visit it directly - use helper methods in `scale/break.ts` instead.
+     */
+    readonly brk: BreakScaleMapper | NullUndefined;
 
     private _isBlank: boolean;
 
     // Inject
-    // MUST only visit by `ensureScaleRawExtentInfo()`, as it may be null/undefined.
     readonly rawExtentInfo: ScaleRawExtentInfo | NullUndefined;
 
-    constructor(setting?: SETTING) {
-        this._setting = setting || {} as SETTING;
-        this._extent = initExtentForUnion();
-        const scaleBreakHelper = getScaleBreakHelper();
-        if (scaleBreakHelper) {
-            this._brkCtx = scaleBreakHelper.createScaleBreakContext();
-            this._brkCtx!.update(this._extent);
-        }
-    }
-
     /**
-     * @final NEVER override!
-     */
-    getSetting<KEY extends keyof SETTING>(name: KEY): SETTING[KEY] {
-        return this._setting[name];
-    }
-
-    /**
+     * NOTICE:
+     *  - Must be available in constructor.
+     *  - Must ensure the return is a number.
+     *    null/undefined is not allowed.
+     *    `NaN` represents invalid data.
+     *
      * Parse input val to valid inner number.
      * Notice: This would be a trap here, If the implementation
      * of this method depends on extent, and this method is used
      * before extent set (like in dataZoom), it would be wrong.
      * Nevertheless, parse does not depend on extent generally.
      */
-    abstract parse(val: ScaleDataValue): number;
-
-    /**
-     * Whether contain the given value.
-     */
-    abstract contain(val: number): boolean;
-
-    /**
-     * Normalize value to linear [0, 1], return 0.5 if extent span is 0.
-     */
-    abstract normalize(val: number): number;
-
-    /**
-     * Scale normalized value to extent.
-     */
-    abstract scale(val: number): number;
-
-    /**
-     * Get a new slice of extent.
-     * Extent is always in increase order.
-     *
-     * [NOTICE]:
-     *  In ec workflow, `getExtent()` is finally determined on `coordSys#update` stage,
-     *  and `ensureScaleRawExtentInfo()` is used before `coordSys#update` stage.
-     */
-    getExtent(): [number, number] {
-        return this._extent.slice() as [number, number];
-    }
-
-    setExtent(start: number, end: number): void {
-        const thisExtent = this._extent;
-        if (!isNaN(start)) {
-            thisExtent[0] = start;
-        }
-        if (!isNaN(end)) {
-            thisExtent[1] = end;
-        }
-        this._brkCtx && this._brkCtx.update(thisExtent);
-    }
-
-    /**
-     * Prerequisite: Scale#parse is ready.
-     */
-    setBreaksFromOption(
-        breakOptionList: AxisBreakOption[],
-    ): void {
-        const scaleBreakHelper = getScaleBreakHelper();
-        if (scaleBreakHelper) {
-            this.innerSetBreak(
-                scaleBreakHelper.parseAxisBreakOption(breakOptionList, bind(this.parse, this))
-            );
-        }
-    }
-
-    /**
-     * @final NEVER override!
-     */
-    innerSetBreak(parsed: AxisBreakParsingResult) {
-        const brkCtx = this._brkCtx;
-        if (brkCtx) {
-            brkCtx.setBreaks(parsed);
-            this._calculator.updateMethods(brkCtx);
-            brkCtx.update(this._extent);
-        }
-    }
-
-    /**
-     * @final NEVER override!
-     */
-    innerGetBreaks(): ParsedAxisBreakList {
-        const brkCtx = this._brkCtx;
-        return brkCtx ? brkCtx.breaks : [];
-    }
-
-    /**
-     * Do not expose the internal `_breaks` unless necessary.
-     *
-     * @final NEVER override!
-     */
-    hasBreaks(): boolean {
-        const brkCtx = this._brkCtx;
-        return brkCtx ? brkCtx.hasBreaks() : false;
-    }
-
-    /**
-     * @final NEVER override!
-     */
-    getBreaksElapsedExtentSpan() {
-        const brkCtx = this._brkCtx;
-        const extent = this._extent;
-        return (brkCtx && brkCtx.hasBreaks())
-            ? brkCtx.getExtentSpan()
-            : extent[1] - extent[0];
-    }
+    parse: (val: ScaleDataValue) => number;
 
     /**
      * When axis extent depends on data and no data exists,
@@ -232,5 +115,6 @@ abstract class Scale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> 
 
 type ScaleConstructor = typeof Scale & clazzUtil.ClassManager;
 clazzUtil.enableClassManagement(Scale as ScaleConstructor);
+
 
 export default Scale;

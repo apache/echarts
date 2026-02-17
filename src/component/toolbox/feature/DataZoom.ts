@@ -181,7 +181,7 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
 
             // Round for displayable.
             const precision = getAcceptableTickPrecision(
-                scaleExtent[1] - scaleExtent[0],
+                scaleExtent,
                 coordSysRect[XY2WH[dimName]],
                 0.5
             );

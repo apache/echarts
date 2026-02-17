@@ -65,7 +65,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import { makeInner } from '../../util/model';
 import { getAxisBreakHelper } from './axisBreakHelper';
 import { AXIS_BREAK_EXPAND_ACTION_TYPE, BaseAxisBreakPayload } from './axisAction';
-import { getScaleBreakHelper } from '../../scale/break';
+import { getScaleBreakHelper, hasBreaks } from '../../scale/break';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import Point from 'zrender/src/core/Point';
 import { copyTransform } from 'zrender/src/core/Transformable';
@@ -709,7 +709,7 @@ const builders: Record<AxisBuilderAxisPartName, AxisElementsBuilder> = {
             style: lineStyle,
         };
 
-        if (axisModel.get(['axisLine', 'breakLine']) && axisModel.axis.scale.hasBreaks()) {
+        if (axisModel.get(['axisLine', 'breakLine']) && hasBreaks(axisModel.axis.scale)) {
             getAxisBreakHelper()!.buildAxisBreakLine(axisModel, group, transformGroup, pathBaseProp);
         }
         else {

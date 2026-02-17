@@ -199,6 +199,10 @@ export function round(x: number | string, precision?: number, returnStr?: boolea
         //  precision. The caller need to input a precision according to the scenarios.
         precision = 10;
     }
+    if (isNaN(precision)) {
+        // precision utils (such as getAcceptableTickPrecision) may return NaN.
+        return returnStr ? '' + x : +x;
+    }
     // Avoid range error
     precision = mathMin(mathMax(0, precision), TO_FIXED_SUPPORTED_PRECISION_MAX);
     // PENDING: 1.005.toFixed(2) is '1.00' rather than '1.01'
@@ -293,20 +297,23 @@ export function getPixelPrecision(dataExtent: [number, number], pixelExtent: [nu
  * [NOTICE]: using arbitrary parameters is NOT preferable - a discernible misalign (e.g., over 1px)
  *  may occur, especially when `splitLine` is displayed.
  *
- * PENDING: Only linear case is addressed for now; other mapping methods (like log) will not be
- *  covered until necessary.
+ * PENDING: Only the linear case is addressed for now; other mapping methods (like logarithm) will
+ *  not be covered until necessary.
  */
 export function getAcceptableTickPrecision(
-    // Typically, `Math.abs(dataExtent[1] - dataExtent[0])`.
-    dataSpan: number,
+    dataExtent: number[],
     // Typically, `Math.abs(pixelExtent[1] - pixelExtent[0])`.
     pxSpan: number,
     // By default, `1`.
     pxDiffAcceptable: number | NullUndefined
     // Return a precision >= 0
     // This precision can be used in method `round`.
-    // Return `NaN` for illegal inputs, such as `0`/`NaN`/`Infinity`.
+    // Return `NaN` for edge case or illegal inputs. Callers need to handle that.
 ): number {
+    const dataSpan = mathAbs(dataExtent[1] - dataExtent[0]);
+    if (!isFinite(dataSpan) || dataSpan === 0) {
+        return NaN;
+    }
     // Formula for choosing an acceptable precision:
     //  Let `pxDiff = abs(dataSpan - round(dataSpan, precision))`.
     //  We require `pxDiff <= dataSpan * pxDiffAcceptable / pxSpan`.
@@ -317,7 +324,12 @@ export function getAcceptableTickPrecision(
     const pxExp = mathLog(mathAbs(pxSpan)) / mathLN10;
     // PENDING: Rounding error generally does not matter; do not fix it before `Math.ceil`
     // until bad case occur.
-    return mathMax(0, mathCeil(-dataExp2 + pxExp));
+    let precision = mathMax(0, mathCeil(-dataExp2 + pxExp));
+    if (!isFinite(precision)) {
+        // If dataSpan is near `0`, the result should not be too big or even `Infinity`.
+        precision = NaN;
+    }
+    return precision;
 }
 
 /**

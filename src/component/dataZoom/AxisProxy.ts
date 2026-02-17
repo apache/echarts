@@ -30,9 +30,11 @@ import { Dictionary, NullUndefined } from '../../util/types';
 import DataZoomModel from './DataZoomModel';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getAxisMainType, isCoordSupported, DataZoomAxisDimension } from './helper';
-import { initExtentForUnion, SINGLE_REFERRING } from '../../util/model';
+import { SINGLE_REFERRING } from '../../util/model';
 import { isOrdinalScale, isTimeScale } from '../../scale/helper';
-import { AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, axisExtentInfoFinalBuild, ensureScaleRawExtentInfo } from '../../coord/scaleRawExtentInfo';
+import {
+    AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, scaleRawExtentInfoReallyCreate,
+} from '../../coord/scaleRawExtentInfo';
 
 
 interface MinMaxSpan {
@@ -69,7 +71,7 @@ class AxisProxy {
 
     private _window: AxisProxyWindow;
 
-    private _dataExtent: [number, number];
+    private _dataExtent: number[];
 
     private _minMaxSpan: MinMaxSpan;
 
@@ -260,7 +262,7 @@ class AxisProxy {
         const pxSpan = mathAbs(pxExtent[1] - pxExtent[0]);
         const precision = isScaleOrdinalOrTime
             ? 0
-            : getAcceptableTickPrecision(valueWindow[1] - valueWindow[0], pxSpan, 0.5);
+            : getAcceptableTickPrecision(valueWindow, pxSpan, 0.5);
         each([[0, mathCeil], [1, mathFloor]] as const, function ([idx, ceilOrFloor]) {
             if (!needRound[idx] || !isFinite(precision)) {
                 return;
@@ -320,10 +322,10 @@ class AxisProxy {
         // Nevertheless, user can set min/max/scale on axes to make extent of axes
         // consistent.
         const axis = this.getAxisModel().axis;
-        axisExtentInfoFinalBuild(this.ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
-        const rawExtentInfo = ensureScaleRawExtentInfo(axis)
-        const rawExtentResult = rawExtentInfo.calculate();
-        this._dataExtent = [rawExtentResult.min, rawExtentResult.max];
+        scaleRawExtentInfoReallyCreate(this.ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
+
+        const rawExtentInfo = axis.scale.rawExtentInfo;
+        this._dataExtent = rawExtentInfo.makeForZoom();
 
         // `calculateDataWindow` uses min/maxSpan.
         this._updateMinMaxSpan();
@@ -342,10 +344,10 @@ class AxisProxy {
         // `axisHelper.getScaleExtent`. But the different just affects the experience a
         // little when zooming. So it will not be fixed until some users require it strongly.
         if (percent[0] !== 0) {
-            rawExtentInfo.setDeterminedMinMax('min', value[0]);
+            rawExtentInfo.setZoomMinMax(0, value[0]);
         }
         if (percent[1] !== 100) {
-            rawExtentInfo.setDeterminedMinMax('max', value[1]);
+            rawExtentInfo.setZoomMinMax(1, value[1]);
         }
     }
 

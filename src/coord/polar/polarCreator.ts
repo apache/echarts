@@ -24,6 +24,7 @@ import Polar, { polarDimensions } from './Polar';
 import {parsePercent} from '../../util/number';
 import {
     createScaleByModel,
+    determineAxisType,
 } from '../../coord/axisHelper';
 
 import PolarModel from './PolarModel';
@@ -41,7 +42,7 @@ import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { createBoxLayoutReference } from '../../util/layout';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, axisExtentInfoFinalBuild, axisExtentInfoRequireBuild
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoReallyCreate, scaleRawExtentInfoRequireCreate
 } from '../scaleRawExtentInfo';
 
 /**
@@ -84,8 +85,8 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     const angleAxis = polar.getAngleAxis();
     const radiusAxis = polar.getRadiusAxis();
 
-    axisExtentInfoFinalBuild(ecModel, angleAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
-    axisExtentInfoFinalBuild(ecModel, radiusAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+    scaleRawExtentInfoReallyCreate(ecModel, angleAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+    scaleRawExtentInfoReallyCreate(ecModel, radiusAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
 
     scaleCalcNice(angleAxis);
     scaleCalcNice(radiusAxis);
@@ -106,8 +107,8 @@ function isAngleAxisModel(axisModel: AngleAxisModel | PolarAxisModel): axisModel
  * Set common axis properties
  */
 function setAxis(axis: RadiusAxis | AngleAxis, axisModel: PolarAxisModel) {
-    axis.type = axisModel.get('type');
-    axis.scale = createScaleByModel(axisModel);
+    axis.type = determineAxisType(axisModel);
+    axis.scale = createScaleByModel(axisModel, axis.type, false);
     axis.onBand = (axisModel as AxisBaseModel<CategoryAxisBaseOption>).get('boundaryGap')
         && axis.type === 'category';
     axis.inverse = axisModel.get('inverse');
@@ -174,8 +175,8 @@ const polarCreator = {
                 }
                 const polar = seriesModel.coordinateSystem = polarModel.coordinateSystem;
                 if (polar) {
-                    axisExtentInfoRequireBuild(polar.getRadiusAxis(), seriesModel, null);
-                    axisExtentInfoRequireBuild(polar.getAngleAxis(), seriesModel, null);
+                    scaleRawExtentInfoRequireCreate(polar.getRadiusAxis(), seriesModel);
+                    scaleRawExtentInfoRequireCreate(polar.getAngleAxis(), seriesModel);
                 }
             }
         });

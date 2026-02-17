@@ -32,7 +32,7 @@ import {
 } from '../../util/types';
 import { AxisBaseOption, CategoryAxisBaseOption, ValueAxisBaseOption } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
-import Radar from './Radar';
+import Radar, { RADAR_DEFAULT_SPLIT_NUMBER } from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
 import tokens from '../../visual/tokens';
 
@@ -207,7 +207,7 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
 
         boundaryGap: [0, 0],
 
-        splitNumber: 5,
+        splitNumber: RADAR_DEFAULT_SPLIT_NUMBER,
 
         axisNameGap: 15,
 
