@@ -1,5 +1,13 @@
 [
   {
+    "link": "https://github.com/apache/echarts/issues/21430",
+    "comment": "The diff may be introduced by the change of dataZoom auto precision. And the result is acceptable.",
+    "type": "Others",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1768476462244
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/19459",
     "comment": "",
     "type": "New Feature",
