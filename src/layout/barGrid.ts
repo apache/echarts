@@ -28,7 +28,7 @@ import { StageHandler, NullUndefined } from '../util/types';
 import { createFloat32Array } from '../util/vendor';
 import {
     extentHasValue,
-    getCachePerECUpdate, GlobalModelCachePerECUpdate, initExtentForUnion,
+    getCachePerECFullUpdate, GlobalModelCachePerECFullUpdate, initExtentForUnion,
     isValidNumberForExtent, makeCallOnlyOnce, makeInner,
     unionExtentFromNumber,
 } from '../util/model';
@@ -48,7 +48,7 @@ import type Scale from '../scale/Scale';
 
 const ecModelCacheInner = makeInner<{
     layoutPre: BarGridLayoutPre;
-}, GlobalModelCachePerECUpdate>();
+}, GlobalModelCachePerECFullUpdate>();
 
 // Record of layout preparation by series sub type.
 type BarGridLayoutPre = Partial<Record<BaseBarSeriesSubType, BarGridLayoutPreOnSeriesType>>;
@@ -176,7 +176,7 @@ export function getLayoutOnAxis(opt: BarGridLayoutOption): BarGridLayoutResultFo
 function ensureLayoutPre(
     ecModel: GlobalModel, seriesType: BaseBarSeriesSubType
 ): BarGridLayoutPreOnSeriesType {
-    const ecCache = ecModelCacheInner(getCachePerECUpdate(ecModel));
+    const ecCache = ecModelCacheInner(getCachePerECFullUpdate(ecModel));
     const layoutPre = ecCache.layoutPre || (ecCache.layoutPre = {});
     return layoutPre[seriesType] || (layoutPre[seriesType] = {
         axes: [], axisMap: {}, seriesReady: false

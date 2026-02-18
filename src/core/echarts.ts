@@ -1577,6 +1577,8 @@ class ECharts extends Eventful<ECEventDefinition> {
     private static internalField = (function () {
 
         prepare = function (ecIns: ECharts): void {
+            modelUtil.resetCachePerECPrepare(ecIns._model);
+
             const scheduler = ecIns._scheduler;
 
             scheduler.restorePipelines(ecIns._model);
@@ -1802,7 +1804,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     return;
                 }
 
-                modelUtil.resetCachePerECUpdate(ecModel);
+                modelUtil.resetCachePerECFullUpdate(ecModel);
                 ecModel.setUpdatePayload(payload);
 
                 scheduler.restoreData(ecModel, payload);

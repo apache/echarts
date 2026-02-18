@@ -82,10 +82,8 @@ class Axis {
     // `inverse` can be inferred by `extent` unless `extent[0] === extent[1]`.
     inverse: AxisBaseOption['inverse'] = false;
 
-    // Injected outside
-    alignTo: Axis;
-    // Injected outside.
-    suggestNotOnZeroOfMe: boolean;
+    // To be injected outside. May change - do not use it outside of echarts.
+    __alignTo: Axis;
 
 
     constructor(dim: DimensionName, scale: Scale, extent: [number, number]) {

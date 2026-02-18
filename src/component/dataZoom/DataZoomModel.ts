@@ -24,7 +24,6 @@ import {
     LayoutOrient,
     ComponentOption,
     LabelOption,
-    NullUndefined
 } from '../../util/types';
 import Model from '../../model/Model';
 import GlobalModel from '../../model/Global';

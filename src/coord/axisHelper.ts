@@ -50,9 +50,19 @@ import {
     extentDiffers, isLogScale, isOrdinalScale
 } from '../scale/helper';
 import { AxisModelExtendedInCreator } from './axisModelCreator';
-import { initExtentForUnion } from '../util/model';
+import { initExtentForUnion, makeInner } from '../util/model';
 import { ComponentModel } from '../echarts.simple';
 import { SCALE_EXTENT_KIND_EFFECTIVE, SCALE_MAPPER_DEPTH_OUT_OF_BREAK } from '../scale/scaleMapper';
+
+
+const axisInner = makeInner<{
+    noOnMyZero: SuppressOnAxisZeroReason;
+}, Axis>();
+
+type SuppressOnAxisZeroReason = {
+    dz?: boolean;
+    base?: boolean
+};
 
 
 export function determineAxisType(
@@ -135,6 +145,21 @@ export function ifAxisCrossZero(axis: Axis) {
     const min = dataExtent[0];
     const max = dataExtent[1];
     return !((min > 0 && max > 0) || (min < 0 && max < 0));
+}
+
+export function suppressOnAxisZero(axis: Axis, reason: Partial<SuppressOnAxisZeroReason>): void {
+    zrUtil.defaults(axisInner(axis).noOnMyZero || (axisInner(axis).noOnMyZero = {}), reason);
+}
+
+/**
+ * `true`: Prevent orthoganal axes from positioning at the zero point of this axis.
+ */
+export function isOnAxisZeroSuppressed(axis: Axis): boolean {
+    const dontOnAxisZero = axisInner(axis).noOnMyZero;
+    // Empirically, onZero causes weired effect when dataZoom is used on an "base axis". Consider
+    // bar series as an example. And also consider when `SCALE_EXTENT_KIND_MAPPING` is used, where
+    // the axis line is likely to cross the series shapes unexpectedly.
+    return dontOnAxisZero && dontOnAxisZero.dz && dontOnAxisZero.base;
 }
 
 /**

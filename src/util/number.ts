@@ -37,6 +37,8 @@ const RADIAN_EPSILON = 1e-4;
 const TO_FIXED_SUPPORTED_PRECISION_MAX = 20;
 
 // For rounding error like `2.9999999999999996`, with respect to IEEE754 64bit float.
+// NOTICE: It only works when the expected result is a rational number with low
+// precision. See method `round` for details.
 export const DEFAULT_PRECISION_FOR_ROUNDING_ERROR = 14;
 
 function _trim(str: string): string {

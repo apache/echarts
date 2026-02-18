@@ -35,6 +35,7 @@ import { isOrdinalScale, isTimeScale } from '../../scale/helper';
 import {
     AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, scaleRawExtentInfoReallyCreate,
 } from '../../coord/scaleRawExtentInfo';
+import { suppressOnAxisZero } from '../../coord/axisHelper';
 
 
 interface MinMaxSpan {
@@ -56,6 +57,8 @@ interface AxisProxyWindow {
 }
 
 /**
+ * NOTICE: Its lifetime is different from `Axis` instance. It is recreated in each run of "ec prepare".
+ *
  * Operate single axis.
  * One axis can only operated by one axis operator.
  * Different dataZoomModels may be defined to operate the same axis.
@@ -156,7 +159,8 @@ class AxisProxy {
         const dataExtent = this._dataExtent;
         const axis = this.getAxisModel().axis;
         const scale = axis.scale;
-        const rangePropMode = this._dataZoomModel.getRangePropMode();
+        const dataZoomModel = this._dataZoomModel;
+        const rangePropMode = dataZoomModel.getRangePropMode();
         const percentExtent = [0, 100];
         const percentWindow = [] as unknown as [number, number];
         const valueWindow = [] as unknown as [number, number];
@@ -262,6 +266,13 @@ class AxisProxy {
         const pxSpan = mathAbs(pxExtent[1] - pxExtent[0]);
         const precision = isScaleOrdinalOrTime
             ? 0
+            // NOTICE: We deliberately do not allow specifying this precision by users, until real requirements
+            // occur. Otherwise, unnecessary complexity and bad case may be introduced. A small precision may
+            // cause the rounded ends overflow the expected min/max significantly. And this precision effectively
+            // determines the size of a roaming step, and a big step would likely constantly cut through series
+            // shapes in an unexpected place and cause visual artifacts (e.g., for bar series). Although
+            // theroetically that defect can be resolved by introducing extra spaces between axis min/max tick
+            // and axis boundary (see `SCALE_EXTENT_KIND_MAPPING`), it's complicated and unnecessary.
             : getAcceptableTickPrecision(valueWindow, pxSpan, 0.5);
         each([[0, mathCeil], [1, mathFloor]] as const, function ([idx, ceilOrFloor]) {
             if (!needRound[idx] || !isFinite(precision)) {
@@ -323,6 +334,8 @@ class AxisProxy {
         // consistent.
         const axis = this.getAxisModel().axis;
         scaleRawExtentInfoReallyCreate(this.ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
+
+        suppressOnAxisZero(axis, {dz: true});
 
         const rawExtentInfo = axis.scale.rawExtentInfo;
         this._dataExtent = rawExtentInfo.makeForZoom();

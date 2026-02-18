@@ -88,9 +88,11 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
     }
 
     /**
-     * Base axis will be used on stacking.
+     * Base axis will be used on stacking and series such as 'bar', 'pictorialBar', etc.
      */
     getBaseAxis(): Axis2D {
+        // PENGING: Should we allow bar series to specify a base axis when
+        // both axes are type "value", rather than force to xAxis?
         return this.getAxesByScale('ordinal')[0]
             || this.getAxesByScale('time')[0]
             || this.getAxis('x');

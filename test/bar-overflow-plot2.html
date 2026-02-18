@@ -42,10 +42,12 @@ under the License.
                     // Historically, true by default.
                     yAxisOnZero: 'unspecified',
                     useDataZoom: true,
+                    xAxisShowMinMaxLabel: undefined,
+                    dataZoomLabelPrecision: undefined,
                 };
 
                 function createData() {
-                    var MIN_X = 0;
+                    var MIN_X = -0.0025;
                     var MAX_X = 0.0035;
                     var actualMinX = Infinity;
                     var data0 = [];
@@ -57,23 +59,22 @@ under the License.
                     var dataSet = {bar_a: [], bar_b: [], bar_partially_negative: []};
                     var minXSet = {bar_a: Infinity, bar_b: Infinity, bar_partially_negative: Infinity};
 
-                    for (var i = MIN_X; i <= MAX_X; i += 0.0001) {
+                    for (var i = MIN_X; i <= MAX_X; i = +(i + 0.0001).toFixed(10)) {
                         lastDelta += (Math.random() - 0.5) * 5;
                         last += lastDelta;
-                        addItem(
-                            'bar_a', i, last
-                        );
-                        addItem(
-                            'bar_b', i, Math.max(90, last - Math.random() * 700)
-                        );
-                        addItem(
-                            'bar_partially_negative', i - Math.round((MAX_X - MIN_X) / 2), Math.max(70, last + Math.random() * 600)
-                        );
+                        if (i >= 0) {
+                            addItem('bar_a', i, last);
+                            addItem('bar_b', i, Math.max(90, last - Math.random() * 700));
+                        }
+                        if (i < 0.0030) {
+                            addItem('bar_partially_negative', i, Math.max(70, last + Math.random() * 600));
+                        }
                     }
                     function addItem(prop, x, y) {
                         dataSet[prop].push([x, y]);
                         minXSet[prop] = Math.min(minXSet[prop], x);
                     }
+                    console.log(dataSet, minXSet)
 
                     return {dataSet, minXSet};
                 }
@@ -104,8 +105,12 @@ under the License.
                         dataZoom: _ctx.useDataZoom
                             ? [{
                                 type: 'slider',
+                                labelPrecision: _ctx.dataZoomLabelPrecision,
+                                valuePrecision: 4,
                             }, {
                                 type: 'inside',
+                                labelPrecision: _ctx.dataZoomLabelPrecision,
+                                valuePrecision: 4,
                             }]
                             : undefined,
                         xAxis: {
@@ -113,6 +118,10 @@ under the License.
                             splitLine: {
                                 show: false
                             },
+                            axisLabel: {
+                                showMinLabel: _ctx.xAxisShowMinMaxLabel,
+                                showMaxLabel: _ctx.xAxisShowMinMaxLabel,
+                            }
                         },
                         yAxis: {
                             type: 'value',
@@ -153,6 +162,7 @@ under the License.
 
                 var myChart = testHelper.create(echarts, 'main_onZero', {
                     title: [
+                        'Bars must not overflow the xAxis.',
                         'Check yAxis onZero to xAxis (xAxis is value axis).',
                         `series data min value is **${testHelper.printObject(_data.minXSet)}**`,
                     ],
@@ -172,6 +182,24 @@ under the License.
                         values: [_ctx.useDataZoom, false],
                         onchange: function () {
                             _ctx.useDataZoom = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'xAxisShowMinMaxLabel:',
+                        values: [_ctx.xAxisShowMinMaxLabel, true, false],
+                        onchange() {
+                            _ctx.xAxisShowMinMaxLabel = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'br',
+                    }, {
+                        type: 'select',
+                        text: 'dataZoomLabelPrecision:',
+                        values: [_ctx.dataZoomLabelPrecision, 0, 2, 4, 8],
+                        onchange() {
+                            _ctx.dataZoomLabelPrecision = this.value;
                             updateChart();
                         }
                     }]

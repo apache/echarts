@@ -32,6 +32,8 @@ import {
     shouldAxisShow,
     retrieveAxisBreaksOption,
     determineAxisType,
+    suppressOnAxisZero,
+    isOnAxisZeroSuppressed,
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
@@ -74,7 +76,6 @@ import {
     AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE,
     scaleRawExtentInfoEnableBoxCoordSysUsage, scaleRawExtentInfoReallyCreate, scaleRawExtentInfoRequireCreate
 } from '../scaleRawExtentInfo';
-import { SCALE_EXTENT_KIND_MAPPING } from '../../scale/scaleMapper';
 import { hasBreaks } from '../../scale/break';
 
 
@@ -144,7 +145,7 @@ class Grid implements CoordinateSystemMaster {
 
             for (let i = axesIndices.length - 1; i >= 0; i--) { // Reverse order
                 const axis = axes[+axesIndices[i]];
-                if (axis.alignTo) {
+                if (axis.__alignTo) {
                     axisNeedsAlign.push(axis);
                 }
                 else {
@@ -152,13 +153,13 @@ class Grid implements CoordinateSystemMaster {
                 }
             };
             each(axisNeedsAlign, axis => {
-                if (incapableOfAlignNeedFallback(axis, axis.alignTo as Axis2D)) {
+                if (incapableOfAlignNeedFallback(axis, axis.__alignTo as Axis2D)) {
                     scaleCalcNice(axis);
                 }
                 else {
                     scaleCalcAlign(
                         axis,
-                        axis.alignTo.scale as IntervalScale | LogScale
+                        axis.__alignTo.scale as IntervalScale | LogScale
                     );
                 }
             });
@@ -445,6 +446,8 @@ class Grid implements CoordinateSystemMaster {
 
                 cartesian.addAxis(xAxis);
                 cartesian.addAxis(yAxis);
+
+                suppressOnAxisZero(cartesian.getBaseAxis(), {base: true});
             });
         });
 
@@ -666,17 +669,18 @@ function fixAxisOnZero(
     }
 }
 
+/**
+ * CAVEAT: Must not be called before `CoordinateSystem#update` due to `__dontOnMyZero`.
+ */
 function canOnZeroToAxis(
     onZeroOption: AxisBaseOptionCommon['axisLine']['onZero'],
     axis: Axis2D
 ): boolean {
+    // PENDING: Historical behavior: `onZero` on 'category' and 'time' axis are always disabled
+    // even if ec option gives `onZero: true`.
     let can = axis && axis.type !== 'category' && axis.type !== 'time' && ifAxisCrossZero(axis);
-    if (can && onZeroOption === 'auto') {
-        if (axis.scale.getExtentUnsafe(SCALE_EXTENT_KIND_MAPPING, null)) {
-            // Empirically, onZero is inappropriate when `SCALE_EXTENT_KIND_MAPPING` is
-            // used - the axis line is likely to cross the series shapes unexpectedly.
-            can = false;
-        }
+    if (can && onZeroOption === 'auto' && isOnAxisZeroSuppressed(axis)) {
+        can = false;
     }
     // falsy value of `onZeroOption` has been handled in the previous logic.
     return can;
@@ -722,7 +726,7 @@ function prepareAlignToInCoordSysCreate(axes: Record<number, Axis2D>): void {
     }
     if (alignTo) {
         each(axisNeedsAlign, function (axis) {
-            axis.alignTo = alignTo;
+            axis.__alignTo = alignTo;
         });
     }
 }

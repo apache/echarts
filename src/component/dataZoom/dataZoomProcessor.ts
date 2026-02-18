@@ -20,9 +20,12 @@
 import {createHashMap, each} from 'zrender/src/core/util';
 import SeriesModel from '../../model/Series';
 import DataZoomModel from './DataZoomModel';
-import { getAxisMainType, DataZoomAxisDimension, DataZoomExtendedAxisBaseModel, getAlignTo } from './helper';
+import {
+    getAxisMainType, DataZoomAxisDimension, getAlignTo, getAxisProxyFromModel, setAxisProxyToModel
+} from './helper';
 import AxisProxy from './AxisProxy';
 import { StageHandler } from '../../util/types';
+import { AxisBaseModel } from '../../coord/AxisBaseModel';
 
 
 const dataZoomProcessor: StageHandler = {
@@ -36,31 +39,27 @@ const dataZoomProcessor: StageHandler = {
             cb: (
                 axisDim: DataZoomAxisDimension,
                 axisIndex: number,
-                axisModel: DataZoomExtendedAxisBaseModel,
+                axisModel: AxisBaseModel,
                 dataZoomModel: DataZoomModel
             ) => void
         ) {
             ecModel.eachComponent('dataZoom', function (dataZoomModel: DataZoomModel) {
                 dataZoomModel.eachTargetAxis(function (axisDim, axisIndex) {
                     const axisModel = ecModel.getComponent(getAxisMainType(axisDim), axisIndex);
-                    cb(axisDim, axisIndex, axisModel as DataZoomExtendedAxisBaseModel, dataZoomModel);
+                    cb(axisDim, axisIndex, axisModel as AxisBaseModel, dataZoomModel);
                 });
             });
         }
         // FIXME: it brings side-effect to `getTargetSeries`.
-        // Prepare axis proxies.
-        eachAxisModel(function (axisDim, axisIndex, axisModel, dataZoomModel) {
-            // dispose all last axis proxy, in case that some axis are deleted.
-            axisModel.__dzAxisProxy = null;
-        });
         const proxyList: AxisProxy[] = [];
         eachAxisModel(function (axisDim, axisIndex, axisModel, dataZoomModel) {
             // Different dataZooms may control the same axis. In that case,
             // an axisProxy serves both of them.
-            if (!axisModel.__dzAxisProxy) {
+            if (!getAxisProxyFromModel(axisModel)) {
                 // Use the first dataZoomModel as the main model of axisProxy.
-                axisModel.__dzAxisProxy = new AxisProxy(axisDim, axisIndex, dataZoomModel, ecModel);
-                proxyList.push(axisModel.__dzAxisProxy);
+                const axisProxy = new AxisProxy(axisDim, axisIndex, dataZoomModel, ecModel);
+                proxyList.push(axisProxy);
+                setAxisProxyToModel(axisModel, axisProxy);
             }
         });
 

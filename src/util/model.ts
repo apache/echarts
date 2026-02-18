@@ -1269,22 +1269,47 @@ let onceUniqueIndex = getRandomIdBase();
 
 
 const ecModelCacheInner = makeInner<{
-    perECUpdate: GlobalModelCachePerECUpdate;
+    fullUpdate: GlobalModelCachePerECFullUpdate;
+    prepare: GlobalModelCachePerECPrepare;
 }, GlobalModel>();
 
-/**
- * Reset on each time `updateMethods.update` (i.e., full update) is called.
- * It is mainly used for cache.
- */
-export type GlobalModelCachePerECUpdate = {};
+export type GlobalModelCachePerECPrepare = {__: 'prepare'}; // Nominal to distinguish.
+export type GlobalModelCachePerECFullUpdate = {__: 'fullUpdate'}; // Nominal to distinguish.
 
 /**
  * CAVEAT: Can only be called by `echarts.ts`
  */
-export function resetCachePerECUpdate(ecModel: GlobalModel): void {
-    ecModelCacheInner(ecModel).perECUpdate = {};
+export function resetCachePerECPrepare(ecModel: GlobalModel): void {
+    ecModelCacheInner(ecModel).prepare = {} as GlobalModelCachePerECPrepare;
 }
 
-export function getCachePerECUpdate(ecModel: GlobalModel): GlobalModelCachePerECUpdate {
-    return ecModelCacheInner(ecModel).perECUpdate;
+/**
+ * CAVEAT: Can only be called by `echarts.ts`
+ */
+export function resetCachePerECFullUpdate(ecModel: GlobalModel): void {
+    ecModelCacheInner(ecModel).fullUpdate = {} as GlobalModelCachePerECFullUpdate;
+}
+
+/**
+ * The cache is auto cleared at the begining of a run of "ec prepare".
+ *
+ * NOTICE:
+ *  - It can be only called at "ec prepare" stage, such as,
+ *      - Do not call it in processor `getTargetSeries` methods.
+ *      - Do not call it in component/series model `init`/`mergeOption`/`optionUpdated`/`getData` methods.
+ *  - "ec prepare" is not necessarily called before each "ec full update".
+ */
+export function getCachePerECPrepare(ecModel: GlobalModel): GlobalModelCachePerECPrepare {
+    return ecModelCacheInner(ecModel).prepare;
+}
+
+/**
+ * The cache is auto cleared at the begining of a run of "ec full update".
+ *
+ * NOTICE:
+ *  - Do not call it at "ec prepare" stage. See `getCachePerECPrepare` for details.
+ *  - All shortcuts (such as `updateView`/`updateLayout`/etc.) do not clear it.
+ */
+export function getCachePerECFullUpdate(ecModel: GlobalModel): GlobalModelCachePerECFullUpdate {
+    return ecModelCacheInner(ecModel).fullUpdate;
 }
