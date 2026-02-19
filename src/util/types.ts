@@ -654,7 +654,7 @@ export type SeriesLayoutBy = typeof SERIES_LAYOUT_BY_COLUMN | typeof SERIES_LAYO
 // Like `sourceHeader: 2`, means line 0 and line 1 are header, data start from line 2.
 export type OptionSourceHeader = boolean | 'auto' | number;
 
-export type SeriesDataType = 'main' | 'node' | 'edge';
+export type SeriesDataType = 'main' | 'node' | 'edge' | 'marker';
 
 
 // --------------------------------------------
