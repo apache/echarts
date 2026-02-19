@@ -34,6 +34,7 @@ import { SINGLE_REFERRING } from '../../util/model';
 import { isOrdinalScale, isTimeScale } from '../../scale/helper';
 import {
     AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, scaleRawExtentInfoReallyCreate,
+    ScaleRawExtentResultForZoom,
 } from '../../coord/scaleRawExtentInfo';
 import { suppressOnAxisZero } from '../../coord/axisHelper';
 
@@ -45,20 +46,20 @@ interface MinMaxSpan {
     maxValueSpan: number
 }
 
-interface AxisProxyWindow {
-    value: [number, number];
-    percent: [number, number];
+export interface AxisProxyWindow {
+    // NOTE: May include non-effective portion.
+    value: number[];
+    noZoomEffMM: ScaleRawExtentResultForZoom['noZoomEffMM'];
+    percent: number[];
     // Percent invert from "value window", which may be slightly different from "percent window" due to some
     // handling such as rounding. The difference may be magnified in cases like "alignTicks", so we use
     // `percentInverted` in these cases.
     // But we retain the original input percent in `percent` whenever possible, since they have been used in views.
-    percentInverted: [number, number];
+    percentInverted: number[];
     valuePrecision: number;
 }
 
 /**
- * NOTICE: Its lifetime is different from `Axis` instance. It is recreated in each run of "ec prepare".
- *
  * Operate single axis.
  * One axis can only operated by one axis operator.
  * Different dataZoomModels may be defined to operate the same axis.
@@ -69,12 +70,15 @@ class AxisProxy {
 
     ecModel: GlobalModel;
 
+    // NOTICE: The lifetime of `AxisProxy` instance is different from `Axis` instance.
+    // It is recreated in each run of "ec prepare".
+
     private _dimName: DataZoomAxisDimension;
     private _axisIndex: number;
 
     private _window: AxisProxyWindow;
 
-    private _dataExtent: number[];
+    private _extent: ScaleRawExtentResultForZoom;
 
     private _minMaxSpan: MinMaxSpan;
 
@@ -156,7 +160,7 @@ class AxisProxy {
             endValue?: number | string | Date
         }
     ): AxisProxyWindow {
-        const dataExtent = this._dataExtent;
+        const {noZoomMapMM: dataExtent, noZoomEffMM} = this._extent;
         const axis = this.getAxisModel().axis;
         const scale = axis.scale;
         const dataZoomModel = this._dataZoomModel;
@@ -167,13 +171,26 @@ class AxisProxy {
         let hasPropModeValue;
         const needRound = [false, false];
 
+        // NOTE:
+        //  The current percentage base calculation strategy:
+        //    - If the window boundary is NOT at 0% or 100%, boundary values are derived from the raw extent
+        //      (series data + axis.min/max; see `ScaleRawExtentInfo['makeForZoom']`). Any subsequent "nice"
+        //      expansion are excluded.
+        //    - If the window boundary is at 0% or 100%, the "nice"-expanded portion is included.
+        //  Pros:
+        //    - The effect may be preferable when users intend to quickly narrow down to data details,
+        //      especially when "nice strategy" excessively expands the extent.
+        //    - It simplifies the logic, otherwise, "nice strategy" would need to be applied twice (full window
+        //      + current window).
+        //  Cons:
+        //    - This strategy causes jitter when switching dataZoom to/from 0%/100% (though generally acceptable).
+
         each(['start', 'end'] as const, function (prop, idx) {
             let boundPercent = opt[prop];
             let boundValue = opt[prop + 'Value' as 'startValue' | 'endValue'];
 
-            // Notice: dataZoom is based either on `percentProp` ('start', 'end') or
-            // on `valueProp` ('startValue', 'endValue'). (They are based on the data extent
-            // but not min/max of axis, which will be calculated by data window then).
+            // NOTE: dataZoom is based either on `percentProp` ('start', 'end') or
+            // on `valueProp` ('startValue', 'endValue').
             // The former one is suitable for cases that a dataZoom component controls multiple
             // axes with different unit or extent, and the latter one is suitable for accurate
             // zoom by pixel (e.g., in dataZoomSelect).
@@ -307,6 +324,7 @@ class AxisProxy {
 
         return {
             value: valueWindow,
+            noZoomEffMM: noZoomEffMM.slice(),
             percent: percentWindow,
             percentInverted: percentInvertedWindow,
             valuePrecision: precision,
@@ -318,7 +336,7 @@ class AxisProxy {
      * so it is recommended to be called in "process stage" but not "model init
      * stage".
      */
-    reset(dataZoomModel: DataZoomModel, alignToPercentInverted: [number, number] | NullUndefined) {
+    reset(dataZoomModel: DataZoomModel, alignToPercentInverted: number[] | NullUndefined) {
         if (!this.hostedBy(dataZoomModel)) {
             return;
         }
@@ -338,7 +356,7 @@ class AxisProxy {
         suppressOnAxisZero(axis, {dz: true});
 
         const rawExtentInfo = axis.scale.rawExtentInfo;
-        this._dataExtent = rawExtentInfo.makeForZoom();
+        this._extent = rawExtentInfo.makeForZoom();
 
         // `calculateDataWindow` uses min/maxSpan.
         this._updateMinMaxSpan();
@@ -441,7 +459,7 @@ class AxisProxy {
                     }
                     else {
                         const range: Dictionary<[number, number]> = {};
-                        range[dim] = valueWindow;
+                        range[dim] = valueWindow as [number, number];
 
                         // console.time('select');
                         seriesData.selectRange(range);
@@ -451,7 +469,7 @@ class AxisProxy {
             }
 
             each(dataDims, function (dim) {
-                seriesData.setApproximateExtent(valueWindow, dim);
+                seriesData.setApproximateExtent(valueWindow as [number, number], dim);
             });
         });
 
@@ -463,7 +481,7 @@ class AxisProxy {
     private _updateMinMaxSpan() {
         const minMaxSpan = this._minMaxSpan = {} as MinMaxSpan;
         const dataZoomModel = this._dataZoomModel;
-        const dataExtent = this._dataExtent;
+        const dataExtent = this._extent.noZoomMapMM;
 
         each(['min', 'max'], function (minMax) {
             let percentSpan = dataZoomModel.get(minMax + 'Span' as 'minSpan' | 'maxSpan');

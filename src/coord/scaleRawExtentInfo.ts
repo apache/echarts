@@ -92,10 +92,14 @@ type ScaleRawExtentResultForContainShape = Pick<
 >;
 
 /**
- * Return the min max before `dataZoom` applied for mapping.
- * "mapping" means `SCALE_EXTENT_KIND_MAPPING`.
+ * Return the min max before `dataZoom` applied.
  */
-type ScaleRawExtentResultForZoom = number[];
+export type ScaleRawExtentResultForZoom = {
+    // "effective" means `SCALE_EXTENT_KIND_EFFECTIVE`.
+    noZoomEffMM: number[];
+    // "mapping" means `SCALE_EXTENT_KIND_MAPPING`.
+    noZoomMapMM: number[];
+};
 
 type ScaleRawExtentResultFinal = Pick<
     ScaleRawExtentInternal,
@@ -343,7 +347,10 @@ export class ScaleRawExtentInfo {
 
     makeForZoom(): ScaleRawExtentResultForZoom {
         const internal = this._i;
-        return (internal.noZoomEffMMExp || internal.noZoomEffMM).slice();
+        return {
+            noZoomEffMM: internal.noZoomEffMM.slice(),
+            noZoomMapMM: makeNoZoomMappingMM(internal),
+        };
     }
 
     makeFinal(): ScaleRawExtentResultFinal {
@@ -359,7 +366,7 @@ export class ScaleRawExtentInfo {
             needCrossZero: internal.needCrossZero,
             needToggleAxisInverse: internal.needToggleAxisInverse,
             effMM: noZoomEffMM.slice(),
-            mapMM: this.makeForZoom(),
+            mapMM: makeNoZoomMappingMM(internal),
         };
         const effMM = result.effMM;
         const mapMM = result.mapMM;
@@ -412,6 +419,10 @@ export class ScaleRawExtentInfo {
         sanitizeExtent(internal, internal.noZoomEffMMExp = [start, end]);
     }
 
+}
+
+function makeNoZoomMappingMM(internal: ScaleRawExtentInternal): number[] {
+    return (internal.noZoomEffMMExp || internal.noZoomEffMM).slice();
 }
 
 /**

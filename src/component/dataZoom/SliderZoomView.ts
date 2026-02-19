@@ -22,7 +22,7 @@ import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
 import * as throttle from '../../util/throttle';
 import DataZoomView from './DataZoomView';
-import { linearMap, asc, parsePercent, round } from '../../util/number';
+import { linearMap, asc, parsePercent, round, mathMax, mathMin } from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
@@ -44,8 +44,11 @@ import Displayable from 'zrender/src/graphic/Displayable';
 import { createTextStyle } from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
 import tokens from '../../visual/tokens';
-import type AxisProxy from './AxisProxy';
 import { isOrdinalScale, isTimeScale } from '../../scale/helper';
+import { AxisProxyWindow } from './AxisProxy';
+import type Scale from '../../scale/Scale';
+import { SCALE_EXTENT_KIND_EFFECTIVE } from '../../scale/scaleMapper';
+
 
 const Rect = graphic.Rect;
 
@@ -827,11 +830,12 @@ class SliderZoomView extends DataZoomView {
 
         if (dataZoomModel.get('showDetail')) {
             const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
+            const scale = axisProxy.getAxisModel().axis.scale;
 
             if (axisProxy) {
                 const range = this._range;
 
-                let dataInterval: [number, number];
+                let window: AxisProxyWindow;
                 if (nonRealtime) {
                     // See #4434, data and axis are not processed and reset yet in non-realtime mode.
                     let calcWinInput = {start: range[0], end: range[1]};
@@ -840,15 +844,15 @@ class SliderZoomView extends DataZoomView {
                         const alignToWindow = alignTo.calculateDataWindow(calcWinInput).percentInverted;
                         calcWinInput = {start: alignToWindow[0], end: alignToWindow[1]};
                     }
-                    dataInterval = axisProxy.calculateDataWindow(calcWinInput).value;
+                    window = axisProxy.calculateDataWindow(calcWinInput);
                 }
                 else {
-                    dataInterval = axisProxy.getWindow().value;
+                    window = axisProxy.getWindow();
                 }
 
                 labelTexts = [
-                    this._formatLabel(dataInterval[0], axisProxy),
-                    this._formatLabel(dataInterval[1], axisProxy)
+                    formatLabel(dataZoomModel, 0, window, scale),
+                    formatLabel(dataZoomModel, 1, window, scale)
                 ];
             }
         }
@@ -884,31 +888,6 @@ class SliderZoomView extends DataZoomView {
                 text: labelTexts[handleIndex]
             });
         }
-    }
-
-    private _formatLabel(value: number, axisProxy: AxisProxy) {
-        const dataZoomModel = this.dataZoomModel;
-        const labelFormatter = dataZoomModel.get('labelFormatter');
-
-        let labelPrecision = dataZoomModel.get('labelPrecision');
-        if (labelPrecision == null || labelPrecision === 'auto') {
-            labelPrecision = axisProxy.getWindow().valuePrecision;
-        }
-
-        const scale = axisProxy.getAxisModel().axis.scale;
-        const valueStr = (value == null || isNaN(value))
-            ? ''
-            : (isOrdinalScale(scale) || isTimeScale(scale))
-            ? scale.getLabel({value: Math.round(value)})
-            : isFinite(labelPrecision)
-            ? round(value, labelPrecision, true)
-            : value + '';
-
-        return isFunction(labelFormatter)
-            ? labelFormatter(value, valueStr)
-            : isString(labelFormatter)
-                ? labelFormatter.replace('{value}', valueStr)
-                : valueStr;
     }
 
     private _onOverDataInfoTriggerArea(isOver: boolean): void {
@@ -1147,6 +1126,42 @@ class SliderZoomView extends DataZoomView {
         return rect;
     }
 
+}
+
+function formatLabel(
+    dataZoomModel: SliderZoomModel,
+    extentIdx: 0 | 1,
+    window: AxisProxyWindow,
+    scale: Scale
+): string {
+    const labelFormatter = dataZoomModel.get('labelFormatter');
+
+    let labelPrecision = dataZoomModel.get('labelPrecision');
+    if (labelPrecision == null || labelPrecision === 'auto') {
+        labelPrecision = window.valuePrecision;
+    }
+
+    // Do not display values out of `SCALE_EXTENT_KIND_EFFECTIVE` - generally they are meaningless.
+    // For example, `scaleExtent[0]` is often `0`, and negative values are unlikely to be meaningful.
+    // That is, "nice" expansion and `SCALE_EXTENT_KIND_MAPPING` expansion are always not display in labels.
+    const value = (extentIdx ? mathMin : mathMax)(
+        window.value[extentIdx],
+        window.noZoomEffMM[extentIdx],
+    );
+
+    const valueStr = (value == null || isNaN(value))
+        ? ''
+        : (isOrdinalScale(scale) || isTimeScale(scale))
+        ? scale.getLabel({value: Math.round(value)})
+        : isFinite(labelPrecision)
+        ? round(value, labelPrecision, true)
+        : value + '';
+
+    return isFunction(labelFormatter)
+        ? labelFormatter(value, valueStr)
+        : isString(labelFormatter)
+            ? labelFormatter.replace('{value}', valueStr)
+            : valueStr;
 }
 
 function getOtherDim(thisDim: 'x' | 'y' | 'radius' | 'angle' | 'single' | 'z') {
