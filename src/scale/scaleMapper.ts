@@ -204,7 +204,7 @@ export interface ScaleMapperGeneric<This> {
      * An extent is always in an increase order.
      * It always returns an array - never be a null/undefined.
      */
-    getExtent(this: This): [number, number];
+    getExtent(this: This): number[];
 
     /**
      * [NOTICE]:
@@ -215,7 +215,7 @@ export interface ScaleMapperGeneric<This> {
         kind: ScaleExtentKind,
         // NullUndefined means the outermost space.
         depth: ScaleMapperDepthOpt['depth'] | NullUndefined
-    ): [number, number] | NullUndefined;
+    ): number[] | NullUndefined;
 
     /**
      * [NOTICE]:
@@ -413,11 +413,11 @@ const linearScaleMapperMethods: ScaleMapperGeneric<LinearScaleMapper> = {
     },
 
     getExtent() {
-        return this._extents[SCALE_EXTENT_KIND_EFFECTIVE].slice() as [number, number];
+        return this._extents[SCALE_EXTENT_KIND_EFFECTIVE].slice();
     },
 
     getExtentUnsafe(kind) {
-        return this._extents[kind] as [number, number];
+        return this._extents[kind];
     },
 
     setExtent(start, end) {

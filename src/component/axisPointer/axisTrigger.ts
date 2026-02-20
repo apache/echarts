@@ -26,6 +26,7 @@ import { Dictionary, Payload, CommonAxisPointerOption, HighlightPayload, Downpla
 import AxisPointerModel, { AxisPointerOption } from './AxisPointerModel';
 import { each, curry, bind, extend, Curry1 } from 'zrender/src/core/util';
 import { ZRenderType } from 'zrender/src/zrender';
+import { isNullableNumberFinite } from '../../util/number';
 
 const inner = makeInner<{
     axisPointerLastHighlights: Dictionary<BatchItem>
@@ -288,7 +289,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
             seriesNestestValue = series.getData().get(dataDim[0], dataIndices[0]);
         }
 
-        if (seriesNestestValue == null || !isFinite(seriesNestestValue)) {
+        if (!isNullableNumberFinite(seriesNestestValue)) {
             return;
         }
 

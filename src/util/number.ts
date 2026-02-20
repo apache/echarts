@@ -802,3 +802,13 @@ export function getLeastCommonMultiple(a: number, b: number) {
     }
     return a * b / getGreatestCommonDividor(a, b);
 }
+
+/**
+ * NOTICE: Assume the input `val` is number or null/undefined, no type check.
+ * Therefore, it is NOT suitable for processing user input, but sufficient for
+ * internal usage in most cases.
+ * For platform-agnosticism, `Number.isFinite` is not used.
+ */
+export function isNullableNumberFinite(val: number | NullUndefined) {
+    return val != null && isFinite(val);
+}

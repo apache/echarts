@@ -18,7 +18,7 @@
 */
 
 import { each, defaults, hasOwn, assert } from 'zrender/src/core/util';
-import { mathAbs, mathMax, mathMin, parsePercent } from '../util/number';
+import { isNullableNumberFinite, mathAbs, mathMax, mathMin, parsePercent } from '../util/number';
 import { isDimensionStacked } from '../data/helper/dataStackHelper';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import Axis2D from '../coord/cartesian/Axis2D';
@@ -340,7 +340,7 @@ function createLayoutInfoListOnAxis(
         const linearScaleSpan = getScaleLinearSpanForMapping(axisScale);
         // `linearScaleSpan` may be `0` or `Infinity` or `NaN`, since normalizers like
         // `intervalScaleEnsureValidExtent` may not have been called yet.
-        if (axisPre.linearMinGap && linearScaleSpan && isFinite(linearScaleSpan)) {
+        if (axisPre.linearMinGap && linearScaleSpan && isNullableNumberFinite(linearScaleSpan)) {
             singular = false;
             bandWidth = pxSpan / linearScaleSpan * axisPre.linearMinGap;
             pxToDataRatio = linearScaleSpan / pxSpan;
@@ -759,7 +759,7 @@ function calcShapeOverflowSupplement(
             const linearSpan = getScaleLinearSpanForMapping(scale);
             linearSupplement = [-linearSpan * SINGULAR_SUPPLEMENT_RATIO, linearSpan * SINGULAR_SUPPLEMENT_RATIO];
         }
-        else if (pxToDataRatio != null && isFinite(pxToDataRatio)) {
+        else if (isNullableNumberFinite(pxToDataRatio)) {
             // Convert from pixel domain to data domain, since the `barsBoundPx` is calculated based on
             // `minGap` and extent on data domain.
             linearSupplement = [barsBoundPx[0] * pxToDataRatio, barsBoundPx[1] * pxToDataRatio];

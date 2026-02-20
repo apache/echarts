@@ -19,6 +19,7 @@
 
 import {
     getAcceptableTickPrecision,
+    isNullableNumberFinite,
     mathAbs, mathCeil, mathFloor, mathMax, mathRound, nice, NICE_MODE_MIN, quantity, round
 } from '../util/number';
 import IntervalScale from '../scale/Interval';
@@ -243,7 +244,7 @@ export function scaleCalcAlign(
         intervalPrecision = getAcceptableTickPrecision([max, min], pxSpan, 0.5 / alignToNiceSegCount);
         updateMinNiceFromMinT0Interval();
         updateMaxNiceFromMaxT1Interval();
-        if (isFinite(intervalPrecision)) {
+        if (isNullableNumberFinite(intervalPrecision)) {
             interval = round(interval, intervalPrecision);
         }
     }

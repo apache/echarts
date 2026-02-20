@@ -436,7 +436,7 @@ function addBreaksToTicks(
     // The input ticks should be in accending order.
     ticks: ScaleTick[],
     breaks: ParsedAxisBreakList,
-    scaleExtent: [number, number],
+    scaleExtent: number[],
     // Keep the break ends at the same level to avoid an awkward appearance.
     getTimeProps?: (clampedBrk: ParsedAxisBreak) => ScaleTick['time'],
 ): void {
