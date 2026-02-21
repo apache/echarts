@@ -151,7 +151,7 @@ function normalize(
     // Dont use optional arguments for performance consideration here.
 ): number {
     if (extent[1] === extent[0]) {
-        return 0.5;
+        return isNaN(val) ? NaN : 0.5;
     }
     return (val - extent[0]) / (extent[1] - extent[0]);
 }
