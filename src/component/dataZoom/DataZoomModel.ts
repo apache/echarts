@@ -579,12 +579,13 @@ class DataZoomModel<Opts extends DataZoomOption = DataZoomOption> extends Compon
 /**
  * Retrieve those raw params from option, which will be cached separately,
  * because they will be overwritten by normalized/calculated values in the main
- * process.
+ * process. Get parameter 'anchor' to add option to pin the chart to 'start' or
+ # 'ene' while using default dataZoom
  */
 function retrieveRawOption<T extends DataZoomOption>(option: T) {
     const ret = {} as T;
     each(
-        ['start', 'end', 'startValue', 'endValue', 'throttle'] as const,
+        ['start', 'end', 'startValue', 'endValue', 'throttle', 'anchor'] as const,
         function (name) {
             option.hasOwnProperty(name) && ((ret as any)[name] = option[name]);
         }
