@@ -77,6 +77,9 @@ import {
 import { TransformProp } from 'zrender/src/core/Transformable';
 import { ElementKeyframeAnimationOption } from '../../animation/customGraphicKeyframeAnimation';
 
+import * as zrUtil from 'zrender/src/core/util';
+import LegendVisualProvider from '../../visual/LegendVisualProvider';
+
 export type CustomExtraElementInfo = Dictionary<unknown>;
 
 // Also compat with ec4, where
@@ -368,6 +371,7 @@ export interface CustomSeriesOption extends
     ComponentOnMatrixOptionMixin {
 
     type?: 'custom'
+    useLegendByCategory?: boolean;
 
     // If set as 'none', do not depends on coord sys.
     coordinateSystem?: string | 'none';
@@ -415,6 +419,21 @@ export const customInnerStore = makeInner<{
 export default class CustomSeriesModel extends SeriesModel<CustomSeriesOption> {
 
     static type = 'series.custom';
+    /**
+     * @overwrite
+     */
+    init(option: CustomSeriesOption): void {
+        super.init.apply(this, arguments as any);
+
+        if (option.useLegendByCategory) {
+            // Enable legend selection for each data item
+            // Use a function instead of direct access because data reference may changed
+            this.legendVisualProvider = new LegendVisualProvider(
+                zrUtil.bind(this.getData, this), zrUtil.bind(this.getRawData, this)
+            );
+        }
+    }
+
     readonly type = CustomSeriesModel.type;
 
     static dependencies = ['grid', 'polar', 'geo', 'singleAxis', 'calendar', 'matrix'];
