@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Issue #21461 Fix Demo</title>
+    <script src="../dist/echarts.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .chart { width: 500px; height: 400px; border: 1px solid #ddd; }
+        h1 { font-size: 24px; margin-bottom: 10px; }
+        h2 { font-size: 18px; margin: 20px 0 10px 0; }
+        .description { margin-bottom: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Issue #21461: Label moveOverlap Fix</h1>
+    <div class="description">
+        This demo shows the fix for the bug where labels with moveOverlap were shifted unnecessarily 
+        and moved outside the coordinate system bounds.
+    </div>
+
+    <h2>Before Fix (Expected Issues):</h2>
+    <ul>
+        <li>Labels shifted even when not overlapping</li>
+        <li>Labels moved outside the coordinate system area</li>
+    </ul>
+
+    <h2>After Fix (Expected Behavior):</h2>
+    <ul>
+        <li>Labels only shift when they actually overlap</li>
+        <li>Labels stay within the coordinate system bounds</li>
+    </ul>
+
+    <div class="container">
+        <div id="chart1" class="chart"></div>
+        <div id="chart2" class="chart"></div>
+    </div>
+
+    <script>
+        // Chart 1: Heatmap with value axes and moveOverlap: 'shiftX'
+        var chart1 = echarts.init(document.getElementById('chart1'));
+        var data1 = [];
+        for (var i = 0; i < 5; i++) {
+            for (var j = 0; j < 5; j++) {
+                data1.push([i, j, Math.floor(Math.random() * 100)]);
+            }
+        }
+
+        chart1.setOption({
+            title: {
+                text: 'Heatmap with moveOverlap: shiftX',
+                left: 'center'
+            },
+            grid: {
+                left: 100,
+                right: 100,
+                top: 100,
+                bottom: 100,
+                backgroundColor: '#f5f5f5'
+            },
+            xAxis: {
+                type: 'value',
+                min: 0,
+                max: 4,
+                splitLine: { show: true }
+            },
+            yAxis: {
+                type: 'value',
+                min: 0,
+                max: 4,
+                splitLine: { show: true }
+            },
+            visualMap: {
+                min: 0,
+                max: 100,
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: 20
+            },
+            series: [{
+                type: 'heatmap',
+                data: data1,
+                label: {
+                    show: true,
+                    fontSize: 12,
+                    formatter: function(params) {
+                        return params.value[2];
+                    }
+                },
+                labelLayout: {
+                    moveOverlap: 'shiftX'
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        });
+
+        // Chart 2: Heatmap with time axis and moveOverlap: 'shiftY'
+        var chart2 = echarts.init(document.getElementById('chart2'));
+        var data2 = [];
+        var baseTime = new Date('2023-01-01').getTime();
+        for (var i = 0; i < 5; i++) {
+            for (var j = 0; j < 5; j++) {
+                data2.push([baseTime + i * 86400000, j, Math.floor(Math.random() * 100)]);
+            }
+        }
+
+        chart2.setOption({
+            title: {
+                text: 'Heatmap with moveOverlap: shiftY',
+                left: 'center'
+            },
+            grid: {
+                left: 120,
+                right: 100,
+                top: 100,
+                bottom: 100,
+                backgroundColor: '#f5f5f5'
+            },
+            xAxis: {
+                type: 'time',
+                splitLine: { show: true }
+            },
+            yAxis: {
+                type: 'value',
+                min: 0,
+                max: 4,
+                splitLine: { show: true }
+            },
+            visualMap: {
+                min: 0,
+                max: 100,
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: 20
+            },
+            series: [{
+                type: 'heatmap',
+                data: data2,
+                label: {
+                    show: true,
+                    fontSize: 12,
+                    formatter: function(params) {
+                        return params.value[2];
+                    }
+                },
+                labelLayout: {
+                    moveOverlap: 'shiftY'
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        });
+
+        // Highlight the grid area to show coordinate system bounds
+        console.log('Chart 1 Grid Area:', chart1.getModel().getComponent('grid', 0).coordinateSystem.getArea());
+        console.log('Chart 2 Grid Area:', chart2.getModel().getComponent('grid', 0).coordinateSystem.getArea());
+    </script>
+</body>
+</html>

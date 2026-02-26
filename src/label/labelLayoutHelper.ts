@@ -344,6 +344,45 @@ export function shiftLayoutOnXY(
         return a.rect[xyDim] - b.rect[xyDim];
     });
 
+    // First pass: check if there are any actual overlaps
+    let hasOverlap = false;
+    for (let i = 1; i < len; i++) {
+        const prevRect = list[i - 1].rect;
+        const currRect = list[i].rect;
+        if (currRect[xyDim] < prevRect[xyDim] + prevRect[sizeDim]) {
+            hasOverlap = true;
+            break;
+        }
+    }
+
+    // If no overlaps, only clamp labels to bounds without shifting
+    if (!hasOverlap) {
+        let adjusted = false;
+        for (let i = 0; i < len; i++) {
+            const item = list[i];
+            const rect = item.rect;
+            const rectStart = rect[xyDim];
+            const rectEnd = rectStart + rect[sizeDim];
+            
+            // Clamp to minBound
+            if (rectStart < minBound) {
+                const delta = minBound - rectStart;
+                rect[xyDim] = minBound;
+                item.label[xyDim] += delta;
+                adjusted = true;
+            }
+            // Clamp to maxBound
+            else if (rectEnd > maxBound) {
+                const delta = maxBound - rectEnd;
+                rect[xyDim] += delta;
+                item.label[xyDim] += delta;
+                adjusted = true;
+            }
+        }
+        return adjusted;
+    }
+
+    // Original overlap resolution logic
     let lastPos = 0;
     let delta;
     let adjusted = false;

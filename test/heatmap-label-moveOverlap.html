@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/esl.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+<body>
+    <style>
+        .chart {
+            width: 600px;
+            height: 400px;
+            border: 1px solid #ccc;
+            margin: 20px;
+            display: inline-block;
+        }
+    </style>
+
+    <div id="main1" class="chart"></div>
+    <div id="main2" class="chart"></div>
+    <div id="main3" class="chart"></div>
+
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            // Test case 1: Heatmap with value axes and moveOverlap: 'shiftX'
+            // Labels should NOT be shifted if they don't overlap
+            // Labels should stay within coordinate system bounds
+            var chart1 = echarts.init(document.getElementById('main1'));
+            var data1 = [];
+            for (var i = 0; i < 5; i++) {
+                for (var j = 0; j < 5; j++) {
+                    data1.push([i, j, Math.random() * 100]);
+                }
+            }
+
+            chart1.setOption({
+                title: { text: 'Issue #21461: moveOverlap shiftX (value axes)' },
+                grid: { left: 80, right: 80, top: 80, bottom: 80 },
+                xAxis: { type: 'value', min: 0, max: 4 },
+                yAxis: { type: 'value', min: 0, max: 4 },
+                visualMap: {
+                    min: 0,
+                    max: 100,
+                    calculable: true,
+                    orient: 'horizontal',
+                    left: 'center',
+                    bottom: 20
+                },
+                series: [{
+                    type: 'heatmap',
+                    data: data1,
+                    label: {
+                        show: true,
+                        formatter: function(params) {
+                            return params.value[2].toFixed(0);
+                        }
+                    },
+                    labelLayout: {
+                        moveOverlap: 'shiftX'
+                    }
+                }]
+            });
+
+            // Test case 2: Heatmap with time axes and moveOverlap: 'shiftY'
+            var chart2 = echarts.init(document.getElementById('main2'));
+            var data2 = [];
+            var baseTime = new Date('2023-01-01').getTime();
+            for (var i = 0; i < 5; i++) {
+                for (var j = 0; j < 5; j++) {
+                    data2.push([baseTime + i * 86400000, j, Math.random() * 100]);
+                }
+            }
+
+            chart2.setOption({
+                title: { text: 'Issue #21461: moveOverlap shiftY (time axis)' },
+                grid: { left: 100, right: 80, top: 80, bottom: 80 },
+                xAxis: { type: 'time' },
+                yAxis: { type: 'value', min: 0, max: 4 },
+                visualMap: {
+                    min: 0,
+                    max: 100,
+                    calculable: true,
+                    orient: 'horizontal',
+                    left: 'center',
+                    bottom: 20
+                },
+                series: [{
+                    type: 'heatmap',
+                    data: data2,
+                    label: {
+                        show: true,
+                        formatter: function(params) {
+                            return params.value[2].toFixed(0);
+                        }
+                    },
+                    labelLayout: {
+                        moveOverlap: 'shiftY'
+                    }
+                }]
+            });
+
+            // Test case 3: Heatmap with overlapping labels (should shift)
+            var chart3 = echarts.init(document.getElementById('main3'));
+            var data3 = [];
+            for (var i = 0; i < 10; i++) {
+                for (var j = 0; j < 10; j++) {
+                    data3.push([i, j, Math.random() * 100]);
+                }
+            }
+
+            chart3.setOption({
+                title: { text: 'Issue #21461: With actual overlap (should shift)' },
+                grid: { left: 80, right: 80, top: 80, bottom: 80 },
+                xAxis: { type: 'value', min: 0, max: 9 },
+                yAxis: { type: 'value', min: 0, max: 9 },
+                visualMap: {
+                    min: 0,
+                    max: 100,
+                    calculable: true,
+                    orient: 'horizontal',
+                    left: 'center',
+                    bottom: 20
+                },
+                series: [{
+                    type: 'heatmap',
+                    data: data3,
+                    label: {
+                        show: true,
+                        fontSize: 14,
+                        formatter: function(params) {
+                            return params.value[2].toFixed(0);
+                        }
+                    },
+                    labelLayout: {
+                        moveOverlap: 'shiftX'
+                    }
+                }]
+            });
+
+        });
+    </script>
+</body>
+</html>
