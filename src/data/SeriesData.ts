@@ -17,7 +17,7 @@
 * under the License.
 */
 
-/* global Int32Array */
+/* global Int32Array, Map */
 
 
 import * as zrUtil from 'zrender/src/core/util';
@@ -225,7 +225,7 @@ class SeriesData<
 
     private _dimSummary: DimensionSummary;
 
-    private _invertedIndicesMap: Record<SeriesDimensionName, ArrayLike<number>>;
+    private _invertedIndicesMap: Record<SeriesDimensionName, ArrayLike<number> | Map<number, number>>;
 
     private _calculationInfo: DataCalculationInfo<HostModel> = {} as DataCalculationInfo<HostModel>;
 
@@ -861,7 +861,7 @@ class SeriesData<
      * Only support the dimension which inverted index created.
      * Do not support other cases until required.
      * @param dim concrete dim
-     * @param value ordinal index
+     * @param value ordinal index or time value
      * @return rawIndex
      */
     rawIndexOf(dim: SeriesDimensionName, value: OrdinalNumber): number {
@@ -871,7 +871,13 @@ class SeriesData<
                 throw new Error('Do not supported yet');
             }
         }
-        const rawIndex = invertedIndices && invertedIndices[value];
+        let rawIndex: number | undefined;
+        if (invertedIndices instanceof Map) {
+            rawIndex = invertedIndices.get(value);
+        }
+        else {
+            rawIndex = invertedIndices && invertedIndices[value];
+        }
         if (rawIndex == null || isNaN(rawIndex)) {
             return INDEX_NOT_FOUND;
         }
@@ -1393,7 +1399,6 @@ class SeriesData<
             const invertedIndicesMap = data._invertedIndicesMap;
             zrUtil.each(invertedIndicesMap, function (invertedIndices, dim) {
                 const dimInfo = data._dimInfos[dim];
-                // Currently, only dimensions that has ordinalMeta can create inverted indices.
                 const ordinalMeta = dimInfo.ordinalMeta;
                 const store = data._store;
                 if (ordinalMeta) {
@@ -1408,6 +1413,14 @@ class SeriesData<
                     for (let i = 0; i < store.count(); i++) {
                         // Only support the case that all values are distinct.
                         invertedIndices[store.get(dimInfo.storeDimIndex, i) as number] = i;
+                    }
+                }
+                else if (dimInfo.type === 'time') {
+                    const timeInvertedIndices = invertedIndicesMap[dim] = new Map<number, number>();
+                    for (let i = 0; i < store.count(); i++) {
+                        const timeValue = store.get(dimInfo.storeDimIndex, i) as number;
+                        // Only support the case that all values are distinct.
+                        timeInvertedIndices.set(timeValue, i);
                     }
                 }
             });
