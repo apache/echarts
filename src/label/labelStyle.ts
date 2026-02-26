@@ -682,6 +682,11 @@ function setTokenTextStyle<TNuance extends TextCommonOptionNuanceBase>(
             textStyle.borderColor = inheritColor;
         }
     }
+    // If height or width is set but no backgroundColor, set transparent background
+    // to ensure the box constraints are applied
+    if ((textStyle.height != null || textStyle.width != null) && textStyle.backgroundColor == null) {
+        textStyle.backgroundColor = 'transparent';
+    }
 }
 
 export function getFont(
