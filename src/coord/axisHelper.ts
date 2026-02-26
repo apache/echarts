@@ -210,6 +210,7 @@ export function createScaleByModel(model: AxisBaseModel, axisType?: string): Sca
                 return new TimeScale({
                     locale: model.ecModel.getLocaleModel(),
                     useUTC: model.ecModel.get('useUTC'),
+                    timezone: model.ecModel.get('timezone'),
                 });
             default:
                 // case 'value'/'interval', 'log', or others.
