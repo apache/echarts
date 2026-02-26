@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>AxisPointer: cross + shadow</title>
+    <script src="../../dist/echarts.js"></script>
+</head>
+
+<body>
+    <div id="main" style="width: 800px; height: 500px;"></div>
+
+    <script>
+        var chart = echarts.init(document.getElementById('main'));
+
+        chart.setOption({
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                    // Current behavior:
+                    // - Only crosshair lines are shown
+                    // - Shadow background is NOT rendered
+                    //
+                    // Expected behavior (discussion pending):
+                    // - Crosshair lines + shadow background together
+                }
+            },
+            xAxis: {
+                type: 'category',
+                axisPointer: {
+                    type: 'shadow'
+                },
+                data: ['A', 'B', 'C', 'D']
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                type: 'bar',
+                data: [10, 20, 30, 40]
+            }]
+        });
+    </script>
+</body>
+
+</html>
