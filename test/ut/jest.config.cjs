@@ -46,7 +46,8 @@ module.exports = {
         '**/spec/data/*.test.ts',
         '**/spec/model/*.test.ts',
         '**/spec/scale/*.test.ts',
-        '**/spec/util/*.test.ts'
+        '**/spec/util/*.test.ts',
+        '**/spec/processor/*.test.ts'
     ],
     moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
         prefix: '<rootDir>/'
