@@ -27,10 +27,13 @@ import {
     ParsedValueNumeric
 } from '../util/types';
 import { DataProvider } from './helper/dataProvider';
-import { parseDataValue } from './helper/dataValueHelper';
+import {
+    DataSanitizationFilter, parseDataValue, parseSanitizationFilter, passesSanitizationFilter
+} from './helper/dataValueHelper';
 import OrdinalMeta from './OrdinalMeta';
 import { shouldRetrieveDataByName, Source } from './Source';
 import { initExtentForUnion } from '../util/model';
+import { asc } from '../util/number';
 
 const UNDEFINED = 'undefined';
 /* global Float64Array, Int32Array, Uint32Array, Uint16Array */
@@ -72,9 +75,6 @@ type FilterCb1 = (x: ParsedValue, idx: number) => boolean;
 type FilterCb = (...args: any) => boolean;
 // type MapArrayCb = (...args: any) => any;
 type MapCb = (...args: any) => ParsedValue | ParsedValue[];
-
-// g: greater than, ge: greater equal, l: less than, le: less equal
-export type DataStoreExtentFilter = {g?: number; ge?: number; l?: number; le?: number;};
 
 export type DimValueGetter = (
     this: DataStore,
@@ -509,7 +509,7 @@ class DataStore {
      * Get median of data in one dimension
      */
     getMedian(dim: DimensionIndex): number {
-        const dimDataArray: ParsedValue[] = [];
+        const dimDataArray: number[] = [];
         // map all data of one dimension
         this.each([dim], function (val) {
             if (!isNaN(val as number)) {
@@ -519,16 +519,14 @@ class DataStore {
 
         // TODO
         // Use quick select?
-        const sortedDimDataArray = dimDataArray.sort(function (a: number, b: number) {
-            return a - b;
-        }) as number[];
+        asc(dimDataArray);
         const len = this.count();
         // calculate median
         return len === 0
             ? 0
             : len % 2 === 1
-            ? sortedDimDataArray[(len - 1) / 2]
-            : (sortedDimDataArray[len / 2] + sortedDimDataArray[len / 2 - 1]) / 2;
+            ? dimDataArray[(len - 1) / 2]
+            : (dimDataArray[len / 2] + dimDataArray[len / 2 - 1]) / 2;
     }
 
     /**
@@ -1134,7 +1132,7 @@ class DataStore {
 
     getDataExtent(
         dim: DimensionIndex,
-        filter: DataStoreExtentFilter | NullUndefined
+        filter: DataSanitizationFilter | NullUndefined
     ): [number, number] {
         // Make sure use concrete dim as cache name.
         const dimData = this._chunks[dim];
@@ -1165,29 +1163,10 @@ class DataStore {
 
         const thisExtent = this._extent;
         const dimExtentRecord = thisExtent[dim] || (thisExtent[dim] = {});
-        let filterKey = '';
-        let filterG = -Infinity;
-        let filterGE = -Infinity;
-        let filterL = Infinity;
-        let filterLE = Infinity;
-        if (filter) {
-            if (filter.g != null) {
-                filterKey += 'G' + filter.g;
-                filterG = filter.g;
-            }
-            if (filter.ge != null) {
-                filterKey += 'GE' + filter.ge;
-                filterGE = filter.ge;
-            }
-            if (filter.l != null) {
-                filterKey += 'L' + filter.l;
-                filterL = filter.l;
-            }
-            if (filter.le != null) {
-                filterKey += 'LE' + filter.le;
-                filterLE = filter.le;
-            }
-        }
+
+        const filterParsed = parseSanitizationFilter(filter);
+        const filterKey = filterParsed.key;
+
         const dimExtent = dimExtentRecord[filterKey];
         if (dimExtent) {
             return dimExtent.slice() as [number, number];
@@ -1196,24 +1175,18 @@ class DataStore {
         let min = initialExtent[0];
         let max = initialExtent[1];
 
-        // NOTICE: Performance sensitive on large data.
         for (let i = 0; i < currEnd; i++) {
+            // NOTICE: Manually inline some code for performance of large data.
             const rawIdx = this.getRawIndex(i);
             const value = dimData[rawIdx] as ParsedValueNumeric;
-            if (filter) {
-                if (value <= filterG
-                    || value < filterGE
-                    || value >= filterL
-                    || value > filterLE
-                ) {
-                    continue;
+            // NOTE: in most cases, filter does not exist.
+            if (!filter || passesSanitizationFilter(filterParsed, value)) {
+                if (value < min) {
+                    min = value;
                 }
-            }
-            if (value < min) {
-                min = value;
-            }
-            if (value > max) {
-                max = value;
+                if (value > max) {
+                    max = value;
+                }
             }
         }
 

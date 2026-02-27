@@ -38,6 +38,7 @@ import {
     AxisLabelFormatterExtraParams,
     OptionAxisType,
     AXIS_TYPES,
+    AxisShowMinMaxLabelOption,
 } from './axisCommonTypes';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';

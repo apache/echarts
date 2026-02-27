@@ -23,7 +23,7 @@ import { NullUndefined } from '../util/types';
 import { AxisBreakParsingResult, BreakScaleMapper, getScaleBreakHelper } from './break';
 import { error } from '../util/log';
 import { ValueTransformLookupOpt } from './helper';
-import { DataStoreExtentFilter } from '../data/DataStore';
+import { DataSanitizationFilter } from '../data/helper/dataValueHelper';
 
 
 // ------ START: Scale Mapper Core ------
@@ -34,7 +34,6 @@ import { DataStoreExtentFilter } from '../data/DataStore';
  *      - All tick/label-related calculation.
  *      - `dataZoom` controlled ends.
  *      - Cartesian2D `clampData`.
- *      - `axisPointer` triggering.
  *      - line series start.
  *      - heatmap series range.
  *      - markerArea range.
@@ -58,6 +57,7 @@ import { DataStoreExtentFilter } from '../data/DataStore';
  *      - `grid` boundary related calculation in view rendering, such as, `barGrid` calculates
  *        `barWidth` for numeric scales based on the data extent.
  *      - Axis line position determination (such as `canOnZeroToAxis`);
+ *      - `axisPointer` triggering (otherwise users may be confused if using `SCALE_EXTENT_KIND_EFFECTIVE`).
  *    `SCALE_EXTENT_KIND_MAPPING` can be absent, which can be used to determine whether it is used.
  *
  * Illustration:
@@ -72,6 +72,7 @@ export const SCALE_EXTENT_KIND_MAPPING = 1;
 
 
 const SCALE_MAPPER_METHOD_NAMES_MAP: Record<keyof ScaleMapper, 1> = {
+    needTransform: 1,
     normalize: 1,
     scale: 1,
     transformIn: 1,
@@ -81,7 +82,7 @@ const SCALE_MAPPER_METHOD_NAMES_MAP: Record<keyof ScaleMapper, 1> = {
     getExtentUnsafe: 1,
     setExtent: 1,
     setExtent2: 1,
-    getSeriesExtentFilter: 1,
+    getFilter: 1,
     sanitizeExtent: 1,
     freeze: 1,
 };
@@ -147,6 +148,12 @@ export type ScaleMapperTransformInOpt =
  */
 export interface ScaleMapper extends ScaleMapperGeneric<ScaleMapper> {}
 export interface ScaleMapperGeneric<This> {
+
+    /**
+     * Enable a fast path in large data traversal - the call of `transformIn`/`transformOut`
+     * can be omitted, and this is the most case.
+     */
+    needTransform(this: This): boolean;
 
     /**
      * Normalize a value to linear [0, 1], return 0.5 if extent span is 0.
@@ -240,7 +247,10 @@ export interface ScaleMapperGeneric<This> {
     setExtent(this: This, start: number, end: number): void;
     setExtent2(this: This, kind: ScaleExtentKind, start: number, end: number): void;
 
-    getSeriesExtentFilter?: () => DataStoreExtentFilter;
+    /**
+     * Filter for sanitization.
+     */
+    getFilter?: () => DataSanitizationFilter;
 
     /**
      * Sanitize the input extent if possible. For example, for LogScale, the negative part will be clampped.
@@ -383,6 +393,10 @@ export function initLinearScaleMapper(
 
 const linearScaleMapperMethods: ScaleMapperGeneric<LinearScaleMapper> = {
 
+    needTransform() {
+        return false;
+    },
+
     /**
      * NOTICE: Don't use optional arguments for performance consideration here.
      */
@@ -408,7 +422,9 @@ const linearScaleMapperMethods: ScaleMapperGeneric<LinearScaleMapper> = {
     },
 
     contain(val) {
-        const extent = this._extents[SCALE_EXTENT_KIND_EFFECTIVE];
+        // This method is typically used in axis trigger and markers.
+        // Users may be confused if the extent is restricted to `SCALE_EXTENT_KIND_EFFECTIVE`.
+        const extent = getScaleExtentForMappingUnsafe(this, null);
         return val >= extent[0] && val <= extent[1];
     },
 

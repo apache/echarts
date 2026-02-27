@@ -25,6 +25,7 @@ import { GraphNode, GraphEdge } from '../../data/Graph';
 import { LayoutOrient } from '../../util/types';
 import GlobalModel from '../../model/Global';
 import { createBoxLayoutReference, getLayoutRect } from '../../util/layout';
+import { asc } from '../../util/number';
 
 export default function sankeyLayout(ecModel: GlobalModel, api: ExtensionAPI) {
 
@@ -290,9 +291,7 @@ function prepareNodesByBreadth(nodes: GraphNode[], orient: LayoutOrient) {
     const groupResult = groupData(nodes, function (node) {
         return node.getLayout()[keyAttr] as number;
     });
-    groupResult.keys.sort(function (a, b) {
-        return a - b;
-    });
+    asc(groupResult.keys);
     zrUtil.each(groupResult.keys, function (key) {
         nodesByBreadth.push(groupResult.buckets.get(key));
     });

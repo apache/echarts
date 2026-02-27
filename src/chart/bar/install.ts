@@ -19,7 +19,7 @@
 
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import * as zrUtil from 'zrender/src/core/util';
-import {layout, createProgressiveLayout, registerBarGridAxisContainShapeHandler} from '../../layout/barGrid';
+import {layout, createProgressiveLayout, registerBarGridAxisHandlers} from '../../layout/barGrid';
 import dataSample from '../../processor/dataSample';
 
 import BarSeries from './BarSeries';
@@ -67,5 +67,5 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         );
     });
 
-    registerBarGridAxisContainShapeHandler(registers);
+    registerBarGridAxisHandlers(registers);
 }

@@ -17,11 +17,13 @@
 * under the License.
 */
 
-import { ParsedValue, DimensionType } from '../../util/types';
+import { ParsedValue, DimensionType, NullUndefined } from '../../util/types';
 import { parseDate, numericToNumber } from '../../util/number';
 import { createHashMap, trim, hasOwn, isString, isNumber } from 'zrender/src/core/util';
 import { throwError } from '../../util/log';
 
+
+// --------- START: Parsers --------
 
 /**
  * Convert raw the value in to inner value in List.
@@ -95,8 +97,12 @@ export function getRawValueParser(type: RawValueParserType): RawValueParser {
     return valueParserMap.get(type);
 }
 
+// --------- END: Parsers ---------
 
 
+
+// --------- START: Data transformattion filters ---------
+// (comprehensive and performance insensitive)
 
 export interface FilterComparator {
     evaluate(val: unknown): boolean;
@@ -261,3 +267,68 @@ export function createFilterComparator(
         ? new FilterOrderComparator(op as OrderRelationOperator, rval)
         : null;
 }
+
+// --------- END: Data transformattion filters ---------
+
+
+
+// --------- START: Data store sanitization filters ---------
+// (simple and performance sensitive)
+
+// g: greater than, ge: greater equal, l: less than, le: less equal
+export type DataSanitizationFilter = {g?: number; ge?: number; l?: number; le?: number;};
+type DataSanitizationFilterParsed = {key: string; g: number; ge: number; l: number; le: number;};
+
+/**
+ * @usage
+ *  const filterParsed = parseSanitizationFilter(filter);
+ *  for( ... ) {
+ *      const val = ...;
+ *      if (!filter || passesFilter(filterParsed, val)) {
+ *          // normal handling
+ *      }
+ *  }
+ */
+export function parseSanitizationFilter(
+    filter: DataSanitizationFilter | NullUndefined
+): DataSanitizationFilterParsed {
+    let filterKey = '';
+    let filterG = -Infinity;
+    let filterGE = -Infinity;
+    let filterL = Infinity;
+    let filterLE = Infinity;
+    if (filter) {
+        if (filter.g != null) {
+            filterKey += 'G' + filter.g;
+            filterG = filter.g;
+        }
+        if (filter.ge != null) {
+            filterKey += 'GE' + filter.ge;
+            filterGE = filter.ge;
+        }
+        if (filter.l != null) {
+            filterKey += 'L' + filter.l;
+            filterL = filter.l;
+        }
+        if (filter.le != null) {
+            filterKey += 'LE' + filter.le;
+            filterLE = filter.le;
+        }
+    }
+    return {
+        key: filterKey,
+        g: filterG,
+        ge: filterGE,
+        l: filterL,
+        le: filterLE,
+    };
+}
+
+export function passesSanitizationFilter(filterParsed: DataSanitizationFilterParsed, value: number): boolean {
+    return value > filterParsed.g
+        || value >= filterParsed.ge
+        || value < filterParsed.l
+        || value <= filterParsed.le;
+}
+
+// --------- END: Data store sanitization filters ---------

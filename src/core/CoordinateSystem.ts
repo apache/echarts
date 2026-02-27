@@ -28,6 +28,7 @@ import SeriesModel from '../model/Series';
 import { error } from '../util/log';
 import { CoordinateSystemDataCoord, NullUndefined } from '../util/types';
 
+
 type CoordinateSystemCreatorMap = {[type: string]: CoordinateSystemCreator};
 
 /**
@@ -58,6 +59,8 @@ class CoordinateSystemManager {
     create(ecModel: GlobalModel, api: ExtensionAPI): void {
         this._nonSeriesBoxMasterList = dealCreate(nonSeriesBoxCoordSysCreators, true);
         this._normalMasterList = dealCreate(normalCoordSysCreators, false);
+
+        performAxisStatistics && performAxisStatistics(ecModel);
 
         function dealCreate(creatorMap: CoordinateSystemCreatorMap, canBeNonSeriesBox: boolean) {
             let coordinateSystems: CoordinateSystemMaster[] = [];
@@ -356,5 +359,10 @@ export const simpleCoordSysInjectionProvider: CoordSysInjectionProvider = functi
     return coordSysModel && coordSysModel.coordinateSystem;
 };
 
+let performAxisStatistics: ((ecModel: GlobalModel) => void) | NullUndefined;
+// To reduce code size, the implementation of `performAxisStatistics` is registered only when needed.
+export function registerPerformAxisStatistics(impl: typeof performAxisStatistics): void {
+    performAxisStatistics = impl;
+}
 
 export default CoordinateSystemManager;

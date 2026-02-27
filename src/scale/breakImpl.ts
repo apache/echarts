@@ -105,6 +105,10 @@ class BreakScaleMapperImpl {
 
     static decoratedMethods: DecoratedScaleMapperMethods<BreakScaleMapperImpl> = {
 
+        needTransform() {
+            return !this.breaks.length;
+        },
+
         getExtent() {
             return this._outOfBrk.getExtent();
         },

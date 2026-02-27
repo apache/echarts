@@ -43,7 +43,6 @@ import { enableHoverEmphasis } from '../../util/states';
 import { createTooltipMarkup } from '../tooltip/tooltipMarkup';
 import Displayable from 'zrender/src/graphic/Displayable';
 import { createScaleByModel } from '../../coord/axisHelper';
-import { OptionAxisType } from '../../coord/axisCommonTypes';
 import { scaleCalcNiceDirectly } from '../../coord/axisNiceTicks';
 
 const PI = Math.PI;
@@ -473,14 +472,14 @@ class SliderTimelineView extends TimelineView {
 
         each(labels, (labelItem) => {
             // The tickValue is dataIndex, see the customized scale.
-            const dataIndex = labelItem.tickValue;
+            const dataIndex = labelItem.tick.value;
 
             const itemModel = data.getItemModel<TimelineDataItemOption>(dataIndex);
             const normalLabelModel = itemModel.getModel('label');
             const hoverLabelModel = itemModel.getModel(['emphasis', 'label']);
             const progressLabelModel = itemModel.getModel(['progress', 'label']);
 
-            const tickCoord = axis.dataToCoord(labelItem.tickValue);
+            const tickCoord = axis.dataToCoord(dataIndex);
             const textEl = new graphic.Text({
                 x: tickCoord,
                 y: 0,

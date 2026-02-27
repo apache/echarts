@@ -212,9 +212,9 @@ const valueAxis: AxisBaseOption = zrUtil.merge({
 const timeAxis: AxisBaseOption = zrUtil.merge({
     splitNumber: 6,
     axisLabel: {
-        // To eliminate labels that are not nice
-        showMinLabel: false,
-        showMaxLabel: false,
+        // The default value of TimeScale is determined in `AxisBuilder`
+        // showMinLabel: false,
+        // showMaxLabel: false,
         rich: {
             primary: {
                 fontWeight: 'bold'

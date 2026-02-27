@@ -370,7 +370,7 @@ export interface StageHandler {
      */
     overallReset?: StageHandlerOverallReset;
     /**
-     * Called only when this task in a pipeline, and "dirty".
+     * Called only when this task in a single pipeline, and "dirty".
      */
     reset?: StageHandlerReset;
 }
@@ -550,9 +550,11 @@ export type AxisLabelFormatterExtraBreakPart = {
 };
 
 export interface ScaleTick {
-    value: number,
-    break?: VisualAxisBreak,
-    time?: TimeScaleTick['time'],
+    value: number;
+    break?: VisualAxisBreak;
+    time?: TimeScaleTick['time'];
+    // NOTICE: null/undefined mean it is unknown whether this tick is "nice".
+    notNice?: boolean | NullUndefined;
 };
 export interface TimeScaleTick extends ScaleTick {
     time: {

@@ -851,7 +851,7 @@ function layOutGridByOuterBounds(
             if (labelInfoList) {
                 for (let idx = 0; idx < labelInfoList.length; idx++) {
                     const labelInfo = labelInfoList[idx];
-                    let proportion = axis.scale.normalize(getLabelInner(labelInfo.label).tickValue);
+                    let proportion = axis.scale.normalize(getLabelInner(labelInfo.label).labelInfo.tick.value);
                     proportion = xyIdx === 1 ? 1 - proportion : proportion;
                     // xAxis use proportion on x, yAxis use proprotion on y, otherwise not.
                     fillMarginOnOneDimension(labelInfo.rect, xyIdx, proportion);

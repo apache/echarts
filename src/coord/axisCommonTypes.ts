@@ -260,7 +260,7 @@ interface AxisTickOption {
     // The length of axisTick.
     length?: number,
     lineStyle?: LineStyleOption,
-    customValues?: (number | string | Date)[]
+    customValues?: AxisTickLabelCustomValuesOption
 }
 
 export type AxisLabelValueFormatter = (
@@ -326,10 +326,8 @@ interface AxisLabelBaseOption extends LabelCommonOption<AxisLabelBaseOptionNuanc
     // Whether axisLabel is inside the grid or outside the grid.
     inside?: boolean,
     rotate?: number,
-    // true | false | null/undefined (auto)
-    showMinLabel?: boolean,
-    // true | false | null/undefined (auto)
-    showMaxLabel?: boolean,
+    showMinLabel?: AxisShowMinMaxLabelOption,
+    showMaxLabel?: AxisShowMinMaxLabelOption,
     // 'left' | 'center' | 'right' | null/undefined (auto)
     alignMinLabel?: TextAlign,
     // 'left' | 'center' | 'right' | null/undefined (auto)
@@ -345,8 +343,13 @@ interface AxisLabelBaseOption extends LabelCommonOption<AxisLabelBaseOptionNuanc
      * If hide overlapping labels.
      */
     hideOverlap?: boolean,
-    customValues?: (number | string | Date)[],
+    customValues?: AxisTickLabelCustomValuesOption,
 }
+
+// true | false | null/undefined (auto)
+export type AxisShowMinMaxLabelOption = boolean | NullUndefined;
+
+export type AxisTickLabelCustomValuesOption = (number | string | Date)[];
 
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]

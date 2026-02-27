@@ -177,6 +177,10 @@ class OrdinalScale extends Scale<OrdinalScale> {
 
     static decoratedMethods: DecoratedScaleMapperMethods<OrdinalScale> = {
 
+        needTransform() {
+            return this._mapper.needTransform();
+        },
+
         contain(this: OrdinalScale, val: OrdinalNumber): boolean {
             return this._mapper.contain(this._getTickNumber(val))
                 && val >= 0 && val < this._ordinalMeta.categories.length;

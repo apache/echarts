@@ -28,12 +28,13 @@ import {
     createAxisLabelsComputingContext,
 } from './axisTickLabelBuilder';
 import Scale, { ScaleGetTicksOpt } from '../scale/Scale';
-import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
+import { DimensionName, NullUndefined, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
 import { isOrdinalScale } from '../scale/helper';
+import { AxisBandWidthResult, calcBandWidth } from './axisBand';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -83,7 +84,7 @@ class Axis {
     inverse: AxisBaseOption['inverse'] = false;
 
     // To be injected outside. May change - do not use it outside of echarts.
-    __alignTo: Axis;
+    __alignTo: Axis | NullUndefined;
 
 
     constructor(dim: DimensionName, scale: Scale, extent: [number, number]) {
@@ -241,19 +242,12 @@ class Axis {
     }
 
     /**
-     * Get width of band
+     * NOTICE: Can only be called after `adoptBandWidth` being called in `CoordinateSystem#update` stage.
      */
     getBandWidth(): number {
-        const axisExtent = this._extent;
-        const dataExtent = this.scale.getExtent();
-
-        let len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
-        // Fix #2728, avoid NaN when only one data.
-        len === 0 && (len = 1);
-
-        const size = Math.abs(axisExtent[1] - axisExtent[0]);
-
-        return Math.abs(size) / len;
+        calcBandWidth(tmpOutBandWidth, this);
+        // NOTICE: Do not add logic here. Implement everthing in `calcBandWidth`.
+        return tmpOutBandWidth.bandWidth;
     }
 
     /**
@@ -264,7 +258,7 @@ class Axis {
     /**
      * Only be called in category axis.
      * Can be overridden, consider other axes like in 3D.
-     * @return Auto interval for cateogry axis tick and label
+     * @return Auto interval for category axis tick and label
      */
     calculateCategoryInterval(ctx?: AxisLabelsComputingContext): number {
         ctx = ctx || createAxisLabelsComputingContext(AxisTickLabelComputingKind.determine);
@@ -272,6 +266,8 @@ class Axis {
     }
 
 }
+
+const tmpOutBandWidth: AxisBandWidthResult = {};
 
 function makeExtentWithBands(axis: Axis): number[] {
     const extent = axis.getExtent();

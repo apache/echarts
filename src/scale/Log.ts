@@ -161,6 +161,10 @@ class LogScale extends Scale<LogScale> {
 
     static mapperMethods: DecoratedScaleMapperMethods<LogScale> = {
 
+        needTransform() {
+            return true;
+        },
+
         normalize(val) {
             return this.intervalStub.normalize(logScaleLogTick(val, this.base));
         },
@@ -228,7 +232,7 @@ class LogScale extends Scale<LogScale> {
             );
         },
 
-        getSeriesExtentFilter() {
+        getFilter() {
             return {g: 0};
         },
 

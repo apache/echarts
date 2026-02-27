@@ -642,7 +642,7 @@ function scaleRawExtentInfoReallyCreateDeal(
             // NOTE: This data may have been filtered by dataZoom on orthogonal axes.
             const data = seriesModel.getData();
             if (data) {
-                const filter = scale.getSeriesExtentFilter ? scale.getSeriesExtentFilter() : null;
+                const filter = scale.getFilter ? scale.getFilter() : null;
                 each(getDataDimensionsOnAxis(data, axisDim), function (dim) {
                     unionExtentFromExtent(extent, data.getApproximateExtent(dim, filter));
                 });

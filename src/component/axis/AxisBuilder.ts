@@ -44,7 +44,8 @@ import {
     DimensionName,
 } from '../../util/types';
 import {
-    AxisBaseOption, AxisBaseOptionCommon, AxisLabelBaseOptionNuance
+    AxisBaseOption, AxisBaseOptionCommon, AxisLabelBaseOptionNuance,
+    AxisShowMinMaxLabelOption,
 } from '../../coord/axisCommonTypes';
 import type Element from 'zrender/src/Element';
 import { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
@@ -70,9 +71,11 @@ import BoundingRect from 'zrender/src/core/BoundingRect';
 import Point from 'zrender/src/core/Point';
 import { copyTransform } from 'zrender/src/core/Transformable';
 import {
+    AxisLabelInfoDetermined,
     AxisLabelsComputingContext, AxisTickLabelComputingKind, createAxisLabelsComputingContext
 } from '../../coord/axisTickLabelBuilder';
 import { AxisTickCoord } from '../../coord/Axis';
+import { isTimeScale } from '../../scale/helper';
 
 
 const PI = Math.PI;
@@ -112,14 +115,13 @@ type AxisLabelText = graphic.Text & {
 } & ECElement;
 
 export const getLabelInner = makeInner<{
-    break: VisualAxisBreak;
-    tickValue: number;
+    labelInfo: AxisLabelInfoDetermined; // Never be null/undefined.
     layoutRotation: number;
 }, graphic.Text>();
 
 const getTickInner = makeInner<{
-    onBand: AxisTickCoord['onBand']
-    tickValue: AxisTickCoord['tickValue']
+    onBand: AxisTickCoord['onBand'];
+    tickValue: AxisTickCoord['tickValue'];
 }, graphic.Line>();
 
 
@@ -1061,7 +1063,10 @@ function fixMinMaxLabelShow(
     labelLayoutList: LabelLayoutData[],
     optionHideOverlap: AxisBaseOption['axisLabel']['hideOverlap']
 ) {
-    if (shouldShowAllLabels(axisModel.axis)) {
+    const axis = axisModel.axis;
+    const customValuesOption = axisModel.get(['axisLabel', 'customValues']);
+
+    if (shouldShowAllLabels(axis)) {
         return;
     }
 
@@ -1070,7 +1075,7 @@ function fixMinMaxLabelShow(
     // Assert no ignore in labels.
 
     function deal(
-        showMinMaxLabel: boolean,
+        showMinMaxLabelOption: AxisShowMinMaxLabelOption,
         outmostLabelIdx: number,
         innerLabelIdx: number,
     ) {
@@ -1079,8 +1084,18 @@ function fixMinMaxLabelShow(
         if (!outmostLabelLayout || !innerLabelLayout) {
             return;
         }
+        if (showMinMaxLabelOption == null) {
+            if (!optionHideOverlap && customValuesOption) {
+                // In this case, users are unlikely to expect labels to be hidden.
+                return;
+            }
+            if (isTimeScale(axis.scale) && getLabelInner(outmostLabelLayout.label).labelInfo.tick.notNice) {
+                // TimeScale does not expand extent to "nice", so eliminate labels that are not nice.
+                ignoreEl(outmostLabelLayout.label);
+            }
+        }
 
-        if (showMinMaxLabel === false || outmostLabelLayout.suggestIgnore) {
+        if (showMinMaxLabelOption === false || outmostLabelLayout.suggestIgnore) {
             ignoreEl(outmostLabelLayout.label);
             return;
         }
@@ -1107,7 +1122,7 @@ function fixMinMaxLabelShow(
             innerLabelLayout = newLabelLayoutWithGeometry({marginForce}, innerLabelLayout);
         }
         if (labelIntersect(outmostLabelLayout, innerLabelLayout, null, {touchThreshold})) {
-            if (showMinMaxLabel) {
+            if (showMinMaxLabelOption) {
                 ignoreEl(innerLabelLayout.label);
             }
             else {
@@ -1119,11 +1134,11 @@ function fixMinMaxLabelShow(
     // If min or max are user set, we need to check
     // If the tick on min(max) are overlap on their neighbour tick
     // If they are overlapped, we need to hide the min(max) tick label
-    const showMinLabel = axisModel.get(['axisLabel', 'showMinLabel']);
-    const showMaxLabel = axisModel.get(['axisLabel', 'showMaxLabel']);
+    const showMinLabelOption = axisModel.get(['axisLabel', 'showMinLabel']);
+    const showMaxLabelOption = axisModel.get(['axisLabel', 'showMaxLabel']);
     const labelsLen = labelLayoutList.length;
-    deal(showMinLabel, 0, 1);
-    deal(showMaxLabel, labelsLen - 1, labelsLen - 2);
+    deal(showMinLabelOption, 0, 1);
+    deal(showMaxLabelOption, labelsLen - 1, labelsLen - 2);
 }
 
 // PENDING: Is it necessary to display a tick while the corresponding label is ignored?
@@ -1146,7 +1161,7 @@ function syncLabelIgnoreToMajorTicks(
                 const labelInner = getLabelInner(labelLayout.label);
                 if (tickInner.tickValue != null
                     && !tickInner.onBand
-                    && tickInner.tickValue === labelInner.tickValue
+                    && tickInner.tickValue === labelInner.labelInfo.tick.value
                 ) {
                     ignoreEl(tickEl);
                     return;
@@ -1355,9 +1370,11 @@ function buildAxisLabel(
     let z2Max = -Infinity;
 
     each(labels, function (labelItem, index) {
+        const labelItemTick = labelItem.tick;
+        const labelItemTickValue = labelItemTick.value;
         const tickValue = axis.scale.type === 'ordinal'
-            ? (axis.scale as OrdinalScale).getRawOrdinalNumber(labelItem.tickValue)
-            : labelItem.tickValue;
+            ? (axis.scale as OrdinalScale).getRawOrdinalNumber(labelItemTickValue)
+            : labelItemTickValue;
         const formattedLabel = labelItem.formattedLabel;
         const rawLabel = labelItem.rawLabel;
 
@@ -1396,7 +1413,7 @@ function buildAxisLabel(
             itemLabelModel.getShallow('verticalAlignMaxLabel', true),
             verticalAlign
         );
-        const z2 = 10 + (labelItem.time?.level || 0);
+        const z2 = 10 + (labelItemTick.time?.level || 0);
         z2Min = Math.min(z2Min, z2);
         z2Max = Math.max(z2Max, z2);
 
@@ -1443,8 +1460,7 @@ function buildAxisLabel(
         textEl.anid = 'label_' + tickValue;
 
         const inner = getLabelInner(textEl);
-        inner.break = labelItem.break;
-        inner.tickValue = tickValue;
+        inner.labelInfo = labelItem;
         inner.layoutRotation = labelLayout.rotation;
 
         graphic.setTooltipConfig({
@@ -1464,11 +1480,13 @@ function buildAxisLabel(
             eventData.targetType = 'axisLabel';
             eventData.value = rawLabel;
             eventData.tickIndex = index;
-            if (labelItem.break) {
+            const labelItemTickBreak = labelItem.tick.break;
+            const labelItemTickBreakParsedBreak = labelItemTickBreak.parsedBreak;
+            if (labelItemTickBreak) {
                 eventData.break = {
                     // type: labelItem.break.type,
-                    start: labelItem.break.parsedBreak.vmin,
-                    end: labelItem.break.parsedBreak.vmax,
+                    start: labelItemTickBreakParsedBreak.vmin,
+                    end: labelItemTickBreakParsedBreak.vmax,
                 };
             }
             if (axis.type === 'category') {
@@ -1477,8 +1495,8 @@ function buildAxisLabel(
 
             getECData(textEl).eventData = eventData;
 
-            if (labelItem.break) {
-                addBreakEventHandler(axisModel, api, textEl, labelItem.break);
+            if (labelItemTickBreak) {
+                addBreakEventHandler(axisModel, api, textEl, labelItemTickBreak);
             }
         }
 
@@ -1488,7 +1506,7 @@ function buildAxisLabel(
 
     const labelLayoutList = map(labelEls, label => ({
         label,
-        priority: getLabelInner(label).break
+        priority: getLabelInner(label).labelInfo.tick.break
             ? label.z2 + (z2Max - z2Min + 1) // Make break labels be highest priority.
             : label.z2,
         defaultAttr: {
@@ -1537,7 +1555,7 @@ function updateAxisLabelChangableProps(
         labelEl.ignore = false;
 
         copyTransform(_tmpLayoutEl, _tmpLayoutElReset);
-        _tmpLayoutEl.x = axisModel.axis.dataToCoord(inner.tickValue);
+        _tmpLayoutEl.x = axisModel.axis.dataToCoord(inner.labelInfo.tick.value);
         _tmpLayoutEl.y = cfg.labelOffset + cfg.labelDirection * labelMargin;
         _tmpLayoutEl.rotation = inner.layoutRotation;
 
@@ -1590,7 +1608,7 @@ function adjustBreakLabels(
     }
     const breakLabelIndexPairs = scaleBreakHelper.retrieveAxisBreakPairs(
         labelLayoutList,
-        layoutInfo => layoutInfo && getLabelInner(layoutInfo.label).break,
+        layoutInfo => layoutInfo && getLabelInner(layoutInfo.label).labelInfo.tick.break,
         true
     );
     const moveOverlap = axisModel.get(['breakLabelLayout', 'moveOverlap'], true);

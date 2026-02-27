@@ -489,7 +489,7 @@ type CtxPointToData = {
     y: CtxPointToDataAreaType | NullUndefined;
     point: number[]; // If clamp required, this point is clamped after prepared.
 };
-// For handy performance optimization in pointToData.
+// For quick performance optimization in pointToData.
 const _tmpCtxPointToData: CtxPointToData = {x: null, y: null, point: []};
 
 function pointToDataOneDimPrepareCtx(

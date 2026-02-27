@@ -804,7 +804,7 @@ export function getLeastCommonMultiple(a: number, b: number) {
 }
 
 /**
- * NOTICE: Assume the input `val` is number or null/undefined, no type check.
+ * NOTICE: Assume the input `val` is number or null/undefined, no type check, no support of BitInt.
  * Therefore, it is NOT suitable for processing user input, but sufficient for
  * internal usage in most cases.
  * For platform-agnosticism, `Number.isFinite` is not used.

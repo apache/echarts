@@ -160,10 +160,9 @@ const PRIORITY_PROCESSOR_DATASTACK = 900;
 // `PRIORITY_PROCESSOR_FILTER` is typically used by `dataZoom` (see `AxisProxy`), which relies
 // on the initialized "axis extent".
 const PRIORITY_PROCESSOR_FILTER = 1000;
-// NOTICE: These "data processors" (especially, data filters) above may block the stream, so they
-// should be put at the beginning of data processing.
 const PRIORITY_PROCESSOR_DEFAULT = 2000;
 const PRIORITY_PROCESSOR_STATISTIC = 5000;
+// NOTICE: Data processors above block the stream (especially time-consuming processors like data filters).
 
 const PRIORITY_VISUAL_LAYOUT = 1000;
 const PRIORITY_VISUAL_PROGRESSIVE_LAYOUT = 1100;
@@ -2928,6 +2927,9 @@ export function registerPreprocessor(preprocessorFunc: OptionPreprocessor): void
     }
 }
 
+/**
+ * NOTICE: Alway run in block way (no progessive is allowed).
+ */
 export function registerProcessor(
     priority: number | StageHandler | StageHandlerOverallReset,
     processor?: StageHandler | StageHandlerOverallReset

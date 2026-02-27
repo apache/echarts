@@ -27,6 +27,7 @@ import Grid from '../../coord/cartesian/Grid';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { PathProps } from 'zrender/src/graphic/Path';
 import Model from '../../model/Model';
+import { isNullableNumberFinite, mathMax, mathMin } from '../../util/number';
 
 // Not use top level axisPointer model
 type AxisPointerModel = Model<CommonAxisPointerOption>;
@@ -105,8 +106,8 @@ class CartesianAxisPointer extends BaseAxisPointer {
 
         const currPosition = [transform.x, transform.y];
         currPosition[dimIndex] += delta[dimIndex];
-        currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
-        currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
+        currPosition[dimIndex] = mathMin(axisExtent[1], currPosition[dimIndex]);
+        currPosition[dimIndex] = mathMax(axisExtent[0], currPosition[dimIndex]);
 
         const cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
         const cursorPoint = [cursorOtherValue, cursorOtherValue];
@@ -156,13 +157,18 @@ const pointerShapeBuilder = {
     },
 
     shadow: function (axis: Axis2D, pixelValue: number, otherExtent: number[]): PathProps & { type: 'Rect'} {
-        const bandWidth = Math.max(1, axis.getBandWidth());
-        const span = otherExtent[1] - otherExtent[0];
+        let bandWidth = axis.getBandWidth();
+        const thisExtent = axis.getGlobalExtent();
+        bandWidth = isNullableNumberFinite(bandWidth)
+            ? mathMax(1, bandWidth) : 1;
+        const otherSpan = otherExtent[1] - otherExtent[0];
+        const thisX = mathMax(thisExtent[0], pixelValue - bandWidth / 2);
+        const thisW = mathMin(thisX + bandWidth, thisExtent[1]) - thisX;
         return {
             type: 'Rect',
             shape: viewHelper.makeRectShape(
-                [pixelValue - bandWidth / 2, otherExtent[0]],
-                [bandWidth, span],
+                [thisX, otherExtent[0]],
+                [thisW, otherSpan],
                 getAxisDimIndex(axis)
             )
         };

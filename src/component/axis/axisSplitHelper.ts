@@ -26,6 +26,7 @@ import type CartesianAxisView from './CartesianAxisView';
 import type SingleAxisModel from '../../coord/single/AxisModel';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import AxisView from './AxisView';
+import type { AxisBaseModel } from '../../coord/AxisBaseModel';
 
 const inner = makeInner<{
     // Hash map of color index
@@ -35,7 +36,7 @@ const inner = makeInner<{
 export function rectCoordAxisBuildSplitArea(
     axisView: SingleAxisView | CartesianAxisView,
     axisGroup: graphic.Group,
-    axisModel: SingleAxisModel | CartesianAxisModel,
+    axisModel: (SingleAxisModel | CartesianAxisModel) & AxisBaseModel,
     gridModel: GridModel | SingleAxisModel
 ) {
     const axis = axisModel.axis;
@@ -44,8 +45,7 @@ export function rectCoordAxisBuildSplitArea(
         return;
     }
 
-    // TODO: TYPE
-    const splitAreaModel = (axisModel as CartesianAxisModel).getModel('splitArea');
+    const splitAreaModel = axisModel.getModel('splitArea');
     const areaStyleModel = splitAreaModel.getModel('areaStyle');
     let areaColors = areaStyleModel.get('color');
 
@@ -107,7 +107,6 @@ export function rectCoordAxisBuildSplitArea(
 
         const tickValue = ticksCoords[i - 1].tickValue;
         tickValue != null && newSplitAreaColors.set(tickValue, colorIndex);
-
         axisGroup.add(new graphic.Rect({
             anid: tickValue != null ? 'area_' + tickValue : null,
             shape: {

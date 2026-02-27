@@ -1239,6 +1239,7 @@ export function isValidBoundsForExtent(start: number, end: number): boolean {
 
 /**
  * `extent` should be initialized by `initExtentForUnion()`, and unioned by `unionExtent()`.
+ * `extent` may contain `Infinity` / `NaN`, but assume no `null`/`undefined`.
  */
 export function extentHasValue(extent: number[]): boolean {
     // Also considered extent may have `NaN` and `Infinity`.
@@ -1294,10 +1295,11 @@ export function resetCachePerECFullUpdate(ecModel: GlobalModel): void {
  * The cache is auto cleared at the begining of a run of "ec prepare".
  *
  * NOTICE:
- *  - It can be only called at "ec prepare" stage, such as,
- *      - Do not call it in processor `getTargetSeries` methods.
- *      - Do not call it in component/series model `init`/`mergeOption`/`optionUpdated`/`getData` methods.
- *  - "ec prepare" is not necessarily called before each "ec full update".
+ *  - The cache can only be written at the "ec prepare" stage, such as
+ *      - It can be written in `getTargetSeries` methods of data processors.
+ *      - It can be written in `init`/`mergeOption`/`optionUpdated`/`getData` methods of component/series models.
+ *  - The cache can be read in any stages.
+ *  - "ec prepare" is not necessarily performed before each "ec full update" performing.
  */
 export function getCachePerECPrepare(ecModel: GlobalModel): GlobalModelCachePerECPrepare {
     return ecModelCacheInner(ecModel).prepare;
@@ -1305,11 +1307,66 @@ export function getCachePerECPrepare(ecModel: GlobalModel): GlobalModelCachePerE
 
 /**
  * The cache is auto cleared at the begining of a run of "ec full update".
+ * However, all shortcuts (such as `updateView`/`updateLayout`/etc.) do not clear it.
  *
  * NOTICE:
- *  - Do not call it at "ec prepare" stage. See `getCachePerECPrepare` for details.
- *  - All shortcuts (such as `updateView`/`updateLayout`/etc.) do not clear it.
+ *  - The cache can only be written AFTER "ec prepare" stage (not included).
+ *    See `getCachePerECPrepare` for details.
  */
 export function getCachePerECFullUpdate(ecModel: GlobalModel): GlobalModelCachePerECFullUpdate {
     return ecModelCacheInner(ecModel).fullUpdate;
+}
+
+/**
+ * @usage
+ *  - The earlier item takes precedence for duplicate items.
+ *  - The input `arr` will be modified if `resolve` is null/undefined.
+ *  - Callers can use `resolve` to manually modify the `currItem`.
+ *    The input `arr` will not be modified if `resolve` is passed.
+ *    `resolve` will be called on every item.
+ *  - Callers need to handle null/undefined (if existing) in `getKey`.
+ */
+export function removeDuplicates<TItem>(
+    arr: (TItem | NullUndefined)[],
+    getKey: (item: TItem) => string,
+    // `existingCount`: the count before this item is added.
+    resolve: ((item: TItem, existingCount: number) => void) | NullUndefined,
+): void {
+    const dupMap = createHashMap<number, string>();
+    let writeIdx = 0;
+    each(arr, function (item) {
+        const key = getKey(item);
+        if (__DEV__) {
+            assert(isString(key));
+        }
+        const count = dupMap.get(key) || 0;
+        if (resolve) {
+            resolve(item, count);
+        }
+        if (!count && !resolve) {
+            arr[writeIdx++] = item;
+        }
+        dupMap.set(key, count + 1);
+    });
+    if (!resolve) {
+        arr.length = writeIdx;
+    }
+}
+
+export function removeDuplicatesGetKeyFromValueProp<TValue extends (string | number)>(
+    item: {value: TValue}
+): string {
+    if (__DEV__) {
+        assert(item.value != null);
+    }
+    return item.value + '';
+}
+
+export function removeDuplicatesGetKeyFromItemItself<TValue extends (string | number)>(
+    item: TValue
+): string {
+    if (__DEV__) {
+        assert(item != null);
+    }
+    return item + '';
 }

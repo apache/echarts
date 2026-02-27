@@ -44,8 +44,9 @@ import type Tree from './Tree';
 import type { VisualMeta } from '../component/visualMap/VisualMapModel';
 import {isSourceInstance, Source} from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
-import DataStore, { DataStoreDimensionDefine, DataStoreExtentFilter, DimValueGetter } from './DataStore';
+import DataStore, { DataStoreDimensionDefine, DimValueGetter } from './DataStore';
 import { isSeriesDataSchema, SeriesDataSchema } from './helper/SeriesDataSchema';
+import { DataSanitizationFilter } from './helper/dataValueHelper';
 
 const isObject = zrUtil.isObject;
 const map = zrUtil.map;
@@ -679,7 +680,7 @@ class SeriesData<
      */
     getApproximateExtent(
         dim: SeriesDimensionLoose,
-        filter: DataStoreExtentFilter | NullUndefined
+        filter: DataSanitizationFilter | NullUndefined
     ): [number, number] {
         return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim), filter);
     }

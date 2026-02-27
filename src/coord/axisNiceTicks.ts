@@ -46,7 +46,7 @@ import type Axis from './Axis';
 // ------ START: LinearIntervalScaleStub Nice ------
 
 function calcNiceForIntervalOrLogScale(
-    scale: IntervalScale | LogScale,
+    scale: (IntervalScale | LogScale) & Scale,
     opt: ScaleCalcNiceMethodOpt,
 ): void {
     // [CAVEAT]: If updating this impl, need to sync it to `axisAlignTicks.ts`.
@@ -187,6 +187,9 @@ type ScaleCalcNiceMethodOpt = {
 
 /**
  * NOTE: See the summary of the process of extent determination in the comment of `scaleMapper.setExtent`.
+ *
+ * Calculate a "nice" extent and "nice" ticks configs based on the current scale extent and ec options.
+ * scale extent will be modified, and config may be set to the scale.
  */
 export function scaleCalcNice(
     axisLike: {

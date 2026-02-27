@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { each, defaults, hasOwn, assert } from 'zrender/src/core/util';
+import { each, defaults, hasOwn } from 'zrender/src/core/util';
 import { isNullableNumberFinite, mathAbs, mathMax, mathMin, parsePercent } from '../util/number';
 import { isDimensionStacked } from '../data/helper/dataStackHelper';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
@@ -28,13 +28,13 @@ import { StageHandler, NullUndefined } from '../util/types';
 import { createFloat32Array } from '../util/vendor';
 import {
     extentHasValue,
-    getCachePerECFullUpdate, GlobalModelCachePerECFullUpdate, initExtentForUnion,
-    isValidNumberForExtent, makeCallOnlyOnce, makeInner,
+    initExtentForUnion,
+    makeCallOnlyOnce,
     unionExtentFromNumber,
 } from '../util/model';
 import { isOrdinalScale } from '../scale/helper';
 import {
-    CartesianAxisHashKey, getCartesianAxisHashKey, isCartesian2DInjectedAsDataCoordSys
+    isCartesian2DInjectedAsDataCoordSys
 } from '../coord/cartesian/cartesianAxisHelper';
 import type BaseBarSeriesModel from '../chart/bar/BaseBarSeries';
 import type BarSeriesModel from '../chart/bar/BarSeries';
@@ -42,46 +42,18 @@ import {
     AxisContainShapeHandler, registerAxisContainShapeHandler,
 } from '../coord/scaleRawExtentInfo';
 import { EChartsExtensionInstallRegisters } from '../extension';
-import { getScaleLinearSpanForMapping } from '../scale/scaleMapper';
-import type Scale from '../scale/Scale';
+import {
+    AxisStatisticsClient, AxisStatisticsKey, eachCollectedAxis,
+    eachCollectedSeries, getCollectedSeriesLength, requireAxisStatistics
+} from '../coord/axisStatistics';
+import {
+    AXIS_BAND_WIDTH_KIND_NORMAL, AxisBandWidthResult, calcBandWidth
+} from '../coord/axisBand';
 
 
-const ecModelCacheInner = makeInner<{
-    layoutPre: BarGridLayoutPre;
-}, GlobalModelCachePerECFullUpdate>();
-
-// Record of layout preparation by series sub type.
-type BarGridLayoutPre = Partial<Record<BaseBarSeriesSubType, BarGridLayoutPreOnSeriesType>>;
-
-type BarGridLayoutPreOnSeriesType = {
-    seriesReady: boolean;
-    // NOTICE: `axes` and `axisMap` do not necessarily contain all Cartesian axes - a record
-    //  is created iff `ensureLayoutAxisPre` is called.
-    axes: CartesianAxisHashKey[];
-    axisMap: Record<CartesianAxisHashKey, BarGridLayoutAxisPre>;
-};
-
-// Record of layout preparation by series sub type by axis.
-type BarGridLayoutAxisPre = {
-    axis: Axis2D;
-    // This is series use this axis as base axis and need to be laid out.
-    seriesList: BaseBarSeriesModel[];
-    // Statistics on values for `minGap` and `linearValueExtent` has been ready.
-    valStatReady?: boolean;
-    linearMinGap?: number | NullUndefined;
-    // min/max of values of all bar series (per `BaseBarSeriesSubType`) on this axis,
-    // but other series types are not included.
-    // Only available for non-'category' axis.
-    // If no valid data, remains `undefined`.
-    linearValueExtent?: number[] | NullUndefined;
-};
+const callOnlyOnce = makeCallOnlyOnce();
 
 const STACK_PREFIX = '__ec_stack_';
-
-// Arbitrary, leave some space to avoid overflowing when dataZoom moving.
-const SINGULAR_BAND_WIDTH_RATIO = 0.8;
-// Corresponding to `SINGULAR_BAND_WIDTH_RATIO`, but they are not necessarily equal on other value choices.
-const SINGULAR_SUPPLEMENT_RATIO = 0.8;
 
 function getSeriesStackId(seriesModel: BaseBarSeriesModel): string {
     return (seriesModel as BarSeriesModel).get('stack') || STACK_PREFIX + seriesModel.seriesIndex;
@@ -90,10 +62,7 @@ function getSeriesStackId(seriesModel: BaseBarSeriesModel): string {
 interface BarGridLayoutAxisInfo {
     seriesInfo: BarGridLayoutAxisSeriesInfo[];
     // Calculated layout width for a single bars group.
-    bandWidth: number;
-    singular?: boolean;
-    linearValueExtent?: BarGridLayoutAxisPre['linearValueExtent'];
-    pxToDataRatio?: number | NullUndefined;
+    bandWidthResult: AxisBandWidthResult;
 }
 
 interface BarGridLayoutAxisSeriesInfo {
@@ -132,7 +101,7 @@ export type BarGridColumnLayoutOnAxis = BarGridLayoutAxisInfo & {
 };
 
 type BarGridLayoutResultItemInternal = {
-    bandWidth: BarGridLayoutAxisInfo['bandWidth']
+    bandWidth: BarGridLayoutAxisInfo['bandWidthResult']['bandWidth']
     offset: number // An offset with respect to `dataToPoint`
     width: number
 };
@@ -146,12 +115,8 @@ export type BarGridLayoutResultForCustomSeries = BarGridLayoutResultItem[] | Nul
  */
 export function getLayoutOnAxis(opt: BarGridLayoutOption): BarGridLayoutResultForCustomSeries {
     const params: BarGridLayoutAxisSeriesInfo[] = [];
-    const baseAxis = opt.axis;
-
-    if (baseAxis.type !== 'category') {
-        return;
-    }
-    const bandWidth = baseAxis.getBandWidth();
+    const bandWidthResult: AxisBandWidthResult = {};
+    calcBandWidth(bandWidthResult, opt.axis);
 
     for (let i = 0; i < opt.count || 0; i++) {
         params.push(defaults({
@@ -159,7 +124,7 @@ export function getLayoutOnAxis(opt: BarGridLayoutOption): BarGridLayoutResultFo
         }, opt) as BarGridLayoutAxisSeriesInfo);
     }
     const widthAndOffsets = calcBarWidthAndOffset({
-        bandWidth,
+        bandWidthResult,
         seriesInfo: params,
     });
 
@@ -173,130 +138,6 @@ export function getLayoutOnAxis(opt: BarGridLayoutOption): BarGridLayoutResultFo
     return result;
 }
 
-function ensureLayoutPre(
-    ecModel: GlobalModel, seriesType: BaseBarSeriesSubType
-): BarGridLayoutPreOnSeriesType {
-    const ecCache = ecModelCacheInner(getCachePerECFullUpdate(ecModel));
-    const layoutPre = ecCache.layoutPre || (ecCache.layoutPre = {});
-    return layoutPre[seriesType] || (layoutPre[seriesType] = {
-        axes: [], axisMap: {}, seriesReady: false
-    });
-}
-
-function ensureLayoutAxisPre(
-    layoutPre: BarGridLayoutPreOnSeriesType, axis: Axis2D
-): BarGridLayoutAxisPre {
-    const axisKey = getCartesianAxisHashKey(axis);
-    const axisMap = layoutPre.axisMap || (layoutPre.axisMap = {});
-    let axisPre = axisMap[axisKey];
-    if (!axisPre) {
-        layoutPre.axes.push(axisKey);
-        axisPre = axisMap[axisKey] = {
-            axis,
-            seriesList: [],
-        };
-    }
-    return axisPre;
-}
-
-function eachAxisPre(
-    layoutPre: BarGridLayoutPreOnSeriesType, cb: (axisPre: BarGridLayoutAxisPre) => void
-): void {
-    each(layoutPre.axes, function (axisKey) {
-        cb(layoutPre.axisMap[axisKey]);
-    });
-}
-
-/**
- * NOTICE:
- *  - Ensure the idempotent on this function - it may be called multiple times in a run
- *    of ec workflow.
- *  - Not a pure function - `seriesListByType` will be cached on base axis instance
- *    to avoid duplicated travel of series for each axis.
- *  - The order of series matters - must be respected to the declaration on ec option,
- *    because for historical reason, the last series holds the effective ec option.
- *    See `calcBarWidthAndOffset`.
- */
-function ensureBarGridSeriesList(
-    ecModel: GlobalModel, seriesType: BaseBarSeriesSubType
-): BarGridLayoutPreOnSeriesType {
-    const layoutPre = ensureLayoutPre(ecModel, seriesType);
-    if (layoutPre.seriesReady) {
-        return layoutPre;
-    }
-    ecModel.eachSeriesByType(seriesType, function (seriesModel: BaseBarSeriesModel) {
-        if (isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
-            const baseAxis = (seriesModel.coordinateSystem as Cartesian2D).getBaseAxis();
-            ensureLayoutAxisPre(layoutPre, baseAxis).seriesList.push(seriesModel);
-        }
-    });
-    layoutPre.seriesReady = true;
-    return layoutPre;
-}
-
-/**
- * CAVEAT: Time-consuming due to the travel and sort of series data.
- *
- * Map from (baseAxis.dim + '_' + baseAxis.index) to min gap of two adjacent
- * values.
- * This works for time axes, value axes, and log axes.
- * For a single time axis, return value is in the form like
- * {'x_0': [1000000]}.
- * The value of 1000000 is in milliseconds.
- */
-function ensureValuesStatisticsOnAxis(
-    axis: Axis2D, layoutPre: BarGridLayoutPreOnSeriesType
-): BarGridLayoutAxisPre {
-    if (__DEV__) {
-        assert(!isOrdinalScale(axis.scale));
-    }
-
-    const axisPre = ensureLayoutAxisPre(layoutPre, axis);
-    // `minGap` is cached for performance, otherwise data will be traveled more than once
-    // in each run of ec workflow. The first creation is during coord sys update stage to
-    // expand the scale extent of the base axis to avoid edge bars overflowing the axis.
-    // And then in render stage.
-    if (axisPre.valStatReady) {
-        return axisPre;
-    }
-
-    const scale = axis.scale;
-    const values: number[] = [];
-    const linearValueExtent = initExtentForUnion();
-    each(axisPre.seriesList, function (seriesModel) {
-        const data = seriesModel.getData();
-        const dimIdx = data.getDimensionIndex(data.mapDimension(axis.dim));
-        const store = data.getStore();
-        for (let i = 0, cnt = store.count(); i < cnt; ++i) {
-            const val = scale.transformIn(store.get(dimIdx, i) as number, null);
-            if (isValidNumberForExtent(val)) { // This also filters out `log(non-positive)` for LogScale.
-                values.push(val);
-                unionExtentFromNumber(linearValueExtent, val);
-            }
-        }
-    });
-
-    // Sort axis values into ascending order to calculate gaps
-    values.sort(function (a, b) {
-        return a - b;
-    });
-    let min = null;
-    for (let j = 1; j < values.length; ++j) {
-        const delta = values[j] - values[j - 1];
-        if (delta > 0) {
-            // Ignore 0 delta because they are of the same axis value
-            min = min === null ? delta : mathMin(min, delta);
-        }
-    }
-    axisPre.linearMinGap = min; // Set to null if only have one data
-    if (extentHasValue(linearValueExtent)) {
-        axisPre.linearValueExtent = linearValueExtent; // Remain `undefined` if no valid data
-    }
-    axisPre.valStatReady = true;
-
-    return axisPre;
-}
-
 /**
  * NOTICE: This layout is based on axis pixel extent and scale extent.
  *  It may be used on estimation, where axis pixel extent and scale extent
@@ -304,12 +145,11 @@ function ensureValuesStatisticsOnAxis(
  *  axis pixel extent and scale extent may be changed finally.
  */
 function makeColumnLayoutOnAxisReal(
-    layoutPre: BarGridLayoutPreOnSeriesType,
     baseAxis: Axis2D,
+    seriesType: BaseBarSeriesSubType
 ): BarGridColumnLayoutOnAxis {
-    const axisPre = ensureLayoutAxisPre(layoutPre, baseAxis);
     const seriesInfoListOnAxis = createLayoutInfoListOnAxis(
-        axisPre.axis, layoutPre, axisPre
+        baseAxis, seriesType
     ) as BarGridColumnLayoutOnAxis;
     seriesInfoListOnAxis.columnMap = calcBarWidthAndOffset(seriesInfoListOnAxis);
     return seriesInfoListOnAxis;
@@ -317,41 +157,15 @@ function makeColumnLayoutOnAxisReal(
 
 function createLayoutInfoListOnAxis(
     baseAxis: Axis2D,
-    layoutPre: BarGridLayoutPreOnSeriesType,
-    axisPre: BarGridLayoutAxisPre
+    seriesType: BaseBarSeriesSubType
 ): BarGridLayoutAxisInfo {
 
     const seriesInfoOnAxis: BarGridLayoutAxisSeriesInfo[] = [];
-    const axisScale = baseAxis.scale;
-    let linearValueExtent: BarGridLayoutAxisInfo['linearValueExtent'];
-    let pxToDataRatio: BarGridLayoutAxisInfo['pxToDataRatio'];
-    let singular: BarGridLayoutAxisInfo['singular'];
+    const bandWidthResult: AxisBandWidthResult = {};
+    calcBandWidth(bandWidthResult, baseAxis);
+    const bandWidth = bandWidthResult.bandWidth;
 
-    let bandWidth: number;
-    if (isOrdinalScale(axisScale)) {
-        bandWidth = baseAxis.getBandWidth();
-    }
-    else {
-        const axisPre = ensureValuesStatisticsOnAxis(baseAxis, layoutPre);
-        linearValueExtent = axisPre.linearValueExtent;
-        const axisExtent = baseAxis.getExtent();
-        // Always use a new pxSpan because it may be changed in `grid` contain label calculation.
-        const pxSpan = mathAbs(axisExtent[1] - axisExtent[0]);
-        const linearScaleSpan = getScaleLinearSpanForMapping(axisScale);
-        // `linearScaleSpan` may be `0` or `Infinity` or `NaN`, since normalizers like
-        // `intervalScaleEnsureValidExtent` may not have been called yet.
-        if (axisPre.linearMinGap && linearScaleSpan && isNullableNumberFinite(linearScaleSpan)) {
-            singular = false;
-            bandWidth = pxSpan / linearScaleSpan * axisPre.linearMinGap;
-            pxToDataRatio = linearScaleSpan / pxSpan;
-        }
-        else {
-            singular = true;
-            bandWidth = pxSpan * SINGULAR_BAND_WIDTH_RATIO;
-        }
-    }
-
-    each(axisPre.seriesList, function (seriesModel) {
+    eachCollectedSeries(baseAxis, axisStatKey(seriesType), function (seriesModel: BaseBarSeriesModel) {
         seriesInfoOnAxis.push({
             barWidth: parsePercent(seriesModel.get('barWidth'), bandWidth),
             barMaxWidth: parsePercent(seriesModel.get('barMaxWidth'), bandWidth),
@@ -368,11 +182,8 @@ function createLayoutInfoListOnAxis(
     });
 
     return {
-        bandWidth: bandWidth,
-        linearValueExtent: linearValueExtent,
+        bandWidthResult,
         seriesInfo: seriesInfoOnAxis,
-        singular: singular,
-        pxToDataRatio: pxToDataRatio,
     };
 }
 
@@ -392,7 +203,7 @@ function calcBarWidthAndOffset(
         minWidth?: number
     }
 
-    const bandWidth = seriesInfoOnAxis.bandWidth;
+    const bandWidth = seriesInfoOnAxis.bandWidthResult.bandWidth;
     let remainedWidth = bandWidth;
     let autoWidthCount: number = 0;
     let barCategoryGapOption: number | string;
@@ -530,10 +341,9 @@ function calcBarWidthAndOffset(
 
 
 export function layout(seriesType: BaseBarSeriesSubType, ecModel: GlobalModel): void {
-    const layoutPre = ensureBarGridSeriesList(ecModel, seriesType);
-    eachAxisPre(layoutPre, function (axisPre) {
-        const columnLayout = makeColumnLayoutOnAxisReal(layoutPre, axisPre.axis);
-        each(axisPre.seriesList, function (seriesModel) {
+    eachCollectedAxis(ecModel, function (axis) {
+        const columnLayout = makeColumnLayoutOnAxisReal(axis as Axis2D, seriesType);
+        eachCollectedSeries(axis, axisStatKey(seriesType), function (seriesModel) {
             const columnLayoutInfo = columnLayout.columnMap[getSeriesStackId(seriesModel)];
             seriesModel.getData().setLayout({
                 bandWidth: columnLayoutInfo.bandWidth,
@@ -707,25 +517,25 @@ function barGridCreateAxisContainShapeHandler(seriesType: BaseBarSeriesSubType):
         // If bars are placed on 'time', 'value', 'log' axis, handle bars overflow here.
         // See #6728, #4862, `test/bar-overflow-time-plot.html`
         if (axis && axis instanceof Axis2D && !isOrdinalScale(scale)) {
-            const layoutPre = ensureBarGridSeriesList(ecModel, seriesType);
-            const axisPre = ensureLayoutAxisPre(layoutPre, axis);
-            if (!axisPre.seriesList.length) {
-                return; // Quick return for robustness - in most cases there is no bar series based on this axis.
+            if (!getCollectedSeriesLength(axis, axisStatKey(seriesType))) {
+                return; // Quick path - in most cases there is no bar on non-ordinal axis.
             }
-            const columnLayout = makeColumnLayoutOnAxisReal(layoutPre, axis);
-            return calcShapeOverflowSupplement(scale, columnLayout);
+            const columnLayout = makeColumnLayoutOnAxisReal(axis, seriesType);
+            return calcShapeOverflowSupplement(columnLayout);
         }
     };
 }
 
 function calcShapeOverflowSupplement(
-    scale: Scale,
     columnLayout: BarGridColumnLayoutOnAxis | NullUndefined
 ): number[] | NullUndefined {
-    const linearValueExtent = columnLayout && columnLayout.linearValueExtent;
-
-    if (columnLayout == null || !linearValueExtent) {
+    if (columnLayout == null) {
         return;
+    }
+    const bandWidthResult = columnLayout.bandWidthResult;
+    const bandWidthResultKind = bandWidthResult.kind;
+    if (bandWidthResultKind == null) {
+        return; // No series data.
     }
 
     // The calculation below is based on a proportion mapping from
@@ -737,7 +547,7 @@ function calcShapeOverflowSupplement(
     //    (Note: `|---|` above represents "pixels" rather than "data".)
 
     const barsBoundPx = initExtentForUnion();
-    const bandWidth = columnLayout.bandWidth;
+    const bandWidth = bandWidthResult.bandWidth;
     // Union `-bandWidth / 2` and `bandWidth / 2` to provide extra space for visually preferred,
     // Otherwise the bars on the edges may overlap with axis line.
     // And it also includes `0`, which ensures `barsBoundPx[0] <= 0 <= barsBoundPx[1]`.
@@ -750,30 +560,58 @@ function calcShapeOverflowSupplement(
         unionExtentFromNumber(barsBoundPx, item.offset + item.width);
     });
 
-    const pxToDataRatio = columnLayout.pxToDataRatio;
-
-    if (extentHasValue(barsBoundPx)) {
-        let linearSupplement: number[];
-
-        if (columnLayout.singular) {
-            const linearSpan = getScaleLinearSpanForMapping(scale);
-            linearSupplement = [-linearSpan * SINGULAR_SUPPLEMENT_RATIO, linearSpan * SINGULAR_SUPPLEMENT_RATIO];
-        }
-        else if (isNullableNumberFinite(pxToDataRatio)) {
-            // Convert from pixel domain to data domain, since the `barsBoundPx` is calculated based on
-            // `minGap` and extent on data domain.
-            linearSupplement = [barsBoundPx[0] * pxToDataRatio, barsBoundPx[1] * pxToDataRatio];
-        }
-
-        return linearSupplement;
+    const ratio = bandWidthResult.ratio;
+    if (extentHasValue(barsBoundPx) && isNullableNumberFinite(ratio)
+        && bandWidthResultKind === AXIS_BAND_WIDTH_KIND_NORMAL
+    ) {
+        // Convert from pixel domain to data domain, since the `barsBoundPx` is calculated based on
+        // `minGap` and extent on data domain.
+        return [barsBoundPx[0] * ratio, barsBoundPx[1] * ratio];
+        // If AXIS_BAND_WIDTH_KIND_SINGULAR, extent expansion is not needed.
     }
 }
 
-const callOnlyOnce = makeCallOnlyOnce();
+function createAxisStatisticsClient(seriesType: BaseBarSeriesSubType): AxisStatisticsClient {
+    return {
+        /**
+         * NOTICE:
+         *  The order of series matters - must be respected to the declaration on ec option,
+         *  because for historical reason, the last series holds the effective ec option.
+         *  See `calcBarWidthAndOffset`.
+         */
+        collectAxisSeries(ecModel, saveAxisSeries) {
+            ecModel.eachSeriesByType(seriesType, function (seriesModel: BaseBarSeriesModel) {
+                if (isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
+                    saveAxisSeries(
+                        (seriesModel.coordinateSystem as Cartesian2D).getBaseAxis(),
+                        seriesModel
+                    );
+                }
+            });
+        },
 
-export function registerBarGridAxisContainShapeHandler(registers: EChartsExtensionInstallRegisters) {
+        getMetrics(axis) {
+            return {
+                minGap: !isOrdinalScale(axis.scale)
+            };
+        }
+
+    };
+}
+
+function axisStatKey(seriesType: BaseBarSeriesSubType): AxisStatisticsKey {
+    return `barGrid-${seriesType}` as AxisStatisticsKey;
+}
+
+export function registerBarGridAxisHandlers(registers: EChartsExtensionInstallRegisters) {
     callOnlyOnce(registers, function () {
-        registerAxisContainShapeHandler('bar', barGridCreateAxisContainShapeHandler('bar'));
-        registerAxisContainShapeHandler('pictorialBar', barGridCreateAxisContainShapeHandler('pictorialBar'));
+
+        function register(seriesType: BaseBarSeriesSubType): void {
+            requireAxisStatistics(axisStatKey(seriesType), createAxisStatisticsClient(seriesType));
+            registerAxisContainShapeHandler(seriesType, barGridCreateAxisContainShapeHandler(seriesType));
+        }
+
+        register('bar');
+        register('pictorialBar');
     });
 }

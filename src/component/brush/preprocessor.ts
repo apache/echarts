@@ -23,7 +23,7 @@ import { ECUnitOption, Dictionary } from '../../util/types';
 import { BrushOption, BrushToolboxIconType } from './BrushModel';
 import { ToolboxOption } from '../toolbox/ToolboxModel';
 import { ToolboxBrushFeatureOption } from '../toolbox/feature/Brush';
-import { normalizeToArray } from '../../util/model';
+import { normalizeToArray, removeDuplicates } from '../../util/model';
 
 const DEFAULT_TOOLBOX_BTNS: BrushToolboxIconType[] = ['rect', 'polygon', 'keep', 'clear'];
 
@@ -61,20 +61,9 @@ export default function brushPreprocessor(option: ECUnitOption, isNew: boolean):
 
     brushTypes.push.apply(brushTypes, brushComponentSpecifiedBtns);
 
-    removeDuplicate(brushTypes);
+    removeDuplicates(brushTypes, item => item + '', null);
 
     if (isNew && !brushTypes.length) {
         brushTypes.push.apply(brushTypes, DEFAULT_TOOLBOX_BTNS);
     }
-}
-
-function removeDuplicate(arr: string[]): void {
-    const map = {} as Dictionary<number>;
-    zrUtil.each(arr, function (val) {
-        map[val] = 1;
-    });
-    arr.length = 0;
-    zrUtil.each(map, function (flag, val) {
-        arr.push(val);
-    });
 }

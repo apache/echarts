@@ -90,6 +90,7 @@ import {
     getScaleExtentForTickUnsafe,
     initBreakOrLinearMapper, ScaleMapperGeneric
 } from './scaleMapper';
+import { removeDuplicates, removeDuplicatesGetKeyFromValueProp } from '../util/model';
 
 // FIXME 公用？
 const bisect = function (
@@ -191,17 +192,7 @@ class TimeScale extends Scale<TimeScale> {
             return ticks;
         }
 
-        const extent0Unit = getUnitFromValue(extent[1], useUTC);
-        ticks.push({
-            value: extent[0],
-            time: {
-                level: 0,
-                upperTimeUnit: extent0Unit,
-                lowerTimeUnit: extent0Unit,
-            }
-        });
-
-        const innerTicks = getIntervalTicks(
+        ticks = createIntervalTicks(
             this._minLevelUnit,
             this._approxInterval,
             useUTC,
@@ -209,18 +200,6 @@ class TimeScale extends Scale<TimeScale> {
             getScaleLinearSpanEffective(this),
             brk
         );
-
-        ticks = ticks.concat(innerTicks);
-
-        const extent1Unit = getUnitFromValue(extent[1], useUTC);
-        ticks.push({
-            value: extent[1],
-            time: {
-                level: 0,
-                upperTimeUnit: extent1Unit,
-                lowerTimeUnit: extent1Unit,
-            }
-        });
 
         let upperUnitIndex = primaryTimeUnits.length - 1;
         let maxLevel = 0;
@@ -489,7 +468,7 @@ function createEstimateNiceMultiple(
     };
 }
 
-function getIntervalTicks(
+function createIntervalTicks(
     bottomUnitName: TimeUnit,
     approxInterval: number,
     isUTC: boolean,
@@ -709,8 +688,9 @@ function getIntervalTicks(
         return filter(levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1] && !tick.notAdd);
     }), levelTicks => levelTicks.length > 0);
 
-    const ticks: TimeScaleTick[] = [];
     const maxLevel = levelsTicksInExtent.length - 1;
+    const ticks: TimeScaleTick[] = [];
+
     for (let i = 0; i < levelsTicksInExtent.length; ++i) {
         const levelTicks = levelsTicksInExtent[i];
         for (let k = 0; k < levelTicks.length; ++k) {
@@ -726,16 +706,31 @@ function getIntervalTicks(
         }
     }
 
+    // Remove duplicates, which may cause jitter of `splitArea` and other bad cases.
+    removeDuplicates(ticks, removeDuplicatesGetKeyFromValueProp, null);
+
     ticks.sort((a, b) => a.value - b.value);
-    // Remove duplicates
-    const result: TimeScaleTick[] = [];
-    for (let i = 0; i < ticks.length; ++i) {
-        if (i === 0 || ticks[i].value !== ticks[i - 1].value) {
-            result.push(ticks[i]);
-        }
+
+    const currMinTick = ticks[0];
+    const currMaxTick = ticks[ticks.length - 1];
+    const extent0Unit = getUnitFromValue(extent[0], isUTC);
+    const extent1Unit = getUnitFromValue(extent[1], isUTC);
+    if (!currMinTick || currMinTick.value > extent[0]) {
+        ticks.unshift({
+            value: extent[0],
+            time: {level: 0, upperTimeUnit: extent0Unit, lowerTimeUnit: extent0Unit},
+            notNice: true,
+        });
+    }
+    if (!currMaxTick || currMaxTick.value < extent[1]) {
+        ticks.push({
+            value: extent[1],
+            time: {level: 0, upperTimeUnit: extent1Unit, lowerTimeUnit: extent1Unit},
+            notNice: true,
+        });
     }
 
-    return result;
+    return ticks;
 }
 
 export const calcNiceForTimeScale: ScaleCalcNiceMethod = function (scale: TimeScale, opt) {

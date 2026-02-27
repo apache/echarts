@@ -368,7 +368,7 @@ function showTooltip(
         axisType: axisModel.type,
         axisId: axisModel.id,
         value: value as number,
-        // Caustion: viewHelper.getValueLabel is actually on "view stage", which
+        // Caution: viewHelper.getValueLabel is actually on "view stage", which
         // depends that all models have been updated. So it should not be performed
         // here. Considering axisPointerModel used here is volatile, which is hard
         // to be retrieve in TooltipView, we prepare parameters here.
