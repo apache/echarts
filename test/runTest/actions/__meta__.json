@@ -143,6 +143,7 @@
   "line-sampling": 2,
   "line-visual2": 2,
   "lines-bus": 1,
+  "lines-single-symbol": 5,
   "lines-symbolSize-update": 1,
   "logScale": 3,
   "map": 3,
