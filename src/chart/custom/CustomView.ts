@@ -27,7 +27,7 @@ import * as labelStyleHelper from '../../label/labelStyle';
 import {getDefaultLabel} from '../helper/labelHelper';
 import {
     BarGridLayoutOptionForCustomSeries, BarGridLayoutResultForCustomSeries,
-    getLayoutOnAxis
+    computeBarLayoutForCustomSeries
 } from '../../layout/barGrid';
 import DataDiffer from '../../data/DataDiffer';
 import Model from '../../model/Model';
@@ -924,7 +924,7 @@ function makeRenderItem(
     ): BarGridLayoutResultForCustomSeries {
         if (coordSys.type === 'cartesian2d') {
             const baseAxis = coordSys.getBaseAxis() as Axis2D;
-            return getLayoutOnAxis(defaults({axis: baseAxis}, opt));
+            return computeBarLayoutForCustomSeries(defaults({axis: baseAxis}, opt));
         }
     }
 

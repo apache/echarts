@@ -1148,7 +1148,7 @@ function syncLabelIgnoreToMajorTicks(
     tickEls: graphic.Line[],
 ) {
     if (cfg.showMinorTicks) {
-        // It probably unreaasonable to hide major ticks when show minor ticks.
+        // It probably unreasonable to hide major ticks when show minor ticks.
         return;
     }
     each(labelLayoutList, labelLayout => {
@@ -1481,8 +1481,8 @@ function buildAxisLabel(
             eventData.value = rawLabel;
             eventData.tickIndex = index;
             const labelItemTickBreak = labelItem.tick.break;
-            const labelItemTickBreakParsedBreak = labelItemTickBreak.parsedBreak;
             if (labelItemTickBreak) {
+                const labelItemTickBreakParsedBreak = labelItemTickBreak.parsedBreak;
                 eventData.break = {
                     // type: labelItem.break.type,
                     start: labelItemTickBreakParsedBreak.vmin,

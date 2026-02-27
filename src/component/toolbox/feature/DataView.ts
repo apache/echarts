@@ -75,7 +75,7 @@ function groupSeries(ecModel: GlobalModel) {
         const coordSys = seriesModel.coordinateSystem;
 
         if (coordSys && (coordSys.type === 'cartesian2d' || coordSys.type === 'polar')) {
-            // TODO: TYPE Consider polar? Include polar may increase unecessary bundle size.
+            // TODO: TYPE Consider polar? Include polar may increase unnecessary bundle size.
             const baseAxis = (coordSys as Cartesian2D).getBaseAxis();
             if (baseAxis.type === 'category') {
                 const key = getCartesianAxisHashKey(baseAxis);

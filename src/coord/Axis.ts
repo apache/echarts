@@ -245,7 +245,7 @@ class Axis {
      * NOTICE: Can only be called after `adoptBandWidth` being called in `CoordinateSystem#update` stage.
      */
     getBandWidth(): number {
-        calcBandWidth(tmpOutBandWidth, this);
+        calcBandWidth(tmpOutBandWidth, this, true);
         // NOTICE: Do not add logic here. Implement everthing in `calcBandWidth`.
         return tmpOutBandWidth.bandWidth;
     }

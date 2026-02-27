@@ -434,7 +434,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      */
     getBaseAxis(): Axis {
         const coordSys = this.coordinateSystem;
-        // @ts-ignore
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
     }
 

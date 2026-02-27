@@ -111,12 +111,22 @@ type BarGridLayoutResultItem = BarGridLayoutResultItemInternal & {
 export type BarGridLayoutResultForCustomSeries = BarGridLayoutResultItem[] | NullUndefined;
 
 /**
- * @return If axis.type is not 'category', return undefined.
+ * Return null/undefined if not 'category' axis.
+ *
+ * PENDING: The layout on non-'category' axis relies on `bandWidth`, which is calculated
+ * based on the `linearPositiveMinGap` of series data. This strategy is somewhat heuristic
+ * and will not be public to custom series until required in future. Additionally, more ec
+ * options may be introduced for that, because it requires `requireAxisStatistics` to be
+ * called on custom series that requires this feature.
  */
-export function getLayoutOnAxis(opt: BarGridLayoutOption): BarGridLayoutResultForCustomSeries {
+export function computeBarLayoutForCustomSeries(opt: BarGridLayoutOption): BarGridLayoutResultForCustomSeries {
+    if (!isOrdinalScale(opt.axis.scale)) {
+        return;
+    }
+
     const params: BarGridLayoutAxisSeriesInfo[] = [];
     const bandWidthResult: AxisBandWidthResult = {};
-    calcBandWidth(bandWidthResult, opt.axis);
+    calcBandWidth(bandWidthResult, opt.axis, false);
 
     for (let i = 0; i < opt.count || 0; i++) {
         params.push(defaults({
@@ -162,7 +172,7 @@ function createLayoutInfoListOnAxis(
 
     const seriesInfoOnAxis: BarGridLayoutAxisSeriesInfo[] = [];
     const bandWidthResult: AxisBandWidthResult = {};
-    calcBandWidth(bandWidthResult, baseAxis);
+    calcBandWidth(bandWidthResult, baseAxis, false);
     const bandWidth = bandWidthResult.bandWidth;
 
     eachCollectedSeries(baseAxis, axisStatKey(seriesType), function (seriesModel: BaseBarSeriesModel) {

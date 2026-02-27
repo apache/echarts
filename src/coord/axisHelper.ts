@@ -38,7 +38,6 @@ import {
     AxisLabelFormatterExtraParams,
     OptionAxisType,
     AXIS_TYPES,
-    AxisShowMinMaxLabelOption,
 } from './axisCommonTypes';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
@@ -52,8 +51,8 @@ import {
 } from '../scale/helper';
 import { AxisModelExtendedInCreator } from './axisModelCreator';
 import { initExtentForUnion, makeInner } from '../util/model';
-import { ComponentModel } from '../echarts.simple';
 import { SCALE_EXTENT_KIND_EFFECTIVE, SCALE_MAPPER_DEPTH_OUT_OF_BREAK } from '../scale/scaleMapper';
+import ComponentModel from '../model/Component';
 
 
 const axisInner = makeInner<{

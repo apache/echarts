@@ -31,7 +31,8 @@ import { getScaleLinearSpanForMapping } from '../scale/scaleMapper';
 const SINGULAR_BAND_WIDTH_RATIO = 0.7;
 
 export type AxisBandWidthResult = {
-    // In px. May be NaN/null/undefined if no meaningfull bandWidth.
+    // In px. After the calling of `calcBandWidth`, it may be NaN if no meaningfull bandWidth,
+    // but never be null/undefined any more.
     bandWidth?: number | NullUndefined;
     kind?: AxisBandWidthKind;
     // If `AXIS_BAND_WIDTH_KIND_NORMAL`, this is a ratio from px span to data span, exists only if not singular.
@@ -66,15 +67,22 @@ export const AXIS_BAND_WIDTH_KIND_NORMAL = 2;
  */
 export function calcBandWidth(
     out: AxisBandWidthResult,
-    axis: Axis
+    axis: Axis,
+    useFallback: boolean
 ): void {
     // Clear out.
-    out.bandWidth = out.ratio = out.kind = undefined;
+    out.ratio = out.kind = undefined;
+    out.bandWidth = NaN;
 
     const scale = axis.scale;
 
     if (isOrdinalScale(scale)
-        || !calcBandWidthForNumericAxisIfPossible(out, axis, scale)
+        || (
+            !calcBandWidthForNumericAxisIfPossible(out, axis, scale)
+            // The fallback is only reasonable in several special cases (e.g., axis number is interger).
+            // So it is used only for backward compatibility.
+            && useFallback
+        )
     ) {
         calcBandWidthForCategoryAxisOrFallback(out, axis, scale);
     }
@@ -98,9 +106,7 @@ function calcBandWidthForCategoryAxisOrFallback(
     // Fix #2728, avoid NaN when only one data.
     len === 0 && (len = 1);
 
-    const size = Math.abs(axisExtent[1] - axisExtent[0]);
-
-    out.bandWidth = Math.abs(size) / len;
+    out.bandWidth = mathAbs(axisExtent[1] - axisExtent[0]) / len;
 }
 
 function calcBandWidthForNumericAxisIfPossible(
