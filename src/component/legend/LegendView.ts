@@ -26,6 +26,7 @@ import { enableHoverEmphasis } from '../../util/states';
 import {setLabelStyle, createTextStyle} from '../../label/labelStyle';
 import {makeBackground} from '../helper/listComponent';
 import * as layoutUtil from '../../util/layout';
+import { parsePercent } from '../../util/number';
 import ComponentView from '../../view/Component';
 import LegendModel, {
     LegendItemStyleOption,
@@ -141,7 +142,26 @@ class LegendView extends ComponentView {
 
         const maxSize = layoutUtil.getLayoutRect(positionInfo, refContainer, padding);
 
-        const mainRect = this.layoutInner(legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition);
+        const userHeight = legendModel.get('height');
+        let heightThreshold: number | null = null;
+
+        if (userHeight != null) {
+            if (typeof userHeight === 'string') {
+                const parsed = parsePercent(userHeight, refContainer.height);
+                if (!isNaN(parsed) && isFinite(parsed) && parsed > 0) {
+                    heightThreshold = parsed;
+                }
+            }
+            else if (typeof userHeight === 'number') {
+                if (!isNaN(userHeight) && isFinite(userHeight) && userHeight > 0) {
+                    heightThreshold = userHeight;
+                }
+            }
+        }
+
+        const mainRect = this.layoutInner(
+            legendModel, itemAlign, maxSize, isFirstRender, selector, selectorPosition, heightThreshold
+        );
 
         // Place mainGroup, based on the calculated `mainRect`.
         const layoutRect = layoutUtil.getLayoutRect(
@@ -522,7 +542,8 @@ class LegendView extends ComponentView {
         maxSize: { width: number, height: number },
         isFirstRender: boolean,
         selector: LegendOption['selector'],
-        selectorPosition: LegendOption['selectorPosition']
+        selectorPosition: LegendOption['selectorPosition'],
+        heightThreshold: number | null
     ): ZRRectLike {
         const contentGroup = this.getContentGroup();
         const selectorGroup = this.getSelectorGroup();
@@ -536,7 +557,38 @@ class LegendView extends ComponentView {
             maxSize.height
         );
 
-        const contentRect = contentGroup.getBoundingRect();
+        let contentRect = contentGroup.getBoundingRect();
+
+        if (heightThreshold != null) {
+            if (contentRect.height > heightThreshold) {
+                const exceedRatio = (contentRect.height - heightThreshold) / heightThreshold;
+                const scale = Math.max(1 / (1 + exceedRatio), 0.5);
+
+                const adjustedMaxSize = {
+                    width: maxSize.width / scale,
+                    height: maxSize.height / scale,
+                };
+
+                layoutUtil.box(
+                    legendModel.get('orient'),
+                    contentGroup,
+                    legendModel.get('itemGap'),
+                    adjustedMaxSize.width,
+                    adjustedMaxSize.height
+                );
+                contentGroup.scaleX = scale;
+                contentGroup.scaleY = scale;
+                contentRect = contentGroup.getBoundingRect();
+            }
+            else {
+                if (contentGroup.scaleX !== 1 || contentGroup.scaleY !== 1) {
+                    contentGroup.scaleX = 1;
+                    contentGroup.scaleY = 1;
+                    contentRect = contentGroup.getBoundingRect();
+                }
+            }
+        }
+
         const contentPos = [-contentRect.x, -contentRect.y];
 
         selectorGroup.markRedraw();
