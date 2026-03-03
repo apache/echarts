@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MarkPoint Single Data Test</title>
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-case {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .test-case h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .chart {
+            width: 100%;
+            height: 400px;
+            background: white;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+        .description {
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>MarkPoint Single Data Test Cases</h1>
+
+    <!-- Test Case 1 -->
+    <div class="test-case">
+        <h2>Test 1: Line Chart - Single Data Point with Multiple MarkPoints</h2>
+        <div class="description">Line chart with one data point. MarkPoints (max, min, average) should render correctly.</div>
+        <div id="chart1" class="chart"></div>
+    </div>
+
+    <!-- Test Case 2 -->
+    <div class="test-case">
+        <h2>Test 2: Bar Chart - Single Bar with Custom Coordinate MarkPoint</h2>
+        <div class="description">Bar chart with single bar and custom markPoint coordinates.</div>
+        <div id="chart2" class="chart"></div>
+    </div>
+
+    <!-- Test Case 3 -->
+    <div class="test-case">
+        <h2>Test 3: Scatter Chart - Single Point on Value Axes with MarkPoints</h2>
+        <div class="description">Scatter chart with single point on continuous value axes.</div>
+        <div id="chart3" class="chart"></div>
+    </div>
+
+    <!-- Test Case 4 -->
+    <div class="test-case">
+        <h2>Test 4: Bar Chart - DataZoom FilterMode='none'</h2>
+        <div class="description">Bar chart with dataZoom filterMode='none'. Zoom to single bar to test issue #19666 fix.</div>
+        <div id="chart4" class="chart"></div>
+    </div>
+
+    <!-- Test Case 5 -->
+    <div class="test-case">
+        <h2>Test 5: Edge Case - MarkPoint on Non-Existent Category</h2>
+        <div class="description">Testing markPoint behavior when referencing non-existent category.</div>
+        <div id="chart5" class="chart"></div>
+    </div>
+
+    <script>
+        require(['echarts'], function (echarts) {
+            
+            // Test 1: Single data point with markPoints
+            var chart1 = echarts.init(document.getElementById('chart1'));
+            var option1 = {
+                title: { text: 'Single Data Point', left: 'center', top: 10 },
+                tooltip: { trigger: 'axis' },
+                grid: { top: 60, bottom: 60 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Monday']
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100
+                },
+                series: [{
+                    name: 'Temperature',
+                    type: 'line',
+                    data: [50],
+                    symbolSize: 12,
+                    label: {
+                        show: true,
+                        formatter: 'Value: {c}'
+                    },
+                    markPoint: {
+                        symbol: 'pin',
+                        symbolSize: 60,
+                        data: [
+                            { type: 'max', name: 'Max', label: { formatter: 'MAX\n{c}' } },
+                            { type: 'min', name: 'Min', label: { formatter: 'MIN\n{c}' }, itemStyle: { color: 'green' } },
+                            { type: 'average', name: 'Avg', label: { formatter: 'AVG\n{c}' }, itemStyle: { color: 'orange' } }
+                        ]
+                    }
+                }]
+            };
+            chart1.setOption(option1);
+            
+            // Test 2: Bar chart single data with custom markPoint
+            var chart2 = echarts.init(document.getElementById('chart2'));
+            var option2 = {
+                title: { text: 'Single Bar with Custom MarkPoints', left: 'center', top: 10 },
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { top: 60, bottom: 60 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Product A']
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100
+                },
+                series: [{
+                    name: 'Sales',
+                    type: 'bar',
+                    data: [75],
+                    itemStyle: { color: '#5470c6' },
+                    markPoint: {
+                        data: [
+                            { coord: ['Product A', 75], name: 'Actual\nValue', itemStyle: { color: 'red' }, symbolSize: 50 },
+                            { coord: ['Product A', 90], name: 'Target', itemStyle: { color: 'green' }, symbolSize: 50 },
+                            { type: 'max', name: 'Max' }
+                        ]
+                    }
+                }]
+            };
+            chart2.setOption(option2);
+            
+            // Test 3: Scatter single point on value axes
+            var chart3 = echarts.init(document.getElementById('chart3'));
+            var option3 = {
+                title: { text: 'Single Point on Value Axes', left: 'center', top: 10 },
+                tooltip: { trigger: 'item' },
+                grid: { top: 60, bottom: 60 },
+                xAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100
+                },
+                series: [{
+                    name: 'Data Point',
+                    type: 'scatter',
+                    data: [[50, 50]],
+                    symbolSize: 20,
+                    itemStyle: { color: '#ee6666' },
+                    markPoint: {
+                        data: [
+                            { coord: [50, 50], name: 'Data\nPoint', symbolSize: 60, itemStyle: { color: 'purple' } },
+                            { coord: [30, 70], name: 'Reference', symbolSize: 50, itemStyle: { color: 'orange' } },
+                            { coord: [70, 30], name: 'Target', symbolSize: 50, itemStyle: { color: 'green' } }
+                        ]
+                    }
+                }]
+            };
+            chart3.setOption(option3);
+            
+            // Test 4: The original bug case
+            var chart4 = echarts.init(document.getElementById('chart4'));
+            var option4 = {
+                title: { text: 'DataZoom FilterMode: none (Issue #19666)', left: 'center', top: 10 },
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { top: 60, bottom: 100 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                dataZoom: [{
+                    type: 'slider',
+                    show: true,
+                    xAxisIndex: [0],
+                    filterMode: 'none',
+                    start: 0,
+                    end: 100,
+                    bottom: 10
+                }],
+                series: [{
+                    name: 'Sales',
+                    type: 'bar',
+                    data: [5, 8, 3, 10, 7, 4, 6],
+                    itemStyle: { color: '#91cc75' },
+                    markPoint: {
+                        data: [
+                            { type: 'max', name: 'Max' },
+                            { type: 'min', name: 'Min' }
+                        ]
+                    }
+                }]
+            };
+            chart4.setOption(option4);
+            
+            // Test 5: Edge case
+            var chart5 = echarts.init(document.getElementById('chart5'));
+            var option5 = {
+                title: { text: 'Edge Case: Single Category', left: 'center', top: 10 },
+                tooltip: { trigger: 'axis' },
+                grid: { top: 60, bottom: 60 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Alpha']
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 0,
+                    max: 100
+                },
+                series: [{
+                    name: 'Value',
+                    type: 'bar',
+                    data: [60],
+                    itemStyle: { color: '#fac858' },
+                    markPoint: {
+                        data: [
+                            { coord: ['Alpha', 60], name: 'Exists', itemStyle: { color: 'green' } },
+                            { type: 'max', name: 'Max' }
+                        ]
+                    }
+                }]
+            };
+            chart5.setOption(option5);
+            
+            // Add resize listeners
+            window.addEventListener('resize', function() {
+                chart1.resize();
+                chart2.resize();
+                chart3.resize();
+                chart4.resize();
+                chart5.resize();
+            });
+        });
+    </script>
+</body>
+</html>
