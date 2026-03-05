@@ -146,12 +146,10 @@ interface ToolboxComponentOption extends ToolboxOption {
 export { SliderDataZoomComponentOption, InsideDataZoomComponentOption };
 export type DataZoomComponentOption = SliderDataZoomComponentOption | InsideDataZoomComponentOption;
 export { ContinuousVisualMapComponentOption, PiecewiseVisualMapComponentOption };
-export {
-    /**
-     * @deprecated Use ContinuousVisualMapComponentOption instead.
-     */
-    ContinuousVisualMapComponentOption as ContinousVisualMapComponentOption,
-};
+/**
+ * @deprecated Use `ContinuousVisualMapComponentOption` instead.
+ */
+export type ContinousVisualMapComponentOption = ContinuousVisualMapComponentOption;
 export type VisualMapComponentOption = ContinuousVisualMapComponentOption | PiecewiseVisualMapComponentOption;
 export { PlainLegendComponentOption, ScrollableLegendComponentOption };
 export type LegendComponentOption = PlainLegendComponentOption | ScrollableLegendComponentOption;

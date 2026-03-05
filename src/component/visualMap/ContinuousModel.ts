@@ -34,10 +34,7 @@ type RangeWithAuto = {
 
 type VisualState = VisualMapModel['stateList'][number];
 
-/**
- * @deprecated Use ContinuousVisualMapOption instead.
- */
-export interface ContinousVisualMapOption extends VisualMapOption {
+export interface ContinuousVisualMapOption extends VisualMapOption {
 
     align?: 'auto' | 'left' | 'right' | 'top' | 'bottom'
 
@@ -101,7 +98,10 @@ export interface ContinousVisualMapOption extends VisualMapOption {
     }
 }
 
-export type ContinuousVisualMapOption = ContinousVisualMapOption
+/**
+ * @deprecated Use `ContinuousVisualMapOption` instead.
+ */
+export type ContinousVisualMapOption = ContinuousVisualMapOption;
 
 class ContinuousModel extends VisualMapModel<ContinuousVisualMapOption> {
 
