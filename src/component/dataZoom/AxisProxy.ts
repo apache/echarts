@@ -36,7 +36,7 @@ import {
     AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, scaleRawExtentInfoReallyCreate,
     ScaleRawExtentResultForZoom,
 } from '../../coord/scaleRawExtentInfo';
-import { suppressOnAxisZero } from '../../coord/axisHelper';
+import { discourageOnAxisZero } from '../../coord/axisHelper';
 
 
 interface MinMaxSpan {
@@ -353,10 +353,10 @@ class AxisProxy {
         const axis = this.getAxisModel().axis;
         scaleRawExtentInfoReallyCreate(this.ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
 
-        suppressOnAxisZero(axis, {dz: true});
+        discourageOnAxisZero(axis, {dz: true});
 
         const rawExtentInfo = axis.scale.rawExtentInfo;
-        this._extent = rawExtentInfo.makeForZoom();
+        this._extent = rawExtentInfo.makeNoZoom();
 
         // `calculateDataWindow` uses min/maxSpan.
         this._updateMinMaxSpan();
@@ -461,9 +461,9 @@ class AxisProxy {
                         const range: Dictionary<[number, number]> = {};
                         range[dim] = valueWindow as [number, number];
 
-                        // console.time('select');
+                        // console.time('AxisProxy_selectRange');
                         seriesData.selectRange(range);
-                        // console.timeEnd('select');
+                        // console.timeEnd('AxisProxy_selectRange');
                     }
                 });
             }

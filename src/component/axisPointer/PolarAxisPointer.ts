@@ -36,6 +36,7 @@ import AngleAxis from '../../coord/polar/AngleAxis';
 import RadiusAxis from '../../coord/polar/RadiusAxis';
 import { PathProps } from 'zrender/src/graphic/Path';
 import Model from '../../model/Model';
+import type GlobalModel from '../../model/Global';
 
 // Not use top level axisPointer model
 type AxisPointerModel = Model<CommonAxisPointerOption>;
@@ -59,8 +60,8 @@ class PolarAxisPointer extends BaseAxisPointer {
         }
 
         const polar = axis.polar;
-        const otherAxis = polar.getOtherAxis(axis);
-        const otherExtent = otherAxis.getExtent();
+        const thisExtent = axis.getExtent();
+        const otherExtent = polar.getOtherAxis(axis).getExtent();
 
         const coordValue = axis.dataToCoord(value);
 
@@ -68,7 +69,13 @@ class PolarAxisPointer extends BaseAxisPointer {
         if (axisPointerType && axisPointerType !== 'none') {
             const elStyle = viewHelper.buildElStyle(axisPointerModel);
             const pointerOption = pointerShapeBuilder[axisPointerType](
-                axis, polar, coordValue, otherExtent
+                axis,
+                polar,
+                coordValue,
+                thisExtent,
+                otherExtent,
+                axisPointerModel.get('seriesDataIndices'),
+                axisPointerModel.ecModel
             );
             pointerOption.style = elStyle;
             elOption.graphicKey = pointerOption.type;
@@ -80,7 +87,7 @@ class PolarAxisPointer extends BaseAxisPointer {
         viewHelper.buildLabelElOption(elOption, axisModel, axisPointerModel, api, labelPos);
     }
 
-    // Do not support handle, utill any user requires it.
+    // Do not support handle, util any user requires it.
 
 };
 
@@ -139,6 +146,7 @@ const pointerShapeBuilder = {
         axis: AngleAxis | RadiusAxis,
         polar: Polar,
         coordValue: number,
+        thisExtent: number[],
         otherExtent: number[]
     ): PathProps & { type: 'Line' | 'Circle' } {
         return axis.dim === 'angle'
@@ -163,31 +171,44 @@ const pointerShapeBuilder = {
         axis: AngleAxis | RadiusAxis,
         polar: Polar,
         coordValue: number,
-        otherExtent: number[]
+        thisExtent: number[],
+        otherExtent: number[],
+        seriesDataIndices: CommonAxisPointerOption['seriesDataIndices'],
+        ecModel: GlobalModel
     ): PathProps & { type: 'Sector' } {
-        const bandWidth = Math.max(1, axis.getBandWidth());
-        const radian = Math.PI / 180;
 
-        return axis.dim === 'angle'
-            ? {
-                type: 'Sector',
-                shape: viewHelper.makeSectorShape(
-                    polar.cx, polar.cy,
-                    otherExtent[0], otherExtent[1],
-                    // In ECharts y is negative if angle is positive
-                    (-coordValue - bandWidth / 2) * radian,
-                    (-coordValue + bandWidth / 2) * radian
-                )
-            }
-            : {
-                type: 'Sector',
-                shape: viewHelper.makeSectorShape(
-                    polar.cx, polar.cy,
-                    coordValue - bandWidth / 2,
-                    coordValue + bandWidth / 2,
-                    0, Math.PI * 2
-                )
-            };
+        const radian = Math.PI / 180;
+        const bandWidth = viewHelper.calcAxisPointerShadowBandWidth(axis, seriesDataIndices, ecModel);
+        let shape;
+        if (axis.dim === 'angle') {
+            shape = viewHelper.makeSectorShape(
+                polar.cx,
+                polar.cy,
+                otherExtent[0],
+                otherExtent[1],
+                // In ECharts the screen y is negative if angle is positive,
+                // opposite to zrender shape.
+                // No need clamp.
+                (-coordValue - bandWidth / 2) * radian,
+                (-coordValue + bandWidth / 2) * radian
+            );
+        }
+        else {
+            const [min, max] = viewHelper.calcAxisPointerShadowEnds(coordValue, thisExtent, bandWidth);
+            shape = viewHelper.makeSectorShape(
+                polar.cx,
+                polar.cy,
+                min,
+                max,
+                0,
+                Math.PI * 2
+            );
+        }
+
+        return {
+            type: 'Sector',
+            shape,
+        };
     }
 };
 

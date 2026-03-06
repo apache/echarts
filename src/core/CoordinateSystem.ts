@@ -60,8 +60,6 @@ class CoordinateSystemManager {
         this._nonSeriesBoxMasterList = dealCreate(nonSeriesBoxCoordSysCreators, true);
         this._normalMasterList = dealCreate(normalCoordSysCreators, false);
 
-        performAxisStatistics && performAxisStatistics(ecModel);
-
         function dealCreate(creatorMap: CoordinateSystemCreatorMap, canBeNonSeriesBox: boolean) {
             let coordinateSystems: CoordinateSystemMaster[] = [];
             zrUtil.each(creatorMap, function (creator, type) {
@@ -358,11 +356,5 @@ export const simpleCoordSysInjectionProvider: CoordSysInjectionProvider = functi
     ).models[0] as (ComponentModel & {coordinateSystem: CoordinateSystem});
     return coordSysModel && coordSysModel.coordinateSystem;
 };
-
-let performAxisStatistics: ((ecModel: GlobalModel) => void) | NullUndefined;
-// To reduce code size, the implementation of `performAxisStatistics` is registered only when needed.
-export function registerPerformAxisStatistics(impl: typeof performAxisStatistics): void {
-    performAxisStatistics = impl;
-}
 
 export default CoordinateSystemManager;

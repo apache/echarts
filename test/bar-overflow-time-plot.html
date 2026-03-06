@@ -41,6 +41,7 @@ under the License.
 
                 var _ctx = {
                     useDataZoom: true,
+                    stack: false,
                     xAxisInverse: undefined,
                     datasource: 'simple',
                     xAxisType: 'time',
@@ -54,6 +55,7 @@ under the License.
                     barCategoryGap: undefined,
                     xAxisLabelShowMinMaxLabel: undefined,
                     xAxisBoundaryGap: undefined,
+                    xAxisContainShape: undefined,
                 };
 
                 function makeLogDataIfNeeded(linearData) {
@@ -201,6 +203,7 @@ under the License.
                             },
                             inverse: _ctx.xAxisInverse,
                             boundaryGap: _ctx.xAxisBoundaryGap,
+                            containShape: _ctx.xAxisContainShape,
                             splitArea: {
                                 show: true,
                             },
@@ -282,6 +285,11 @@ under the License.
                             series.clip = _ctx.seriesBarClip;
                         });
                     }
+                    if (_ctx.stack) {
+                        option.series.forEach(individualSeries => {
+                            individualSeries.stack = 'a';
+                        });
+                    }
 
                     return option;
                 }
@@ -336,6 +344,14 @@ under the License.
                             resetOption();
                         }
                     }, {
+                        type: 'select',
+                        text: 'stack:',
+                        values: [false, true],
+                        onchange() {
+                            _ctx.stack = this.value;
+                            resetOption();
+                        }
+                    }, {
                         type: 'br',
                     }, {
                         type: 'select',
@@ -379,12 +395,17 @@ under the License.
                         values: [
                             _ctx.xAxisBoundaryGap,
                             ['30%', '15%'],
-                            [{containShape: false}, {containShape: false}],
-                            [{containShape: false, value: '30%'}, {containShape: false, value: '15%'}],
-                            [{containShape: true, value: '30%'}, {containShape: true, value: '15%'}],
                         ],
                         onchange() {
                             _ctx.xAxisBoundaryGap = this.value;
+                            resetOption();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'xAxis.containShape:',
+                        values: [_ctx.xAxisContainShape, false, true],
+                        onchange() {
+                            _ctx.xAxisContainShape = this.value;
                             resetOption();
                         }
                     }, {

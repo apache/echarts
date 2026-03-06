@@ -38,7 +38,8 @@ import {
     ScaleMapperTransformOutOpt
 } from './scaleMapper';
 import { map } from 'zrender/src/core/util';
-import { isValidBoundsForExtent } from '../util/model';
+import { isValidBoundsForExtent, isValidNumberForExtent } from '../util/model';
+import { isNullableNumberFinite } from '../util/number';
 
 
 type LogScaleSetting = {
@@ -236,14 +237,15 @@ class LogScale extends Scale<LogScale> {
             return {g: 0};
         },
 
-        sanitizeExtent(extent, dataExtent) {
-            if (isValidBoundsForExtent(extent[0], extent[1])
-                && isValidBoundsForExtent(dataExtent[0], dataExtent[1])
+        sanitize(value, dataExtent) {
+            // Conservative - if dataExtent is invalid, do not sanitize.
+            if (isValidBoundsForExtent(dataExtent[0], dataExtent[1])
+                && isNullableNumberFinite(value)
             ) {
                 // `DataStore` has ensured that `dataExtent` is valid for LogScale.
-                extent[0] <= 0 && (extent[0] = dataExtent[0]);
-                extent[1] <= 0 && (extent[1] = dataExtent[0]);
+                value <= 0 && (value = dataExtent[0]);
             }
+            return value;
         },
 
         getExtent() {

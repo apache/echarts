@@ -21,13 +21,18 @@ import createSeriesDataSimply from './createSeriesDataSimply';
 import * as zrUtil from 'zrender/src/core/util';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
-import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient } from '../../util/types';
+import type { SeriesOption, SeriesOnCartesianOptionMixin, LayoutOrient, NullUndefined } from '../../util/types';
 import type GlobalModel from '../../model/Global';
 import type SeriesModel from '../../model/Series';
 import type CartesianAxisModel from '../../coord/cartesian/AxisModel';
 import type SeriesData from '../../data/SeriesData';
 import type Axis2D from '../../coord/cartesian/Axis2D';
 import { CoordDimensionDefinition } from '../../data/helper/createDimensions';
+import { CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
+import {
+    SHAPE_CLIP_KIND_FULLY_CLIPPED, SHAPE_CLIP_KIND_NOT_CLIPPED, SHAPE_CLIP_KIND_PARTIALLY_CLIPPED,
+    ShapeClipKind
+} from './createClipPathFromCoordSys';
 
 interface CommonOption extends SeriesOption, SeriesOnCartesianOptionMixin {
     // - 'horizontal': Multiple whisker boxes (each drawn vertically)
@@ -44,8 +49,8 @@ interface DataItemOption {
     value?: number[]
 }
 
-interface WhiskerBoxCommonMixin<Opts extends CommonOption> extends SeriesModel<Opts>{}
-class WhiskerBoxCommonMixin<Opts extends CommonOption> {
+export interface WhiskerBoxCommonMixin<Opts extends CommonOption> extends SeriesModel<Opts>{}
+export class WhiskerBoxCommonMixin<Opts extends CommonOption> {
 
     private _baseAxisDim: string;
 
@@ -184,5 +189,26 @@ class WhiskerBoxCommonMixin<Opts extends CommonOption> {
 
 };
 
-
-export { WhiskerBoxCommonMixin };
+/**
+ * PENDING: We do not use zr Element clipPath due to performance consideration,
+ * although it may be further optimized.
+ */
+export function resolveNormalBoxClipping(
+    clipArea: CoordinateSystemClipArea,
+    itemLayout: {
+        ends: number[][];
+    }
+): ShapeClipKind {
+    const count = itemLayout.ends.length;
+    let containCount = 0;
+    for (let i = 0; i < count; i++) {
+        // clip if any points is out of the area, otherwise the shape may partially
+        // out of the coord sys area and overlap with axis labels.
+        if (clipArea.contain(itemLayout.ends[i][0], itemLayout.ends[i][1])) {
+            containCount++;
+        }
+    }
+    return !containCount ? SHAPE_CLIP_KIND_FULLY_CLIPPED
+        : containCount < count ? SHAPE_CLIP_KIND_PARTIALLY_CLIPPED
+        : SHAPE_CLIP_KIND_NOT_CLIPPED;
+}

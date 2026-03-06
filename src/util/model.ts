@@ -29,7 +29,8 @@ import {
     indexOf,
     isStringSafe,
     isNumber,
-    hasOwn
+    hasOwn,
+    isTypedArray,
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -48,12 +49,13 @@ import {
     OptionName,
     InterpolatableValue,
     NullUndefined,
+    UNDEFINED_STR,
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import type GridModel from '../coord/cartesian/GridModel';
-import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
+import { isNumeric, getRandomIdBase, getPrecision, round, MAX_SAFE_INTEGER } from './number';
 import { error, warn } from './log';
 import type Model from '../model/Model';
 
@@ -1251,17 +1253,20 @@ export function extentHasValue(extent: number[]): boolean {
  * A util for ensuring the callback is called only once.
  * @usage
  *  const callOnlyOnce = makeCallOnlyOnce(); // Should be static (ESM top level).
- *  function someFunc(hostObj) {
- *      callOnlyOnce(hostObj, function () {
- *          // Do something immediately and only once for hostObj.
+ *  function someFunc(registers: EChartsExtensionInstallRegisters): void {
+ *      callOnlyOnce(registers, function () {
+ *          // Do something immediately and only once per registers.
  *      }
  *  }
  */
 export function makeCallOnlyOnce<Host extends object>() {
-    const key = '__ec_once_' + onceUniqueIndex++;
+    const hiddenKey = '__ec_once_' + onceUniqueIndex++;
     return function (hostObj: Host, cb: () => void) {
-        if (!hasOwn(hostObj, key)) {
-            (hostObj as any)[key] = 1;
+        if (__DEV__) {
+            assert(hostObj);
+        }
+        if (!hasOwn(hostObj, hiddenKey)) {
+            (hostObj as any)[hiddenKey] = 1;
             cb();
         }
     };
@@ -1293,12 +1298,9 @@ export function resetCachePerECFullUpdate(ecModel: GlobalModel): void {
 
 /**
  * The cache is auto cleared at the begining of a run of "ec prepare".
+ * Typically, `setOption` trigger "ec prepare", but `dispatchAction` does not.
  *
  * NOTICE:
- *  - The cache can only be written at the "ec prepare" stage, such as
- *      - It can be written in `getTargetSeries` methods of data processors.
- *      - It can be written in `init`/`mergeOption`/`optionUpdated`/`getData` methods of component/series models.
- *  - The cache can be read in any stages.
  *  - "ec prepare" is not necessarily performed before each "ec full update" performing.
  */
 export function getCachePerECPrepare(ecModel: GlobalModel): GlobalModelCachePerECPrepare {
@@ -1308,9 +1310,13 @@ export function getCachePerECPrepare(ecModel: GlobalModel): GlobalModelCachePerE
 /**
  * The cache is auto cleared at the begining of a run of "ec full update".
  * However, all shortcuts (such as `updateView`/`updateLayout`/etc.) do not clear it.
+ * Typically, all `setOption` and some `dispatchAction` trigger "ec full update".
+ * This is the same as the lifecycle of coordinate systems instances and axes instances.
  *
  * NOTICE:
- *  - The cache can only be written AFTER "ec prepare" stage (not included).
+ *  - The cache should NOT be written in:
+ *      - `getTargetSeries` methods of data processors.
+ *      - `init`/`mergeOption`/`optionUpdated`/`getData` methods of component/series models.
  *    See `getCachePerECPrepare` for details.
  */
 export function getCachePerECFullUpdate(ecModel: GlobalModel): GlobalModelCachePerECFullUpdate {

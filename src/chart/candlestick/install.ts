@@ -23,7 +23,7 @@ import CandlestickSeriesModel from './CandlestickSeries';
 import preprocessor from './preprocessor';
 
 import candlestickVisual from './candlestickVisual';
-import candlestickLayout from './candlestickLayout';
+import {candlestickLayout, registerCandlestickAxisHandlers} from './candlestickLayout';
 
 export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerChartView(CandlestickView);
@@ -31,4 +31,6 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerPreprocessor(preprocessor);
     registers.registerVisual(candlestickVisual);
     registers.registerLayout(candlestickLayout);
+
+    registerCandlestickAxisHandlers(registers);
 }

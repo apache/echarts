@@ -27,13 +27,16 @@ import {isObject, each, indexOf, retrieve3, keys, assert, eqNaN, find, retrieve2
 import {BoxLayoutReferenceResult, createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
-    ifAxisCrossZero,
+    getScaleValuePositionKind,
     isNameLocationCenter,
     shouldAxisShow,
     retrieveAxisBreaksOption,
     determineAxisType,
-    suppressOnAxisZero,
-    isOnAxisZeroSuppressed,
+    discourageOnAxisZero,
+    isOnAxisZeroDiscouraged,
+    SCALE_VALUE_POSITION_KIND_OUTSIDE,
+    SCALE_VALUE_POSITION_KIND_EDGE,
+    SCALE_VALUE_POSITION_KIND_INSIDE,
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
@@ -447,7 +450,7 @@ class Grid implements CoordinateSystemMaster {
                 cartesian.addAxis(xAxis);
                 cartesian.addAxis(yAxis);
 
-                suppressOnAxisZero(cartesian.getBaseAxis(), {base: true});
+                discourageOnAxisZero(cartesian.getBaseAxis(), {base: true});
             });
         });
 
@@ -676,10 +679,28 @@ function canOnZeroToAxis(
     onZeroOption: AxisBaseOptionCommon['axisLine']['onZero'],
     axis: Axis2D
 ): boolean {
-    // PENDING: Historical behavior: `onZero` on 'category' and 'time' axis are always disabled
-    // even if ec option gives `onZero: true`.
-    let can = axis && axis.type !== 'category' && axis.type !== 'time' && ifAxisCrossZero(axis);
-    if (can && onZeroOption === 'auto' && isOnAxisZeroSuppressed(axis)) {
+    const scale = axis.scale;
+    const kindEffective = getScaleValuePositionKind(scale, 0, false);
+
+    let can = axis
+        // PENDING: Historical behavior: `onZero` on 'category' and 'time' axis are always disabled
+        // even if ec option gives `onZero: true`.
+        && axis.type !== 'category' && axis.type !== 'time'
+        // NOTE: Although the portion out of "effective" portion may also cross zero
+        // (see `SCALE_EXTENT_KIND_MAPPING`), that is commonly meaningless, so we use
+        // `SCALE_EXTENT_KIND_EFFECTIVE`
+        && kindEffective !== SCALE_VALUE_POSITION_KIND_OUTSIDE;
+
+    if (can && onZeroOption === 'auto'
+        && (
+            isOnAxisZeroDiscouraged(axis)
+            || (
+                // Avoid axis line cross series shape (typically, bar series on "value"/"time" axis) unexpectedly.
+                kindEffective === SCALE_VALUE_POSITION_KIND_EDGE
+                && getScaleValuePositionKind(scale, 0, true) === SCALE_VALUE_POSITION_KIND_INSIDE
+            )
+        )
+    ) {
         can = false;
     }
     // falsy value of `onZeroOption` has been handled in the previous logic.

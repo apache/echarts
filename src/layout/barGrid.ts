@@ -17,13 +17,13 @@
 * under the License.
 */
 
-import { each, defaults, hasOwn } from 'zrender/src/core/util';
+import { each, defaults, hasOwn, assert } from 'zrender/src/core/util';
 import { isNullableNumberFinite, mathAbs, mathMax, mathMin, parsePercent } from '../util/number';
 import { isDimensionStacked } from '../data/helper/dataStackHelper';
 import createRenderPlanner from '../chart/helper/createRenderPlanner';
 import Axis2D from '../coord/cartesian/Axis2D';
 import GlobalModel from '../model/Global';
-import type Cartesian2D from '../coord/cartesian/Cartesian2D';
+import Cartesian2D from '../coord/cartesian/Cartesian2D';
 import { StageHandler, NullUndefined } from '../util/types';
 import { createFloat32Array } from '../util/vendor';
 import {
@@ -43,20 +43,23 @@ import {
 } from '../coord/scaleRawExtentInfo';
 import { EChartsExtensionInstallRegisters } from '../extension';
 import {
-    AxisStatisticsClient, AxisStatisticsKey, eachCollectedAxis,
-    eachCollectedSeries, getCollectedSeriesLength, requireAxisStatistics
+    AxisStatKey,
+    eachCollectedAxis,
+    eachCollectedSeries, getCollectedSeriesLength
 } from '../coord/axisStatistics';
 import {
-    AXIS_BAND_WIDTH_KIND_NORMAL, AxisBandWidthResult, calcBandWidth
+    AxisBandWidthResult, calcBandWidth
 } from '../coord/axisBand';
+import { BaseBarSeriesSubType, getStartValue, registerAxisStatisticsForBaseBar } from './barCommon';
+import { COORD_SYS_TYPE_CARTESIAN_2D } from '../coord/cartesian/GridModel';
 
 
 const callOnlyOnce = makeCallOnlyOnce();
 
 const STACK_PREFIX = '__ec_stack_';
 
-function getSeriesStackId(seriesModel: BaseBarSeriesModel): string {
-    return (seriesModel as BarSeriesModel).get('stack') || STACK_PREFIX + seriesModel.seriesIndex;
+function getSeriesStackId(seriesModel: BaseBarSeriesModel): StackId {
+    return ((seriesModel as BarSeriesModel).get('stack') || STACK_PREFIX + seriesModel.seriesIndex) as StackId;
 }
 
 interface BarGridLayoutAxisInfo {
@@ -72,12 +75,11 @@ interface BarGridLayoutAxisSeriesInfo {
     barGap: number | string
     defaultBarGap?: number | string
     barCategoryGap: number | string
-    stackId: string
+    stackId: StackId
 }
 
-type StackId = string;
+type StackId = string & {_: 'barGridStackId'};
 
-export type BaseBarSeriesSubType = 'bar' | 'pictorialBar';
 
 export interface BarGridLayoutOptionForCustomSeries {
     count: number
@@ -101,7 +103,7 @@ export type BarGridColumnLayoutOnAxis = BarGridLayoutAxisInfo & {
 };
 
 type BarGridLayoutResultItemInternal = {
-    bandWidth: BarGridLayoutAxisInfo['bandWidthResult']['bandWidth']
+    bandWidth: BarGridLayoutAxisInfo['bandWidthResult']['w']
     offset: number // An offset with respect to `dataToPoint`
     width: number
 };
@@ -124,13 +126,12 @@ export function computeBarLayoutForCustomSeries(opt: BarGridLayoutOption): BarGr
         return;
     }
 
-    const params: BarGridLayoutAxisSeriesInfo[] = [];
-    const bandWidthResult: AxisBandWidthResult = {};
-    calcBandWidth(bandWidthResult, opt.axis, false);
+    const bandWidthResult = calcBandWidth(opt.axis);
 
+    const params: BarGridLayoutAxisSeriesInfo[] = [];
     for (let i = 0; i < opt.count || 0; i++) {
         params.push(defaults({
-            stackId: STACK_PREFIX + i
+            stackId: STACK_PREFIX + i as StackId
         }, opt) as BarGridLayoutAxisSeriesInfo);
     }
     const widthAndOffsets = calcBarWidthAndOffset({
@@ -140,7 +141,7 @@ export function computeBarLayoutForCustomSeries(opt: BarGridLayoutOption): BarGr
 
     const result: BarGridLayoutResultItem[] = [];
     for (let i = 0; i < opt.count; i++) {
-        const item = widthAndOffsets[STACK_PREFIX + i] as BarGridLayoutResultItem;
+        const item = widthAndOffsets[STACK_PREFIX + i as StackId] as BarGridLayoutResultItem;
         item.offsetCenter = item.offset + item.width / 2;
         result.push(item);
     }
@@ -171,11 +172,13 @@ function createLayoutInfoListOnAxis(
 ): BarGridLayoutAxisInfo {
 
     const seriesInfoOnAxis: BarGridLayoutAxisSeriesInfo[] = [];
-    const bandWidthResult: AxisBandWidthResult = {};
-    calcBandWidth(bandWidthResult, baseAxis, false);
-    const bandWidth = bandWidthResult.bandWidth;
+    const bandWidthResult = calcBandWidth(
+        baseAxis,
+        {fromStat: {key: makeAxisStatKey(seriesType)}, min: 1}
+    );
+    const bandWidth = bandWidthResult.w;
 
-    eachCollectedSeries(baseAxis, axisStatKey(seriesType), function (seriesModel: BaseBarSeriesModel) {
+    eachCollectedSeries(baseAxis, makeAxisStatKey(seriesType), function (seriesModel: BaseBarSeriesModel) {
         seriesInfoOnAxis.push({
             barWidth: parsePercent(seriesModel.get('barWidth'), bandWidth),
             barMaxWidth: parsePercent(seriesModel.get('barMaxWidth'), bandWidth),
@@ -213,7 +216,7 @@ function calcBarWidthAndOffset(
         minWidth?: number
     }
 
-    const bandWidth = seriesInfoOnAxis.bandWidthResult.bandWidth;
+    const bandWidth = seriesInfoOnAxis.bandWidthResult.w;
     let remainedWidth = bandWidth;
     let autoWidthCount: number = 0;
     let barCategoryGapOption: number | string;
@@ -349,11 +352,15 @@ function calcBarWidthAndOffset(
     return result;
 }
 
-
 export function layout(seriesType: BaseBarSeriesSubType, ecModel: GlobalModel): void {
-    eachCollectedAxis(ecModel, function (axis) {
-        const columnLayout = makeColumnLayoutOnAxisReal(axis as Axis2D, seriesType);
-        eachCollectedSeries(axis, axisStatKey(seriesType), function (seriesModel) {
+    const axisStatKey = makeAxisStatKey(seriesType);
+    eachCollectedAxis(ecModel, axisStatKey, function (axis: Axis2D) {
+        if (__DEV__) {
+            assert(axis instanceof Axis2D);
+        }
+        const columnLayout = makeColumnLayoutOnAxisReal(axis, seriesType);
+
+        eachCollectedSeries(axis, axisStatKey, function (seriesModel) {
             const columnLayoutInfo = columnLayout.columnMap[getSeriesStackId(seriesModel)];
             seriesModel.getData().setLayout({
                 bandWidth: columnLayoutInfo.bandWidth,
@@ -361,6 +368,7 @@ export function layout(seriesType: BaseBarSeriesSubType, ecModel: GlobalModel): 
                 size: columnLayoutInfo.width
             });
         });
+
     });
 }
 
@@ -388,7 +396,9 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
             const stackResultDim = data.getCalculationInfo('stackResultDimension');
             const stacked = isDimensionStacked(data, valueDim) && !!data.getCalculationInfo('stackedOnSeries');
             const isValueAxisH = valueAxis.isHorizontal();
-            const valueAxisStart = getValueAxisStart(baseAxis, valueAxis);
+
+            const valueAxisStart = valueAxis.toGlobalCoord(valueAxis.dataToCoord(getStartValue(baseAxis)));
+
             const isLarge = isInLargeMode(seriesModel);
             const barMinHeight = seriesModel.get('barMinHeight') || 0;
 
@@ -432,8 +442,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         if (isValueAxisH) {
                             const coord = cartesian.dataToPoint([value, baseValue]);
                             if (stacked) {
-                                const startCoord = cartesian.dataToPoint([stackStartValue, baseValue]);
-                                baseCoord = startCoord[0];
+                                baseCoord = cartesian.dataToPoint([stackStartValue, baseValue])[0];
                             }
                             x = baseCoord;
                             y = coord[1] + columnOffset;
@@ -447,8 +456,7 @@ export function createProgressiveLayout(seriesType: string): StageHandler {
                         else {
                             const coord = cartesian.dataToPoint([baseValue, value]);
                             if (stacked) {
-                                const startCoord = cartesian.dataToPoint([baseValue, stackStartValue]);
-                                baseCoord = startCoord[1];
+                                baseCoord = cartesian.dataToPoint([baseValue, stackStartValue])[1];
                             }
                             x = coord[0] + columnOffset;
                             y = baseCoord;
@@ -499,19 +507,6 @@ function isInLargeMode(seriesModel: BaseBarSeriesModel) {
     return seriesModel.pipelineContext && seriesModel.pipelineContext.large;
 }
 
-// See cases in `test/bar-start.html` and `#7412`, `#8747`.
-function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D) {
-    let startValue = valueAxis.model.get('startValue');
-    if (!startValue) {
-        startValue = 0;
-    }
-    return valueAxis.toGlobalCoord(
-        valueAxis.dataToCoord(
-            valueAxis.type === 'log'
-            ? (startValue > 0 ? startValue : 1)
-            : startValue));
-}
-
 
 /**
  * NOTICE:
@@ -521,13 +516,11 @@ function getValueAxisStart(baseAxis: Axis2D, valueAxis: Axis2D) {
  *    See the summary of the process of extent determination in the comment of `scaleMapper.setExtent`.
  */
 function barGridCreateAxisContainShapeHandler(seriesType: BaseBarSeriesSubType): AxisContainShapeHandler {
-    return function (
-        axis, scale, ecModel
-    ) {
+    return function (axis, scale, ecModel) {
         // If bars are placed on 'time', 'value', 'log' axis, handle bars overflow here.
         // See #6728, #4862, `test/bar-overflow-time-plot.html`
         if (axis && axis instanceof Axis2D && !isOrdinalScale(scale)) {
-            if (!getCollectedSeriesLength(axis, axisStatKey(seriesType))) {
+            if (!getCollectedSeriesLength(axis, makeAxisStatKey(seriesType))) {
                 return; // Quick path - in most cases there is no bar on non-ordinal axis.
             }
             const columnLayout = makeColumnLayoutOnAxisReal(axis, seriesType);
@@ -543,9 +536,9 @@ function calcShapeOverflowSupplement(
         return;
     }
     const bandWidthResult = columnLayout.bandWidthResult;
-    const bandWidthResultKind = bandWidthResult.kind;
-    if (bandWidthResultKind == null) {
-        return; // No series data.
+    const invRatio = (bandWidthResult.fromStat || {}).invRatio;
+    if (!isNullableNumberFinite(invRatio)) {
+        return; // No series data or no more than one distinct valid data values.
     }
 
     // The calculation below is based on a proportion mapping from
@@ -557,7 +550,7 @@ function calcShapeOverflowSupplement(
     //    (Note: `|---|` above represents "pixels" rather than "data".)
 
     const barsBoundPx = initExtentForUnion();
-    const bandWidth = bandWidthResult.bandWidth;
+    const bandWidth = bandWidthResult.w;
     // Union `-bandWidth / 2` and `bandWidth / 2` to provide extra space for visually preferred,
     // Otherwise the bars on the edges may overlap with axis line.
     // And it also includes `0`, which ensures `barsBoundPx[0] <= 0 <= barsBoundPx[1]`.
@@ -570,55 +563,33 @@ function calcShapeOverflowSupplement(
         unionExtentFromNumber(barsBoundPx, item.offset + item.width);
     });
 
-    const ratio = bandWidthResult.ratio;
-    if (extentHasValue(barsBoundPx) && isNullableNumberFinite(ratio)
-        && bandWidthResultKind === AXIS_BAND_WIDTH_KIND_NORMAL
-    ) {
+    if (extentHasValue(barsBoundPx)) {
         // Convert from pixel domain to data domain, since the `barsBoundPx` is calculated based on
         // `minGap` and extent on data domain.
-        return [barsBoundPx[0] * ratio, barsBoundPx[1] * ratio];
+        return [barsBoundPx[0] * invRatio, barsBoundPx[1] * invRatio];
         // If AXIS_BAND_WIDTH_KIND_SINGULAR, extent expansion is not needed.
     }
 }
 
-function createAxisStatisticsClient(seriesType: BaseBarSeriesSubType): AxisStatisticsClient {
-    return {
-        /**
-         * NOTICE:
-         *  The order of series matters - must be respected to the declaration on ec option,
-         *  because for historical reason, the last series holds the effective ec option.
-         *  See `calcBarWidthAndOffset`.
-         */
-        collectAxisSeries(ecModel, saveAxisSeries) {
-            ecModel.eachSeriesByType(seriesType, function (seriesModel: BaseBarSeriesModel) {
-                if (isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
-                    saveAxisSeries(
-                        (seriesModel.coordinateSystem as Cartesian2D).getBaseAxis(),
-                        seriesModel
-                    );
-                }
-            });
-        },
-
-        getMetrics(axis) {
-            return {
-                minGap: !isOrdinalScale(axis.scale)
-            };
-        }
-
-    };
-}
-
-function axisStatKey(seriesType: BaseBarSeriesSubType): AxisStatisticsKey {
-    return `barGrid-${seriesType}` as AxisStatisticsKey;
+function makeAxisStatKey(seriesType: BaseBarSeriesSubType): AxisStatKey {
+    return `barGrid-${seriesType}` as AxisStatKey;
 }
 
 export function registerBarGridAxisHandlers(registers: EChartsExtensionInstallRegisters) {
     callOnlyOnce(registers, function () {
 
         function register(seriesType: BaseBarSeriesSubType): void {
-            requireAxisStatistics(axisStatKey(seriesType), createAxisStatisticsClient(seriesType));
-            registerAxisContainShapeHandler(seriesType, barGridCreateAxisContainShapeHandler(seriesType));
+            const axisStatKey = makeAxisStatKey(seriesType);
+            registerAxisStatisticsForBaseBar(
+                registers,
+                axisStatKey,
+                seriesType,
+                COORD_SYS_TYPE_CARTESIAN_2D
+            );
+            registerAxisContainShapeHandler(
+                axisStatKey,
+                barGridCreateAxisContainShapeHandler(seriesType)
+            );
         }
 
         register('bar');

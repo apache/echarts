@@ -43,7 +43,7 @@ import { DataSanitizationFilter } from '../data/helper/dataValueHelper';
  *  - `SCALE_EXTENT_KIND_MAPPING`:
  *    It is an expanded extent from the start and end of `SCALE_EXTENT_KIND_EFFECTIVE`. In the
  *    expanded parts, axis ticks and labels are considered meaningless and are not rendered. They
- *    can be typically created by `boundaryGap[i].containShape` feature. In this case, we need to:
+ *    can be typically created by `xxxAxis.containShape` feature. In this case, we need to:
  *      - Prevent "nice strategy" from triggering unexpectedly by the "contain shape expansion".
  *        Otherwise, for example, the original extent is `[0, 1000]`, then the expanded
  *        extent, say `[-5, 1000]`, can cause a considerable negative expansion by "nice",
@@ -83,7 +83,7 @@ const SCALE_MAPPER_METHOD_NAMES_MAP: Record<keyof ScaleMapper, 1> = {
     setExtent: 1,
     setExtent2: 1,
     getFilter: 1,
-    sanitizeExtent: 1,
+    sanitize: 1,
     freeze: 1,
 };
 const SCALE_MAPPER_METHOD_NAMES = keys(SCALE_MAPPER_METHOD_NAMES_MAP);
@@ -253,12 +253,16 @@ export interface ScaleMapperGeneric<This> {
     getFilter?: () => DataSanitizationFilter;
 
     /**
-     * Sanitize the input extent if possible. For example, for LogScale, the negative part will be clampped.
-     * This provides some permissiveness to ec option like `xxxAxis.min/max`.
+     * NOTICE:
+     *  Should not sanitize invalid values (e.g., NaN, Infinity, null, undefined),
+     *  since it probably has special meaning, and always properly handled in every Scale.
      *
-     * The input `extent` can be modified.
+     * Sanitize the value if possible. For example, for LogScale, the negative part will be clampped.
+     * This provides some permissiveness to ec option like `xxxAxis.min/max`.
      */
-    sanitizeExtent?: ((this: This, extent: number[], dataExtent: number[]) => void) | NullUndefined;
+    sanitize?: (
+        (this: This, values: number | NullUndefined, dataExtent: number[]) => number | NullUndefined
+    ) | NullUndefined;
 
     /**
      * Restrict the modification behavior of a scale for robustness. e.g., avoid subsequently

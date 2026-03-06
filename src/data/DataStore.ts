@@ -24,7 +24,8 @@ import {
     NullUndefined,
     OptionDataItem,
     ParsedValue,
-    ParsedValueNumeric
+    ParsedValueNumeric,
+    UNDEFINED_STR
 } from '../util/types';
 import { DataProvider } from './helper/dataProvider';
 import {
@@ -35,15 +36,14 @@ import { shouldRetrieveDataByName, Source } from './Source';
 import { initExtentForUnion } from '../util/model';
 import { asc } from '../util/number';
 
-const UNDEFINED = 'undefined';
 /* global Float64Array, Int32Array, Uint32Array, Uint16Array */
 
 // Caution: MUST not use `new CtorUint32Array(arr, 0, len)`, because the Ctor of array is
 // different from the Ctor of typed array.
-export const CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
-export const CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
-export const CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
-export const CtorFloat64Array = typeof Float64Array === UNDEFINED ? Array : Float64Array;
+export const CtorUint32Array = typeof Uint32Array === UNDEFINED_STR ? Array : Uint32Array;
+export const CtorUint16Array = typeof Uint16Array === UNDEFINED_STR ? Array : Uint16Array;
+export const CtorInt32Array = typeof Int32Array === UNDEFINED_STR ? Array : Int32Array;
+export const CtorFloat64Array = typeof Float64Array === UNDEFINED_STR ? Array : Float64Array;
 /**
  * Multi dimensional data store
  */

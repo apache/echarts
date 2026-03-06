@@ -17,6 +17,7 @@
 * under the License.
 */
 
+import { calcBandWidth } from '../axisBand';
 import Single from './Single';
 import { bind } from 'zrender/src/core/util';
 
@@ -26,7 +27,7 @@ function dataToCoordSize(this: Single, dataSize: number | number[], dataItem: nu
     const val = dataItem instanceof Array ? dataItem[0] : dataItem;
     const halfSize = (dataSize instanceof Array ? dataSize[0] : dataSize) / 2;
     return axis.type === 'category'
-        ? axis.getBandWidth()
+        ? calcBandWidth(axis).w
         : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
 }
 

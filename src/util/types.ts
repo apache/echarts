@@ -67,6 +67,7 @@ export type RendererType = 'canvas' | 'svg';
  * which has to be determined by the implementation.
  */
 export type NullUndefined = null | undefined;
+export const UNDEFINED_STR = 'undefined';
 
 export type LayoutOrient = 'vertical' | 'horizontal';
 export type HorizontalAlign = 'left' | 'center' | 'right';

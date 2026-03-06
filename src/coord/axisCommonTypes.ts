@@ -29,7 +29,6 @@ import {
     LabelCommonOption,
 } from '../util/types';
 import type { PrimaryTimeUnit } from '../util/time';
-import { BaseBarSeriesSubType } from '../layout/barGrid';
 
 
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
@@ -138,20 +137,18 @@ export interface AxisBaseOptionCommon extends ComponentOption,
 /**
  * The gap at both ends of the axis. `[GAP, GAP]`.
  */
-type NumericAxisBoundaryGapOption = [NumericAxisBoundaryGapOptionItemLoose, NumericAxisBoundaryGapOptionItemLoose];
+type NumericAxisBoundaryGapOption = [NumericAxisBoundaryGapOptionItemValue, NumericAxisBoundaryGapOptionItemValue];
 // It can be an absolute pixel number (like `35`), or percent (like `'30%'`)
-type NumericAxisBoundaryGapOptionItemValue = number | string | NullUndefined;
-export type NumericAxisBoundaryGapOptionItemLoose =
-    NumericAxisBoundaryGapOptionItemValue | NumericAxisBoundaryGapOptionItem;
-export type NumericAxisBoundaryGapOptionItem = {
-    value?: NumericAxisBoundaryGapOptionItemValue | NullUndefined;
-    // The axis contains the series shapes if possible, instead of overlowing at the edges.
-    containShape?: Partial<Record<BaseBarSeriesSubType, boolean>> | boolean | NullUndefined;
-};
+export type NumericAxisBoundaryGapOptionItemValue = number | string | NullUndefined;
 
 export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
 
     boundaryGap?: NumericAxisBoundaryGapOption;
+
+    // The axis contains the series shapes if possible, instead of overlowing at the edges.
+    // Key is series type, like 'bar', 'pictorialBar'.
+    // null/undefined means `true`.
+    containShape?: boolean;
 
     /**
      * AxisTick and axisLabel and splitLine are calculated based on splitNumber.

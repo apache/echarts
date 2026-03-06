@@ -19,14 +19,27 @@
 
 import {subPixelOptimize} from '../../util/graphic';
 import createRenderPlanner from '../helper/createRenderPlanner';
-import {parsePercent} from '../../util/number';
+import {mathMax, mathMin, parsePercent} from '../../util/number';
 import {map, retrieve2} from 'zrender/src/core/util';
 import { DimensionIndex, StageHandler, StageHandlerProgressParams } from '../../util/types';
-import CandlestickSeriesModel, { CandlestickDataItemOption } from './CandlestickSeries';
+import CandlestickSeriesModel, { SERIES_TYPE_CANDLESTICK, CandlestickDataItemOption } from './CandlestickSeries';
 import SeriesData from '../../data/SeriesData';
 import { RectLike } from 'zrender/src/core/BoundingRect';
 import DataStore from '../../data/DataStore';
 import { createFloat32Array } from '../../util/vendor';
+import { makeCallOnlyOnce } from '../../util/model';
+import {
+    requireAxisStatistics
+} from '../../coord/axisStatistics';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import { registerAxisContainShapeHandler } from '../../coord/scaleRawExtentInfo';
+import {
+    makeAxisStatKey, createSimpleAxisStatClient, createBandWidthBasedAxisContainShapeHandler
+} from '../helper/axisSnippets';
+import { calcBandWidth } from '../../coord/axisBand';
+
+
+const callOnlyOnce = makeCallOnlyOnce();
 
 export interface CandlestickItemLayout {
     sign: number
@@ -40,9 +53,9 @@ export interface CandlestickLayoutMeta {
     isSimpleBox: boolean
 }
 
-const candlestickLayout: StageHandler = {
+export const candlestickLayout: StageHandler = {
 
-    seriesType: 'candlestick',
+    seriesType: SERIES_TYPE_CANDLESTICK,
 
     plan: createRenderPlanner(),
 
@@ -87,8 +100,8 @@ const candlestickLayout: StageHandler = {
                 const lowestVal = store.get(lowestDimI, dataIndex) as number;
                 const highestVal = store.get(highestDimI, dataIndex) as number;
 
-                const ocLow = Math.min(openVal, closeVal);
-                const ocHigh = Math.max(openVal, closeVal);
+                const ocLow = mathMin(openVal, closeVal);
+                const ocHigh = mathMax(openVal, closeVal);
 
                 const ocLowPoint = getPoint(ocLow, axisDimVal);
                 const ocHighPoint = getPoint(ocHigh, axisDimVal);
@@ -229,7 +242,7 @@ function getSign(
             ? 0
             : (dataIndex > 0
                 // If close === open, compare with close of last record
-                ? (store.get(closeDimI, dataIndex - 1) <= closeVal ? 1 : -1)
+                ? ((store.get(closeDimI, dataIndex - 1) as number) <= closeVal ? 1 : -1)
                 // No record of previous, set to be positive
                 : 1
             );
@@ -240,14 +253,11 @@ function getSign(
 
 function calculateCandleWidth(seriesModel: CandlestickSeriesModel, data: SeriesData) {
     const baseAxis = seriesModel.getBaseAxis();
-    let extent;
 
-    const bandWidth = baseAxis.type === 'category'
-        ? baseAxis.getBandWidth()
-        : (
-            extent = baseAxis.getExtent(),
-            Math.abs(extent[1] - extent[0]) / data.count()
-        );
+    const bandWidth = calcBandWidth(
+        baseAxis,
+        {fromStat: {key: makeAxisStatKey(SERIES_TYPE_CANDLESTICK)}, min: 1}
+    ).w;
 
     const barMaxWidth = parsePercent(
         retrieve2(seriesModel.get('barMaxWidth'), bandWidth),
@@ -262,7 +272,20 @@ function calculateCandleWidth(seriesModel: CandlestickSeriesModel, data: SeriesD
     return barWidth != null
         ? parsePercent(barWidth, bandWidth)
         // Put max outer to ensure bar visible in spite of overlap.
-        : Math.max(Math.min(bandWidth / 2, barMaxWidth), barMinWidth);
+        : mathMax(mathMin(bandWidth / 2, barMaxWidth), barMinWidth);
 }
 
-export default candlestickLayout;
+export function registerCandlestickAxisHandlers(registers: EChartsExtensionInstallRegisters) {
+    callOnlyOnce(registers, function () {
+        const axisStatKey = makeAxisStatKey(SERIES_TYPE_CANDLESTICK);
+        requireAxisStatistics(
+            registers,
+            axisStatKey,
+            createSimpleAxisStatClient(SERIES_TYPE_CANDLESTICK)
+        );
+        registerAxisContainShapeHandler(
+            axisStatKey,
+            createBandWidthBasedAxisContainShapeHandler(axisStatKey)
+        );
+    });
+}

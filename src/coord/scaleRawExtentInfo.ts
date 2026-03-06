@@ -17,13 +17,15 @@
 * under the License.
 */
 
-import { assert, isArray, eqNaN, isFunction, each, HashMap, isObject } from 'zrender/src/core/util';
+import {
+    assert, isArray, eqNaN, isFunction, each, HashMap, createHashMap
+} from 'zrender/src/core/util';
 import Scale from '../scale/Scale';
 import { AxisBaseModel } from './AxisBaseModel';
 import { parsePercent } from 'zrender/src/contain/text';
 import {
-    NumericAxisBaseOptionCommon, NumericAxisBoundaryGapOptionItem,
-    NumericAxisBoundaryGapOptionItemLoose
+    NumericAxisBaseOptionCommon,
+    NumericAxisBoundaryGapOptionItemValue,
 } from './axisCommonTypes';
 import { ComponentSubType, DimensionIndex, DimensionName, NullUndefined, ScaleDataValue } from '../util/types';
 import { isIntervalScale, isLogScale, isOrdinalScale, isTimeScale } from '../scale/helper';
@@ -34,7 +36,6 @@ import {
     unionExtentFromExtent,
     unionExtentStartFromNumber,
     unionExtentEndFromNumber,
-    isValidBoundsForExtent
 } from '../util/model';
 import { getDataDimensionsOnAxis } from './axisHelper';
 import {
@@ -45,6 +46,7 @@ import { error } from '../util/log';
 import type Axis from './Axis';
 import { mathMax, mathMin } from '../util/number';
 import { SCALE_EXTENT_KIND_MAPPING } from '../scale/scaleMapper';
+import { AxisStatKey, eachAxisStatKey } from './axisStatistics';
 
 
 /**
@@ -88,7 +90,7 @@ export type ScaleExtentFixMinMax = boolean[];
 
 type ScaleRawExtentResultForContainShape = Pick<
     ScaleRawExtentInternal,
-    'noZoomEffMM' | 'containShapeCfg'
+    'noZoomEffMM' | 'containShape'
 >;
 
 /**
@@ -117,6 +119,12 @@ type ScaleRawExtentResultFinal = Pick<
     // since "nice" strategies may expand the scale extent originated from `effMM`.
     mapMM: number[];
 };
+
+type ScaleRawExtentResultOthers = Pick<
+    ScaleRawExtentInternal,
+    'startValue' | 'dataMM'
+>;
+
 
 /**
  * CAVEAT: MUST NOT be modified outside!
@@ -148,6 +156,8 @@ interface ScaleRawExtentInternal {
     // It indicates that the min max have been fixed by `dataZoom` when its start/end is not 0%/100%.
     zoomFixMM: ScaleExtentFixMinMax;
 
+    startValue: number;
+
     // Mark that the axis should be blank.
     isBlank: boolean;
 
@@ -155,14 +165,8 @@ interface ScaleRawExtentInternal {
 
     needToggleAxisInverse: boolean;
 
-    containShapeCfg: BoundaryGapOptionParsedItem['containShape'][];
+    containShape: boolean;
 }
-
-type BoundaryGapOptionParsedItem = {
-    value: number;
-    // From `NumericAxisBoundaryGapOptionItem['containShape']`
-    containShape: HashMap<boolean, ComponentSubType>
-};
 
 export type AxisContainShapeHandler = (
     axis: Axis,
@@ -235,9 +239,10 @@ export class ScaleRawExtentInfo {
         //      be the result that originalExtent enlarged by boundaryGap.
         // (3) If no data, it should be ensured that `scale.setBlank` is set.
 
+        let startValue = parseAxisModelMinMax(scale, model.get('startValue', true));
         let modelMinRaw = model.get('min', true);
         if (modelMinRaw == null) {
-            modelMinRaw = model.get('startValue', true);
+            modelMinRaw = startValue;
         }
         if (modelMinRaw === 'dataMin') {
             noZoomEffMM[0] = dataMM[0];
@@ -272,7 +277,7 @@ export class ScaleRawExtentInfo {
             fixMM[1] = noZoomEffMM[1] != null;
         }
 
-        const boundaryGapCfg = parseBoundaryGapOption(scale, model);
+        const boundaryGap = parseBoundaryGapOption(scale, model);
 
         const span = !isOrdinal
             ? ((dataMM[1] - dataMM[0]) || Math.abs(dataMM[0]))
@@ -282,12 +287,12 @@ export class ScaleRawExtentInfo {
         if (noZoomEffMM[0] == null) {
             noZoomEffMM[0] = isOrdinal
                 ? (axisDataLen ? 0 : NaN)
-                : dataMM[0] - boundaryGapCfg[0].value * span;
+                : dataMM[0] - boundaryGap[0] * span;
         }
         if (noZoomEffMM[1] == null) {
             noZoomEffMM[1] = isOrdinal
                 ? (axisDataLen ? axisDataLen - 1 : NaN)
-                : dataMM[1] + boundaryGapCfg[1].value * span;
+                : dataMM[1] + boundaryGap[1] * span;
         }
 
         // Normalize to `NaN` if invalid.
@@ -318,6 +323,15 @@ export class ScaleRawExtentInfo {
             }
         }
 
+        if (scale.sanitize) {
+            startValue = scale.sanitize(startValue, dataMM);
+        }
+
+        let containShape = (model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('containShape', true);
+        if (containShape == null) {
+            containShape = true;
+        }
+
         const internal: ScaleRawExtentInternal = this._i = {
             scale,
             dataMM,
@@ -325,13 +339,11 @@ export class ScaleRawExtentInfo {
             zoomMM: [],
             fixMM,
             zoomFixMM: [false, false],
+            startValue,
             isBlank,
             needCrossZero,
             needToggleAxisInverse,
-            containShapeCfg: [
-                boundaryGapCfg[0].containShape,
-                boundaryGapCfg[1].containShape
-            ]
+            containShape,
         };
 
         sanitizeExtent(internal, noZoomEffMM);
@@ -341,11 +353,11 @@ export class ScaleRawExtentInfo {
         const internal = this._i;
         return {
             noZoomEffMM: internal.noZoomEffMM.slice(),
-            containShapeCfg: internal.containShapeCfg
+            containShape: internal.containShape
         };
     }
 
-    makeForZoom(): ScaleRawExtentResultForZoom {
+    makeNoZoom(): ScaleRawExtentResultForZoom {
         const internal = this._i;
         return {
             noZoomEffMM: internal.noZoomEffMM.slice(),
@@ -396,6 +408,14 @@ export class ScaleRawExtentInfo {
         return result;
     }
 
+    makeOthers(): ScaleRawExtentResultOthers {
+        const internal = this._i;
+        return {
+            dataMM: internal.dataMM.slice(),
+            startValue: internal.startValue,
+        };
+    }
+
     /**
      * NOTICE:
      *  The caller must ensure `start <= end` and the range is equal or less then `noZoomMappingMinMax`.
@@ -430,11 +450,16 @@ function makeNoZoomMappingMM(internal: ScaleRawExtentInternal): number[] {
  */
 function sanitizeExtent(
     internal: ScaleRawExtentInternal,
-    mm: (number | NullUndefined)[] | NullUndefined
+    mm: (number | NullUndefined)[]
 ): void {
     const scale = internal.scale;
-    if (scale.sanitizeExtent && mm && isValidBoundsForExtent(mm[0], mm[1])) {
-        scale.sanitizeExtent(mm, internal.dataMM);
+    if (scale.sanitize) {
+        const dataMM = internal.dataMM;
+        mm[0] = scale.sanitize(mm[0], dataMM);
+        mm[1] = scale.sanitize(mm[1], dataMM);
+        if (mm[1] < mm[0]) {
+            mm[1] = mm[0];
+        }
     }
 }
 
@@ -447,7 +472,7 @@ function parseAxisModelMinMax(scale: Scale, minMax: ScaleDataValue): number {
 function parseBoundaryGapOption(
     scale: Scale,
     model: AxisBaseModel
-): BoundaryGapOptionParsedItem[] {
+): number[] {
     let boundaryGapOptionArr;
     if (isOrdinalScale(scale)) {
         boundaryGapOptionArr = [0, 0];
@@ -472,32 +497,12 @@ function parseBoundaryGapOption(
 }
 
 function parseBoundaryGapOptionItem(
-    opt: NumericAxisBoundaryGapOptionItemLoose | boolean
-): BoundaryGapOptionParsedItem {
-    opt = typeof opt === 'boolean' ? 0 : opt;
-    const optItem = isObject(opt) ? opt : {value: opt} as NumericAxisBoundaryGapOptionItem;
-    const containShapeOption = optItem.containShape;
-
-    let containShape: HashMap<boolean, ComponentSubType>;
-    if (isObject(containShapeOption)) {
-        containShape = new HashMap(containShapeOption);
-    }
-    else {
-        containShape = new HashMap<boolean, ComponentSubType>();
-        if (containShapeOption === true) {
-            axisContainShapeHandlerMap.each(function (handler, seriesType) {
-                containShape.set(seriesType, true);
-            });
-        }
-        else if (containShapeOption !== false) { // The defaults.
-            containShape.set('bar', true);
-            containShape.set('pictorialBar', true);
-        }
-    }
-    return {
-        value: parsePercent(optItem.value, 1) || 0,
-        containShape,
-    };
+    opt: NumericAxisBoundaryGapOptionItemValue | boolean
+): number {
+    return parsePercent(
+        typeof opt === 'boolean' ? 0 : opt,
+        1
+    ) || 0;
 }
 
 /**
@@ -689,17 +694,22 @@ function injectScaleRawExtentInfo(
     scaleRawExtentInfo.from = from;
 }
 
+/**
+ * See `axisSnippets.ts` for some commonly used handlers.
+ */
 export function registerAxisContainShapeHandler(
-    seriesType: ComponentSubType,
-    handler: AxisContainShapeHandler
+    // `axisStatKey` is used to quickly omit irrelevant handlers,
+    // since handlers need to be iterated per axis.
+    axisStatKey: AxisStatKey,
+    handler: AxisContainShapeHandler,
 ) {
     if (__DEV__) {
-        assert(!axisContainShapeHandlerMap.get(seriesType));
+        assert(!axisContainShapeHandlerMap.get(axisStatKey));
     }
-    axisContainShapeHandlerMap.set(seriesType, handler);
+    axisContainShapeHandlerMap.set(axisStatKey, handler);
 }
 
-const axisContainShapeHandlerMap: HashMap<AxisContainShapeHandler, ComponentSubType> = new HashMap();
+const axisContainShapeHandlerMap: HashMap<AxisContainShapeHandler, AxisStatKey> = createHashMap();
 
 
 /**
@@ -771,18 +781,19 @@ function calcContainShape(
 ): void {
     // `scale.getExtent` is required by AxisContainShapeHandler. See
     // `barGridCreateAxisContainShapeHandler` in `barGrid.ts` as an example.
-    const {noZoomEffMM, containShapeCfg} = rawExtentInfo.makeForContainShape();
+    const {noZoomEffMM, containShape} = rawExtentInfo.makeForContainShape();
     axis.scale.setExtent(noZoomEffMM[0], noZoomEffMM[1]);
+
+    if (!containShape) {
+        return;
+    }
 
     // `NullUndefined` indicates that `linearSupplement` is not introduced.
     let linearSupplement: number[] | NullUndefined;
 
-    axisContainShapeHandlerMap.each(function (handler, seriesType) {
-        const containCfg = [
-            containShapeCfg[0].get(seriesType),
-            containShapeCfg[1].get(seriesType)
-        ];
-        if (containCfg[0] || containCfg[1]) {
+    eachAxisStatKey(axis, function (axisStatKey) {
+        const handler = axisContainShapeHandlerMap.get(axisStatKey);
+        if (handler) {
             const singleLinearSupplement = handler(axis, scale, ecModel);
             if (singleLinearSupplement) {
                 linearSupplement = linearSupplement || [0, 0];

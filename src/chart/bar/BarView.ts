@@ -99,6 +99,7 @@ function getClipArea(coord: CoordSysOfBar, data: SeriesData) {
         // When boundaryGap is false in category axis, bar may exceed the grid.
         // We should not clip this part.
         // See test/bar2.html
+        // PENDING: The effect is not preferable, but we preserve it for backward compatibility.
         if (baseAxis.type === 'category' && !baseAxis.onBand) {
             const expandWidth = data.getLayout('bandWidth');
             if (baseAxis.isHorizontal()) {

@@ -87,7 +87,7 @@ export function enableDataStack(
         store = dimensionsInput.store;
     }
 
-    // Compatibal: when `stack` is set as '', do not stack.
+    // compatible: when `stack` is set as '', do not stack.
     const mayStack = !!(seriesModel && seriesModel.get('stack'));
     let stackedByDimInfo: SeriesDimensionDefine;
     let stackedDimInfo: SeriesDimensionDefine;

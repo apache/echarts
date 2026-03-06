@@ -51,8 +51,8 @@ class SeriesDimensionDefine {
      * 1. When there are too many dimensions in data store, seriesData only save the
      * used store dimensions.
      * 2. We use dimensionIndex but not name to reference store dimension
-     * becuause the dataset dimension definition might has no name specified by users,
-     * or names in sereis dimension definition might be different from dataset.
+     * because the dataset dimension definition might has no name specified by users,
+     * or names in series dimension definition might be different from dataset.
      */
     storeDimIndex?: number;
 

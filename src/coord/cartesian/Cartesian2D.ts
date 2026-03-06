@@ -23,7 +23,7 @@ import Cartesian from './Cartesian';
 import { ScaleDataValue } from '../../util/types';
 import Axis2D from './Axis2D';
 import { CoordinateSystem } from '../CoordinateSystem';
-import GridModel from './GridModel';
+import GridModel, { COORD_SYS_TYPE_CARTESIAN_2D } from './GridModel';
 import Grid from './Grid';
 import Scale from '../../scale/Scale';
 import { invert } from 'zrender/src/core/matrix';
@@ -40,7 +40,7 @@ function canCalculateAffineTransform(scale: Scale) {
 
 class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
 
-    readonly type = 'cartesian2d';
+    readonly type = COORD_SYS_TYPE_CARTESIAN_2D;
 
     readonly dimensions = cartesian2DDimensions;
 

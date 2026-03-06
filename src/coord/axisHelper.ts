@@ -50,18 +50,20 @@ import {
     extentDiffers, isLogScale, isOrdinalScale
 } from '../scale/helper';
 import { AxisModelExtendedInCreator } from './axisModelCreator';
-import { initExtentForUnion, makeInner } from '../util/model';
-import { SCALE_EXTENT_KIND_EFFECTIVE, SCALE_MAPPER_DEPTH_OUT_OF_BREAK } from '../scale/scaleMapper';
+import { initExtentForUnion, isValidBoundsForExtent, makeInner } from '../util/model';
+import {
+    getScaleExtentForMappingUnsafe, SCALE_EXTENT_KIND_EFFECTIVE, SCALE_MAPPER_DEPTH_OUT_OF_BREAK
+} from '../scale/scaleMapper';
 import ComponentModel from '../model/Component';
 
 
 const axisInner = makeInner<{
-    noOnMyZero: SuppressOnAxisZeroReason;
+    noOnMyZero: DiscourageOnAxisZeroCondition;
 }, Axis>();
 
-type SuppressOnAxisZeroReason = {
+type DiscourageOnAxisZeroCondition = {
     dz?: boolean;
-    base?: boolean
+    base?: boolean;
 };
 
 
@@ -135,31 +137,44 @@ export function createScaleByModel(
 }
 
 /**
- * Check if the axis cross 0
+ * Check if the axis cross a specific value.
  */
-export function ifAxisCrossZero(axis: Axis) {
-    // NOTE: Although the portion out of "effective" portion may also cross zero
-    // (see `SCALE_EXTENT_KIND_MAPPING`), that is commonly meaningless, so we use
-    // `SCALE_EXTENT_KIND_EFFECTIVE`
-    const dataExtent = axis.scale.getExtentUnsafe(SCALE_EXTENT_KIND_EFFECTIVE, null);
+export function getScaleValuePositionKind(
+    scale: Scale, value: number, considerMappingExtent: boolean
+): ScaleValuePositionKind {
+    const dataExtent = considerMappingExtent
+        ? getScaleExtentForMappingUnsafe(scale, null)
+        : scale.getExtentUnsafe(SCALE_EXTENT_KIND_EFFECTIVE, null);
     const min = dataExtent[0];
     const max = dataExtent[1];
-    return !((min > 0 && max > 0) || (min < 0 && max < 0));
+    return !isValidBoundsForExtent(min, max) ? SCALE_VALUE_POSITION_KIND_OUTSIDE
+        : (min === value || max === value) ? SCALE_VALUE_POSITION_KIND_EDGE
+        : (min < value || max > value) ? SCALE_VALUE_POSITION_KIND_INSIDE
+        : SCALE_VALUE_POSITION_KIND_OUTSIDE;
 }
+export type ScaleValuePositionKind =
+    typeof SCALE_VALUE_POSITION_KIND_INSIDE
+    | typeof SCALE_VALUE_POSITION_KIND_EDGE
+    | typeof SCALE_VALUE_POSITION_KIND_OUTSIDE;
+export const SCALE_VALUE_POSITION_KIND_INSIDE = 1;
+export const SCALE_VALUE_POSITION_KIND_EDGE = 2;
+export const SCALE_VALUE_POSITION_KIND_OUTSIDE = 3;
 
-export function suppressOnAxisZero(axis: Axis, reason: Partial<SuppressOnAxisZeroReason>): void {
+
+export function discourageOnAxisZero(axis: Axis, reason: Partial<DiscourageOnAxisZeroCondition>): void {
     zrUtil.defaults(axisInner(axis).noOnMyZero || (axisInner(axis).noOnMyZero = {}), reason);
 }
 
 /**
  * `true`: Prevent orthoganal axes from positioning at the zero point of this axis.
  */
-export function isOnAxisZeroSuppressed(axis: Axis): boolean {
-    const dontOnAxisZero = axisInner(axis).noOnMyZero;
-    // Empirically, onZero causes weired effect when dataZoom is used on an "base axis". Consider
+export function isOnAxisZeroDiscouraged(axis: Axis): boolean {
+    const noOnMyZero = axisInner(axis).noOnMyZero;
+    // Empirically, onZero causes weird effect when dataZoom is used on an "base axis". Consider
     // bar series as an example. And also consider when `SCALE_EXTENT_KIND_MAPPING` is used, where
     // the axis line is likely to cross the series shapes unexpectedly.
-    return dontOnAxisZero && dontOnAxisZero.dz && dontOnAxisZero.base;
+    // Conservatively, we use "&&" rather than "||" here.
+    return noOnMyZero && noOnMyZero.dz && noOnMyZero.base;
 }
 
 /**

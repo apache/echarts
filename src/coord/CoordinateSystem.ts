@@ -189,6 +189,10 @@ export interface CoordinateSystem {
 
     getAxis?: (dim?: DimensionName) => Axis;
 
+    /**
+     * FIXME: It may introduce inconsistency with `Series['getBaseAxis']`.
+     * `CoordinateSystem['getBaseAxis']` probably should not exist.
+     */
     getBaseAxis?: () => Axis;
 
     getOtherAxis?: (baseAxis: Axis) => Axis;

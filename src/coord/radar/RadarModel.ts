@@ -35,6 +35,7 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import Radar, { RADAR_DEFAULT_SPLIT_NUMBER } from './Radar';
 import {CoordinateSystemHostModel} from '../../coord/CoordinateSystem';
 import tokens from '../../visual/tokens';
+import { getUID } from '../../util/component';
 
 const valueAxisDefault = axisDefault.value;
 
@@ -173,6 +174,9 @@ class RadarModel extends ComponentModel<RadarOption> implements CoordinateSystem
             // For triggerEvent.
             model.mainType = 'radar';
             model.componentIndex = this.componentIndex;
+            // FIXME: construct an AxisBaseModel directly, rather than mixin.
+            // @ts-ignore
+            model.uid = getUID('ec_radar');
 
             return model;
         }, this);

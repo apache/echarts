@@ -34,7 +34,7 @@ import Model from '../model/Model';
 import { AxisBaseOption, CategoryAxisBaseOption, OptionAxisType } from './axisCommonTypes';
 import { AxisBaseModel } from './AxisBaseModel';
 import { isOrdinalScale } from '../scale/helper';
-import { AxisBandWidthResult, calcBandWidth } from './axisBand';
+import { calcBandWidth } from './axisBand';
 
 const NORMALIZED_EXTENT = [0, 1] as [number, number];
 
@@ -65,6 +65,9 @@ class Axis {
     type: OptionAxisType;
 
     // Axis dimension. Such as 'x', 'y', 'z', 'angle', 'radius'.
+    // The name must be globally unique across different coordinate systems.
+    // But they may be not enumerable, e.g., in Radar and Parallel, axis
+    // number is not static.
     readonly dim: DimensionName;
 
     // Axis scale
@@ -242,12 +245,11 @@ class Axis {
     }
 
     /**
-     * NOTICE: Can only be called after `adoptBandWidth` being called in `CoordinateSystem#update` stage.
+     * @deprecated Use `calcBandWidth` instead.
      */
     getBandWidth(): number {
-        calcBandWidth(tmpOutBandWidth, this, true);
+        return calcBandWidth(this, {min: 1}).w;
         // NOTICE: Do not add logic here. Implement everthing in `calcBandWidth`.
-        return tmpOutBandWidth.bandWidth;
     }
 
     /**
@@ -266,8 +268,6 @@ class Axis {
     }
 
 }
-
-const tmpOutBandWidth: AxisBandWidthResult = {};
 
 function makeExtentWithBands(axis: Axis): number[] {
     const extent = axis.getExtent();

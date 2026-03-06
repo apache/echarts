@@ -17,41 +17,59 @@
 * under the License.
 */
 
-import { each } from 'zrender/src/core/util';
+import { assert, each } from 'zrender/src/core/util';
 import { NullUndefined } from '../util/types';
 import type Axis from './Axis';
 import type Scale from '../scale/Scale';
 import { isOrdinalScale } from '../scale/helper';
-import { isNullableNumberFinite, mathAbs } from '../util/number';
-import { getAxisStatistics, getAxisStatisticsKeys } from './axisStatistics';
+import { isNullableNumberFinite, mathAbs, mathMax } from '../util/number';
+import {
+    AxisStatKey, getAxisStat, getAxisStatBySeries,
+} from './axisStatistics';
 import { getScaleLinearSpanForMapping } from '../scale/scaleMapper';
+import type SeriesModel from '../model/Series';
 
 
 // Arbitrary, leave some space to avoid overflowing when dataZoom moving.
-const SINGULAR_BAND_WIDTH_RATIO = 0.7;
+const FALLBACK_BAND_WIDTH_RATIO = 0.8;
 
 export type AxisBandWidthResult = {
-    // In px. After the calling of `calcBandWidth`, it may be NaN if no meaningfull bandWidth,
-    // but never be null/undefined any more.
-    bandWidth?: number | NullUndefined;
-    kind?: AxisBandWidthKind;
-    // If `AXIS_BAND_WIDTH_KIND_NORMAL`, this is a ratio from px span to data span, exists only if not singular.
-    // If `AXIS_BAND_WIDTH_KIND_SINGULAR`, no need any ratio.
-    ratio?: number | NullUndefined;
+    // The result `bandWidth`. In pixel.
+    // Never be null/undefined.
+    // May be NaN if no meaningfull `bandWidth`. But it's unlikely to be NaN, since edge cases
+    // are handled internally whenever possible.
+    w: number;
+    // Exists if `bandWidth` is calculated by `fromStat`.
+    fromStat?: {
+        // This is a ratio from pixel span to data span; The conversion can not be performed
+        // if it is not valid, typically when only one or no series data item exists on the axis.
+        invRatio?: number | NullUndefined;
+    };
 };
 
-export type AxisBandWidthKind =
-    // NullUndefined means no bandWidth, typically due to no series data.
-    NullUndefined
-    | typeof AXIS_BAND_WIDTH_KIND_SINGULAR
-    | typeof AXIS_BAND_WIDTH_KIND_NORMAL;
-export const AXIS_BAND_WIDTH_KIND_SINGULAR = 1;
-export const AXIS_BAND_WIDTH_KIND_NORMAL = 2;
+/**
+ * PENDING: Should the `bandWidth` strategy be chosen by users, or auto-determined basesd on
+ * performance?
+ */
+type CalculateBandWidthOpt = {
+    // Only used on non-'category' axes. Calculate `bandWidth` based on statistics.
+    // Require `requireAxisStatistics` to be called.
+    fromStat?: {
+        // Either `axisStatKey` or `series` is required.
+        // If multiple axis statistics can be queried by `series`, currently we only support to return a
+        // maximum `bandWidth`, which is suitable for cases like "axis pointer shadow".
+        sers?: (SeriesModel | NullUndefined)[] | NullUndefined;
+        key?: AxisStatKey;
+    };
+    // It also act as a fallback for NaN/null/undefined result.
+    min?: number;
+};
 
 /**
  * NOTICE:
- *  Require the axis pixel extent and the scale extent as inputs. But they
- *  can be not precise for approximation.
+ *  - Require the axis pixel extent and the scale extent as inputs. But they
+ *    can be not precise for approximation.
+ *  - Can only be called after "data processing" stage.
  *
  * PENDING:
  *  Currently `bandWidth` can not be specified by users explicitly. But if we
@@ -61,31 +79,38 @@ export const AXIS_BAND_WIDTH_KIND_NORMAL = 2;
  *      (but before break) scale, similar to `axis.interval`.
  *
  * A band is required on:
- *  - bar series group band width;
+ *  - series group band width in bar/boxplot/candlestick/...;
  *  - tooltip axisPointer type "shadow";
  *  - etc.
  */
 export function calcBandWidth(
-    out: AxisBandWidthResult,
     axis: Axis,
-    useFallback: boolean
-): void {
-    // Clear out.
-    out.ratio = out.kind = undefined;
-    out.bandWidth = NaN;
-
+    opt?: CalculateBandWidthOpt | NullUndefined
+): AxisBandWidthResult {
+    opt = opt || {};
+    const out: AxisBandWidthResult = {w: NaN};
     const scale = axis.scale;
+    const fromStat = opt.fromStat;
+    const min = opt.min;
 
-    if (isOrdinalScale(scale)
-        || (
-            !calcBandWidthForNumericAxisIfPossible(out, axis, scale)
-            // The fallback is only reasonable in several special cases (e.g., axis number is interger).
-            // So it is used only for backward compatibility.
-            && useFallback
-        )
-    ) {
-        calcBandWidthForCategoryAxisOrFallback(out, axis, scale);
+    if (isOrdinalScale(scale)) {
+        calcBandWidthForCategoryAxis(out, axis, scale);
     }
+    else if (fromStat) {
+        calcBandWidthForNumericAxis(out, axis, scale, fromStat);
+    }
+    else if (min == null) {
+        if (__DEV__) {
+            assert(false);
+        }
+    }
+
+    if (min != null) {
+        out.w = isNullableNumberFinite(out.w)
+            ? mathMax(min, out.w) : min;
+    }
+
+    return out;
 }
 
 /**
@@ -93,8 +118,10 @@ export function calcBandWidth(
  *
  * It can be used as a fallback, as it does not produce a significant negative impact
  * on non-category axes.
+ *
+ * @see CalculateBandWidthOpt
  */
-function calcBandWidthForCategoryAxisOrFallback(
+function calcBandWidthForCategoryAxis(
     out: AxisBandWidthResult,
     axis: Axis,
     scale: Scale
@@ -106,38 +133,48 @@ function calcBandWidthForCategoryAxisOrFallback(
     // Fix #2728, avoid NaN when only one data.
     len === 0 && (len = 1);
 
-    out.bandWidth = mathAbs(axisExtent[1] - axisExtent[0]) / len;
+    out.w = mathAbs(axisExtent[1] - axisExtent[0]) / len;
 }
 
-function calcBandWidthForNumericAxisIfPossible(
+/**
+ * @see CalculateBandWidthOpt
+ */
+function calcBandWidthForNumericAxis(
     out: AxisBandWidthResult,
     axis: Axis,
     scale: Scale,
-    // A falsy return indicates this method is not applicable - a fallback is needed.
-): boolean {
-    // PENDING: Theoretically, for 'value'/'time'/'log' axis, `bandWidth` should be derived from
-    // series data and may vary per data items. However, we currently only derive `bandWidth`
-    // per serise, regardless of individual data items, until concrete requirements arise.
-    // Therefore, we arbitrarily choose a minimal `bandWidth` to avoid overlap if multiple
-    // irrelevant series reside on one axis.
-    let hasStat: boolean;
-    let linearPositiveMinGap = Infinity;
-    each(getAxisStatisticsKeys(axis), function (axisStatKey) {
-        const liMinGap = getAxisStatistics(axis, axisStatKey).linearPositiveMinGap;
-        if (liMinGap != null) {
-            hasStat = true;
-            if (isNullableNumberFinite(liMinGap) && liMinGap < linearPositiveMinGap) {
-                linearPositiveMinGap = liMinGap;
-            }
-        }
-    });
-    if (!hasStat) {
-        return false;
+    fromStat: CalculateBandWidthOpt['fromStat'],
+): void {
+
+    let bandWidth = NaN;
+    let invRatio: number | NullUndefined;
+
+    if (__DEV__) {
+        assert(fromStat);
     }
 
-    let bandWidth: number | NullUndefined;
-    let kind: AxisBandWidthKind | NullUndefined;
-    let ratio: number | NullUndefined;
+    let allSingularOrNone: boolean | NullUndefined;
+    let bandWidthInData = -Infinity;
+    each(
+        fromStat.key
+            ? [getAxisStat(axis, fromStat.key)]
+            : getAxisStatBySeries(axis, fromStat.sers || []),
+        function (stat) {
+            const liPosMinGap = stat.liPosMinGap;
+            // `liPosMinGap == null` may indicate that `requireAxisStatistics`
+            // is not used by the relevant series. We conservatively do not
+            // consider it as a "singular" case.
+            if (liPosMinGap != null && allSingularOrNone == null) {
+                allSingularOrNone = true;
+            }
+            if (isNullableNumberFinite(liPosMinGap)) {
+                if (liPosMinGap > bandWidthInData) {
+                    bandWidthInData = liPosMinGap;
+                }
+                allSingularOrNone = false;
+            }
+        }
+    );
 
     const axisExtent = axis.getExtent();
     // Always use a new pxSpan because it may be changed in `grid` contain label calculation.
@@ -146,20 +183,18 @@ function calcBandWidthForNumericAxisIfPossible(
     // `linearScaleSpan` may be `0` or `Infinity` or `NaN`, since normalizers like
     // `intervalScaleEnsureValidExtent` may not have been called yet.
     if (isNullableNumberFinite(linearScaleSpan) && linearScaleSpan > 0
-        && isNullableNumberFinite(linearPositiveMinGap)
+        && isNullableNumberFinite(bandWidthInData)
     ) {
-        bandWidth = pxSpan / linearScaleSpan * linearPositiveMinGap;
-        ratio = linearScaleSpan / pxSpan;
-        kind = AXIS_BAND_WIDTH_KIND_NORMAL;
+        // NOTE: even when the `bandWidth` is far smaller than `1`, we should still preserve the
+        // precision, because it is required to convert back to data space by `invRatio` for
+        // displaying of zoomed ticks and band.
+        bandWidth = pxSpan / linearScaleSpan * bandWidthInData;
+        invRatio = linearScaleSpan / pxSpan;
     }
-    else {
-        bandWidth = pxSpan * SINGULAR_BAND_WIDTH_RATIO;
-        kind = AXIS_BAND_WIDTH_KIND_SINGULAR;
+    else if (allSingularOrNone) {
+        bandWidth = pxSpan * FALLBACK_BAND_WIDTH_RATIO;
     }
 
-    out.bandWidth = bandWidth;
-    out.kind = kind;
-    out.ratio = ratio;
-
-    return true;
+    out.w = bandWidth;
+    out.fromStat = {invRatio};
 }

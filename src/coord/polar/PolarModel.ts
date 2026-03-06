@@ -32,8 +32,10 @@ export interface PolarOption extends
     mainType?: 'polar';
 }
 
+export const COORD_SYS_TYPE_POLAR = 'polar';
+
 class PolarModel extends ComponentModel<PolarOption> {
-    static type = 'polar' as const;
+    static type = COORD_SYS_TYPE_POLAR;
     type = PolarModel.type;
 
     static dependencies = ['radiusAxis', 'angleAxis'];

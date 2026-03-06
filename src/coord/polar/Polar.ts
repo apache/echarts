@@ -19,7 +19,7 @@
 
 import RadiusAxis from './RadiusAxis';
 import AngleAxis from './AngleAxis';
-import PolarModel from './PolarModel';
+import PolarModel, { COORD_SYS_TYPE_POLAR } from './PolarModel';
 import { CoordinateSystem, CoordinateSystemMaster, CoordinateSystemClipArea } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
@@ -37,7 +37,7 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     readonly dimensions = polarDimensions;
 
-    readonly type = 'polar';
+    readonly type = COORD_SYS_TYPE_POLAR;
 
     /**
      * x of polar center
@@ -117,7 +117,6 @@ class Polar implements CoordinateSystem, CoordinateSystemMaster {
 
     /**
      * Base axis will be used on stacking.
-     *
      */
     getBaseAxis() {
         return this.getAxesByScale('ordinal')[0]

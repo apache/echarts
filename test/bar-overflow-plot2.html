@@ -44,6 +44,7 @@ under the License.
                     useDataZoom: true,
                     xAxisShowMinMaxLabel: undefined,
                     dataZoomLabelPrecision: undefined,
+                    stack: false,
                 };
 
                 function createData() {
@@ -134,16 +135,25 @@ under the License.
                         series: [{
                             name: 'bar_a',
                             type: 'bar',
+                            itemStyle: {
+                                barBorderRadius: 3,
+                            },
                             // barMaxWidth: 10,
                             data: _data.dataSet.bar_a
                         }, {
                             name: 'bar_b',
                             type: 'bar',
+                            itemStyle: {
+                                barBorderRadius: 3,
+                            },
                             // barMaxWidth: 10,
                             data: _data.dataSet.bar_b
                         }, {
                             name: 'bar_partially_negative',
                             type: 'bar',
+                            itemStyle: {
+                                barBorderRadius: 3,
+                            },
                             // barMaxWidth: 10,
                             data: _data.dataSet.bar_partially_negative
                         }]
@@ -151,6 +161,11 @@ under the License.
 
                     if (_ctx.yAxisOnZero !== 'unspecified') {
                         option.yAxis.axisLine.onZero = _ctx.yAxisOnZero;
+                    }
+                    if (_ctx.stack) {
+                        option.series.forEach(individualSeries => {
+                            individualSeries.stack = 'a';
+                        });
                     }
 
                     return option;
@@ -201,6 +216,14 @@ under the License.
                         values: [_ctx.dataZoomLabelPrecision, 0, 2, 4, 8],
                         onchange() {
                             _ctx.dataZoomLabelPrecision = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'stack',
+                        values: [false, true],
+                        onchange() {
+                            _ctx.stack = this.value;
                             updateChart();
                         }
                     }]

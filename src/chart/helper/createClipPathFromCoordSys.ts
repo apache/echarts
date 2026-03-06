@@ -20,16 +20,18 @@
 import * as graphic from '../../util/graphic';
 import {round} from '../../util/number';
 import SeriesModel from '../../model/Series';
-import { SeriesOption } from '../../util/types';
+import { NullUndefined, SeriesOption } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
-import { isFunction } from 'zrender/src/core/util';
+import { assert, isFunction } from 'zrender/src/core/util';
+import type Element from 'zrender/src/Element';
+
 
 type SeriesModelWithLineWidth = SeriesModel<SeriesOption & {
     lineStyle?: { width?: number }
 }>;
-function createGridClipPath(
+export function createGridClipPath(
     cartesian: Cartesian2D,
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth,
@@ -104,7 +106,7 @@ function createGridClipPath(
     return clipPath;
 }
 
-function createPolarClipPath(
+export function createPolarClipPath(
     polar: Polar,
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth
@@ -146,7 +148,7 @@ function createPolarClipPath(
     return clipPath;
 }
 
-function createClipPath(
+export function createClipPath(
     coordSys: CoordinateSystem,
     hasAnimation: boolean,
     seriesModel: SeriesModelWithLineWidth,
@@ -165,8 +167,26 @@ function createClipPath(
     return null;
 }
 
-export {
-    createGridClipPath,
-    createPolarClipPath,
-    createClipPath
-};
+export type ShapeClipKind =
+    typeof SHAPE_CLIP_KIND_NOT_CLIPPED
+    | typeof SHAPE_CLIP_KIND_PARTIALLY_CLIPPED
+    | typeof SHAPE_CLIP_KIND_FULLY_CLIPPED;
+export const SHAPE_CLIP_KIND_NOT_CLIPPED = 0;
+export const SHAPE_CLIP_KIND_PARTIALLY_CLIPPED = 1;
+export const SHAPE_CLIP_KIND_FULLY_CLIPPED = 2;
+
+export function updateClipPath(
+    clip: boolean,
+    symbolEl: Element,
+    clipPath: graphic.Path | NullUndefined
+): void {
+    if (clip) {
+        if (__DEV__) {
+            assert(clipPath);
+        }
+        symbolEl.setClipPath(clipPath);
+    }
+    else {
+        symbolEl.removeClipPath();
+    }
+}

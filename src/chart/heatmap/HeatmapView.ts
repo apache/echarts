@@ -35,6 +35,7 @@ import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import type Element from 'zrender/src/Element';
 import type Matrix from '../../coord/matrix/Matrix';
+import { calcBandWidth } from '../../coord/axisBand';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -199,8 +200,8 @@ class HeatmapView extends ChartView {
             }
 
             // add 0.5px to avoid the gaps
-            width = xAxis.getBandWidth() + .5;
-            height = yAxis.getBandWidth() + .5;
+            width = calcBandWidth(xAxis).w + .5;
+            height = calcBandWidth(yAxis).w + .5;
             xAxisExtent = xAxis.scale.getExtent();
             yAxisExtent = yAxis.scale.getExtent();
         }

@@ -34,6 +34,8 @@ import tokens from '../../visual/tokens';
 export const OUTER_BOUNDS_DEFAULT = {left: 0, right: 0, top: 0, bottom: 0};
 export const OUTER_BOUNDS_CLAMP_DEFAULT = ['25%', '25%'];
 
+export const COORD_SYS_TYPE_CARTESIAN_2D = 'cartesian2d';
+
 export interface GridOption extends ComponentOption,
     ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,
     BoxLayoutOptionMixin, ShadowOptionMixin {

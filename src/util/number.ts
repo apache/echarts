@@ -441,7 +441,7 @@ export function addSafe(val0: number, val1: number): number {
 }
 
 // Number.MAX_SAFE_INTEGER, ie do not support.
-export const MAX_SAFE_INTEGER = 9007199254740991;
+export const MAX_SAFE_INTEGER = mathPow(2, 53) - 1;
 
 /**
  * To 0 - 2 * PI, considering negative radian.
