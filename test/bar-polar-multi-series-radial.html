@@ -34,7 +34,7 @@ under the License.
         </style>
 
 
-        <div id="main_multiple_bar_category_angle_axis"></div>
+        <!-- <div id="main_multiple_bar_category_angle_axis"></div> -->
         <div id="main_multiple_bar_value_angle_axis"></div>
 
 
@@ -86,7 +86,7 @@ under the License.
                     height: 500,
                 });
 
-                chart.on('click', function (params) {
+                chart && chart.on('click', function (params) {
                     console.log(params);
                 });
             });
@@ -213,7 +213,7 @@ under the License.
                     }]
                 });
 
-                chart.on('click', function (params) {
+                chart && chart.on('click', function (params) {
                     console.log(params);
                 });
             });

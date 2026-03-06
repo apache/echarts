@@ -91,8 +91,14 @@ class Cartesian2D extends Cartesian<Axis2D> implements CoordinateSystem {
      * Base axis will be used on stacking and series such as 'bar', 'pictorialBar', etc.
      */
     getBaseAxis(): Axis2D {
-        // PENGING: Should we allow bar series to specify a base axis when
-        // both axes are type "value", rather than force to xAxis?
+        // FIXME:
+        //  (1) We should allow series (e.g., bar) to specify a base axis when
+        //      both axes are type "value", rather than force to xAxis or angleAxis.
+        //      NOTE: At present BoxplotSeries has its own overide `getBaseAxis`.
+        //      `CoordinateSystem['getBaseAxis']` probably should not exist, since it
+        //      may introduce inconsistency with `Series['getBaseAxis']`.
+        //  (2) "base axis" info is required in "createSeriesData" stage for "stack",
+        //      (see `dataStackHelper.ts` for details). Currently it is hard coded there.
         return this.getAxesByScale('ordinal')[0]
             || this.getAxesByScale('time')[0]
             || this.getAxis('x');

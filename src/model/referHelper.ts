@@ -61,7 +61,7 @@ import { AxisModelExtendedInCreator } from '../coord/axisModelCreator';
  * }
  */
 
-class CoordSysInfo {
+export class SeriesModelCoordSysInfo {
 
     coordSysName: string;
 
@@ -84,14 +84,14 @@ type FetcherAxisModel =
     & Pick<AxisModelExtendedInCreator, 'getOrdinalMeta'>;
 type Fetcher = (
     seriesModel: SeriesModel,
-    result: CoordSysInfo,
+    result: SeriesModelCoordSysInfo,
     axisMap: HashMap<FetcherAxisModel>,
     categoryAxisMap: HashMap<FetcherAxisModel>
 ) => void;
 
-export function getCoordSysInfoBySeries(seriesModel: SeriesModel) {
+export function getCoordSysInfoBySeries(seriesModel: SeriesModel): SeriesModelCoordSysInfo {
     const coordSysName = seriesModel.get('coordinateSystem') as SupportedCoordSys;
-    const result = new CoordSysInfo(coordSysName);
+    const result = new SeriesModelCoordSysInfo(coordSysName);
     const fetch = fetchers[coordSysName];
     if (fetch) {
         fetch(seriesModel, result, result.axisMap, result.categoryAxisMap);

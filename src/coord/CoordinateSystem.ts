@@ -190,8 +190,7 @@ export interface CoordinateSystem {
     getAxis?: (dim?: DimensionName) => Axis;
 
     /**
-     * FIXME: It may introduce inconsistency with `Series['getBaseAxis']`.
-     * `CoordinateSystem['getBaseAxis']` probably should not exist.
+     * FIXME: Remove this method? See details in `Cartesian2D['getBaseAxis']`
      */
     getBaseAxis?: () => Axis;
 

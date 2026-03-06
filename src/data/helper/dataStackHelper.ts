@@ -93,6 +93,11 @@ export function enableDataStack(
     let stackedDimInfo: SeriesDimensionDefine;
     let stackResultDimension: string;
     let stackedOverDimension: string;
+    let allDimTypesAreNotOrdinalAndTime = true;
+
+    function dimTypeIsNotOrdinalAndTime(dimensionInfo: SeriesDimensionDefine): boolean {
+        return dimensionInfo.type !== 'ordinal' && dimensionInfo.type !== 'time';
+    }
 
     each(dimensionDefineList, function (dimensionInfo, index) {
         if (isString(dimensionInfo)) {
@@ -100,7 +105,12 @@ export function enableDataStack(
                 name: dimensionInfo as string
             } as SeriesDimensionDefine;
         }
+        if (!dimTypeIsNotOrdinalAndTime(dimensionInfo)) {
+            allDimTypesAreNotOrdinalAndTime = false;
+        }
+    });
 
+    each(dimensionDefineList, function (dimensionInfo: SeriesDimensionDefine, index) {
         if (mayStack && !dimensionInfo.isExtraCoord) {
             // Find the first ordinal dimension as the stackedByDimInfo.
             if (!byIndex && !stackedByDimInfo && dimensionInfo.ordinalMeta) {
@@ -108,8 +118,17 @@ export function enableDataStack(
             }
             // Find the first stackable dimension as the stackedDimInfo.
             if (!stackedDimInfo
-                && dimensionInfo.type !== 'ordinal'
-                && dimensionInfo.type !== 'time'
+                && dimTypeIsNotOrdinalAndTime(dimensionInfo)
+                // FIXME:
+                //  This rule MUST be consistent with `Cartesian2D['getBaseAxis']` and `Polar['getBaseAxis']`
+                //  Need refactor - merge them!
+                //  See comments in `Cartesian2D['getBaseAxis']` for details.
+                && (!allDimTypesAreNotOrdinalAndTime
+                    || (
+                        dimensionInfo.coordDim !== 'x'
+                        && dimensionInfo.coordDim !== 'angle'
+                    )
+                )
                 && (!stackedCoordDimension || stackedCoordDimension === dimensionInfo.coordDim)
             ) {
                 stackedDimInfo = dimensionInfo;
