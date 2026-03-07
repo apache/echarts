@@ -56,6 +56,10 @@ export function scaleCalcAlign(
         targetScale, targetAxisModel, targetAxisModel.ecModel, targetAxis, null
     );
 
+    // FIXME:
+    //  (1) Axis inverse is not considered yet.
+    //  (2) `SCALE_EXTENT_KIND_MAPPING` is not considered yet.
+
     const isTargetLogScale = isLogScale(targetScale);
     const alignToScaleLinear = isLogScale(alignToScale) ? alignToScale.intervalStub : alignToScale;
     const targetIntervalStub = isTargetLogScale ? targetScale.intervalStub : targetScale;

@@ -17,12 +17,6 @@
 * under the License.
 */
 
-/**
- * ECharts option manager
- */
-
-
-// import ComponentModel, { ComponentModelConstructor } from './Component';
 import ExtensionAPI from '../core/ExtensionAPI';
 import {
     OptionPreprocessor, MediaQuery, ECUnitOption, MediaUnit, ECBasicOption, SeriesOption

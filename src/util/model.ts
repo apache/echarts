@@ -30,7 +30,6 @@ import {
     isStringSafe,
     isNumber,
     hasOwn,
-    isTypedArray,
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -1273,55 +1272,6 @@ export function makeCallOnlyOnce<Host extends object>() {
 }
 let onceUniqueIndex = getRandomIdBase();
 
-
-const ecModelCacheInner = makeInner<{
-    fullUpdate: GlobalModelCachePerECFullUpdate;
-    prepare: GlobalModelCachePerECPrepare;
-}, GlobalModel>();
-
-export type GlobalModelCachePerECPrepare = {__: 'prepare'}; // Nominal to distinguish.
-export type GlobalModelCachePerECFullUpdate = {__: 'fullUpdate'}; // Nominal to distinguish.
-
-/**
- * CAVEAT: Can only be called by `echarts.ts`
- */
-export function resetCachePerECPrepare(ecModel: GlobalModel): void {
-    ecModelCacheInner(ecModel).prepare = {} as GlobalModelCachePerECPrepare;
-}
-
-/**
- * CAVEAT: Can only be called by `echarts.ts`
- */
-export function resetCachePerECFullUpdate(ecModel: GlobalModel): void {
-    ecModelCacheInner(ecModel).fullUpdate = {} as GlobalModelCachePerECFullUpdate;
-}
-
-/**
- * The cache is auto cleared at the begining of a run of "ec prepare".
- * Typically, `setOption` trigger "ec prepare", but `dispatchAction` does not.
- *
- * NOTICE:
- *  - "ec prepare" is not necessarily performed before each "ec full update" performing.
- */
-export function getCachePerECPrepare(ecModel: GlobalModel): GlobalModelCachePerECPrepare {
-    return ecModelCacheInner(ecModel).prepare;
-}
-
-/**
- * The cache is auto cleared at the begining of a run of "ec full update".
- * However, all shortcuts (such as `updateView`/`updateLayout`/etc.) do not clear it.
- * Typically, all `setOption` and some `dispatchAction` trigger "ec full update".
- * This is the same as the lifecycle of coordinate systems instances and axes instances.
- *
- * NOTICE:
- *  - The cache should NOT be written in:
- *      - `getTargetSeries` methods of data processors.
- *      - `init`/`mergeOption`/`optionUpdated`/`getData` methods of component/series models.
- *    See `getCachePerECPrepare` for details.
- */
-export function getCachePerECFullUpdate(ecModel: GlobalModel): GlobalModelCachePerECFullUpdate {
-    return ecModelCacheInner(ecModel).fullUpdate;
-}
 
 /**
  * @usage

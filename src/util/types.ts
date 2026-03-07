@@ -336,19 +336,25 @@ export interface StageHandlerOverallReset {
     (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
 }
 export interface StageHandler {
+
     /**
-     * Indicate that the task will be piped all series
-     * (`performRawSeries` indicate whether includes filtered series).
+     * Indicate that the "series stage task" will be piped for all series
+     * (filtered series is included iff `performRawSeries: true`).
+     *
+     * OVERALL_STAGE_TASK (See `overallReset`) can not set `createOnAllSeries: true`.
      */
     createOnAllSeries?: boolean;
+
     /**
-     * Indicate that the task will be only piped in the pipeline of this type of series.
-     * (`performRawSeries` indicate whether includes filtered series).
+     * Indicate that the task will only be piped in the pipeline of this type of series.
+     * (filtered series is included iff `performRawSeries: true`).
+     * It is available for both `reset` and `overallReset`.
      */
     seriesType?: string;
+
     /**
-     * Indicate that the task will be only piped in the pipeline of the returned series.
-     * Called in "prepare" stage, before coord sys creation.
+     * Indicate that the task will only be piped in the pipeline of the returned series.
+     * It is called in EC_PREPARE_UPDATE, before `CoordinateSystem['create']`.
      * It is available for both `reset` and `overallReset`.
      */
     getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
@@ -362,18 +368,45 @@ export interface StageHandler {
      * Called only when this task in a pipeline.
      */
     plan?: StageHandlerPlan;
+
     /**
-     * If `overallReset` specified, an "overall task" will be created.
-     * "overall task" does not belong to a certain pipeline.
-     * They always be "performed" in certain phase (depends on when they declared).
-     * They has "stub"s to connect with pipelines (one stub for one pipeline),
-     * delivering info like "dirty" and "output end".
+     * If `overallReset` is specified, an OVERALL_STAGE_TASK will be created.
+     * An OVERALL_STAGE_TASK resides across multiple pipelines, and is associated with
+     * pipelines by "stub"s, which deliver messages like "dirty" and "output end".
+     * OVERALL_STAGE_TASK does not support `progess` method.
+     *
+     * The `overallReset` method is called iff this task is "dirty" (See `Task['dirty']`).
+     * See `StageHandler['reset']` for a summary of possible `dirty()` calls.
      */
     overallReset?: StageHandlerOverallReset;
+
     /**
-     * Called only when this task in a single pipeline, and "dirty".
+     * If `reset` is specified, a SERIES_STAGE_TASK will be created.
+     * A SERIES_STAGE_TASK is owned by a pipeline and is specific to a single series.
+     *
+     * The `reset` method is called iff this task is "dirty" (See `Task['dirty']`).
+     * Task `dirty()` call typically originates from:
+     *  - A trigger of EC_MAIN_CYCLE (including EC_FULL_UPDATE and EC_PARTIAL_UPDATE)
+     *    (See comments in EC_CYCLE)
+     *  - NOTICE: `dirtyOnOverallProgress: true` cause that the corresponding `overallReset`
+     *    and `reset` of downsteams tasks may also be called in EC_PROGRESSIVE_CYCLE.
+     *    But in this case, `CoordinateSystem#create` and `CoordinateSystem#update` are
+     *    not called.
      */
     reset?: StageHandlerReset;
+
+    /**
+     * This is a temporary mechanism for dataZoom case in `appendData`.
+     *
+     * It will set the OVERALL_STAGE_TASK dirty when the pipeline progress.
+     * Moreover, to avoid call the OVERALL_STAGE_TASK each frame (too frequent),
+     * it set the pipeline block (via `task.__block`) in this stage.
+     *
+     * Otherwise, (usually it is legacy case), the OVERALL_STAGE_TASK will only be
+     * executed when upstream is dirty. Otherwise the progressive rendering of all
+     * pipelines will be disabled unexpectedly.
+     */
+    dirtyOnOverallProgress?: boolean;
 }
 
 export interface StageHandlerInternal extends StageHandler {

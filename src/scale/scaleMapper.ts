@@ -205,7 +205,7 @@ export interface ScaleMapperGeneric<This> {
 
     /**
      * [NOTICE]:
-     *  In ec workflow, scale extent is finally determined at `coordSys#update` stage.
+     *  In EC_MAIN_CYCLE, scale extent is finally determined at `coordSys#update` stage.
      *
      * Get a clone of the scale extent.
      * An extent is always in an increase order.
@@ -230,7 +230,7 @@ export interface ScaleMapperGeneric<This> {
      *
      * `setExtent` is identical to `setExtent2(SCALE_EXTENT_KIND_EFFECTIVE)`.
      *
-     * [The steps of extent construction in ec workflow]:
+     * [The steps of extent construction in EC_MAIN_CYCLE]:
      *  - step#1. At `CoordinateSystem#create` stage, requirements of collecting series data extents are
      *            committed to `scaleRawExtentInfoRequireCreate`, and `Scale` instances are created.
      *  - step#2. Call `scaleRawExtentInfoReallyCreate` to really collect series data extent and create

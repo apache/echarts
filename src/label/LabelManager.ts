@@ -86,7 +86,7 @@ interface LabelDesc {
  * Save the original value determined in a pass of echarts main process. That refers to the values
  * rendered by `SeriesView`, before `series:layoutlabels` is triggered in `renderSeries`.
  *
- * 'series:layoutlabels' may be triggered during some shortcut passes, such as zooming in series.graph/geo
+ * 'series:layoutlabels' may be triggered during some EC_PARTIAL_UPDATE passes, such as zooming in series.graph/geo
  * (`updateLabelLayout`), where the modified `Element` props should be restorable by the original value here.
  *
  * Regarding `Element` state, simply consider the values here as the normal state values.

@@ -58,7 +58,7 @@ import { AxisStatKey, eachAxisStatKey } from './axisStatistics';
  */
 const scaleInner = makeInner<{
     extent: number[];
-    // series on this axis.
+    // series on this axis to union data extent.
     seriesList: SeriesModel[];
     dimIdxInCoord: number;
 }, Scale>();
@@ -422,9 +422,6 @@ export class ScaleRawExtentInfo {
      *  The outcome `_zoomMM` may have both `NullUndefined` and a finite value, like `[undefined, 123]`.
      */
     setZoomMinMax(idxMinMax: 0 | 1, val: number | NullUndefined): void {
-        if (__DEV__) {
-            assert(this._i.zoomMM[idxMinMax] == null);
-        }
         this._i.zoomMM[idxMinMax] = val;
     }
 
@@ -596,8 +593,11 @@ export function scaleRawExtentInfoReallyCreate(
     if (scale.rawExtentInfo) {
         if (__DEV__) {
             // Check for incorrect impl - the duplicated calling of this method is only allowed in
-            // one case: first dataZoom then coord sys update.
-            assert(scale.rawExtentInfo.from !== from);
+            // these cases:
+            //  - First in `AxisProxy['reset']` (for dataZoom)
+            //  - Then in `CoordinateSystem['update']`.
+            //  - Then after `chart.appendData()` due to `dirtyOnOverallProgress: true`
+            assert(scale.rawExtentInfo.from !== from || from === AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
         }
         return;
     }

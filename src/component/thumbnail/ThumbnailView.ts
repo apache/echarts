@@ -70,7 +70,7 @@ export class ThumbnailView extends ComponentView {
             return;
         }
 
-        this._renderVersion = api.getMainProcessVersion();
+        this._renderVersion = api.getECMainCycleVersion();
         const group = this.group;
 
         group.removeAll();

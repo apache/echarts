@@ -51,7 +51,7 @@ export class ThumbnailBridgeImpl implements ThumbnailBridge {
     }
 
     reset(api: ExtensionAPI) {
-        this._renderVersion = api.getMainProcessVersion();
+        this._renderVersion = api.getECMainCycleVersion();
     }
 
     renderContent(opt: {

@@ -25,8 +25,9 @@ import SeriesModel from '../../model/Series';
 import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import type AxisProxy from './AxisProxy';
-import { getCachePerECPrepare, GlobalModelCachePerECPrepare, makeInner } from '../../util/model';
+import { makeInner } from '../../util/model';
 import type ComponentModel from '../../model/Component';
+import { getCachePerECPrepare, GlobalModelCachePerECPrepare } from '../../util/cycleCache';
 
 
 export interface DataZoomPayloadBatchItem {

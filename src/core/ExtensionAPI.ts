@@ -72,7 +72,7 @@ abstract class ExtensionAPI {
     abstract getViewOfComponentModel(componentModel: ComponentModel): ComponentView;
     abstract getViewOfSeriesModel(seriesModel: SeriesModel): ChartView;
     abstract getModel(): GlobalModel;
-    abstract getMainProcessVersion(): number;
+    abstract getECMainCycleVersion(): number;
 }
 
 export default ExtensionAPI;

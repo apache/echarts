@@ -139,6 +139,7 @@ import type geoSourceManager from '../coord/geo/geoSourceManager';
 import {
     registerCustomSeries as registerCustom
 } from '../chart/custom/customSeriesRegister';
+import { resetCachePerECFullUpdate, resetCachePerECPrepare } from '../util/cycleCache';
 
 declare let global: any;
 
@@ -203,17 +204,68 @@ export const PRIORITY = {
     }
 };
 
-// Main process have three entries: `setOption`, `dispatchAction` and `resize`,
-// where they must not be invoked nestedly, except the only case: invoke
-// dispatchAction with updateMethod "none" in main process.
-// This flag is used to carry out this rule.
-// All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
-const IN_MAIN_PROCESS_KEY = '__flagInMainProcess' as const;
+/**
+ * [ec updating/rendering cycles (EC_CYCLE)]
+ *
+ *  - EC_MAIN_CYCLE:
+ *    - It designates a run of a series of processing/updating/rendering.
+ *    - It is triggered by:
+ *      - `setOption`
+ *      - `dispatchAction`
+ *        (It is typically internally triggered by user inputs; but can also an explicit API call.)
+ *      - `resize`
+ *      - The next "animation frame" if in `lazyMode: true`.
+ *    - Nested entry is not allowed. If triggering a new run of EC_MAIN_CYCLE during a
+ *      unfinished run, the new run will be delayed until the current run finishes
+ *      (if triggered by `dispatchAction`), or throw error (if triggered by other API calls).
+ *    - All user-visible ec events are triggered outside EC_MAIN_CYCLE
+ *      (i.e. be triggered after `this[IN_EC_MAIN_CYCLE_KEY]` becoming `false`).
+ *    - A run of EC_MAIN_CYCLE comprises:
+ *      - EC_PREPARE_UPDATE (may be absent)
+ *      - EC_FULL_UPDATE or EC_PARTIAL_UPDATE
+ *    - A run of EC_FULL_UPDATE comprises:
+ *      - CoordinateSystem['create']
+ *      - Data processing (may be absent) (see `registerProcessor`)
+ *      - CoordinateSystem['update'] (may be absent)
+ *      - Visual encoding (may be absent) (see `registerVisual`)
+ *      - Layout (may be absent) (see `registerLayout`)
+ *      - Rendering (`ComponentView` or `SeriesView`)
+ *
+ *  - EC_PROGRESSIVE_CYCLE:
+ *    - It also carries out a series of processing/updating/rendering, but out of EC_MAIN_CYCLE.
+ *    - It is performed in each "animation frame".
+ *    - It can be triggered internally or `appendData` call.
+ *    - A run of EC_PROGRESSIVE_CYCLE comprises:
+ *      - Data processing (may be absent) (see `registerProcessor`)
+ *      - Visual encoding (may be absent) (see `registerVisual`)
+ *      - Layout (may be absent) (see `registerLayout`)
+ *      - Rendering (`ComponentView` or `SeriesView`)
+ *    - PENDING: currently all data processing tasks (via `registerProcessor`) run in "block" mode.
+ *      (see `performDataProcessorTasks`)
+ *
+ *  - Other updating/rendering cycles:
+ *    - Some series have specific update/render cycles. For example, graph force layout performs
+ *    layout and rendering in each "animation frame".
+ *
+ *  - Model updating:
+ *    - Model can only be modified at the beginning of ec cycles, including only:
+ *      - EC_PREPARE_UPDATE (see method `prepare()`) in `setOption` call.
+ *      - EC action handlers in `dispatchAction` call.
+ *      - `appendData` (a special case, where only data is modified).
+ *
+ *  - The lifetime of CoordinateSystem/Axis/Scale instances:
+ *    - They are only re-created per run of EC_FULL_UPDATE.
+ *
+ *  - Available caches: see `cycleCache.ts`
+ */
+
+// See comments in EC_CYCLE.
+const IN_EC_MAIN_CYCLE_KEY = '__flagInMainProcess' as const;
 // Useful for detecting outdated rendering results in scenarios that these issues are involved:
-//  - Use shortcut (such as, updateTransform, or no update) to start a main process.
+//  - Use EC_PARTIAL_UPDATE (such as, updateTransform, or no update) to start an EC_MAIN_CYCLE.
 //  - Asynchronously update rendered view (e.g., graph force layout).
 //  - Multiple ChartView/ComponentView render to one group cooperatively.
-const MAIN_PROCESS_VERSION_KEY = '__mainProcessVersion' as const;
+const EC_MAIN_CYCLE_VERSION_KEY = '__mainProcessVersion' as const;
 const PENDING_UPDATE = '__pendingUpdate' as const;
 const STATUS_NEEDS_UPDATE_KEY = '__needsUpdateStatus' as const;
 const ACTION_REG = /^[a-zA-Z0-9_]+$/;
@@ -285,7 +337,7 @@ messageCenterProto.off = createRegisterEventWithLowercaseMessageCenter('off');
 // ---------------------------------------
 // Internal method names for class ECharts
 // ---------------------------------------
-let prepare: (ecIns: ECharts) => void;
+let prepare: (ecIns: ECharts) => void; // This is `EC_PREPARE_UPDATE`.
 let prepareView: (ecIns: ECharts, isComponent: boolean) => void;
 let updateDirectly: (
     ecIns: ECharts, method: string, payload: Payload, mainType: ComponentMainType, subType?: ComponentSubType
@@ -293,11 +345,11 @@ let updateDirectly: (
 type UpdateMethod = (this: ECharts, payload?: Payload, renderParams?: UpdateLifecycleParams) => void;
 let updateMethods: {
     prepareAndUpdate: UpdateMethod,
-    update: UpdateMethod,
-    updateTransform: UpdateMethod,
-    updateView: UpdateMethod,
-    updateVisual: UpdateMethod,
-    updateLayout: UpdateMethod
+    update: UpdateMethod, // This is `EC_FULL_UPDATE`.
+    updateTransform: UpdateMethod, // This is one of `EC_PARTIAL_UPDATE`.
+    updateView: UpdateMethod, // This is one of `EC_PARTIAL_UPDATE`.
+    updateVisual: UpdateMethod, // This is one of `EC_PARTIAL_UPDATE`.
+    updateLayout: UpdateMethod // This is one of `EC_PARTIAL_UPDATE`.
 };
 let doConvertPixel: {
     (
@@ -345,7 +397,7 @@ let enableConnect: (ecIns: ECharts) => void;
 
 let markStatusToUpdate: (ecIns: ECharts) => void;
 let applyChangedStates: (ecIns: ECharts) => void;
-let updateMainProcessVersion: (ecIns: ECharts) => void;
+let updateECMainCycleVersion: (ecIns: ECharts) => void;
 
 type RenderedEventParam = { elapsedTime: number };
 type ECEventDefinition = {
@@ -427,8 +479,8 @@ class ECharts extends Eventful<ECEventDefinition> {
         silent: boolean
         updateParams: UpdateLifecycleParams
     };
-    private [IN_MAIN_PROCESS_KEY]: boolean;
-    private [MAIN_PROCESS_VERSION_KEY]: number;
+    private [IN_EC_MAIN_CYCLE_KEY]: boolean;
+    private [EC_MAIN_CYCLE_VERSION_KEY]: number;
     private [CONNECT_STATUS_KEY]: ConnectStatus;
     private [STATUS_NEEDS_UPDATE_KEY]: boolean;
 
@@ -451,7 +503,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         let defaultCoarsePointer: 'auto' | boolean = 'auto';
         let defaultUseDirtyRect = false;
 
-        this[MAIN_PROCESS_VERSION_KEY] = 1;
+        this[EC_MAIN_CYCLE_VERSION_KEY] = 1;
 
         if (__DEV__) {
             const root = (
@@ -545,15 +597,15 @@ class ECharts extends Eventful<ECEventDefinition> {
         if (this[PENDING_UPDATE]) {
             const silent = (this[PENDING_UPDATE] as any).silent;
 
-            this[IN_MAIN_PROCESS_KEY] = true;
-            updateMainProcessVersion(this);
+            this[IN_EC_MAIN_CYCLE_KEY] = true;
+            updateECMainCycleVersion(this);
 
             try {
                 prepare(this);
                 updateMethods.update.call(this, null, this[PENDING_UPDATE].updateParams);
             }
             catch (e) {
-                this[IN_MAIN_PROCESS_KEY] = false;
+                this[IN_EC_MAIN_CYCLE_KEY] = false;
                 this[PENDING_UPDATE] = null;
                 throw e;
             }
@@ -566,7 +618,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             // will render the final state of the elements before the real animation started.
             this._zr.flush();
 
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_MAIN_CYCLE_KEY] = false;
             this[PENDING_UPDATE] = null;
 
             flushPendingActions.call(this, silent);
@@ -649,7 +701,7 @@ class ECharts extends Eventful<ECEventDefinition> {
     setOption<Opt extends ECBasicOption>(option: Opt, opts?: SetOptionOpts): void;
     /* eslint-disable-next-line */
     setOption<Opt extends ECBasicOption>(option: Opt, notMerge?: boolean | SetOptionOpts, lazyUpdate?: boolean): void {
-        if (this[IN_MAIN_PROCESS_KEY]) {
+        if (this[IN_EC_MAIN_CYCLE_KEY]) {
             if (__DEV__) {
                 error('`setOption` should not be called during main process.');
             }
@@ -672,8 +724,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             notMerge = notMerge.notMerge;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = true;
-        updateMainProcessVersion(this);
+        this[IN_EC_MAIN_CYCLE_KEY] = true;
+        updateECMainCycleVersion(this);
 
         if (!this._model || notMerge) {
             const optionManager = new OptionManager(this._api);
@@ -696,7 +748,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 silent: silent,
                 updateParams: updateParams
             };
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_MAIN_CYCLE_KEY] = false;
 
             // `setOption(option, {lazyMode: true})` may be called when zrender has been slept.
             // It should wake it up to make sure zrender start to render at the next frame.
@@ -709,7 +761,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
             catch (e) {
                 this[PENDING_UPDATE] = null;
-                this[IN_MAIN_PROCESS_KEY] = false;
+                this[IN_EC_MAIN_CYCLE_KEY] = false;
 
                 throw e;
             }
@@ -722,7 +774,7 @@ class ECharts extends Eventful<ECEventDefinition> {
             }
 
             this[PENDING_UPDATE] = null;
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_MAIN_CYCLE_KEY] = false;
 
             flushPendingActions.call(this, silent);
             triggerUpdatedEvent.call(this, silent);
@@ -735,7 +787,7 @@ class ECharts extends Eventful<ECEventDefinition> {
      * @param opts Optional settings
      */
     setTheme(theme: string | ThemeOption, opts?: SetThemeOpts): void {
-        if (this[IN_MAIN_PROCESS_KEY]) {
+        if (this[IN_EC_MAIN_CYCLE_KEY]) {
             if (__DEV__) {
                 error('`setTheme` should not be called during main process.');
             }
@@ -763,8 +815,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             this[PENDING_UPDATE] = null;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = true;
-        updateMainProcessVersion(this);
+        this[IN_EC_MAIN_CYCLE_KEY] = true;
+        updateECMainCycleVersion(this);
 
         try {
             this._updateTheme(theme);
@@ -774,11 +826,11 @@ class ECharts extends Eventful<ECEventDefinition> {
             updateMethods.update.call(this, {type: 'setTheme'}, updateParams);
         }
         catch (e) {
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_MAIN_CYCLE_KEY] = false;
             throw e;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = false;
+        this[IN_EC_MAIN_CYCLE_KEY] = false;
 
         flushPendingActions.call(this, silent);
         triggerUpdatedEvent.call(this, silent);
@@ -1357,7 +1409,7 @@ class ECharts extends Eventful<ECEventDefinition> {
      * Resize the chart
      */
     resize(opts?: ResizeOpts): void {
-        if (this[IN_MAIN_PROCESS_KEY]) {
+        if (this[IN_EC_MAIN_CYCLE_KEY]) {
             if (__DEV__) {
                 error('`resize` should not be called during main process.');
             }
@@ -1395,8 +1447,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             this[PENDING_UPDATE] = null;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = true;
-        updateMainProcessVersion(this);
+        this[IN_EC_MAIN_CYCLE_KEY] = true;
+        updateECMainCycleVersion(this);
 
         try {
             needPrepare && prepare(this);
@@ -1409,11 +1461,11 @@ class ECharts extends Eventful<ECEventDefinition> {
             });
         }
         catch (e) {
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_MAIN_CYCLE_KEY] = false;
             throw e;
         }
 
-        this[IN_MAIN_PROCESS_KEY] = false;
+        this[IN_EC_MAIN_CYCLE_KEY] = false;
 
         flushPendingActions.call(this, silent);
 
@@ -1507,7 +1559,7 @@ class ECharts extends Eventful<ECEventDefinition> {
         }
 
         // May dispatchAction in rendering procedure
-        if (this[IN_MAIN_PROCESS_KEY]) {
+        if (this[IN_EC_MAIN_CYCLE_KEY]) {
             this._pendingActions.push(payload);
             return;
         }
@@ -1579,7 +1631,7 @@ class ECharts extends Eventful<ECEventDefinition> {
     private static internalField = (function () {
 
         prepare = function (ecIns: ECharts): void {
-            modelUtil.resetCachePerECPrepare(ecIns._model);
+            resetCachePerECPrepare(ecIns._model);
 
             const scheduler = ecIns._scheduler;
 
@@ -1806,7 +1858,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     return;
                 }
 
-                modelUtil.resetCachePerECFullUpdate(ecModel);
+                resetCachePerECFullUpdate(ecModel);
                 ecModel.setUpdatePayload(payload);
 
                 scheduler.restoreData(ecModel, payload);
@@ -2050,8 +2102,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             const updateMethod = cptTypeTmp.pop();
             const cptType = cptTypeTmp[0] != null && parseClassType(cptTypeTmp[0]);
 
-            this[IN_MAIN_PROCESS_KEY] = true;
-            updateMainProcessVersion(this);
+            this[IN_EC_MAIN_CYCLE_KEY] = true;
+            updateECMainCycleVersion(this);
 
             let payloads: Payload[] = [payload];
             let batched = false;
@@ -2122,7 +2174,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                     }
                 }
                 catch (e) {
-                    this[IN_MAIN_PROCESS_KEY] = false;
+                    this[IN_EC_MAIN_CYCLE_KEY] = false;
                     throw e;
                 }
             }
@@ -2139,7 +2191,7 @@ class ECharts extends Eventful<ECEventDefinition> {
                 eventObj = eventObjBatch[0] as ECActionEvent;
             }
 
-            this[IN_MAIN_PROCESS_KEY] = false;
+            this[IN_EC_MAIN_CYCLE_KEY] = false;
 
             if (!silent) {
                 let refinedEvent: ECActionEvent;
@@ -2434,8 +2486,8 @@ class ECharts extends Eventful<ECEventDefinition> {
             ecIns.getZr().wakeUp();
         };
 
-        updateMainProcessVersion = function (ecIns: ECharts): void {
-            ecIns[MAIN_PROCESS_VERSION_KEY] = (ecIns[MAIN_PROCESS_VERSION_KEY] + 1) % 1000;
+        updateECMainCycleVersion = function (ecIns: ECharts): void {
+            ecIns[EC_MAIN_CYCLE_VERSION_KEY] = (ecIns[EC_MAIN_CYCLE_VERSION_KEY] + 1) % 1000;
         };
 
         applyChangedStates = function (ecIns: ECharts): void {
@@ -2666,8 +2718,8 @@ class ECharts extends Eventful<ECEventDefinition> {
                 getViewOfSeriesModel(seriesModel: SeriesModel): ChartView {
                     return ecIns.getViewOfSeriesModel(seriesModel);
                 }
-                getMainProcessVersion(): number {
-                    return ecIns[MAIN_PROCESS_VERSION_KEY];
+                getECMainCycleVersion(): number {
+                    return ecIns[EC_MAIN_CYCLE_VERSION_KEY];
                 }
             })(ecIns);
         };

@@ -30,6 +30,8 @@ import { AxisBaseModel } from '../../coord/AxisBaseModel';
 
 const dataZoomProcessor: StageHandler = {
 
+    dirtyOnOverallProgress: true,
+
     // `dataZoomProcessor` will only be performed in needed series. Consider if
     // there is a line series and a pie series, it is better not to update the
     // line series if only pie series is needed to be updated.

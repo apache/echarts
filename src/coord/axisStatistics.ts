@@ -21,8 +21,6 @@ import { assert, createHashMap, each, HashMap } from 'zrender/src/core/util';
 import type GlobalModel from '../model/Global';
 import type SeriesModel from '../model/Series';
 import {
-    getCachePerECFullUpdate, getCachePerECPrepare, GlobalModelCachePerECFullUpdate,
-    GlobalModelCachePerECPrepare,
     initExtentForUnion, makeCallOnlyOnce, makeInner,
 } from '../util/model';
 import { DimensionIndex, NullUndefined } from '../util/types';
@@ -34,6 +32,10 @@ import type { AxisBaseModel } from './AxisBaseModel';
 import { tryEnsureTypedArray, Float64ArrayCtor } from '../util/vendor';
 import { EChartsExtensionInstallRegisters } from '../extension';
 import type ComponentModel from '../model/Component';
+import {
+    getCachePerECFullUpdate, getCachePerECPrepare, GlobalModelCachePerECFullUpdate,
+    GlobalModelCachePerECPrepare
+} from '../util/cycleCache';
 
 
 const callOnlyOnce = makeCallOnlyOnce();
@@ -237,7 +239,7 @@ export function eachAxisStatKey(
     });
 }
 
-function performAxisStatistics(ecModel: GlobalModel): void {
+function performAxisStatisticsOnOverallReset(ecModel: GlobalModel): void {
     const ecFullUpdateCache = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel));
     const axisStatAll: AxisStatAll = ecFullUpdateCache.all = createHashMap();
 
@@ -350,11 +352,10 @@ function performStatisticsForRecord(
     }
     if (!ecPrepareCacheMiss && ecPrepareLiPosMinGap != null) {
         // Consider the fact in practice:
-        //  - Series data can only be changed in the "ec prepare" stage.
-        //  - The relationship between series and axes can only be changed in "ec prepare" stage and
-        //    `SERIES_FILTER`.
-        //  (NOTE: "ec prepare" stage can be typically considered as `chart.setOption`, and "ec updated"
-        //  stage can be typically considered as `dispatchAction`.)
+        //  - Series data can only be changed in EC_PREPARE_UPDATE.
+        //  - The relationship between series and axes can only be changed in EC_PREPARE_UPDATE and
+        //    SERIES_FILTER.
+        //  (See EC_CYCLE for more info)
         // Therefore, some statistics results can be cached in `GlobalModelCachePerECPrepare` to avoid
         // repeated time-consuming calculation for large data (e.g., over 1e5 data items).
         perKeyPerAxis.liPosMinGap = ecPrepareLiPosMinGap;
@@ -452,7 +453,7 @@ export function requireAxisStatistics(
 
     callOnlyOnce(registers, function () {
         registers.registerProcessor(registers.PRIORITY.PROCESSOR.AXIS_STATISTICS, {
-            overallReset: performAxisStatistics
+            overallReset: performAxisStatisticsOnOverallReset
         });
     });
 }
