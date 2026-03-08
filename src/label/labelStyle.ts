@@ -651,7 +651,9 @@ function setTokenTextStyle<TNuance extends TextCommonOptionNuanceBase>(
             textStyle.verticalAlign = baseline;
         }
     }
-    if (!isBlock || !opt.disableBox) {
+    // Enable box when height is explicitly set, so height property can take effect
+    const hasExplicitHeight = textStyleModel.getShallow('height') != null;
+    if (!isBlock || !opt.disableBox || hasExplicitHeight) {
         for (let i = 0; i < TEXT_PROPS_BOX.length; i++) {
             const key = TEXT_PROPS_BOX[i];
             const val = textStyleModel.getShallow(key);
