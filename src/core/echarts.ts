@@ -233,30 +233,31 @@ export const PRIORITY = {
  *
  *  - EC_PROGRESSIVE_CYCLE:
  *    - It also carries out a series of processing/updating/rendering, but out of EC_MAIN_CYCLE.
- *    - It is performed in each "animation frame".
- *    - It can be triggered internally or `appendData` call.
+ *    - It is performed in each subsequent "animation frame" until finished.
+ *    - It can be triggered by EC_MAIN_CYCLE or EC_APPEND_DATA_CYCLE.
  *    - A run of EC_PROGRESSIVE_CYCLE comprises:
  *      - Data processing (may be absent) (see `registerProcessor`)
  *      - Visual encoding (may be absent) (see `registerVisual`)
  *      - Layout (may be absent) (see `registerLayout`)
  *      - Rendering (`ComponentView` or `SeriesView`)
  *    - PENDING: currently all data processing tasks (via `registerProcessor`) run in "block" mode.
- *      (see `performDataProcessorTasks`)
+ *      (see `performDataProcessorTasks`).
  *
  *  - Other updating/rendering cycles:
+ *    - EC_APPEND_DATA_CYCLE (see `appendData`) is only supported for some special cases.
  *    - Some series have specific update/render cycles. For example, graph force layout performs
- *    layout and rendering in each "animation frame".
+ *      layout and rendering in each "animation frame".
  *
  *  - Model updating:
  *    - Model can only be modified at the beginning of ec cycles, including only:
  *      - EC_PREPARE_UPDATE (see method `prepare()`) in `setOption` call.
  *      - EC action handlers in `dispatchAction` call.
- *      - `appendData` (a special case, where only data is modified).
+ *      - `appendData` (a special case, where only data can be modified).
  *
  *  - The lifetime of CoordinateSystem/Axis/Scale instances:
- *    - They are only re-created per run of EC_FULL_UPDATE.
+ *    - They are only re-created per run of EC_FULL_UPDATE in EC_MAIN_CYCLE.
  *
- *  - Available caches: see `cycleCache.ts`
+ *  - Global caches: see `cycleCache.ts`
  */
 
 // See comments in EC_CYCLE.
@@ -1612,13 +1613,13 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         seriesModel.appendData(params);
 
-        // Note: `appendData` does not support that update extent of coordinate
-        // system, util some scenario require that. In the expected usage of
-        // `appendData`, the initial extent of coordinate system should better
-        // be fixed by axis `min`/`max` setting or initial data, otherwise if
-        // the extent changed while `appendData`, the location of the painted
-        // graphic elements have to be changed, which make the usage of
-        // `appendData` meaningless.
+        // NOTICE:
+        // `appendData` does not support to update axis scale extent of coordinate
+        // systems. In the expected usage of `appendData`, the initial extent of
+        // coordinate system should be explicitly specified (by `xxxAxis.data` for
+        // 'category' axis or by `xxxAxis.min/max` for other axes). Otherwise, if
+        // the extent keep changing while `appendData`, the location of the painted
+        // graphic elements have to be changed frequently.
 
         this._scheduler.unfinished = true;
 
@@ -1872,6 +1873,8 @@ class ECharts extends Eventful<ECEventDefinition> {
                 // Create new coordinate system each update
                 // In LineView may save the old coordinate system and use it to get the original point.
                 coordSysMgr.create(ecModel, api);
+
+                lifecycle.trigger('coordsys:aftercreate', ecModel, api);
 
                 scheduler.performDataProcessorTasks(ecModel, payload);
 

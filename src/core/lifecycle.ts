@@ -54,6 +54,7 @@ export interface UpdateLifecycleParams {
 }
 interface LifecycleEvents {
     'afterinit': [EChartsType],
+    'coordsys:aftercreate': [GlobalModel, ExtensionAPI],
     'series:beforeupdate': [GlobalModel, ExtensionAPI, UpdateLifecycleParams],
     'series:layoutlabels': [GlobalModel, ExtensionAPI, UpdateLifecycleParams],
     'series:transition': [GlobalModel, ExtensionAPI, UpdateLifecycleParams],

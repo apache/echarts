@@ -385,13 +385,14 @@ export interface StageHandler {
      * A SERIES_STAGE_TASK is owned by a pipeline and is specific to a single series.
      *
      * The `reset` method is called iff this task is "dirty" (See `Task['dirty']`).
-     * Task `dirty()` call typically originates from:
-     *  - A trigger of EC_MAIN_CYCLE (including EC_FULL_UPDATE and EC_PARTIAL_UPDATE)
-     *    (See comments in EC_CYCLE)
-     *  - NOTICE: `dirtyOnOverallProgress: true` cause that the corresponding `overallReset`
-     *    and `reset` of downsteams tasks may also be called in EC_PROGRESSIVE_CYCLE.
-     *    But in this case, `CoordinateSystem#create` and `CoordinateSystem#update` are
-     *    not called.
+     * Task `dirty()` call typically originates from a trigger of EC_MAIN_CYCLE (including
+     * EC_FULL_UPDATE and EC_PARTIAL_UPDATE) (See comments in EC_CYCLE)
+     *
+     * NOTICE: `dirtyOnOverallProgress: true` cause that the corresponding `overallReset`
+     *  and `reset` of downsteams tasks may also be called in EC_PROGRESSIVE_CYCLE.
+     *  But in this case, `CoordinateSystem#create` and `CoordinateSystem#update` are not called.
+     *  Only lifecycle like `coordsys:aftercreate` can be ensured to be only called in EC_FULL_UPDATE
+     *  of EC_MAIN_CYCLE, but not in EC_PROGRESSIVE_CYCLE and EC_APPEND_DATA_CYCLE.
      */
     reset?: StageHandlerReset;
 

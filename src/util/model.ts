@@ -48,13 +48,12 @@ import {
     OptionName,
     InterpolatableValue,
     NullUndefined,
-    UNDEFINED_STR,
 } from './types';
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
 import type GridModel from '../coord/cartesian/GridModel';
-import { isNumeric, getRandomIdBase, getPrecision, round, MAX_SAFE_INTEGER } from './number';
+import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
 import { error, warn } from './log';
 import type Model from '../model/Model';
 
@@ -718,6 +717,10 @@ export function queryDataIndex(data: SeriesData, payload: Payload & {
 }
 
 /**
+ * [CAVEAT]:
+ *  DO NOT use it in performance-sensitive scenarios.
+ *  Likely a hash map lookup; not inline-cache friendly.
+ *
  * Enable property storage to any host object.
  * Notice: Serialization is not supported.
  *
