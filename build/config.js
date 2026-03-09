@@ -20,7 +20,7 @@
 const nodeResolvePlugin = require('@rollup/plugin-node-resolve').default;
 const nodePath = require('path');
 const ecDir = nodePath.resolve(__dirname, '..');
-const {terser} = require('rollup-plugin-terser');
+const terser = require('@rollup/plugin-terser');
 const replace = require('@rollup/plugin-replace');
 const MagicString = require('magic-string');
 const preamble = require('./preamble');
