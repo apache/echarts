@@ -21,7 +21,7 @@ import { EChartsExtensionInstallRegisters, use } from '../../extension';
 import ComponentView from '../../view/Component';
 import SingleAxisView from '../axis/SingleAxisView';
 import axisModelCreator from '../../coord/axisModelCreator';
-import SingleAxisModel from '../../coord/single/AxisModel';
+import SingleAxisModel, { COORD_SYS_TYPE_SINGLE_AXIS } from '../../coord/single/AxisModel';
 import singleCreator from '../../coord/single/singleCreator';
 import {install as installAxisPointer} from '../axisPointer/install';
 import AxisView from '../axis/AxisView';
@@ -43,7 +43,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerComponentView(SingleAxisView);
     registers.registerComponentModel(SingleAxisModel);
 
-    axisModelCreator(registers, 'single', SingleAxisModel, SingleAxisModel.defaultOption);
+    axisModelCreator(registers, COORD_SYS_TYPE_SINGLE_AXIS, SingleAxisModel, SingleAxisModel.defaultOption);
 
     registers.registerCoordinateSystem('single', singleCreator);
 }

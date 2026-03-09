@@ -23,7 +23,7 @@ import {
     ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin, NullUndefined,
     ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin
 } from '../../util/types';
-import Grid from './Grid';
+import type Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 import type GlobalModel from '../../model/Global';
 import { getLayoutParams, mergeLayoutParam } from '../../util/layout';

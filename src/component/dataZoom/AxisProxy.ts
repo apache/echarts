@@ -33,7 +33,7 @@ import { getAxisMainType, isCoordSupported, DataZoomAxisDimension } from './help
 import { SINGLE_REFERRING } from '../../util/model';
 import { isOrdinalScale, isTimeScale } from '../../scale/helper';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, scaleRawExtentInfoReallyCreate,
+    AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, scaleRawExtentInfoCreate,
     ScaleRawExtentResultForZoom,
 } from '../../coord/scaleRawExtentInfo';
 import { discourageOnAxisZero } from '../../coord/axisHelper';
@@ -351,7 +351,7 @@ class AxisProxy {
         // Nevertheless, user can set min/max/scale on axes to make extent of axes
         // consistent.
         const axis = this.getAxisModel().axis;
-        scaleRawExtentInfoReallyCreate(this.ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
+        scaleRawExtentInfoCreate(this.ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
 
         discourageOnAxisZero(axis, {dz: true});
 

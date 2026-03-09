@@ -27,12 +27,12 @@ import GlobalModel from '../model/Global';
 import ExtensionAPI from '../core/ExtensionAPI';
 import { Dictionary } from '../util/types';
 import { calcBandWidth } from '../coord/axisBand';
-import { createBandWidthBasedAxisContainShapeHandler } from '../chart/helper/axisSnippets';
+import { createBandWidthBasedAxisContainShapeHandler, makeAxisStatKey2 } from '../chart/helper/axisSnippets';
 import { makeCallOnlyOnce } from '../util/model';
 import { EChartsExtensionInstallRegisters } from '../extension';
 import { registerAxisContainShapeHandler } from '../coord/scaleRawExtentInfo';
-import { getStartValue, registerAxisStatisticsForBaseBar } from './barCommon';
-import { AxisStatKey, eachCollectedAxis, eachCollectedSeries } from '../coord/axisStatistics';
+import { getStartValue, requireAxisStatisticsForBaseBar } from './barCommon';
+import { eachAxisOnKey, eachSeriesOnAxisOnKey } from '../coord/axisStatistics';
 import { COORD_SYS_TYPE_POLAR } from '../coord/polar/PolarModel';
 import type Axis from '../coord/Axis';
 import { assert, each } from 'zrender/src/core/util';
@@ -64,9 +64,9 @@ function getSeriesStackId(seriesModel: BarSeriesModel) {
 }
 
 export function barLayoutPolar(seriesType: 'bar', ecModel: GlobalModel, api: ExtensionAPI) {
-    const axisStatKey = makeAxisStatKey(seriesType);
+    const axisStatKey = makeAxisStatKey2(seriesType, COORD_SYS_TYPE_POLAR);
 
-    eachCollectedAxis(ecModel, axisStatKey, function (axis: PolarAxis) {
+    eachAxisOnKey(ecModel, axisStatKey, function (axis: PolarAxis) {
         if (__DEV__) {
             assert((axis instanceof AngleAxis) || axis instanceof RadiusAxis);
         }
@@ -74,7 +74,7 @@ export function barLayoutPolar(seriesType: 'bar', ecModel: GlobalModel, api: Ext
         const barWidthAndOffset = calcRadialBar(axis, seriesType);
 
         const lastStackCoords: LastStackCoords = {};
-        eachCollectedSeries(axis, axisStatKey, function (seriesModel: BarSeriesModel) {
+        eachSeriesOnAxisOnKey(axis, axisStatKey, function (seriesModel: BarSeriesModel) {
             layoutPerAxisPerSeries(axis, seriesModel, barWidthAndOffset, lastStackCoords);
         });
     });
@@ -93,7 +93,7 @@ function layoutPerAxisPerSeries(
     const columnWidth = columnLayoutInfo.width;
     const polar = seriesModel.coordinateSystem as Polar;
     if (__DEV__) {
-        assert(polar.type === 'polar');
+        assert(polar.type === COORD_SYS_TYPE_POLAR);
     }
     const valueAxis = polar.getOtherAxis(baseAxis);
 
@@ -209,9 +209,11 @@ function layoutPerAxisPerSeries(
  * Calculate bar width and offset for radial bar charts
  */
 function calcRadialBar(axis: Axis, seriesType: 'bar'): BarWidthAndOffsetOnAxis {
+    const axisStatKey = makeAxisStatKey2(seriesType, COORD_SYS_TYPE_POLAR);
+
     const bandWidth = calcBandWidth(
         axis,
-        {fromStat: {key: makeAxisStatKey(seriesType)}, min: 1}
+        {fromStat: {key: axisStatKey}, min: 1}
     ).w;
 
     let remainedWidth: number = bandWidth;
@@ -220,7 +222,7 @@ function calcRadialBar(axis: Axis, seriesType: 'bar'): BarWidthAndOffsetOnAxis {
     let gapOption: string | number = '30%';
     const stacks: Dictionary<StackInfo> = {};
 
-    eachCollectedSeries(axis, makeAxisStatKey(seriesType), function (seriesModel: BarSeriesModel, idx) {
+    eachSeriesOnAxisOnKey(axis, axisStatKey, function (seriesModel: BarSeriesModel) {
         const stackId = getSeriesStackId(seriesModel);
 
         if (!stacks[stackId]) {
@@ -308,17 +310,13 @@ function calcRadialBar(axis: Axis, seriesType: 'bar'): BarWidthAndOffsetOnAxis {
     return result;
 }
 
-function makeAxisStatKey(seriesType: 'bar'): AxisStatKey {
-    return `barPolar-${seriesType}` as AxisStatKey;
-}
-
 export function registerBarPolarAxisHandlers(
     registers: EChartsExtensionInstallRegisters,
     seriesType: 'bar' // Currently only 'bar' is supported.
 ): void {
     callOnlyOnce(registers, function () {
-        const axisStatKey = makeAxisStatKey(seriesType);
-        registerAxisStatisticsForBaseBar(
+        const axisStatKey = makeAxisStatKey2(seriesType, COORD_SYS_TYPE_POLAR);
+        requireAxisStatisticsForBaseBar(
             registers,
             axisStatKey,
             seriesType,

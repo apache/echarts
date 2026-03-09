@@ -21,6 +21,8 @@ import type Axis from '../coord/Axis';
 import { calcBandWidth } from '../coord/axisBand';
 import type { AxisBaseModel } from '../coord/AxisBaseModel';
 import Axis2D from '../coord/cartesian/Axis2D';
+import { COORD_SYS_TYPE_CARTESIAN_2D } from '../coord/cartesian/GridModel';
+import { COORD_SYS_TYPE_SINGLE_AXIS } from '../coord/single/AxisModel';
 import type SingleAxis from '../coord/single/SingleAxis';
 import type SeriesModel from '../model/Series';
 import { isOrdinalScale } from '../scale/helper';
@@ -31,8 +33,8 @@ export function needFixJitter(seriesModel: SeriesModel, axis: Axis): boolean {
     const coordType = coordinateSystem && coordinateSystem.type;
     const baseAxis = coordinateSystem && coordinateSystem.getBaseAxis && coordinateSystem.getBaseAxis();
     const scaleType = baseAxis && baseAxis.scale && baseAxis.scale.type;
-    const seriesValid = coordType === 'cartesian2d' && scaleType === 'ordinal'
-        || coordType === 'single';
+    const seriesValid = coordType === COORD_SYS_TYPE_CARTESIAN_2D && scaleType === 'ordinal'
+        || coordType === COORD_SYS_TYPE_SINGLE_AXIS;
 
     const axisValid = (axis.model as AxisBaseModel).get('jitter') > 0;
     return seriesValid && axisValid;

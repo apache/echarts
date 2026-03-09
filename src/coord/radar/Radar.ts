@@ -23,7 +23,9 @@ import IndicatorAxis from './IndicatorAxis';
 import IntervalScale from '../../scale/Interval';
 import * as numberUtil from '../../util/number';
 import { CoordinateSystemMaster, CoordinateSystem } from '../CoordinateSystem';
-import RadarModel from './RadarModel';
+import RadarModel, {
+    COMPONENT_TYPE_RADAR, COORD_SYS_TYPE_RADAR, RADAR_DEFAULT_SPLIT_NUMBER, SERIES_TYPE_RADAR
+} from './RadarModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { ScaleDataValue } from '../../util/types';
@@ -32,16 +34,15 @@ import { map, each, isString, isNumber } from 'zrender/src/core/util';
 import { scaleCalcAlign } from '../axisAlignTicks';
 import { createBoxLayoutReference } from '../../util/layout';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoReallyCreate, scaleRawExtentInfoRequireCreate
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoCreate
 } from '../scaleRawExtentInfo';
 import { ensureValidSplitNumber } from '../../scale/helper';
+import { associateSeriesWithAxis } from '../axisStatistics';
 
-
-export const RADAR_DEFAULT_SPLIT_NUMBER = 5;
 
 class Radar implements CoordinateSystem, CoordinateSystemMaster {
 
-    readonly type: 'radar';
+    readonly type = COORD_SYS_TYPE_RADAR;
     /**
      *
      * Radar dimensions
@@ -168,7 +169,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         dummyScale.setConfig({interval: 1});
         // Force all the axis fixing the maxSplitNumber.
         each(indicatorAxes, function (indicatorAxis) {
-            scaleRawExtentInfoReallyCreate(ecModel, indicatorAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleRawExtentInfoCreate(ecModel, indicatorAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
             scaleCalcAlign(indicatorAxis, dummyScale);
         });
     }
@@ -192,19 +193,19 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
 
     static create(ecModel: GlobalModel, api: ExtensionAPI) {
         const radarList: Radar[] = [];
-        ecModel.eachComponent('radar', function (radarModel: RadarModel) {
+        ecModel.eachComponent(COMPONENT_TYPE_RADAR, function (radarModel: RadarModel) {
             const radar = new Radar(radarModel, ecModel, api);
             radarList.push(radar);
             radarModel.coordinateSystem = radar;
         });
-        ecModel.eachSeriesByType('radar', function (radarSeries) {
-            if (radarSeries.get('coordinateSystem') === 'radar') {
+        ecModel.eachSeriesByType(SERIES_TYPE_RADAR, function (radarSeries) {
+            if (radarSeries.get('coordinateSystem') === COORD_SYS_TYPE_RADAR) {
                 // Inject coordinate system
                 // @ts-ignore
                 const radar = radarSeries.coordinateSystem = radarList[radarSeries.get('radarIndex') || 0];
                 if (radar) {
                     each(radar.getIndicatorAxes(), function (indicatorAxis) {
-                        scaleRawExtentInfoRequireCreate(indicatorAxis, radarSeries);
+                        associateSeriesWithAxis(indicatorAxis, radarSeries, COORD_SYS_TYPE_RADAR);
                     });
                 }
             }

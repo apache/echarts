@@ -27,7 +27,7 @@ import {
     determineAxisType,
 } from '../../coord/axisHelper';
 
-import PolarModel from './PolarModel';
+import PolarModel, { COMPONENT_TYPE_POLAR, COORD_SYS_TYPE_POLAR } from './PolarModel';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import OrdinalScale from '../../scale/Ordinal';
@@ -42,8 +42,9 @@ import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { createBoxLayoutReference } from '../../util/layout';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoReallyCreate, scaleRawExtentInfoRequireCreate
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoCreate
 } from '../scaleRawExtentInfo';
+import { associateSeriesWithAxis } from '../axisStatistics';
 
 /**
  * Resize method bound to the polar
@@ -85,8 +86,8 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     const angleAxis = polar.getAngleAxis();
     const radiusAxis = polar.getRadiusAxis();
 
-    scaleRawExtentInfoReallyCreate(ecModel, angleAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
-    scaleRawExtentInfoReallyCreate(ecModel, radiusAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+    scaleRawExtentInfoCreate(ecModel, angleAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+    scaleRawExtentInfoCreate(ecModel, radiusAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
 
     scaleCalcNice(angleAxis);
     scaleCalcNice(radiusAxis);
@@ -131,7 +132,7 @@ const polarCreator = {
 
     create: function (ecModel: GlobalModel, api: ExtensionAPI) {
         const polarList: Polar[] = [];
-        ecModel.eachComponent('polar', function (polarModel: PolarModel, idx: number) {
+        ecModel.eachComponent(COMPONENT_TYPE_POLAR, function (polarModel: PolarModel, idx: number) {
             const polar = new Polar(idx + '');
             // Inject resize and update method
             polar.update = updatePolarScale;
@@ -157,9 +158,9 @@ const polarCreator = {
             polarIndex?: number
             polarId?: string
         }>) {
-            if (seriesModel.get('coordinateSystem') === 'polar') {
+            if (seriesModel.get('coordinateSystem') === COORD_SYS_TYPE_POLAR) {
                 const polarModel = seriesModel.getReferringComponents(
-                    'polar', SINGLE_REFERRING
+                    COMPONENT_TYPE_POLAR, SINGLE_REFERRING
                 ).models[0] as PolarModel;
 
                 if (__DEV__) {
@@ -175,8 +176,8 @@ const polarCreator = {
                 }
                 const polar = seriesModel.coordinateSystem = polarModel.coordinateSystem;
                 if (polar) {
-                    scaleRawExtentInfoRequireCreate(polar.getRadiusAxis(), seriesModel);
-                    scaleRawExtentInfoRequireCreate(polar.getAngleAxis(), seriesModel);
+                    associateSeriesWithAxis(polar.getRadiusAxis(), seriesModel, COORD_SYS_TYPE_POLAR);
+                    associateSeriesWithAxis(polar.getAngleAxis(), seriesModel, COORD_SYS_TYPE_POLAR);
                 }
             }
         });

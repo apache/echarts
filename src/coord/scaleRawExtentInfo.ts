@@ -27,9 +27,8 @@ import {
     NumericAxisBaseOptionCommon,
     NumericAxisBoundaryGapOptionItemValue,
 } from './axisCommonTypes';
-import { ComponentSubType, DimensionIndex, DimensionName, NullUndefined, ScaleDataValue } from '../util/types';
+import { DimensionIndex, DimensionName, NullUndefined, ScaleDataValue } from '../util/types';
 import { isIntervalScale, isLogScale, isOrdinalScale, isTimeScale } from '../scale/helper';
-import type SeriesModel from '../model/Series';
 import {
     makeInner, initExtentForUnion, unionExtentFromNumber, isValidNumberForExtent,
     extentHasValue,
@@ -46,7 +45,7 @@ import { error } from '../util/log';
 import type Axis from './Axis';
 import { mathMax, mathMin } from '../util/number';
 import { SCALE_EXTENT_KIND_MAPPING } from '../scale/scaleMapper';
-import { AxisStatKey, eachAxisStatKey } from './axisStatistics';
+import { AxisStatKey, eachKeyOnAxis, eachSeriesOnAxis } from './axisStatistics';
 
 
 /**
@@ -58,8 +57,6 @@ import { AxisStatKey, eachAxisStatKey } from './axisStatistics';
  */
 const scaleInner = makeInner<{
     extent: number[];
-    // series on this axis to union data extent.
-    seriesList: SeriesModel[];
     dimIdxInCoord: number;
 }, Scale>();
 
@@ -503,59 +500,13 @@ function parseBoundaryGapOptionItem(
 }
 
 /**
- * @usage
- *  class SomeCoordSys {
- *      static create() {
- *          ecModel.eachSeries(function (seriesModel) {
- *              scaleRawExtentInfoRequireCreate(axis1, seriesModel, ...);
- *              scaleRawExtentInfoRequireCreate(axis2, seriesModel, ...);
- *              // ...
- *          });
- *      }
- *      update() {
- *          scaleRawExtentInfoReallyCreate(axis1);
- *          scaleRawExtentInfoReallyCreate(axis2);
- *      }
- *  }
- *  class AxisProxy {
- *      reset() {
- *          scaleRawExtentInfoReallyCreate(axis1);
- *      }
- *  }
- *
- * NOTICE:
- *  - `scaleRawExtentInfoRequireCreate` should be typically called in:
- *      - Coord sys create method.
- *  - `scaleRawExtentInfoReallyCreate` should be typically called in:
- *      - `dataZoom` processor. It require processing like:
- *          1. Filter series data by dataZoom1;
- *          2. Union the filtered data and init the extent of the orthogonal axes, which is the 100% of dataZoom2;
- *          3. Filter series data by dataZoom2;
- *          4. ...
- *      - Coord sys update method, for other axes that not covered by `dataZoom`.
- *          NOTE: If `dataZoom` exists can cover this series, this data and its extent
- *          has been dataZoom-filtered. Therefore this handling should not before dataZoom.
- *  - The callback of `min`/`max` in ec option should NOT be called multiple times,
- *      therefore, we initialize `ScaleRawExtentInfo` uniformly in `scaleRawExtentInfoReallyCreate`.
- */
-export function scaleRawExtentInfoRequireCreate(
-    axisLike: {
-        scale: Scale;
-    },
-    seriesModel: SeriesModel
-): void {
-    ensureScaleStore(axisLike).seriesList.push(seriesModel);
-}
-
-/**
- * NOTE: `scaleRawExtentInfoRequireCreate` is not necessarily called, e.g., when
+ * NOTE: `associateSeriesWithAxis` is not necessarily called, e.g., when
  * an axis is not used by any series.
  */
 function ensureScaleStore(axisLike: {scale: Scale}) {
     const store = scaleInner(axisLike.scale);
     if (!store.extent) {
         store.extent = initExtentForUnion();
-        store.seriesList = [];
     }
     return store;
 }
@@ -563,7 +514,7 @@ function ensureScaleStore(axisLike: {scale: Scale}) {
 /**
  * This supports union extent on case like: pie (or other similar series)
  * lays out on cartesian2d.
- * @see scaleRawExtentInfoRequireCreate
+ * @see scaleRawExtentInfoCreate
  */
 export function scaleRawExtentInfoEnableBoxCoordSysUsage(
     axisLike: {
@@ -576,9 +527,42 @@ export function scaleRawExtentInfoEnableBoxCoordSysUsage(
 }
 
 /**
- * @see scaleRawExtentInfoRequireCreate
+ * @usage
+ *  class SomeCoordSys {
+ *      static create() {
+ *          ecModel.eachSeries(function (seriesModel) {
+ *              associateSeriesWithAxis(axis1, seriesModel, ...);
+ *              associateSeriesWithAxis(axis2, seriesModel, ...);
+ *              // ...
+ *          });
+ *      }
+ *      update() {
+ *          scaleRawExtentInfoCreate(axis1);
+ *          scaleRawExtentInfoCreate(axis2);
+ *      }
+ *  }
+ *  class AxisProxy {
+ *      reset() {
+ *          scaleRawExtentInfoCreate(axis1);
+ *      }
+ *  }
+ *
+ * NOTICE:
+ *  - `associateSeriesWithAxis`(in `axisStatistics.ts`) should be called in:
+ *      - Coord sys create method.
+ *  - `scaleRawExtentInfoCreate` should be typically called in:
+ *      - `dataZoom` processor. It require processing like:
+ *          1. Filter series data by dataZoom1;
+ *          2. Union the filtered data and init the extent of the orthogonal axes, which is the 100% of dataZoom2;
+ *          3. Filter series data by dataZoom2;
+ *          4. ...
+ *      - Coord sys update method, for other axes that not covered by `dataZoom`.
+ *          NOTE: If `dataZoom` exists can cover this series, this data and its extent
+ *          has been dataZoom-filtered. Therefore this handling should not before dataZoom.
+ *  - The callback of `min`/`max` in ec option should NOT be called multiple times,
+ *      therefore, we initialize `ScaleRawExtentInfo` uniformly in `scaleRawExtentInfoCreate`.
  */
-export function scaleRawExtentInfoReallyCreate(
+export function scaleRawExtentInfoCreate(
     ecModel: GlobalModel,
     axis: Axis,
     from: AxisExtentInfoBuildFrom
@@ -602,12 +586,12 @@ export function scaleRawExtentInfoReallyCreate(
         return;
     }
 
-    scaleRawExtentInfoReallyCreateDeal(scale, axis, axisDim, model, ecModel, from);
+    scaleRawExtentInfoCreateDeal(scale, axis, axisDim, model, ecModel, from);
 
     calcContainShape(scale, axis, ecModel, scale.rawExtentInfo);
 }
 
-function scaleRawExtentInfoReallyCreateDeal(
+function scaleRawExtentInfoCreateDeal(
     scale: Scale,
     axis: Axis,
     axisDim: DimensionName,
@@ -618,11 +602,7 @@ function scaleRawExtentInfoReallyCreateDeal(
     const scaleStore = ensureScaleStore(axis);
     const extent = scaleStore.extent;
 
-    each(scaleStore.seriesList, function (seriesModel) {
-        // Legend-filtered series need to be ignored since series are registered before `legendFilter`.
-        if (ecModel.isSeriesFiltered(seriesModel)) {
-            return;
-        }
+    eachSeriesOnAxis(axis, function (seriesModel) {
         if (seriesModel.boxCoordinateSystem) {
             // This supports union extent on case like: pie (or other similar series)
             // lays out on cartesian2d.
@@ -658,7 +638,7 @@ function scaleRawExtentInfoReallyCreateDeal(
     const rawExtentInfo = new ScaleRawExtentInfo(scale, model, extent);
     injectScaleRawExtentInfo(scale, rawExtentInfo, from);
 
-    scaleStore.seriesList = scaleStore.extent = null; // Clean up
+    scaleStore.extent = null; // Clean up
 }
 
 /**
@@ -791,7 +771,7 @@ function calcContainShape(
     // `NullUndefined` indicates that `linearSupplement` is not introduced.
     let linearSupplement: number[] | NullUndefined;
 
-    eachAxisStatKey(axis, function (axisStatKey) {
+    eachKeyOnAxis(axis, function (axisStatKey) {
         const handler = axisContainShapeHandlerMap.get(axisStatKey);
         if (handler) {
             const singleLinearSupplement = handler(axis, scale, ecModel);

@@ -849,6 +849,9 @@ echarts.use([${seriesImportName}]);`);
         return each(this.getSeriesByType(subType), cb, context);
     }
 
+    /**
+     * It means "filtered out".
+     */
     isSeriesFiltered(seriesModel: SeriesModel): boolean {
         assertSeriesInitialized(this);
         return this._seriesIndicesMap.get(seriesModel.componentIndex) == null;

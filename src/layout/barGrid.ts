@@ -43,15 +43,15 @@ import {
 } from '../coord/scaleRawExtentInfo';
 import { EChartsExtensionInstallRegisters } from '../extension';
 import {
-    AxisStatKey,
-    eachCollectedAxis,
-    eachCollectedSeries, getCollectedSeriesLength
+    eachAxisOnKey,
+    eachSeriesOnAxisOnKey, countSeriesOnAxisOnKey,
 } from '../coord/axisStatistics';
 import {
     AxisBandWidthResult, calcBandWidth
 } from '../coord/axisBand';
-import { BaseBarSeriesSubType, getStartValue, registerAxisStatisticsForBaseBar } from './barCommon';
+import { BaseBarSeriesSubType, getStartValue, requireAxisStatisticsForBaseBar } from './barCommon';
 import { COORD_SYS_TYPE_CARTESIAN_2D } from '../coord/cartesian/GridModel';
+import { makeAxisStatKey2 } from '../chart/helper/axisSnippets';
 
 
 const callOnlyOnce = makeCallOnlyOnce();
@@ -171,14 +171,15 @@ function createLayoutInfoListOnAxis(
     seriesType: BaseBarSeriesSubType
 ): BarGridLayoutAxisInfo {
 
+    const axisStatKey = makeAxisStatKey2(seriesType, COORD_SYS_TYPE_CARTESIAN_2D);
     const seriesInfoOnAxis: BarGridLayoutAxisSeriesInfo[] = [];
     const bandWidthResult = calcBandWidth(
         baseAxis,
-        {fromStat: {key: makeAxisStatKey(seriesType)}, min: 1}
+        {fromStat: {key: axisStatKey}, min: 1}
     );
     const bandWidth = bandWidthResult.w;
 
-    eachCollectedSeries(baseAxis, makeAxisStatKey(seriesType), function (seriesModel: BaseBarSeriesModel) {
+    eachSeriesOnAxisOnKey(baseAxis, axisStatKey, function (seriesModel: BaseBarSeriesModel) {
         seriesInfoOnAxis.push({
             barWidth: parsePercent(seriesModel.get('barWidth'), bandWidth),
             barMaxWidth: parsePercent(seriesModel.get('barMaxWidth'), bandWidth),
@@ -353,14 +354,14 @@ function calcBarWidthAndOffset(
 }
 
 export function layout(seriesType: BaseBarSeriesSubType, ecModel: GlobalModel): void {
-    const axisStatKey = makeAxisStatKey(seriesType);
-    eachCollectedAxis(ecModel, axisStatKey, function (axis: Axis2D) {
+    const axisStatKey = makeAxisStatKey2(seriesType, COORD_SYS_TYPE_CARTESIAN_2D);
+    eachAxisOnKey(ecModel, axisStatKey, function (axis: Axis2D) {
         if (__DEV__) {
             assert(axis instanceof Axis2D);
         }
         const columnLayout = makeColumnLayoutOnAxisReal(axis, seriesType);
 
-        eachCollectedSeries(axis, axisStatKey, function (seriesModel) {
+        eachSeriesOnAxisOnKey(axis, axisStatKey, function (seriesModel) {
             const columnLayoutInfo = columnLayout.columnMap[getSeriesStackId(seriesModel)];
             seriesModel.getData().setLayout({
                 bandWidth: columnLayoutInfo.bandWidth,
@@ -520,7 +521,7 @@ function barGridCreateAxisContainShapeHandler(seriesType: BaseBarSeriesSubType):
         // If bars are placed on 'time', 'value', 'log' axis, handle bars overflow here.
         // See #6728, #4862, `test/bar-overflow-time-plot.html`
         if (axis && axis instanceof Axis2D && !isOrdinalScale(scale)) {
-            if (!getCollectedSeriesLength(axis, makeAxisStatKey(seriesType))) {
+            if (!countSeriesOnAxisOnKey(axis, makeAxisStatKey2(seriesType, COORD_SYS_TYPE_CARTESIAN_2D))) {
                 return; // Quick path - in most cases there is no bar on non-ordinal axis.
             }
             const columnLayout = makeColumnLayoutOnAxisReal(axis, seriesType);
@@ -571,16 +572,12 @@ function calcShapeOverflowSupplement(
     }
 }
 
-function makeAxisStatKey(seriesType: BaseBarSeriesSubType): AxisStatKey {
-    return `barGrid-${seriesType}` as AxisStatKey;
-}
-
 export function registerBarGridAxisHandlers(registers: EChartsExtensionInstallRegisters) {
     callOnlyOnce(registers, function () {
 
         function register(seriesType: BaseBarSeriesSubType): void {
-            const axisStatKey = makeAxisStatKey(seriesType);
-            registerAxisStatisticsForBaseBar(
+            const axisStatKey = makeAxisStatKey2(seriesType, COORD_SYS_TYPE_CARTESIAN_2D);
+            requireAxisStatisticsForBaseBar(
                 registers,
                 axisStatKey,
                 seriesType,

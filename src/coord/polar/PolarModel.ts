@@ -22,7 +22,7 @@ import {
     ComponentOnMatrixOptionMixin
 } from '../../util/types';
 import ComponentModel from '../../model/Component';
-import Polar from './Polar';
+import type Polar from './Polar';
 import { AngleAxisModel, RadiusAxisModel } from './AxisModel';
 
 export interface PolarOption extends
@@ -33,6 +33,7 @@ export interface PolarOption extends
 }
 
 export const COORD_SYS_TYPE_POLAR = 'polar';
+export const COMPONENT_TYPE_POLAR = COORD_SYS_TYPE_POLAR;
 
 class PolarModel extends ComponentModel<PolarOption> {
     static type = COORD_SYS_TYPE_POLAR;

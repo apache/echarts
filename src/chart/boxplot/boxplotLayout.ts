@@ -22,7 +22,7 @@ import {parsePercent} from '../../util/number';
 import type GlobalModel from '../../model/Global';
 import BoxplotSeriesModel, { SERIES_TYPE_BOXPLOT } from './BoxplotSeries';
 import {
-    eachCollectedAxis, eachCollectedSeries, getCollectedSeriesLength,
+    countSeriesOnAxisOnKey, eachAxisOnKey, eachSeriesOnAxisOnKey,
     requireAxisStatistics
 } from '../../coord/axisStatistics';
 import { makeCallOnlyOnce } from '../../util/model';
@@ -31,8 +31,9 @@ import Axis from '../../coord/Axis';
 import { registerAxisContainShapeHandler } from '../../coord/scaleRawExtentInfo';
 import { calcBandWidth } from '../../coord/axisBand';
 import {
-    makeAxisStatKey,
-    createSimpleAxisStatClient, createBandWidthBasedAxisContainShapeHandler
+    createBandWidthBasedAxisContainShapeHandler,
+    getMetricsNonOrdinalLinearPositiveMinGap,
+    makeAxisStatKey
 } from '../helper/axisSnippets';
 
 
@@ -45,13 +46,13 @@ export interface BoxplotItemLayout {
 
 export function boxplotLayout(ecModel: GlobalModel) {
     const axisStatKey = makeAxisStatKey(SERIES_TYPE_BOXPLOT);
-    eachCollectedAxis(ecModel, axisStatKey, function (axis) {
-        const seriesCount = getCollectedSeriesLength(axis, axisStatKey);
+    eachAxisOnKey(ecModel, axisStatKey, function (axis) {
+        const seriesCount = countSeriesOnAxisOnKey(axis, axisStatKey);
         if (!seriesCount) {
             return;
         }
         const baseResult = calculateBase(axis, seriesCount);
-        eachCollectedSeries(axis, axisStatKey, function (seriesModel: BoxplotSeriesModel, idx) {
+        eachSeriesOnAxisOnKey(axis, axisStatKey, function (seriesModel: BoxplotSeriesModel, idx) {
             layoutSingleSeries(
                 seriesModel,
                 baseResult.boxOffsetList[idx],
@@ -77,7 +78,7 @@ function calculateBase(baseAxis: Axis, seriesCount: number): {
         {fromStat: {key: makeAxisStatKey(SERIES_TYPE_BOXPLOT)}, min: 1},
     ).w;
 
-    eachCollectedSeries(baseAxis, makeAxisStatKey(SERIES_TYPE_BOXPLOT), function (seriesModel: BoxplotSeriesModel) {
+    eachSeriesOnAxisOnKey(baseAxis, makeAxisStatKey(SERIES_TYPE_BOXPLOT), function (seriesModel: BoxplotSeriesModel) {
         let boxWidthBound = seriesModel.get('boxWidth');
         if (!isArray(boxWidthBound)) {
             boxWidthBound = [boxWidthBound, boxWidthBound];
@@ -93,7 +94,7 @@ function calculateBase(baseAxis: Axis, seriesCount: number): {
     const boxWidth = (availableWidth - boxGap * (seriesCount - 1)) / seriesCount;
     let base = boxWidth / 2 - availableWidth / 2;
 
-    eachCollectedSeries(baseAxis, makeAxisStatKey(SERIES_TYPE_BOXPLOT), function (seriesModel, idx) {
+    eachSeriesOnAxisOnKey(baseAxis, makeAxisStatKey(SERIES_TYPE_BOXPLOT), function (seriesModel, idx) {
         boxOffsetList.push(base);
         base += boxGap + boxWidth;
 
@@ -189,8 +190,11 @@ export function registerBoxplotAxisHandlers(registers: EChartsExtensionInstallRe
         const axisStatKey = makeAxisStatKey(SERIES_TYPE_BOXPLOT);
         requireAxisStatistics(
             registers,
-            axisStatKey,
-            createSimpleAxisStatClient(SERIES_TYPE_BOXPLOT)
+            {
+                key: axisStatKey,
+                seriesType: SERIES_TYPE_BOXPLOT,
+                getMetrics: getMetricsNonOrdinalLinearPositiveMinGap,
+            }
         );
         registerAxisContainShapeHandler(
             axisStatKey,

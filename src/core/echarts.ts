@@ -154,17 +154,18 @@ export const dependencies = {
 const TEST_FRAME_REMAIN_TIME = 1;
 
 const PRIORITY_PROCESSOR_SERIES_FILTER = 800;
-// Axis statistics require filtered series.
-const PRIORITY_PROCESSOR_AXIS_STATISTICS = 810;
 // In the current impl, "data stack" will modifies the original "series data extent". Some data
 // processors rely on the stack result dimension to calculate extents. So data stack
 // should be in front of other data processors.
 const PRIORITY_PROCESSOR_DATASTACK = 900;
+// AXIS_STATISTICS should be after SERIES_FILTER, as it may change the statistics result (like min gap).
+// AXIS_STATISTICS should be before filter (dataZoom), as dataZoom require the result in "containShape" calculation.
+const PRIORITY_PROCESSOR_AXIS_STATISTICS = 920;
 // `PRIORITY_PROCESSOR_FILTER` is typically used by `dataZoom` (see `AxisProxy`), which relies
 // on the initialized "axis extent".
 const PRIORITY_PROCESSOR_FILTER = 1000;
 const PRIORITY_PROCESSOR_DEFAULT = 2000;
-const PRIORITY_PROCESSOR_STATISTIC = 5000;
+const PRIORITY_PROCESSOR_STATISTICS = 5000;
 // NOTICE: Data processors above block the stream (especially time-consuming processors like data filters).
 
 const PRIORITY_VISUAL_LAYOUT = 1000;
@@ -188,7 +189,8 @@ export const PRIORITY = {
         SERIES_FILTER: PRIORITY_PROCESSOR_SERIES_FILTER,
         AXIS_STATISTICS: PRIORITY_PROCESSOR_AXIS_STATISTICS,
         FILTER: PRIORITY_PROCESSOR_FILTER,
-        STATISTIC: PRIORITY_PROCESSOR_STATISTIC
+        STATISTIC: PRIORITY_PROCESSOR_STATISTICS, // naming - backward compatibility.
+        STATISTICS: PRIORITY_PROCESSOR_STATISTICS,
     },
     VISUAL: {
         LAYOUT: PRIORITY_VISUAL_LAYOUT,

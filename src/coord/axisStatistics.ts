@@ -17,13 +17,13 @@
 * under the License.
 */
 
-import { assert, createHashMap, each, HashMap } from 'zrender/src/core/util';
+import { assert, createHashMap, HashMap, retrieve2 } from 'zrender/src/core/util';
 import type GlobalModel from '../model/Global';
 import type SeriesModel from '../model/Series';
 import {
     initExtentForUnion, makeCallOnlyOnce, makeInner,
 } from '../util/model';
-import { DimensionIndex, NullUndefined } from '../util/types';
+import { ComponentSubType, DimensionIndex, NullUndefined } from '../util/types';
 import type Axis from './Axis';
 import { asc, isNullableNumberFinite } from '../util/number';
 import { parseSanitizationFilter, passesSanitizationFilter } from '../data/helper/dataValueHelper';
@@ -36,24 +36,41 @@ import {
     getCachePerECFullUpdate, getCachePerECPrepare, GlobalModelCachePerECFullUpdate,
     GlobalModelCachePerECPrepare
 } from '../util/cycleCache';
+import { CoordinateSystem } from './CoordinateSystem';
 
 
 const callOnlyOnce = makeCallOnlyOnce();
+// Ensure that it never appears in internal generated uid and pre-defined coordSysType.
+export const AXIS_STAT_KEY_DELIMITER = '|&';
 
 const ecModelCacheFullUpdateInner = makeInner<{
-    all: AxisStatAll;
+
+    // It stores all <axis, series> pairs, aggregated by axis, based on which axis scale extent is calculated.
+    // NOTICE: series that has been filtered out are included.
+    // It is unrelated to `AxisStatKeyedClient`.
+    axSer: HashMap<SeriesModel[], AxisBaseModel['uid']>;
+
+    // AxisStatKey based statistics records.
+    // Only `AxisStatKeyedClient` concerned <axis, series> pairs are collected, based on which
+    // statistics are calculated.
+    keyed: AxisStatKeyed;
+    // `keys` is only used to quick travel.
     keys: AxisStatKeys;
-    axisMapForCheck?: HashMap<1, ComponentModel['uid']>; // Only used in dev mode
-    seriesMapForCheck?: HashMap<1, ComponentModel['uid']>; // Only used in dev mode
+
+    // Only used in dev mode for duplication checking.
+    axSerPairCheck?: HashMap<1, string>;
+
 }, GlobalModelCachePerECFullUpdate>();
 
 type AxisStatKeys = HashMap<AxisStatKey[], ComponentModel['uid']>;
-type AxisStatAll = HashMap<AxisStatPerKey | NullUndefined, AxisStatKey>;
+type AxisStatKeyed = HashMap<AxisStatPerKey | NullUndefined, AxisStatKey>;
 type AxisStatPerKey = HashMap<AxisStatPerKeyPerAxis | NullUndefined, AxisBaseModel['uid']>;
 type AxisStatPerKeyPerAxis = {
     axis: Axis;
     // This is series use this axis as base axis and need to be laid out.
     // The order is determined by the client and must be respected.
+    // Never be null/undefined.
+    // series filtered out is included.
     sers: SeriesModel[];
     // For query. The array index is series index.
     serByIdx: SeriesModel[];
@@ -64,16 +81,14 @@ type AxisStatPerKeyPerAxis = {
     liPosMinGap?: number | NullUndefined;
 
     // metrics corresponds to this record.
-    metrics?: AxisStatisticsMetrics;
-    // ecPrepareCache corresponds to this record.
-    ecPrepare?: AxisStatECPrepareCachePerKeyPerAxis;
+    metrics?: AxisStatMetrics;
 };
 
 const ecModelCachePrepareInner = makeInner<{
-    all: AxisStatECPrepareCacheAll | NullUndefined;
+    keyed: AxisStatECPrepareCacheKeyed | NullUndefined;
 }, GlobalModelCachePerECPrepare>();
 
-type AxisStatECPrepareCacheAll = HashMap<AxisStatECPrepareCachePerKey | NullUndefined, AxisStatKey>;
+type AxisStatECPrepareCacheKeyed = HashMap<AxisStatECPrepareCachePerKey | NullUndefined, AxisStatKey>;
 type AxisStatECPrepareCachePerKey = HashMap<AxisStatECPrepareCachePerKeyPerAxis | NullUndefined, AxisBaseModel['uid']>;
 type AxisStatECPrepareCachePerKeyPerAxis =
     Pick<AxisStatPerKeyPerAxis, 'liPosMinGap'> & {
@@ -81,17 +96,20 @@ type AxisStatECPrepareCachePerKeyPerAxis =
         serUids?: HashMap<1, ComponentModel['uid']>
     };
 
-export type AxisStatisticsClient = {
-    /**
-     * NOTICE: It is called after series filtering.
-     */
-    collectAxisSeries: (
-        ecModel: GlobalModel,
-        saveAxisSeries: (axis: Axis | NullUndefined, series: SeriesModel) => void
-    ) => void;
-    getMetrics: (
-        axis: Axis,
-    ) => AxisStatisticsMetrics;
+export type AxisStatKeyedClient = {
+
+    // A key for retrieving result.
+    key: AxisStatKey;
+
+    // Only the specific `seriesType` is covered.
+    seriesType: ComponentSubType;
+    // `true` by default - the <axis, series> pair is collected only if series's base axis is that axis.
+    baseAxis?: boolean | NullUndefined;
+    // `NullUndefined` by default - all coordinate systems are covered.
+    coordSysType?: CoordinateSystem['type'] | NullUndefined;
+
+    // `NullUndefined` return indicates this axis should be omitted.
+    getMetrics: (axis: Axis) => AxisStatMetrics | NullUndefined;
 };
 
 /**
@@ -99,9 +117,9 @@ export type AxisStatisticsClient = {
  * designated by `AxisStatKey`. In most case `seriesType` is used as `AxisStatKey`.
  */
 export type AxisStatKey = string & {_: 'AxisStatKey'}; // Nominal to avoid misusing.
+type ClientQueryKey = string & {_: 'ClientQueryKey'}; // Nominal to avoid misusing; internal usage.
 
-type AxisStatisticsMetrics = {
-    // Currently only one metric is required.
+export type AxisStatMetrics = {
 
     // NOTICE:
     //  May be time-consuming in large data due to some metrics requiring travel and sort of
@@ -115,6 +133,8 @@ export type AxisStatisticsResult = Pick<
     'liPosMinGap'
 >;
 
+type AxisStatEachSeriesCb = (seriesModel: SeriesModel, travelIdx: number) => void;
+
 let validateInputAxis: ((axis: Axis) => void) | NullUndefined;
 if (__DEV__) {
     validateInputAxis = function (axis) {
@@ -127,8 +147,8 @@ function getAxisStatPerKeyPerAxis(
     axisStatKey: AxisStatKey
 ): AxisStatPerKeyPerAxis | NullUndefined {
     const axisModel = axis.model;
-    const all = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(axisModel.ecModel)).all;
-    const perKey = all && all.get(axisStatKey);
+    const keyed = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(axisModel.ecModel)).keyed;
+    const perKey = keyed && keyed.get(axisStatKey);
     return perKey && perKey.get(axisModel.uid);
 }
 
@@ -153,7 +173,7 @@ export function getAxisStatBySeries(
         validateInputAxis(axis);
     }
     const result: AxisStatisticsResult[] = [];
-    eachPerKeyPerAxis(axis.model.ecModel, function (perKeyPerAxis) {
+    eachKeyEachAxis(axis.model.ecModel, function (perKeyPerAxis) {
         for (let idx = 0; idx < seriesList.length; idx++) {
             if (seriesList[idx] && perKeyPerAxis.serByIdx[seriesList[idx].seriesIndex]) {
                 result.push(wrapStatResult(perKeyPerAxis));
@@ -163,7 +183,7 @@ export function getAxisStatBySeries(
     return result;
 }
 
-function eachPerKeyPerAxis(
+function eachKeyEachAxis(
     ecModel: GlobalModel,
     cb: (
         perKeyPerAxis: AxisStatPerKeyPerAxis,
@@ -171,8 +191,8 @@ function eachPerKeyPerAxis(
         axisModelUid: AxisBaseModel['uid']
     ) => void
 ): void {
-    const all = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel)).all;
-    all && all.each(function (perKey, axisStatKey) {
+    const keyed = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel)).keyed;
+    keyed && keyed.each(function (perKey, axisStatKey) {
         perKey.each(function (perKeyPerAxis, axisModelUid) {
             cb(perKeyPerAxis, axisStatKey, axisModelUid);
         });
@@ -185,19 +205,57 @@ function wrapStatResult(record: AxisStatPerKeyPerAxis | NullUndefined): AxisStat
     };
 }
 
-export function eachCollectedSeries(
+/**
+ * NOTE:
+ *  - series declaration order is respected.
+ *  - series filtered out are excluded.
+ */
+export function eachSeriesOnAxis(
+    axis: Axis,
+    cb: AxisStatEachSeriesCb
+): void {
+    if (__DEV__) {
+        validateInputAxis(axis);
+    }
+    const ecModel = axis.model.ecModel;
+    const seriesOnAxisMap = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel)).axSer;
+    seriesOnAxisMap && seriesOnAxisMap.each(function (seriesList) {
+        eachSeriesDeal(ecModel, seriesList, cb);
+    });
+}
+
+export function eachSeriesOnAxisOnKey(
     axis: Axis,
     axisStatKey: AxisStatKey,
     cb: (series: SeriesModel, idx: number) => void
 ): void {
     if (__DEV__) {
+        assert(axisStatKey != null);
         validateInputAxis(axis);
     }
     const perKeyPerAxis = getAxisStatPerKeyPerAxis(axis, axisStatKey);
-    perKeyPerAxis && each(perKeyPerAxis.sers, cb);
+    perKeyPerAxis && eachSeriesDeal(axis.model.ecModel, perKeyPerAxis.sers, cb);
 }
 
-export function getCollectedSeriesLength(
+function eachSeriesDeal(
+    ecModel: GlobalModel,
+    seriesList: SeriesModel[],
+    cb: AxisStatEachSeriesCb
+): void {
+    for (let i = 0; i < seriesList.length; i++) {
+        const seriesModel = seriesList[i];
+        // Legend-filtered series need to be ignored since series are registered before `legendFilter`.
+        if (!ecModel.isSeriesFiltered(seriesModel)) {
+            cb(seriesModel, i);
+        }
+    }
+}
+
+/**
+ * NOTE:
+ *  - series filtered out are excluded.
+ */
+export function countSeriesOnAxisOnKey(
     axis: Axis,
     axisStatKey: AxisStatKey,
 ): number {
@@ -206,10 +264,17 @@ export function getCollectedSeriesLength(
         validateInputAxis(axis);
     }
     const perKeyPerAxis = getAxisStatPerKeyPerAxis(axis, axisStatKey);
-    return perKeyPerAxis ? perKeyPerAxis.sers.length : 0;
+    if (!perKeyPerAxis || !perKeyPerAxis.sers.length) {
+        return 0;
+    }
+    let count = 0;
+    eachSeriesDeal(axis.model.ecModel, perKeyPerAxis.sers, function () {
+        count++;
+    });
+    return count;
 }
 
-export function eachCollectedAxis(
+export function eachAxisOnKey(
     ecModel: GlobalModel,
     axisStatKey: AxisStatKey,
     cb: (axis: Axis) => void
@@ -217,14 +282,17 @@ export function eachCollectedAxis(
     if (__DEV__) {
         assert(axisStatKey != null);
     }
-    const all = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel)).all;
-    const perKey = all && all.get(axisStatKey);
+    const keyed = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel)).keyed;
+    const perKey = keyed && keyed.get(axisStatKey);
     perKey && perKey.each(function (perKeyPerAxis) {
         cb(perKeyPerAxis.axis);
     });
 }
 
-export function eachAxisStatKey(
+/**
+ * NOTICE: Available after `CoordinateSystem['create']` (not included).
+ */
+export function eachKeyOnAxis(
     axis: Axis,
     cb: (axisStatKey: AxisStatKey) => void
 ): void {
@@ -239,75 +307,33 @@ export function eachAxisStatKey(
     });
 }
 
+/**
+ * NOTICE: this processor may be omitted - it is registered only if required.
+ */
 function performAxisStatisticsOnOverallReset(ecModel: GlobalModel): void {
-    const ecFullUpdateCache = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel));
-    const axisStatAll: AxisStatAll = ecFullUpdateCache.all = createHashMap();
-
     const ecPrepareCache = ecModelCachePrepareInner(getCachePerECPrepare(ecModel));
-    const ecPrepareCacheAll = ecPrepareCache.all || (ecPrepareCache.all = createHashMap());
+    const ecPrepareCacheKeyed = ecPrepareCache.keyed || (ecPrepareCache.keyed = createHashMap());
 
-    axisStatisticsClients.each(function (client, axisStatKey) {
-        client.collectAxisSeries(ecModel, function saveAxisSeries(axis, series) {
-            if (!axis) {
-                return;
-            }
+    eachKeyEachAxis(ecModel, function (perKeyPerAxis, axisStatKey, axisModelUid) {
+        const ecPrepareCachePerKey = ecPrepareCacheKeyed.get(axisStatKey)
+            || ecPrepareCacheKeyed.set(axisStatKey, createHashMap());
+        const ecPreparePerKeyPerAxis = ecPrepareCachePerKey.get(axisModelUid)
+            || ecPrepareCachePerKey.set(axisModelUid, {});
 
-            if (__DEV__) {
-                validateInputAxis(axis);
-                // - An axis can be associated with multiple `axisStatKey`s. For example, if `axisStatKey`s are
-                //   "candlestick" and "bar", they can be associated with the same "xAxis".
-                // - Within an individual axis, it is a typically incorrect usage if a <series-axis> pair is
-                //   associated with multiple `perKeyPerAxis`, which may cause repeated calculation and
-                //   performance degradation, had hard to be found without the checking below. For example, If
-                //   `axisStatKey` are "grid-bar" (see `barGrid.ts`) and "polar-bar" (see `barPolar.ts`), and
-                //   a <xAxis-series> pair is wrongly associated with both "polar-bar" and "grid-bar", the
-                //   relevant statistics will be computed twice.
-                const axisMapForCheck = ecFullUpdateCache.axisMapForCheck
-                    || (ecFullUpdateCache.axisMapForCheck = createHashMap());
-                const seriesMapForCheck = ecFullUpdateCache.seriesMapForCheck
-                    || (ecFullUpdateCache.seriesMapForCheck = createHashMap());
-                assert(!axisMapForCheck.get(axis.model.uid) || !seriesMapForCheck.get(series.uid));
-                axisMapForCheck.set(axis.model.uid, 1);
-                seriesMapForCheck.set(series.uid, 1);
-            }
-
-            const perKey = axisStatAll.get(axisStatKey) || axisStatAll.set(axisStatKey, createHashMap());
-
-            const axisModelUid = axis.model.uid;
-            let perKeyPerAxis = perKey.get(axisModelUid);
-            if (!perKeyPerAxis) {
-                perKeyPerAxis = perKey.set(axisModelUid, {axis, sers: [], serByIdx: []});
-                perKeyPerAxis.metrics = client.getMetrics(axis) || {};
-
-                const ecPrepareCachePerKey = ecPrepareCacheAll.get(axisStatKey)
-                    || ecPrepareCacheAll.set(axisStatKey, createHashMap());
-                perKeyPerAxis.ecPrepare = ecPrepareCachePerKey.get(axisModelUid)
-                    || ecPrepareCachePerKey.set(axisModelUid, {});
-            }
-            // NOTICE: series order should respect to the input order, since it
-            // matters in some cases (see `axisSnippets.ts` for more details).
-            perKeyPerAxis.sers.push(series);
-            perKeyPerAxis.serByIdx[series.seriesIndex] = series;
-        });
-    });
-
-    const axisStatKeys: AxisStatKeys = ecFullUpdateCache.keys = createHashMap();
-    eachPerKeyPerAxis(ecModel, function (perKeyPerAxis, axisStatKey, axisModelUid) {
-        (axisStatKeys.get(axisModelUid) || axisStatKeys.set(axisModelUid, []))
-            .push(axisStatKey);
-        performStatisticsForRecord(perKeyPerAxis);
+        performStatisticsForRecord(ecModel, perKeyPerAxis, ecPreparePerKeyPerAxis);
     });
 }
 
 function performStatisticsForRecord(
+    ecModel: GlobalModel,
     perKeyPerAxis: AxisStatPerKeyPerAxis,
+    ecPreparePerKeyPerAxis: AxisStatECPrepareCachePerKeyPerAxis
 ): void {
     if (!perKeyPerAxis.metrics.liPosMinGap) {
         return;
     }
 
     const newSerUids: AxisStatECPrepareCachePerKeyPerAxis['serUids'] = createHashMap();
-    const ecPreparePerKeyPerAxis = perKeyPerAxis.ecPrepare;
     const ecPrepareSerUids = ecPreparePerKeyPerAxis.serUids;
     const ecPrepareLiPosMinGap = ecPreparePerKeyPerAxis.liPosMinGap;
     let ecPrepareCacheMiss: boolean;
@@ -325,26 +351,25 @@ function performStatisticsForRecord(
     // timeAll[0] = Date.now(); // _EC_PERF_
 
     function eachSeries(
-        cb: (dimStoreIdx: DimensionIndex, seriesModel: SeriesModel, store: DataStore) => void
+        cb: (dimStoreIdx: DimensionIndex, seriesModel: SeriesModel, rawDataStore: DataStore) => void
     ) {
-        for (let i = 0; i < perKeyPerAxis.sers.length; i++) {
-            const seriesModel = perKeyPerAxis.sers[i];
-            const data = seriesModel.getData();
+        eachSeriesDeal(ecModel, perKeyPerAxis.sers, function (seriesModel) {
+            const rawData = seriesModel.getRawData();
             // NOTE: Currently there is no series that a "base axis" can map to multiple dimensions.
-            const dimStoreIdx = data.getDimensionIndex(data.mapDimension(axis.dim));
+            const dimStoreIdx = rawData.getDimensionIndex(rawData.mapDimension(axis.dim));
             if (dimStoreIdx >= 0) {
-                cb(dimStoreIdx, seriesModel, data.getStore());
+                cb(dimStoreIdx, seriesModel, rawData.getStore());
             }
-        }
+        });
     }
 
     let bufferCapacity = 0;
-    eachSeries(function (dimStoreIdx, seriesModel, store) {
+    eachSeries(function (dimStoreIdx, seriesModel, rawDataStore) {
         newSerUids.set(seriesModel.uid, 1);
         if (!ecPrepareSerUids || !ecPrepareSerUids.hasKey(seriesModel.uid)) {
             ecPrepareCacheMiss = true;
         }
-        bufferCapacity += store.count();
+        bufferCapacity += rawDataStore.count();
     });
 
     if (!ecPrepareSerUids || ecPrepareSerUids.keys().length !== newSerUids.keys().length) {
@@ -436,26 +461,133 @@ const tmpValueBuffer = tryEnsureTypedArray(
 );
 
 /**
+ * NOTICE:
+ *  - It must be called in `CoordinateSystem['create']`, before series filtering.
+ *  - It must be called in `seriesIndex` ascending order (series declaration order).
+ *    i.e., iterated by `ecModel.eachSeries`.
+ *  - Every <axis, series> pair can only call this method once.
+ *
+ * @see scaleRawExtentInfoCreate in `scaleRawExtentInfo.ts`
+ */
+export function associateSeriesWithAxis(
+    axis: Axis | NullUndefined,
+    seriesModel: SeriesModel,
+    coordSysType: CoordinateSystem['type']
+): void {
+    if (!axis) {
+        return;
+    }
+
+    const ecModel = seriesModel.ecModel;
+    const ecFullUpdateCache = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel));
+    const axisModelUid = axis.model.uid;
+
+    if (__DEV__) {
+        validateInputAxis(axis);
+        // - An axis can be associated with multiple `axisStatKey`s. For example, if `axisStatKey`s are
+        //   "candlestick" and "bar", they can be associated with the same "xAxis".
+        // - Within an individual axis, it is a typically incorrect usage if a <axis, series> pair is
+        //   associated with multiple `perKeyPerAxis`, which may cause repeated calculation and
+        //   performance degradation, had hard to be found without the checking below. For example, If
+        //   `axisStatKey` are "grid-bar" (see `barGrid.ts`) and "polar-bar" (see `barPolar.ts`), and
+        //   a <xAxis-series> pair is wrongly associated with both "polar-bar" and "grid-bar", the
+        //   relevant statistics will be computed twice.
+        const axSerPairCheck = ecFullUpdateCache.axSerPairCheck
+            || (ecFullUpdateCache.axSerPairCheck = createHashMap());
+        const pairKey = `${axisModelUid}${AXIS_STAT_KEY_DELIMITER}${seriesModel.uid}`;
+        assert(!axSerPairCheck.get(pairKey));
+        axSerPairCheck.set(pairKey, 1);
+    }
+
+    const seriesOnAxisMap = ecFullUpdateCache.axSer || (ecFullUpdateCache.axSer = createHashMap());
+    const seriesListPerAxis = seriesOnAxisMap.get(axisModelUid) || (seriesOnAxisMap.set(axisModelUid, []));
+    if (__DEV__) {
+        const lastSeries = seriesListPerAxis[seriesListPerAxis.length - 1];
+        if (lastSeries) {
+            // Series order should respect to the input order, since it matters in some cases
+            // (e.g., see `barGrid.ts` and `barPolar.ts` - ec option declaration order matters).
+            assert(lastSeries.seriesIndex < seriesModel.seriesIndex);
+        }
+    }
+    seriesListPerAxis.push(seriesModel);
+
+    const seriesType = seriesModel.subType;
+    const isBaseAxis = seriesModel.getBaseAxis() === axis;
+
+    const client = clientsByQueryKey.get(makeClientQueryKey(seriesType, isBaseAxis, coordSysType))
+        || clientsByQueryKey.get(makeClientQueryKey(seriesType, isBaseAxis, null));
+    if (!client) {
+        return;
+    }
+
+    const keyed: AxisStatKeyed = ecFullUpdateCache.keyed || (ecFullUpdateCache.keyed = createHashMap());
+    const keys: AxisStatKeys = ecFullUpdateCache.keys || (ecFullUpdateCache.keys = createHashMap());
+
+    const axisStatKey = client.key;
+    const perKey = keyed.get(axisStatKey) || keyed.set(axisStatKey, createHashMap());
+    let perKeyPerAxis = perKey.get(axisModelUid);
+    if (!perKeyPerAxis) {
+        perKeyPerAxis = perKey.set(axisModelUid, {axis, sers: [], serByIdx: []});
+        // They should only be executed for each <key, axis> pair once:
+        perKeyPerAxis.metrics = client.getMetrics(axis);
+        (keys.get(axisModelUid) || keys.set(axisModelUid, []))
+            .push(axisStatKey);
+    }
+
+    // series order should respect to the input order.
+    perKeyPerAxis.sers.push(seriesModel);
+    perKeyPerAxis.serByIdx[seriesModel.seriesIndex] = seriesModel;
+}
+
+/**
+ * NOTE: Currently, the scenario is simple enough to look up clients by hash map.
+ * Otherwise, a caller-provided `filter` may be an alternative if more complex requirements arise.
+ */
+function makeClientQueryKey(
+    seriesType: ComponentSubType,
+    isBaseAxis: boolean | NullUndefined,
+    coordSysType: CoordinateSystem['type'] | NullUndefined
+): ClientQueryKey {
+    return (
+        seriesType
+        + AXIS_STAT_KEY_DELIMITER + retrieve2(isBaseAxis, true)
+        + AXIS_STAT_KEY_DELIMITER + (coordSysType || '')
+    ) as ClientQueryKey;
+}
+
+/**
  * NOTICE: Can only be called in "install" stage.
  *
  * See `axisSnippets.ts` for some commonly used clients.
  */
 export function requireAxisStatistics(
     registers: EChartsExtensionInstallRegisters,
-    axisStatKey: AxisStatKey,
-    client: AxisStatisticsClient
+    client: AxisStatKeyedClient
 ): void {
+    const queryKey = makeClientQueryKey(client.seriesType, client.baseAxis, client.coordSysType);
+
     if (__DEV__) {
-        assert(!axisStatisticsClients.get(axisStatKey));
+        assert(client.seriesType
+            && client.key
+            && !clientsCheckStatKey.get(client.key)
+            && !clientsByQueryKey.get(queryKey)
+        ); // More checking is performed in `axSerPairCheck`.
+        clientsCheckStatKey.set(client.key, 1);
     }
 
-    axisStatisticsClients.set(axisStatKey, client);
+    clientsByQueryKey.set(queryKey, client);
 
     callOnlyOnce(registers, function () {
         registers.registerProcessor(registers.PRIORITY.PROCESSOR.AXIS_STATISTICS, {
+            // Theoretically, `appendData` requires to re-calculate them.
+            dirtyOnOverallProgress: true,
             overallReset: performAxisStatisticsOnOverallReset
         });
     });
 }
 
-const axisStatisticsClients: HashMap<AxisStatisticsClient, AxisStatKey> = createHashMap();
+let clientsCheckStatKey: HashMap<1, AxisStatKey>;
+if (__DEV__) {
+    clientsCheckStatKey = createHashMap();
+}
+const clientsByQueryKey: HashMap<AxisStatKeyedClient, ClientQueryKey> = createHashMap();

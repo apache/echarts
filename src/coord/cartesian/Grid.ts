@@ -43,7 +43,7 @@ import Axis2D from './Axis2D';
 import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
-import GridModel, { GridOption, OUTER_BOUNDS_CLAMP_DEFAULT, OUTER_BOUNDS_DEFAULT } from './GridModel';
+import GridModel, { COORD_SYS_TYPE_CARTESIAN_2D, GridOption, OUTER_BOUNDS_CLAMP_DEFAULT, OUTER_BOUNDS_DEFAULT } from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
@@ -77,9 +77,10 @@ import { createDimNameMap } from '../../data/helper/SeriesDataSchema';
 import type Axis from '../Axis';
 import {
     AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE,
-    scaleRawExtentInfoEnableBoxCoordSysUsage, scaleRawExtentInfoReallyCreate, scaleRawExtentInfoRequireCreate
+    scaleRawExtentInfoEnableBoxCoordSysUsage, scaleRawExtentInfoCreate
 } from '../scaleRawExtentInfo';
 import { hasBreaks } from '../../scale/break';
+import { associateSeriesWithAxis } from '../axisStatistics';
 
 
 type Cartesian2DDimensionName = 'x' | 'y';
@@ -134,7 +135,7 @@ class Grid implements CoordinateSystemMaster {
         const axesMap = this._axesMap;
 
         each(this._axesList, function (axis) {
-            scaleRawExtentInfoReallyCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleRawExtentInfoCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
             const scale = axis.scale;
             if (isOrdinalScale(scale)) {
                 scale.setSortInfo(axis.model.get('categorySortInfo'));
@@ -559,7 +560,7 @@ class Grid implements CoordinateSystemMaster {
 
             injectCoordSysByOption({
                 targetModel: seriesModel,
-                coordSysType: 'cartesian2d',
+                coordSysType: COORD_SYS_TYPE_CARTESIAN_2D,
                 coordSysProvider: coordSysProvider
             });
 
@@ -594,8 +595,8 @@ class Grid implements CoordinateSystemMaster {
                 );
             }
             if (xAxis && yAxis) {
-                scaleRawExtentInfoRequireCreate(xAxis, seriesModel);
-                scaleRawExtentInfoRequireCreate(yAxis, seriesModel);
+                associateSeriesWithAxis(xAxis, seriesModel, COORD_SYS_TYPE_CARTESIAN_2D);
+                associateSeriesWithAxis(yAxis, seriesModel, COORD_SYS_TYPE_CARTESIAN_2D);
             }
 
         }, this);

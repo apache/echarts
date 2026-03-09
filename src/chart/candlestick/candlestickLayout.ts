@@ -34,7 +34,9 @@ import {
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import { registerAxisContainShapeHandler } from '../../coord/scaleRawExtentInfo';
 import {
-    makeAxisStatKey, createSimpleAxisStatClient, createBandWidthBasedAxisContainShapeHandler
+    createBandWidthBasedAxisContainShapeHandler,
+    getMetricsNonOrdinalLinearPositiveMinGap,
+    makeAxisStatKey
 } from '../helper/axisSnippets';
 import { calcBandWidth } from '../../coord/axisBand';
 
@@ -280,8 +282,11 @@ export function registerCandlestickAxisHandlers(registers: EChartsExtensionInsta
         const axisStatKey = makeAxisStatKey(SERIES_TYPE_CANDLESTICK);
         requireAxisStatistics(
             registers,
-            axisStatKey,
-            createSimpleAxisStatClient(SERIES_TYPE_CANDLESTICK)
+            {
+                key: axisStatKey,
+                seriesType: SERIES_TYPE_CANDLESTICK,
+                getMetrics: getMetricsNonOrdinalLinearPositiveMinGap
+            }
         );
         registerAxisContainShapeHandler(
             axisStatKey,

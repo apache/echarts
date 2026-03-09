@@ -232,8 +232,8 @@ export interface ScaleMapperGeneric<This> {
      *
      * [The steps of extent construction in EC_MAIN_CYCLE]:
      *  - step#1. At `CoordinateSystem#create` stage, requirements of collecting series data extents are
-     *            committed to `scaleRawExtentInfoRequireCreate`, and `Scale` instances are created.
-     *  - step#2. Call `scaleRawExtentInfoReallyCreate` to really collect series data extent and create
+     *            committed to `associateSeriesWithAxis`, and `Scale` instances are created.
+     *  - step#2. Call `scaleRawExtentInfoCreate` to really collect series data extent and create
      *            `ScaleRawExtentInfo` instances to manage extent related configurations
      *                - at "data processing" stage for dataZoom controlled axes, if any, or
      *                - at "CoordinateSystem#update" stage for all other axes.

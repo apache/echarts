@@ -17,7 +17,7 @@
 * under the License.
 */
 
-import { getMetricsMinGapOnNonCategoryAxis } from '../chart/helper/axisSnippets';
+import { getMetricsNonOrdinalLinearPositiveMinGap } from '../chart/helper/axisSnippets';
 import type Axis from '../coord/Axis';
 import { AxisStatKey, requireAxisStatistics } from '../coord/axisStatistics';
 import { EChartsExtensionInstallRegisters } from '../extension';
@@ -28,28 +28,19 @@ export type BaseBarSeriesSubType = 'bar' | 'pictorialBar';
 
 export const BAR_SERIES_TYPE = 'bar';
 
-export function registerAxisStatisticsForBaseBar(
+export function requireAxisStatisticsForBaseBar(
     registers: EChartsExtensionInstallRegisters,
     axisStatKey: AxisStatKey,
     seriesType: BaseBarSeriesSubType,
     coordSysType: 'cartesian2d' | 'polar'
-) {
+): void {
     requireAxisStatistics(
         registers,
-        axisStatKey,
         {
-            collectAxisSeries(ecModel, saveAxisSeries) {
-                // NOTICE: The order of series matters - must be respected to the declaration on ec option,
-                // because for historical reason, in `barGrid.ts`, the last series holds the effective ec option.
-                // (See `calcBarWidthAndOffset` in `barGrid.ts`).
-                ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-                    const coordSys = seriesModel.coordinateSystem;
-                    if (coordSys && coordSys.type === coordSysType) {
-                        saveAxisSeries(seriesModel.getBaseAxis(), seriesModel);
-                    }
-                });
-            },
-            getMetrics: getMetricsMinGapOnNonCategoryAxis,
+            key: axisStatKey,
+            seriesType,
+            coordSysType,
+            getMetrics: getMetricsNonOrdinalLinearPositiveMinGap
         }
     );
 }

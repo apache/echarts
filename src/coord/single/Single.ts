@@ -28,14 +28,14 @@ import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import SingleAxisModel from './AxisModel';
+import SingleAxisModel, { COORD_SYS_TYPE_SINGLE_AXIS } from './AxisModel';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoReallyCreate
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoCreate
 } from '../scaleRawExtentInfo';
 
 export const singleDimensions = ['single'];
@@ -44,7 +44,7 @@ export const singleDimensions = ['single'];
  */
 class Single implements CoordinateSystem, CoordinateSystemMaster {
 
-    readonly type = 'single';
+    readonly type = COORD_SYS_TYPE_SINGLE_AXIS;
 
     readonly dimension = 'single';
     /**
@@ -101,7 +101,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      */
     update(ecModel: GlobalModel, api: ExtensionAPI) {
         const axis = this._axis;
-        scaleRawExtentInfoReallyCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+        scaleRawExtentInfoCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
         scaleCalcNice(axis);
     }
 

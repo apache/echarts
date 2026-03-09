@@ -31,7 +31,7 @@ import ParallelAxis from './ParallelAxis';
 import * as graphic from '../../util/graphic';
 import {mathCeil, mathFloor, mathMax, mathMin, mathPI, round} from '../../util/number';
 import sliderMove from '../../component/helper/sliderMove';
-import ParallelModel, { ParallelLayoutDirection } from './ParallelModel';
+import ParallelModel, { COORD_SYS_TYPE_PARALLEL, ParallelLayoutDirection } from './ParallelModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary, DimensionName, ScaleDataValue } from '../../util/types';
@@ -42,7 +42,7 @@ import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
 import { scaleCalcNice } from '../axisNiceTicks';
 import {
-    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoReallyCreate
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoCreate
 } from '../scaleRawExtentInfo';
 
 
@@ -77,7 +77,7 @@ type SlidedAxisExpandBehavior = 'none' | 'slide' | 'jump';
 
 class Parallel implements CoordinateSystemMaster, CoordinateSystem {
 
-    readonly type = 'parallel';
+    readonly type = COORD_SYS_TYPE_PARALLEL;
 
     /**
      * key: dimension
@@ -149,7 +149,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
     update(ecModel: GlobalModel, api: ExtensionAPI): void {
         each(this.dimensions, function (dim) {
             const axis = this._axesMap.get(dim);
-            scaleRawExtentInfoReallyCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleRawExtentInfoCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
             scaleCalcNice(axis);
         }, this);
     }

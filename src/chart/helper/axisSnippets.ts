@@ -17,32 +17,15 @@
 * under the License.
 */
 
+import type Axis from '../../coord/Axis';
 import { calcBandWidth } from '../../coord/axisBand';
-import { AxisStatisticsClient, AxisStatKey } from '../../coord/axisStatistics';
+import { AXIS_STAT_KEY_DELIMITER, AxisStatKey, AxisStatMetrics } from '../../coord/axisStatistics';
+import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import { AxisContainShapeHandler } from '../../coord/scaleRawExtentInfo';
 import { isOrdinalScale } from '../../scale/helper';
 import { isNullableNumberFinite } from '../../util/number';
 import { ComponentSubType } from '../../util/types';
 
-
-export const getMetricsMinGapOnNonCategoryAxis: AxisStatisticsClient['getMetrics'] = function (axis) {
-    return {
-        liPosMinGap: !isOrdinalScale(axis.scale)
-    };
-};
-
-export function createSimpleAxisStatClient(
-    seriesType: ComponentSubType,
-): AxisStatisticsClient {
-    return {
-        collectAxisSeries(ecModel, saveAxisSeries) {
-            ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-                saveAxisSeries(seriesModel.getBaseAxis(), seriesModel);
-            });
-        },
-        getMetrics: getMetricsMinGapOnNonCategoryAxis
-    };
-}
 
 /**
  * Require `requireAxisStatistics`.
@@ -57,6 +40,24 @@ export function createBandWidthBasedAxisContainShapeHandler(axisStatKey: AxisSta
     };
 }
 
+
+/**
+ * A pre-built `makeAxisStatKey`.
+ * See `makeAxisStatKey2`. Use two functions rather than a optional parameter to impose checking.
+ */
 export function makeAxisStatKey(seriesType: ComponentSubType): AxisStatKey {
-    return seriesType as AxisStatKey;
+    return (seriesType + AXIS_STAT_KEY_DELIMITER) as AxisStatKey;
 }
+export function makeAxisStatKey2(seriesType: ComponentSubType, coordSysType: CoordinateSystem['type']): AxisStatKey {
+    return (seriesType + AXIS_STAT_KEY_DELIMITER + coordSysType) as AxisStatKey;
+}
+
+/**
+ * A pre-built `getMetrics`.
+ */
+export function getMetricsNonOrdinalLinearPositiveMinGap(axis: Axis): AxisStatMetrics {
+    return {
+        // non-category scale do not use `liPosMinGap` to calculate `bandWidth`.
+        liPosMinGap: !isOrdinalScale(axis.scale)
+    };
+};
