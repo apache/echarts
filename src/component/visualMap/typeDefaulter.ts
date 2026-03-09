@@ -20,7 +20,7 @@
 import Component from '../../model/Component';
 import {VisualMapOption} from './VisualMapModel';
 import {PiecewiseVisualMapOption} from './PiecewiseModel';
-import {ContinousVisualMapOption} from './ContinuousModel';
+import {ContinuousVisualMapOption} from './ContinuousModel';
 
 Component.registerSubTypeDefaulter(
     'visualMap', function (option: VisualMapOption) {
@@ -33,7 +33,7 @@ Component.registerSubTypeDefaulter(
                         ? ((option as PiecewiseVisualMapOption)).pieces.length > 0
                         : ((option as PiecewiseVisualMapOption)).splitNumber > 0
                 )
-                || (option as ContinousVisualMapOption).calculable
+                || (option as ContinuousVisualMapOption).calculable
             )
         )
         ? 'continuous' : 'piecewise';

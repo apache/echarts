@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Determine if workflow build job is successful
         id: check-build-success
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           result-encoding: string
           script: |

@@ -58,7 +58,7 @@ import type {SliderDataZoomOption as SliderDataZoomComponentOption} from '../com
 import type {InsideDataZoomOption as InsideDataZoomComponentOption} from '../component/dataZoom/InsideZoomModel';
 
 import type {
-    ContinousVisualMapOption as ContinousVisualMapComponentOption
+    ContinuousVisualMapOption as ContinuousVisualMapComponentOption
 } from '../component/visualMap/ContinuousModel';
 import type {
     PiecewiseVisualMapOption as PiecewiseVisualMapComponentOption
@@ -145,8 +145,12 @@ interface ToolboxComponentOption extends ToolboxOption {
 
 export { SliderDataZoomComponentOption, InsideDataZoomComponentOption };
 export type DataZoomComponentOption = SliderDataZoomComponentOption | InsideDataZoomComponentOption;
-export { ContinousVisualMapComponentOption, PiecewiseVisualMapComponentOption };
-export type VisualMapComponentOption = ContinousVisualMapComponentOption | PiecewiseVisualMapComponentOption;
+export { ContinuousVisualMapComponentOption, PiecewiseVisualMapComponentOption };
+/**
+ * @deprecated Use `ContinuousVisualMapComponentOption` instead.
+ */
+export type ContinousVisualMapComponentOption = ContinuousVisualMapComponentOption;
+export type VisualMapComponentOption = ContinuousVisualMapComponentOption | PiecewiseVisualMapComponentOption;
 export { PlainLegendComponentOption, ScrollableLegendComponentOption };
 export type LegendComponentOption = PlainLegendComponentOption | ScrollableLegendComponentOption;
 export {
