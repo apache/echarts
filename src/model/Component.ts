@@ -191,7 +191,9 @@ class ComponentModel<Opt extends ComponentOption = ComponentOption> extends Mode
     /**
      * Called immediately after `init` or `mergeOption` of this instance called.
      */
-    optionUpdated(newCptOption: Opt, isInit: boolean): void {}
+    optionUpdated(newCptOption: Opt, isInit: boolean): void {
+        // MUST NOT do anything here.
+    }
 
     /**
      * [How to declare defaultOption]:
