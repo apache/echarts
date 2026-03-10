@@ -447,12 +447,8 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         this._dom = root;
     }
 
-    remove(ecModel: GlobalModel, api: ExtensionAPI) {
-        this._dom && api.getDom().removeChild(this._dom);
-    }
-
     dispose(ecModel: GlobalModel, api: ExtensionAPI) {
-        this.remove(ecModel, api);
+        this._dom && api.getDom().removeChild(this._dom);
     }
 
     static getDefaultOption(ecModel: GlobalModel) {

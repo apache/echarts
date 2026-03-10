@@ -104,13 +104,6 @@ class DataZoomFeature extends ToolboxFeature<ToolboxDataZoomFeatureOption> {
         handlers[type].call(this);
     }
 
-    remove(
-        ecModel: GlobalModel,
-        api: ExtensionAPI
-    ) {
-        this._brushController && this._brushController.unmount();
-    }
-
     dispose(
         ecModel: GlobalModel,
         api: ExtensionAPI
