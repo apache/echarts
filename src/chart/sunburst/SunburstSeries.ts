@@ -209,8 +209,12 @@ class SunburstSeriesModel extends SeriesModel<SunburstSeriesOption> {
      */
     getDataParams(dataIndex: number) {
         const params = super.getDataParams.apply(this, arguments as any) as SunburstDataParams;
+        const data = this.getData();
+        if (!data) {
+            return params;
+        }
 
-        const node = this.getData().tree.getNodeByDataIndex(dataIndex);
+        const node = data.tree.getNodeByDataIndex(dataIndex);
         params.treePathInfo = wrapTreePathInfo<SunburstSeriesNodeItemOption['value']>(node, this);
 
         return params;

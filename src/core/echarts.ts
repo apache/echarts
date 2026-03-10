@@ -1208,9 +1208,14 @@ class ECharts extends Eventful<ECEventDefinition> {
                         const ecData = getECData(parent);
                         if (ecData && ecData.dataIndex != null) {
                             const dataModel = ecData.dataModel || ecModel.getSeriesByIndex(ecData.seriesIndex);
-                            params = (
-                                dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
-                            ) as ECElementEvent;
+                            try {
+                                params = (
+                                    dataModel && dataModel.getDataParams(ecData.dataIndex, ecData.dataType, el) || {}
+                                ) as ECElementEvent;
+                            }
+                            catch (e) {
+                                params = {} as ECElementEvent;
+                            }
                             return true;
                         }
                         // If element has custom eventData of components

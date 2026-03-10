@@ -140,6 +140,9 @@ class FunnelSeriesModel extends SeriesModel<FunnelSeriesOption> {
     // Overwrite
     getDataParams(dataIndex: number): FunnelCallbackDataParams {
         const data = this.getData();
+        if (!data) {
+            return {} as FunnelCallbackDataParams;
+        }
         const params = super.getDataParams(dataIndex) as FunnelCallbackDataParams;
         const valueDim = data.mapDimension('value');
         const sum = data.getSum(valueDim);

@@ -242,8 +242,12 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
     // Add tree path to tooltip param
     getDataParams(dataIndex: number) {
         const params = super.getDataParams.apply(this, arguments as any) as TreeSeriesCallbackDataParams;
+        const data = this.getData();
+        if (!data) {
+            return params;
+        }
 
-        const node = this.getData().tree.getNodeByDataIndex(dataIndex);
+        const node = data.tree.getNodeByDataIndex(dataIndex);
         params.treeAncestors = wrapTreePathInfo(node, this);
         params.collapsed = !node.isExpand;
 
