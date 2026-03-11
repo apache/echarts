@@ -273,6 +273,9 @@ class ChordSeriesModel extends SeriesModel<ChordSeriesOption> {
 
     getDataParams(dataIndex: number, dataType: 'node' | 'edge') {
         const params = super.getDataParams(dataIndex, dataType);
+        if (!this.getData()) {
+            return params;
+        }
         if (dataType === 'node') {
             const nodeData = this.getData();
             const node = this.getGraph().getNodeByIndex(dataIndex);

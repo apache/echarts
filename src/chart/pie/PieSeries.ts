@@ -186,6 +186,9 @@ class PieSeriesModel extends SeriesModel<PieSeriesOption> {
      */
     getDataParams(dataIndex: number): PieCallbackDataParams {
         const data = this.getData();
+        if (!data) {
+            return {} as PieCallbackDataParams;
+        }
         // update seats when data is changed
         const dataInner = innerData(data);
         let seats = dataInner.seats;
