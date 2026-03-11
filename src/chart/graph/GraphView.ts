@@ -344,7 +344,6 @@ class GraphView extends ChartView {
         updateViewOnZoom(this._controllerHost, params.zoom, params.originX, params.originY);
         this._updateNodeAndLinkScale();
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
-        this._lineDraw.updateLayout();
         // Only update label layout on zoom
         api.updateLabelLayout();
         this._updateThumbnailWindow();
