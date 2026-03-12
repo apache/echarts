@@ -219,9 +219,7 @@ export function eachSeriesOnAxis(
     }
     const ecModel = axis.model.ecModel;
     const seriesOnAxisMap = ecModelCacheFullUpdateInner(getCachePerECFullUpdate(ecModel)).axSer;
-    seriesOnAxisMap && seriesOnAxisMap.each(function (seriesList) {
-        eachSeriesDeal(ecModel, seriesList, cb);
-    });
+    seriesOnAxisMap && eachSeriesDeal(ecModel, seriesOnAxisMap.get(axis.model.uid), cb);
 }
 
 export function eachSeriesOnAxisOnKey(
@@ -239,9 +237,12 @@ export function eachSeriesOnAxisOnKey(
 
 function eachSeriesDeal(
     ecModel: GlobalModel,
-    seriesList: SeriesModel[],
+    seriesList: SeriesModel[] | NullUndefined,
     cb: AxisStatEachSeriesCb
 ): void {
+    if (!seriesList) {
+        return;
+    }
     for (let i = 0; i < seriesList.length; i++) {
         const seriesModel = seriesList[i];
         // Legend-filtered series need to be ignored since series are registered before `legendFilter`.
