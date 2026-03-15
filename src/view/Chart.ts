@@ -249,6 +249,9 @@ function toggleHighlight(data: SeriesData, payload: Payload, state: DisplayState
         });
     }
     else {
+        // In progressive mode, `data._graphicEls` has typically no items,
+        // thereby skipping this hover style changing.
+        // PENDING: more robust approaches?
         data.eachItemGraphicEl(function (el) {
             elSetState(el, state, highlightDigit);
         });

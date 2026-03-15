@@ -34,6 +34,7 @@ import { EChartsType } from './echarts';
 import SeriesModel from '../model/Series';
 import ChartView from '../view/Chart';
 import SeriesData from '../data/SeriesData';
+import { ZRenderType } from 'zrender/src/zrender';
 
 export type GeneralTask = Task<TaskContext>;
 export type SeriesTask = Task<SeriesTaskContext>;
@@ -233,12 +234,12 @@ class Scheduler {
         };
     }
 
-    restorePipelines(ecModel: GlobalModel): void {
+    restorePipelines(zr: ZRenderType, ecModel: GlobalModel): void {
         const scheduler = this;
         const pipelineMap = scheduler._pipelineMap = createHashMap();
 
         ecModel.eachSeries(function (seriesModel) {
-            const progressive = seriesModel.getProgressive();
+            const progressive = zr.painter.type === 'canvas' && seriesModel.getProgressive();
             const pipelineId = seriesModel.uid;
 
             pipelineMap.set(pipelineId, {

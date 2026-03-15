@@ -98,6 +98,14 @@ export const XY = ['x', 'y'] as const;
 export const WH = ['width', 'height'] as const;
 
 /**
+ * NOTICE: Only canvas renderer can set these hoverLayer flags.
+ * @see ElementCommonState['hoverLayer']
+ */
+export const HOVER_LAYER_NO = 0;
+export const HOVER_LAYER_FROM_THRESHOLD = 1;
+export const HOVER_LAYER_FOR_INCREMENTAL = 2;
+
+/**
  * Extend shape with parameters
  */
 export function extendShape(opts: ExtendShapeOpt): ExtendShapeReturn {

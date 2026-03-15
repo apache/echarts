@@ -310,6 +310,11 @@ interface PostIniter {
     (chart: EChartsType): void
 }
 
+const ecInner = modelUtil.makeInner<{
+    // Using hoverLayer due to over hoverLayerThreshold.
+    usingTHL: boolean;
+}, ECharts>();
+
 type EventMethodName = 'on' | 'off';
 function createRegisterEventWithLowercaseECharts(method: EventMethodName) {
     return function (this: ECharts, ...args: any): ECharts {
@@ -1638,7 +1643,7 @@ class ECharts extends Eventful<ECEventDefinition> {
 
             const scheduler = ecIns._scheduler;
 
-            scheduler.restorePipelines(ecIns._model);
+            scheduler.restorePipelines(ecIns._zr, ecIns._model);
             scheduler.prepareStageTasks();
 
             prepareView(ecIns, true);
@@ -2538,6 +2543,11 @@ class ECharts extends Eventful<ECEventDefinition> {
 
         function updateHoverLayerStatus(ecIns: ECharts, ecModel: GlobalModel): void {
             const zr = ecIns._zr;
+
+            if (zr.painter.type !== 'canvas') {
+                return;
+            }
+
             const storage = zr.storage;
             let elCount = 0;
 
@@ -2547,7 +2557,10 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
             });
 
-            if (elCount > ecModel.get('hoverLayerThreshold') && !env.node && !env.worker) {
+            const inner = ecInner(ecIns);
+            const shouldUseHoverLayer = elCount > ecModel.get('hoverLayerThreshold') && !env.node && !env.worker;
+
+            if (inner.usingTHL || shouldUseHoverLayer) {
                 ecModel.eachSeries(function (seriesModel) {
                     if (seriesModel.preventUsingHoverLayer) {
                         return;
@@ -2555,12 +2568,16 @@ class ECharts extends Eventful<ECEventDefinition> {
                     const chartView = ecIns._chartsMap[seriesModel.__viewId];
                     if (chartView.__alive) {
                         chartView.eachRendered((el: ECElement) => {
-                            if (el.states.emphasis) {
-                                el.states.emphasis.hoverLayer = true;
+                            const emphasis = el.states.emphasis;
+                            if (emphasis && emphasis.hoverLayer !== graphic.HOVER_LAYER_FOR_INCREMENTAL) {
+                                emphasis.hoverLayer = shouldUseHoverLayer
+                                    ? graphic.HOVER_LAYER_FROM_THRESHOLD
+                                    : graphic.HOVER_LAYER_NO;
                             }
                         });
                     }
                 });
+                inner.usingTHL = shouldUseHoverLayer;
             }
         };
 
@@ -2725,6 +2742,9 @@ class ECharts extends Eventful<ECEventDefinition> {
                 }
                 getECMainCycleVersion(): number {
                     return ecIns[EC_MAIN_CYCLE_VERSION_KEY];
+                }
+                usingTHL(): boolean {
+                    return ecInner(ecIns).usingTHL;
                 }
             })(ecIns);
         };

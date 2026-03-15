@@ -292,7 +292,7 @@ class SymbolDraw {
         function updateIncrementalAndHover(el: Displayable) {
             if (!el.isGroup) {
                 el.incremental = true;
-                el.ensureState('emphasis').hoverLayer = true;
+                el.ensureState('emphasis').hoverLayer = graphic.HOVER_LAYER_FOR_INCREMENTAL;
             }
         }
         for (let idx = taskParams.start; idx < taskParams.end; idx++) {

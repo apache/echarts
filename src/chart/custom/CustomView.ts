@@ -94,7 +94,6 @@ import CustomSeriesModel, {
     CustomRootElementOption,
     CustomSeriesOption,
     CustomCompoundPathOption,
-    CustomSeriesRenderItemCoordinateSystemAPI
 } from './CustomSeries';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
 import {
@@ -109,6 +108,7 @@ import {
 import type SeriesModel from '../../model/Series';
 import { getCustomSeries } from './customSeriesRegister';
 import tokens from '../../visual/tokens';
+
 
 const EMPHASIS = 'emphasis' as const;
 const NORMAL = 'normal' as const;
@@ -290,7 +290,7 @@ export default class CustomChartView extends ChartView {
         function setIncrementalAndHoverLayer(el: Displayable) {
             if (!el.isGroup) {
                 el.incremental = true;
-                el.ensureState('emphasis').hoverLayer = true;
+                el.ensureState('emphasis').hoverLayer = graphicUtil.HOVER_LAYER_FOR_INCREMENTAL;
             }
         }
         for (let idx = params.start; idx < params.end; idx++) {

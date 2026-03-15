@@ -346,7 +346,7 @@ class HeatmapView extends ChartView {
             // PENDING
             if (incremental) {
                 // Rect must use hover layer if it's incremental.
-                rect.states.emphasis.hoverLayer = true;
+                rect.states.emphasis.hoverLayer = graphic.HOVER_LAYER_FOR_INCREMENTAL;
             }
 
             group.add(rect);
