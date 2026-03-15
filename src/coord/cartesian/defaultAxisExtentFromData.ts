@@ -17,254 +17,273 @@
 * under the License.
 */
 
-import * as echarts from '../../core/echarts';
-import { createHashMap, each, HashMap, hasOwn, keys, map } from 'zrender/src/core/util';
-import SeriesModel from '../../model/Series';
-import {
-    isCartesian2DDeclaredSeries, findAxisModels, isCartesian2DInjectedAsDataCoordSys
-} from './cartesianAxisHelper';
-import { getDataDimensionsOnAxis, unionAxisExtentFromData } from '../axisHelper';
-import { AxisBaseModel } from '../AxisBaseModel';
-import Axis from '../Axis';
-import GlobalModel from '../../model/Global';
-import { Dictionary } from '../../util/types';
-import { ScaleRawExtentInfo, ScaleRawExtentResult, ensureScaleRawExtentInfo } from '../scaleRawExtentInfo';
+// import * as echarts from '../../core/echarts';
+// import { createHashMap, each, HashMap, hasOwn, keys, map } from 'zrender/src/core/util';
+// import SeriesModel from '../../model/Series';
+// import {
+//     isCartesian2DDeclaredSeries, findAxisModels, isCartesian2DInjectedAsDataCoordSys
+// } from './cartesianAxisHelper';
+// import { getDataDimensionsOnAxis } from '../axisHelper';
+// import { AxisBaseModel } from '../AxisBaseModel';
+// import type Axis from '../Axis';
+// import GlobalModel from '../../model/Global';
+// import { Dictionary } from '../../util/types';
+// import {
+//     AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM, ensureScaleRawExtentInfo, ScaleRawExtentInfo, ScaleRawExtentResult
+// } from '../scaleRawExtentInfo';
+// import { initExtentForUnion, unionExtentFromNumber } from '../../util/model';
 
+/**
+ * @obsolete
+ * PENDING:
+ *  - This file is not used anywhere currently.
+ *  - This is a similar behavior to `dataZoom`, but historically supported separately.
+ *    Can it be merged into `dataZoom`?
+ *  - The impl need to be fixed, @see #15050 , and,
+ *      - Remove side-effect.
+ *      - Need to fix the case:
+ *          series_a =>
+ *              x_m (category): dataExtent: [3,8]
+ *              y_i:
+ *          series_b =>
+ *              x_m (category): dataExtent: [4,6]
+ *              y_j:
+ *          series_c =>
+ *              x_m (category): dataExtent: [5,7]
+ *              y_j:
+ *          dataZoom control y_i, so series_a is excluded.
+ *          So x_m.condExtent = [4,6] U [5,7] = [4,7] , and use it to call ensureScaleRawExtentInfo.
+ *              (incorrect?, supposed to be [3,8]?)
+ *
+ * See test case `test/axis-filter-extent.html`.
+ *
+ * The responsibility of this processor:
+ *  Enable category axis to use the specified `min`/`max` to shrink the extent of the orthogonal axis in
+ *  Cartesian2D. That is, if some data item on a category axis is out of the range of `min`/`max`, the
+ *  extent of the orthogonal axis will exclude the data items.
+ *  A typical case is bar-racing, where bars are sorted dynamically and may only need to
+ *  displayed part of the whole bars.
+ *
+ * IMPL_MEMO:
+ *  - For each triple xAxis-yAxis-series, if either xAxis or yAxis is controlled by a dataZoom,
+ *    the triple should be ignored in this processor.
+ *  - Input:
+ *    - Cartesian series data ("series approximate extent" has been prepared).
+ *    - Axis original `ScaleRawExtentInfo`
+ *      (the content comes from ec option and "series approximate extent").
+ *  - Modify(result):
+ *    - `ScaleRawExtentInfo#min/max` of the determined "target axis".
+ *    - "series approximate extent".
+ */
+// The priority is just after dataZoom processor.
+// echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER + 10, {
 
-type AxisRecord = {
-    condExtent: number[];
-    rawExtentInfo?: ScaleRawExtentInfo;
-    rawExtentResult?: ScaleRawExtentResult
-    tarExtent?: number[];
-};
+//     getTargetSeries: function (ecModel) {
+//         const seriesModelMap = createHashMap<SeriesModel>();
+//         ecModel.eachSeries(function (seriesModel: SeriesModel) {
+//             isCartesian2DDeclaredSeries(seriesModel) && seriesModelMap.set(seriesModel.uid, seriesModel);
+//         });
+//         return seriesModelMap;
+//     },
 
-type SeriesRecord = {
-    seriesModel: SeriesModel;
-    xAxisModel: AxisBaseModel;
-    yAxisModel: AxisBaseModel;
-};
+//     overallReset: function (ecModel, api) {
+//         const seriesRecords = [] as SeriesRecord[];
+//         const axisRecordMap = createHashMap<AxisRecord>();
 
-// A tricky: the priority is just after dataZoom processor.
-// If dataZoom has fixed the min/max, this processor do not need to work.
-// TODO: SELF REGISTERED.
-echarts.registerProcessor(echarts.PRIORITY.PROCESSOR.FILTER + 10, {
+//         prepareDataExtentOnAxis(ecModel, axisRecordMap, seriesRecords);
+//         calculateFilteredExtent(axisRecordMap, seriesRecords);
+//         shrinkAxisExtent(axisRecordMap);
+//     }
+// });
 
-    getTargetSeries: function (ecModel) {
-        const seriesModelMap = createHashMap<SeriesModel>();
-        ecModel.eachSeries(function (seriesModel: SeriesModel) {
-            isCartesian2DDeclaredSeries(seriesModel) && seriesModelMap.set(seriesModel.uid, seriesModel);
-        });
-        return seriesModelMap;
-    },
+// type AxisRecord = {
+//     rawExtentInfo?: ScaleRawExtentInfo;
+//     rawExtentResult?: ScaleRawExtentResult;
+//     tarExtent?: number[];
+// };
 
-    overallReset: function (ecModel, api) {
-        const seriesRecords = [] as SeriesRecord[];
-        const axisRecordMap = createHashMap<AxisRecord>();
+// type SeriesRecord = {
+//     seriesModel: SeriesModel;
+//     xAxisModel: AxisBaseModel;
+//     yAxisModel: AxisBaseModel;
+// };
 
-        prepareDataExtentOnAxis(ecModel, axisRecordMap, seriesRecords);
-        calculateFilteredExtent(axisRecordMap, seriesRecords);
-        shrinkAxisExtent(axisRecordMap);
-    }
-});
+// function prepareDataExtentOnAxis(
+//     ecModel: GlobalModel,
+//     axisRecordMap: HashMap<AxisRecord>,
+//     seriesRecords: SeriesRecord[]
+// ): void {
+//     ecModel.eachSeries(function (seriesModel: SeriesModel) {
+//         // If pie (or other similar series) use cartesian2d, the logic below is
+//         // probably wrong, therefore skip it temporarily.
+//         // TODO: support union extent in this case.
+//         //  e.g. make a fake seriesData by series.coord/series.center, and it can be
+//         //  performed by data processing (such as, filter), and applied here.
+//         if (!isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
+//             return;
+//         }
 
-function prepareDataExtentOnAxis(
-    ecModel: GlobalModel,
-    axisRecordMap: HashMap<AxisRecord>,
-    seriesRecords: SeriesRecord[]
-): void {
-    ecModel.eachSeries(function (seriesModel: SeriesModel) {
-        // If pie (or other similar series) use cartesian2d, the logic below is
-        // probably wrong, therefore skip it temporarily.
-        // TODO: support union extent in this case.
-        //  e.g. make a fake seriesData by series.coord/series.center, and it can be
-        //  performed by data processing (such as, filter), and applied here.
-        if (!isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
-            return;
-        }
+//         const axesModelMap = findAxisModels(seriesModel);
+//         const xAxisModel = axesModelMap.xAxisModel;
+//         const yAxisModel = axesModelMap.yAxisModel;
+//         const xAxis = xAxisModel.axis;
+//         const yAxis = yAxisModel.axis;
+//         const xRawExtentInfo = ensureScaleRawExtentInfo(xAxis);
+//         const yRawExtentInfo = ensureScaleRawExtentInfo(yAxis);
 
-        const axesModelMap = findAxisModels(seriesModel);
-        const xAxisModel = axesModelMap.xAxisModel;
-        const yAxisModel = axesModelMap.yAxisModel;
-        const xAxis = xAxisModel.axis;
-        const yAxis = yAxisModel.axis;
-        const xRawExtentInfo = xAxis.scale.rawExtentInfo;
-        const yRawExtentInfo = yAxis.scale.rawExtentInfo;
-        const data = seriesModel.getData();
+//         // If either axis controlled by other filter like "dataZoom",
+//         // use the rule of dataZoom rather than adopting the rules here.
+//         if (
+//             (xRawExtentInfo && xRawExtentInfo.from === AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM)
+//             || (yRawExtentInfo && yRawExtentInfo.from === AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM)
+//         ) {
+//             return;
+//         }
 
-        // If either axis controlled by other filter like "dataZoom",
-        // use the rule of dataZoom rather than adopting the rules here.
-        if (
-            (xRawExtentInfo && xRawExtentInfo.frozen)
-            || (yRawExtentInfo && yRawExtentInfo.frozen)
-        ) {
-            return;
-        }
+//         seriesRecords.push({
+//             seriesModel: seriesModel,
+//             xAxisModel: xAxisModel,
+//             yAxisModel: yAxisModel
+//         });
+//     });
+// }
 
-        seriesRecords.push({
-            seriesModel: seriesModel,
-            xAxisModel: xAxisModel,
-            yAxisModel: yAxisModel
-        });
+// function calculateFilteredExtent(
+//     axisRecordMap: HashMap<AxisRecord>,
+//     seriesRecords: SeriesRecord[]
+// ) {
+//     each(seriesRecords, function (seriesRecord) {
+//         const xAxisModel = seriesRecord.xAxisModel;
+//         const yAxisModel = seriesRecord.yAxisModel;
+//         const xAxis = xAxisModel.axis;
+//         const yAxis = yAxisModel.axis;
+//         const xAxisRecord = prepareAxisRecord(axisRecordMap, xAxisModel);
+//         const yAxisRecord = prepareAxisRecord(axisRecordMap, yAxisModel);
+//         xAxisRecord.rawExtentInfo = ensureScaleRawExtentInfo(xAxis);
+//         yAxisRecord.rawExtentInfo = ensureScaleRawExtentInfo(yAxis);
+//         xAxisRecord.rawExtentResult = xAxisRecord.rawExtentInfo.calculate();
+//         yAxisRecord.rawExtentResult = yAxisRecord.rawExtentInfo.calculate();
 
-        // FIXME: this logic needs to be consistent with
-        // `coord/cartesian/Grid.ts#_updateScale`.
-        // It's not good to implement one logic in multiple places.
-        unionAxisExtentFromData(prepareAxisRecord(axisRecordMap, xAxisModel).condExtent, data, xAxis.dim);
-        unionAxisExtentFromData(prepareAxisRecord(axisRecordMap, yAxisModel).condExtent, data, yAxis.dim);
-    });
-}
+//         const data = seriesRecord.seriesModel.getData();
+//         // For duplication removal.
+//         // key: series data dimension corresponding to the condition axis.
+//         const condDimMap: Dictionary<boolean> = {};
+//         // key: series data dimension corresponding to the target axis.
+//         const tarDimMap: Dictionary<boolean> = {};
+//         let condAxis: Axis;
+//         let tarAxisRecord: AxisRecord;
 
-function calculateFilteredExtent(
-    axisRecordMap: HashMap<AxisRecord>,
-    seriesRecords: SeriesRecord[]
-) {
-    each(seriesRecords, function (seriesRecord) {
-        const xAxisModel = seriesRecord.xAxisModel;
-        const yAxisModel = seriesRecord.yAxisModel;
-        const xAxis = xAxisModel.axis;
-        const yAxis = yAxisModel.axis;
-        const xAxisRecord = prepareAxisRecord(axisRecordMap, xAxisModel);
-        const yAxisRecord = prepareAxisRecord(axisRecordMap, yAxisModel);
-        xAxisRecord.rawExtentInfo = ensureScaleRawExtentInfo(
-            xAxis.scale, xAxisModel, xAxisRecord.condExtent
-        );
-        yAxisRecord.rawExtentInfo = ensureScaleRawExtentInfo(
-            yAxis.scale, yAxisModel, yAxisRecord.condExtent
-        );
-        xAxisRecord.rawExtentResult = xAxisRecord.rawExtentInfo.calculate();
-        yAxisRecord.rawExtentResult = yAxisRecord.rawExtentInfo.calculate();
+//         function addCondition(axis: Axis, axisRecord: AxisRecord) {
+//             // But for simplicity and safety and performance, we only adopt this
+//             // feature on category axis at present.
+//             const rawExtentResult = axisRecord.rawExtentResult;
+//             if (axis.type === 'category'
+//                 && (rawExtentResult.dataMinMax[0] < rawExtentResult.resultMinMax[0]
+//                     || rawExtentResult.resultMinMax[1] < rawExtentResult.dataMinMax[1]
+//                 )
+//             ) {
+//                 each(getDataDimensionsOnAxis(data, axis.dim), function (dataDim) {
+//                     if (!hasOwn(condDimMap, dataDim)) {
+//                         condDimMap[dataDim] = true;
+//                         condAxis = axis;
+//                     }
+//                 });
+//             }
+//         }
+//         function addTarget(axis: Axis, axisRecord: AxisRecord) {
+//             const rawExtentResult = axisRecord.rawExtentResult;
+//             const fixMinMax = rawExtentResult.fixMinMax;
+//             if (axis.type !== 'category'
+//                 && (!fixMinMax[0] || !fixMinMax[1])
+//             ) {
+//                 each(getDataDimensionsOnAxis(data, axis.dim), function (dataDim) {
+//                     if (!hasOwn(condDimMap, dataDim) && !hasOwn(tarDimMap, dataDim)) {
+//                         tarDimMap[dataDim] = true;
+//                         tarAxisRecord = axisRecord;
+//                     }
+//                 });
+//             }
+//         }
 
-        // If the "xAxis" is set `min`/`max`, some data items might be out of the cartesian.
-        // then the "yAxis" may needs to calculate extent only based on the data items inside
-        // the cartesian (similar to what "dataZoom" did).
-        // A typical case is bar-racing, where bars ara sort dynamically and may only need to
-        // displayed part of the whole bars.
+//         addCondition(xAxis, xAxisRecord);
+//         addCondition(yAxis, yAxisRecord);
+//         addTarget(xAxis, xAxisRecord);
+//         addTarget(yAxis, yAxisRecord);
 
-        const data = seriesRecord.seriesModel.getData();
-        // For duplication removal.
-        const condDimMap: Dictionary<boolean> = {};
-        const tarDimMap: Dictionary<boolean> = {};
-        let condAxis: Axis;
-        let tarAxisRecord: AxisRecord;
+//         const condDims = keys(condDimMap);
+//         const tarDims = keys(tarDimMap);
+//         const tarDimExtents = map(tarDims, function () {
+//             return initExtentForUnion();
+//         });
 
-        function addCondition(axis: Axis, axisRecord: AxisRecord) {
-            // But for simplicity and safety and performance, we only adopt this
-            // feature on category axis at present.
-            const condExtent = axisRecord.condExtent;
-            const rawExtentResult = axisRecord.rawExtentResult;
-            if (axis.type === 'category'
-                && (condExtent[0] < rawExtentResult.min || rawExtentResult.max < condExtent[1])
-            ) {
-                each(getDataDimensionsOnAxis(data, axis.dim), function (dataDim) {
-                    if (!hasOwn(condDimMap, dataDim)) {
-                        condDimMap[dataDim] = true;
-                        condAxis = axis;
-                    }
-                });
-            }
-        }
-        function addTarget(axis: Axis, axisRecord: AxisRecord) {
-            const rawExtentResult = axisRecord.rawExtentResult;
-            if (axis.type !== 'category'
-                && (!rawExtentResult.minFixed || !rawExtentResult.maxFixed)
-            ) {
-                each(getDataDimensionsOnAxis(data, axis.dim), function (dataDim) {
-                    if (!hasOwn(condDimMap, dataDim) && !hasOwn(tarDimMap, dataDim)) {
-                        tarDimMap[dataDim] = true;
-                        tarAxisRecord = axisRecord;
-                    }
-                });
-            }
-        }
+//         const condDimsLen = condDims.length;
+//         const tarDimsLen = tarDims.length;
 
-        addCondition(xAxis, xAxisRecord);
-        addCondition(yAxis, yAxisRecord);
-        addTarget(xAxis, xAxisRecord);
-        addTarget(yAxis, yAxisRecord);
+//         if (!condDimsLen || !tarDimsLen) {
+//             return;
+//         }
 
-        const condDims = keys(condDimMap);
-        const tarDims = keys(tarDimMap);
-        const tarDimExtents = map(tarDims, function () {
-            return initExtent();
-        });
+//         const singleCondDim = condDimsLen === 1 ? condDims[0] : null;
+//         const singleTarDim = tarDimsLen === 1 ? tarDims[0] : null;
+//         const dataLen = data.count();
 
-        const condDimsLen = condDims.length;
-        const tarDimsLen = tarDims.length;
+//         // Time consuming, because this is a "block task".
+//         // Simple optimization for the vast majority of cases.
+//         if (singleCondDim && singleTarDim) {
+//             for (let dataIdx = 0; dataIdx < dataLen; dataIdx++) {
+//                 const condVal = data.get(singleCondDim, dataIdx) as number;
+//                 if (condAxis.scale.contain(condVal)) {
+//                     unionExtentFromNumber(tarDimExtents[0], data.get(singleTarDim, dataIdx) as number);
+//                 }
+//             }
+//         }
+//         else {
+//             for (let dataIdx = 0; dataIdx < dataLen; dataIdx++) {
+//                 for (let j = 0; j < condDimsLen; j++) {
+//                     const condVal = data.get(condDims[j], dataIdx) as number;
+//                     if (condAxis.scale.contain(condVal)) {
+//                         for (let k = 0; k < tarDimsLen; k++) {
+//                             unionExtentFromNumber(tarDimExtents[k], data.get(tarDims[k], dataIdx) as number);
+//                         }
+//                         // Any one dim is in range means satisfied.
+//                         break;
+//                     }
+//                 }
+//             }
+//         }
 
-        if (!condDimsLen || !tarDimsLen) {
-            return;
-        }
+//         each(tarDimExtents, function (tarDimExtent, i) {
+//             // FIXME: if there has been approximateExtent set?
+//             data.setApproximateExtent(tarDimExtent as [number, number], tarDims[i]);
+//             const tarAxisExtent = tarAxisRecord.tarExtent = tarAxisRecord.tarExtent || initExtentForUnion();
+//             unionExtentFromNumber(tarAxisExtent, tarDimExtent[0]);
+//             unionExtentFromNumber(tarAxisExtent, tarDimExtent[1]);
+//         });
+//     });
+// }
 
-        const singleCondDim = condDimsLen === 1 ? condDims[0] : null;
-        const singleTarDim = tarDimsLen === 1 ? tarDims[0] : null;
-        const dataLen = data.count();
+// function shrinkAxisExtent(axisRecordMap: HashMap<AxisRecord>) {
+//     axisRecordMap.each(function (axisRecord) {
+//         const tarAxisExtent = axisRecord.tarExtent;
+//         if (tarAxisExtent) {
+//             const rawExtentResult = axisRecord.rawExtentResult;
+//             const fixMinMax = rawExtentResult.fixMinMax;
+//             // const rawExtentInfo = axisRecord.rawExtentInfo;
+//             // Shrink the original extent.
+//             if (!fixMinMax[0] && tarAxisExtent[0] > rawExtentResult.resultMinMax[0]) {
+//                 // rawExtentInfo.modifyDataMinMax('min', tarAxisExtent[0]);
+//             }
+//             if (!fixMinMax[1] && tarAxisExtent[1] < rawExtentResult.resultMinMax[1]) {
+//                 // rawExtentInfo.modifyDataMinMax('max', tarAxisExtent[1]);
+//             }
+//         }
+//     });
+// }
 
-        // Time consuming, because this is a "block task".
-        // Simple optimization for the vast majority of cases.
-        if (singleCondDim && singleTarDim) {
-            for (let dataIdx = 0; dataIdx < dataLen; dataIdx++) {
-                const condVal = data.get(singleCondDim, dataIdx) as number;
-                if (condAxis.scale.isInExtentRange(condVal)) {
-                    unionExtent(tarDimExtents[0], data.get(singleTarDim, dataIdx) as number);
-                }
-            }
-        }
-        else {
-            for (let dataIdx = 0; dataIdx < dataLen; dataIdx++) {
-                for (let j = 0; j < condDimsLen; j++) {
-                    const condVal = data.get(condDims[j], dataIdx) as number;
-                    if (condAxis.scale.isInExtentRange(condVal)) {
-                        for (let k = 0; k < tarDimsLen; k++) {
-                            unionExtent(tarDimExtents[k], data.get(tarDims[k], dataIdx) as number);
-                        }
-                        // Any one dim is in range means satisfied.
-                        break;
-                    }
-                }
-            }
-        }
-
-        each(tarDimExtents, function (tarDimExtent, i) {
-            const dim = tarDims[i];
-            // FIXME: if there has been approximateExtent set?
-            data.setApproximateExtent(tarDimExtent as [number, number], dim);
-            const tarAxisExtent = tarAxisRecord.tarExtent = tarAxisRecord.tarExtent || initExtent();
-            unionExtent(tarAxisExtent, tarDimExtent[0]);
-            unionExtent(tarAxisExtent, tarDimExtent[1]);
-        });
-    });
-}
-
-function shrinkAxisExtent(axisRecordMap: HashMap<AxisRecord>) {
-    axisRecordMap.each(function (axisRecord) {
-        const tarAxisExtent = axisRecord.tarExtent;
-        if (tarAxisExtent) {
-            const rawExtentResult = axisRecord.rawExtentResult;
-            const rawExtentInfo = axisRecord.rawExtentInfo;
-            // Shink the original extent.
-            if (!rawExtentResult.minFixed && tarAxisExtent[0] > rawExtentResult.min) {
-                rawExtentInfo.modifyDataMinMax('min', tarAxisExtent[0]);
-            }
-            if (!rawExtentResult.maxFixed && tarAxisExtent[1] < rawExtentResult.max) {
-                rawExtentInfo.modifyDataMinMax('max', tarAxisExtent[1]);
-            }
-        }
-    });
-}
-
-function prepareAxisRecord(
-    axisRecordMap: HashMap<AxisRecord>,
-    axisModel: AxisBaseModel
-): AxisRecord {
-    return axisRecordMap.get(axisModel.uid)
-        || axisRecordMap.set(axisModel.uid, { condExtent: initExtent() });
-}
-
-function initExtent() {
-    return [Infinity, -Infinity];
-}
-
-function unionExtent(extent: number[], val: number) {
-    val < extent[0] && (extent[0] = val);
-    val > extent[1] && (extent[1] = val);
-}
+// function prepareAxisRecord(
+//     axisRecordMap: HashMap<AxisRecord>,
+//     axisModel: AxisBaseModel
+// ): AxisRecord {
+//     return axisRecordMap.get(axisModel.uid)
+//         || axisRecordMap.set(axisModel.uid, {});
+// }

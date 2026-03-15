@@ -23,12 +23,14 @@ import TimelineModel from './TimelineModel';
 import { LabelOption } from '../../util/types';
 import Model from '../../model/Model';
 
+export type TimelineAxisType = 'category' | 'time' | 'value';
+
 /**
  * Extend axis 2d
  */
 class TimelineAxis extends Axis {
 
-    type: 'category' | 'time' | 'value';
+    type: TimelineAxisType;
 
     // @ts-ignore
     model: TimelineModel;
@@ -37,7 +39,7 @@ class TimelineAxis extends Axis {
         dim: string,
         scale: Scale,
         coordExtent: [number, number],
-        axisType: 'category' | 'time' | 'value'
+        axisType: TimelineAxisType
     ) {
         super(dim, scale, coordExtent);
         this.type = axisType || 'value';

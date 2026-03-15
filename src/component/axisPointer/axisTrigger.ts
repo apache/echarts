@@ -26,6 +26,7 @@ import { Dictionary, Payload, CommonAxisPointerOption, HighlightPayload, Downpla
 import AxisPointerModel, { AxisPointerOption } from './AxisPointerModel';
 import { each, curry, bind, extend, Curry1 } from 'zrender/src/core/util';
 import { ZRenderType } from 'zrender/src/zrender';
+import { isNullableNumberFinite } from '../../util/number';
 
 const inner = makeInner<{
     axisPointerLastHighlights: Dictionary<BatchItem>
@@ -72,7 +73,7 @@ type CollectedCoordInfo = ReturnType<typeof modelHelper['collect']>;
 type CollectedAxisInfo = CollectedCoordInfo['axesInfo'][string];
 
 interface AxisTriggerPayload extends Payload {
-    currTrigger?: 'click' | 'mousemove' | 'leave'
+    currTrigger?: 'click' | 'mousemove' | 'leave' | 'mousewheel'
     /**
      * x and y, which are mandatory, specify a point to trigger axisPointer and tooltip.
      */
@@ -288,7 +289,7 @@ function buildPayloadsBySeries(value: AxisValue, axisInfo: CollectedAxisInfo) {
             seriesNestestValue = series.getData().get(dataDim[0], dataIndices[0]);
         }
 
-        if (seriesNestestValue == null || !isFinite(seriesNestestValue)) {
+        if (!isNullableNumberFinite(seriesNestestValue)) {
             return;
         }
 
@@ -367,7 +368,7 @@ function showTooltip(
         axisType: axisModel.type,
         axisId: axisModel.id,
         value: value as number,
-        // Caustion: viewHelper.getValueLabel is actually on "view stage", which
+        // Caution: viewHelper.getValueLabel is actually on "view stage", which
         // depends that all models have been updated. So it should not be performed
         // here. Considering axisPointerModel used here is volatile, which is hard
         // to be retrieve in TooltipView, we prepare parameters here.
@@ -452,7 +453,7 @@ function dispatchHighDownActually(
 ) {
     // FIXME
     // highlight status modification should be a stage of main process?
-    // (Consider confilct (e.g., legend and axisPointer) and setOption)
+    // (Consider conflict (e.g., legend and axisPointer) and setOption)
 
     const zr = api.getZr();
     const highDownKey = 'axisPointerLastHighlights' as const;
@@ -464,19 +465,26 @@ function dispatchHighDownActually(
     each(axesInfo, function (axisInfo, key) {
         const option = axisInfo.axisPointerModel.option;
         option.status === 'show' && axisInfo.triggerEmphasis && each(option.seriesDataIndices, function (batchItem) {
-            const key = batchItem.seriesIndex + ' | ' + batchItem.dataIndex;
-            newHighlights[key] = batchItem;
+            newHighlights[batchItem.seriesIndex + '|' + batchItem.dataIndex] = batchItem;
         });
     });
 
     // Diff.
-    const toHighlight: BatchItem[] = [];
-    const toDownplay: BatchItem[] = [];
+    const toHighlight: Pick<BatchItem, 'seriesIndex' | 'dataIndex'>[] = [];
+    const toDownplay: Pick<BatchItem, 'seriesIndex' | 'dataIndex'>[] = [];
+    function makeHighDownItem(batchItem: BatchItem) {
+        // `dataIndexInside` should be removed, since the last recorded `dataIndexInside` may have
+        // been changed if `dataZoomInside` changed the view. Only `dataIndex` will suffice.
+        return {
+            seriesIndex: batchItem.seriesIndex,
+            dataIndex: batchItem.dataIndex,
+        };
+    }
     each(lastHighlights, function (batchItem, key) {
-        !newHighlights[key] && toDownplay.push(batchItem);
+        !newHighlights[key] && toDownplay.push(makeHighDownItem(batchItem));
     });
     each(newHighlights, function (batchItem, key) {
-        !lastHighlights[key] && toHighlight.push(batchItem);
+        !lastHighlights[key] && toHighlight.push(makeHighDownItem(batchItem));
     });
 
     toDownplay.length && api.dispatchAction({

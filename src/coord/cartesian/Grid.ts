@@ -27,36 +27,38 @@ import {isObject, each, indexOf, retrieve3, keys, assert, eqNaN, find, retrieve2
 import {BoxLayoutReferenceResult, createBoxLayoutReference, getLayoutRect, LayoutRect} from '../../util/layout';
 import {
     createScaleByModel,
-    ifAxisCrossZero,
-    niceScaleExtent,
-    getDataDimensionsOnAxis,
+    getScaleValuePositionKind,
     isNameLocationCenter,
     shouldAxisShow,
+    retrieveAxisBreaksOption,
+    determineAxisType,
+    discourageOnAxisZero,
+    isOnAxisZeroDiscouraged,
+    SCALE_VALUE_POSITION_KIND_OUTSIDE,
+    SCALE_VALUE_POSITION_KIND_EDGE,
+    SCALE_VALUE_POSITION_KIND_INSIDE,
 } from '../../coord/axisHelper';
 import Cartesian2D, {cartesian2DDimensions} from './Cartesian2D';
 import Axis2D from './Axis2D';
 import {ParsedModelFinder, ParsedModelFinderKnown, SINGLE_REFERRING} from '../../util/model';
 
 // Depends on GridModel, AxisModel, which performs preprocess.
-import GridModel, { GridOption, OUTER_BOUNDS_CLAMP_DEFAULT, OUTER_BOUNDS_DEFAULT } from './GridModel';
+import GridModel, { COORD_SYS_TYPE_CARTESIAN_2D, GridOption, OUTER_BOUNDS_CLAMP_DEFAULT, OUTER_BOUNDS_DEFAULT } from './GridModel';
 import CartesianAxisModel from './AxisModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { Dictionary } from 'zrender/src/core/types';
 import {CoordinateSystemMaster} from '../CoordinateSystem';
 import { NullUndefined, ScaleDataValue } from '../../util/types';
-import SeriesData from '../../data/SeriesData';
-import OrdinalScale from '../../scale/Ordinal';
 import {
     findAxisModels,
     createCartesianAxisViewCommonPartBuilder,
     updateCartesianAxisViewCommonPartBuilder,
-    isCartesian2DInjectedAsDataCoordSys
 } from './cartesianAxisHelper';
-import { CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
+import { AxisBaseOptionCommon, CategoryAxisBaseOption, NumericAxisBaseOptionCommon } from '../axisCommonTypes';
 import { AxisBaseModel } from '../AxisBaseModel';
-import { isIntervalOrLogScale } from '../../scale/helper';
-import { alignScaleTicks } from '../axisAlignTicks';
+import { isIntervalOrLogScale, isOrdinalScale } from '../../scale/helper';
+import { scaleCalcAlign } from '../axisAlignTicks';
 import IntervalScale from '../../scale/Interval';
 import LogScale from '../../scale/Log';
 import { BoundingRect, expandOrShrinkRect, WH, XY } from '../../util/graphic';
@@ -70,6 +72,16 @@ import { error, log } from '../../util/log';
 import { AxisTickLabelComputingKind } from '../axisTickLabelBuilder';
 import { injectCoordSysByOption } from '../../core/CoordinateSystem';
 import { mathMax, parsePositionSizeOption } from '../../util/number';
+import { scaleCalcNice } from '../axisNiceTicks';
+import { createDimNameMap } from '../../data/helper/SeriesDataSchema';
+import type Axis from '../Axis';
+import {
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE,
+    scaleRawExtentInfoEnableBoxCoordSysUsage, scaleRawExtentInfoCreate
+} from '../scaleRawExtentInfo';
+import { hasBreaks } from '../../scale/break';
+import { associateSeriesWithAxis } from '../axisStatistics';
+
 
 type Cartesian2DDimensionName = 'x' | 'y';
 
@@ -107,6 +119,7 @@ class Grid implements CoordinateSystemMaster {
     // For deciding which dimensions to use when creating list data
     static dimensions = cartesian2DDimensions;
     readonly dimensions = cartesian2DDimensions;
+    static dimIdxMap = createDimNameMap(cartesian2DDimensions);
 
     constructor(gridModel: GridModel, ecModel: GlobalModel, api: ExtensionAPI) {
         this._initCartesian(gridModel, ecModel, api);
@@ -121,53 +134,39 @@ class Grid implements CoordinateSystemMaster {
 
         const axesMap = this._axesMap;
 
-        this._updateScale(ecModel, this.model);
+        each(this._axesList, function (axis) {
+            scaleRawExtentInfoCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            const scale = axis.scale;
+            if (isOrdinalScale(scale)) {
+                scale.setSortInfo(axis.model.get('categorySortInfo'));
+            }
+        });
 
         function updateAxisTicks(axes: Record<number, Axis2D>) {
-            let alignTo: Axis2D;
             // Axis is added in order of axisIndex.
             const axesIndices = keys(axes);
-            const len = axesIndices.length;
-            if (!len) {
-                return;
-            }
             const axisNeedsAlign: Axis2D[] = [];
-            // Process once and calculate the ticks for those don't use alignTicks.
-            for (let i = len - 1; i >= 0; i--) {
-                const idx = +axesIndices[i];    // Convert to number.
-                const axis = axes[idx];
-                const model = axis.model as AxisBaseModel<NumericAxisBaseOptionCommon>;
-                const scale = axis.scale;
-                if (// Only value and log axis without interval support alignTicks.
-                    isIntervalOrLogScale(scale)
-                    && model.get('alignTicks')
-                    && model.get('interval') == null
-                ) {
+
+            for (let i = axesIndices.length - 1; i >= 0; i--) { // Reverse order
+                const axis = axes[+axesIndices[i]];
+                if (axis.__alignTo) {
                     axisNeedsAlign.push(axis);
                 }
                 else {
-                    niceScaleExtent(scale, model);
-                    if (isIntervalOrLogScale(scale)) {  // Can only align to interval or log axis.
-                        alignTo = axis;
-                    }
+                    scaleCalcNice(axis);
                 }
             };
-            // All axes has set alignTicks. Pick the first one.
-            // PENDING. Should we find the axis that both set interval, min, max and align to this one?
-            if (axisNeedsAlign.length) {
-                if (!alignTo) {
-                    alignTo = axisNeedsAlign.pop();
-                    niceScaleExtent(alignTo.scale, alignTo.model);
+            each(axisNeedsAlign, axis => {
+                if (incapableOfAlignNeedFallback(axis, axis.__alignTo as Axis2D)) {
+                    scaleCalcNice(axis);
                 }
-
-                each(axisNeedsAlign, axis => {
-                    alignScaleTicks(
-                        axis.scale as IntervalScale | LogScale,
-                        axis.model,
-                        alignTo.scale as IntervalScale | LogScale
+                else {
+                    scaleCalcAlign(
+                        axis,
+                        axis.__alignTo.scale as IntervalScale | LogScale
                     );
-                });
-            }
+                }
+            });
         }
 
         updateAxisTicks(axesMap.x);
@@ -216,6 +215,10 @@ class Grid implements CoordinateSystemMaster {
 
         const optionContainLabel = gridModel.get('containLabel'); // No `.get(, true)` for backward compat.
 
+        // NOTE: The axis pixel extent is also required by some estimation, e.g., in coord sys update stage,
+        // bars on 'time'/'value' axis need it to calculate the supplementary scale extent to avoid edge bars
+        // overflowing the axis (see `barGrid.ts`). Therefore, axis pixel extent need to be set early, even
+        // may not be accurate.
         updateAllAxisExtentTransByGridRect(axesMap, gridRect);
 
         if (!beforeDataProcessing) {
@@ -265,13 +268,13 @@ class Grid implements CoordinateSystemMaster {
                 layoutRef
             );
             // console.timeEnd('buildAxesView_determine');
-        } // End of beforeDataProcessing
 
-        each(this._coordsList, function (coord) {
-            // Calculate affine matrix to accelerate the data to point transform.
-            // If all the axes scales are time or value.
-            coord.calcAffineTransform();
-        });
+            each(this._coordsList, function (coord) {
+                // Calculate affine matrix to accelerate the data to point transform.
+                // If all the axes scales are time or value.
+                coord.calcAffineTransform();
+            });
+        } // End of beforeDataProcessing
     }
 
     getAxis(dim: Cartesian2DDimensionName, axisIndex?: number): Axis2D {
@@ -447,8 +450,13 @@ class Grid implements CoordinateSystemMaster {
 
                 cartesian.addAxis(xAxis);
                 cartesian.addAxis(yAxis);
+
+                discourageOnAxisZero(cartesian.getBaseAxis(), {base: true});
             });
         });
+
+        prepareAlignToInCoordSysCreate(axesMap.x);
+        prepareAlignToInCoordSysCreate(axesMap.y);
 
         function createAxisCreator(dimName: Cartesian2DDimensionName) {
             return function (axisModel: CartesianAxisModel, idx: number): void {
@@ -473,11 +481,12 @@ class Grid implements CoordinateSystemMaster {
                 }
                 axisPositionUsed[axisPosition] = true;
 
+                const axisType = determineAxisType(axisModel);
                 const axis = new Axis2D(
                     dimName,
-                    createScaleByModel(axisModel),
+                    createScaleByModel(axisModel, axisType, true),
                     [0, 0],
-                    axisModel.get('type'),
+                    axisType,
                     axisPosition
                 );
 
@@ -502,53 +511,6 @@ class Grid implements CoordinateSystemMaster {
                 axesMap[dimName][idx] = axis;
                 axesCount[dimName]++;
             };
-        }
-    }
-
-    /**
-     * Update cartesian properties from series.
-     */
-    private _updateScale(ecModel: GlobalModel, gridModel: GridModel): void {
-        // Reset scale
-        each(this._axesList, function (axis) {
-            axis.scale.setExtent(Infinity, -Infinity);
-            if (axis.type === 'category') {
-                const categorySortInfo = axis.model.get('categorySortInfo');
-                (axis.scale as OrdinalScale).setSortInfo(categorySortInfo);
-            }
-        });
-
-        ecModel.eachSeries(function (seriesModel) {
-            // If pie (or other similar series) use cartesian2d, the unionExtent logic below is
-            // wrong, therefore skip it temporarily. See also in `defaultAxisExtentFromData.ts`.
-            // TODO: support union extent in this case.
-            if (isCartesian2DInjectedAsDataCoordSys(seriesModel)) {
-                const axesModelMap = findAxisModels(seriesModel);
-                const xAxisModel = axesModelMap.xAxisModel;
-                const yAxisModel = axesModelMap.yAxisModel;
-
-                if (!isAxisUsedInTheGrid(xAxisModel, gridModel)
-                    || !isAxisUsedInTheGrid(yAxisModel, gridModel)
-                ) {
-                    return;
-                }
-
-                const cartesian = this.getCartesian(
-                    xAxisModel.componentIndex, yAxisModel.componentIndex
-                );
-                const data = seriesModel.getData();
-                const xAxis = cartesian.getAxis('x');
-                const yAxis = cartesian.getAxis('y');
-
-                unionExtent(data, xAxis);
-                unionExtent(data, yAxis);
-            }
-        }, this);
-
-        function unionExtent(data: SeriesData, axis: Axis2D): void {
-            each(getDataDimensionsOnAxis(data, axis.dim), function (dim) {
-                axis.scale.unionExtentFromData(data, dim);
-            });
         }
     }
 
@@ -585,13 +547,20 @@ class Grid implements CoordinateSystemMaster {
             gridModel.coordinateSystem = grid;
 
             grids.push(grid);
+
+            each(grid._axesList, function (axis) {
+                scaleRawExtentInfoEnableBoxCoordSysUsage(axis, Grid.dimIdxMap);
+            });
         });
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
+            let xAxis: Axis;
+            let yAxis: Axis;
+
             injectCoordSysByOption({
                 targetModel: seriesModel,
-                coordSysType: 'cartesian2d',
+                coordSysType: COORD_SYS_TYPE_CARTESIAN_2D,
                 coordSysProvider: coordSysProvider
             });
 
@@ -599,6 +568,8 @@ class Grid implements CoordinateSystemMaster {
                 const axesModelMap = findAxisModels(seriesModel);
                 const xAxisModel = axesModelMap.xAxisModel;
                 const yAxisModel = axesModelMap.yAxisModel;
+                xAxis = xAxisModel.axis;
+                yAxis = yAxisModel.axis;
 
                 const gridModel = xAxisModel.getCoordSysModel();
 
@@ -623,7 +594,12 @@ class Grid implements CoordinateSystemMaster {
                     xAxisModel.componentIndex, yAxisModel.componentIndex
                 );
             }
-        });
+            if (xAxis && yAxis) {
+                associateSeriesWithAxis(xAxis, seriesModel, COORD_SYS_TYPE_CARTESIAN_2D);
+                associateSeriesWithAxis(yAxis, seriesModel, COORD_SYS_TYPE_CARTESIAN_2D);
+            }
+
+        }, this);
 
         return grids;
     }
@@ -660,13 +636,16 @@ function fixAxisOnZero(
     const onZero = axisModel.get(['axisLine', 'onZero']);
     const onZeroAxisIndex = axisModel.get(['axisLine', 'onZeroAxisIndex']);
 
+    // For historical reason, ec option `axisLine.onZero: undefined` leads to "not on zero"
+    // while leaving `axisLine.onZero` unspecified causes "on zero". This inconsistency goes
+    // against common sense, but is preserved for backward compatibility.
     if (!onZero) {
         return;
     }
 
     // If target axis is specified.
     if (onZeroAxisIndex != null) {
-        if (canOnZeroToAxis(otherAxes[onZeroAxisIndex])) {
+        if (canOnZeroToAxis(onZero, otherAxes[onZeroAxisIndex])) {
             otherAxisOnZeroOf = otherAxes[onZeroAxisIndex];
         }
     }
@@ -674,7 +653,7 @@ function fixAxisOnZero(
         // Find the first available other axis.
         for (const idx in otherAxes) {
             if (otherAxes.hasOwnProperty(idx)
-                && canOnZeroToAxis(otherAxes[idx])
+                && canOnZeroToAxis(onZero, otherAxes[idx])
                 // Consider that two Y axes on one value axis,
                 // if both onZero, the two Y axes overlap.
                 && !onZeroRecords[getOnZeroRecordKey(otherAxes[idx])]
@@ -694,9 +673,100 @@ function fixAxisOnZero(
     }
 }
 
-function canOnZeroToAxis(axis: Axis2D): boolean {
-    return axis && axis.type !== 'category' && axis.type !== 'time' && ifAxisCrossZero(axis);
+/**
+ * CAVEAT: Must not be called before `CoordinateSystem#update` due to `__dontOnMyZero`.
+ */
+function canOnZeroToAxis(
+    onZeroOption: AxisBaseOptionCommon['axisLine']['onZero'],
+    axis: Axis2D
+): boolean {
+    const scale = axis.scale;
+    const kindEffective = getScaleValuePositionKind(scale, 0, false);
+
+    let can = axis
+        // PENDING: Historical behavior: `onZero` on 'category' and 'time' axis are always disabled
+        // even if ec option gives `onZero: true`.
+        && axis.type !== 'category' && axis.type !== 'time'
+        // NOTE: Although the portion out of "effective" portion may also cross zero
+        // (see `SCALE_EXTENT_KIND_MAPPING`), that is commonly meaningless, so we use
+        // `SCALE_EXTENT_KIND_EFFECTIVE`
+        && kindEffective !== SCALE_VALUE_POSITION_KIND_OUTSIDE;
+
+    if (can && onZeroOption === 'auto'
+        && (
+            isOnAxisZeroDiscouraged(axis)
+            || (
+                // Avoid axis line cross series shape (typically, bar series on "value"/"time" axis) unexpectedly.
+                kindEffective === SCALE_VALUE_POSITION_KIND_EDGE
+                && getScaleValuePositionKind(scale, 0, true) === SCALE_VALUE_POSITION_KIND_INSIDE
+            )
+        )
+    ) {
+        can = false;
+    }
+    // falsy value of `onZeroOption` has been handled in the previous logic.
+    return can;
 }
+
+/**
+ * [CAVEAT] This method is called before data processing stage.
+ *  Do not rely on any info that is determined afterward.
+ */
+function prepareAlignToInCoordSysCreate(axes: Record<number, Axis2D>): void {
+    // Axis is added in order of axisIndex.
+    const axesIndices = keys(axes);
+
+    let alignTo: Axis2D;
+    const axisNeedsAlign: Axis2D[] = [];
+
+    for (let i = axesIndices.length - 1; i >= 0; i--) { // Reverse order
+        const axis = axes[+axesIndices[i]];
+        if (
+            isIntervalOrLogScale(axis.scale)
+            // NOTE: `scale.hasBreaks()` is not available at this moment. Check it later.
+            && retrieveAxisBreaksOption(axis.model, axis.type, true) == null
+            // NOTE: `scale.getTicks()` is not available at this moment. Check it later.
+        ) {
+            // Request `alignTicks`.
+            if ((axis.model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('alignTicks')
+                && (axis.model as AxisBaseModel<NumericAxisBaseOptionCommon>).get('interval') == null
+            ) {
+                axisNeedsAlign.push(axis);
+            }
+            else {
+                // `alignTo` the last one that does not request `alignTicks`
+                // (This rule is retained for backward compat).
+                alignTo = axis;
+            }
+        }
+    };
+    // If all axes has set alignTicks, pick the first one as alignTo.
+    // PENDING. Should we find the axis that both set interval, min, max and align to this one?
+    // PENDING. Should we allow specifying alignTo via ec option?
+    if (!alignTo) {
+        alignTo = axisNeedsAlign.pop();
+    }
+    if (alignTo) {
+        each(axisNeedsAlign, function (axis) {
+            axis.__alignTo = alignTo;
+        });
+    }
+}
+
+/**
+ * This is just a defence code. They are unlikely to be actually `true`,
+ * since these cases have been addressed in `prepareAlignToInCoordSysCreate`.
+ *
+ * Can not be called BEFORE "nice" performed.
+ */
+function incapableOfAlignNeedFallback(targetAxis: Axis2D, alignTo: Axis2D): boolean {
+    return hasBreaks(targetAxis.scale)
+        || hasBreaks(alignTo.scale)
+        // Normally ticks length are more than 2 even when axis is blank.
+        // But still guard for corner cases and possible changes.
+        || alignTo.scale.getTicks().length < 2;
+}
+
 
 function updateAxisTransform(axis: Axis2D, coordBase: number) {
     const axisExtent = axis.getExtent();
@@ -803,7 +873,7 @@ function layOutGridByOuterBounds(
             if (labelInfoList) {
                 for (let idx = 0; idx < labelInfoList.length; idx++) {
                     const labelInfo = labelInfoList[idx];
-                    let proportion = axis.scale.normalize(getLabelInner(labelInfo.label).tickValue);
+                    let proportion = axis.scale.normalize(getLabelInner(labelInfo.label).labelInfo.tick.value);
                     proportion = xyIdx === 1 ? 1 - proportion : proportion;
                     // xAxis use proportion on x, yAxis use proprotion on y, otherwise not.
                     fillMarginOnOneDimension(labelInfo.rect, xyIdx, proportion);
@@ -917,7 +987,7 @@ function createOrUpdateAxesView(
 
 function prepareOuterBounds(
     gridModel: GridModel,
-    rawRridRect: BoundingRect,
+    rawGridRect: BoundingRect,
     layoutRef: BoxLayoutReferenceResult,
 ): {
     outerBoundsRect: BoundingRect | NullUndefined
@@ -927,7 +997,7 @@ function prepareOuterBounds(
     let outerBoundsRect: BoundingRect | NullUndefined;
     const optionOuterBoundsMode = gridModel.get('outerBoundsMode', true);
     if (optionOuterBoundsMode === 'same') {
-        outerBoundsRect = rawRridRect.clone();
+        outerBoundsRect = rawGridRect.clone();
     }
     else if (optionOuterBoundsMode == null || optionOuterBoundsMode === 'auto') {
         outerBoundsRect = getLayoutRect(
@@ -957,10 +1027,10 @@ function prepareOuterBounds(
 
     const outerBoundsClamp = [
         parsePositionSizeOption(
-            retrieve2(gridModel.get('outerBoundsClampWidth', true), OUTER_BOUNDS_CLAMP_DEFAULT[0]), rawRridRect.width
+            retrieve2(gridModel.get('outerBoundsClampWidth', true), OUTER_BOUNDS_CLAMP_DEFAULT[0]), rawGridRect.width
         ),
         parsePositionSizeOption(
-            retrieve2(gridModel.get('outerBoundsClampHeight', true), OUTER_BOUNDS_CLAMP_DEFAULT[1]), rawRridRect.height
+            retrieve2(gridModel.get('outerBoundsClampHeight', true), OUTER_BOUNDS_CLAMP_DEFAULT[1]), rawGridRect.height
         )
     ];
 

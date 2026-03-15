@@ -39,6 +39,7 @@ under the License.
         <div id="main2_source_format_original"></div>
         <div id="main2_dataset"></div>
         <div id="main3"></div>
+        <div id="main_bar_stack_on_value_or_time_axis"></div>
 
 
 
@@ -721,6 +722,103 @@ under the License.
 
 
 
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                // 'data/flight.json'
+                // 'theme/dark.js', // auto register if load.
+            ], function (echarts /*, data */) {
+                var _ctx = {
+                    stack: true,
+                    xAxisType: 'value',
+                };
+
+                function createOption() {
+                    var option = {
+                        xAxis: {
+                            type: _ctx.xAxisType,
+                        },
+                        yAxis: {
+                        },
+                        legend: {
+                            top: 5,
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow',
+                            }
+                        },
+                        series: [{
+                            type: 'bar',
+                            name: 'A',
+                            symbolSize: 50,
+                            itemStyle: {barBorderRadius: 3},
+                            label: {show: true, position: 'top'},
+                            data: [[1, 200], [100, 400], [500, 150]]
+                        }, {
+                            type: 'bar',
+                            name: 'B',
+                            symbolSize: 50,
+                            itemStyle: {barBorderRadius: 3},
+                            label: {show: true, position: 'top'},
+                            data: [[1, 200], [100, 200], [500, 50]]
+                        }, {
+                            type: 'bar',
+                            name: 'C',
+                            symbolSize: 50,
+                            itemStyle: {barBorderRadius: 3},
+                            label: {show: true, position: 'top'},
+                            data: [[1, 200], [100, 300], [500, 100]]
+                        }]
+                    };
+                    if (_ctx.stack) {
+                        option.series.forEach(function (item) {
+                            item.stack = 'a';
+                        });
+                    }
+
+                    return option;
+                }
+
+                function updateChart() {
+                    chart.setOption(createOption(), {notMerge: true});
+                }
+
+                var chart = testHelper.create(echarts, 'main_bar_stack_on_value_or_time_axis', {
+                    title: [
+                        'bar stack on value/time axis',
+                    ],
+                    option: createOption(),
+
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'stack:',
+                        values: [true, false],
+                        onchange() {
+                            _ctx.stack = this.value;
+                            updateChart();
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'xAxisType:',
+                        values: [_ctx.xAxisType, 'time'],
+                        onchange() {
+                            _ctx.xAxisType = this.value;
+                            updateChart();
+                        }
+                    }]
+
+                }); // End of `testHelper.create`
+
+            }); // End of `require`
+        </script>
 
 
 

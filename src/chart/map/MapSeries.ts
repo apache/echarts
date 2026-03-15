@@ -47,7 +47,7 @@ import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
 import {createSymbol, ECSymbol} from '../../util/symbol';
 import {LegendIconParams} from '../../component/legend/LegendModel';
 import {Group} from '../../util/graphic';
-import { CoordinateSystemUsageKind, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
+import { COORD_SYS_USAGE_KIND_BOX, decideCoordSysUsageKind } from '../../core/CoordinateSystem';
 import { GeoJSONRegion } from '../../coord/geo/Region';
 import tokens from '../../visual/tokens';
 
@@ -164,8 +164,8 @@ class MapSeries extends SeriesModel<MapSeriesOption> {
      * inner exclusive geo model.
      */
     getHostGeoModel(): GeoModel {
-        if (decideCoordSysUsageKind(this).kind === CoordinateSystemUsageKind.boxCoordSys) {
-            // Always use an internal geo if specify a boxCoordSys.
+        if (decideCoordSysUsageKind(this).kind === COORD_SYS_USAGE_KIND_BOX) {
+            // Always use an internal geo if specify as `COORD_SYS_USAGE_KIND_BOX`.
             // Notice that currently we do not support laying out a geo based on
             // another geo, but preserve the possibility.
             return;

@@ -1,5 +1,13 @@
 [
   {
+    "link": "https://github.com/apache/echarts/issues/21430",
+    "comment": "Caused by the change of dataZoom auto precision and make axis precision consistent with dataZoom. Acceptable.",
+    "type": "Others",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1768551693040
+  },
+  {
     "link": "https://github.com/apache/echarts/commit/9f4dfcfc2209ac8b7fd4cb9fb30984a510de21d2",
     "comment": "",
     "type": "Others",

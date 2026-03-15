@@ -24,16 +24,19 @@
 import SingleAxis from './SingleAxis';
 import * as axisHelper from '../axisHelper';
 import {createBoxLayoutReference, getLayoutRect} from '../../util/layout';
-import {each} from 'zrender/src/core/util';
 import { CoordinateSystem, CoordinateSystemMaster } from '../CoordinateSystem';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import BoundingRect from 'zrender/src/core/BoundingRect';
-import SingleAxisModel from './AxisModel';
+import SingleAxisModel, { COORD_SYS_TYPE_SINGLE_AXIS } from './AxisModel';
 import { ParsedModelFinder, ParsedModelFinderKnown } from '../../util/model';
 import { ScaleDataValue } from '../../util/types';
 import { AxisBaseModel } from '../AxisBaseModel';
 import { CategoryAxisBaseOption } from '../axisCommonTypes';
+import { scaleCalcNice } from '../axisNiceTicks';
+import {
+    AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE, scaleRawExtentInfoCreate
+} from '../scaleRawExtentInfo';
 
 export const singleDimensions = ['single'];
 /**
@@ -41,7 +44,7 @@ export const singleDimensions = ['single'];
  */
 class Single implements CoordinateSystem, CoordinateSystemMaster {
 
-    readonly type = 'single';
+    readonly type = COORD_SYS_TYPE_SINGLE_AXIS;
 
     readonly dimension = 'single';
     /**
@@ -73,11 +76,12 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
 
         const dim = this.dimension;
 
+        const axisType = axisHelper.determineAxisType(axisModel);
         const axis = new SingleAxis(
             dim,
-            axisHelper.createScaleByModel(axisModel),
+            axisHelper.createScaleByModel(axisModel, axisType, true),
             [0, 0],
-            axisModel.get('type'),
+            axisType,
             axisModel.get('position')
         );
 
@@ -96,15 +100,9 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      * Update axis scale after data processed
      */
     update(ecModel: GlobalModel, api: ExtensionAPI) {
-        ecModel.eachSeries(function (seriesModel) {
-            if (seriesModel.coordinateSystem === this) {
-                const data = seriesModel.getData();
-                each(data.mapDimensionsAll(this.dimension), function (dim) {
-                    this._axis.scale.unionExtentFromData(data, dim);
-                }, this);
-                axisHelper.niceScaleExtent(this._axis.scale, this._axis.model);
-            }
-        }, this);
+        const axis = this._axis;
+        scaleRawExtentInfoCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+        scaleCalcNice(axis);
     }
 
     /**

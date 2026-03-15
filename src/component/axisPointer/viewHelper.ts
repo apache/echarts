@@ -40,6 +40,8 @@ import Model from '../../model/Model';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { createTextStyle } from '../../label/labelStyle';
 import type SingleAxisModel from '../../coord/single/AxisModel';
+import { calcBandWidth } from '../../coord/axisBand';
+import { mathMax, mathMin } from '../../util/number';
 
 export interface AxisTransformedPositionLayoutInfo {
     position: VectorArray
@@ -261,4 +263,39 @@ export function makeSectorShape(
         endAngle: endAngle,
         clockwise: true
     };
+}
+
+export function calcAxisPointerShadowBandWidth(
+    axis: Axis,
+    seriesDataIndices: CommonAxisPointerOption['seriesDataIndices'],
+    ecModel: GlobalModel
+): number {
+    return calcBandWidth(axis, {
+        fromStat: {
+            sers: zrUtil.map(seriesDataIndices, function (item) {
+                return ecModel.getSeriesByIndex(item.seriesIndex);
+            })
+        },
+        min: 1
+    }).w;
+}
+
+/**
+ * Return a [min, max] in pixel clampped by `axisExtent`.
+ */
+export function calcAxisPointerShadowEnds(
+    val: number,
+    axisExtent: number[],
+    bandWidth: number
+): number[] {
+    return [
+        mathMax(
+            mathMin(axisExtent[0], axisExtent[1]),
+            val - bandWidth / 2
+        ),
+        mathMin(
+            val + bandWidth / 2,
+            mathMax(axisExtent[0], axisExtent[1])
+        )
+    ];
 }

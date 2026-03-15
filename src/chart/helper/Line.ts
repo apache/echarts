@@ -303,7 +303,9 @@ class Line extends graphic.Group {
             defaultText: (rawVal == null
                 ? lineData.getName(idx)
                 : isFinite(rawVal)
-                ? round(rawVal)
+                // PENDING: the `rawVal` is not supposed to be rounded. But this rounding was introduced
+                // in the early stages, so changing it would likely be breaking.
+                ? round(rawVal, 10)
                 : rawVal) + ''
         });
         const label = this.getTextContent() as InnerLineLabel;

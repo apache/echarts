@@ -22,7 +22,7 @@ import * as eventTool from 'zrender/src/core/event';
 import * as graphic from '../../util/graphic';
 import * as throttle from '../../util/throttle';
 import DataZoomView from './DataZoomView';
-import { linearMap, asc, parsePercent } from '../../util/number';
+import { linearMap, asc, parsePercent, round, mathMax, mathMin } from '../../util/number';
 import * as layout from '../../util/layout';
 import sliderMove from '../helper/sliderMove';
 import GlobalModel from '../../model/Global';
@@ -35,7 +35,7 @@ import { RectLike } from 'zrender/src/core/BoundingRect';
 import Axis from '../../coord/Axis';
 import SeriesModel from '../../model/Series';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { getAxisMainType, collectReferCoordSysModelInfo } from './helper';
+import { getAxisMainType, collectReferCoordSysModelInfo, getAlignTo } from './helper';
 import { enableHoverEmphasis } from '../../util/states';
 import { createSymbol, symbolBuildProxies } from '../../util/symbol';
 import { deprecateLog } from '../../util/log';
@@ -44,6 +44,11 @@ import Displayable from 'zrender/src/graphic/Displayable';
 import { createTextStyle } from '../../label/labelStyle';
 import SeriesData from '../../data/SeriesData';
 import tokens from '../../visual/tokens';
+import { isOrdinalScale, isTimeScale } from '../../scale/helper';
+import { AxisProxyWindow } from './AxisProxy';
+import type Scale from '../../scale/Scale';
+import { SCALE_EXTENT_KIND_EFFECTIVE } from '../../scale/scaleMapper';
+
 
 const Rect = graphic.Rect;
 
@@ -116,6 +121,8 @@ class SliderZoomView extends DataZoomView {
     private _dragging: boolean;
 
     private _brushing: boolean;
+
+    private _isOverDataInfoTriggerArea: boolean;
 
     private _dataShadowInfo: {
         thisAxis: Axis
@@ -609,8 +616,8 @@ class SliderZoomView extends DataZoomView {
                 draggable: true,
                 drift: bind(this._onDragMove, this, handleIndex),
                 ondragend: bind(this._onDragEnd, this),
-                onmouseover: bind(this._showDataInfo, this, true),
-                onmouseout: bind(this._showDataInfo, this, false),
+                onmouseover: bind(this._onOverDataInfoTriggerArea, this, true),
+                onmouseout: bind(this._onOverDataInfoTriggerArea, this, false),
                 z2: 5
             });
 
@@ -705,12 +712,12 @@ class SliderZoomView extends DataZoomView {
 
         actualMoveZone.attr({
             draggable: true,
-            cursor: 'default',
-            drift: bind(this._onDragMove, this, 'all'),
-            ondragstart: bind(this._showDataInfo, this, true),
-            ondragend: bind(this._onDragEnd, this),
-            onmouseover: bind(this._showDataInfo, this, true),
-            onmouseout: bind(this._showDataInfo, this, false)
+            cursor: 'grab',
+            drift: bind(this._onActualMoveZoneDrift, this),
+            ondragstart: bind(this._onActualMoveZoneDragStart, this),
+            ondragend: bind(this._onActualMoveZoneDragEnd, this),
+            onmouseover: bind(this._onOverDataInfoTriggerArea, this, true),
+            onmouseout: bind(this._onOverDataInfoTriggerArea, this, false)
         });
     }
 
@@ -816,30 +823,36 @@ class SliderZoomView extends DataZoomView {
 
     private _updateDataInfo(nonRealtime?: boolean) {
         const dataZoomModel = this.dataZoomModel;
-        const displaybles = this._displayables;
-        const handleLabels = displaybles.handleLabels;
+        const displayables = this._displayables;
+        const handleLabels = displayables.handleLabels;
         const orient = this._orient;
         let labelTexts = ['', ''];
 
-        // FIXME
-        // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
         if (dataZoomModel.get('showDetail')) {
             const axisProxy = dataZoomModel.findRepresentativeAxisProxy();
+            const scale = axisProxy.getAxisModel().axis.scale;
 
             if (axisProxy) {
-                const axis = axisProxy.getAxisModel().axis;
                 const range = this._range;
 
-                const dataInterval = nonRealtime
+                let window: AxisProxyWindow;
+                if (nonRealtime) {
                     // See #4434, data and axis are not processed and reset yet in non-realtime mode.
-                    ? axisProxy.calculateDataWindow({
-                        start: range[0], end: range[1]
-                    }).valueWindow
-                    : axisProxy.getDataValueWindow();
+                    let calcWinInput = {start: range[0], end: range[1]};
+                    const alignTo = getAlignTo(dataZoomModel, axisProxy);
+                    if (alignTo) {
+                        const alignToWindow = alignTo.calculateDataWindow(calcWinInput).percentInverted;
+                        calcWinInput = {start: alignToWindow[0], end: alignToWindow[1]};
+                    }
+                    window = axisProxy.calculateDataWindow(calcWinInput);
+                }
+                else {
+                    window = axisProxy.getWindow();
+                }
 
                 labelTexts = [
-                    this._formatLabel(dataInterval[0], axis),
-                    this._formatLabel(dataInterval[1], axis)
+                    formatLabel(dataZoomModel, 0, window, scale),
+                    formatLabel(dataZoomModel, 1, window, scale)
                 ];
             }
         }
@@ -854,7 +867,7 @@ class SliderZoomView extends DataZoomView {
             // Text should not transform by barGroup.
             // Ignore handlers transform
             const barTransform = graphic.getTransform(
-                displaybles.handles[handleIndex].parent, this.group
+                displayables.handles[handleIndex].parent, this.group
             );
             const direction = graphic.transformDirection(
                 handleIndex === 0 ? 'right' : 'left', barTransform
@@ -877,30 +890,9 @@ class SliderZoomView extends DataZoomView {
         }
     }
 
-    private _formatLabel(value: ParsedValue, axis: Axis) {
-        const dataZoomModel = this.dataZoomModel;
-        const labelFormatter = dataZoomModel.get('labelFormatter');
-
-        let labelPrecision = dataZoomModel.get('labelPrecision');
-        if (labelPrecision == null || labelPrecision === 'auto') {
-            labelPrecision = axis.getPixelPrecision();
-        }
-
-        const valueStr = (value == null || isNaN(value as number))
-            ? ''
-            // FIXME Glue code
-            : (axis.type === 'category' || axis.type === 'time')
-                ? axis.scale.getLabel({
-                    value: Math.round(value as number)
-                })
-                // param of toFixed should less then 20.
-                : (value as number).toFixed(Math.min(labelPrecision as number, 20));
-
-        return isFunction(labelFormatter)
-            ? labelFormatter(value as number, valueStr)
-            : isString(labelFormatter)
-                ? labelFormatter.replace('{value}', valueStr)
-                : valueStr;
+    private _onOverDataInfoTriggerArea(isOver: boolean): void {
+        this._isOverDataInfoTriggerArea = isOver;
+        this._showDataInfo(isOver);
     }
 
     /**
@@ -923,6 +915,21 @@ class SliderZoomView extends DataZoomView {
         // Highlight move handle
         displayables.moveHandle
             && this.api[toShow ? 'enterEmphasis' : 'leaveEmphasis'](displayables.moveHandle, 1);
+    }
+
+    private _onActualMoveZoneDrift(dx: number, dy: number, event: ZRElementEvent) {
+        this.api.getZr().setCursorStyle('grabbing');
+        this._onDragMove('all', dx, dy, event);
+    }
+
+    private _onActualMoveZoneDragStart(event: ZRElementEvent) {
+        (event.target as Displayable).attr('cursor', 'grabbing');
+        this._showDataInfo(true);
+    }
+
+    private _onActualMoveZoneDragEnd(event: ZRElementEvent) {
+        (event.target as Displayable).attr('cursor', 'grab');
+        this._onDragEnd();
     }
 
     private _onDragMove(handleIndex: 0 | 1 | 'all', dx: number, dy: number, event: ZRElementEvent) {
@@ -948,7 +955,11 @@ class SliderZoomView extends DataZoomView {
 
     private _onDragEnd() {
         this._dragging = false;
-        this._showDataInfo(false);
+
+        if (!this._isOverDataInfoTriggerArea) {
+            // Drag end may occur on draggable bars, where data info should be still shown.
+            this._showDataInfo(false);
+        }
 
         // While in realtime mode and stream mode, dispatch action when
         // drag end will cause the whole view rerender, which is unnecessary.
@@ -1115,6 +1126,42 @@ class SliderZoomView extends DataZoomView {
         return rect;
     }
 
+}
+
+function formatLabel(
+    dataZoomModel: SliderZoomModel,
+    extentIdx: 0 | 1,
+    window: AxisProxyWindow,
+    scale: Scale
+): string {
+    const labelFormatter = dataZoomModel.get('labelFormatter');
+
+    let labelPrecision = dataZoomModel.get('labelPrecision');
+    if (labelPrecision == null || labelPrecision === 'auto') {
+        labelPrecision = window.valuePrecision;
+    }
+
+    // Do not display values out of `SCALE_EXTENT_KIND_EFFECTIVE` - generally they are meaningless.
+    // For example, `scaleExtent[0]` is often `0`, and negative values are unlikely to be meaningful.
+    // That is, "nice" expansion and `SCALE_EXTENT_KIND_MAPPING` expansion are always not display in labels.
+    const value = (extentIdx ? mathMin : mathMax)(
+        window.value[extentIdx],
+        window.noZoomEffMM[extentIdx],
+    );
+
+    const valueStr = (value == null || isNaN(value))
+        ? ''
+        : (isOrdinalScale(scale) || isTimeScale(scale))
+        ? scale.getLabel({value: Math.round(value)})
+        : isFinite(labelPrecision)
+        ? round(value, labelPrecision, true)
+        : value + '';
+
+    return isFunction(labelFormatter)
+        ? labelFormatter(value, valueStr)
+        : isString(labelFormatter)
+            ? labelFormatter.replace('{value}', valueStr)
+            : valueStr;
 }
 
 function getOtherDim(thisDim: 'x' | 'y' | 'radius' | 'angle' | 'single' | 'z') {

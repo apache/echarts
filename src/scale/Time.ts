@@ -74,8 +74,7 @@ import {
     primaryTimeUnits,
     roundTime
 } from '../util/time';
-import * as scaleHelper from './helper';
-import IntervalScale from './Interval';
+import { ensureValidSplitNumber } from './helper';
 import Scale, { ScaleGetTicksOpt } from './Scale';
 import {TimeScaleTick, ScaleTick, AxisBreakOption, NullUndefined} from '../util/types';
 import {TimeAxisLabelFormatterParsed} from '../coord/axisCommonTypes';
@@ -83,7 +82,15 @@ import { warn } from '../util/log';
 import { LocaleOption } from '../core/locale';
 import Model from '../model/Model';
 import { each, filter, indexOf, isNumber, map } from 'zrender/src/core/util';
-import { ScaleBreakContext, getScaleBreakHelper } from './break';
+import { BreakScaleMapper, getBreaksUnsafe, getScaleBreakHelper, simplyParseBreakOption } from './break';
+import type { ScaleCalcNiceMethod } from '../coord/axisNiceTicks';
+import { getMinorTicks } from './minorTicks';
+import {
+    getScaleLinearSpanEffective,
+    getScaleExtentForTickUnsafe,
+    initBreakOrLinearMapper, ScaleMapperGeneric
+} from './scaleMapper';
+import { removeDuplicates, removeDuplicatesGetKeyFromValueProp } from '../util/model';
 
 // FIXME 公用？
 const bisect = function (
@@ -107,34 +114,51 @@ const bisect = function (
 type TimeScaleSetting = {
     locale: Model<LocaleOption>;
     useUTC: boolean;
-    modelAxisBreaks?: AxisBreakOption[];
+    breakOption: AxisBreakOption[] | NullUndefined;
 };
 
-class TimeScale extends IntervalScale<TimeScaleSetting> {
+/**
+ * @final NEVER inherit me!
+ */
+interface TimeScale extends ScaleMapperGeneric<TimeScale> {}
+class TimeScale extends Scale<TimeScale> {
 
     static type = 'time';
-    readonly type = 'time';
+    readonly type = 'time' as const;
 
+    private _locale: Model<LocaleOption>;
+    private _useUTC: boolean;
     private _approxInterval: number;
+    private _interval: number;
 
     private _minLevelUnit: TimeUnit;
 
-    constructor(settings?: TimeScaleSetting) {
-        super(settings);
+    constructor(setting: TimeScaleSetting) {
+        super();
+        this.parse = TimeScale.parse;
+
+        this._locale = setting.locale;
+        this._useUTC = setting.useUTC;
+        this._interval = 0;
+
+        const breakParsed = simplyParseBreakOption(this, setting);
+
+        const res = initBreakOrLinearMapper(this, breakParsed, null);
+        // @ts-ignore
+        this.brk = res.brk;
     }
 
     /**
      * Get label is mainly for other components like dataZoom, tooltip.
      */
-    getLabel(tick: TimeScaleTick): string {
-        const useUTC = this.getSetting('useUTC');
+    getLabel(tick: ScaleTick): string {
         return format(
             tick.value,
             fullLeveledFormatter[
                 getDefaultFormatPrecisionOfInterval(getPrimaryTimeUnit(this._minLevelUnit))
             ] || fullLeveledFormatter.second,
-            useUTC,
-            this.getSetting('locale')
+            this._useUTC,
+            this._locale
         );
     }
 
@@ -143,20 +167,17 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         idx: number,
         labelFormatter: TimeAxisLabelFormatterParsed
     ): string {
-        const isUTC = this.getSetting('useUTC');
-        const lang = this.getSetting('locale');
-        return leveledFormat(tick, idx, labelFormatter, lang, isUTC);
+        return leveledFormat(tick, idx, labelFormatter, this._locale, this._useUTC);
     }
 
-    /**
-     * @override
-     */
     getTicks(opt?: ScaleGetTicksOpt): TimeScaleTick[] {
         opt = opt || {};
 
         const interval = this._interval;
-        const extent = this._extent;
+        const extent = getScaleExtentForTickUnsafe(this);
         const scaleBreakHelper = getScaleBreakHelper();
+        const brk = this.brk;
+        const brkAvailable = scaleBreakHelper && brk;
 
         let ticks = [] as TimeScaleTick[];
         // If interval is 0, return [];
@@ -164,45 +185,22 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             return ticks;
         }
 
-        const useUTC = this.getSetting('useUTC');
+        const useUTC = this._useUTC;
 
-        if (scaleBreakHelper && opt.breakTicks === 'only_break') {
-            getScaleBreakHelper().addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent);
+        if (brkAvailable && opt.breakTicks === 'only_break') {
+            getScaleBreakHelper().addBreaksToTicks(ticks, brk.breaks, extent);
             return ticks;
         }
 
-        const extent0Unit = getUnitFromValue(extent[1], useUTC);
-        ticks.push({
-            value: extent[0],
-            time: {
-                level: 0,
-                upperTimeUnit: extent0Unit,
-                lowerTimeUnit: extent0Unit,
-            }
-        });
-
-        const innerTicks = getIntervalTicks(
+        ticks = createIntervalTicks(
             this._minLevelUnit,
             this._approxInterval,
             useUTC,
             extent,
-            this._getExtentSpanWithBreaks(),
-            this._brkCtx
+            getScaleLinearSpanEffective(this),
+            brk
         );
 
-        ticks = ticks.concat(innerTicks);
-
-        const extent1Unit = getUnitFromValue(extent[1], useUTC);
-        ticks.push({
-            value: extent[1],
-            time: {
-                level: 0,
-                upperTimeUnit: extent1Unit,
-                lowerTimeUnit: extent1Unit,
-            }
-        });
-
-        const isUTC = this.getSetting('useUTC');
         let upperUnitIndex = primaryTimeUnits.length - 1;
         let maxLevel = 0;
         each(ticks, tick => {
@@ -212,27 +210,27 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
             }
         });
 
-        if (scaleBreakHelper) {
+        if (brkAvailable) {
             getScaleBreakHelper().pruneTicksByBreak(
                 opt.pruneByBreak,
                 ticks,
-                this._brkCtx!.breaks,
+                brk.breaks,
                 item => item.value,
                 this._approxInterval,
-                this._extent
+                extent
             );
         }
-        if (scaleBreakHelper && opt.breakTicks !== 'none') {
-            getScaleBreakHelper().addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent, trimmedBrk => {
+        if (brkAvailable && opt.breakTicks !== 'none') {
+            getScaleBreakHelper().addBreaksToTicks(ticks, brk.breaks, extent, trimmedBrk => {
                 // @see `parseTimeAxisLabelFormatterDictionary`.
                 const lowerBrkUnitIndex = Math.max(
-                    indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmin, isUTC)),
-                    indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmax, isUTC)),
+                    indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmin, useUTC)),
+                    indexOf(primaryTimeUnits, getUnitFromValue(trimmedBrk.vmax, useUTC)),
                 );
                 let upperBrkUnitIndex = 0;
                 for (let unitIdx = 0; unitIdx < primaryTimeUnits.length; unitIdx++) {
                     if (!isPrimaryUnitValueAndGreaterSame(
-                        primaryTimeUnits[unitIdx], trimmedBrk.vmin, trimmedBrk.vmax, isUTC
+                        primaryTimeUnits[unitIdx], trimmedBrk.vmin, trimmedBrk.vmax, useUTC
                     )) {
                         upperBrkUnitIndex = unitIdx;
                         break;
@@ -251,75 +249,28 @@ class TimeScale extends IntervalScale<TimeScaleSetting> {
         return ticks;
     }
 
-    calcNiceExtent(
-        opt?: {
-            splitNumber?: number,
-            fixMin?: boolean,
-            fixMax?: boolean,
-            minInterval?: number,
-            maxInterval?: number
-        }
-    ): void {
-        const extent = this.getExtent();
-        // If extent start and end are same, expand them
-        if (extent[0] === extent[1]) {
-            // Expand extent
-            extent[0] -= ONE_DAY;
-            extent[1] += ONE_DAY;
-        }
-        // If there are no data and extent are [Infinity, -Infinity]
-        if (extent[1] === -Infinity && extent[0] === Infinity) {
-            const d = new Date();
-            extent[1] = +new Date(d.getFullYear(), d.getMonth(), d.getDate());
-            extent[0] = extent[1] - ONE_DAY;
-        }
-        this._innerSetExtent(extent[0], extent[1]);
-
-        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
-    }
-
-    calcNiceTicks(approxTickNum: number, minInterval: number, maxInterval: number): void {
-        approxTickNum = approxTickNum || 10;
-
-        const span = this._getExtentSpanWithBreaks();
-        this._approxInterval = span / approxTickNum;
-
-        if (minInterval != null && this._approxInterval < minInterval) {
-            this._approxInterval = minInterval;
-        }
-        if (maxInterval != null && this._approxInterval > maxInterval) {
-            this._approxInterval = maxInterval;
-        }
-
-        const scaleIntervalsLen = scaleIntervals.length;
-        const idx = Math.min(
-            bisect(scaleIntervals, this._approxInterval, 0, scaleIntervalsLen),
-            scaleIntervalsLen - 1
+    getMinorTicks(splitNumber: number): number[][] {
+        return getMinorTicks(
+            this,
+            splitNumber,
+            getBreaksUnsafe(this),
+            this._interval
         );
-
-        // Interval that can be used to calculate ticks
-        this._interval = scaleIntervals[idx][1];
-        this._intervalPrecision = scaleHelper.getIntervalPrecision(this._interval);
-        // Min level used when picking ticks from top down.
-        // We check one more level to avoid the ticks are to sparse in some case.
-        this._minLevelUnit = scaleIntervals[Math.max(idx - 1, 0)][0];
     }
 
-    parse(val: number | string | Date): number {
-        // val might be float.
-        return isNumber(val) ? val : +numberUtil.parseDate(val);
+    setTimeInterval(opt: {
+        interval: number;
+        approxInterval: number;
+        minLevelUnit: TimeUnit;
+    }): void {
+        this._interval = opt.interval;
+        this._approxInterval = opt.approxInterval;
+        this._minLevelUnit = opt.minLevelUnit;
     }
 
-    contain(val: number): boolean {
-        return scaleHelper.contain(val, this._extent);
-    }
-
-    normalize(val: number): number {
-        return this._calculator.normalize(val, this._extent);
-    }
-
-    scale(val: number): number {
-        return this._calculator.scale(val, this._extent);
+    static parse(val: number | string | Date): number {
+        // `val` might be a float (e.g., calculated from percent), so call `round`.
+        return isNumber(val) ? Math.round(val) : +numberUtil.parseDate(val);
     }
 
 }
@@ -517,13 +468,13 @@ function createEstimateNiceMultiple(
     };
 }
 
-function getIntervalTicks(
+function createIntervalTicks(
     bottomUnitName: TimeUnit,
     approxInterval: number,
     isUTC: boolean,
     extent: number[],
-    extentSpanWithBreaks: number,
-    brkCtx: ScaleBreakContext | NullUndefined,
+    innermostSpan: number,
+    brk: BreakScaleMapper | NullUndefined,
 ): TimeScaleTick[] {
     const safeLimit = 10000;
     const unitNames = timeUnits;
@@ -569,8 +520,8 @@ function getIntervalTicks(
             date[setMethodName](date[getMethodName]() + interval);
             dateTime = date.getTime();
 
-            if (brkCtx) {
-                const moreMultiple = brkCtx.calcNiceTickMultiple(dateTime, estimateNiceMultiple);
+            if (brk) {
+                const moreMultiple = brk.calcNiceTickMultiple(dateTime, estimateNiceMultiple);
                 if (moreMultiple > 0) {
                     date[setMethodName](date[getMethodName]() + moreMultiple * interval);
                     dateTime = date.getTime();
@@ -578,7 +529,7 @@ function getIntervalTicks(
             }
         }
 
-        // This extra tick is for calcuating ticks of next level. Will not been added to the final result
+        // This extra tick is for calculating ticks of next level. Will not been added to the final result
         out.push({
             value: dateTime,
             notAdd: true
@@ -713,7 +664,7 @@ function getIntervalTicks(
                     }
                 }
 
-                const targetTickNum = extentSpanWithBreaks / approxInterval;
+                const targetTickNum = innermostSpan / approxInterval;
                 // Added too much in this level and not too less in last level
                 if (tickCount > targetTickNum * 1.5 && lastLevelTickCount > targetTickNum / 1.5) {
                     break;
@@ -737,8 +688,9 @@ function getIntervalTicks(
         return filter(levelTicks, tick => tick.value >= extent[0] && tick.value <= extent[1] && !tick.notAdd);
     }), levelTicks => levelTicks.length > 0);
 
-    const ticks: TimeScaleTick[] = [];
     const maxLevel = levelsTicksInExtent.length - 1;
+    const ticks: TimeScaleTick[] = [];
+
     for (let i = 0; i < levelsTicksInExtent.length; ++i) {
         const levelTicks = levelsTicksInExtent[i];
         for (let k = 0; k < levelTicks.length; ++k) {
@@ -754,18 +706,79 @@ function getIntervalTicks(
         }
     }
 
+    // Remove duplicates, which may cause jitter of `splitArea` and other bad cases.
+    removeDuplicates(ticks, removeDuplicatesGetKeyFromValueProp, null);
+
     ticks.sort((a, b) => a.value - b.value);
-    // Remove duplicates
-    const result: TimeScaleTick[] = [];
-    for (let i = 0; i < ticks.length; ++i) {
-        if (i === 0 || ticks[i].value !== ticks[i - 1].value) {
-            result.push(ticks[i]);
-        }
+
+    const currMinTick = ticks[0];
+    const currMaxTick = ticks[ticks.length - 1];
+    const extent0Unit = getUnitFromValue(extent[0], isUTC);
+    const extent1Unit = getUnitFromValue(extent[1], isUTC);
+    if (!currMinTick || currMinTick.value > extent[0]) {
+        ticks.unshift({
+            value: extent[0],
+            time: {level: 0, upperTimeUnit: extent0Unit, lowerTimeUnit: extent0Unit},
+            notNice: true,
+        });
+    }
+    if (!currMaxTick || currMaxTick.value < extent[1]) {
+        ticks.push({
+            value: extent[1],
+            time: {level: 0, upperTimeUnit: extent1Unit, lowerTimeUnit: extent1Unit},
+            notNice: true,
+        });
     }
 
-    return result;
+    return ticks;
 }
 
+export const calcNiceForTimeScale: ScaleCalcNiceMethod = function (scale: TimeScale, opt) {
+    const extent = scale.getExtent();
+    // If extent start and end are same, expand them
+    if (extent[0] === extent[1]) {
+        // Expand extent
+        extent[0] -= ONE_DAY;
+        extent[1] += ONE_DAY;
+    }
+    // If there are no data and extent are [Infinity, -Infinity]
+    if (extent[1] === -Infinity && extent[0] === Infinity) {
+        const d = new Date();
+        extent[1] = +new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        extent[0] = extent[1] - ONE_DAY;
+    }
+    scale.setExtent(extent[0], extent[1]);
+
+    const splitNumber = ensureValidSplitNumber(opt.splitNumber, 10);
+    let approxInterval = getScaleLinearSpanEffective(scale) / splitNumber;
+
+    const minInterval = opt.minInterval;
+    const maxInterval = opt.maxInterval;
+    if (minInterval != null && approxInterval < minInterval) {
+        approxInterval = minInterval;
+    }
+    if (maxInterval != null && approxInterval > maxInterval) {
+        approxInterval = maxInterval;
+    }
+
+    const scaleIntervalsLen = scaleIntervals.length;
+    const idx = Math.min(
+        bisect(scaleIntervals, approxInterval, 0, scaleIntervalsLen),
+        scaleIntervalsLen - 1
+    );
+
+    // Interval that can be used to calculate ticks
+    const interval = scaleIntervals[idx][1];
+    // Min level used when picking ticks from top down.
+    // We check one more level to avoid the ticks are to sparse in some case.
+    const minLevelUnit = scaleIntervals[Math.max(idx - 1, 0)][0];
+
+    scale.setTimeInterval({
+        approxInterval,
+        interval,
+        minLevelUnit
+    });
+};
 
 Scale.registerClass(TimeScale);
 

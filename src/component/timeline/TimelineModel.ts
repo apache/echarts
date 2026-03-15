@@ -292,10 +292,6 @@ class TimelineModel extends ComponentModel<TimelineOption> {
         return this._data;
     }
 
-    /**
-     * @public
-     * @return {Array.<string>} categoreis
-     */
     getCategories() {
         if (this.get('axisType') === 'category') {
             return this._names.slice();

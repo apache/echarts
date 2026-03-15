@@ -29,6 +29,10 @@ import {
 import { AxisBaseModel } from '../AxisBaseModel';
 import { mixin } from 'zrender/src/core/util';
 
+
+export const COORD_SYS_TYPE_SINGLE_AXIS = 'singleAxis';
+export const COMPONENT_TYPE_SINGLE_AXIS = COORD_SYS_TYPE_SINGLE_AXIS;
+
 export type SingleAxisPosition = 'top' | 'bottom' | 'left' | 'right';
 
 export type SingleAxisOption = AxisBaseOption & BoxLayoutOptionMixin & {
@@ -39,7 +43,7 @@ export type SingleAxisOption = AxisBaseOption & BoxLayoutOptionMixin & {
 
 class SingleAxisModel extends ComponentModel<SingleAxisOption>
     implements AxisBaseModel<SingleAxisOption> {
-    static type = 'singleAxis';
+    static type = COMPONENT_TYPE_SINGLE_AXIS;
     type = SingleAxisModel.type;
 
     static readonly layoutMode = 'box';

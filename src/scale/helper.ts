@@ -17,12 +17,19 @@
 * under the License.
 */
 
-import {getPrecision, round, nice, quantityExponent} from '../util/number';
-import IntervalScale from './Interval';
-import LogScale from './Log';
+import {
+    getPrecision, round, nice, quantityExponent,
+    mathPow, mathMax, mathRound,
+    mathLog, mathAbs, mathFloor, mathCeil
+} from '../util/number';
+import type IntervalScale from './Interval';
+import type LogScale from './Log';
 import type Scale from './Scale';
-import { bind } from 'zrender/src/core/util';
-import type { ScaleBreakContext } from './break';
+import type TimeScale from './Time';
+import { NullUndefined } from '../util/types';
+import type OrdinalScale from './Ordinal';
+import type { ScaleExtentFixMinMax } from '../coord/scaleRawExtentInfo';
+import { isValidNumberForExtent } from '../util/model';
 
 type intervalScaleNiceTicksResult = {
     interval: number,
@@ -30,19 +37,50 @@ type intervalScaleNiceTicksResult = {
     niceTickExtent: [number, number]
 };
 
-export function isValueNice(val: number) {
-    const exp10 = Math.pow(10, quantityExponent(Math.abs(val)));
-    const f = Math.abs(val / exp10);
-    return f === 0
-        || f === 1
-        || f === 2
-        || f === 3
-        || f === 5;
+export type IntervalScaleGetLabelOpt = {
+    // If 'auto', use nice precision.
+    precision?: 'auto' | number,
+    // `true`: returns 1.50 but not 1.5 if precision is 2.
+    pad?: boolean
+};
+
+/**
+ * See also method `nice` in `src/util/number.ts`.
+ */
+// export function isValueNice(val: number) {
+//     const exp10 = Math.pow(10, quantityExponent(Math.abs(val)));
+//     const f = Math.abs(round(val / exp10, 0));
+//     return f === 0
+//         || f === 1
+//         || f === 2
+//         || f === 3
+//         || f === 5;
+// }
+
+export function isIntervalOrLogScale(scale: Scale): scale is (LogScale | IntervalScale) {
+    return isIntervalScale(scale) || isLogScale(scale);
 }
 
-export function isIntervalOrLogScale(scale: Scale): scale is LogScale | IntervalScale {
-    return scale.type === 'interval' || scale.type === 'log';
+export function isIntervalOrTimeScale(scale: Scale): scale is (IntervalScale | TimeScale) {
+    return isIntervalScale(scale) || isTimeScale(scale);
 }
+
+export function isIntervalScale(scale: Scale): scale is IntervalScale {
+    return scale.type === 'interval';
+}
+
+export function isTimeScale(scale: Scale): scale is TimeScale {
+    return scale.type === 'time';
+}
+
+export function isLogScale(scale: Scale): scale is LogScale {
+    return scale.type === 'log';
+}
+
+export function isOrdinalScale(scale: Scale): scale is OrdinalScale {
+    return scale.type === 'ordinal';
+}
+
 /**
  * @param extent Both extent[0] and extent[1] should be valid number.
  *               Should be extent[0] < extent[1].
@@ -65,23 +103,27 @@ export function intervalScaleNiceTicks(
     if (maxInterval != null && interval > maxInterval) {
         interval = result.interval = maxInterval;
     }
-    // Tow more digital for tick.
     const precision = result.intervalPrecision = getIntervalPrecision(interval);
     // Niced extent inside original extent
-    const niceTickExtent = result.niceTickExtent = [
-        round(Math.ceil(extent[0] / interval) * interval, precision),
-        round(Math.floor(extent[1] / interval) * interval, precision)
+    result.niceTickExtent = [
+        round(mathCeil(extent[0] / interval) * interval, precision),
+        round(mathFloor(extent[1] / interval) * interval, precision)
     ];
-
-    fixExtent(niceTickExtent, extent);
 
     return result;
 }
 
-export function increaseInterval(interval: number) {
-    const exp10 = Math.pow(10, quantityExponent(interval));
-    // Increase interval
-    let f = interval / exp10;
+/**
+ * The input `niceInterval` should be generated
+ * from `nice` method in `src/util/number.ts`, or
+ * from `increaseInterval` itself.
+ */
+export function increaseInterval(niceInterval: number) {
+    const exponent = quantityExponent(niceInterval);
+    // No rounding error in Math.pow(10, integer).
+    const exp10 = mathPow(10, exponent);
+    // Fix IEEE 754 float rounding error
+    let f = mathRound(niceInterval / exp10);
     if (!f) {
         f = 1;
     }
@@ -94,82 +136,133 @@ export function increaseInterval(interval: number) {
     else { // f is 1 or 5
         f *= 2;
     }
-    return round(f * exp10);
+    // Fix IEEE 754 float rounding error
+    return round(f * exp10, -exponent);
+}
+
+export function getIntervalPrecision(niceInterval: number): number {
+    // Tow more digital for tick.
+    // NOTE: `2` was introduced in commit `af2a2a9f6303081d7c3b52f0a38add07b4c6e0c7`;
+    // it works on "nice" interval, but seems not necessarily mathematically required.
+    return getPrecision(niceInterval) + 2;
 }
 
 /**
- * @return interval precision
+ * Lookup table to avoid rounding error - if the value before transformed is in `lookup.from[i]`,
+ * return `lookup.to[i]` directly without transform.
+ * Rounding errors typically arise in logarithm transform, which can cause the tick to be displayed
+ * like `5.999999999999999` when it is expected to be `6`.
  */
-export function getIntervalPrecision(interval: number): number {
-    // Tow more digital for tick.
-    return getPrecision(interval) + 2;
+export type ValueTransformLookupOpt = {
+    lookup?: {
+        from: number[];
+        to: number[];
+    } | NullUndefined;
+};
+
+/**
+ * NOTE:
+ *  - If `val` is `NaN`, return `NaN`.
+ *  - If `val` is `0`, return `-Infinity`.
+ *  - If `val` is negative, return `NaN`.
+ *
+ * @see {DataStore#getDataExtent} It handles non-positive values for logarithm scale.
+ */
+export function logScaleLogTick(
+    val: number,
+    base: number,
+): number {
+    // NOTE:
+    //  - rounding error may happen above, typically expecting `log10(1000)` but actually
+    //    getting `2.9999999999999996`, but generally it does not matter since they are not
+    //    used to display.
+    //  - Consider backward compatibility and other log bases, do not use `Math.log10`.
+    return mathLog(val) / mathLog(base);
 }
 
-function clamp(
-    niceTickExtent: [number, number], idx: number, extent: [number, number]
-): void {
-    niceTickExtent[idx] = Math.max(Math.min(niceTickExtent[idx], extent[1]), extent[0]);
-}
-
-// In some cases (e.g., splitNumber is 1), niceTickExtent may be out of extent.
-export function fixExtent(
-    niceTickExtent: [number, number], extent: [number, number]
-): void {
-    !isFinite(niceTickExtent[0]) && (niceTickExtent[0] = extent[0]);
-    !isFinite(niceTickExtent[1]) && (niceTickExtent[1] = extent[1]);
-    clamp(niceTickExtent, 0, extent);
-    clamp(niceTickExtent, 1, extent);
-    if (niceTickExtent[0] > niceTickExtent[1]) {
-        niceTickExtent[0] = niceTickExtent[1];
+/**
+ * Cumulative rounding errors cause the logarithm operation to become non-invertible by simply exponentiation.
+ *  - `Math.pow(10, integer)` itself has no rounding error. But,
+ *  - If `linearTickVal` is generated internally by `calcNiceTicks`, it may be still "not nice" (not an integer)
+ *    when it is `extent[i]`.
+ *  - If `linearTickVal` is generated outside (e.g., by `scaleCalcAlign`) and set by `setExtent`,
+ *    `logScaleLogTick` may already have introduced rounding errors even for "nice" values.
+ * But invertible is required when the original `extent[i]` need to be respected, or "nice" ticks need to be
+ * displayed instead of something like `5.999999999999999`, which is addressed in this function.
+ * See also `#4158`.
+ *
+ * [CAUTION]:
+ *  Monotonicity may be broken on extent ends - callers must make sure it does not matter.
+ */
+export function logScalePowTick(
+    // `tickVal` should be in the linear space.
+    linearTickVal: number,
+    base: number,
+    opt: ValueTransformLookupOpt | NullUndefined
+): number {
+    const lookup = opt && opt.lookup;
+    if (lookup) {
+        for (let i = 0; i < lookup.from.length; i++) {
+            if (linearTickVal === lookup.from[i]) {
+                return lookup.to[i];
+            }
+        }
     }
+    return mathPow(base, linearTickVal);
 }
 
-export function contain(val: number, extent: [number, number]): boolean {
-    return val >= extent[0] && val <= extent[1];
-}
-
-export class ScaleCalculator {
-
-    normalize: (val: number, extent: [number, number]) => number = normalize;
-    scale: (val: number, extent: [number, number]) => number = scale;
-
-    updateMethods(brkCtx: ScaleBreakContext) {
-        if (brkCtx.hasBreaks()) {
-            this.normalize = bind(brkCtx.normalize, brkCtx);
-            this.scale = bind(brkCtx.scale, brkCtx);
+/**
+ * For `IntervalScale`, convert `rawExtent` to:
+ *  - Be no non-finite number.
+ *  - Be `extent[0] < extent[1]`; no equal, which brings convenience to "nice" calculation.
+ */
+export function intervalScaleEnsureValidExtent(
+    rawExtent: number[],
+    fixMinMax: ScaleExtentFixMinMax,
+): number[] {
+    const extent = rawExtent.slice();
+    // If extent start and end are same, expand them
+    if (extent[0] === extent[1]) {
+        if (extent[0] !== 0) {
+            // Expand extent
+            // Note that extents can be both negative. See #13154
+            const expandSize = mathAbs(extent[0]);
+            // In the fowllowing case
+            //      Axis has been fixed max 100
+            //      Plus data are all 100 and axis extent are [100, 100].
+            // Extend to the both side will cause expanded max is larger than fixed max.
+            // So only expand to the smaller side.
+            if (!fixMinMax[1]) {
+                extent[1] += expandSize / 2;
+                extent[0] -= expandSize / 2;
+            }
+            else {
+                extent[0] -= expandSize / 2;
+            }
         }
         else {
-            this.normalize = normalize;
-            this.scale = scale;
+            extent[1] = 1;
         }
     }
-}
-
-function normalize(
-    val: number,
-    extent: [number, number],
-    // Dont use optional arguments for performance consideration here.
-): number {
-    if (extent[1] === extent[0]) {
-        return 0.5;
+    // For example, if there are no series data, extent may be `[Infinity, -Infinity]` here.
+    if (!isValidNumberForExtent(extent[0]) || !isValidNumberForExtent(extent[1])) {
+        extent[0] = 0;
+        extent[1] = 1;
     }
-    return (val - extent[0]) / (extent[1] - extent[0]);
+    if (extent[1] < extent[0]) {
+        extent.reverse();
+    }
+
+    return extent;
 }
 
-function scale(
-    val: number,
-    extent: [number, number],
+export function extentDiffers(extent1: number[], extent2: number[]): boolean[] {
+    return [extent1[0] !== extent2[0], extent1[1] !== extent2[1]];
+}
+
+export function ensureValidSplitNumber(
+    rawSplitNumber: number | NullUndefined, defaultSplitNumber: number
 ): number {
-    return val * (extent[1] - extent[0]) + extent[0];
-}
-
-export function logTransform(base: number, extent: number[], noClampNegative?: boolean): [number, number] {
-    const loggedBase = Math.log(base);
-    return [
-        // log(negative) is NaN, so safe guard here.
-        // PENDING: But even getting a -Infinity still does not make sense in extent.
-        //  Just keep it as is, getting a NaN to make some previous cases works by coincidence.
-        Math.log(noClampNegative ? extent[0] : Math.max(0, extent[0])) / loggedBase,
-        Math.log(noClampNegative ? extent[1] : Math.max(0, extent[1])) / loggedBase
-    ];
+    rawSplitNumber = rawSplitNumber || defaultSplitNumber;
+    return mathRound(mathMax(rawSplitNumber, 1));
 }

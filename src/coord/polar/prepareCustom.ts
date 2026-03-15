@@ -20,6 +20,7 @@
 import * as zrUtil from 'zrender/src/core/util';
 import Polar from './Polar';
 import RadiusAxis from './RadiusAxis';
+import { calcBandWidth } from '../axisBand';
 // import AngleAxis from './AngleAxis';
 
 function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
@@ -33,7 +34,7 @@ function dataToCoordSize(this: Polar, dataSize: number[], dataItem: number[]) {
         const halfSize = dataSize[dimIdx] / 2;
 
         let result = axis.type === 'category'
-            ? axis.getBandWidth()
+            ? calcBandWidth(axis).w
             : Math.abs(axis.dataToCoord(val - halfSize) - axis.dataToCoord(val + halfSize));
 
         if (dim === 'Angle') {

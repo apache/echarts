@@ -35,6 +35,7 @@ import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
 import type Element from 'zrender/src/Element';
 import type Matrix from '../../coord/matrix/Matrix';
+import { calcBandWidth } from '../../coord/axisBand';
 
 // Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
 interface GeoLikeCoordSys extends CoordinateSystem {
@@ -199,8 +200,8 @@ class HeatmapView extends ChartView {
             }
 
             // add 0.5px to avoid the gaps
-            width = xAxis.getBandWidth() + .5;
-            height = yAxis.getBandWidth() + .5;
+            width = calcBandWidth(xAxis).w + .5;
+            height = calcBandWidth(yAxis).w + .5;
             xAxisExtent = xAxis.scale.getExtent();
             yAxisExtent = yAxis.scale.getExtent();
         }
@@ -241,10 +242,10 @@ class HeatmapView extends ChartView {
                 if (isNaN(data.get(dataDims[2], idx) as number)
                     || isNaN(dataDimX as number)
                     || isNaN(dataDimY as number)
-                    || dataDimX < xAxisExtent[0]
-                    || dataDimX > xAxisExtent[1]
-                    || dataDimY < yAxisExtent[0]
-                    || dataDimY > yAxisExtent[1]
+                    || (dataDimX as number) < xAxisExtent[0]
+                    || (dataDimX as number) > xAxisExtent[1]
+                    || (dataDimY as number) < yAxisExtent[0]
+                    || (dataDimY as number) > yAxisExtent[1]
                 ) {
                     continue;
                 }
@@ -345,7 +346,7 @@ class HeatmapView extends ChartView {
             // PENDING
             if (incremental) {
                 // Rect must use hover layer if it's incremental.
-                rect.states.emphasis.hoverLayer = true;
+                rect.states.emphasis.hoverLayer = graphic.HOVER_LAYER_FOR_INCREMENTAL;
             }
 
             group.add(rect);

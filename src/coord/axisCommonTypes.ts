@@ -34,6 +34,9 @@ import type { PrimaryTimeUnit } from '../util/time';
 export const AXIS_TYPES = {value: 1, category: 1, time: 1, log: 1} as const;
 export type OptionAxisType = keyof typeof AXIS_TYPES;
 
+// `scale/Ordinal` | `scale/Interval` | `scale/Log` | `scale/Time`
+export type AxisScaleType = 'ordinal' | 'interval' | 'log' | 'time';
+
 export interface AxisBaseOptionCommon extends ComponentOption,
     AnimationOptionMixin {
     type?: OptionAxisType;
@@ -131,13 +134,21 @@ export interface AxisBaseOptionCommon extends ComponentOption,
     }
 }
 
+/**
+ * The gap at both ends of the axis. `[GAP, GAP]`.
+ */
+type NumericAxisBoundaryGapOption = [NumericAxisBoundaryGapOptionItemValue, NumericAxisBoundaryGapOptionItemValue];
+// It can be an absolute pixel number (like `35`), or percent (like `'30%'`)
+export type NumericAxisBoundaryGapOptionItemValue = number | string | NullUndefined;
+
 export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
-    /*
-     * The gap at both ends of the axis.
-     * [GAP, GAP], where
-     * `GAP` can be an absolute pixel number (like `35`), or percent (like `'30%'`)
-     */
-    boundaryGap?: [number | string, number | string]
+
+    boundaryGap?: NumericAxisBoundaryGapOption;
+
+    // The axis contains the series shapes if possible, instead of overlowing at the edges.
+    // Key is series type, like 'bar', 'pictorialBar'.
+    // null/undefined means `true`.
+    containShape?: boolean;
 
     /**
      * AxisTick and axisLabel and splitLine are calculated based on splitNumber.
@@ -167,14 +178,12 @@ export interface NumericAxisBaseOptionCommon extends AxisBaseOptionCommon {
     /**
      * Data min value to be included in axis extent calculation.
      * The final min value will be the minimum of this value and the data min.
-     * Only works for value axis.
      */
     dataMin?: ScaleDataValue;
 
     /**
      * Data max value to be included in axis extent calculation.
      * The final max value will be the maximum of this value and the data max.
-     * Only works for value axis.
      */
     dataMax?: ScaleDataValue;
 }
@@ -210,10 +219,10 @@ export interface ValueAxisBaseOption extends NumericAxisBaseOptionCommon {
 
     /**
      * Optional value can be:
-     * + `false`: always include value 0.
+     * + `false`: always include value 0 if not conflict with `axis.min/max` setting.
      * + `true`: the axis may not contain zero position.
      */
-     scale?: boolean;
+    scale?: boolean;
 }
 export interface LogAxisBaseOption extends NumericAxisBaseOptionCommon {
     type?: 'log';
@@ -230,7 +239,7 @@ interface AxisNameTextStyleOption extends LabelCommonOption {
 
 interface AxisLineOption {
     show?: boolean | 'auto',
-    onZero?: boolean,
+    onZero?: boolean | 'auto',
     onZeroAxisIndex?: number,
     // The arrow at both ends the the axis.
     symbol?: string | [string, string],
@@ -248,7 +257,7 @@ interface AxisTickOption {
     // The length of axisTick.
     length?: number,
     lineStyle?: LineStyleOption,
-    customValues?: (number | string | Date)[]
+    customValues?: AxisTickLabelCustomValuesOption
 }
 
 export type AxisLabelValueFormatter = (
@@ -314,10 +323,8 @@ interface AxisLabelBaseOption extends LabelCommonOption<AxisLabelBaseOptionNuanc
     // Whether axisLabel is inside the grid or outside the grid.
     inside?: boolean,
     rotate?: number,
-    // true | false | null/undefined (auto)
-    showMinLabel?: boolean,
-    // true | false | null/undefined (auto)
-    showMaxLabel?: boolean,
+    showMinLabel?: AxisShowMinMaxLabelOption,
+    showMaxLabel?: AxisShowMinMaxLabelOption,
     // 'left' | 'center' | 'right' | null/undefined (auto)
     alignMinLabel?: TextAlign,
     // 'left' | 'center' | 'right' | null/undefined (auto)
@@ -333,8 +340,13 @@ interface AxisLabelBaseOption extends LabelCommonOption<AxisLabelBaseOptionNuanc
      * If hide overlapping labels.
      */
     hideOverlap?: boolean,
-    customValues?: (number | string | Date)[],
+    customValues?: AxisTickLabelCustomValuesOption,
 }
+
+// true | false | null/undefined (auto)
+export type AxisShowMinMaxLabelOption = boolean | NullUndefined;
+
+export type AxisTickLabelCustomValuesOption = (number | string | Date)[];
 
 interface AxisLabelOption<TType extends OptionAxisType> extends AxisLabelBaseOption {
     formatter?: LabelFormatters[TType]

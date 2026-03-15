@@ -23,7 +23,7 @@ import {
     ComponentOption, BoxLayoutOptionMixin, ZRColor, ShadowOptionMixin, NullUndefined,
     ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin
 } from '../../util/types';
-import Grid from './Grid';
+import type Grid from './Grid';
 import { CoordinateSystemHostModel } from '../CoordinateSystem';
 import type GlobalModel from '../../model/Global';
 import { getLayoutParams, mergeLayoutParam } from '../../util/layout';
@@ -33,6 +33,8 @@ import tokens from '../../visual/tokens';
 // the canvas, the chart canvas probably does not have an border or a different background color within a page.
 export const OUTER_BOUNDS_DEFAULT = {left: 0, right: 0, top: 0, bottom: 0};
 export const OUTER_BOUNDS_CLAMP_DEFAULT = ['25%', '25%'];
+
+export const COORD_SYS_TYPE_CARTESIAN_2D = 'cartesian2d';
 
 export interface GridOption extends ComponentOption,
     ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin,

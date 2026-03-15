@@ -17,103 +17,70 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
+import { isArray } from 'zrender/src/core/util';
 import {parsePercent} from '../../util/number';
 import type GlobalModel from '../../model/Global';
-import BoxplotSeriesModel from './BoxplotSeries';
-import Axis2D from '../../coord/cartesian/Axis2D';
+import BoxplotSeriesModel, { SERIES_TYPE_BOXPLOT } from './BoxplotSeries';
+import {
+    countSeriesOnAxisOnKey, eachAxisOnKey, eachSeriesOnAxisOnKey,
+    requireAxisStatistics
+} from '../../coord/axisStatistics';
+import { makeCallOnlyOnce } from '../../util/model';
+import { EChartsExtensionInstallRegisters } from '../../extension';
+import Axis from '../../coord/Axis';
+import { registerAxisContainShapeHandler } from '../../coord/scaleRawExtentInfo';
+import { calcBandWidth } from '../../coord/axisBand';
+import {
+    createBandWidthBasedAxisContainShapeHandler,
+    getMetricsNonOrdinalLinearPositiveMinGap,
+    makeAxisStatKey
+} from '../helper/axisSnippets';
 
-const each = zrUtil.each;
 
-interface GroupItem {
-    seriesModels: BoxplotSeriesModel[]
-    axis: Axis2D
-    boxOffsetList: number[]
-    boxWidthList: number[]
-}
+const callOnlyOnce = makeCallOnlyOnce();
 
 export interface BoxplotItemLayout {
     ends: number[][]
     initBaseline: number
 }
 
-export default function boxplotLayout(ecModel: GlobalModel) {
-
-    const groupResult = groupSeriesByAxis(ecModel);
-
-    each(groupResult, function (groupItem) {
-        const seriesModels = groupItem.seriesModels;
-
-        if (!seriesModels.length) {
+export function boxplotLayout(ecModel: GlobalModel) {
+    const axisStatKey = makeAxisStatKey(SERIES_TYPE_BOXPLOT);
+    eachAxisOnKey(ecModel, axisStatKey, function (axis) {
+        const seriesCount = countSeriesOnAxisOnKey(axis, axisStatKey);
+        if (!seriesCount) {
             return;
         }
-
-        calculateBase(groupItem);
-
-        each(seriesModels, function (seriesModel, idx) {
+        const baseResult = calculateBase(axis, seriesCount);
+        eachSeriesOnAxisOnKey(axis, axisStatKey, function (seriesModel: BoxplotSeriesModel, idx) {
             layoutSingleSeries(
                 seriesModel,
-                groupItem.boxOffsetList[idx],
-                groupItem.boxWidthList[idx]
+                baseResult.boxOffsetList[idx],
+                baseResult.boxWidthList[idx]
             );
         });
     });
 }
 
 /**
- * Group series by axis.
- */
-function groupSeriesByAxis(ecModel: GlobalModel) {
-    const result: GroupItem[] = [];
-    const axisList: Axis2D[] = [];
-
-    ecModel.eachSeriesByType('boxplot', function (seriesModel: BoxplotSeriesModel) {
-        const baseAxis = seriesModel.getBaseAxis();
-        let idx = zrUtil.indexOf(axisList, baseAxis);
-
-        if (idx < 0) {
-            idx = axisList.length;
-            axisList[idx] = baseAxis;
-            result[idx] = {
-                axis: baseAxis,
-                seriesModels: []
-            } as GroupItem;
-        }
-
-        result[idx].seriesModels.push(seriesModel);
-    });
-
-    return result;
-}
-
-/**
  * Calculate offset and box width for each series.
  */
-function calculateBase(groupItem: GroupItem) {
-    const baseAxis = groupItem.axis;
-    const seriesModels = groupItem.seriesModels;
-    const seriesCount = seriesModels.length;
-
-    const boxWidthList: number[] = groupItem.boxWidthList = [];
-    const boxOffsetList: number[] = groupItem.boxOffsetList = [];
+function calculateBase(baseAxis: Axis, seriesCount: number): {
+    boxOffsetList: number[];
+    boxWidthList: number[];
+} {
+    const boxWidthList: number[] = [];
+    const boxOffsetList: number[] = [];
     const boundList: number[][] = [];
 
-    let bandWidth: number;
-    if (baseAxis.type === 'category') {
-        bandWidth = baseAxis.getBandWidth();
-    }
-    else {
-        let maxDataCount = 0;
-        each(seriesModels, function (seriesModel) {
-            maxDataCount = Math.max(maxDataCount, seriesModel.getData().count());
-        });
-        const extent = baseAxis.getExtent();
-        bandWidth = Math.abs(extent[1] - extent[0]) / maxDataCount;
-    }
+    const bandWidth = calcBandWidth(
+        baseAxis,
+        {fromStat: {key: makeAxisStatKey(SERIES_TYPE_BOXPLOT)}, min: 1},
+    ).w;
 
-    each(seriesModels, function (seriesModel) {
+    eachSeriesOnAxisOnKey(baseAxis, makeAxisStatKey(SERIES_TYPE_BOXPLOT), function (seriesModel: BoxplotSeriesModel) {
         let boxWidthBound = seriesModel.get('boxWidth');
-        if (!zrUtil.isArray(boxWidthBound)) {
+        if (!isArray(boxWidthBound)) {
             boxWidthBound = [boxWidthBound, boxWidthBound];
         }
         boundList.push([
@@ -127,7 +94,7 @@ function calculateBase(groupItem: GroupItem) {
     const boxWidth = (availableWidth - boxGap * (seriesCount - 1)) / seriesCount;
     let base = boxWidth / 2 - availableWidth / 2;
 
-    each(seriesModels, function (seriesModel, idx) {
+    eachSeriesOnAxisOnKey(baseAxis, makeAxisStatKey(SERIES_TYPE_BOXPLOT), function (seriesModel, idx) {
         boxOffsetList.push(base);
         base += boxGap + boxWidth;
 
@@ -135,6 +102,11 @@ function calculateBase(groupItem: GroupItem) {
             Math.min(Math.max(boxWidth, boundList[idx][0]), boundList[idx][1])
         );
     });
+
+    return {
+        boxOffsetList,
+        boxWidthList,
+    };
 }
 
 /**
@@ -211,4 +183,22 @@ function layoutSingleSeries(seriesModel: BoxplotSeriesModel, offset: number, box
         to[cDimIdx] += halfWidth;
         ends.push(from, to);
     }
+}
+
+export function registerBoxplotAxisHandlers(registers: EChartsExtensionInstallRegisters) {
+    callOnlyOnce(registers, function () {
+        const axisStatKey = makeAxisStatKey(SERIES_TYPE_BOXPLOT);
+        requireAxisStatistics(
+            registers,
+            {
+                key: axisStatKey,
+                seriesType: SERIES_TYPE_BOXPLOT,
+                getMetrics: getMetricsNonOrdinalLinearPositiveMinGap,
+            }
+        );
+        registerAxisContainShapeHandler(
+            axisStatKey,
+            createBandWidthBasedAxisContainShapeHandler(axisStatKey)
+        );
+    });
 }

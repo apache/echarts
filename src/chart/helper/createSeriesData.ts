@@ -23,7 +23,7 @@ import prepareSeriesDataSchema from '../../data/helper/createDimensions';
 import {getDimensionTypeByAxis} from '../../data/helper/dimensionHelper';
 import {getDataItemValue} from '../../util/model';
 import CoordinateSystem from '../../core/CoordinateSystem';
-import {getCoordSysInfoBySeries} from '../../model/referHelper';
+import {getCoordSysInfoBySeries, SeriesModelCoordSysInfo} from '../../model/referHelper';
 import { createSourceFromSeriesDataOption, Source } from '../../data/Source';
 import {enableDataStack} from '../../data/helper/dataStackHelper';
 import {makeSeriesEncodeForAxisCoordSys} from '../../data/helper/sourceHelper';
@@ -40,7 +40,7 @@ import SeriesDimensionDefine from '../../data/SeriesDimensionDefine';
 
 function getCoordSysDimDefs(
     seriesModel: SeriesModel,
-    coordSysInfo: ReturnType<typeof getCoordSysInfoBySeries>
+    coordSysInfo: SeriesModelCoordSysInfo
 ) {
     const coordSysName = seriesModel.get('coordinateSystem');
     const registeredCoordSys = CoordinateSystem.get(coordSysName);

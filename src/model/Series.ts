@@ -434,7 +434,6 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
      */
     getBaseAxis(): Axis {
         const coordSys = this.coordinateSystem;
-        // @ts-ignore
         return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
     }
 
@@ -537,6 +536,7 @@ class SeriesModel<Opt extends SeriesOption = SeriesOption> extends ComponentMode
     }
 
     restoreData() {
+        // See `dataTaskReset`.
         this.dataTask.dirty();
     }
 

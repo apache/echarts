@@ -27,6 +27,8 @@ import Grid from '../../coord/cartesian/Grid';
 import Axis2D from '../../coord/cartesian/Axis2D';
 import { PathProps } from 'zrender/src/graphic/Path';
 import Model from '../../model/Model';
+import { mathMax, mathMin } from '../../util/number';
+import type GlobalModel from '../../model/Global';
 
 // Not use top level axisPointer model
 type AxisPointerModel = Model<CommonAxisPointerOption>;
@@ -46,13 +48,19 @@ class CartesianAxisPointer extends BaseAxisPointer {
         const axis = axisModel.axis;
         const grid = axis.grid;
         const axisPointerType = axisPointerModel.get('type');
+        const thisExtent = axis.getGlobalExtent();
         const otherExtent = getCartesian(grid, axis).getOtherAxis(axis).getGlobalExtent();
         const pixelValue = axis.toGlobalCoord(axis.dataToCoord(value, true));
 
         if (axisPointerType && axisPointerType !== 'none') {
             const elStyle = viewHelper.buildElStyle(axisPointerModel);
             const pointerOption = pointerShapeBuilder[axisPointerType](
-                axis, pixelValue, otherExtent
+                axis,
+                pixelValue,
+                thisExtent,
+                otherExtent,
+                axisPointerModel.get('seriesDataIndices'),
+                axisPointerModel.ecModel
             );
             pointerOption.style = elStyle;
             elOption.graphicKey = pointerOption.type;
@@ -105,8 +113,8 @@ class CartesianAxisPointer extends BaseAxisPointer {
 
         const currPosition = [transform.x, transform.y];
         currPosition[dimIndex] += delta[dimIndex];
-        currPosition[dimIndex] = Math.min(axisExtent[1], currPosition[dimIndex]);
-        currPosition[dimIndex] = Math.max(axisExtent[0], currPosition[dimIndex]);
+        currPosition[dimIndex] = mathMin(axisExtent[1], currPosition[dimIndex]);
+        currPosition[dimIndex] = mathMax(axisExtent[0], currPosition[dimIndex]);
 
         const cursorOtherValue = (otherExtent[1] + otherExtent[0]) / 2;
         const cursorPoint = [cursorOtherValue, cursorOtherValue];
@@ -142,7 +150,12 @@ function getCartesian(grid: Grid, axis: Axis2D) {
 
 const pointerShapeBuilder = {
 
-    line: function (axis: Axis2D, pixelValue: number, otherExtent: number[]): PathProps & { type: 'Line'} {
+    line: function (
+        axis: Axis2D,
+        pixelValue: number,
+        thisExtent: number[],
+        otherExtent: number[]
+    ): PathProps & { type: 'Line'} {
         const targetShape = viewHelper.makeLineShape(
             [pixelValue, otherExtent[0]],
             [pixelValue, otherExtent[1]],
@@ -155,14 +168,23 @@ const pointerShapeBuilder = {
         };
     },
 
-    shadow: function (axis: Axis2D, pixelValue: number, otherExtent: number[]): PathProps & { type: 'Rect'} {
-        const bandWidth = Math.max(1, axis.getBandWidth());
-        const span = otherExtent[1] - otherExtent[0];
+    shadow: function (
+        axis: Axis2D,
+        pixelValue: number,
+        thisExtent: number[],
+        otherExtent: number[],
+        seriesDataIndices: CommonAxisPointerOption['seriesDataIndices'],
+        ecModel: GlobalModel
+    ): PathProps & { type: 'Rect'} {
+
+        const bandWidth = viewHelper.calcAxisPointerShadowBandWidth(axis, seriesDataIndices, ecModel);
+        const otherSpan = otherExtent[1] - otherExtent[0];
+        const [min, max] = viewHelper.calcAxisPointerShadowEnds(pixelValue, thisExtent, bandWidth);
         return {
             type: 'Rect',
             shape: viewHelper.makeRectShape(
-                [pixelValue - bandWidth / 2, otherExtent[0]],
-                [bandWidth, span],
+                [min, otherExtent[0]],
+                [max - min, otherSpan],
                 getAxisDimIndex(axis)
             )
         };

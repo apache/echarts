@@ -38,6 +38,7 @@ import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import { getECData } from '../../util/innerStore';
 import { createTextStyle as innerCreateTextStyle } from '../../label/labelStyle';
 import { DisplayState, TextCommonOption } from '../../util/types';
+import { scaleCalcNice2 } from '../../coord/axisNiceTicks';
 
 /**
  * Create a multi dimension List structure from seriesModel.
@@ -74,10 +75,11 @@ export const dataStack = {
 export {createSymbol} from '../../util/symbol';
 
 /**
+ * Externally used by echarts-gl.
  * Create scale
- * @param {Array.<number>} dataExtent
- * @param {Object|module:echarts/Model} option If `optoin.type`
- *        is secified, it can only be `'value'` currently.
+ * @param dataExtent
+ * @param option If `option.type`
+ *        is specified, it can only be `'value'` currently.
  */
 export function createScale(dataExtent: number[], option: object | AxisBaseModel) {
     let axisModel = option;
@@ -93,22 +95,17 @@ export function createScale(dataExtent: number[], option: object | AxisBaseModel
         // zrUtil.mixin(axisModel, AxisModelCommonMixin);
     }
 
-    const scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel);
-    scale.setExtent(dataExtent[0], dataExtent[1]);
-
-    axisHelper.niceScaleExtent(scale, axisModel as AxisBaseModel);
+    const axisType = axisHelper.determineAxisType(axisModel as AxisBaseModel);
+    const scale = axisHelper.createScaleByModel(axisModel as AxisBaseModel, axisType, false);
+    if (dataExtent[1] < dataExtent[0]) {
+        dataExtent = dataExtent.slice().reverse();
+    }
+    scaleCalcNice2(scale, axisModel as AxisBaseModel, null, null, dataExtent);
     return scale;
 }
 
 /**
- * Mixin common methods to axis model,
- *
- * Include methods
- * `getFormattedLabels() => Array.<string>`
- * `getCategories() => Array.<string>`
- * `getMin(origin: boolean) => number`
- * `getMax(origin: boolean) => number`
- * `getNeedCrossZero() => boolean`
+ * Mixin common methods to axis model
  */
 export function mixinAxisModelCommonMethods(Model: Model) {
     zrUtil.mixin(Model, AxisModelCommonMixin);

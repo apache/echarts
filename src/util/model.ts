@@ -28,7 +28,8 @@ import {
     isString,
     indexOf,
     isStringSafe,
-    isNumber
+    isNumber,
+    hasOwn,
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
 import GlobalModel from '../model/Global';
@@ -51,7 +52,7 @@ import {
 import { Dictionary } from 'zrender/src/core/types';
 import SeriesModel from '../model/Series';
 import CartesianAxisModel from '../coord/cartesian/AxisModel';
-import GridModel from '../coord/cartesian/GridModel';
+import type GridModel from '../coord/cartesian/GridModel';
 import { isNumeric, getRandomIdBase, getPrecision, round } from './number';
 import { error, warn } from './log';
 import type Model from '../model/Model';
@@ -716,11 +717,15 @@ export function queryDataIndex(data: SeriesData, payload: Payload & {
 }
 
 /**
+ * [CAVEAT]:
+ *  DO NOT use it in performance-sensitive scenarios.
+ *  Likely a hash map lookup; not inline-cache friendly.
+ *
  * Enable property storage to any host object.
  * Notice: Serialization is not supported.
  *
  * For example:
- * let inner = zrUitl.makeInner();
+ * let inner = makeInner();
  *
  * function some1(hostObj) {
  *      inner(hostObj).someProperty = 1212;
@@ -732,10 +737,8 @@ export function queryDataIndex(data: SeriesData, payload: Payload & {
  *      fields.someProperty2 = 'xx';
  *      ...
  * }
- *
- * @return {Function}
  */
-export function makeInner<T, Host extends object>() {
+export function makeInner<T extends object, Host extends object>() {
     const key = '__ec_inner_' + innerUniqueIndex++;
     return function (hostObj: Host): T {
         return (hostObj as any)[key] || ((hostObj as any)[key] = {});
@@ -1172,4 +1175,157 @@ export class ListIterator<TItem> {
 export function clearTmpModel(model: Model): void {
     // Clear to avoid memory leak.
     model.option = model.parentModel = model.ecModel = null;
+}
+
+export function initExtentForUnion(): [number, number] {
+    return [Infinity, -Infinity];
+}
+
+/**
+ * NOTICE:
+ *  - The input `val` must be a number - type checking is not performed.
+ *  - `extent` should be initialized as `initExtentForUnion()`.
+ */
+export function unionExtentFromNumber(extent: number[], val: number | NullUndefined): void {
+    if (isValidNumberForExtent(val)) {
+        val < extent[0] && (extent[0] = val);
+        val > extent[1] && (extent[1] = val);
+    }
+}
+
+/**
+ * NOTICE:
+ *  - The input `val` must be a number - type checking is not performed.
+ *  - `extent` should be initialized as `initExtentForUnion()`.
+ */
+export function unionExtentStartFromNumber(extent: number[], val: number | NullUndefined): void {
+    if (isValidNumberForExtent(val) && val < extent[0]) {
+        extent[0] = val;
+    }
+}
+
+/**
+ * NOTICE:
+ *  - The input `val` must be a number - type checking is not performed.
+ *  - `extent` should be initialized as `initExtentForUnion()`.
+ */
+export function unionExtentEndFromNumber(extent: number[], val: number | NullUndefined): void {
+    if (isValidNumberForExtent(val) && val > extent[1]) {
+        extent[1] = val;
+    }
+}
+
+/**
+ * NOTICE:
+ *  - `extent` should be initialized as `initExtentForUnion()`.
+ */
+export function unionExtentFromExtent(tarExtent: number[], srcExtent: number[]): void {
+    // Accept both or neither.
+    if (isValidBoundsForExtent(srcExtent[0], srcExtent[1])) {
+        srcExtent[0] < tarExtent[0] && (tarExtent[0] = srcExtent[0]);
+        srcExtent[1] > tarExtent[1] && (tarExtent[1] = srcExtent[1]);
+    }
+}
+
+/**
+ * PENDING: `Infinity` from user data is not necessarily meaningless, but visualizing it requires
+ * special handling and it will not be supported until required. So we simply ignore it here.
+ */
+export function isValidNumberForExtent(val: number | NullUndefined): boolean {
+    // Considered that number could be `NaN` and `Infinity` and should not write into the extent.
+    // Note that `Infinity` is the initialized value from `initExtentForUnion` and may be inputted.
+    return val != null && isFinite(val);
+}
+
+export function isValidBoundsForExtent(start: number, end: number): boolean {
+    return isValidNumberForExtent(start) && isValidNumberForExtent(end) && start <= end;
+}
+
+/**
+ * `extent` should be initialized by `initExtentForUnion()`, and unioned by `unionExtent()`.
+ * `extent` may contain `Infinity` / `NaN`, but assume no `null`/`undefined`.
+ */
+export function extentHasValue(extent: number[]): boolean {
+    // Also considered extent may have `NaN` and `Infinity`.
+    const span = extent[1] - extent[0];
+    return isFinite(span) && span >= 0;
+}
+
+/**
+ * A util for ensuring the callback is called only once.
+ * @usage
+ *  const callOnlyOnce = makeCallOnlyOnce(); // Should be static (ESM top level).
+ *  function someFunc(registers: EChartsExtensionInstallRegisters): void {
+ *      callOnlyOnce(registers, function () {
+ *          // Do something immediately and only once per registers.
+ *      }
+ *  }
+ */
+export function makeCallOnlyOnce<Host extends object>() {
+    const hiddenKey = '__ec_once_' + onceUniqueIndex++;
+    return function (hostObj: Host, cb: () => void) {
+        if (__DEV__) {
+            assert(hostObj);
+        }
+        if (!hasOwn(hostObj, hiddenKey)) {
+            (hostObj as any)[hiddenKey] = 1;
+            cb();
+        }
+    };
+}
+let onceUniqueIndex = getRandomIdBase();
+
+
+/**
+ * @usage
+ *  - The earlier item takes precedence for duplicate items.
+ *  - The input `arr` will be modified if `resolve` is null/undefined.
+ *  - Callers can use `resolve` to manually modify the `currItem`.
+ *    The input `arr` will not be modified if `resolve` is passed.
+ *    `resolve` will be called on every item.
+ *  - Callers need to handle null/undefined (if existing) in `getKey`.
+ */
+export function removeDuplicates<TItem>(
+    arr: (TItem | NullUndefined)[],
+    getKey: (item: TItem) => string,
+    // `existingCount`: the count before this item is added.
+    resolve: ((item: TItem, existingCount: number) => void) | NullUndefined,
+): void {
+    const dupMap = createHashMap<number, string>();
+    let writeIdx = 0;
+    each(arr, function (item) {
+        const key = getKey(item);
+        if (__DEV__) {
+            assert(isString(key));
+        }
+        const count = dupMap.get(key) || 0;
+        if (resolve) {
+            resolve(item, count);
+        }
+        if (!count && !resolve) {
+            arr[writeIdx++] = item;
+        }
+        dupMap.set(key, count + 1);
+    });
+    if (!resolve) {
+        arr.length = writeIdx;
+    }
+}
+
+export function removeDuplicatesGetKeyFromValueProp<TValue extends (string | number)>(
+    item: {value: TValue}
+): string {
+    if (__DEV__) {
+        assert(item.value != null);
+    }
+    return item.value + '';
+}
+
+export function removeDuplicatesGetKeyFromItemItself<TValue extends (string | number)>(
+    item: TValue
+): string {
+    if (__DEV__) {
+        assert(item != null);
+    }
+    return item + '';
 }

@@ -189,6 +189,9 @@ export interface CoordinateSystem {
 
     getAxis?: (dim?: DimensionName) => Axis;
 
+    /**
+     * FIXME: Remove this method? See details in `Cartesian2D['getBaseAxis']`
+     */
     getBaseAxis?: () => Axis;
 
     getOtherAxis?: (baseAxis: Axis) => Axis;

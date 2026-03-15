@@ -19,21 +19,24 @@
 
 
 /**
- * Parallel coordinate system creater.
+ * Parallel coordinate system creator.
  */
 
 import Parallel from './Parallel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import ParallelModel from './ParallelModel';
+import ParallelModel, { COMPONENT_TYPE_PARALLEL, COORD_SYS_TYPE_PARALLEL } from './ParallelModel';
 import { CoordinateSystemMaster } from '../CoordinateSystem';
 import ParallelSeriesModel from '../../chart/parallel/ParallelSeries';
 import { SINGLE_REFERRING } from '../../util/model';
+import { each } from 'zrender/src/core/util';
+import { associateSeriesWithAxis } from '../axisStatistics';
+
 
 function createParallelCoordSys(ecModel: GlobalModel, api: ExtensionAPI): CoordinateSystemMaster[] {
     const coordSysList: CoordinateSystemMaster[] = [];
 
-    ecModel.eachComponent('parallel', function (parallelModel: ParallelModel, idx: number) {
+    ecModel.eachComponent(COMPONENT_TYPE_PARALLEL, function (parallelModel: ParallelModel, idx: number) {
         const coordSys = new Parallel(parallelModel, ecModel, api);
 
         coordSys.name = 'parallel_' + idx;
@@ -47,16 +50,22 @@ function createParallelCoordSys(ecModel: GlobalModel, api: ExtensionAPI): Coordi
 
     // Inject the coordinateSystems into seriesModel
     ecModel.eachSeries(function (seriesModel) {
-        if ((seriesModel as ParallelSeriesModel).get('coordinateSystem') === 'parallel') {
+        if ((seriesModel as ParallelSeriesModel).get('coordinateSystem') === COORD_SYS_TYPE_PARALLEL) {
             const parallelModel = seriesModel.getReferringComponents(
-                'parallel', SINGLE_REFERRING
+                COMPONENT_TYPE_PARALLEL, SINGLE_REFERRING
             ).models[0] as ParallelModel;
-            seriesModel.coordinateSystem = parallelModel.coordinateSystem;
+            const parallel = seriesModel.coordinateSystem = parallelModel.coordinateSystem;
+            if (parallel) {
+                each(parallel.dimensions, function (dim) {
+                    associateSeriesWithAxis(parallel.getAxis(dim), seriesModel, COORD_SYS_TYPE_PARALLEL);
+                });
+            }
         }
     });
 
     return coordSysList;
 }
+
 const parallelCoordSysCreator = {
     create: createParallelCoordSys
 };

@@ -19,13 +19,8 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import OrdinalScale from '../scale/Ordinal';
-import IntervalScale from '../scale/Interval';
+import IntervalScale, { IntervalScaleConfig } from '../scale/Interval';
 import Scale from '../scale/Scale';
-import {
-    prepareLayoutBarSeries,
-    makeColumnLayout,
-    retrieveColumnLayout
-} from '../layout/barGrid';
 
 import TimeScale from '../scale/Time';
 import Model from '../model/Model';
@@ -41,191 +36,145 @@ import {
     AxisLabelCategoryFormatter,
     AxisLabelValueFormatter,
     AxisLabelFormatterExtraParams,
+    OptionAxisType,
+    AXIS_TYPES,
 } from './axisCommonTypes';
-import CartesianAxisModel from './cartesian/AxisModel';
 import SeriesData from '../data/SeriesData';
 import { getStackedDimension } from '../data/helper/dataStackHelper';
-import { Dictionary, DimensionName, ScaleTick } from '../util/types';
-import { ensureScaleRawExtentInfo } from './scaleRawExtentInfo';
+import { Dictionary, DimensionName, NullUndefined, ScaleTick } from '../util/types';
+import { ScaleExtentFixMinMax } from './scaleRawExtentInfo';
 import { parseTimeAxisLabelFormatter } from '../util/time';
 import { getScaleBreakHelper } from '../scale/break';
 import { error } from '../util/log';
+import {
+    extentDiffers, isLogScale, isOrdinalScale
+} from '../scale/helper';
+import { AxisModelExtendedInCreator } from './axisModelCreator';
+import { initExtentForUnion, isValidBoundsForExtent, makeInner } from '../util/model';
+import {
+    getScaleExtentForMappingUnsafe, SCALE_EXTENT_KIND_EFFECTIVE, SCALE_MAPPER_DEPTH_OUT_OF_BREAK
+} from '../scale/scaleMapper';
+import ComponentModel from '../model/Component';
 
 
-type BarWidthAndOffset = ReturnType<typeof makeColumnLayout>;
+const axisInner = makeInner<{
+    noOnMyZero: DiscourageOnAxisZeroCondition;
+}, Axis>();
 
-/**
- * Get axis scale extent before niced.
- * Item of returned array can only be number (including Infinity and NaN).
- *
- * Caution:
- * Precondition of calling this method:
- * The scale extent has been initialized using series data extent via
- * `scale.setExtent` or `scale.unionExtentFromData`;
- */
-export function getScaleExtent(scale: Scale, model: AxisBaseModel) {
-    const scaleType = scale.type;
-    const rawExtentResult = ensureScaleRawExtentInfo(scale, model, scale.getExtent()).calculate();
+type DiscourageOnAxisZeroCondition = {
+    dz?: boolean;
+    base?: boolean;
+};
 
-    scale.setBlank(rawExtentResult.isBlank);
 
-    let min = rawExtentResult.min;
-    let max = rawExtentResult.max;
-
-    // If bars are placed on a base axis of type time or interval account for axis boundary overflow and current axis
-    // is base axis
-    // FIXME
-    // (1) Consider support value axis, where below zero and axis `onZero` should be handled properly.
-    // (2) Refactor the logic with `barGrid`. Is it not need to `makeBarWidthAndOffsetInfo` twice with different extent?
-    //     Should not depend on series type `bar`?
-    // (3) Fix that might overlap when using dataZoom.
-    // (4) Consider other chart types using `barGrid`?
-    // See #6728, #4862, `test/bar-overflow-time-plot.html`
-    const ecModel = model.ecModel;
-    if (ecModel && (scaleType === 'time' /* || scaleType === 'interval' */)) {
-        const barSeriesModels = prepareLayoutBarSeries('bar', ecModel);
-        let isBaseAxisAndHasBarSeries = false;
-
-        zrUtil.each(barSeriesModels, function (seriesModel) {
-            isBaseAxisAndHasBarSeries = isBaseAxisAndHasBarSeries || seriesModel.getBaseAxis() === model.axis;
-        });
-
-        if (isBaseAxisAndHasBarSeries) {
-            // Calculate placement of bars on axis. TODO should be decoupled
-            // with barLayout
-            const barWidthAndOffset = makeColumnLayout(barSeriesModels);
-
-            // Adjust axis min and max to account for overflow
-            const adjustedScale = adjustScaleForOverflow(min, max, model as CartesianAxisModel, barWidthAndOffset);
-            min = adjustedScale.min;
-            max = adjustedScale.max;
-        }
+export function determineAxisType(
+    model: Model<Pick<AxisBaseOption, 'type'>>
+): OptionAxisType {
+    let type = model.get('type') as OptionAxisType;
+    if (// In ec option, `xxxAxis.type` may be undefined.
+        type == null
+        // PENDING: Theoretically, a customized `Scale` is probably impossible, since
+        // the interface of `Scale` does not guarantee stability. But we still literally
+        // support it for backward compat, though type incorrect.
+        || (!zrUtil.hasOwn(AXIS_TYPES, type) && !Scale.getClass(type))
+    ) {
+        type = 'value';
     }
-
-    return {
-        extent: [min, max],
-        // "fix" means "fixed", the value should not be
-        // changed in the subsequent steps.
-        fixMin: rawExtentResult.minFixed,
-        fixMax: rawExtentResult.maxFixed
-    };
+    return type;
 }
 
-function adjustScaleForOverflow(
-    min: number,
-    max: number,
-    model: CartesianAxisModel,  // Only support cartesian coord yet.
-    barWidthAndOffset: BarWidthAndOffset
-) {
+export function createScaleByModel(
+    model:
+        Model<
+            // Expect `Pick<AxisBaseOptionCommon, 'type'>`,
+            // but be lenient for user's invalid input.
+            {type?: string}
+            & Pick<LogAxisBaseOption, 'logBase'>
+            & Pick<AxisBaseOptionCommon, 'breaks'>
+        >
+        & Partial<Pick<
+            AxisModelExtendedInCreator,
+            'getOrdinalMeta' | 'getCategories'
+        >>,
+    type: OptionAxisType,
+    coordSysSupportAxisBreaks: boolean,
+): Scale {
 
-    // Get Axis Length
-    const axisExtent = model.axis.getExtent();
-    const axisLength = Math.abs(axisExtent[1] - axisExtent[0]);
-
-    // Get bars on current base axis and calculate min and max overflow
-    const barsOnCurrentAxis = retrieveColumnLayout(barWidthAndOffset, model.axis);
-    if (barsOnCurrentAxis === undefined) {
-        return {min: min, max: max};
+    const breakHelper = getScaleBreakHelper();
+    let breakOption;
+    if (breakHelper) {
+        breakOption = retrieveAxisBreaksOption(model, type, coordSysSupportAxisBreaks);
     }
 
-    let minOverflow = Infinity;
-    zrUtil.each(barsOnCurrentAxis, function (item) {
-        minOverflow = Math.min(item.offset, minOverflow);
-    });
-    let maxOverflow = -Infinity;
-    zrUtil.each(barsOnCurrentAxis, function (item) {
-        maxOverflow = Math.max(item.offset + item.width, maxOverflow);
-    });
-    minOverflow = Math.abs(minOverflow);
-    maxOverflow = Math.abs(maxOverflow);
-    const totalOverFlow = minOverflow + maxOverflow;
-
-    // Calculate required buffer based on old range and overflow
-    const oldRange = max - min;
-    const oldRangePercentOfNew = (1 - (minOverflow + maxOverflow) / axisLength);
-    const overflowBuffer = ((oldRange / oldRangePercentOfNew) - oldRange);
-
-    max += overflowBuffer * (maxOverflow / totalOverFlow);
-    min -= overflowBuffer * (minOverflow / totalOverFlow);
-
-    return {min: min, max: max};
-}
-
-// Precondition of calling this method:
-// The scale extent has been initialized using series data extent via
-// `scale.setExtent` or `scale.unionExtentFromData`;
-export function niceScaleExtent(
-    scale: Scale,
-    inModel: AxisBaseModel
-) {
-    const model = inModel as AxisBaseModel<LogAxisBaseOption>;
-    const extentInfo = getScaleExtent(scale, model);
-    const extent = extentInfo.extent;
-    const splitNumber = model.get('splitNumber');
-
-    if (scale instanceof LogScale) {
-        scale.base = model.get('logBase');
-    }
-
-    const scaleType = scale.type;
-    const interval = model.get('interval');
-    const isIntervalOrTime = scaleType === 'interval' || scaleType === 'time';
-
-    scale.setBreaksFromOption(retrieveAxisBreaksOption(model));
-    scale.setExtent(extent[0], extent[1]);
-    scale.calcNiceExtent({
-        splitNumber: splitNumber,
-        fixMin: extentInfo.fixMin,
-        fixMax: extentInfo.fixMax,
-        minInterval: isIntervalOrTime ? model.get('minInterval') : null,
-        maxInterval: isIntervalOrTime ? model.get('maxInterval') : null
-    });
-
-    // If some one specified the min, max. And the default calculated interval
-    // is not good enough. He can specify the interval. It is often appeared
-    // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
-    // to be 60.
-    // FIXME
-    if (interval != null) {
-        (scale as IntervalScale).setInterval && (scale as IntervalScale).setInterval(interval);
+    switch (type) {
+        case 'category':
+            return new OrdinalScale({
+                ordinalMeta: model.getOrdinalMeta
+                    ? model.getOrdinalMeta()
+                    : model.getCategories(),
+                extent: initExtentForUnion(),
+            });
+        case 'time':
+            return new TimeScale({
+                locale: model.ecModel.getLocaleModel(),
+                useUTC: model.ecModel.get('useUTC'),
+                breakOption,
+            });
+        case 'log':
+            // See also #3749
+            return new LogScale({
+                logBase: model.get('logBase'),
+                breakOption,
+            });
+        case 'value':
+            return new IntervalScale({
+                breakOption
+            });
+        default:
+            // case others.
+            return new (Scale.getClass(type) || IntervalScale)({});
     }
 }
 
 /**
- * @param axisType Default retrieve from model.type
+ * Check if the axis cross a specific value.
  */
-export function createScaleByModel(model: AxisBaseModel, axisType?: string): Scale {
-    axisType = axisType || model.get('type');
-    if (axisType) {
-        switch (axisType) {
-            // Buildin scale
-            case 'category':
-                return new OrdinalScale({
-                    ordinalMeta: model.getOrdinalMeta
-                        ? model.getOrdinalMeta()
-                        : model.getCategories(),
-                    extent: [Infinity, -Infinity]
-                });
-            case 'time':
-                return new TimeScale({
-                    locale: model.ecModel.getLocaleModel(),
-                    useUTC: model.ecModel.get('useUTC'),
-                });
-            default:
-                // case 'value'/'interval', 'log', or others.
-                return new (Scale.getClass(axisType) || IntervalScale)();
-        }
-    }
-}
-
-/**
- * Check if the axis cross 0
- */
-export function ifAxisCrossZero(axis: Axis) {
-    const dataExtent = axis.scale.getExtent();
+export function getScaleValuePositionKind(
+    scale: Scale, value: number, considerMappingExtent: boolean
+): ScaleValuePositionKind {
+    const dataExtent = considerMappingExtent
+        ? getScaleExtentForMappingUnsafe(scale, null)
+        : scale.getExtentUnsafe(SCALE_EXTENT_KIND_EFFECTIVE, null);
     const min = dataExtent[0];
     const max = dataExtent[1];
-    return !((min > 0 && max > 0) || (min < 0 && max < 0));
+    return !isValidBoundsForExtent(min, max) ? SCALE_VALUE_POSITION_KIND_OUTSIDE
+        : (min === value || max === value) ? SCALE_VALUE_POSITION_KIND_EDGE
+        : (min < value || max > value) ? SCALE_VALUE_POSITION_KIND_INSIDE
+        : SCALE_VALUE_POSITION_KIND_OUTSIDE;
+}
+export type ScaleValuePositionKind =
+    typeof SCALE_VALUE_POSITION_KIND_INSIDE
+    | typeof SCALE_VALUE_POSITION_KIND_EDGE
+    | typeof SCALE_VALUE_POSITION_KIND_OUTSIDE;
+export const SCALE_VALUE_POSITION_KIND_INSIDE = 1;
+export const SCALE_VALUE_POSITION_KIND_EDGE = 2;
+export const SCALE_VALUE_POSITION_KIND_OUTSIDE = 3;
+
+
+export function discourageOnAxisZero(axis: Axis, reason: Partial<DiscourageOnAxisZeroCondition>): void {
+    zrUtil.defaults(axisInner(axis).noOnMyZero || (axisInner(axis).noOnMyZero = {}), reason);
+}
+
+/**
+ * `true`: Prevent orthoganal axes from positioning at the zero point of this axis.
+ */
+export function isOnAxisZeroDiscouraged(axis: Axis): boolean {
+    const noOnMyZero = axisInner(axis).noOnMyZero;
+    // Empirically, onZero causes weird effect when dataZoom is used on an "base axis". Consider
+    // bar series as an example. And also consider when `SCALE_EXTENT_KIND_MAPPING` is used, where
+    // the axis line is likely to cross the series shapes unexpectedly.
+    // Conservatively, we use "&&" rather than "||" here.
+    return noOnMyZero && noOnMyZero.dz && noOnMyZero.base;
 }
 
 /**
@@ -298,12 +247,12 @@ export function getAxisRawValue<TIsCategory extends boolean>(axis: Axis, tick: S
     // In category axis with data zoom, tick is not the original
     // index of axis.data. So tick should not be exposed to user
     // in category axis.
-    return axis.type === 'category' ? axis.scale.getLabel(tick) : tick.value as any;
+    const scale = axis.scale;
+    return (isOrdinalScale(scale) ? scale.getLabel(tick) : tick.value) as any;
 }
 
 /**
  * @param model axisLabelModel or axisTickModel
- * @return {number|String} Can be null|'auto'|number|function
  */
 export function getOptionCategoryInterval(
     model: Model<AxisBaseOption['axisLabel']>
@@ -340,16 +289,6 @@ export function getDataDimensionsOnAxis(data: SeriesData, axisDim: string): Dime
     return zrUtil.keys(dataDimMap);
 }
 
-export function unionAxisExtentFromData(dataExtent: number[], data: SeriesData, axisDim: string): void {
-    if (data) {
-        zrUtil.each(getDataDimensionsOnAxis(data, axisDim), function (dim) {
-            const seriesExtent = data.getApproximateExtent(dim);
-            seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
-            seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
-        });
-    }
-}
-
 export function isNameLocationCenter(nameLocation: AxisBaseOptionCommon['nameLocation']) {
     return nameLocation === 'middle' || nameLocation === 'center';
 }
@@ -358,7 +297,11 @@ export function shouldAxisShow(axisModel: AxisBaseModel): boolean {
     return axisModel.getShallow('show');
 }
 
-export function retrieveAxisBreaksOption(model: AxisBaseModel): AxisBaseOptionCommon['breaks'] {
+export function retrieveAxisBreaksOption(
+    model: Model<Pick<AxisBaseOptionCommon, 'breaks'>>,
+    axisType: OptionAxisType,
+    coordSysSupportAxisBreaks: boolean,
+): AxisBaseOptionCommon['breaks'] {
     const option = model.get('breaks', true);
     if (option != null) {
         if (!getScaleBreakHelper()) {
@@ -369,9 +312,12 @@ export function retrieveAxisBreaksOption(model: AxisBaseModel): AxisBaseOptionCo
             }
             return undefined;
         }
-        if (!isSupportAxisBreak(model.axis)) {
-            if (__DEV__) {
-                error(`Axis '${model.axis.dim}'-'${model.axis.type}' does not support break.`);
+        if (!coordSysSupportAxisBreaks || !isAxisTypeSupportAxisBreak(axisType)) {
+            if (__DEV__) { // Users have provided `breaks` in ec option but not supported.
+                const axisInfo = (model instanceof ComponentModel)
+                    ? ` ${model.type}[${model.componentIndex}]`
+                    : '';
+                error(`Axis${axisInfo} does not support break.`);
             }
             return undefined;
         }
@@ -379,8 +325,45 @@ export function retrieveAxisBreaksOption(model: AxisBaseModel): AxisBaseOptionCo
     }
 }
 
-function isSupportAxisBreak(axis: Axis): boolean {
-    // The polar radius axis can also support break feasibly. Do not do it until the requirements are met.
-    return (axis.dim === 'x' || axis.dim === 'y' || axis.dim === 'z' || axis.dim === 'single')
-        && axis.type !== 'category';
+function isAxisTypeSupportAxisBreak(axisType: OptionAxisType): boolean {
+    return axisType !== 'category';
+}
+
+export function updateIntervalOrLogScaleForNiceOrAligned(
+    scale: IntervalScale | LogScale,
+    fixMinMax: ScaleExtentFixMinMax,
+    oldIntervalExtent: number[],
+    newIntervalExtent: number[],
+    oldOutermostExtent: number[] | NullUndefined,
+    cfg: IntervalScaleConfig
+): void {
+    const isTargetLogScale = isLogScale(scale);
+    const intervalStub = isTargetLogScale ? scale.intervalStub : scale;
+    intervalStub.setExtent(newIntervalExtent[0], newIntervalExtent[1]);
+
+    if (isTargetLogScale) {
+        // Sync intervalStub extent to the outermost extent (i.e., `powStub` for `LogScale`).
+        const powStub = scale.powStub;
+        const opt = {depth: SCALE_MAPPER_DEPTH_OUT_OF_BREAK} as const;
+        let minPow = scale.transformOut(newIntervalExtent[0], opt);
+        let maxPow = scale.transformOut(newIntervalExtent[1], opt);
+        // Log transform is probably not inversible by rounding error, which causes min/max tick may be
+        // displayed as `5.999999999999999` unexpectedly when min/max are required to be fixed (specified
+        // by users or by dataZoom). Therefore we set `powStub` with respect to `oldOutermostExtent` if
+        // interval extent is not changed. But `intervalStub` should not be inversely changed by this
+        // handling, otherwise its monotonicity between `niceExtent` and `extent` may be broken and cause
+        // unexpected ticks generation.
+        const extentChanged = extentDiffers(oldIntervalExtent, newIntervalExtent);
+        // NOTE: extent may still be changed even when min/max are required to be fixed,
+        // e.g., by `intervalScaleEnsureValidExtent`.
+        if (fixMinMax[0] && !extentChanged[0]) {
+            minPow = oldOutermostExtent[0];
+        }
+        if (fixMinMax[1] && !extentChanged[1]) {
+            maxPow = oldOutermostExtent[1];
+        }
+        powStub.setExtent(minPow, maxPow);
+    }
+
+    intervalStub.setConfig(cfg);
 }

@@ -92,14 +92,15 @@ type RealtimeSortConfig = {
 // Return a number, based on which the ordinal sorted.
 type OrderMapping = (dataIndex: number) => number;
 
-function getClipArea(coord: CoordSysOfBar, data: SeriesData, strictClip?: boolean) {
+function getClipArea(coord: CoordSysOfBar, data: SeriesData) {
     const coordSysClipArea = coord.getArea && coord.getArea();
     if (isCoordinateSystemType<Cartesian2D>(coord, 'cartesian2d')) {
         const baseAxis = coord.getBaseAxis();
-        // When boundaryGap is false or using time axis. bar may exceed the grid.
+        // When boundaryGap is false in category axis, bar may exceed the grid.
         // We should not clip this part.
         // See test/bar2.html
-        if (!strictClip && (baseAxis.type !== 'category' || !baseAxis.onBand)) {
+        // PENDING: The effect is not preferable, but we preserve it for backward compatibility.
+        if (baseAxis.type === 'category' && !baseAxis.onBand) {
             const expandWidth = data.getLayout('bandWidth');
             if (baseAxis.isHorizontal()) {
                 (coordSysClipArea as CartesianCoordArea).x -= expandWidth;
@@ -220,12 +221,12 @@ class BarView extends ChartView {
         }
 
         const needsClip = seriesModel.get('clip', true) || realtimeSortCfg;
-        const strictClip = seriesModel.get('clip', true);
-        const coordSysClipArea = getClipArea(coord, data, strictClip);
+        const coordSysClipArea = getClipArea(coord, data);
         // If there is clipPath created in large mode. Remove it.
         group.removeClipPath();
         // We don't use clipPath in normal mode because we needs a perfect animation
         // And don't want the label are clipped.
+        // Instead, `Clipper` is used in normal mode.
 
         const roundCap = seriesModel.get('roundCap', true);
 

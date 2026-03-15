@@ -1,5 +1,13 @@
 [
   {
+    "link": "https://github.com/apache/echarts/issues/21430",
+    "comment": "Caused by the change of dataZoom auto precision and make axis precision consistent with dataZoom. Acceptable.",
+    "type": "Others",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1768551928569
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/21059",
     "comment": "Introduced by the `outerBounds` feature, which avoids axis name overflowing the canvas by default.",
     "type": "New Feature",

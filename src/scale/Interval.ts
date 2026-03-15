@@ -18,27 +18,102 @@
 */
 
 
-import * as numberUtil from '../util/number';
-import * as formatUtil from '../util/format';
-import Scale, { ScaleGetTicksOpt, ScaleSettingDefault } from './Scale';
-import * as helper from './helper';
-import {ScaleTick, ParsedAxisBreakList, ScaleDataValue} from '../util/types';
-import { getScaleBreakHelper } from './break';
+import {round, mathRound, mathMin, getPrecision} from '../util/number';
+import {addCommas} from '../util/format';
+import Scale, { ScaleGetTicksOpt } from './Scale';
+import { getIntervalPrecision, IntervalScaleGetLabelOpt } from './helper';
+import {ScaleTick, ScaleDataValue, NullUndefined, AxisBreakOption} from '../util/types';
+import {
+    AxisBreakParsingResult, getBreaksUnsafe, getScaleBreakHelper, hasBreaks, simplyParseBreakOption
+} from './break';
+import { assert, clone } from 'zrender/src/core/util';
+import { getMinorTicks } from './minorTicks';
+import {
+    getScaleExtentForTickUnsafe,
+    initBreakOrLinearMapper, ScaleMapperGeneric
+} from './scaleMapper';
 
-const roundNumber = numberUtil.round;
 
-class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> extends Scale<SETTING> {
+export type IntervalScaleConfig = {
+    interval: IntervalScaleConfigParsed['interval'];
+    intervalPrecision?: IntervalScaleConfigParsed['intervalPrecision'] | NullUndefined;
+    intervalCount?: IntervalScaleConfigParsed['intervalCount'] | NullUndefined;
+    niceExtent?: IntervalScaleConfigParsed['niceExtent'] | NullUndefined;
+};
+
+type IntervalScaleConfigParsed = {
+    /**
+     * Step of ticks.
+     */
+    interval: number;
+    intervalPrecision: number;
+    /**
+     * `_intervalCount` effectively specifies the number of "nice segments". This is for special cases,
+     * such as `alignTicks: true` and min max are fixed. In this case, `_interval` may be specified with
+     * a "not-nice" value and needs to be rounded with `_intervalPrecision` for better appearance. Then
+     * merely accumulating `_interval` may generate incorrect number of ticks due to cumulative errors.
+     * So `_intervalCount` is required to specify the expected nice ticks number.
+     * Should ensure `_intervalCount >= -1`,
+     *  where `-1` means no nice tick (e.g., `_extent: [5.2, 5.8], _interval: 1`),
+     *  and `0` means only one nice tick (e.g., `_extent: [5, 5.8], _interval: 1`).
+     * @see setInterval
+     */
+    intervalCount: number | NullUndefined;
+    /**
+     * Should ensure:
+     *  `_extent[0] <= _niceExtent[0] && _niceExtent[1] <= _extent[1]`
+     * But NOTICE:
+     *  `_niceExtent[0] - _niceExtent[1] <= _interval`, rather than always `< 0`,
+     *  because `_niceExtent` is typically calculated by
+     *  `[ Math.ceil(_extent[0] / _interval) * _interval, Math.floor(_extent[1] / _interval) * _interval ]`.
+     *  e.g., `_extent: [5.2, 5.8]` with interval `1` will get `_niceExtent: [6, 5]`.
+     *  e.g., `_extent: [5, 5.8]` with interval `1` will get `_niceExtent: [5, 5]`.
+     *  e.g., `_extent: [5.7, 5.7]` with interval `1` will get `_niceExtent: [6, 5]`.
+     * @see setInterval
+     */
+    niceExtent: number[] | NullUndefined;
+};
+
+type IntervalScaleSetting = {
+    // Either `breakOption` or `parsedBreaks` can be specified.
+    breakOption?: AxisBreakOption[] | NullUndefined;
+    breakParsed?: AxisBreakParsingResult | NullUndefined;
+};
+
+/**
+ * @final NEVER inherit me!
+ */
+interface IntervalScale extends ScaleMapperGeneric<IntervalScale> {}
+class IntervalScale extends Scale<IntervalScale> {
 
     static type = 'interval';
-    type = 'interval';
+    type = 'interval' as const;
 
-    // Step is calculated in adjustExtent.
-    protected _interval: number = 0;
-    protected _niceExtent: [number, number];
-    protected _intervalPrecision: number = 2;
+    private _cfg: IntervalScaleConfigParsed;
 
 
-    parse(val: ScaleDataValue): number {
+    constructor(setting?: IntervalScaleSetting) {
+        super();
+
+        this.parse = IntervalScale.parse;
+
+        setting = setting || {};
+
+        const breakParsed = simplyParseBreakOption(this, setting);
+
+        const res = initBreakOrLinearMapper(this, breakParsed, null);
+        // @ts-ignore
+        this.brk = res.brk;
+
+        this._cfg = {
+            interval: 0,
+            intervalPrecision: 2,
+            intervalCount: undefined,
+            niceExtent: undefined,
+        };
+    }
+
+    static parse(val: ScaleDataValue): number {
         // `Scale#parse` (and its overrids) are typically applied at the axis values input
         // in echarts option. e.g., `axis.min/max`, `dataZoom.min/max`, etc.
         // but `series.data` is not included, which uses `dataValueHelper.ts`#`parseDataValue`.
@@ -65,41 +140,55 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             : Number(val);
     }
 
-    contain(val: number): boolean {
-        return helper.contain(val, this._extent);
+    getConfig(): IntervalScaleConfigParsed {
+        return clone(this._cfg);
     }
 
-    normalize(val: number): number {
-        return this._calculator.normalize(val, this._extent);
-    }
+    setConfig(cfg: IntervalScaleConfig): void {
+        const extent = getScaleExtentForTickUnsafe(this);
 
-    scale(val: number): number {
-        return this._calculator.scale(val, this._extent);
-    }
+        if (__DEV__) {
+            assert(cfg.interval != null);
+            if (cfg.intervalCount != null) {
+                assert(
+                    cfg.intervalCount >= -1
+                    && cfg.intervalPrecision != null
+                    // Do not support intervalCount on axis break currently.
+                    && !hasBreaks(this)
+                );
+            }
+            if (cfg.niceExtent != null) {
+                assert(isFinite(cfg.niceExtent[0]) && isFinite(cfg.niceExtent[1]));
+                assert(extent[0] <= cfg.niceExtent[0] && cfg.niceExtent[1] <= extent[1]);
+                assert(round(cfg.niceExtent[0] - cfg.niceExtent[1], getPrecision(cfg.interval)) <= cfg.interval);
+            }
+        }
 
-    getInterval(): number {
-        return this._interval;
-    }
-
-    setInterval(interval: number): void {
-        this._interval = interval;
-        // Dropped auto calculated niceExtent and use user-set extent.
-        // We assume user wants to set both interval, min, max to get a better result.
-        this._niceExtent = this._extent.slice() as [number, number];
-
-        this._intervalPrecision = helper.getIntervalPrecision(interval);
+        // Reset all.
+        this._cfg = cfg = clone(cfg) as IntervalScaleConfigParsed;
+        if (cfg.niceExtent == null) {
+            // Dropped the auto calculated niceExtent and use user-set extent.
+            // We assume users want to set both interval and extent to get a better result.
+            cfg.niceExtent = extent.slice() as [number, number];
+        }
+        if (cfg.intervalPrecision == null) {
+            cfg.intervalPrecision = getIntervalPrecision(cfg.interval);
+        }
     }
 
     /**
-     * @override
+     * In ascending order.
      */
     getTicks(opt?: ScaleGetTicksOpt): ScaleTick[] {
         opt = opt || {};
-        const interval = this._interval;
-        const extent = this._extent;
-        const niceTickExtent = this._niceExtent;
-        const intervalPrecision = this._intervalPrecision;
+        const cfg = this._cfg;
+        const interval = cfg.interval;
+        const extent = getScaleExtentForTickUnsafe(this);
+        const niceExtent = cfg.niceExtent;
+        const intervalPrecision = cfg.intervalPrecision;
         const scaleBreakHelper = getScaleBreakHelper();
+        const brk = this.brk;
+        const brkAvailable = scaleBreakHelper && brk;
 
         const ticks = [] as ScaleTick[];
         // If interval is 0, return [];
@@ -107,18 +196,24 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             return ticks;
         }
 
-        if (opt.breakTicks === 'only_break' && scaleBreakHelper) {
-            scaleBreakHelper.addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent);
+        if (opt.breakTicks === 'only_break' && brkAvailable) {
+            scaleBreakHelper.addBreaksToTicks(ticks, brk.breaks, extent);
             return ticks;
         }
+
+        if (__DEV__) {
+            assert(niceExtent != null);
+        }
+
+        // [CAVEAT]: If changing this logic, must sync it to `axisAlignTicks.ts`.
 
         // Consider this case: using dataZoom toolbox, zoom and zoom.
         const safeLimit = 10000;
 
-        if (extent[0] < niceTickExtent[0]) {
+        if (extent[0] < niceExtent[0]) {
             if (opt.expandToNicedExtent) {
                 ticks.push({
-                    value: roundNumber(niceTickExtent[0] - interval, intervalPrecision)
+                    value: round(niceExtent[0] - interval, intervalPrecision)
                 });
             }
             else {
@@ -129,21 +224,47 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         }
 
         const estimateNiceMultiple = (tickVal: number, targetTick: number) => {
-            return Math.round((targetTick - tickVal) / interval);
+            return mathRound((targetTick - tickVal) / interval);
         };
 
-        let tick = niceTickExtent[0];
-        while (tick <= niceTickExtent[1]) {
+        const intervalCount = cfg.intervalCount;
+        for (
+            let tick = niceExtent[0], niceTickIdx = 0;
+            ;
+            niceTickIdx++
+        ) {
+            // Consider case `_extent: [5.2, 5.8], _niceExtent: [6, 5], interval: 1`,
+            //  `_intervalCount` makes sense iff `-1`.
+            // Consider case `_extent: [5, 5.8], _niceExtent: [5, 5], interval: 1`,
+            //  `_intervalCount` makes sense iff `0`.
+            if (intervalCount == null) {
+                if (tick > niceExtent[1] || !isFinite(tick) || !isFinite(niceExtent[1])) {
+                    break;
+                }
+            }
+            else {
+                if (niceTickIdx > intervalCount) { // nice ticks number should be `intervalCount + 1`
+                    break;
+                }
+                // Consider cumulative error, especially caused by rounding, the last nice
+                // `tick` may be less than or greater than `niceExtent[1]` slightly.
+                tick = mathMin(tick, niceExtent[1]);
+                if (niceTickIdx === intervalCount) {
+                    tick = niceExtent[1];
+                }
+            }
+
             ticks.push({
                 value: tick
             });
 
             // Avoid rounding error
-            tick = roundNumber(tick + interval, intervalPrecision);
-            if (this._brkCtx) {
-                const moreMultiple = this._brkCtx.calcNiceTickMultiple(tick, estimateNiceMultiple);
+            tick = round(tick + interval, intervalPrecision);
+
+            if (brk) {
+                const moreMultiple = brk.calcNiceTickMultiple(tick, estimateNiceMultiple);
                 if (moreMultiple >= 0) {
-                    tick = roundNumber(tick + moreMultiple * interval, intervalPrecision);
+                    tick = round(tick + moreMultiple * interval, intervalPrecision);
                 }
             }
 
@@ -156,13 +277,14 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
                 return [];
             }
         }
+
         // Consider this case: the last item of ticks is smaller
-        // than niceTickExtent[1] and niceTickExtent[1] === extent[1].
-        const lastNiceTick = ticks.length ? ticks[ticks.length - 1].value : niceTickExtent[1];
+        // than niceExtent[1] and niceExtent[1] === extent[1].
+        const lastNiceTick = ticks.length ? ticks[ticks.length - 1].value : niceExtent[1];
         if (extent[1] > lastNiceTick) {
             if (opt.expandToNicedExtent) {
                 ticks.push({
-                    value: roundNumber(lastNiceTick + interval, intervalPrecision)
+                    value: round(lastNiceTick + interval, intervalPrecision)
                 });
             }
             else {
@@ -172,88 +294,35 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
             }
         }
 
-        if (scaleBreakHelper) {
+        if (brkAvailable) {
             scaleBreakHelper.pruneTicksByBreak(
                 opt.pruneByBreak,
                 ticks,
-                this._brkCtx!.breaks,
+                brk.breaks,
                 item => item.value,
-                this._interval,
-                this._extent
+                cfg.interval,
+                extent
             );
         }
-        if (opt.breakTicks !== 'none' && scaleBreakHelper) {
-            scaleBreakHelper.addBreaksToTicks(ticks, this._brkCtx!.breaks, this._extent);
+        if (brkAvailable && opt.breakTicks !== 'none') {
+            scaleBreakHelper.addBreaksToTicks(ticks, brk.breaks, extent);
         }
 
         return ticks;
     }
 
     getMinorTicks(splitNumber: number): number[][] {
-        const ticks = this.getTicks({
-            expandToNicedExtent: true,
-        });
-        // NOTE: In log-scale, do not support minor ticks when breaks exist.
-        //  because currently log-scale minor ticks is calculated based on raw values
-        //  rather than log-transformed value, due to an odd effect when breaks exist.
-        const minorTicks = [];
-        const extent = this.getExtent();
-
-        for (let i = 1; i < ticks.length; i++) {
-            const nextTick = ticks[i];
-            const prevTick = ticks[i - 1];
-
-            if (prevTick.break || nextTick.break) {
-                // Do not build minor ticks to the adjacent ticks to breaks ticks,
-                // since the interval might be irregular.
-                continue;
-            }
-
-            let count = 0;
-            const minorTicksGroup = [];
-            const interval = nextTick.value - prevTick.value;
-            const minorInterval = interval / splitNumber;
-            const minorIntervalPrecision = helper.getIntervalPrecision(minorInterval);
-
-            while (count < splitNumber - 1) {
-                const minorTick = roundNumber(prevTick.value + (count + 1) * minorInterval, minorIntervalPrecision);
-
-                // For the first and last interval. The count may be less than splitNumber.
-                if (minorTick > extent[0] && minorTick < extent[1]) {
-                    minorTicksGroup.push(minorTick);
-                }
-                count++;
-            }
-
-            const scaleBreakHelper = getScaleBreakHelper();
-            scaleBreakHelper && scaleBreakHelper.pruneTicksByBreak(
-                'auto',
-                minorTicksGroup,
-                this._getNonTransBreaks(),
-                value => value,
-                this._interval,
-                extent
-            );
-            minorTicks.push(minorTicksGroup);
-        }
-
-        return minorTicks;
+        return getMinorTicks(
+            this,
+            splitNumber,
+            getBreaksUnsafe(this),
+            this._cfg.interval
+        );
     }
 
-    protected _getNonTransBreaks(): ParsedAxisBreakList {
-        return this._brkCtx ? this._brkCtx.breaks : [];
-    }
-
-    /**
-     * @param opt.precision If 'auto', use nice presision.
-     * @param opt.pad returns 1.50 but not 1.5 if precision is 2.
-     */
     getLabel(
         data: ScaleTick,
-        opt?: {
-            precision?: 'auto' | number,
-            pad?: boolean
-        }
+        opt?: IntervalScaleGetLabelOpt
     ): string {
         if (data == null) {
             return '';
@@ -262,109 +331,18 @@ class IntervalScale<SETTING extends ScaleSettingDefault = ScaleSettingDefault> e
         let precision = opt && opt.precision;
 
         if (precision == null) {
-            precision = numberUtil.getPrecision(data.value) || 0;
+            precision = getPrecision(data.value) || 0;
         }
         else if (precision === 'auto') {
             // Should be more precise then tick.
-            precision = this._intervalPrecision;
+            precision = this._cfg.intervalPrecision;
         }
 
         // (1) If `precision` is set, 12.005 should be display as '12.00500'.
-        // (2) Use roundNumber (toFixed) to avoid scientific notation like '3.5e-7'.
-        const dataNum = roundNumber(data.value, precision as number, true);
+        // (2) Use `round` (toFixed) to avoid scientific notation like '3.5e-7'.
+        const dataNum = round(data.value, precision as number, true);
 
-        return formatUtil.addCommas(dataNum);
-    }
-
-    /**
-     * FIXME: refactor - disallow override, use composition instead.
-     *
-     * The override of `calcNiceTicks` should ensure these members are provided:
-     *  this._intervalPrecision
-     *  this._interval
-     *
-     * @param splitNumber By default `5`.
-     */
-    calcNiceTicks(splitNumber?: number, minInterval?: number, maxInterval?: number): void {
-        splitNumber = splitNumber || 5;
-        let extent = this._extent.slice() as [number, number];
-        let span = this._getExtentSpanWithBreaks();
-        if (!isFinite(span)) {
-            return;
-        }
-        // User may set axis min 0 and data are all negative
-        // FIXME If it needs to reverse ?
-        if (span < 0) {
-            span = -span;
-            extent.reverse();
-            this._innerSetExtent(extent[0], extent[1]);
-            extent = this._extent.slice() as [number, number];
-        }
-
-        const result = helper.intervalScaleNiceTicks(
-            extent, span, splitNumber, minInterval, maxInterval
-        );
-
-        this._intervalPrecision = result.intervalPrecision;
-        this._interval = result.interval;
-        this._niceExtent = result.niceTickExtent;
-    }
-
-    calcNiceExtent(opt: {
-        splitNumber: number, // By default 5.
-        fixMin?: boolean,
-        fixMax?: boolean,
-        minInterval?: number,
-        maxInterval?: number
-    }): void {
-        let extent = this._extent.slice() as [number, number];
-        // If extent start and end are same, expand them
-        if (extent[0] === extent[1]) {
-            if (extent[0] !== 0) {
-                // Expand extent
-                // Note that extents can be both negative. See #13154
-                const expandSize = Math.abs(extent[0]);
-                // In the fowllowing case
-                //      Axis has been fixed max 100
-                //      Plus data are all 100 and axis extent are [100, 100].
-                // Extend to the both side will cause expanded max is larger than fixed max.
-                // So only expand to the smaller side.
-                if (!opt.fixMax) {
-                    extent[1] += expandSize / 2;
-                    extent[0] -= expandSize / 2;
-                }
-                else {
-                    extent[0] -= expandSize / 2;
-                }
-            }
-            else {
-                extent[1] = 1;
-            }
-        }
-        const span = extent[1] - extent[0];
-        // If there are no data and extent are [Infinity, -Infinity]
-        if (!isFinite(span)) {
-            extent[0] = 0;
-            extent[1] = 1;
-        }
-        this._innerSetExtent(extent[0], extent[1]);
-        extent = this._extent.slice() as [number, number];
-
-        this.calcNiceTicks(opt.splitNumber, opt.minInterval, opt.maxInterval);
-        const interval = this._interval;
-        const intervalPrecition = this._intervalPrecision;
-
-        if (!opt.fixMin) {
-            extent[0] = roundNumber(Math.floor(extent[0] / interval) * interval, intervalPrecition);
-        }
-        if (!opt.fixMax) {
-            extent[1] = roundNumber(Math.ceil(extent[1] / interval) * interval, intervalPrecition);
-        }
-        this._innerSetExtent(extent[0], extent[1]);
-    }
-
-    setNiceExtent(min: number, max: number): void {
-        this._niceExtent = [min, max];
+        return addCommas(dataNum);
     }
 
 }

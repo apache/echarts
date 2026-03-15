@@ -21,29 +21,26 @@ under the License.
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="lib/simpleRequire.js"></script>
         <script src="lib/config.js"></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-            }
-            #main {
-                background: #fff;
-            }
         </style>
-        <div id="main"></div>
+
+
+        <div id="main_multiple_bar_category_angle_axis"></div>
+        <div id="main_multiple_bar_value_angle_axis"></div>
+
+
         <script>
-
             require(['echarts'], function (echarts) {
-
-                var chart = echarts.init(document.getElementById('main'));
-
-                chart.setOption({
+                var option = {
                     angleAxis: {
                         type: 'category',
                         data: ['周一', '周二', '周三', '周四'],
@@ -52,6 +49,12 @@ under the License.
                     radiusAxis: {
                     },
                     polar: {
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
                     },
                     series: [{
                         type: 'bar',
@@ -73,14 +76,149 @@ under the License.
                         show: true,
                         data: ['A', 'B', 'C']
                     }
+                }
+
+                var chart = testHelper.create(echarts, 'main_multiple_bar_category_angle_axis', {
+                    title: [
+                        'Multiple bars on "category" angle axis',
+                    ],
+                    option: option,
+                    height: 500,
                 });
 
-                chart.on('click', function (params) {
+                chart && chart.on('click', function (params) {
                     console.log(params);
                 });
-
-                window.onresize = chart.resize;
             });
         </script>
+
+
+
+        <script>
+            require(['echarts'], function (echarts) {
+                var _ctx = {
+                    stack: false,
+                };
+                
+                function createOption() {
+                    var data0 = [];
+                    var data1 = [];
+                    var data2 = [];
+
+                    var time = 0;
+                    var maxTime = 12 * 3600 * 1000;
+                    var count = 10;
+                    for (let i = 0; i < count; i++) {
+                        if (i === count - 1) {
+                            time = maxTime;
+                        }
+
+                        data0.push([Math.random() * 1000 + 800, time]);
+                        data1.push([Math.random() * 1000 + 1900, time]);
+                        data2.push([Math.random() * 1000 + 2000, time]);
+
+                        if (i % 3 === 0) {
+                            time += 1200 * 1000;
+                        }
+                        else {
+                            time += 3000 * 1000;
+                        }
+                    }
+
+                    var option = {
+                        angleAxis: {
+                            min: 0,
+                            max: maxTime,
+                            z: 10,
+                            interval: 3600 * 1000,
+                            // containShape: false,
+                            axisLabel: {
+                                formatter(val) {
+                                    return Math.round(val / 1000 / 3600);
+                                }
+                            }
+                        },
+                        radiusAxis: {
+                        },
+                        polar: {
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'shadow',
+                            },
+                        },
+                        dataZoom: {
+                            orient: 'vertical',
+                            right: 20,
+                            angleAxisIndex: 0,
+                        },
+                        legend: {
+                        },
+                        series: [{
+                            type: 'bar',
+                            data: data0,
+                            encode: {
+                                tooltip: 0
+                            },
+                            coordinateSystem: 'polar',
+                            name: 'A'
+                        }, {
+                            type: 'bar',
+                            data: data1,
+                            encode: {
+                                tooltip: 0
+                            },
+                            coordinateSystem: 'polar',
+                            name: 'B'
+                        }, {
+                            type: 'bar',
+                            data: data2,
+                            encode: {
+                                tooltip: 0
+                            },
+                            coordinateSystem: 'polar',
+                            name: 'C'
+                        }],
+                    };
+
+                    if (_ctx.stack) {
+                        option.series.forEach(individualSeries => {
+                            individualSeries.stack = 'a';
+                        });
+                    }
+                    
+                    return option;
+                }
+
+                function updateChart() {
+                    chart.setOption(createOption(), {notMerge: true});
+                }
+
+                var chart = testHelper.create(echarts, 'main_multiple_bar_value_angle_axis', {
+                    title: [
+                        'Multiple bars on "value" angle axis',
+                    ],
+                    option: createOption(),
+                    height: 500,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'stack:',
+                        values: [false, true],
+                        onchange() {
+                            _ctx.stack = this.value;
+                            updateChart();
+                        }
+                    }]
+                });
+
+                chart && chart.on('click', function (params) {
+                    console.log(params);
+                });
+            });
+        </script>
+
+
     </body>
 </html>

@@ -49,105 +49,204 @@ under the License.
         </style>
 
         <div id="main0"></div>
-        <div id="main2"></div>
-        <div id="main3"></div>
-        <div id="main4"></div>
+        <div id="main_categoryX_hasMinSpan_hasMaxSpan"></div>
+        <div id="main_timeX_hasMinSpan_hasMaxSpan"></div>
+        <div id="main_categoryX_hasMinValueSpan_hasMaxValueSpan"></div>
+        <div id="main_timeX_noMinSpan_noMaxSpan"></div>
+        <div id="main_floatValueX_hasMinValueSpan_hasMaxValueSpan"></div>
 
 
 
         <script>
-        require(['echarts'], function (echarts) {
-            function makeButtons(ctx) {
 
-                function printStates() {
-                    var option = ctx.chart.getOption();
-                    var dzs = option.dataZoom;
-                    var info = [{
-                        type: dzs[0].type,
-                        start: dzs[0].start,
-                        end: dzs[0].end,
-                        startValue: dzs[0].startValue,
-                        endValue: dzs[0].endValue
-                    }, {
-                        type: dzs[1].type,
-                        start: dzs[1].start,
-                        end: dzs[1].end,
-                        startValue: dzs[1].startValue,
-                        endValue: dzs[1].endValue
-                    }]
-                    console.log('!!! ' + ctx.hint + ' !!!\n' + JSON.stringify(info, null, 2));
-                    // alert(
-                    //     '!!! ' + ctx.hint + ' !!!\n' + JSON.stringify(info, null, 2)
-                    // );
+        /**
+         * @param expect Can be null/undefined; means no "expect".
+         * @param expect.minSpan number 0~100; expected minSpan.
+         * @param expect.maxSpan number 0~100; expected maxSpan.
+         * @param expect.epsilon number; enable tolerant comparison; can be null/undefined
+         */ 
+        function getDefaultPercentButtons(expect) {
+            // If expect is null, means no "expect".
+            const minSpan = expect ? expect.minSpan : null;
+            const maxSpan = expect ? expect.maxSpan : null;
+
+            function makeStartEndConfig(start, end) {
+                const START_MIN = 0;
+                const END_MAX = 100;
+                let overInfo = [];
+                let expectValues;
+
+                if (expect) {
+
+                    const inputSpan = end - start;
+                    if (start < START_MIN) {
+                        overInfo.push('over min');
+                    }
+                    if (end > END_MAX) {
+                        overInfo.push('over max');
+                    }
+                    if (minSpan != null && inputSpan < minSpan) {
+                        overInfo.push('over minSpan');
+                    }
+                    if (maxSpan != null && inputSpan > maxSpan) {
+                        overInfo.push('over maxSpan');
+                    }
+
+                    expectValues = {
+                        start: start,
+                        end: end,
+                        inputSpan: inputSpan,
+                    };
+                    if (expectValues.start < START_MIN) {
+                        expectValues.start = START_MIN;
+                        expectValues.end = expectValues.start + expectValues.inputSpan;
+                    }
+                    if (expectValues.end > END_MAX) {
+                        expectValues.end = END_MAX;
+                        expectValues.start = expectValues.end - expectValues.inputSpan;
+                    }
+                    if (expectValues.inputSpan < minSpan) {
+                        expectValues.inputSpan = minSpan;
+                        expectValues.end = expectValues.start + expectValues.inputSpan;
+                    }
+                    if (expectValues.inputSpan > maxSpan) {
+                        expectValues.inputSpan = maxSpan;
+                        expectValues.end = expectValues.start + expectValues.inputSpan;
+                    }
                 }
 
-                function dispatchPercent(start, end) {
-                    ctx.chart.dispatchAction({
-                        type: 'dataZoom',
-                        batch: [
-                            {id: 'dz-in', start: start, end: end},
-                            {id: 'dz-s', start: start, end: end}
-                        ]
-                    });
-                }
-                function dispatchValue(startValue, endValue) {
-                    ctx.chart.dispatchAction({
-                        type: 'dataZoom',
-                        batch: [
-                            {id: 'dz-in', startValue: startValue, endValue: endValue},
-                            {id: 'dz-s', startValue: startValue, endValue: endValue}
-                        ]
-                    });
-                }
+                const config = {
+                    text: `{start: ${start}, end: ${end}} ${overInfo.join(' ')}`,
+                    start: start,
+                    end: end,
+                    expect: !expect ? undefined : {
+                        GET_OPTION: [{
+                            start: expectValues.start,
+                            end: expectValues.end,
+                            epsilonDef: {
+                                start: expect.epsilon,
+                                end: expect.epsilon,
+                            },
+                        }, {
+                            start: expectValues.start,
+                            end: expectValues.end,
+                            epsilonDef: {
+                                start: expect.epsilon,
+                                end: expect.epsilon,
+                            },
+                        }]
+                    }
+                };
+                return config;
+            }
+            return [
+                makeStartEndConfig(-5, 5),
+                makeStartEndConfig(95, 105),
+                makeStartEndConfig(40, 60),
+                makeStartEndConfig(40, 90),
+                makeStartEndConfig(40, 41),
+            ];
+        } // End of `getDefaultPercentButtons`
 
-                var buttons = [];
 
-                echarts.util.each(ctx.percentButttons, function (item) {
-                    buttons.push({
-                        text: item.text,
-                        onclick: function () {
-                            dispatchPercent(item.start, item.end);
-                            printStates();
-                        }
-                    })
-                });
-                echarts.util.each(ctx.valueButtons, function (item) {
-                    buttons.push({
-                        text: item.text,
-                        onclick: function () {
-                            dispatchValue(item.startValue, item.endValue);
-                            printStates();
-                        }
-                    })
-                });
+        function makeButtons(ctx) {
 
-                return buttons;
+            function printAndValidateStates(btnDef) {
+                var option = ctx.chart.getOption();
+                var dzs = option.dataZoom;
+                var states = [{
+                    type: dzs[0].type,
+                    start: dzs[0].start,
+                    end: dzs[0].end,
+                    startValue: dzs[0].startValue,
+                    endValue: dzs[0].endValue
+                }, {
+                    type: dzs[1].type,
+                    start: dzs[1].start,
+                    end: dzs[1].end,
+                    startValue: dzs[1].startValue,
+                    endValue: dzs[1].endValue
+                }]
+                console.log('!!! ' + ctx.hint + ' !!!\n' + '(from chart.getOption())\n' + JSON.stringify(states, null, 2));
+
+                validateStates(states, btnDef, 'GET_OPTION');
             }
 
-            function getDefaultPercentButtons() {
-                return [{
-                    text: '{start: -5, end: 5} over min',
-                    start: -5,
-                    end: 5
-                }, {
-                    text: '{start: 95, end: 105} over max',
-                    start: 95,
-                    end: 105
-                }, {
-                    text: '{start: 40, end: 60}',
-                    start: 40,
-                    end: 60
-                }, {
-                    text: '{start: 40, end: 90} (over maxSpan)',
-                    start: 40,
-                    end: 90
-                }, {
-                    text: '{start: 40, end: 41} (over minSpan)',
-                    start: 40,
-                    end: 41
-                }];
+            function validateStates(actualStates, btnDef, btnDefExpectKey) {
+                if (!btnDef.expect) {
+                    return;
+                }
+                testHelper.printAssert(ctx.chart, function (assert) {
+                    actualStates.forEach(function (state, idx) {
+                        const expectItem = btnDef.expect[btnDefExpectKey][idx];
+                        Object.keys(expectItem).forEach(function (key) {
+                            if (key === 'epsilonDef') {
+                                return;
+                            }
+                            const expectVal = expectItem[key];
+                            const epsilonDef = expectItem.epsilonDef;
+                            const actualVal = state[key];
+                            if (epsilonDef && epsilonDef[key] != null) {
+                                assert(Math.abs(expectVal - actualVal) <= epsilonDef[key]);
+                            }
+                            else {
+                                assert(expectVal === actualVal);
+                            }
+                        });
+                    });
+                });
             }
-        });
+
+            function dispatchPercent(start, end) {
+                ctx.chart.dispatchAction({
+                    type: 'dataZoom',
+                    batch: [
+                        {id: 'dz-in', start: start, end: end},
+                        {id: 'dz-s', start: start, end: end}
+                    ]
+                });
+            }
+            function dispatchValue(startValue, endValue) {
+                ctx.chart.dispatchAction({
+                    type: 'dataZoom',
+                    batch: [
+                        {id: 'dz-in', startValue: startValue, endValue: endValue},
+                        {id: 'dz-s', startValue: startValue, endValue: endValue}
+                    ]
+                });
+            }
+
+            var buttons = [];
+
+            ctx.percentButttons.forEach(function (item) {
+                buttons.push({
+                    text: item.text,
+                    onclick: function () {
+                        dispatchPercent(item.start, item.end);
+                        printAndValidateStates(item);
+                    }
+                })
+            });
+            ctx.valueButtons.forEach(function (item) {
+                buttons.push({
+                    text: item.text,
+                    onclick: function () {
+                        dispatchValue(item.startValue, item.endValue);
+                        printAndValidateStates(item);
+                    }
+                })
+            });
+
+            return buttons;
+        } // End of `makeButtons`
+
+
+        function round(x, precision) {
+            precision = Math.min(Math.max(0, precision), 20);
+            return +(+x).toFixed(precision);
+        }
+
+
         </script>
 
 
@@ -328,7 +427,7 @@ under the License.
                 var now = new Date(base += oneDay);
                 var cat = [now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-');
                 category.push(cat);
-                value = Math.round((Math.random() - 0.5) * 20 + (!i ? startValue : data1[i - 1]));
+                var value = Math.round((Math.random() - 0.5) * 20 + (!i ? startValue : data1[i - 1]));
                 data1.push(value);
                 if (i === 40) {
                     specialNormal[0] = cat;
@@ -345,6 +444,9 @@ under the License.
                     specialLong[1] = cat;
                 }
             }
+
+            var minSpan = 5;
+            var maxSpan = 30;
 
             var option = {
                 tooltip: {
@@ -373,15 +475,15 @@ under the License.
                     id: 'dz-in',
                     start: 0,
                     end: 10,
-                    minSpan: 5,
-                    maxSpan: 30,
+                    minSpan: minSpan,
+                    maxSpan: maxSpan,
                     xAxisIndex: 0
                 }, {
                     id: 'dz-s',
                     start: 0,
                     end: 10,
-                    minSpan: 5,
-                    maxSpan: 30,
+                    minSpan: minSpan,
+                    maxSpan: maxSpan,
                     xAxisIndex: 0
                 }],
                 series: [{
@@ -398,7 +500,7 @@ under the License.
 
             var ctx = {
                 hint: 'category axis value should be integer',
-                percentButttons: getDefaultPercentButtons(),
+                percentButttons: getDefaultPercentButtons({minSpan, maxSpan}),
                 valueButtons: [{
                     text: getBtnLabel(specialNormal),
                     startValue: specialNormal[0],
@@ -414,7 +516,7 @@ under the License.
                 }, {
                 }]
             };
-            ctx.chart = testHelper.create(echarts, 'main2', {
+            ctx.chart = testHelper.create(echarts, 'main_categoryX_hasMinSpan_hasMaxSpan', {
                 option: option,
                 title: [
                     '(category axis) dispatchAction: {type: "dataZoom"}',
@@ -448,7 +550,7 @@ under the License.
 
             for (var i = 0; i < 100; i++) {
                 var now = new Date(base += oneDay);
-                value = Math.round((Math.random() - 0.5) * 20 + (!i ? startValue : data2[i - 1][1]));
+                var value = Math.round((Math.random() - 0.5) * 20 + (!i ? startValue : data2[i - 1][1]));
                 data2.push([now, value]);
                 if (i === 30) {
                     specialNormal[0] = +now;
@@ -465,6 +567,9 @@ under the License.
                     specialLong[1] = +now;
                 }
             }
+
+            var minSpan = 5;
+            var maxSpan = 30;
 
             var option = {
                 tooltip: {
@@ -490,14 +595,14 @@ under the License.
                 dataZoom: [{
                     type: 'inside',
                     id: 'dz-in',
-                    maxSpan: 30,
-                    minSpan: 5,
+                    minSpan: minSpan,
+                    maxSpan: maxSpan,
                     start: 0,
                     end: 10
                 }, {
                     id: 'dz-s',
-                    maxSpan: 30,
-                    minSpan: 5,
+                    minSpan: minSpan,
+                    maxSpan: maxSpan,
                     start: 0,
                     end: 10
                 }],
@@ -520,7 +625,7 @@ under the License.
 
             var ctx = {
                 hint: 'time axis value should be integer',
-                percentButttons: getDefaultPercentButtons(),
+                percentButttons: getDefaultPercentButtons({minSpan, maxSpan}),
                 valueButtons: [{
                     text: getBtnLabel(specialNormal),
                     startValue: fmt2Str(specialNormal[0]),
@@ -535,7 +640,7 @@ under the License.
                     endValue: fmt2Str(specialLong[1])
                 }]
             };
-            ctx.chart = testHelper.create(echarts, 'main3', {
+            ctx.chart = testHelper.create(echarts, 'main_timeX_hasMinSpan_hasMaxSpan', {
                 option: option,
                 title: [
                     '(time axis) dispatchAction: {type: "dataZoom"}',
@@ -552,17 +657,6 @@ under the License.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
         <script>
         require(['echarts'], function (echarts) {
             var option;
@@ -571,14 +665,17 @@ under the License.
             var oneDay = 24 * 3600 * 1000;
             var startValue = Math.random() * 300;
             var data1 = [];
-            var category = []
+            var category = [];
 
             for (var i = 0; i < 1000; i++) {
                 var now = new Date(base += oneDay);
                 category.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-'));
-                value = Math.round((Math.random() - 0.5) * 20 + (!i ? startValue : data1[i - 1]));
+                var value = Math.round((Math.random() - 0.5) * 20 + (!i ? startValue : data1[i - 1]));
                 data1.push(value);
             }
+
+            var minValueSpan = 50;
+            var maxValueSpan = 300;
 
             var option = {
                 tooltip: {
@@ -607,15 +704,15 @@ under the License.
                     id: 'dz-in',
                     start: 0,
                     end: 10,
-                    minValueSpan: 50,
-                    maxValueSpan: 300,
+                    minValueSpan: minValueSpan,
+                    maxValueSpan: maxValueSpan,
                     xAxisIndex: 0
                 }, {
                     id: 'dz-s',
                     start: 0,
                     end: 10,
-                    minValueSpan: 50,
-                    maxValueSpan: 300,
+                    minValueSpan: minValueSpan,
+                    maxValueSpan: maxValueSpan,
                     xAxisIndex: 0
                 }],
                 series: [{
@@ -627,7 +724,7 @@ under the License.
 
             var ctx = {
                 hint: 'category axis value should be integer',
-                percentButttons: getDefaultPercentButtons(),
+                percentButttons: getDefaultPercentButtons(null),
                 valueButtons: [{
                     text: 'startValue: 30, endValue: 500, over maxValueSpan',
                     startValue: 30,
@@ -638,12 +735,12 @@ under the License.
                     endValue: 32
                 }]
             };
-            ctx.chart = testHelper.create(echarts, 'main4', {
+            ctx.chart = testHelper.create(echarts, 'main_categoryX_hasMinValueSpan_hasMaxValueSpan', {
                 title: [
                     '(category axis)',
                     'dispatchAction: {type: "dataZoom"}',
                     'range should not out of bound',
-                    'minValueSpan: 50, maxValueSpan: 300'
+                    `minValueSpan: ${minValueSpan}, maxValueSpan: ${maxValueSpan}`
                 ],
                 option: option,
                 height: 200,
@@ -654,6 +751,327 @@ under the License.
 
 
 
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            var base = +new Date(1990, 9, 3);
+            var oneDay = 24 * 3600 * 1000;
+            var startValue = Math.random() * 300;
+            var data2 = [];
+            var specialNormal = [];
+            var xDataMin;
+            var xDataMax;
+            var now;
+
+            for (var i = 0; i < 100; i++) {
+                now = new Date(base += oneDay);
+                if (xDataMin == null) {
+                    xDataMin = +now;
+                }
+                var value = Math.round((Math.random() - 0.5) * 20 + (!i ? startValue : data2[i - 1][1]));
+                data2.push([now, value]);
+                if (i === 30) {
+                    specialNormal[0] = +now;
+                }
+                else if (i === 38) {
+                    specialNormal[1] = +now;
+                }
+            }
+            xDataMax = +now;
+            var specialOverXDataMin = [xDataMin - oneDay * 10, specialNormal[0]];
+            var specialOverXDataMax = [specialNormal[1], xDataMax + oneDay * 10];
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    position: function (pt) {
+                        return [pt[0], '10%'];
+                    }
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: 'none'
+                        },
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                xAxis: [{
+                    type: 'time'
+                }],
+                yAxis: [{
+                }],
+                dataZoom: [{
+                    type: 'inside',
+                    id: 'dz-in',
+                    start: 0,
+                    end: 10
+                }, {
+                    id: 'dz-s',
+                    start: 0,
+                    end: 10
+                }],
+                series: [{
+                    type:'line',
+                    symbolSize: 10,
+                    data: data2
+                }]
+            };
+
+            function fmt2Str(dt) {
+                return echarts.format.formatTime('yyyy-MM-dd', +dt)
+            }
+            function getBtnLabel(special, extra) {
+                extra = extra || '';
+                return 'startValue: "' + fmt2Str(special[0]) + '"('
+                    + special[0] + '), endValue: "' + fmt2Str(special[1])
+                    + '"(' + special[1] + ') ' + extra;
+            }
+
+            var ctx = {
+                hint: 'time axis value should be integer',
+                percentButttons: getDefaultPercentButtons({minSpan: undefined, maxSpan: undefined}),
+                valueButtons: [{
+                    text: getBtnLabel(specialNormal),
+                    startValue: fmt2Str(specialNormal[0]),
+                    endValue: fmt2Str(specialNormal[1]),
+                    expect: {
+                        GET_OPTION: [{
+                            startValue: specialNormal[0],
+                            endValue: specialNormal[1],
+                        }, {
+                            startValue: specialNormal[0],
+                            endValue: specialNormal[1],
+                        }]
+                    }
+                }, {
+                    text: getBtnLabel(specialOverXDataMin, 'over xDataMin'),
+                    startValue: fmt2Str(specialOverXDataMin[0]),
+                    endValue: fmt2Str(specialOverXDataMin[1]),
+                    expect: {
+                        GET_OPTION: (function () {
+                            const startValue = xDataMin;
+                            const endValue = Math.min(
+                                xDataMin + (specialOverXDataMin[1] - specialOverXDataMin[0]),
+                                xDataMax
+                            );
+                            return [{
+                                startValue: startValue,
+                                endValue: endValue,
+                            }, {
+                                startValue: startValue,
+                                endValue: endValue,
+                            }]
+                        })()
+                    }
+                }, {
+                    text: getBtnLabel(specialOverXDataMax, 'over xDataMax'),
+                    startValue: fmt2Str(specialOverXDataMax[0]),
+                    endValue: fmt2Str(specialOverXDataMax[1]),
+                    expect: {
+                        GET_OPTION: (function () {
+                            const endValue = xDataMax;
+                            const startValue = Math.max(
+                                xDataMax - (specialOverXDataMax[1] - specialOverXDataMax[0]),
+                                xDataMin
+                            );
+                            return [{
+                                startValue: startValue,
+                                endValue: endValue,
+                            }, {
+                                startValue: startValue,
+                                endValue: endValue,
+                            }];
+                        })()
+                    }
+                }]
+            };
+            ctx.chart = testHelper.create(echarts, 'main_timeX_noMinSpan_noMaxSpan', {
+                option: option,
+                title: [
+                    `X is time axis; xDataMin: **${xDataMin}**, xDataMax: **${xDataMax}**`,
+                    'Click button to dispatchAction: {type: "dataZoom"}',
+                    '**minSpan: undefined, maxSpan: undefined**',
+                    'Expect: start/end and valueRange in dataZoom action payload NEVER out of [0, 100]',
+                    'Expect: startValue/endValue in dataZoom action payload NEVER out of [xDataMin, xDataMax]',
+                ],
+                height: 200,
+                buttons: makeButtons(ctx)
+            });
+        });
+        </script>
+
+
+
+
+
+
+        <script>
+        require(['echarts'], function (echarts) {
+            var option;
+
+            var xBase = 7000 * 1e-12;
+            var xOneStep = 1e-12;
+            var yStartValue = Math.random() * 300;
+            var data2 = [];
+            var specialNormal = [];
+            var xDataMin;
+            var xDataMax;
+
+            var X_ROUNDING_ERROR_PRECISION = 16;
+            var expectMinSpan = 10;
+            var expectMaxSpan = 80;
+            var DATA_COUNT = 101;
+            var minValueSpan = round(expectMinSpan * 1e-12, X_ROUNDING_ERROR_PRECISION);
+            var maxValueSpan = round(expectMaxSpan * 1e-12, X_ROUNDING_ERROR_PRECISION);
+
+            xDataMin = xBase;
+            for (var i = 0, now = xBase; i < DATA_COUNT; i++, now = round(now + xOneStep, X_ROUNDING_ERROR_PRECISION)) {
+                var value = Math.round((Math.random() - 0.5) * 20 + (!i ? yStartValue : data2[i - 1][1]));
+                data2.push([now, value]);
+                xDataMax = now;
+                if (i === 30) {
+                    specialNormal[0] = now;
+                }
+                else if (i === 58) {
+                    specialNormal[1] = now;
+                }
+            }
+            var specialOverXDataMin = [
+                round(xDataMin - xOneStep * 10, X_ROUNDING_ERROR_PRECISION),
+                specialNormal[0]
+            ];
+            var specialOverXDataMax = [
+                specialNormal[1],
+                round(xDataMax + xOneStep * 10, X_ROUNDING_ERROR_PRECISION)
+            ];
+
+            var option = {
+                tooltip: {
+                    trigger: 'axis',
+                    position: function (pt) {
+                        return [pt[0], '10%'];
+                    }
+                },
+                toolbox: {
+                    feature: {
+                        dataZoom: {
+                            yAxisIndex: 'none'
+                        },
+                        restore: {},
+                        saveAsImage: {}
+                    }
+                },
+                grid: {
+                    left: 50,
+                    right: 50,
+                },
+                xAxis: [{
+                    scale: true,
+                }],
+                yAxis: [{
+                }],
+                dataZoom: [{
+                    type: 'inside',
+                    id: 'dz-in',
+                    minValueSpan,
+                    maxValueSpan,
+                }, {
+                    id: 'dz-s',
+                    minValueSpan,
+                    maxValueSpan,
+                }],
+                series: [{
+                    type:'line',
+                    symbolSize: 5,
+                    data: data2
+                }]
+            };
+
+            function getBtnLabel(special, extra) {
+                extra = extra || '';
+                return 'startValue: ' + special[0] + ', endValue: ' + special[1] + ' ' + extra;
+            }
+
+            var ctx = {
+                hint: '',
+                percentButttons: getDefaultPercentButtons({
+                    minSpan: expectMinSpan, 
+                    maxSpan: expectMaxSpan,
+                    epsilon: 1e-12
+                }),
+                valueButtons: [{
+                    text: getBtnLabel(specialNormal),
+                    startValue: specialNormal[0],
+                    endValue: specialNormal[1],
+                    expect: {
+                        GET_OPTION: [{
+                            startValue: specialNormal[0],
+                            endValue: specialNormal[1],
+                        }, {
+                            startValue: specialNormal[0],
+                            endValue: specialNormal[1],
+                        }]
+                    }
+                }, {
+                    text: getBtnLabel(specialOverXDataMin, 'over xDataMin'),
+                    startValue: specialOverXDataMin[0],
+                    endValue: specialOverXDataMin[1],
+                    expect: {
+                        GET_OPTION: (function () {
+                            const startValue = xDataMin;
+                            const endValue = Math.min(
+                                round(xDataMin + (specialOverXDataMin[1] - specialOverXDataMin[0]), X_ROUNDING_ERROR_PRECISION),
+                                xDataMax
+                            );
+                            return [{
+                                startValue: startValue,
+                                endValue: endValue,
+                            }, {
+                                startValue: startValue,
+                                endValue: endValue,
+                            }]
+                        })()
+                    }
+                }, {
+                    text: getBtnLabel(specialOverXDataMax, 'over xDataMax'),
+                    startValue: specialOverXDataMax[0],
+                    endValue: specialOverXDataMax[1],
+                    expect: {
+                        GET_OPTION: (function () {
+                            const endValue = xDataMax;
+                            const startValue = Math.max(
+                                round(xDataMax - (specialOverXDataMax[1] - specialOverXDataMax[0]), X_ROUNDING_ERROR_PRECISION),
+                                xDataMin
+                            );
+                            return [{
+                                startValue: startValue,
+                                endValue: endValue,
+                            }, {
+                                startValue: startValue,
+                                endValue: endValue,
+                            }];
+                        })()
+                    }
+                }]
+            };
+            ctx.chart = testHelper.create(echarts, 'main_floatValueX_hasMinValueSpan_hasMaxValueSpan', {
+                option: option,
+                title: [
+                    `X is value axis`,
+                    'Click button to dispatchAction: {type: "dataZoom"}',
+                    `xDataMin: **${xDataMin}**, xDataMax: **${xDataMax}**`,
+                    `minValueSpan: **${minValueSpan}**, maxValueSpan: **${maxValueSpan}**`,
+                ],
+                height: 300,
+                buttons: makeButtons(ctx)
+            });
+        });
+        </script>
 
 
 

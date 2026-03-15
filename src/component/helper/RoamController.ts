@@ -180,7 +180,7 @@ class RoamController extends Eventful<RoamEventDefinition> {
                 controlType = true;
             }
 
-            // A handy optimization for repeatedly calling `enable` during roaming.
+            // A quick optimization for repeatedly calling `enable` during roaming.
             // Assert `disable` is only affected by `controlType`.
             if (!this._enabled || this._controlType !== controlType) {
                 this._enabled = true;

@@ -17,7 +17,6 @@
 * under the License.
 */
 
-import * as zrUtil from 'zrender/src/core/util';
 import * as featureManager from './featureManager';
 import ComponentModel from '../../model/Component';
 import {
@@ -31,9 +30,13 @@ import {
     CommonTooltipOption,
     Dictionary,
     ComponentOnCalendarOptionMixin,
-    ComponentOnMatrixOptionMixin
+    ComponentOnMatrixOptionMixin,
+    NullUndefined
 } from '../../util/types';
 import tokens from '../../visual/tokens';
+import type GlobalModel from '../../model/Global';
+import type Model from '../../model/Model';
+import { each, extend, merge } from 'zrender/src/core/util';
 
 
 export interface ToolboxTooltipFormatterParams {
@@ -93,19 +96,49 @@ class ToolboxModel extends ComponentModel<ToolboxOption> {
         ignoreSize: true
     } as const;
 
-    optionUpdated() {
-        super.optionUpdated.apply(this, arguments as any);
-        const {ecModel} = this;
+    private _themeFeatureOption: ToolboxOption['feature'];
 
-        zrUtil.each(this.option.feature, function (featureOpt, featureName) {
+    init(option: ToolboxOption, parentModel: Model, ecModel: GlobalModel): void {
+        // An historical behavior:
+        //  An initial ec option
+        //       chart.setOption( {toolbox: {feature: { featureA: {}, featureB: {}, }} } )
+        //  indicates the declared toolbox features need to be enabled regardless of whether property
+        //  "show" is explicity specified. But the subsequent `setOption` in merge mode requires property
+        //  "show: false" to be explicity specified if intending to remove features, for example:
+        //       chart.setOption( {toolbox: {feature: { featureA: {show: false}, featureC: {} } )
+        // We keep backward compatibility and perform specific processing to prevent theme
+        // settings from breaking it.
+        const toolboxOptionInTheme = ecModel.getTheme().get('toolbox');
+        const themeFeatureOption = toolboxOptionInTheme ? toolboxOptionInTheme.feature : null;
+        if (themeFeatureOption) {
+            // Use extend - the first level of the feature option will be modified later.
+            this._themeFeatureOption = extend({}, themeFeatureOption);
+            toolboxOptionInTheme.feature = {};
+        }
+
+        super.init(option, parentModel, ecModel); // merge theme is performed inside it.
+
+        if (themeFeatureOption) {
+            toolboxOptionInTheme.feature = themeFeatureOption; // Recover
+        }
+    }
+
+    optionUpdated() {
+        each(this.option.feature, function (featureOpt, featureName) {
+            const themeFeatureOption = this._themeFeatureOption;
             const Feature = featureManager.getFeature(featureName);
             if (Feature) {
                 if (Feature.getDefaultOption) {
-                    Feature.defaultOption = Feature.getDefaultOption(ecModel);
+                    Feature.defaultOption = Feature.getDefaultOption(this.ecModel);
                 }
-                zrUtil.merge(featureOpt, Feature.defaultOption);
+                if (themeFeatureOption && themeFeatureOption[featureName]) {
+                    merge(featureOpt, themeFeatureOption[featureName]);
+                    // Follow the previous behavior, theme is only be merged once.
+                    themeFeatureOption[featureName] = null;
+                }
+                merge(featureOpt, Feature.defaultOption);
             }
-        });
+        }, this);
     }
 
     static defaultOption: ToolboxOption = {

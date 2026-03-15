@@ -59,7 +59,15 @@ import { PrimaryTimeUnit } from './time';
 export {Dictionary};
 
 export type RendererType = 'canvas' | 'svg';
+/**
+ * NOTICE: For historical reason, echarts and zrender have not enabled TS config
+ * `strictNullChecks` yet. Therefore, a explicitly declared `NullUndefined` can
+ * indicate a variable can be `null` or `undefined` without more investigation,
+ * but a variable without `NullUndefined` may also be `null` or `undefined`,
+ * which has to be determined by the implementation.
+ */
 export type NullUndefined = null | undefined;
+export const UNDEFINED_STR = 'undefined';
 
 export type LayoutOrient = 'vertical' | 'horizontal';
 export type HorizontalAlign = 'left' | 'center' | 'right';
@@ -328,18 +336,26 @@ export interface StageHandlerOverallReset {
     (ecModel: GlobalModel, api: ExtensionAPI, payload?: Payload): void
 }
 export interface StageHandler {
+
     /**
-     * Indicate that the task will be piped all series
-     * (`performRawSeries` indicate whether includes filtered series).
+     * Indicate that the "series stage task" will be piped for all series
+     * (filtered series is included iff `performRawSeries: true`).
+     *
+     * OVERALL_STAGE_TASK (See `overallReset`) can not set `createOnAllSeries: true`.
      */
     createOnAllSeries?: boolean;
+
     /**
-     * Indicate that the task will be only piped in the pipeline of this type of series.
-     * (`performRawSeries` indicate whether includes filtered series).
+     * Indicate that the task will only be piped in the pipeline of this type of series.
+     * (filtered series is included iff `performRawSeries: true`).
+     * It is available for both `reset` and `overallReset`.
      */
     seriesType?: string;
+
     /**
-     * Indicate that the task will be only piped in the pipeline of the returned series.
+     * Indicate that the task will only be piped in the pipeline of the returned series.
+     * It is called in EC_PREPARE_UPDATE, before `CoordinateSystem['create']`.
+     * It is available for both `reset` and `overallReset`.
      */
     getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
 
@@ -352,18 +368,46 @@ export interface StageHandler {
      * Called only when this task in a pipeline.
      */
     plan?: StageHandlerPlan;
+
     /**
-     * If `overallReset` specified, an "overall task" will be created.
-     * "overall task" does not belong to a certain pipeline.
-     * They always be "performed" in certain phase (depends on when they declared).
-     * They has "stub"s to connect with pipelines (one stub for one pipeline),
-     * delivering info like "dirty" and "output end".
+     * If `overallReset` is specified, an OVERALL_STAGE_TASK will be created.
+     * An OVERALL_STAGE_TASK resides across multiple pipelines, and is associated with
+     * pipelines by "stub"s, which deliver messages like "dirty" and "output end".
+     * OVERALL_STAGE_TASK does not support `progess` method.
+     *
+     * The `overallReset` method is called iff this task is "dirty" (See `Task['dirty']`).
+     * See `StageHandler['reset']` for a summary of possible `dirty()` calls.
      */
     overallReset?: StageHandlerOverallReset;
+
     /**
-     * Called only when this task in a pipeline, and "dirty".
+     * If `reset` is specified, a SERIES_STAGE_TASK will be created.
+     * A SERIES_STAGE_TASK is owned by a pipeline and is specific to a single series.
+     *
+     * The `reset` method is called iff this task is "dirty" (See `Task['dirty']`).
+     * Task `dirty()` call typically originates from a trigger of EC_MAIN_CYCLE (including
+     * EC_FULL_UPDATE and EC_PARTIAL_UPDATE) (See comments in EC_CYCLE)
+     *
+     * NOTICE: `dirtyOnOverallProgress: true` cause that the corresponding `overallReset`
+     *  and `reset` of downsteams tasks may also be called in EC_PROGRESSIVE_CYCLE.
+     *  But in this case, `CoordinateSystem#create` and `CoordinateSystem#update` are not called.
+     *  Only lifecycle like `coordsys:aftercreate` can be ensured to be only called in EC_FULL_UPDATE
+     *  of EC_MAIN_CYCLE, but not in EC_PROGRESSIVE_CYCLE and EC_APPEND_DATA_CYCLE.
      */
     reset?: StageHandlerReset;
+
+    /**
+     * This is a temporary mechanism for dataZoom case in `appendData`.
+     *
+     * It will set the OVERALL_STAGE_TASK dirty when the pipeline progress.
+     * Moreover, to avoid call the OVERALL_STAGE_TASK each frame (too frequent),
+     * it set the pipeline block (via `task.__block`) in this stage.
+     *
+     * Otherwise, (usually it is legacy case), the OVERALL_STAGE_TASK will only be
+     * executed when upstream is dirty. Otherwise the progressive rendering of all
+     * pipelines will be disabled unexpectedly.
+     */
+    dirtyOnOverallProgress?: boolean;
 }
 
 export interface StageHandlerInternal extends StageHandler {
@@ -421,12 +465,20 @@ export type OrdinalRawValue = string | number;
 export type OrdinalNumber = number; // The number mapped from each OrdinalRawValue.
 
 /**
- * @usage For example,
- * ```js
- * { ordinalNumbers: [2, 5, 3, 4] }
- * ```
- * means that ordinal 2 should be displayed on tick 0,
- * ordinal 5 should be displayed on tick 1, ...
+ * @usage
+ * For example,
+ *  ```js
+ *  { ordinalNumbers: [2, 5, 3, 4] }
+ *  ```
+ *  means that "ordinal number" 2 should be displayed on `tick.value` 0,
+ *  "ordinal number" 5 should be displayed on `tick.value` 1, ...
+ * NOTICE:
+ *  - The index/key of `ordinalNumbers` is "tick.value" rather than the index of
+ *    `scale.getTicks()`, though in most cases they are the same, except that the
+ *    `axis.min` is delibrately set to be not zero.
+ *  - The value of `ordinalNumbers` must be a valid `OrdinalNumber`;
+ *    null/undefined is not supported.
+ *  - `OrdinalNumber` is always from `0` to `ordinalMeta.categories.length - 1`.
  */
 export type OrdinalSortInfo = {
     ordinalNumbers: OrdinalNumber[];
@@ -533,9 +585,11 @@ export type AxisLabelFormatterExtraBreakPart = {
 };
 
 export interface ScaleTick {
-    value: number,
-    break?: VisualAxisBreak,
-    time?: TimeScaleTick['time'],
+    value: number;
+    break?: VisualAxisBreak;
+    time?: TimeScaleTick['time'];
+    // NOTICE: null/undefined mean it is unknown whether this tick is "nice".
+    notNice?: boolean | NullUndefined;
 };
 export interface TimeScaleTick extends ScaleTick {
     time: {
@@ -708,6 +762,8 @@ export type ECUnitOption = {
     hoverLayerThreshold?: number
 
     legacyViewCoordSysCenterBase?: boolean
+    // A temporary guard in case that some unexpected effect occurs after axis impl refactoring.
+    legacyMinMaxDontInverseAxis?: boolean
 
     [key: string]: ComponentOption | ComponentOption[] | Dictionary<unknown> | unknown
 
@@ -1530,8 +1586,9 @@ export interface CommonTooltipOption<FormatterParams> {
 
     /**
      * When to trigger
+     * NOTE: mousewheel may modify view by dataZoom.
      */
-    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousemove|click'
+    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousewheel' | 'mousemove|click|mousewheel'
     /**
      * Whether to not hide popup content automatically
      */
@@ -1761,8 +1818,10 @@ export interface ComponentOption {
 }
 
 /**
- * - "data": Use it as "dataCoordSys", each data item is laid out based on a coord sys.
- * - "box": Use it as "boxCoordSys", the overall bounding rect or anchor point is calculated based on a coord sys.
+ * - "data": Each data item is laid out based on a coord sys.
+ *   See `COORD_SYS_USAGE_KIND_DATA`.
+ * - "box": The overall bounding rect or anchor point is calculated based on a coord sys.
+ *   See `COORD_SYS_USAGE_KIND_BOX`.
  *   e.g.,
  *      grid rect (cartesian rect) is calculate based on matrix/calendar coord sys;
  *      pie center is calculated based on calendar/cartesian;

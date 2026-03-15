@@ -34,6 +34,7 @@ import { EChartsType } from './echarts';
 import SeriesModel from '../model/Series';
 import ChartView from '../view/Chart';
 import SeriesData from '../data/SeriesData';
+import { ZRenderType } from 'zrender/src/zrender';
 
 export type GeneralTask = Task<TaskContext>;
 export type SeriesTask = Task<SeriesTaskContext>;
@@ -68,6 +69,8 @@ type TaskRecord = {
     overallTask?: OverallTask
 };
 type PerformStageTaskOpt = {
+    // `block` means running from the beginning to the final end within
+    // an individual "progress".
     block?: boolean,
     setDirty?: boolean,
     visualType?: StageHandlerInternal['visualType'],
@@ -96,7 +99,7 @@ interface OverallTaskContext extends TaskContext {
 }
 interface StubTaskContext extends TaskContext {
     model: SeriesModel;
-    overallProgress: boolean;
+    dirtyOnOverallProgress: boolean;
 };
 
 class Scheduler {
@@ -147,7 +150,7 @@ class Scheduler {
         // if a data processor depends on a component (e.g., dataZoomProcessor depends
         // on the settings of `dataZoom`), it should be re-performed if the component
         // is modified by `setOption`.
-        // (2) If a processor depends on sevral series, speicified by its `getTargetSeries`,
+        // (2) If a processor depends on several series, specified by its `getTargetSeries`,
         // it should be re-performed when the result array of `getTargetSeries` changed.
         // We use `dependencies` to cover these issues.
         // (3) How to update target series when coordinate system related components modified.
@@ -231,12 +234,12 @@ class Scheduler {
         };
     }
 
-    restorePipelines(ecModel: GlobalModel): void {
+    restorePipelines(zr: ZRenderType, ecModel: GlobalModel): void {
         const scheduler = this;
         const pipelineMap = scheduler._pipelineMap = createHashMap();
 
         ecModel.eachSeries(function (seriesModel) {
-            const progressive = seriesModel.getProgressive();
+            const progressive = zr.painter.type === 'canvas' && seriesModel.getProgressive();
             const pipelineId = seriesModel.uid;
 
             pipelineMap.set(pipelineId, {
@@ -488,15 +491,13 @@ class Scheduler {
 
         const seriesType = stageHandler.seriesType;
         const getTargetSeries = stageHandler.getTargetSeries;
-        let overallProgress = true;
+        const dirtyOnOverallProgress = stageHandler.dirtyOnOverallProgress;
         let shouldOverallTaskDirty = false;
         // FIXME:TS never used, so comment it
         // let modifyOutputEnd = stageHandler.modifyOutputEnd;
 
         // An overall task with seriesType detected or has `getTargetSeries`, we add
-        // stub in each pipelines, it will set the overall task dirty when the pipeline
-        // progress. Moreover, to avoid call the overall task each frame (too frequent),
-        // we set the pipeline block.
+        // stub in each pipelines to receive dirty info from upstream.
         let errMsg = '';
         if (__DEV__) {
             errMsg = '"createOnAllSeries" is not supported for "overallReset", '
@@ -509,12 +510,7 @@ class Scheduler {
         else if (getTargetSeries) {
             getTargetSeries(ecModel, api).each(createStub);
         }
-        // Otherwise, (usually it is legacy case), the overall task will only be
-        // executed when upstream is dirty. Otherwise the progressive rendering of all
-        // pipelines will be disabled unexpectedly. But it still needs stubs to receive
-        // dirty info from upstream.
         else {
-            overallProgress = false;
             each(ecModel.getSeries(), createStub);
         }
 
@@ -534,12 +530,12 @@ class Scheduler {
             );
             stub.context = {
                 model: seriesModel,
-                overallProgress: overallProgress
+                dirtyOnOverallProgress: dirtyOnOverallProgress
                 // FIXME:TS never used, so comment it
                 // modifyOutputEnd: modifyOutputEnd
             };
             stub.agent = overallTask;
-            stub.__block = overallProgress;
+            stub.__block = dirtyOnOverallProgress;
 
             scheduler._pipe(seriesModel, stub);
         }
@@ -586,7 +582,7 @@ function overallTaskReset(context: OverallTaskContext): void {
 }
 
 function stubReset(context: StubTaskContext): TaskProgressCallback<StubTaskContext> {
-    return context.overallProgress && stubProgress;
+    return context.dirtyOnOverallProgress && stubProgress;
 }
 
 function stubProgress(this: StubTask): void {

@@ -34,7 +34,7 @@ import {
 import OrdinalMeta from '../OrdinalMeta';
 import { createSourceFromSeriesDataOption, isSourceInstance, Source } from '../Source';
 import { CtorInt32Array } from '../DataStore';
-import { normalizeToArray } from '../../util/model';
+import { normalizeToArray, removeDuplicates } from '../../util/model';
 import { BE_ORDINAL, guessOrdinal } from './sourceHelper';
 import {
     createDimNameMap, ensureSourceDimNameMap, SeriesDataSchema, shouldOmitUnusedDimensions
@@ -340,7 +340,18 @@ export default function prepareSeriesDataSchema(
         resultList.sort((item0, item1) => item0.storeDimIndex - item1.storeDimIndex);
     }
 
-    removeDuplication(resultList);
+    removeDuplicates(
+        resultList,
+        function (item) {
+            return item.name;
+        },
+        function (item, existingCount) {
+            if (existingCount > 0) {
+                // Starts from 0.
+                item.name = item.name + (existingCount - 1);
+            }
+        }
+    );
 
     return new SeriesDataSchema({
         source,
@@ -348,21 +359,6 @@ export default function prepareSeriesDataSchema(
         fullDimensionCount: dimCount,
         dimensionOmitted: omitUnusedDimensions
     });
-}
-
-function removeDuplication(result: SeriesDimensionDefine[]) {
-    const duplicationMap = createHashMap<number>();
-    for (let i = 0; i < result.length; i++) {
-        const dim = result[i];
-        const dimOriginalName = dim.name;
-        let count = duplicationMap.get(dimOriginalName) || 0;
-        if (count > 0) {
-            // Starts from 0.
-            dim.name = dimOriginalName + (count - 1);
-        }
-        count++;
-        duplicationMap.set(dimOriginalName, count);
-    }
 }
 
 // ??? TODO

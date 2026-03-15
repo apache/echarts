@@ -27,7 +27,7 @@ import DataDiffer from './DataDiffer';
 import {DataProvider, DefaultDataProvider} from './helper/dataProvider';
 import {summarizeDimensions, DimensionSummary} from './helper/dimensionHelper';
 import SeriesDimensionDefine from './SeriesDimensionDefine';
-import {ArrayLike, Dictionary, FunctionPropertyNames} from 'zrender/src/core/types';
+import {ArrayLike, Dictionary, FunctionPropertyNames, NullUndefined} from 'zrender/src/core/types';
 import Element from 'zrender/src/Element';
 import {
     DimensionIndex, DimensionName, DimensionLoose, OptionDataItem,
@@ -46,6 +46,7 @@ import {isSourceInstance, Source} from './Source';
 import { LineStyleProps } from '../model/mixin/lineStyle';
 import DataStore, { DataStoreDimensionDefine, DimValueGetter } from './DataStore';
 import { isSeriesDataSchema, SeriesDataSchema } from './helper/SeriesDataSchema';
+import { DataSanitizationFilter } from './helper/dataValueHelper';
 
 const isObject = zrUtil.isObject;
 const map = zrUtil.map;
@@ -672,21 +673,16 @@ class SeriesData<
     }
 
     /**
-     * PENDING: In fact currently this function is only used to short-circuit
-     * the calling of `scale.unionExtentFromData` when data have been filtered by modules
-     * like "dataZoom". `scale.unionExtentFromData` is used to calculate data extent for series on
-     * an axis, but if a "axis related data filter module" is used, the extent of the axis have
-     * been fixed and no need to calling `scale.unionExtentFromData` actually.
-     * But if we add "custom data filter" in future, which is not "axis related", this method may
-     * be still needed.
-     *
      * Optimize for the scenario that data is filtered by a given extent.
      * Consider that if data amount is more than hundreds of thousand,
      * extent calculation will cost more than 10ms and the cache will
      * be erased because of the filtering.
      */
-    getApproximateExtent(dim: SeriesDimensionLoose): [number, number] {
-        return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim));
+    getApproximateExtent(
+        dim: SeriesDimensionLoose,
+        filter: DataSanitizationFilter | NullUndefined
+    ): [number, number] {
+        return this._approximateExtent[dim] || this._store.getDataExtent(this._getStoreDimIndex(dim), filter);
     }
 
     /**
@@ -793,7 +789,7 @@ class SeriesData<
     }
 
     getDataExtent(dim: DimensionLoose): [number, number] {
-        return this._store.getDataExtent(this._getStoreDimIndex(dim));
+        return this._store.getDataExtent(this._getStoreDimIndex(dim), null);
     }
 
     getSum(dim: DimensionLoose): number {

@@ -34,7 +34,8 @@ import AngleAxisView from '../axis/AngleAxisView';
 import RadiusAxisView from '../axis/RadiusAxisView';
 import ComponentView from '../../view/Component';
 import { curry } from 'zrender/src/core/util';
-import barLayoutPolar from '../../layout/barPolar';
+import { barLayoutPolar, registerBarPolarAxisHandlers } from '../../layout/barPolar';
+import { BAR_SERIES_TYPE } from '../../layout/barCommon';
 
 
 const angleAxisExtraOption: AngleAxisOption = {
@@ -43,6 +44,9 @@ const angleAxisExtraOption: AngleAxisOption = {
     clockwise: true,
 
     splitNumber: 12,
+
+    // A round axis is not suitable for `containShape` in most cases.
+    containShape: false,
 
     axisLabel: {
         rotate: 0
@@ -76,5 +80,7 @@ export function install(registers: EChartsExtensionInstallRegisters) {
     registers.registerComponentView(AngleAxisView);
     registers.registerComponentView(RadiusAxisView);
 
-    registers.registerLayout(curry(barLayoutPolar, 'bar'));
+    registers.registerLayout(curry(barLayoutPolar, BAR_SERIES_TYPE));
+
+    registerBarPolarAxisHandlers(registers, BAR_SERIES_TYPE);
 }

@@ -1819,7 +1819,7 @@
             if (theme == null && window.__ECHARTS__DEFAULT__THEME__) {
                 theme = window.__ECHARTS__DEFAULT__THEME__;
             }
-            if (theme) {
+            if (typeof theme === 'string') {
                 require(['theme/' + theme]);
             }
 

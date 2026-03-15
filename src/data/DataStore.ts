@@ -21,24 +21,29 @@ import { assert, clone, createHashMap, isFunction, keys, map, reduce } from 'zre
 import {
     DimensionIndex,
     DimensionName,
+    NullUndefined,
     OptionDataItem,
     ParsedValue,
-    ParsedValueNumeric
+    ParsedValueNumeric,
+    UNDEFINED_STR
 } from '../util/types';
 import { DataProvider } from './helper/dataProvider';
-import { parseDataValue } from './helper/dataValueHelper';
+import {
+    DataSanitizationFilter, parseDataValue, parseSanitizationFilter, passesSanitizationFilter
+} from './helper/dataValueHelper';
 import OrdinalMeta from './OrdinalMeta';
 import { shouldRetrieveDataByName, Source } from './Source';
+import { initExtentForUnion } from '../util/model';
+import { asc } from '../util/number';
 
-const UNDEFINED = 'undefined';
 /* global Float64Array, Int32Array, Uint32Array, Uint16Array */
 
 // Caution: MUST not use `new CtorUint32Array(arr, 0, len)`, because the Ctor of array is
 // different from the Ctor of typed array.
-export const CtorUint32Array = typeof Uint32Array === UNDEFINED ? Array : Uint32Array;
-export const CtorUint16Array = typeof Uint16Array === UNDEFINED ? Array : Uint16Array;
-export const CtorInt32Array = typeof Int32Array === UNDEFINED ? Array : Int32Array;
-export const CtorFloat64Array = typeof Float64Array === UNDEFINED ? Array : Float64Array;
+export const CtorUint32Array = typeof Uint32Array === UNDEFINED_STR ? Array : Uint32Array;
+export const CtorUint16Array = typeof Uint16Array === UNDEFINED_STR ? Array : Uint16Array;
+export const CtorInt32Array = typeof Int32Array === UNDEFINED_STR ? Array : Int32Array;
+export const CtorFloat64Array = typeof Float64Array === UNDEFINED_STR ? Array : Float64Array;
 /**
  * Multi dimensional data store
  */
@@ -115,9 +120,7 @@ function getIndicesCtor(rawCount: number): DataArrayLikeConstructor {
     // The possible max value in this._indicies is always this._rawCount despite of filtering.
     return rawCount > 65535 ? CtorUint32Array : CtorUint16Array;
 };
-function getInitialExtent(): [number, number] {
-    return [Infinity, -Infinity];
-};
+
 function cloneChunk(originalChunk: DataValueChunk): DataValueChunk {
     const Ctor = originalChunk.constructor;
     // Only shallow clone is enough when Array.
@@ -164,7 +167,9 @@ class DataStore {
     // It will not be calculated until needed.
     private _rawExtent: [number, number][] = [];
 
-    private _extent: [number, number][] = [];
+    // structure:
+    //  `const extentOnFilterOnDimension = this._extent[dim][extentFilterKey]`
+    private _extent: Record<string, [number, number]>[] = [];
 
     // Indices stores the indices of data subset after filtered.
     // This data subset will be used in chart.
@@ -263,7 +268,7 @@ class DataStore {
         calcDimNameToIdx.set(dimName, calcDimIdx);
 
         this._chunks[calcDimIdx] = new dataCtors[type || 'float'](this._rawCount);
-        this._rawExtent[calcDimIdx] = getInitialExtent();
+        this._rawExtent[calcDimIdx] = initExtentForUnion();
 
         return calcDimIdx;
     }
@@ -282,7 +287,7 @@ class DataStore {
         if (offset === 0) {
             // We need to reset the rawExtent if collect is from start.
             // Because this dimension may be guessed as number and calcuating a wrong extent.
-            rawExtents[dimIdx] = getInitialExtent();
+            rawExtents[dimIdx] = initExtentForUnion();
         }
 
         const dimRawExtent = rawExtents[dimIdx];
@@ -386,7 +391,7 @@ class DataStore {
         for (let i = 0; i < dimLen; i++) {
             const dim = dimensions[i];
             if (!rawExtent[i]) {
-                rawExtent[i] = getInitialExtent();
+                rawExtent[i] = initExtentForUnion();
             }
             prepareStore(chunks, i, dim.type, end, append);
         }
@@ -504,7 +509,7 @@ class DataStore {
      * Get median of data in one dimension
      */
     getMedian(dim: DimensionIndex): number {
-        const dimDataArray: ParsedValue[] = [];
+        const dimDataArray: number[] = [];
         // map all data of one dimension
         this.each([dim], function (val) {
             if (!isNaN(val as number)) {
@@ -514,16 +519,14 @@ class DataStore {
 
         // TODO
         // Use quick select?
-        const sortedDimDataArray = dimDataArray.sort(function (a: number, b: number) {
-            return a - b;
-        }) as number[];
+        asc(dimDataArray);
         const len = this.count();
         // calculate median
         return len === 0
             ? 0
             : len % 2 === 1
-            ? sortedDimDataArray[(len - 1) / 2]
-            : (sortedDimDataArray[len / 2] + sortedDimDataArray[len / 2 - 1]) / 2;
+            ? dimDataArray[(len - 1) / 2]
+            : (dimDataArray[len / 2] + dimDataArray[len / 2 - 1]) / 2;
     }
 
     /**
@@ -596,7 +599,7 @@ class DataStore {
     }
 
     /**
-     * Data filter.
+     * [NOTICE]: Performance-sensitive for large data.
      */
     filter(
         dims: DimensionIndex[],
@@ -817,7 +820,7 @@ class DataStore {
         const rawExtent = target._rawExtent;
 
         for (let i = 0; i < dims.length; i++) {
-            rawExtent[dims[i]] = getInitialExtent();
+            rawExtent[dims[i]] = initExtentForUnion();
         }
 
         for (let dataIndex = 0; dataIndex < dataCount; dataIndex++) {
@@ -830,7 +833,7 @@ class DataStore {
 
             let retValue = cb && cb.apply(null, values);
             if (retValue != null) {
-                // a number or string (in oridinal dimension)?
+                // a number or string (in ordinal dimension)?
                 if (typeof retValue !== 'object') {
                     tmpRetValue[0] = retValue;
                     retValue = tmpRetValue;
@@ -1044,7 +1047,7 @@ class DataStore {
 
         const dimStore = targetStorage[dimension];
         const len = this.count();
-        const rawExtentOnDim = target._rawExtent[dimension] = getInitialExtent();
+        const rawExtentOnDim = target._rawExtent[dimension] = initExtentForUnion();
 
         const newIndices = new (getIndicesCtor(this._rawCount))(Math.ceil(len / frameSize));
 
@@ -1127,13 +1130,13 @@ class DataStore {
         }
     }
 
-    /**
-     * Get extent of data in one dimension
-     */
-    getDataExtent(dim: DimensionIndex): [number, number] {
+    getDataExtent(
+        dim: DimensionIndex,
+        filter: DataSanitizationFilter | NullUndefined
+    ): [number, number] {
         // Make sure use concrete dim as cache name.
         const dimData = this._chunks[dim];
-        const initialExtent = getInitialExtent();
+        const initialExtent = initExtentForUnion();
 
         if (!dimData) {
             return initialExtent;
@@ -1145,33 +1148,49 @@ class DataStore {
         // Consider the most cases when using data zoom, `getDataExtent`
         // happened before filtering. We cache raw extent, which is not
         // necessary to be cleared and recalculated when restore data.
-        const useRaw = !this._indices;
-        let dimExtent: [number, number];
-
+        const useRaw = !this._indices && !filter;
         if (useRaw) {
             return this._rawExtent[dim].slice() as [number, number];
         }
-        dimExtent = this._extent[dim];
+
+        // NOTE:
+        //  - In logarithm axis, zero should be excluded, therefore the `extent[0]` should be less or equal
+        //    than the min positive data item, which requires the special handling here.
+        //  - "Filter non-positive values for logarithm axis" can also be implemented in a data processor
+        //    but that requires more complicated code to not break all streams under the current architecture,
+        //    therefore we simply implement it here.
+        //  - Performance is sensitive for large data, therefore inline filters rather than cb is used here.
+
+        const thisExtent = this._extent;
+        const dimExtentRecord = thisExtent[dim] || (thisExtent[dim] = {});
+
+        const filterParsed = parseSanitizationFilter(filter);
+        const filterKey = filterParsed.key;
+
+        const dimExtent = dimExtentRecord[filterKey];
         if (dimExtent) {
             return dimExtent.slice() as [number, number];
         }
-        dimExtent = initialExtent;
 
-        let min = dimExtent[0];
-        let max = dimExtent[1];
+        let min = initialExtent[0];
+        let max = initialExtent[1];
 
         for (let i = 0; i < currEnd; i++) {
+            // NOTICE: Manually inline some code for performance of large data.
             const rawIdx = this.getRawIndex(i);
             const value = dimData[rawIdx] as ParsedValueNumeric;
-            value < min && (min = value);
-            value > max && (max = value);
+            // NOTE: in most cases, filter does not exist.
+            if (!filter || passesSanitizationFilter(filterParsed, value)) {
+                if (value < min) {
+                    min = value;
+                }
+                if (value > max) {
+                    max = value;
+                }
+            }
         }
 
-        dimExtent = [min, max];
-
-        this._extent[dim] = dimExtent;
-
-        return dimExtent;
+        return (dimExtentRecord[filterKey] = [min, max]);
     }
 
     /**

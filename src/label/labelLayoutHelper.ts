@@ -509,7 +509,7 @@ export function restoreIgnore(labelList: LabelLayoutData[]): void {
 
 /**
  * [NOTICE - restore]:
- *  'series:layoutlabels' may be triggered during some shortcut passes, such as zooming in series.graph/geo
+ *  'series:layoutlabels' may be triggered during some EC_PARTIAL_UPDATE passes, such as zooming in series.graph/geo
  *  (`updateLabelLayout`), where the modified `Element` props should be restorable from `defaultAttr`.
  *  @see `SavedLabelAttr` in `LabelManager.ts`
  *  `restoreIgnore` can be called to perform the restore, if needed.

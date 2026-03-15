@@ -31,6 +31,7 @@ import Axis from '../../../coord/Axis';
 import Cartesian2D from '../../../coord/cartesian/Cartesian2D';
 import { warn } from '../../../util/log';
 import tokens from '../../../visual/tokens';
+import { getCartesianAxisHashKey } from '../../../coord/cartesian/cartesianAxisHelper';
 
 /* global document */
 
@@ -74,10 +75,10 @@ function groupSeries(ecModel: GlobalModel) {
         const coordSys = seriesModel.coordinateSystem;
 
         if (coordSys && (coordSys.type === 'cartesian2d' || coordSys.type === 'polar')) {
-            // TODO: TYPE Consider polar? Include polar may increase unecessary bundle size.
+            // TODO: TYPE Consider polar? Include polar may increase unnecessary bundle size.
             const baseAxis = (coordSys as Cartesian2D).getBaseAxis();
             if (baseAxis.type === 'category') {
-                const key = baseAxis.dim + '_' + baseAxis.index;
+                const key = getCartesianAxisHashKey(baseAxis);
                 if (!seriesGroupByCategoryAxis[key]) {
                     seriesGroupByCategoryAxis[key] = {
                         categoryAxis: baseAxis,
@@ -446,12 +447,8 @@ class DataView extends ToolboxFeature<ToolboxDataViewFeatureOption> {
         this._dom = root;
     }
 
-    remove(ecModel: GlobalModel, api: ExtensionAPI) {
-        this._dom && api.getDom().removeChild(this._dom);
-    }
-
     dispose(ecModel: GlobalModel, api: ExtensionAPI) {
-        this.remove(ecModel, api);
+        this._dom && api.getDom().removeChild(this._dom);
     }
 
     static getDefaultOption(ecModel: GlobalModel) {

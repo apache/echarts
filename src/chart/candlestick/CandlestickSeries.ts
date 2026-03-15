@@ -82,9 +82,11 @@ export interface CandlestickSeriesOption
     data?: (CandlestickDataValue | CandlestickDataItemOption)[]
 }
 
+export const SERIES_TYPE_CANDLESTICK = 'candlestick';
+
 class CandlestickSeriesModel extends SeriesModel<CandlestickSeriesOption> {
 
-    static readonly type = 'series.candlestick';
+    static readonly type = 'series.' + SERIES_TYPE_CANDLESTICK;
     readonly type = CandlestickSeriesModel.type;
 
     static readonly dependencies = ['xAxis', 'yAxis', 'grid'];

@@ -808,7 +808,7 @@ class TooltipView extends ComponentView {
     }
 
     private _showTooltipContent(
-        // Use Model<TooltipOption> insteadof TooltipModel because this model may be from series or other options.
+        // Use Model<TooltipOption> instead of TooltipModel because this model may be from series or other options.
         // Instead of top level tooltip.
         tooltipModel: Model<TooltipOption>,
         defaultHtml: string,

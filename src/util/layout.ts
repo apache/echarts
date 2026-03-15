@@ -34,7 +34,10 @@ import Element from 'zrender/src/Element';
 import { Dictionary } from 'zrender/src/core/types';
 import ExtensionAPI from '../core/ExtensionAPI';
 import { error } from './log';
-import { BoxCoordinateSystemCoordFrom, getCoordForBoxCoordSys } from '../core/CoordinateSystem';
+import {
+    BOX_COORD_SYS_COORD_FROM_PROP_COORD2, BoxCoordinateSystemCoordFrom,
+    getCoordForCoordSysUsageKindBox
+} from '../core/CoordinateSystem';
 import SeriesModel from '../model/Series';
 import type Model from '../model/Model';
 import type ComponentModel from '../model/Component';
@@ -208,7 +211,7 @@ function getViewRectAndCenterForCircleLayout<TOption extends CircleLayoutSeriesO
         viewRect = getLayoutRect(
             boxLayoutParams, layoutRef.refContainer
         );
-        center = layoutRef.boxCoordFrom === BoxCoordinateSystemCoordFrom.coord2
+        center = layoutRef.boxCoordFrom === BOX_COORD_SYS_COORD_FROM_PROP_COORD2
             ? layoutRef.refPoint // option `series.center` has been used as coord.
             : [
                 parsePercent(centerOptionArr[0], viewRect.width) + viewRect.x,
@@ -483,7 +486,7 @@ export function createBoxLayoutReference<TEnableByCenter extends boolean = false
     const boxCoordSys = model.boxCoordinateSystem;
     let boxCoordFrom: BoxCoordinateSystemCoordFrom | NullUndefined;
     if (boxCoordSys) {
-        const {coord, from} = getCoordForBoxCoordSys(model);
+        const {coord, from} = getCoordForCoordSysUsageKindBox(model);
         // Do not use `clamp` in `dataToLayout` and `dataToPoint`, because:
         //  1. Should support overflow (such as, by dataZoom), where NaN should be in the result.
         //  2. Be consistent with the way used in `series.data`

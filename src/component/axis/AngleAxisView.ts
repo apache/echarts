@@ -101,8 +101,8 @@ class AngleAxisView extends AxisView {
             labelItem = zrUtil.clone(labelItem);
             const scale = angleAxis.scale;
             const tickValue = scale.type === 'ordinal'
-                ? (scale as OrdinalScale).getRawOrdinalNumber(labelItem.tickValue)
-                : labelItem.tickValue;
+                ? (scale as OrdinalScale).getRawOrdinalNumber(labelItem.tick.value)
+                : labelItem.tick.value;
             labelItem.coord = angleAxis.dataToCoord(tickValue);
             return labelItem;
         });
@@ -250,7 +250,7 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         // Use length of ticksAngles because it may remove the last tick to avoid overlapping
         zrUtil.each(labels, function (labelItem, idx) {
             let labelModel = commonLabelModel;
-            const tickValue = labelItem.tickValue;
+            const tickValue = labelItem.tick.value;
 
             const r = radiusExtent[getRadiusIdx(polar)];
             const p = polar.coordToPoint([r + labelMargin, labelItem.coord]);
