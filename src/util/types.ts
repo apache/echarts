@@ -1586,8 +1586,9 @@ export interface CommonTooltipOption<FormatterParams> {
 
     /**
      * When to trigger
+     * NOTE: mousewheel may modify view by dataZoom.
      */
-    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousemove|click'
+    triggerOn?: 'mousemove' | 'click' | 'none' | 'mousewheel' | 'mousemove|click|mousewheel'
     /**
      * Whether to not hide popup content automatically
      */
