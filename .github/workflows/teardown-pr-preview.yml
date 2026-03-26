@@ -27,4 +27,7 @@ jobs:
         continue-on-error: true
         run: |
           export SURGE_DOMAIN='https://echarts-pr-${{ github.event.number }}.surge.sh'
-          npx surge teardown $SURGE_DOMAIN --token ${{ secrets.SURGE_TOKEN }}
+          npx surge teardown $SURGE_DOMAIN --token ${SURGE_TOKEN}
+
+        env:
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
