@@ -52,6 +52,7 @@ export interface CandlestickStateOption {
 }
 export interface CandlestickDataItemOption
     extends CandlestickStateOption, StatesOptionMixin<CandlestickStateOption, ExtraStateOption> {
+    cursor?: string
     value: CandlestickDataValue
 }
 
