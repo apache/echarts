@@ -80,7 +80,7 @@ jobs:
 
       # Archive before run others to avoid packing unknown files.
       - name: Archive source release
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-src
           path: |
@@ -123,7 +123,7 @@ jobs:
           echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Download source release
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: apache-echarts-${{env.RELEASE_VERSION}}-src
           path: tmp/echarts
