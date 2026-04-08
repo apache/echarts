@@ -128,7 +128,7 @@ var localeObj = {
             pictorialBar: 'Bildlicher Balken',
             themeRiver: 'Thematische Flusskarte',
             sunburst: 'Sonnenausbruch',
-            custom: 'Benutzerdefiniertes Diagramm',
+            custom: 'Graficu persunalizatu',
             chart: 'Diagramm'
         }
     },
