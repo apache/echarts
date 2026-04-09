@@ -799,6 +799,8 @@ export function adoptScaleExtentKindMapping(
                 unionExtentStartFromNumber(linearSupplement, singleLinearSupplement[0]);
                 unionExtentEndFromNumber(linearSupplement, singleLinearSupplement[1]);
 
+                // Consider the consistency of `onZero` behavior (not varying by series data; otherwise error-prone
+                // to users), if any `containShape` really performed on this axis, discourage `onZero`.
                 discourageOnAxisZero(axis);
             }
         }

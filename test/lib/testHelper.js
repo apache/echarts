@@ -296,6 +296,10 @@
         var boundingRectsContainer = document.createElement('div');
 
         titleContainer.setAttribute('title', dom.getAttribute('id'));
+        titleContainer.addEventListener('click', function () {
+            // Convenient for locating test case code.
+            console.log('[TEST CASE DOM ID]: ' + dom.getAttribute('id'));
+        });
 
         titleContainer.className = 'test-title';
         dom.className = 'test-chart-block';

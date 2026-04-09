@@ -705,11 +705,11 @@ function canOnZeroToAxis(
         // cases that `containShape` is applied.
         && (
             isOnAxisZeroDiscouraged(axis)
-            || (
-                // Avoid axis line cross series shape (typically, bar series on "value"/"time" axis) unexpectedly.
-                kindEffective === SCALE_VALUE_POSITION_KIND_EDGE
-                && getScaleValuePositionKind(scale, 0, true) === SCALE_VALUE_POSITION_KIND_INSIDE
-            )
+            // || (
+            //     // Avoid axis line cross series shape (typically, bar series on "value"/"time" axis) unexpectedly.
+            //     kindEffective === SCALE_VALUE_POSITION_KIND_EDGE
+            //     && getScaleValuePositionKind(scale, 0, true) === SCALE_VALUE_POSITION_KIND_INSIDE
+            // )
         )
     ) {
         can = false;
