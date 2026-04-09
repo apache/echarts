@@ -2148,7 +2148,116 @@
                 _mask = null;
             }
         }
-    }
+    }; // End of `controlFrame`
+
+    /**
+     * Print zrender canvas layer draw operations on frame.
+     *
+     * @usage
+     *  ```js
+     *  var recordContainer = document.getElementById('record');
+     *  testHelper.controlFrame({
+     *      pauseAt: 30,
+     *      onFrame: function (frameNumber) {
+     *          testHelper.printCanvasLayerDrawOperationsOnFrame(chart, frameNumber, recordContainer);
+     *      }
+     *  });
+     *  ```
+     */
+    testHelper.printCanvasLayerDrawOperationsOnFrame = function (
+        chart, frameNumber, recordContainer
+    ) {
+        if (!chart) {
+            return;
+        }
+
+        var _drawOpCtx = chart.__printCanvasLayerDrawOperationsOnFrame_ctx
+            || (chart.__printCanvasLayerDrawOperationsOnFrame_ctx = initPrintDrawOpCtx(recordContainer));
+        // key: layer key; value: ops array.
+        var _lastOps = {};
+
+        doPrint();
+
+        function initPrintDrawOpCtx(recordContainer) {
+            if (window.Canteen) {
+                window.Canteen.globals.STACK_SIZE = 100000000;
+            }
+            else {
+                console.error && console.error('canteen.js is required but not imported');
+            }
+
+            recordContainer.innerHTML = [
+                '<div class="print-canvas-layer-draw-operations-on-frame-record-title">',
+                    'In "incremental layers" (layer N.1), ',
+                    'canvas instruction count (<span class="print-canvas-layer-draw-operations-on-frame-cmd-count">red number</span>) should be the same per frame;',
+                    '<br>In "normal layers" (layer N.0 or N.2), should be no incremental canvas instructions per frame.',
+                '</div>'
+            ].join('');
+            recordContainer.className = 'print-canvas-layer-draw-operations-on-frame-record';
+
+            return {
+                layersInfoMap: {},
+                recordContainer: recordContainer,
+                CELL_MAX: 90
+            };
+        }
+
+        function doPrint() {
+            _drawOpCtx.lastOps = {};
+            var layers = chart.getZr().painter.getLayers();
+            for (var layerId in layers) {
+                if (layers.hasOwnProperty(layerId)) {
+                    printSingleCanvasLayer(layerId, layers[layerId], frameNumber);
+                }
+            }
+        }
+
+        function printSingleCanvasLayer(layerId, layer, frameNumber) {
+            var layerInfo = _drawOpCtx.layersInfoMap[layerId];
+            if (!layerInfo) {
+                layerInfo = _drawOpCtx.layersInfoMap[layerId] = {
+                    recordLineCellCount: 0,
+                    recordLineTitle: document.createElement('div'),
+                    recordLineContainer: document.createElement('div')
+                };
+                layerInfo.recordLineTitle.innerHTML = 'layer ' + layerId + ': <br>';
+                layerInfo.recordLineTitle.className = 'print-canvas-layer-draw-operations-on-frame-record-line-title';
+                layerInfo.recordLineContainer.className = 'print-canvas-layer-draw-operations-on-frame-record-line';
+                _drawOpCtx.recordContainer.appendChild(layerInfo.recordLineTitle);
+                _drawOpCtx.recordContainer.appendChild(layerInfo.recordLineContainer);
+            }
+
+            var canvas = layer.dom;
+            var ctx = canvas.getContext('2d');
+            var stackLength = getStackLength(ctx);
+            var thisStackLength = stackLength;
+
+            var cell;
+            if (layerInfo.recordLineCellCount > _drawOpCtx.CELL_MAX) {
+                cell = layerInfo.recordLineContainer.firstChild;
+            }
+            else {
+                cell = document.createElement('span');
+                layerInfo.recordLineCellCount++;
+            }
+            cell.innerHTML = frameNumber + ':<span class="print-canvas-layer-draw-operations-on-frame-cmd-count">' + thisStackLength + '</span> ';
+            layerInfo.recordLineContainer.appendChild(cell);
+
+            if (ctx.stack) {
+                _lastOps[layerId] = ctx.stack().slice();
+            }
+            if (ctx.clear) {
+                ctx.clear();
+            }
+        }
+
+        function getStackLength(ctx) {
+            return ctx.stack ? ctx.stack().length : 0;
+        }
+
+        return _lastOps;
+
+    }; // End of `printCanvasLayerDrawOperationsOnFrame`
 
     testHelper.resizable = function (chart, opt) {
         opt = opt || {};

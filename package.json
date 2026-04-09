@@ -61,6 +61,7 @@
     "mktest": "node test/build/mktest.js",
     "mktest2": "node test/build/mktest.js --with-inputs-common",
     "mktest3": "node test/build/mktest.js --with-inputs-all",
+    "mktest:canvas:debug": "node test/build/mktest.js --with-canvas-debug",
     "mktest:help": "node test/build/mktest.js -h",
     "checktype": "tsc --noEmit",
     "checkheader": "node build/checkHeader.js",

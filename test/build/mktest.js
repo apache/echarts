@@ -45,6 +45,9 @@ const manualText = `
     # or (make test with all inputs)
     ${chalk.green('npm run mktest3 bar-action.html')}
 
+    # or (make test with canvas debug)
+    ${chalk.green('npm run mktest:canvas:debug tmp-bar.html')}
+
     # or
     ${chalk.green('node ./test/build/mktest bar-action.html')}
 
@@ -73,7 +76,9 @@ function run() {
 
     const testTplContent = nodeFS.readFileSync(testTplPath, {encoding: 'utf8'});
 
-    const testFileContent = makeTestFileContent(opt, testTplContent);
+    const testFileContent = opt.withCanvasDebug
+        ? testTplContent
+        : makeTestFileContent(opt, testTplContent);
 
     nodeFS.writeFileSync(opt.testFilePath, testFileContent, {encoding: 'utf8'});
 
@@ -87,6 +92,7 @@ function prepareOpt() {
         .description(manualText)
         .option('--with-inputs-common', 'include common inputs')
         .option('--with-inputs-all', 'include all inputs')
+        .option('--with-canvas-debug', 'canvas debug')
         .parse(process.argv);
 
     let args = commander.args || [];
@@ -98,6 +104,9 @@ function prepareOpt() {
     }
     else if (opts.withInputsAll) {
         testTplPath = nodePath.resolve(__dirname, 'mktest-tpl3.html');
+    }
+    else if (opts.withCanvasDebug) {
+        testTplPath = nodePath.resolve(__dirname, 'mktest-tpl-canvas-debug.html');
     }
     else {
         testTplPath = nodePath.resolve(__dirname, 'mktest-tpl.html');
@@ -121,7 +130,8 @@ function prepareOpt() {
     return {
         testFileName: testFileName,
         testFilePath: testFilePath,
-        testCaseNumber: testCaseNumber
+        testCaseNumber: testCaseNumber,
+        withCanvasDebug: opts.withCanvasDebug
     };
 }
 

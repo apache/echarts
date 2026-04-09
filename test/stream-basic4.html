@@ -31,8 +31,6 @@ under the License.
         <script src="lib/perlin.js"></script>
         <script src="lib/canteen.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
-        <link rel="stylesheet" href="./stream-basic.css" />
-        <script src="./stream-basic.js"></script>
     </head>
     <body>
 
@@ -47,8 +45,7 @@ under the License.
         testHelper.controlFrame({
             pauseAt: 1,
             onFrame: function (frameNumber) {
-                // from ./stream-basic.js
-                window.printIncrementalOnFrame(chart, frameNumber, recordContainer);
+                testHelper.printCanvasLayerDrawOperationsOnFrame(chart, frameNumber, recordContainer);
             }
         });
 
@@ -169,7 +166,7 @@ under the License.
 
             chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Click **run**',
+                    'Click **Resume**',
                     '(NOTE: hoverLayerThreshold does not affect progressive rendering hovering)'
                 ],
                 option: createOption(),

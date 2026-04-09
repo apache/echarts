@@ -393,3 +393,30 @@ td.test-data-table-key {
     border-radius: 3px;
     pointer-events: none;
 }
+
+.print-canvas-layer-draw-operations-on-frame-record-title {
+    margin: 5px 10px;
+    font-size: 14px;
+    font-weight: 700;
+}
+.print-canvas-layer-draw-operations-on-frame-record-title .print-canvas-layer-draw-operations-on-frame-cmd-count {
+    color: red;
+}
+.print-canvas-layer-draw-operations-on-frame-record {
+    margin: 5px 20px;
+}
+.print-canvas-layer-draw-operations-on-frame-record-line {
+    margin: 5px 10px;
+    font-size: 10px;
+    line-height: 1;
+}
+.print-canvas-layer-draw-operations-on-frame-record-line-title {
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.print-canvas-layer-draw-operations-on-frame-record-line .print-canvas-layer-draw-operations-on-frame-cmd-count {
+    color: red;
+    font-size: 10px;
+    margin-right: 3px;
+}

@@ -30,8 +30,6 @@ under the License.
         <script src="lib/testHelper.js"></script>
         <script src="lib/canteen.js"></script>
         <link rel="stylesheet" href="lib/reset.css" />
-        <link rel="stylesheet" href="./stream-basic.css" />
-        <script src="./stream-basic.js"></script>
     </head>
     <body>
 
@@ -46,7 +44,7 @@ under the License.
         testHelper.controlFrame({
             pauseAt: 20,
             onFrame: function (frameNumber) {
-                window.printIncrementalOnFrame(chart, frameNumber, recordContainer);
+                testHelper.printCanvasLayerDrawOperationsOnFrame(chart, frameNumber, recordContainer);
             }
         });
 
@@ -89,21 +87,21 @@ under the License.
             function createOption() {
 
                 var largeSettingsSeries = {};
-                if (_ctx.large != null) {
+                if (_ctx.large.value != null) {
                     largeSettingsSeries.large = _ctx.large.value;
                 }
-                if (_ctx.largeThreshold != null) {
+                if (_ctx.largeThreshold.value != null) {
                     largeSettingsSeries.largeThreshold = _ctx.largeThreshold.value;
                 }
-                if (_ctx.progressive != null) {
+                if (_ctx.progressive.value != null) {
                     largeSettingsSeries.progressive = _ctx.progressive.value;
                 }
-                if (_ctx.progressiveThreshold != null) {
+                if (_ctx.progressiveThreshold.value != null) {
                     largeSettingsSeries.progressiveThreshold = _ctx.progressiveThreshold.value;
                 }
 
                 var largeSettingsGlobal = {};
-                if (_ctx.hoverLayerThreshold != null) {
+                if (_ctx.hoverLayerThreshold.value != null) {
                     largeSettingsSeries.hoverLayerThreshold = _ctx.hoverLayerThreshold.value;
                 }
 
@@ -355,7 +353,7 @@ under the License.
 
             chart = testHelper.create(echarts, 'main0', {
                 title: [
-                    'Click **run**',
+                    'Click **Resume**',
                     '2 progressive series',
                 ],
                 option: createOption(),
