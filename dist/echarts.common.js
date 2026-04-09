@@ -18788,6 +18788,36 @@
         }
       });
     }
+    function _escapeHTMLEntities(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    function _sanitizeOptionTextContent(option) {
+      if (!option || typeof option !== 'object' || typeof option === 'function') {
+        return;
+      }
+      var htmlRenderFields = ['name', 'value', 'text', 'title', 'subtext', 'content', 'message', 'detail'];
+      each(Object.keys(option), function (key) {
+        var val = option[key];
+        if (htmlRenderFields.indexOf(key) >= 0 && typeof val === 'string') {
+          option[key] = _escapeHTMLEntities(val);
+        }
+        else if (Array.isArray(val)) {
+          each(val, function (item) {
+            if (item && typeof item === 'object') {
+              _sanitizeOptionTextContent(item);
+            }
+          });
+        }
+        else if (val && typeof val === 'object' && typeof val !== 'function') {
+          _sanitizeOptionTextContent(val);
+        }
+      });
+    }
     var GlobalModel = /** @class */function (_super) {
       __extends(GlobalModel, _super);
       function GlobalModel() {
@@ -18806,6 +18836,7 @@
           assert(option[OPTION_INNER_KEY] !== OPTION_INNER_VALUE, 'please use chart.getOption()');
         }
         var innerOpt = normalizeSetOptionInput(opts);
+        _sanitizeOptionTextContent(option);
         this._optionManager.setOption(option, optionPreprocessorFuncs, innerOpt);
         this._resetOption(null, innerOpt);
       };
