@@ -1599,7 +1599,11 @@
         });
 
         function eachCtx(cb) {
-            var layers = chart.getZr().painter.getLayers();
+            var painter = chart.getZr().painter;
+            if (painter.type !== 'canvas') {
+                return;
+            }
+            var layers = painter.getLayers();
             for (var zlevel in layers) {
                 if (layers.hasOwnProperty(zlevel)) {
                     var layer = layers[zlevel];
@@ -2204,7 +2208,11 @@
 
         function doPrint() {
             _drawOpCtx.lastOps = {};
-            var layers = chart.getZr().painter.getLayers();
+            var painter = chart.getZr().painter;
+            if (painter.type !== 'canvas') {
+                return;
+            }
+            var layers = painter.getLayers();
             for (var layerId in layers) {
                 if (layers.hasOwnProperty(layerId)) {
                     printSingleCanvasLayer(layerId, layers[layerId], frameNumber);
@@ -3427,9 +3435,12 @@
     //     }
     // };
 
-    testHelper.getLayerDom = function (chart, zlevel, zlevel2) {
+    testHelper.getCanvasLayerDom = function (chart, zlevel, zlevel2) {
         var zr = chart.getZr();
         var painter = zr.painter;
+        if (painter.type !== 'canvas') {
+            return;
+        }
         // CAVEAT: Accessing internal data structure, may change.
         // See `CanvasPainterInternal`
         var painterInternal = painter._i;

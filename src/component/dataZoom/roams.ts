@@ -34,7 +34,6 @@ import {
     DataZoomPayloadBatchItem, collectReferCoordSysModelInfo,
     DataZoomCoordSysMainType, DataZoomReferCoordSysInfo
 } from './helper';
-import GlobalModel from '../../model/Global';
 import { CoordinateSystemHostModel } from '../../coord/CoordinateSystem';
 import { DataZoomGetRangeHandlers } from './InsideZoomView';
 import { EChartsExtensionInstallRegisters } from '../../extension';

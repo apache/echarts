@@ -163,7 +163,7 @@
   "map-parallel": 1,
   "map-province": 1,
   "mapWorld": 1,
-  "markArea": 3,
+  "markArea": 5,
   "marker-case": 1,
   "matrix": 3,
   "matrix_application": 4,

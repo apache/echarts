@@ -503,7 +503,7 @@ under the License.
                     text: 'hoverLayer:',
                     values: ['show', 'hide'],
                     onchange() {
-                        const hoverLayerDom = testHelper.getLayerDom(chart, 1e5, 0);
+                        const hoverLayerDom = testHelper.getCanvasLayerDom(chart, 1e5, 0);
                         if (!hoverLayerDom) {
                             console.error('hover does not exist!');
                             return;
