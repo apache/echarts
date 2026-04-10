@@ -139,8 +139,12 @@ export function enableDataStack(
     });
 
     if (stackedDimInfo && !byIndex && !stackedByDimInfo) {
-        // Compatible with previous design, value axis (time axis) only stack by index.
-        // It may make sense if the user provides elaborately constructed data.
+        // "Stack by data index" makes sense only if users provide carefully constructed data - any
+        // mismatch or absence of data items can cause incorrect results. By "Stack by data index"
+        // is more performant - no hashmap is required.
+        // PENDING:
+        //  Compatible with previous design, non-category axis ("value"/"log"/"time" axis) can only
+        //  stack by index. "Stack by value" will not be supported until concrete requirements arise.
         byIndex = true;
     }
 

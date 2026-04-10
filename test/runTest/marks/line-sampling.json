@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "datazoom hover",
+    "type": "Others",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775641080721
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/16978",
     "comment": "",
     "type": "Bug Fixing",

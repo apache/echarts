@@ -1,0 +1,10 @@
+[
+  {
+    "link": "",
+    "comment": "Due to the fix of progressive rendering - previously each points are repeatedly painted.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775504824945
+  }
+]

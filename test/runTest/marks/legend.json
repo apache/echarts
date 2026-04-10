@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "axis label and extent change.",
+    "type": "Others",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775673045047
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/21097",
     "comment": "Dark theme changed to improve accessibility.",
     "type": "Others",

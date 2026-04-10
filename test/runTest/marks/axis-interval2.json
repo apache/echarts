@@ -1,6 +1,14 @@
 [
   {
     "link": "",
+    "comment": "splitArea change",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1775676074411
+  },
+  {
+    "link": "",
     "comment": "The result is expected - by interval tweak and dataZoom label show fix.",
     "type": "Bug Fixing",
     "markedBy": "100pah",
