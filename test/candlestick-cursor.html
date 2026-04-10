@@ -163,6 +163,7 @@ under the License.
                         },
                         dataZoom: [
                             {
+                                id: 'inside1',
                                 type: 'inside',
                                 start: 50,
                                 end: 100
@@ -230,7 +231,33 @@ under the License.
                                 }
                             }
                         ]
-                    }
+                    },
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'insideZoom.cursorGrab:',
+                        values: [undefined, 'crosshair'],
+                        onchange() {
+                            normalChart.setOption({
+                                dataZoom: {
+                                    id: 'inside1',
+                                    cursorGrab: this.value
+                                },
+                            });
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'insideZoom.cursorGrabbing:',
+                        values: [undefined, 'crosshair'],
+                        onchange() {
+                            normalChart.setOption({
+                                dataZoom: {
+                                    id: 'inside1',
+                                    cursorGrabbing: this.value
+                                },
+                            });
+                        }
+                    }]
                 });
                 installCursorLog(normalChart, 'normal');
 
