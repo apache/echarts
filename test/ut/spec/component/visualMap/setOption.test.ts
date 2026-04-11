@@ -21,7 +21,7 @@
 import { createChart, getECModel } from '../../../core/utHelper';
 import { EChartsType } from '../../../../../src/echarts';
 import { EChartsOption } from '../../../../../src/export/option';
-import { ContinousVisualMapOption } from '../../../../../src/component/visualMap/ContinuousModel';
+import { ContinuousVisualMapOption } from '../../../../../src/component/visualMap/ContinuousModel';
 import { PiecewiseVisualMapOption } from '../../../../../src/component/visualMap/PiecewiseModel';
 import VisualMapModel from '../../../../../src/component/visualMap/VisualMapModel';
 import globalDefault from '../../../../../src/model/globalDefault';
@@ -50,7 +50,7 @@ describe('vsiaulMap_setOption', function () {
         });
 
         const option = chart.getOption();
-        const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
+        const visualMapOptionGotten = option.visualMap as (ContinuousVisualMapOption | PiecewiseVisualMapOption)[];
 
         expect(visualMapOptionGotten.length).toEqual(1);
         expect(visualMapOptionGotten[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
@@ -70,7 +70,7 @@ describe('vsiaulMap_setOption', function () {
         });
 
         const option = chart.getOption();
-        const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
+        const visualMapOptionGotten = option.visualMap as (ContinuousVisualMapOption | PiecewiseVisualMapOption)[];
 
         expect(visualMapOptionGotten.length).toEqual(1);
         expect(visualMapOptionGotten[0].color).toEqual(['yellow', 'blue', 'red']);
@@ -104,7 +104,7 @@ describe('vsiaulMap_setOption', function () {
         expectTheSame(chart.getOption() as EChartsOption);
 
         function expectTheSame(option: EChartsOption) {
-            const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
+            const visualMapOptionGotten = option.visualMap as (ContinuousVisualMapOption | PiecewiseVisualMapOption)[];
             expect(visualMapOptionGotten.length).toEqual(1);
             expect(visualMapOptionGotten[0].inRange.color).toEqual(['red', 'blue', 'yellow']);
             expect(visualMapOptionGotten[0].target.inRange.color).toEqual(['red', 'blue', 'yellow']);
@@ -137,7 +137,7 @@ describe('vsiaulMap_setOption', function () {
         });
 
         const option = chart.getOption();
-        const visualMapOptionGotten = option.visualMap as (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
+        const visualMapOptionGotten = option.visualMap as (ContinuousVisualMapOption | PiecewiseVisualMapOption)[];
 
         expect(visualMapOptionGotten.length).toEqual(1);
         expect(visualMapOptionGotten[0].inRange.hasOwnProperty('color')).toEqual(false);
@@ -171,7 +171,7 @@ describe('vsiaulMap_setOption', function () {
             }
         });
 
-        let visualMapOptionGotten: (ContinousVisualMapOption | PiecewiseVisualMapOption)[];
+        let visualMapOptionGotten: (ContinuousVisualMapOption | PiecewiseVisualMapOption)[];
         visualMapOptionGotten = chart.getOption().visualMap as typeof visualMapOptionGotten;
         expect(visualMapOptionGotten.length).toEqual(1);
         expect(visualMapOptionGotten[0].inRange.hasOwnProperty('color')).toEqual(false);
@@ -234,7 +234,7 @@ describe('vsiaulMap_setOption', function () {
         });
 
         const visualMapOptionGotten = chart.getOption().visualMap as (
-            ContinousVisualMapOption | PiecewiseVisualMapOption
+            ContinuousVisualMapOption | PiecewiseVisualMapOption
         )[];
         expect(!!visualMapOptionGotten[0].target.outOfRange.opacity).toEqual(true);
         done();

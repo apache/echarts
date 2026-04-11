@@ -67,21 +67,19 @@ export function fixJitter(
     }
     const axisModel = fixedAxis.model as AxisBaseModel;
     const jitter = axisModel.get('jitter');
+    if (!(jitter > 0)) {
+        return floatCoord;
+    }
     const jitterOverlap = axisModel.get('jitterOverlap');
     const jitterMargin = axisModel.get('jitterMargin') || 0;
     // Get band width to limit jitter range
     const bandWidth = fixedAxis.scale.type === 'ordinal'
         ? fixedAxis.getBandWidth()
         : null;
-    if (jitter > 0) {
-        if (jitterOverlap) {
-            return fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
-        }
-        else {
-            return fixJitterAvoidOverlaps(fixedAxis, fixedCoord, floatCoord, radius, jitter, jitterMargin);
-        }
+    if (jitterOverlap) {
+        return fixJitterIgnoreOverlaps(floatCoord, jitter, bandWidth, radius);
     }
-    return floatCoord;
+    return fixJitterAvoidOverlaps(fixedAxis, fixedCoord, floatCoord, radius, jitter, jitterMargin);
 }
 
 function fixJitterIgnoreOverlaps(

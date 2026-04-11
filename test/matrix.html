@@ -47,6 +47,7 @@ under the License.
         <div id="main_collect"></div>
         <div id="main_series_data_use_ordinal_number"></div>
         <div id="main_x_y_length"></div>
+        <div id="main_events_on_text"></div>
 
 
 
@@ -702,6 +703,101 @@ under the License.
                     ],
                     option: option
                 });
+            });
+        </script>
+
+
+
+
+        <script>
+            require([
+                'echarts',
+            ], function (echarts) {
+
+                var option = {
+                    matrix: {
+                        x: {data: ['A', 'B', 'C']},
+                        y: {data: ['U', 'V', 'W']},
+                        body: {
+                            data: [
+                                {coord: [0, 0], value: 1 },
+                                {coord: [0, 1], value: 2 },
+                                {coord: [0, 2], value: 3 },
+                                {coord: [1, 0], value: 4 },
+                                {coord: [1, 1], value: 5, itemStyle: {color: 'orange'} },
+                                {coord: [1, 2], value: 6 },
+                                {coord: [2, 0], value: null },
+                                {coord: [2, 1], value: null },
+                                {coord: [2, 2], value: null },
+                            ],
+                        },
+                        corner: {
+                            data: [
+                                {coord: [-1, -1], value: 'Corner' },
+                            ],
+                        },
+                        triggerEvent: true,
+                    },
+                };
+
+                var chart = testHelper.create(echarts, 'main_events_on_text', {
+                    title: [
+                        'Events on matrix cell text'
+                    ],
+                    option: option,
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'matrix.body.silent:',
+                        values: [undefined, true, false],
+                        onchange: function (value) {
+                            chart.setOption({
+                                matrix: {
+                                    body: {
+                                        silent: this.value,
+                                    }
+                                }
+                            });
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'matrix.body.label.silent:',
+                        values: [undefined, true, false],
+                        onchange: function (value) {
+                            chart.setOption({
+                                matrix: {
+                                    body: {
+                                        label: {
+                                            silent: this.value,
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }]
+                });
+
+                // Create event display div
+                var eventDisplay = document.createElement('div');
+                eventDisplay.style.cssText = 'padding: 8px';
+                eventDisplay.textContent = 'Click on any cell to see event data';
+
+                var chartContainer = document.getElementById('main_events_on_text');
+                chartContainer.parentNode.insertBefore(eventDisplay, chartContainer);
+
+                chart.on('click', function (params) {
+
+                    var eventInfo = {
+                        componentType: params.componentType,
+                        coord: params.coord,
+                        name: params.name,
+                        targetType: params.targetType,
+                    };
+
+                    eventDisplay.textContent = 'Clicked: ' + JSON.stringify(eventInfo);
+                    eventDisplay.style.color = '';
+                });
+
             });
         </script>
 
