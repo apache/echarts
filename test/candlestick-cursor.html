@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+        <script src="lib/testHelper.js"></script>
+        <link rel="stylesheet" href="lib/reset.css" />
+    </head>
+    <body>
+        <style>
+            .chart {
+                width: 100%;
+                height: 320px;
+            }
+
+            .cursor-log {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                color: #000;
+            }
+        </style>
+
+        <div id="main0" class="chart"></div>
+        <div id="main1" class="chart"></div>
+
+        <script>
+            require(['echarts', 'data/security-sh-2013.json.js'], function (echarts, rawData) {
+                function makeData(count) {
+                    var data = [];
+                    var base = 120;
+
+                    for (var i = 0; i < count; i++) {
+                        var open = base + (i % 7 - 3);
+                        var close = open + (i % 5 - 2);
+                        var low = Math.min(open, close) - 3;
+                        var high = Math.max(open, close) + 3;
+
+                        data.push([open, close, low, high]);
+                        base += i % 2 ? 1 : -1;
+                    }
+
+                    return data;
+                }
+
+                function splitData(source) {
+                    var categoryData = [];
+                    var values = [];
+
+                    for (var i = 0; i < source.length; i++) {
+                        categoryData.push(source[i][0]);
+                        values.push(source[i].slice(1));
+                    }
+
+                    return {
+                        categoryData: categoryData,
+                        values: values
+                    };
+                }
+
+                function calculateMA(dayCount, data) {
+                    var result = [];
+
+                    for (var i = 0; i < data.values.length; i++) {
+                        if (i < dayCount) {
+                            result.push('-');
+                            continue;
+                        }
+
+                        var sum = 0;
+                        for (var j = 0; j < dayCount; j++) {
+                            sum += data.values[i - j][1];
+                        }
+                        result.push(sum / dayCount);
+                    }
+
+                    return result;
+                }
+
+                function installCursorLog(chart, label) {
+                    var tipDOM = document.createElement('span');
+                    tipDOM.className = 'cursor-log';
+                    chart.getDom().appendChild(tipDOM);
+
+                    chart.getDom().addEventListener('mousemove', function () {
+                        var cursor = chart.getZr().painter.getViewportRoot().style.cursor || 'default';
+                        tipDOM.innerText = label + ' cursor: ' + cursor;
+                    });
+                }
+
+                var upColor = '#ec0000';
+                var upBorderColor = '#8A0000';
+                var downColor = '#00da3c';
+                var downBorderColor = '#008F28';
+                var shData = splitData(rawData);
+
+                var normalChart = testHelper.create(echarts, 'main0', {
+                    title: [
+                        'Hover candlestick items: cursor should be **move** in normal mode.',
+                        'This chart is similar to the official `candlestick-sh` example and uses `large: false`.'
+                    ],
+                    option: {
+                        title: {
+                            text: '上证指数',
+                            left: 0
+                        },
+                        animation: false,
+                        legend: {
+                            data: ['日K', 'MA5', 'MA10', 'MA20', 'MA30']
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: {
+                                type: 'cross'
+                            }
+                        },
+                        grid: {
+                            left: '10%',
+                            right: '10%',
+                            bottom: '15%'
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: shData.categoryData,
+                            scale: true,
+                            boundaryGap: false,
+                            axisLine: {
+                                onZero: false
+                            },
+                            splitLine: {
+                                show: false
+                            },
+                            splitNumber: 20,
+                            min: 'dataMin',
+                            max: 'dataMax'
+                        },
+                        yAxis: {
+                            scale: true,
+                            splitArea: {
+                                show: true
+                            }
+                        },
+                        dataZoom: [
+                            {
+                                id: 'inside1',
+                                type: 'inside',
+                                start: 50,
+                                end: 100
+                            },
+                            {
+                                show: true,
+                                type: 'slider',
+                                top: '90%',
+                                start: 50,
+                                end: 100
+                            }
+                        ],
+                        series: [
+                            {
+                                name: '日K',
+                                type: 'candlestick',
+                                large: false,
+                                cursor: 'crosshair',
+                                data: shData.values,
+                                itemStyle: {
+                                    color: upColor,
+                                    color0: downColor,
+                                    borderColor: upBorderColor,
+                                    borderColor0: downBorderColor
+                                }
+                            },
+                            {
+                                name: 'MA5',
+                                type: 'line',
+                                data: calculateMA(5, shData),
+                                smooth: true,
+                                showSymbol: false,
+                                lineStyle: {
+                                    width: 1
+                                }
+                            },
+                            {
+                                name: 'MA10',
+                                type: 'line',
+                                data: calculateMA(10, shData),
+                                smooth: true,
+                                showSymbol: false,
+                                lineStyle: {
+                                    width: 1
+                                }
+                            },
+                            {
+                                name: 'MA20',
+                                type: 'line',
+                                data: calculateMA(20, shData),
+                                smooth: true,
+                                showSymbol: false,
+                                lineStyle: {
+                                    width: 1
+                                }
+                            },
+                            {
+                                name: 'MA30',
+                                type: 'line',
+                                data: calculateMA(30, shData),
+                                smooth: true,
+                                showSymbol: false,
+                                lineStyle: {
+                                    width: 1
+                                }
+                            }
+                        ]
+                    },
+                    inputsStyle: 'compact',
+                    inputs: [{
+                        type: 'select',
+                        text: 'insideZoom.cursorGrab:',
+                        values: [undefined, 'crosshair'],
+                        onchange() {
+                            normalChart.setOption({
+                                dataZoom: {
+                                    id: 'inside1',
+                                    cursorGrab: this.value
+                                },
+                            });
+                        }
+                    }, {
+                        type: 'select',
+                        text: 'insideZoom.cursorGrabbing:',
+                        values: [undefined, 'crosshair'],
+                        onchange() {
+                            normalChart.setOption({
+                                dataZoom: {
+                                    id: 'inside1',
+                                    cursorGrabbing: this.value
+                                },
+                            });
+                        }
+                    }]
+                });
+                installCursorLog(normalChart, 'normal');
+
+                var categoryDataLarge = [];
+                for (var j = 0; j < 800; j++) {
+                    categoryDataLarge.push('large-' + j);
+                }
+
+                var largeChart = testHelper.create(echarts, 'main1', {
+                    title: [
+                        'Hover candlestick items: cursor should be **move** in large mode.',
+                        'This chart uses more than the default `largeThreshold`.'
+                    ],
+                    option: {
+                        animation: false,
+                        xAxis: {
+                            type: 'category',
+                            data: categoryDataLarge
+                        },
+                        yAxis: {
+                            scale: true
+                        },
+                        dataZoom: [{
+                            type: 'inside',
+                            start: 0,
+                            end: 20
+                        }],
+                        series: [{
+                            type: 'candlestick',
+                            cursor: 'move',
+                            data: makeData(categoryDataLarge.length)
+                        }]
+                    }
+                });
+                installCursorLog(largeChart, 'large');
+            });
+        </script>
+    </body>
+</html>

@@ -302,6 +302,9 @@ function setBoxCommon(el: NormalBoxPath, data: SeriesData, dataIndex: number, is
     el.useStyle(data.getItemVisual(dataIndex, 'style'));
     el.style.strokeNoScale = true;
 
+    const cursorStyle = itemModel.getShallow('cursor');
+    cursorStyle && el.attr('cursor', cursorStyle);
+
     el.__simpleBox = isSimpleBox;
 
     setStatesStylesFromModel(el, itemModel);
@@ -431,6 +434,9 @@ function setLargeStyle(sign: number, el: LargeBoxPath, seriesModel: CandlestickS
     el.useStyle(itemStyle);
     el.style.fill = null;
     el.style.stroke = borderColor;
+
+    const cursorStyle = seriesModel.get('cursor');
+    cursorStyle && el.attr('cursor', cursorStyle);
 }
 
 

@@ -29,7 +29,7 @@ import { makeInner } from '../../util/model';
 import { Dictionary, RoamOptionMixin, ZRElementEvent } from '../../util/types';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import InsideZoomModel from './InsideZoomModel';
-import { each, curry, Curry1, HashMap, createHashMap } from 'zrender/src/core/util';
+import { each, curry, Curry1, HashMap, createHashMap, retrieve2 } from 'zrender/src/core/util';
 import {
     DataZoomPayloadBatchItem, collectReferCoordSysModelInfo,
     DataZoomCoordSysMainType, DataZoomReferCoordSysInfo
@@ -196,6 +196,8 @@ function mergeControllerParams(
         'type_undefined': -1
     };
     let preventDefaultMouseMove = true;
+    let cursorGrab: RoamOption['cursorGrab'];
+    let cursorGrabbing: RoamOption['cursorGrabbing'];
 
     dataZoomInfoMap.each(function (dataZoomInfo) {
         const dataZoomModel = dataZoomInfo.model;
@@ -212,6 +214,11 @@ function mergeControllerParams(
         // users may be confused why it does not work when multiple insideZooms exist.
         preventDefaultMouseMove = preventDefaultMouseMove
             && dataZoomModel.get('preventDefaultMouseMove', true);
+
+        // Intuitively, use the last declared setting in ec option when this axis is covered
+        // by multiple `dataZoom`s.
+        cursorGrab = retrieve2(dataZoomModel.get('cursorGrab', true), cursorGrab);
+        cursorGrabbing = retrieve2(dataZoomModel.get('cursorGrabbing', true), cursorGrabbing);
     });
 
     return {
@@ -232,6 +239,8 @@ function mergeControllerParams(
                 roamTrigger: null,
                 isInSelf: coordSysRecord.containsPoint
             },
+            cursorGrab,
+            cursorGrabbing,
         }
     };
 }
