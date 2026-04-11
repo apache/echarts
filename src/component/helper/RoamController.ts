@@ -53,6 +53,12 @@ export interface RoamOption {
      * If fixed the page when pan
      */
     preventDefaultMouseMove?: boolean
+
+    /**
+     * Cursor styles
+     */
+    cursorGrab?: string // 'grab' by default.
+    cursorGrabbing?: string // 'grabbing' by default.
 }
 type RoamSetting = Omit<Required<RoamOption>, 'zInfo'> & {
     zInfoParsed: {
@@ -174,6 +180,8 @@ class RoamController extends Eventful<RoamEventDefinition> {
                 preventDefaultMouseMove: true,
                 zInfoParsed,
                 triggerInfo,
+                cursorGrab: 'grab', // CSS cursor 'grab'
+                cursorGrabbing: 'grabbing', // CSS cursor 'grabbing'
             });
 
             if (controlType == null) {
@@ -257,7 +265,7 @@ class RoamController extends Eventful<RoamEventDefinition> {
         if (!target && this._checkPointer(e, x, y)) {
             // To indicate users that this area is draggable, otherwise users probably cannot kwown
             // that when hovering out of the shape but still inside the bounding rect.
-            return 'grab';
+            return this._opt.cursorGrab;
         }
         if (forReverse) {
             return target && (target as Displayable).cursor || 'default';
@@ -318,7 +326,7 @@ class RoamController extends Eventful<RoamEventDefinition> {
             return;
         }
 
-        zr.setCursorStyle('grabbing');
+        zr.setCursorStyle(this._opt.cursorGrabbing);
 
         const oldX = this._x;
         const oldY = this._y;
