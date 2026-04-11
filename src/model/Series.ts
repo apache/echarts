@@ -60,7 +60,7 @@ import {Group} from '../util/graphic';
 import {LegendIconParams} from '../component/legend/LegendModel';
 import {dimPermutations} from '../component/marker/MarkAreaView';
 import type ChartView from '../view/Chart';
-import { AxisBaseOptionCommon } from '../coord/axisCommonTypes';
+
 
 const inner = modelUtil.makeInner<{
     data: SeriesData

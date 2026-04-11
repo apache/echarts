@@ -66,15 +66,11 @@ describe('matrix_event', function () {
         let targetEl;
         for (let i = 0; i < displayList.length; i++) {
             const el = displayList[i];
-            // Check if this element has a text content with eventData
-            const textContent = el.getTextContent && el.getTextContent();
-            if (textContent) {
-                const textEcData = getECData(textContent);
-                if (textEcData && textEcData.eventData && textEcData.eventData.name === 'Cell A') {
-                    // Found the text element with the specific name
-                    targetEl = textContent;
-                    break;
-                }
+            const textEcData = getECData(el);
+            if (textEcData && textEcData.eventData && textEcData.eventData.name === 'Cell A') {
+                // Found the text element with the specific name
+                targetEl = el;
+                break;
             }
         }
 

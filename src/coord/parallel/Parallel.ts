@@ -147,7 +147,7 @@ class Parallel implements CoordinateSystemMaster, CoordinateSystem {
     update(ecModel: GlobalModel, api: ExtensionAPI): void {
         each(this.dimensions, function (dim) {
             const axis = this._axesMap.get(dim);
-            scaleRawExtentInfoCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleRawExtentInfoCreate(axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
             scaleCalcNice(axis);
         }, this);
     }

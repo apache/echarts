@@ -546,7 +546,6 @@ export function scaleRawExtentInfoEnableBoxCoordSysUsage(
  * @see SCALE_EXTENT_CONSTRUCTION for the full processing flow.
  */
 export function scaleRawExtentInfoCreate(
-    ecModel: GlobalModel,
     axis: Axis,
     from: AxisExtentInfoBuildFrom
 ): void {

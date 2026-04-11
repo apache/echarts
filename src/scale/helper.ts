@@ -91,7 +91,7 @@ export function isOrdinalScale(scale: Scale): scale is OrdinalScale {
  * @param splitNumber splitNumber should be >= 1.
  */
 export function intervalScaleNiceTicks(
-    extent: [number, number],
+    extent: number[],
     spanWithBreaks: number,
     splitNumber: number,
     minInterval?: number,

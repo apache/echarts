@@ -38,7 +38,7 @@ import {
     ScaleMapperTransformOutOpt
 } from './scaleMapper';
 import { map } from 'zrender/src/core/util';
-import { isValidBoundsForExtent, isValidNumberForExtent } from '../util/model';
+import { isValidBoundsForExtent } from '../util/model';
 import { isNullableNumberFinite } from '../util/number';
 
 

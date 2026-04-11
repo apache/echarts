@@ -350,7 +350,7 @@ class AxisProxy {
         // Nevertheless, user can set min/max/scale on axes to make extent of axes
         // consistent.
         const axis = this.getAxisModel().axis;
-        scaleRawExtentInfoCreate(this.ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
+        scaleRawExtentInfoCreate(axis, AXIS_EXTENT_INFO_BUILD_FROM_DATA_ZOOM);
 
         const rawExtentInfo = axis.scale.rawExtentInfo;
         this._extent = rawExtentInfo.makeNoZoom();

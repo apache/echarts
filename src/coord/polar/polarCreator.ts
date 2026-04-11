@@ -86,8 +86,8 @@ function updatePolarScale(this: Polar, ecModel: GlobalModel, api: ExtensionAPI) 
     const angleAxis = polar.getAngleAxis();
     const radiusAxis = polar.getRadiusAxis();
 
-    scaleRawExtentInfoCreate(ecModel, angleAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
-    scaleRawExtentInfoCreate(ecModel, radiusAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+    scaleRawExtentInfoCreate(angleAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+    scaleRawExtentInfoCreate(radiusAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
 
     scaleCalcNice(angleAxis);
     scaleCalcNice(radiusAxis);

@@ -167,7 +167,7 @@ class Radar implements CoordinateSystem, CoordinateSystemMaster {
         dummyScale.setConfig({interval: 1});
         // Force all the axis fixing the maxSplitNumber.
         each(indicatorAxes, function (indicatorAxis) {
-            scaleRawExtentInfoCreate(ecModel, indicatorAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleRawExtentInfoCreate(indicatorAxis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
             scaleCalcAlign(indicatorAxis, dummyScale);
         });
     }

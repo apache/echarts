@@ -138,7 +138,7 @@ class Grid implements CoordinateSystemMaster {
         const axesMap = this._axesMap;
 
         each(this._axesList, function (axis) {
-            scaleRawExtentInfoCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+            scaleRawExtentInfoCreate(axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
             const scale = axis.scale;
             if (isOrdinalScale(scale)) {
                 scale.setSortInfo(axis.model.get('categorySortInfo'));

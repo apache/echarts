@@ -100,7 +100,7 @@ class Single implements CoordinateSystem, CoordinateSystemMaster {
      */
     update(ecModel: GlobalModel, api: ExtensionAPI) {
         const axis = this._axis;
-        scaleRawExtentInfoCreate(ecModel, axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
+        scaleRawExtentInfoCreate(axis, AXIS_EXTENT_INFO_BUILD_FROM_COORD_SYS_UPDATE);
         scaleCalcNice(axis);
     }
 

@@ -23,7 +23,7 @@ import {
     getPercentWithPrecision, quantityExponent, quantity, nice,
     isNumeric, numericToNumber, addSafe,
     getPixelPrecision,
-    getAcceptablePrecision
+    getAcceptableTickPrecision
 } from '@/src/util/number';
 
 
@@ -1017,7 +1017,7 @@ describe('util/number', function () {
         testNumeric(function () {}, NaN, false);
     });
 
-    describe('getAcceptablePrecision', function () {
+    it('getAcceptableTickPrecision', function () {
         // NOTICE: These cases fail in `getPixelPrecision` (pxDiff1 > 1)
         const CASES = [
             // dataExtent                      pixelExtent                  precision1 precision2 diff1 diff2
@@ -1054,8 +1054,8 @@ describe('util/number', function () {
                 dataExtent.slice() as [number, number],
                 pxExtent.slice() as [number, number]
             );
-            const precision2 = getAcceptablePrecision(
-                dataExtent[1] - dataExtent[0],
+            const precision2 = getAcceptableTickPrecision(
+                dataExtent,
                 pxExtent[1] - pxExtent[0],
                 null
             );
@@ -1076,8 +1076,8 @@ describe('util/number', function () {
             const caseItem = NAN_CASES[idx];
             const dataExtent = caseItem[0];
             const pxExtent = caseItem[1];
-            const precision2 = getAcceptablePrecision(
-                dataExtent[1] - dataExtent[0],
+            const precision2 = getAcceptableTickPrecision(
+                dataExtent,
                 pxExtent[1] - pxExtent[0],
                 null
             );
