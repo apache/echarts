@@ -34,50 +34,82 @@ under the License.
     </head>
 
     <body>
-        <div id="main"></div>
+        <div id="main0"></div>
+        <div id="main1"></div>
 
         <script>
             require(['echarts'], function (echarts) {
-                var chartDom = document.getElementById('main');
-                var myChart = echarts.init(chartDom);
-                var option;
-
-                option = {
-                    xAxis: {
-                    type: 'category',
-                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    splitLine: {
-                        show: true,
-                        showMinLine: false, // do not show the first splitLine
-                        showMaxLine: false, // do not show the last splitLine
-                        lineStyle: {
-                            color: 'black',
-                            width:3
-                        }
-                    },
-                },
-                    yAxis: {
-                    type: 'value',
-                    axisLine: {
-                        show: true,
-                        lineStyle: {
-                            color: 'rgba(255,100,0,0.8)',
-                            width: 12
-                        }
+                testHelper.create(echarts, 'main0', {
+                    title: 'Cartesian axis splitLine with showMinLine/showMaxLine',
+                    option: {
+                        xAxis: {
+                            type: 'category',
+                            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            splitLine: {
+                                show: true,
+                                showMinLine: false, // do not show the first splitLine
+                                showMaxLine: false, // do not show the last splitLine
+                                lineStyle: {
+                                    color: 'black',
+                                    width: 3
+                                }
+                            }
+                        },
+                        yAxis: {
+                            type: 'value',
+                            axisLine: {
+                                show: true,
+                                lineStyle: {
+                                    color: 'rgba(255,100,0,0.8)',
+                                    width: 12
+                                }
+                            }
+                        },
+                        series: [
+                            {
+                                data: [150, 230, 224, 218, 135, 147, 260],
+                                type: 'line'
+                            }
+                        ]
                     }
-                },
-                    series: [
-                        {
-                        data: [150, 230, 224, 218, 135, 147, 260],
-                        type: 'line'
-                        }
-                    ]
-                };
+                });
 
-                option && myChart.setOption(option);
-            })
+                testHelper.create(echarts, 'main1', {
+                    title: 'radiusAxis splitLine with showMinLine/showMaxLine',
+                    option: {
+                        polar: {
+                            radius: [60, 160]
+                        },
+                        angleAxis: {
+                            type: 'category',
+                            data: ['A', 'B', 'C', 'D'],
+                            splitLine: {
+                                show: false
+                            }
+                        },
+                        radiusAxis: {
+                            min: 0,
+                            max: 4,
+                            interval: 1,
+                            splitLine: {
+                                show: true,
+                                showMinLine: false, // do not show the innermost splitLine
+                                showMaxLine: false, // do not show the outermost splitLine
+                                lineStyle: {
+                                    color: 'black',
+                                    width: 3
+                                }
+                            }
+                        },
+                        series: [{
+                            type: 'bar',
+                            coordinateSystem: 'polar',
+                            data: [1, 2, 3, 4]
+                        }]
+                    }
+                });
+            });
         </script>
 
     </body>
 </html>
-

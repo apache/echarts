@@ -101,6 +101,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const splitLineModel = radiusAxisModel.getModel('splitLine');
         const lineStyleModel = splitLineModel.getModel('lineStyle');
         let lineColors = lineStyleModel.get('color');
+        const showMinLine = splitLineModel.get('showMinLine') !== false;
+        const showMaxLine = splitLineModel.get('showMaxLine') !== false;
         let lineCount = 0;
 
         const angleAxis = polar.getAngleAxis();
@@ -113,6 +115,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const splitLines: graphic.Circle[][] = [];
 
         for (let i = 0; i < ticksCoords.length; i++) {
+            if ((i === 0 && !showMinLine) || (i === ticksCoords.length - 1 && !showMaxLine)) {
+                continue;
+            }
             const colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic[shapeType]({
