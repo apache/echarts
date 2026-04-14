@@ -36,6 +36,7 @@ under the License.
     <body>
         <div id="main0"></div>
         <div id="main1"></div>
+        <div id="main2"></div>
 
         <script>
             require(['echarts'], function (echarts) {
@@ -105,6 +106,40 @@ under the License.
                             type: 'bar',
                             coordinateSystem: 'polar',
                             data: [1, 2, 3, 4]
+                        }]
+                    }
+                });
+
+                testHelper.create(echarts, 'main2', {
+                    title: 'angleAxis splitLine with showMinLine/showMaxLine',
+                    option: {
+                        polar: {
+                            radius: [50, 160]
+                        },
+                        angleAxis: {
+                            type: 'category',
+                            startAngle: 90,
+                            endAngle: -90,
+                            data: ['A', 'B', 'C', 'D', 'E'],
+                            splitLine: {
+                                show: true,
+                                showMinLine: false, // do not show the first splitLine
+                                showMaxLine: false, // do not show the last splitLine
+                                lineStyle: {
+                                    color: 'black',
+                                    width: 3
+                                }
+                            }
+                        },
+                        radiusAxis: {
+                            splitLine: {
+                                show: false
+                            }
+                        },
+                        series: [{
+                            type: 'bar',
+                            coordinateSystem: 'polar',
+                            data: [1, 2, 3, 4, 5]
                         }]
                     }
                 });

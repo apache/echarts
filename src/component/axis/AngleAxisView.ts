@@ -311,6 +311,8 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         const splitLineModel = angleAxisModel.getModel('splitLine');
         const lineStyleModel = splitLineModel.getModel('lineStyle');
         let lineColors = lineStyleModel.get('color');
+        const showMinLine = splitLineModel.get('showMinLine') !== false;
+        const showMaxLine = splitLineModel.get('showMaxLine') !== false;
         let lineCount = 0;
 
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
@@ -318,6 +320,9 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
         const splitLines: graphic.Line[][] = [];
 
         for (let i = 0; i < ticksAngles.length; i++) {
+            if ((i === 0 && !showMinLine) || (i === ticksAngles.length - 1 && !showMaxLine)) {
+                continue;
+            }
             const colorIndex = (lineCount++) % lineColors.length;
             splitLines[colorIndex] = splitLines[colorIndex] || [];
             splitLines[colorIndex].push(new graphic.Line({
