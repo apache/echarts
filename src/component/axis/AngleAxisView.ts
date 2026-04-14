@@ -138,23 +138,30 @@ interface AngleAxisElementBuilder {
 const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisElementBuilder> = {
 
     axisLine(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {
+        const axisLineModel = angleAxisModel.getModel('axisLine');
         const lineStyleModel = angleAxisModel.getModel(['axisLine', 'lineStyle']);
         const angleAxis = polar.getAngleAxis();
         const RADIAN = Math.PI / 180;
         const angleExtent = angleAxis.getExtent();
-
-        // extent id of the axis radius (r0 and r)
-        const rId = getRadiusIdx(polar);
-        const r0Id = rId ? 0 : 1;
-        let shape;
+        const showMinLine = axisLineModel.get('showMinLine') !== false;
+        const showMaxLine = axisLineModel.get('showMaxLine') !== false;
         const shapeType = Math.abs(angleExtent[1] - angleExtent[0]) === 360 ? 'Circle' : 'Arc';
+        const minRadius = radiusExtent[0];
+        const maxRadius = radiusExtent[1];
 
-        if (radiusExtent[r0Id] === 0) {
-            shape = new graphic[shapeType]({
+        if (!showMinLine && !showMaxLine) {
+            return;
+        }
+
+        const addBoundaryLine = (radius: number) => {
+            if (!isFinite(radius)) {
+                return;
+            }
+            const shape = new graphic[shapeType]({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
-                    r: radiusExtent[rId],
+                    r: Math.max(radius, 0),
                     startAngle: -angleExtent[0] * RADIAN,
                     endAngle: -angleExtent[1] * RADIAN,
                     clockwise: angleAxis.inverse
@@ -163,22 +170,21 @@ const angelAxisElementsBuilders: Record<typeof elementList[number], AngleAxisEle
                 z2: 1,
                 silent: true
             });
+            shape.style.fill = null;
+            group.add(shape);
+        };
+
+        if (Math.abs(minRadius - maxRadius) < 1e-4) {
+            addBoundaryLine(minRadius);
+            return;
         }
-        else {
-            shape = new graphic.Ring({
-                shape: {
-                    cx: polar.cx,
-                    cy: polar.cy,
-                    r: radiusExtent[rId],
-                    r0: radiusExtent[r0Id]
-                },
-                style: lineStyleModel.getLineStyle(),
-                z2: 1,
-                silent: true
-            });
+
+        if (showMinLine) {
+            addBoundaryLine(minRadius);
         }
-        shape.style.fill = null;
-        group.add(shape);
+        if (showMaxLine) {
+            addBoundaryLine(maxRadius);
+        }
     },
 
     axisTick(group, angleAxisModel, polar, ticksAngles, minorTickAngles, radiusExtent) {

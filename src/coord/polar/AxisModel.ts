@@ -42,7 +42,11 @@ export type AngleAxisOption = AxisBaseOption & {
     endAngle?: number;
     clockwise?: boolean;
 
-    axisLabel?: AxisBaseOption['axisLabel']
+    axisLabel?: AxisBaseOption['axisLabel'];
+    axisLine?: NonNullable<AxisBaseOption['axisLine']> & {
+        showMinLine?: boolean;
+        showMaxLine?: boolean;
+    }
 };
 
 export type RadiusAxisOption = AxisBaseOption & {
