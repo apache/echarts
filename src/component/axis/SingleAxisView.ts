@@ -96,6 +96,8 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const splitLineModel = axisModel.getModel('splitLine');
         const lineStyleModel = splitLineModel.getModel('lineStyle');
         let lineColors = lineStyleModel.get('color');
+        const showMinLine = splitLineModel.get('showMinLine') !== false;
+        const showMaxLine = splitLineModel.get('showMaxLine') !== false;
         lineColors = lineColors instanceof Array ? lineColors : [lineColors];
         const lineWidth = lineStyleModel.get('width');
 
@@ -115,6 +117,9 @@ const axisElementBuilders: Record<typeof selfBuilderAttrs[number], AxisElementBu
         const p2 = [];
 
         for (let i = 0; i < ticksCoords.length; ++i) {
+            if ((i === 0 && !showMinLine) || (i === ticksCoords.length - 1 && !showMaxLine)) {
+                continue;
+            }
             const tickCoord = axis.toGlobalCoord(ticksCoords[i].coord);
             if (isHorizontal) {
                 p1[0] = tickCoord;

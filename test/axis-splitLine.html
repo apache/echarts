@@ -37,6 +37,7 @@ under the License.
         <div id="main0"></div>
         <div id="main1"></div>
         <div id="main2"></div>
+        <div id="main3"></div>
 
         <script>
             require(['echarts'], function (echarts) {
@@ -140,6 +141,31 @@ under the License.
                             type: 'bar',
                             coordinateSystem: 'polar',
                             data: [1, 2, 3, 4, 5]
+                        }]
+                    }
+                });
+
+                testHelper.create(echarts, 'main3', {
+                    title: 'singleAxis splitLine with showMinLine/showMaxLine',
+                    option: {
+                        singleAxis: {
+                            type: 'category',
+                            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            splitLine: {
+                                show: true,
+                                showMinLine: false, // do not show the first splitLine
+                                showMaxLine: false, // do not show the last splitLine
+                                lineStyle: {
+                                    color: 'black',
+                                    width: 3
+                                }
+                            }
+                        },
+                        series: [{
+                            type: 'scatter',
+                            coordinateSystem: 'singleAxis',
+                            data: [0, 1, 2, 3, 4, 5, 6],
+                            symbolSize: 10
                         }]
                     }
                 });
