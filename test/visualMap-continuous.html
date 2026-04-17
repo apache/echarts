@@ -702,6 +702,168 @@ under the License.
                         ]
                     });
                 });
+
+                createCase("Color HueRange handles: merge on overlap", 6, (chart) => {
+                    const data0 = [];
+                    const MAX_DIM1 = 100;
+
+                    const itemStyle = {
+                        opacity: 0.8,
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                    };
+
+                    let last = 60;
+                    let lastDelta = 20;
+                    for (let i = 0; i < MAX_DIM1; i++) {
+                        lastDelta += (Math.random() - 0.5) * 15;
+                        data0.push([
+                            i,
+                            last += lastDelta
+                        ]);
+                    }
+
+                    chart.setOption({
+                        grid: {
+                            top: 100,
+                            bottom: 100
+                        },
+                        xAxis: {
+                            type: 'value',
+                            splitLine: {
+                                show: false
+                            }
+                        },
+                        yAxis: {
+                            type: 'value',
+                            splitLine: {
+                                show: false
+                            }
+                        },
+                        visualMap: [
+                            {
+                                show: true,
+                                left: 'center',
+                                bottom: 20,
+                                orient: 'horizontal',
+                                itemWidth: 20,
+                                itemHeight: 200,
+                                min: 0,
+                                max: MAX_DIM1,
+                                calculable: true,
+                                range: [90, 95],
+                                dimension: 0,
+                                inRange: {
+                                    colorHue: [0, 300],
+                                    colorLightness: 0.35,
+                                    colorSaturation: 1
+                                },
+                                outOfRange: {
+                                    color: '#eee'
+                                },
+                                text: ['High', 'Low'],
+                                textStyle: {
+                                    textShadowColor: "rgba(255, 0, 255, 1)",
+                                    textShadowBlur: 5,
+                                    textShadowOffsetX: 5,
+                                    textShadowOffsetY: 5
+                                }
+                            }
+                        ],
+                        series: [
+                            {
+                                name: 'bar',
+                                type: 'bar',
+                                barMaxWidth: 10,
+                                itemStyle,
+                                data: data0
+                            }
+                        ]
+                    });
+                });
+
+                createCase("Color HueRange handles: dual drag when apart", 7, (chart) => {
+                    const data0 = [];
+                    const MAX_DIM1 = 100;
+
+                    const itemStyle = {
+                        opacity: 0.8,
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                    };
+
+                    let last = 60;
+                    let lastDelta = 20;
+                    for (let i = 0; i < MAX_DIM1; i++) {
+                        lastDelta += (Math.random() - 0.5) * 15;
+                        data0.push([
+                            i,
+                            last += lastDelta
+                        ]);
+                    }
+
+                    chart.setOption({
+                        grid: {
+                            top: 100,
+                            bottom: 100
+                        },
+                        xAxis: {
+                            type: 'value',
+                            splitLine: {
+                                show: false
+                            }
+                        },
+                        yAxis: {
+                            type: 'value',
+                            splitLine: {
+                                show: false
+                            }
+                        },
+                        visualMap: [
+                            {
+                                show: true,
+                                left: 'center',
+                                bottom: 20,
+                                orient: 'horizontal',
+                                itemWidth: 20,
+                                itemHeight: 200,
+                                min: 0,
+                                max: MAX_DIM1,
+                                calculable: true,
+                                range: [50, 95],
+                                dimension: 0,
+                                inRange: {
+                                    colorHue: [0, 300],
+                                    colorLightness: 0.35,
+                                    colorSaturation: 1
+                                },
+                                outOfRange: {
+                                    color: '#eee'
+                                },
+                                text: ['High', 'Low'],
+                                textStyle: {
+                                    textShadowColor: "rgba(255, 0, 255, 1)",
+                                    textShadowBlur: 5,
+                                    textShadowOffsetX: 5,
+                                    textShadowOffsetY: 5
+                                }
+                            }
+                        ],
+                        series: [
+                            {
+                                name: 'bar',
+                                type: 'bar',
+                                barMaxWidth: 10,
+                                itemStyle,
+                                data: data0
+                            }
+                        ]
+                    });
+                });
             });
         </script>
 
