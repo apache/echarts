@@ -99,7 +99,14 @@ class ScaleBreakContextImpl implements ScaleBreakContext {
         const elapsedSpan = this._elapsedExtent[1] - this._elapsedExtent[0];
         // The same logic as `Scale#normalize`.
         if (elapsedSpan === 0) {
-            return 0.5;
+            const elapsedVal = this.elapse(val);
+            if (isNaN(elapsedVal)) {
+                return NaN;
+            }
+            if (elapsedVal === this._elapsedExtent[0]) {
+                return 0.5;
+            }
+            return elapsedVal < this._elapsedExtent[0] ? -0.5 : 1.5;
         }
         return (this.elapse(val) - this._elapsedExtent[0]) / elapsedSpan;
     }
