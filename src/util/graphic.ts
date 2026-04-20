@@ -884,7 +884,7 @@ function doUpdateZ(
         label.z = z;
         label.zlevel = zlevel;
         // lift z2 of text content
-        // TODO if el.emphasis.z2 is spcefied, what about textContent.
+        // TODO if el.emphasis.z2 is specified, what about textContent.
         isFinite(maxZ2) && (label.z2 = maxZ2 + 2);
     }
     if (labelLine) {

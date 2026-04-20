@@ -437,7 +437,7 @@ class ScrollableLegendView extends LegendView {
         // Strategy:
         // (1) Always align based on the left/top most item.
         // (2) It is user-friendly that the last item shown in the
-        // current window is shown at the begining of next window.
+        // current window is shown at the beginning of next window.
         // Otherwise if half of the last item is cut by the window,
         // it will have no chance to display entirely.
         // (3) Consider that item size probably be different, we
