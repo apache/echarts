@@ -66,13 +66,17 @@ jobs:
           export SURGE_DOMAIN=https://echarts-pr-$PR_NUMBER.surge.sh
           npx surge --project ./package --domain $SURGE_DOMAIN --token $SURGE_TOKEN
 
-      - name: Create comment for PR preview
-        uses: ./.actions/maintain-one-comment
-        env:
-          PR_NUMBER: ${{ steps.pr-metadata.outputs.NUMBER }}
-          COMMIT_SHA_SHORT: ${{ steps.pr-metadata.outputs.COMMIT_SHA_SHORT }}
-        with:
-          body: |
-            The changes brought by this PR can be previewed at: https://echarts.apache.org/examples/editor?version=PR-${{ env.PR_NUMBER }}@${{ env.COMMIT_SHA_SHORT }}
-          body-include: '<!-- ECHARTS_PR_PREVIEW -->'
-          number: ${{ env.PR_NUMBER }}
+      # Disabled for now because the editor preview URL is misleading under the
+      # current website CSP policy. The preview bundle is still deployed to
+      # surge.sh, but `echarts.apache.org/examples/editor?version=PR-...`
+      # cannot reliably load it.
+      # - name: Create comment for PR preview
+      #   uses: ./.actions/maintain-one-comment
+      #   env:
+      #     PR_NUMBER: ${{ steps.pr-metadata.outputs.NUMBER }}
+      #     COMMIT_SHA_SHORT: ${{ steps.pr-metadata.outputs.COMMIT_SHA_SHORT }}
+      #   with:
+      #     body: |
+      #       The changes brought by this PR can be previewed at: https://echarts.apache.org/examples/editor?version=PR-${{ env.PR_NUMBER }}@${{ env.COMMIT_SHA_SHORT }}
+      #     body-include: '<!-- ECHARTS_PR_PREVIEW -->'
+      #     number: ${{ env.PR_NUMBER }}
