@@ -50,6 +50,14 @@ export interface RoamOption {
     moveOnMouseMove?: boolean | 'ctrl' | 'shift' | 'alt'
     moveOnMouseWheel?: boolean | 'ctrl' | 'shift' | 'alt'
     /**
+     * Restrict wheel-driven zoom to a single wheel axis. Unset = no restriction.
+     */
+    zoomOnMouseWheelAxis?: WheelAxisType | undefined
+    /**
+     * Restrict wheel-driven pan to a single wheel axis. Unset = no restriction.
+     */
+    moveOnMouseWheelAxis?: WheelAxisType | undefined
+    /**
      * If fixed the page when pan
      */
     preventDefaultMouseMove?: boolean
@@ -201,6 +209,9 @@ class RoamController extends Eventful<RoamEventDefinition> {
                 moveOnMouseMove: true,
                 // By default, wheel do not trigger move.
                 moveOnMouseWheel: false,
+                // `undefined` = no axis restriction.
+                zoomOnMouseWheelAxis: undefined,
+                moveOnMouseWheelAxis: undefined,
                 preventDefaultMouseMove: true,
                 zInfoParsed,
                 triggerInfo,
@@ -389,11 +400,11 @@ class RoamController extends Eventful<RoamEventDefinition> {
             return;
         }
 
-        const shouldZoom = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
-        const shouldMove = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
+        const zoomAvailable = isAvailableBehavior('zoomOnMouseWheel', e, this._opt);
+        const moveAvailable = isAvailableBehavior('moveOnMouseWheel', e, this._opt);
         const wheelDelta = e.wheelDelta;
         // wheelDelta maybe -0 in chrome mac.
-        if (wheelDelta === 0 || (!shouldZoom && !shouldMove)) {
+        if (wheelDelta === 0 || (!zoomAvailable && !moveAvailable)) {
             return;
         }
 
@@ -402,6 +413,19 @@ class RoamController extends Eventful<RoamEventDefinition> {
         // Pre-2013 IE has no `deltaY`; the axis helpers fall back to the
         // passed default in that case.
         const nativeEvent = (e.event as unknown as WheelEvent) || null;
+
+        // When axis restriction is set, the wheel must carry delta
+        // on that axis or the event falls through to the browser.
+        const zoomAxis = this._opt.zoomOnMouseWheelAxis;
+        const moveAxis = this._opt.moveOnMouseWheelAxis;
+        const shouldZoom = zoomAvailable
+            && (zoomAxis == null || axisHasDelta(nativeEvent, zoomAxis));
+        const shouldMove = moveAvailable
+            && (moveAxis == null || axisHasDelta(nativeEvent, moveAxis));
+        if (!shouldZoom && !shouldMove) {
+            return;
+        }
+
         const originX = e.offsetX;
         const originY = e.offsetY;
 
@@ -492,6 +516,23 @@ interface WheelEventWithLegacyPerAxis extends WheelEvent {
     wheelDeltaY?: number
 }
 
+/** Whether the wheel event exposes per-axis deltas (false on pre-2013 IE). */
+function hasPerAxisInfo(nativeEvent: WheelEvent | null): nativeEvent is WheelEvent {
+    return !!nativeEvent && nativeEvent.deltaY != null;
+}
+
+/**
+ * Whether the requested axis carries any wheel delta.
+ */
+function axisHasDelta(
+    nativeEvent: WheelEvent | null, axis: WheelAxisType
+): boolean {
+    if (!hasPerAxisInfo(nativeEvent)) {
+        return true;
+    }
+    return axisWheelDelta(nativeEvent, axis) !== 0;
+}
+
 /**
  * Per-axis equivalent of zrender's `getWheelDeltaMayPolyfill` + `/120`
  * normalization. Returns a value on the same scale as `wheelDelta`
@@ -551,7 +592,7 @@ function axisScrollDelta(
     axis: WheelAxisType,
     fallback: number
 ): number {
-    if (!nativeEvent || nativeEvent.deltaY == null) {
+    if (!hasPerAxisInfo(nativeEvent)) {
         return fallback;
     }
     return ladderScrollDelta(axisWheelDelta(nativeEvent, axis));
@@ -566,7 +607,7 @@ function axisZoomScale(
     axis: WheelAxisType,
     fallback: number
 ): number {
-    if (!nativeEvent || nativeEvent.deltaY == null) {
+    if (!hasPerAxisInfo(nativeEvent)) {
         return fallback;
     }
     return ladderZoomScale(axisWheelDelta(nativeEvent, axis));

@@ -198,6 +198,12 @@ function mergeControllerParams(
         'type_undefined': -1
     };
     let preventDefaultMouseMove = true;
+    let zoomOnMouseWheelEverActive = false;
+    let moveOnMouseWheelEverActive = false;
+    // `dataZoomInfoMap` is guaranteed non-empty by the caller.
+    const firstDz = dataZoomInfoMap.get(dataZoomInfoMap.keys()[0]).model;
+    let zoomOnMouseWheelAxis = firstDz.get('zoomOnMouseWheelAxis', true);
+    let moveOnMouseWheelAxis = firstDz.get('moveOnMouseWheelAxis', true);
 
     dataZoomInfoMap.each(function (dataZoomInfo) {
         const dataZoomModel = dataZoomInfo.model;
@@ -214,17 +220,34 @@ function mergeControllerParams(
         // users may be confused why it does not work when multiple insideZooms exist.
         preventDefaultMouseMove = preventDefaultMouseMove
             && dataZoomModel.get('preventDefaultMouseMove', true);
+
+        if (dataZoomModel.get('zoomOnMouseWheel', true) !== false) {
+            zoomOnMouseWheelEverActive = true;
+        }
+        if (dataZoomModel.get('moveOnMouseWheel', true) !== false) {
+            moveOnMouseWheelEverActive = true;
+        }
+
+        if (zoomOnMouseWheelAxis !== dataZoomModel.get('zoomOnMouseWheelAxis', true)) {
+            zoomOnMouseWheelAxis = undefined;
+        }
+        if (moveOnMouseWheelAxis !== dataZoomModel.get('moveOnMouseWheelAxis', true)) {
+            moveOnMouseWheelAxis = undefined;
+        }
     });
 
     return {
         controlType: controlType,
         opt: {
-            // RoamController will enable all of these functionalities,
-            // and the final behavior is determined by its event listener
-            // provided by each inside zoom.
-            zoomOnMouseWheel: true,
+            // RoamController enables these functionalities if any inside
+            // zoom opts in, and the final behavior (including modifier
+            // specifics) is determined by its event listener provided by
+            // each inside zoom.
+            zoomOnMouseWheel: zoomOnMouseWheelEverActive,
             moveOnMouseMove: true,
-            moveOnMouseWheel: true,
+            moveOnMouseWheel: moveOnMouseWheelEverActive,
+            zoomOnMouseWheelAxis: zoomOnMouseWheelAxis,
+            moveOnMouseWheelAxis: moveOnMouseWheelAxis,
             preventDefaultMouseMove: !!preventDefaultMouseMove,
             api,
             zInfo: {
