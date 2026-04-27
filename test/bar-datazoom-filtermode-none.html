@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+    <title>Bar Chart DataZoom FilterMode None Test - Issue #19666</title>
+    <style>
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .chart {
+            margin: 10px;
+        }
+        h1 {
+            text-align: center;
+            margin: 20px;
+        }
+        .description {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            margin: 10px;
+            border-radius: 5px;
+        }
+        .instructions {
+            padding: 10px 20px;
+            background: #e3f2fd;
+            margin: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #2196f3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bar Chart with DataZoom FilterMode 'none' - Issue #19666</h1>
+    
+    <div class="description">
+        <h3>Issue Description:</h3>
+        <p>When using a bar chart with dataZoom filterMode='none' and zooming in to show a single bar,
+        the bar graphic displays an incorrect value that doesn't match the tooltip value.</p>
+        <p><strong>Expected:</strong> The bar height should accurately represent the actual value shown in the tooltip.</p>
+        <p><strong>Before Fix:</strong> The bar height shows a random/incorrect value when zoomed to a single category.</p>
+    </div>
+
+    <div class="instructions">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Use the slider below the chart to zoom in</li>
+            <li>Zoom to the maximum level so only a single bar is visible</li>
+            <li>Hover over the bar to see the tooltip</li>
+            <li>Verify that the bar height matches the value shown in the tooltip</li>
+            <li>Try different single bars by adjusting the slider</li>
+        </ol>
+    </div>
+
+    <div class="chart-container">
+        <div id="main" class="chart" style="width: 800px; height: 600px;"></div>
+    </div>
+
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+
+            var chart = echarts.init(document.getElementById('main'));
+
+            var option = {
+                title: {
+                    text: 'Bar Chart with DataZoom FilterMode: none',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        show: true,
+                        xAxisIndex: [0],
+                        filterMode: 'none',
+                        start: 0,
+                        end: 100
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Sales',
+                        type: 'bar',
+                        data: [5, 8, 3, 10, 7, 4, 6],
+                        itemStyle: {
+                            color: '#5470c6'
+                        }
+                    }
+                ]
+            };
+
+            chart.setOption(option);
+
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
+
+            // Log information for debugging
+            console.log('Test case for issue #19666');
+            console.log('Zoom in to a single bar and verify the bar height matches the tooltip value');
+        });
+    </script>
+</body>
+</html>

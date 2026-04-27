@@ -151,7 +151,10 @@ function normalize(
     // Dont use optional arguments for performance consideration here.
 ): number {
     if (extent[1] === extent[0]) {
-        return 0.5;
+        // When extent collapses to a single point, only values equal to that point
+        // should be normalized to 0.5. All other values should return NaN to indicate
+        // they are out of range and should not be rendered.
+        return isNaN(val) || val !== extent[0] ? NaN : 0.5;
     }
     return (val - extent[0]) / (extent[1] - extent[0]);
 }
