@@ -35,6 +35,10 @@ interface SliderHandleLabelOption {
     show?: boolean
 }
 
+type MoveHandleStyle = ItemStyleOption & {
+    borderRadius?: number | number[]
+};
+
 export interface SliderDataZoomOption
     extends DataZoomOption, BoxLayoutOptionMixin,
     ComponentOnCalendarOptionMixin, ComponentOnMatrixOptionMixin {
@@ -102,7 +106,7 @@ export interface SliderDataZoomOption
      * Icon to indicate it is a draggable panel.
      */
     moveHandleIcon?: string
-    moveHandleStyle?: ItemStyleOption
+    moveHandleStyle?: MoveHandleStyle
     /**
      * Height of handle rect. Can be a percent string relative to the slider height.
      */
@@ -121,7 +125,7 @@ export interface SliderDataZoomOption
     textStyle?: LabelOption
 
     /**
-     * If eable select by brushing
+     * If enable select by brushing
      */
     brushSelect?: boolean
 
@@ -130,7 +134,7 @@ export interface SliderDataZoomOption
     emphasis?: {
         handleLabel?: SliderHandleLabelOption
         handleStyle?: ItemStyleOption
-        moveHandleStyle?: ItemStyleOption
+        moveHandleStyle?: MoveHandleStyle
     },
 
     /**
@@ -201,7 +205,8 @@ class SliderZoomModel extends DataZoomModel<SliderDataZoomOption> {
         moveHandleIcon: 'path://M-320.9-50L-320.9-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-348-41-339-50-320.9-50z M-212.3-50L-212.3-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-239.4-41-230.4-50-212.3-50z M-103.7-50L-103.7-50c18.1,0,27.1,9,27.1,27.1V85.7c0,18.1-9,27.1-27.1,27.1l0,0c-18.1,0-27.1-9-27.1-27.1V-22.9C-130.9-41-121.8-50-103.7-50z',
         moveHandleStyle: {
             color: tokens.color.accent40,
-            opacity: 0.5
+            opacity: 0.5,
+            borderRadius: [0, 0, 2, 2]
         },
 
         showDetail: true,
