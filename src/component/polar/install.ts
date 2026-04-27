@@ -44,6 +44,11 @@ const angleAxisExtraOption: AngleAxisOption = {
 
     splitNumber: 12,
 
+    axisLine: {
+        showMinLine: true,
+        showMaxLine: true
+    },
+
     axisLabel: {
         rotate: 0
     }
