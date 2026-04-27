@@ -29,6 +29,7 @@ import SeriesData from '../../data/SeriesData';
 import { TaskProgressParams } from '../../core/task';
 import type { StageHandlerProgressExecutor } from '../../util/types';
 import Element from 'zrender/src/Element';
+import { createClipPath } from '../helper/createClipPathFromCoordSys';
 
 class ScatterView extends ChartView {
     static readonly type = 'scatter';
@@ -52,6 +53,12 @@ class ScatterView extends ChartView {
             // But bounding volume like bounding rect will be much faster in the contain calculation
             clipShape: this._getClipShape(seriesModel)
         });
+
+        // Apply visual clipping to prevent symbols from overflowing
+        const clipPath = seriesModel.get('clip', true)
+            ? createClipPath(seriesModel.coordinateSystem, false, seriesModel)
+            : null;
+        this.group.setClipPath(clipPath);
 
         this._finished = true;
     }

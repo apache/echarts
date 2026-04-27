@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+    <title>Issue #19972: Scatter + Time Axis + DataZoom filterMode: none</title>
+    <style>
+        .description {
+            padding: 15px 20px;
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            margin: 10px 20px;
+            border-radius: 5px;
+        }
+        .description h2 {
+            margin: 0 0 10px 0;
+            color: #ad6800;
+        }
+        .description code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="description">
+        <h2>Issue #19972: Scatter Chart points overflow out of the coordinate system</h2>
+        <p><strong>Scenario:</strong> <code>filterMode: 'none'</code> + <code>series type: scatter</code> + <code>x-axis type: time</code></p>
+        <p><strong>Problem:</strong> On zooming in too much, the scatter points would go outside of the graph (beyond axis)</p>
+        <p><strong>Expected:</strong> Scatter points should be clipped at the coordinate system boundary when <code>clip: true</code></p>
+        <p><strong>Test:</strong> Use the slider or mouse wheel to zoom in. Points at the edges should be clipped, not overflow.</p>
+    </div>
+
+    <!-- Main Test Case: Scatter with time axis -->
+    <div class="chart" id="main-test"></div>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            // Generate sample time-series data
+            var data = [];
+            var baseTime = +new Date(2024, 0, 1);
+            for (var i = 0; i < 200; i++) {
+                data.push([
+                    baseTime + i * 12 * 3600 * 1000,  // time (every 12 hours)
+                    Math.round(Math.random() * 200 + 50),  // y value
+                    Math.round(Math.random() * 30 + 10)  // symbol size
+                ]);
+            }
+
+            var option = {
+                title: {
+                    text: 'MAIN TEST: filterMode: none + scatter + time axis',
+                    subtext: 'Zoom in using slider or mouse wheel - points should NOT overflow',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                grid: {
+                    left: 60,
+                    right: 60,
+                    top: 80,
+                    bottom: 100,
+                    borderColor: '#f00',
+                    borderWidth: 2,
+                    show: true
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        filterMode: 'none',  // KEY: filterMode is 'none'
+                        start: 30,
+                        end: 70
+                    },
+                    {
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        filterMode: 'none'  // KEY: filterMode is 'none'
+                    }
+                ],
+                xAxis: {
+                    type: 'time',  // KEY: x-axis is time type
+                    axisLine: {
+                        lineStyle: {
+                            color: '#f00',
+                            width: 2
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: {
+                        show: true,
+                        lineStyle: {
+                            color: '#f00',
+                            width: 2
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Data Points',
+                    type: 'scatter',  // KEY: series type is scatter
+                    data: data,
+                    clip: true,  // Should clip points at boundaries
+                    symbolSize: function (val) {
+                        return val[2];
+                    },
+                    itemStyle: {
+                        color: '#5470c6'
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main-test', {
+                title: 'MAIN TEST: filterMode: none + scatter + time axis (Issue #19972)',
+                option: option,
+                height: 500,
+                buttons: [
+                    {
+                        text: 'Zoom In (10%-30%)',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'dataZoom',
+                                start: 10,
+                                end: 30
+                            });
+                        }
+                    },
+                    {
+                        text: 'Zoom In More (15%-25%)',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'dataZoom',
+                                start: 15,
+                                end: 25
+                            });
+                        }
+                    },
+                    {
+                        text: 'Zoom In Extreme (20%-22%)',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'dataZoom',
+                                start: 20,
+                                end: 22
+                            });
+                        }
+                    },
+                    {
+                        text: 'Reset Zoom',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'dataZoom',
+                                start: 0,
+                                end: 100
+                            });
+                        }
+                    },
+                    {
+                        text: 'Toggle clip: true/false',
+                        onclick: function () {
+                            var currentClip = chart.getOption().series[0].clip;
+                            chart.setOption({
+                                series: [{
+                                    clip: !currentClip
+                                }]
+                            });
+                            console.log('clip is now:', !currentClip);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <!-- Comparison: clip: false (should overflow) -->
+    <div class="chart" id="test-clip-false"></div>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var data = [];
+            var baseTime = +new Date(2024, 0, 1);
+            for (var i = 0; i < 200; i++) {
+                data.push([
+                    baseTime + i * 12 * 3600 * 1000,
+                    Math.round(Math.random() * 200 + 50),
+                    Math.round(Math.random() * 30 + 10)
+                ]);
+            }
+
+            var option = {
+                title: {
+                    text: 'COMPARISON: clip: false (points SHOULD overflow)',
+                    subtext: 'With clip: false, points are expected to overflow',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                grid: {
+                    left: 60,
+                    right: 60,
+                    top: 80,
+                    bottom: 100,
+                    borderColor: '#f00',
+                    borderWidth: 2,
+                    show: true
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        filterMode: 'none',
+                        start: 30,
+                        end: 70
+                    },
+                    {
+                        type: 'inside',
+                        xAxisIndex: 0,
+                        filterMode: 'none'
+                    }
+                ],
+                xAxis: {
+                    type: 'time'
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    name: 'Data Points',
+                    type: 'scatter',
+                    data: data,
+                    clip: false,  // Points SHOULD overflow when false
+                    symbolSize: function (val) {
+                        return val[2];
+                    },
+                    itemStyle: {
+                        color: '#91cc75'
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'test-clip-false', {
+                title: 'COMPARISON: clip: false (points should overflow - this is expected behavior)',
+                option: option,
+                height: 500,
+                buttons: [
+                    {
+                        text: 'Zoom In (10%-30%)',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'dataZoom',
+                                start: 10,
+                                end: 30
+                            });
+                        }
+                    },
+                    {
+                        text: 'Reset Zoom',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'dataZoom',
+                                start: 0,
+                                end: 100
+                            });
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <!-- Additional test: Scatter with Y-axis min/max -->
+    <div class="chart" id="test-minmax"></div>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var data = [];
+            for (var i = 0; i < 100; i++) {
+                data.push([
+                    Math.round(Math.random() * 100),
+                    Math.round(Math.random() * 300),
+                    Math.round(Math.random() * 25 + 5)
+                ]);
+            }
+
+            var option = {
+                title: {
+                    text: 'Scatter with axis min/max clipping',
+                    subtext: 'Points outside min/max range should be clipped',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                grid: {
+                    left: 60,
+                    right: 60,
+                    top: 80,
+                    bottom: 60,
+                    borderColor: '#f00',
+                    borderWidth: 2,
+                    show: true
+                },
+                xAxis: {
+                    type: 'value',
+                    min: 20,
+                    max: 80
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 50,
+                    max: 250
+                },
+                series: [{
+                    name: 'Data Points',
+                    type: 'scatter',
+                    data: data,
+                    clip: true,
+                    symbolSize: function (val) {
+                        return val[2];
+                    },
+                    itemStyle: {
+                        color: '#ee6666'
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'test-minmax', {
+                title: 'Scatter with axis min/max (x: 20-80, y: 50-250)',
+                option: option,
+                height: 500,
+                buttons: [
+                    {
+                        text: 'Toggle clip: true/false',
+                        onclick: function () {
+                            var currentClip = chart.getOption().series[0].clip;
+                            chart.setOption({
+                                series: [{
+                                    clip: !currentClip
+                                }]
+                            });
+                            console.log('clip is now:', !currentClip);
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+    <!-- Test: Large scatter (progressive rendering) -->
+    <div class="chart" id="test-large"></div>
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
+            var data = [];
+            var baseTime = +new Date(2024, 0, 1);
+            for (var i = 0; i < 5000; i++) {
+                data.push([
+                    baseTime + i * 3600 * 1000,
+                    Math.round(Math.random() * 200 + 50)
+                ]);
+            }
+
+            var option = {
+                title: {
+                    text: 'Large Scatter (5000 points) with time axis',
+                    subtext: 'Testing large mode clipping',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                grid: {
+                    left: 60,
+                    right: 60,
+                    top: 80,
+                    bottom: 100,
+                    borderColor: '#f00',
+                    borderWidth: 2,
+                    show: true
+                },
+                dataZoom: [
+                    {
+                        type: 'slider',
+                        filterMode: 'none',
+                        start: 40,
+                        end: 60
+                    },
+                    {
+                        type: 'inside',
+                        filterMode: 'none'
+                    }
+                ],
+                xAxis: {
+                    type: 'time'
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [{
+                    name: 'Data Points',
+                    type: 'scatter',
+                    data: data,
+                    clip: true,
+                    symbolSize: 5,
+                    large: true,
+                    largeThreshold: 2000,
+                    itemStyle: {
+                        color: '#73c0de'
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'test-large', {
+                title: 'Large Scatter with filterMode: none',
+                option: option,
+                height: 500,
+                buttons: [
+                    {
+                        text: 'Zoom In',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'dataZoom',
+                                start: 45,
+                                end: 55
+                            });
+                        }
+                    },
+                    {
+                        text: 'Reset Zoom',
+                        onclick: function () {
+                            chart.dispatchAction({
+                                type: 'dataZoom',
+                                start: 0,
+                                end: 100
+                            });
+                        }
+                    }
+                ]
+            });
+        });
+    </script>
+
+</body>
+</html>
