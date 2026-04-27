@@ -31,6 +31,7 @@ import { unionAxisExtentFromData } from '../../coord/axisHelper';
 import { ensureScaleRawExtentInfo } from '../../coord/scaleRawExtentInfo';
 import { getAxisMainType, isCoordSupported, DataZoomAxisDimension } from './helper';
 import { SINGLE_REFERRING } from '../../util/model';
+import { getStackedDimension } from '../../data/helper/dataStackHelper';
 
 const each = zrUtil.each;
 const asc = numberUtil.asc;
@@ -302,6 +303,10 @@ class AxisProxy {
             if (!dataDims.length) {
                 return;
             }
+
+            zrUtil.each(dataDims, function (dim, index) {
+                dataDims[index] = getStackedDimension(seriesData, dim);
+            });
 
             if (filterMode === 'weakFilter') {
                 const store = seriesData.getStore();
