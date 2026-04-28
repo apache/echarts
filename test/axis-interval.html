@@ -56,13 +56,21 @@ under the License.
     <h1>[ Test time axis interval ]&nbsp;&nbsp;&nbsp; should not overlap when data zoom.</h1>
     <div class="chart" id="main2"></div>
 
-    <h1>Test xAxis.axisTick.interval</h1>
+    <h1>Test xAxis.axisTick.interval with boundaryGap **true**</h1>
     <div class="chart" id="main30"></div>
     <div class="chart" id="main31"></div>
     <div class="chart" id="main32"></div>
     <div class="chart" id="main33"></div>
     <div class="chart" id="main34"></div>
     <div class="chart" id="main35"></div>
+
+    <h1>Test xAxis.axisTick.interval with boundaryGap **false**</h1>
+    <div class="chart" id="main60"></div>
+    <div class="chart" id="main61"></div>
+    <div class="chart" id="main62"></div>
+    <div class="chart" id="main63"></div>
+    <div class="chart" id="main64"></div>
+    <div class="chart" id="main65"></div>
 
     <div style="height: 600px;">
         <div class="chart" id="main4"></div>
@@ -362,6 +370,9 @@ under the License.
         ], function (echarts) {
 
             var testArr = [
+                [true, true, true, true],
+                [false, false, false, false],
+                [true, false, false, false],
                 [true, false, true, true],
                 [true, false, true, false],
                 [false, true, true, false],
@@ -389,6 +400,7 @@ under the License.
                         bottom: 30
                     },
                     xAxis: {
+                        boundaryGap: true,
                         type: 'category',
                         data: ['Mon', 'Tue', 'Wed', 'Thu'],
                         axisTick: {
@@ -427,7 +439,76 @@ under the License.
     </script>
 
 
+    <script>
+        require([
+            'echarts'
+        ], function (echarts) {
 
+            var testArr = [
+                [true, true, true, true],
+                [false, false, false, false],
+                [true, true, false, false],
+                [true, false, false, false],
+                [false, true, false, false],
+                [false, false, false, true],
+            ];
+
+            function print(index) {
+                return `intervalList:\n[${testArr[index].toString()}] \n\n currentIndex: ${index}`
+            }
+
+            function makeOption(dataIndex) {
+                var option = {
+                    title: {
+                        text: print(dataIndex),
+                        textStyle: {
+                            fontSize: 12
+                        }
+                    },
+                    grid: {
+                        top: 10,
+                        right: 50,
+                        left: 160,
+                        bottom: 30
+                    },
+                    xAxis: {
+                        boundaryGap: false,
+                        type: 'category',
+                        data: ['Mon', 'Tue', 'Wed', 'Thu'],
+                        axisTick: {
+                            show: true,
+                            interval: function (index) {
+                                // return index && !!x2Data[index]
+                                return testArr[dataIndex][index]
+                            },
+                            length: 30,
+                            alignWithLabel: false
+                        },
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [{
+                        data: [820, 932, 901, 934],
+                        type: 'line'
+                    }]
+                };
+
+                return option;
+            }
+
+            for (var i = 0; i < testArr.length; i++) {
+                var dom = document.getElementById('main6' + i);
+                if (dom) {
+                    dom.style.height = '90px';
+                    var chart = echarts.init(dom);
+                    chart.setOption(makeOption(i));
+                }
+            }
+
+        });
+
+    </script>
     <script>
 
         require([

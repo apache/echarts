@@ -17,8 +17,8 @@
 * under the License.
 */
 
-import {each, map} from 'zrender/src/core/util';
-import {linearMap, getPixelPrecision, round} from '../util/number';
+import { each, map, isFunction } from 'zrender/src/core/util';
+import { linearMap, getPixelPrecision, round } from '../util/number';
 import {
     createAxisTicks,
     createAxisLabels,
@@ -28,6 +28,7 @@ import {
     createAxisLabelsComputingContext,
 } from './axisTickLabelBuilder';
 import Scale, { ScaleGetTicksOpt } from '../scale/Scale';
+import { getOptionCategoryInterval } from './axisHelper';
 import { DimensionName, ScaleDataValue, ScaleTick } from '../util/types';
 import OrdinalScale from '../scale/Ordinal';
 import Model from '../model/Model';
@@ -207,9 +208,10 @@ class Axis {
         }, this);
 
         const alignWithLabel = tickModel.get('alignWithLabel');
+        const isCustomIntervalTick = isFunction(getOptionCategoryInterval(tickModel as AxisBaseModel));
 
         fixOnBandTicksCoords(
-            this, ticksCoords, alignWithLabel, opt.clamp
+            this, ticksCoords, alignWithLabel, isCustomIntervalTick, opt.clamp
         );
 
         return ticksCoords;
@@ -315,6 +317,7 @@ function fixOnBandTicksCoords(
     axis: Axis,
     ticksCoords: AxisTickCoord[],
     alignWithLabel: boolean,
+    isCustomIntervalTick: boolean,
     clamp: boolean
 ) {
     const ticksLen = ticksCoords.length;
@@ -326,7 +329,22 @@ function fixOnBandTicksCoords(
     const axisExtent = axis.getExtent();
     let last;
     let diffSize;
-    if (ticksLen === 1) {
+    if (isCustomIntervalTick) {
+        const dataExtent = axis.scale.getExtent();
+        const shift = (axisExtent[1] - axisExtent[0]) / (dataExtent[1] - dataExtent[0] + 1);
+        each(ticksCoords, function (ticksItem: AxisTickCoord) {
+            ticksItem.coord -= shift / 2;
+        });
+        last = {
+            coord: axisExtent[1],
+            tickValue: dataExtent[1] + 1
+        };
+        // if have tick add last tick
+        if (ticksCoords.length) {
+            ticksCoords.push(last);
+        }
+    }
+    else if (ticksLen === 1) {
         ticksCoords[0].coord = axisExtent[0];
         ticksCoords[0].onBand = true;
         last = ticksCoords[1] = {coord: axisExtent[1], tickValue: ticksCoords[0].tickValue, onBand: true};
@@ -335,7 +353,7 @@ function fixOnBandTicksCoords(
         const crossLen = ticksCoords[ticksLen - 1].tickValue - ticksCoords[0].tickValue;
         const shift = (ticksCoords[ticksLen - 1].coord - ticksCoords[0].coord) / crossLen;
 
-        each(ticksCoords, function (ticksItem) {
+        each(ticksCoords, function (ticksItem: AxisTickCoord) {
             ticksItem.coord -= shift / 2;
             ticksItem.onBand = true;
         });
