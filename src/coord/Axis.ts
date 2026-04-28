@@ -295,6 +295,9 @@ class Axis {
 }
 
 function fixExtentWithBands(extent: [number, number], nTick: number): void {
+    if (nTick <= 1) {
+        return;
+    }
     const size = extent[1] - extent[0];
     const len = nTick;
     const margin = size / len / 2;
