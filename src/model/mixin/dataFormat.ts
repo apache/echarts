@@ -36,6 +36,7 @@ import {
 import GlobalModel from '../Global';
 import { TooltipMarkupBlockFragment } from '../../component/tooltip/tooltipMarkup';
 import { error, makePrintable } from '../../util/log';
+import { round } from '../../util/number';
 
 const DIMENSION_LABEL_REG = /\{@(.+?)\}/g;
 
@@ -72,7 +73,7 @@ export class DataFormatMixin {
         const isSeries = mainType === 'series';
         const userOutput = data.userOutput && data.userOutput.get();
 
-        return {
+        const params: CallbackDataParams = {
             componentType: mainType,
             componentSubType: this.subType,
             componentIndex: this.componentIndex,
@@ -93,6 +94,20 @@ export class DataFormatMixin {
             // Param name list for mapping `a`, `b`, `c`, `d`, `e`
             $vars: ['seriesName', 'name', 'value']
         };
+
+        const isPercentStackEnabled = data.getCalculationInfo('isPercentStackEnabled');
+        if (isPercentStackEnabled) {
+            // Include the normalized value when stackPercent is true.
+            const stackResultDim = data.getCalculationInfo('stackResultDimension');
+            const stackedOverDim = data.getCalculationInfo('stackedOverDimension');
+            const stackTop = data.get(stackResultDim, dataIndex) as number;
+            const stackBottom = data.get(stackedOverDim, dataIndex) as number;
+            if (!isNaN(stackTop) && !isNaN(stackBottom)) {
+                const normalizedValue = stackTop - stackBottom;
+                params.percent = round(normalizedValue, 2);
+            }
+        }
+        return params;
     }
 
     /**
