@@ -579,28 +579,41 @@ function removeNodeEdge(
     data: SeriesData,
     group: graphic.Group,
     seriesModel: TreeSeriesModel,
-    removeAnimationOpt: AnimationOption
+    removeAnimationOpt: AnimationOption,
+    currentSymbol?: TreeSymbol,
+    sourceSymbol?: TreeSymbol
 ) {
     const virtualRoot = data.tree.root;
     const { source, sourceLayout } = getSourceNode(virtualRoot, node);
 
-    const symbolEl: TreeSymbol = data.getItemGraphicEl(node.dataIndex) as TreeSymbol;
+    const animateModel = seriesModel.getModel('animation');
+
+    const isAnimationEnabled = animateModel.isAnimationEnabled();
+
+    // use the current symbol when the node is delete immediately
+    const symbolEl: TreeSymbol = data.getItemGraphicEl(node.dataIndex) as TreeSymbol ?? currentSymbol;
 
     if (!symbolEl) {
         return;
     }
 
-    const sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol;
-    const sourceEdge = sourceSymbolEl.__edge;
-
-    // 1. when expand the sub tree, delete the children node should delete the edge of
-    // the source at the same time. because the polyline edge shape is only owned by the source.
-    // 2.when the node is the only children of the source, delete the node should delete the edge of
-    // the source at the same time. the same reason as above.
-    const edge = symbolEl.__edge
-        || ((source.isExpand === false || source.children.length === 1) ? sourceEdge : undefined);
+    // use the source symbol when the node is delete immediately
+    const sourceSymbolEl = data.getItemGraphicEl(source.dataIndex) as TreeSymbol ?? sourceSymbol;
+    const sourceEdge = sourceSymbolEl?.__edge;
 
     const edgeShape = seriesModel.get('edgeShape');
+    // 1. when expand the sub tree, delete the children node should delete the edge of
+    // the source at the same time. because the polyline edge shape is only owned by the source.
+    // 2. when the node is the only children of the source, delete the node should delete the edge of
+    // the source at the same time. the same reason as above.
+    // 3. when the tree shape is polyline and animation is off, delete the edge of the source at the same time.
+    const edge = symbolEl.__edge
+        || ((
+            source.isExpand === false || source.children.length === 1 || (
+                    edgeShape === 'polyline' && !isAnimationEnabled
+                )
+            ) ? sourceEdge : undefined);
+
     const layoutOpt = seriesModel.get('layout');
     const orient = seriesModel.get('orient');
     const curvature = seriesModel.get(['lineStyle', 'curveness']);
@@ -692,10 +705,10 @@ function removeNode(
 
     // remove edge as parent node
     node.children.forEach(childNode => {
-        removeNodeEdge(childNode, data, group, seriesModel, removeAnimationOpt);
+        removeNodeEdge(childNode, data, group, seriesModel, removeAnimationOpt, undefined, symbolEl);
     });
     // remove edge as child node
-    removeNodeEdge(node, data, group, seriesModel, removeAnimationOpt);
+    removeNodeEdge(node, data, group, seriesModel, removeAnimationOpt, symbolEl);
 }
 
 function getEdgeShape(
