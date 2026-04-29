@@ -705,6 +705,7 @@ export type ECUnitOption = {
     darkMode?: boolean | 'auto'
     textStyle?: GlobalTextStyleOption
     useUTC?: boolean
+    timezone?: string;
     hoverLayerThreshold?: number
 
     legacyViewCoordSysCenterBase?: boolean

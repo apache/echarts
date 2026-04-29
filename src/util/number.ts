@@ -26,6 +26,7 @@
 * </licenses/LICENSE-d3>).
 */
 
+import { TZDate } from '@date-fns/tz';
 import * as zrUtil from 'zrender/src/core/util';
 
 const RADIAN_EPSILON = 1e-4;
@@ -369,7 +370,7 @@ const TIME_REG = /^(?:(\d{4})(?:[-\/](\d{1,2})(?:[-\/](\d{1,2})(?:[T ](\d{1,2})(
  *   + a timestamp, which represent a time in UTC.
  * @return date Never be null/undefined. If invalid, return `new Date(NaN)`.
  */
-export function parseDate(value: unknown): Date {
+export function parseDate(value: unknown, timeZone?: string): Date {
     if (value instanceof Date) {
         return value;
     }
@@ -390,14 +391,14 @@ export function parseDate(value: unknown): Date {
         if (!match[8]) {
             // match[n] can only be string or undefined.
             // But take care of '12' + 1 => '121'.
-            return new Date(
+            return new TZDate(
                 +match[1],
                 +(match[2] || 1) - 1,
                 +match[3] || 1,
                 +match[4] || 0,
                 +(match[5] || 0),
                 +match[6] || 0,
-                match[7] ? +match[7].substring(0, 3) : 0
+                match[7] ? +match[7].substring(0, 3) : 0, timeZone
             );
         }
         // Timezoneoffset of Javascript Date has considered DST (Daylight Saving Time,
@@ -412,7 +413,7 @@ export function parseDate(value: unknown): Date {
             if (match[8].toUpperCase() !== 'Z') {
                 hour -= +match[8].slice(0, 3);
             }
-            return new Date(Date.UTC(
+            return new TZDate(Date.UTC(
                 +match[1],
                 +(match[2] || 1) - 1,
                 +match[3] || 1,
@@ -420,14 +421,14 @@ export function parseDate(value: unknown): Date {
                 +(match[5] || 0),
                 +match[6] || 0,
                 match[7] ? +match[7].substring(0, 3) : 0
-            ));
+            ), timeZone);
         }
     }
     else if (value == null) {
         return new Date(NaN);
     }
 
-    return new Date(Math.round(value as number));
+    return new TZDate(Math.round(value as number), timeZone);
 }
 
 /**

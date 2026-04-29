@@ -312,8 +312,8 @@ function singleTransformImport(code, replacement) {
     return transformImport(
         code.replace(/([\"\'])zrender\/src\//g, `$1zrender/${replacement}/`),
         (moduleName) => {
-            // Ignore 'tslib' and 'echarts' in the extensions.
-            if (moduleName === 'tslib' || moduleName === 'echarts') {
+            // Ignore 'tslib', '@date-fns/tz' and 'echarts' in the extensions.
+            if (moduleName === 'tslib' || moduleName === 'echarts' || moduleName === "@date-fns/tz") {
                 return moduleName;
             }
             else if (moduleName === 'zrender/lib/export') {

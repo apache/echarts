@@ -67,6 +67,7 @@
     "lint:dist": "echo 'It might take a while. Please wait ...' && npx jshint --config .jshintrc-dist dist/echarts.js"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.4.1",
     "tslib": "2.3.0",
     "zrender": "6.0.0"
   },
