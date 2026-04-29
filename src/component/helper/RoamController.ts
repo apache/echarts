@@ -191,11 +191,10 @@ class RoamController extends Eventful<RoamEventDefinition> {
             // A quick optimization for repeatedly calling `enable` during roaming.
             // Assert `disable` is only affected by `controlType`.
             if (!this._enabled || this._controlType !== controlType) {
-                this._enabled = true;
-
                 // Disable previous first
                 this.disable();
 
+                this._enabled = true;
                 if (controlType === true || (controlType === 'move' || controlType === 'pan')) {
                     addRoamZrListener(zr, 'mousedown', mousedownHandler, zInfoParsed);
                     addRoamZrListener(zr, 'mousemove', mousemoveHandler, zInfoParsed);
@@ -209,12 +208,14 @@ class RoamController extends Eventful<RoamEventDefinition> {
         };
 
         this.disable = function () {
-            this._enabled = false;
-            removeRoamZrListener(zr, 'mousedown', mousedownHandler);
-            removeRoamZrListener(zr, 'mousemove', mousemoveHandler);
-            removeRoamZrListener(zr, 'mouseup', mouseupHandler);
-            removeRoamZrListener(zr, 'mousewheel', mousewheelHandler);
-            removeRoamZrListener(zr, 'pinch', pinchHandler);
+            if (this._enabled) {
+                this._enabled = false;
+                removeRoamZrListener(zr, 'mousedown', mousedownHandler);
+                removeRoamZrListener(zr, 'mousemove', mousemoveHandler);
+                removeRoamZrListener(zr, 'mouseup', mouseupHandler);
+                removeRoamZrListener(zr, 'mousewheel', mousewheelHandler);
+                removeRoamZrListener(zr, 'pinch', pinchHandler);
+            }
         };
     }
 

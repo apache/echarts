@@ -244,9 +244,9 @@ export class Task<Ctx extends TaskContext> {
 
     /**
      * @tutorial [EC_TASK_DIRTY]
-     *  Task `dirty()` calls typically originate from a trigger of EC_MAIN_CYCLE (including
-     *  EC_FULL_UPDATE and EC_PARTIAL_UPDATE) (See comments in EC_CYCLE)
-     *  Generally, task dirty propagates to downstream tasks.
+     *  Task `dirty()` calls typically originate from a trigger of EC_FULL_UPDATE_CYCLE and
+     *  EC_PARTIAL_UPDATE_CYCLE) (See comments in EC_CYCLE. Generally, task dirty propagates
+     *  to downstream tasks.
      *  Task dirty leads to the `StageHandler['reset']` or `StageHandler['overallReset']` call,
      *  which discards the previous result and starts over the processing.
      */

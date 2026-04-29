@@ -245,17 +245,29 @@ function dispatchAction(
     brushSelected: BrushSelectedItem[],
     payload: Payload
 ): void {
-    // This event will not be triggered when `setOpion`, otherwise dead lock may
+    // This event will not be triggered when `setOption`, otherwise dead lock may
     // triggered when do `setOption` in event listener, which we do not find
     // satisfactory way to solve yet. Some considered resolutions:
-    // (a) Diff with prevoius selected data ant only trigger event when changed.
+    // (a) Diff with previous selected data ant only trigger event when changed.
     // But store previous data and diff precisely (i.e., not only by dataIndex, but
     // also detect value changes in selected data) might bring complexity or fragility.
-    // (b) Use spectial param like `silent` to suppress event triggering.
+    // (b) Use special param like `silent` to suppress event triggering.
     // But such kind of volatile param may be weird in `setOption`.
     if (!payload) {
         return;
     }
+
+    // FIXME: [INCONSISTENCY_OF_BRUSH_SELECTED_EVENT_IN_UPDATE_TRANSFORM]
+    // If any series declared in ec option does not support `updateTransform`, `updateTransform` will
+    // dirty the pipeline (see `echarts.ts`), thereby `reset` of `brush/visualEncoding.ts` being called,
+    // and then 'brushselected' event is triggered here.
+    // If all series declared in ec option support `updateTransform` and return no 'update', the pipeline
+    // will not be dirty, consequently `reset` is not called and 'brushselected' event is not triggered.
+    // This inconsistency is unreasonable and error-prone.
+    // Theoretically, 'brushselected' should always be triggered, since the "brush covers" may stay at its
+    // original place even when roaming (depending on settings). But we should not use `dirtyOnOverallProgress`
+    // in this visual task, otherwise all pipelines will be blocked and progressive rendering is broken.
+    // Therefore, the mechanism of `updateTranform` and `updateVisual` needs to review and refactor.
 
     const zr = api.getZr() as BrushGlobalDispatcher;
     if (zr[DISPATCH_FLAG]) {

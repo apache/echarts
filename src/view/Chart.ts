@@ -183,7 +183,9 @@ class ChartView {
     }
 
     /**
-     * Remove self.
+     * `remove` only occurs when series is filtered out, typically by legend.
+     * And theirafter the view can only be rendered again via
+     * `ChartView['render']` or `ChartView['incrementalPrepareRender']`.
      */
     remove(ecModel: GlobalModel, api: ExtensionAPI): void {
         this.group.removeAll();
@@ -200,9 +202,9 @@ class ChartView {
     }
 
     // FIXME never used?
-    updateLayout(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
-        this.render(seriesModel, ecModel, api, payload);
-    }
+    // updateLayout(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {
+    //     this.render(seriesModel, ecModel, api, payload);
+    // }
 
     // FIXME never used?
     updateVisual(seriesModel: SeriesModel, ecModel: GlobalModel, api: ExtensionAPI, payload: Payload): void {

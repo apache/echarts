@@ -19,12 +19,10 @@
 
 import { EChartsExtensionInstallRegisters } from '../../extension';
 import SankeyView from './SankeyView';
-import SankeySeriesModel from './SankeySeries';
-
-import { Payload } from '../../util/types';
+import SankeySeriesModel, { SERIES_TYPE_SANKEY } from './SankeySeries';
+import { COMPONENT_MAIN_TYPE_SERIES, Payload } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import { updateCenterAndZoomInAction, RoamPayload } from '../../component/helper/roamHelper';
-import type ExtensionAPI from '../../core/ExtensionAPI';
+import {registerRoamActionSimply} from '../../component/helper/roamHelper';
 import { sankeyLayoutStageHandler } from './sankeyLayout';
 import { sankeyVisualStageHandler } from './sankeyVisual';
 
@@ -47,27 +45,14 @@ export function install(registers: EChartsExtensionInstallRegisters) {
         update: 'update'
     }, function (payload: SankeyDragNodePayload, ecModel: GlobalModel) {
         ecModel.eachComponent({
-            mainType: 'series',
-            subType: 'sankey',
+            mainType: COMPONENT_MAIN_TYPE_SERIES,
+            subType: SERIES_TYPE_SANKEY,
             query: payload
         }, function (seriesModel: SankeySeriesModel) {
             seriesModel.setNodePosition(payload.dataIndex, [payload.localX, payload.localY]);
         });
     });
 
-    registers.registerAction({
-        type: 'sankeyRoam',
-        event: 'sankeyRoam',
-        update: 'none'
-    }, function (payload: RoamPayload, ecModel: GlobalModel, api: ExtensionAPI) {
-        ecModel.eachComponent({
-            mainType: 'series', subType: 'sankey', query: payload
-        }, function (seriesModel: SankeySeriesModel) {
-            const coordSys = seriesModel.coordinateSystem;
-            const res = updateCenterAndZoomInAction(coordSys, payload, seriesModel.get('scaleLimit'));
+    registerRoamActionSimply(registers, COMPONENT_MAIN_TYPE_SERIES, SERIES_TYPE_SANKEY);
 
-            seriesModel.setCenter(res.center);
-            seriesModel.setZoom(res.zoom);
-        });
-    });
 }

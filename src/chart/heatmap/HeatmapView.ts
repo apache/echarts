@@ -28,7 +28,7 @@ import type ExtensionAPI from '../../core/ExtensionAPI';
 import type VisualMapModel from '../../component/visualMap/VisualMapModel';
 import type PiecewiseModel from '../../component/visualMap/PiecewiseModel';
 import type ContinuousModel from '../../component/visualMap/ContinuousModel';
-import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
+import { GeoLikeCoordSys, isCoordinateSystemType, isGeoLikeCoordSys } from '../../coord/CoordinateSystem';
 import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
@@ -38,11 +38,6 @@ import type Matrix from '../../coord/matrix/Matrix';
 import { calcBandWidth } from '../../coord/axisBand';
 import { getIncrementalId } from '../../util/model';
 
-// Coord can be 'geo' 'bmap' 'amap' 'leaflet'...
-interface GeoLikeCoordSys extends CoordinateSystem {
-    dimensions: ['lng', 'lat']
-    getViewRect(): graphic.BoundingRect
-}
 
 function getIsInPiecewiseRange(
     dataExtent: number[],
@@ -95,12 +90,6 @@ function getIsInContinuousRange(dataExtent: number[], range: number[]) {
     };
 }
 
-function isGeoCoordSys(coordSys: CoordinateSystem): coordSys is GeoLikeCoordSys {
-    const dimensions = coordSys.dimensions;
-    // Not use coordSys.type === 'geo' because coordSys maybe extended
-    return dimensions[0] === 'lng' && dimensions[1] === 'lat';
-}
-
 class HeatmapView extends ChartView {
 
     static readonly type = 'heatmap';
@@ -138,7 +127,7 @@ class HeatmapView extends ChartView {
         ) {
             this._renderOnGridLike(seriesModel, api, 0, seriesModel.getData().count());
         }
-        else if (isGeoCoordSys(coordSys)) {
+        else if (isGeoLikeCoordSys(coordSys)) {
             this._renderOnGeo(
                 coordSys, seriesModel, visualMapOfThisSeries, api
             );
@@ -158,7 +147,7 @@ class HeatmapView extends ChartView {
         const coordSys = seriesModel.coordinateSystem;
         if (coordSys) {
             // geo does not support incremental rendering?
-            if (isGeoCoordSys(coordSys)) {
+            if (isGeoLikeCoordSys(coordSys)) {
                 this.render(seriesModel, ecModel, api);
             }
             else {

@@ -21,7 +21,7 @@ import * as pathTool from 'zrender/src/tool/path';
 import * as matrix from 'zrender/src/core/matrix';
 import * as vector from 'zrender/src/core/vector';
 import Path, { PathProps } from 'zrender/src/graphic/Path';
-import Transformable from 'zrender/src/core/Transformable';
+import Transformable, { copyTransform } from 'zrender/src/core/Transformable';
 import ZRImage, { ImageStyleProps } from 'zrender/src/graphic/Image';
 import Group from 'zrender/src/graphic/Group';
 import ZRText from 'zrender/src/graphic/Text';
@@ -54,7 +54,8 @@ import {
     CommonTooltipOption,
     ComponentItemTooltipLabelFormatterParams,
     NullUndefined,
-    ComponentOption
+    ComponentOption,
+    Payload
 } from './types';
 import {
     extend,
@@ -82,6 +83,8 @@ import {
 } from '../animation/basicTransition';
 import { ExtendedElement } from '../core/ExtendedElement';
 import { mathMin, mathMax, mathAbs } from './number';
+import type ExtensionAPI from '../core/ExtensionAPI';
+import type CanvasPainter from 'zrender/src/canvas/Painter';
 
 /**
  * @deprecated export for compatitable reason
@@ -906,6 +909,41 @@ function doUpdateZ(
             && (labelLine.z2 = maxZ2 + (textGuideLineConfig && textGuideLineConfig.showAbove ? 1 : -1));
     }
     return maxZ2;
+}
+
+export function payloadDisableAnimation<TPayload extends Payload>(
+    payload: TPayload
+): TPayload {
+    // Disable animation in `updateProps` of `graphic.ts`.
+    payload.animation = {duration: 0};
+    return payload;
+}
+
+/**
+ * Decompose an affine matrix to
+ * x/y/scaleX/scaleY/rotation/skewX/skewY
+ */
+export function decomposeTransform(
+    out: Transformable,
+    mt: matrix.MatrixArray | NullUndefined
+): Transformable {
+    mt
+        ? matrix.copy(tmpDTR.transform, mt)
+        : matrix.identity(tmpDTR.transform);
+    // Use a tmp transformable to avoid effects from parent.
+    tmpDTR.decomposeTransform();
+    copyTransform(out, tmpDTR);
+    return out;
+}
+const tmpDTR = new Transformable();
+tmpDTR.transform = matrix.create();
+
+/**
+ * If not canvas painter, return null/undefined.
+ */
+export function getCurrentCanvasPainter(api: ExtensionAPI): CanvasPainter | NullUndefined {
+    const painter = api.getZr().painter;
+    return painter.getType() === 'canvas' ? (painter as CanvasPainter) : null;
 }
 
 

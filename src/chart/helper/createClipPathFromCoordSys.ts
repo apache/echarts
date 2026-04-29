@@ -23,7 +23,7 @@ import SeriesModel from '../../model/Series';
 import { NullUndefined, SeriesOption } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Polar from '../../coord/polar/Polar';
-import { CoordinateSystem } from '../../coord/CoordinateSystem';
+import { CoordinateSystem, CoordinateSystemClipArea } from '../../coord/CoordinateSystem';
 import { assert, isFunction } from 'zrender/src/core/util';
 import type Element from 'zrender/src/Element';
 
@@ -188,5 +188,19 @@ export function updateClipPath(
     }
     else {
         symbolEl.removeClipPath();
+    }
+}
+
+export function createCoordSysClipAreaSimply(
+    seriesModel: SeriesModel<SeriesOption & {clip?: boolean}>
+): CoordinateSystemClipArea | NullUndefined {
+    const coordSys = seriesModel.coordinateSystem;
+    if (seriesModel.get('clip', true)
+        && coordSys
+        // The effect would be odd if geo is not clip but series is clipped.
+        && (!coordSys.shouldClip || coordSys.shouldClip())
+    ) {
+        // PENDING make `0.1` configurable, for example, `clipTolerance`?
+        return coordSys.getArea && coordSys.getArea(.1);
     }
 }

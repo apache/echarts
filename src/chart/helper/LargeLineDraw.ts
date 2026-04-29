@@ -24,12 +24,13 @@ import * as lineContain from 'zrender/src/contain/line';
 import * as quadraticContain from 'zrender/src/contain/quadratic';
 import { PathProps } from 'zrender/src/graphic/Path';
 import SeriesData from '../../data/SeriesData';
-import { StageHandlerProgressParams, LineStyleOption, ColorString, SeriesOption } from '../../util/types';
+import { StageHandlerProgressParams, LineStyleOption, ColorString } from '../../util/types';
 import Model from '../../model/Model';
 import { getECData } from '../../util/innerStore';
 import Element from 'zrender/src/Element';
 import tokens from '../../visual/tokens';
 import Displayable, { BeforeBrushParam } from 'zrender/src/graphic/Displayable';
+import { ILineDraw } from './baseDraw';
 
 class LargeLinesPathShape {
     polyline = false;
@@ -228,7 +229,7 @@ class LargeLinesPath extends graphic.Path {
     }
 }
 
-class LargeLineDraw {
+class LargeLineDraw implements ILineDraw {
     group = new graphic.Group();
     private _newAdded: LargeLinesPath[];
     /**

@@ -41,8 +41,8 @@ import {
     CallbackDataParams
 } from '../../util/types';
 import GlobalModel from '../../model/Global';
-import type { LineDrawModelOption } from '../helper/LineDraw';
 import { createTooltipMarkup } from '../../component/tooltip/tooltipMarkup';
+import { LineDrawModelOption } from '../helper/baseDraw';
 
 const Uint32Arr = typeof Uint32Array === 'undefined' ? Array : Uint32Array;
 const Float64Arr = typeof Float64Array === 'undefined' ? Array : Float64Array;

@@ -198,13 +198,32 @@ export interface CoordinateSystem {
 
     clampData?: (data: ScaleDataValue[], out?: number[]) => number[];
 
-    getRoamTransform?: () => MatrixArray;
 
-    getArea?: (tolerance?: number) => CoordinateSystemClipArea
+    getArea?: (tolerance?: number) => CoordinateSystemClipArea;
 
-    // Only `coord/View.js` implements `getBoundingRect`.
-    // But if other coord sys implement it, should follow this signature.
+    shouldClip?: () => boolean;
+
+    /**
+     * Optional; e.g. only for `GeoLikeCoordSys`.
+     * External geo like extensions are required to implements it.
+     * This is a rect in data space.
+     * For historicall reason, the name is `getBoundingRect` - preserve it for backward compatibility.
+     * @see VIEW_COORD_SYS_TRANS_RAW
+     */
     getBoundingRect?: () => BoundingRect;
+
+    /**
+     * Optional; e.g. only for `GeoLikeCoordSys`.
+     * External geo like extensions are required to implements it.
+     * @see VIEW_COORD_SYS_TRANS_RAW
+     */
+    getViewRect?: () => BoundingRect;
+
+    /**
+     * Optional; e.g. only for `GeoLikeCoordSys`.
+     * External geo like extensions are required to implements it.
+     */
+    getRoamTransform?: () => MatrixArray;
 
     // Currently only Cartesian2D implements it.
     // But if other coordinate systems implement it, should follow this signature.
@@ -236,4 +255,17 @@ export function isCoordinateSystemType<T extends CoordinateSystem, S = T['type']
     coordSys: CoordinateSystem, type: S
 ): coordSys is T {
     return (coordSys.type as unknown as S) === type;
+}
+
+// Coord sys can be 'geo' 'bmap' 'amap' 'gmap' 'leaflet' ...
+export interface GeoLikeCoordSys extends CoordinateSystem {
+    dimensions: ['lng', 'lat']
+    getViewRect: CoordinateSystem['getViewRect'] // Mandatory (e.g., for heatmap)
+    // PENDING: also check `getBoundingRect` and `getRoamTransform`?
+}
+
+export function isGeoLikeCoordSys(coordSys: CoordinateSystem): coordSys is GeoLikeCoordSys {
+    const dimensions = coordSys.dimensions;
+    // Not use coordSys.type === 'geo' because coordSys maybe extended
+    return dimensions[0] === 'lng' && dimensions[1] === 'lat' && !!coordSys.getViewRect;
 }

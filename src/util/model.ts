@@ -33,7 +33,7 @@ import {
     retrieve2,
 } from 'zrender/src/core/util';
 import env from 'zrender/src/core/env';
-import GlobalModel from '../model/Global';
+import GlobalModel, { QueryConditionKindA } from '../model/Global';
 import ComponentModel, {ComponentModelConstructor} from '../model/Component';
 import SeriesData from '../data/SeriesData';
 import {
@@ -1000,6 +1000,33 @@ export function queryReferringComponents(
         name: nameOption
     });
     return result;
+}
+
+/**
+ * `{{mainType}Id, {mainType}Index, {mainType}Name}` takes precedence if provided in `payload`;
+ * otherwise, query by `mainType`.
+ * `subType` performs futher filtering if provided.
+ */
+export function makeQueryConditionKindA(
+    payload: Payload,
+    // `mainType` is mandatory to restrict the range of query,
+    // since `payload` in an user input.
+    mainType: ComponentMainType,
+    // subType may be '' by `parseClassType`
+    subType: ComponentSubType | NullUndefined,
+): QueryConditionKindA {
+    if (__DEV__) {
+        assert(mainType);
+    }
+    const query: QueryConditionKindA['query'] = {};
+    query[mainType + 'Id'] = payload[mainType + 'Id'];
+    query[mainType + 'Index'] = payload[mainType + 'Index'];
+    query[mainType + 'Name'] = payload[mainType + 'Name'];
+
+    const condition = {mainType: mainType, query: query} as QueryConditionKindA;
+    subType && (condition.subType = subType); // subType is determined by `hasOwnProperty`.
+
+    return condition;
 }
 
 export function setAttribute(dom: HTMLElement, key: string, value: any) {

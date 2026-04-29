@@ -270,7 +270,8 @@
      *
      * @param {Object} [opt.info] Optional. info object to display.
      *        @api info can be updated by `chart.__testHelper.updateInfo(someInfoObj, 'some_info_key');`
-     * @param {string} [opt.infoKey='option'] Optional.
+     * @param {string} [opt.infoStyle] Optional. Can be 'overlay'.
+     * @param {string} [opt.infoKey] Optional.
      * @param {Object|Array} [opt.dataTable] Optional.
      * @param {Array.<Object|Array>} [opt.dataTables] Optional. Multiple dataTables.
      * @param {number} [opt.dataTableLimit=DEFAULT_DATA_TABLE_LIMIT] Optional.
@@ -314,8 +315,13 @@
         recordVideoContainer.className = 'record-video';
 
         if (opt.info) {
-            dom.className += ' test-chart-block-has-right';
-            infoContainer.className += ' test-chart-block-right';
+            if (opt.infoStyle === 'overlay') {
+                infoContainer.className += ' test-info-overlay';
+            }
+            else {
+                dom.className += ' test-chart-block-has-right';
+                infoContainer.className += ' test-chart-block-right';
+            }
         }
 
         left.appendChild(recordCanvasContainer);
@@ -332,11 +338,11 @@
         initTestTitle(opt, titleContainer);
 
         var chart = testHelper.createChart(echarts, chartContainer, opt.option, opt, opt.setOptionOpts, errMsgPrefix);
-        chart.__testHelper = {};
 
         initDataTables(opt, dataTableContainer);
 
         if (chart) {
+            chart.__testHelper = {};
             initInputs(chart, opt, inputsContainer, errMsgPrefix);
             initUpdateInfo(opt, chart, infoContainer);
             initRecordCanvas(opt, chart, recordCanvasContainer);
@@ -344,6 +350,10 @@
                 testHelper.createRecordVideo(chart, recordVideoContainer);
             }
             initShowBoundingRects(chart, echarts, opt, boundingRectsContainer);
+
+            if (opt.info) {
+                infoContainer.style.maxHeight = Math.round(chart.getHeight() * 0.9) + 'px';
+            }
         }
 
         return chart;
@@ -371,7 +381,7 @@
         }
 
         function updateInfo(info, infoKey) {
-            infoContainer.innerHTML = createObjectHTML(info, infoKey || 'option');
+            infoContainer.innerHTML = createObjectHTML(info, infoKey || 'info');
         }
 
         chart.__testHelper.updateInfo = updateInfo;
@@ -1785,6 +1795,7 @@
      *          text: 'xAxis.axisTick.interval:',  // Any text
      *          value: 'NOT_SET',                  // Initial value of the "select" input.
      *          values: ['NOT_SET', 2, 0, 1]       // Options of the "select" input.
+     *          __extra: 123                       // Pass to updateChart directly.
      *      },
      *      xAxis_axisLabel_interval: {
      *          text: 'xAxis.axisLabel.interval:',
@@ -1799,12 +1810,16 @@
      *          values: ['use_xAxis_min_max', 'use_dataZoom'],
      *      },
      *      br1: {},                               // Create another 'br' input.
+     *      hr1: {                                 // Create a 'hr' input.
+     *          text: 'some label on hr'
+     *      },
      *  };
      *  function createOption() {
      *      return {...};
      *  }
-     *  function updateChart() {
+     *  function updateChart(currentInputOption) {
      *      chart.setOption(createOption(), {notMerge: true});
+     *      console.log(currentInputOption.__extra); // 123 or null/undefined.
      *  }
      *  var chart = testHelper.create(echarts, 'chart4', {
      *      option: createOption(),
@@ -1825,6 +1840,13 @@
                 // Can be typically `{br: {}, br0: {}, br1: {}, BR: {}, BR1: {}}`.
                 return {
                     type: 'br'
+                };
+            }
+            else if (/^hr[0-9]*$/i.test(key)) {
+                // Can be typically `{br: {}, br0: {}, br1: {}, BR: {}, BR1: {}}`.
+                return {
+                    type: 'hr',
+                    text: _ctx[key].text
                 };
             }
             else {
@@ -1857,7 +1879,7 @@
                             }
                         }
 
-                        updateChart();
+                        updateChart(_ctx[key]);
                     }
                 };
                 function assignIfExisting(prop) {
@@ -2169,7 +2191,10 @@
      *  ```
      */
     testHelper.printCanvasLayerDrawOperationsOnFrame = function (
-        chart, frameNumber, recordContainer
+        chart, // Mandatory.
+        frameNumber, // Mandatory.
+        recordContainer, // Mandatory.
+        cellMax // Optional; max cell count to display
     ) {
         if (!chart) {
             return;
@@ -2192,9 +2217,9 @@
 
             recordContainer.innerHTML = [
                 '<div class="print-canvas-layer-draw-operations-on-frame-record-title">',
-                    'In "incremental layers" (layer N.1), ',
-                    'canvas instruction count (<span class="print-canvas-layer-draw-operations-on-frame-cmd-count">red number</span>) should be the same per frame;',
-                    '<br>In "normal layers" (layer N.0 or N.2), should be no incremental canvas instructions per frame.',
+                    'NOTE: In "incremental layers" (layer zr_N.1), ',
+                    'canvas instruction count per frame (<span class="print-canvas-layer-draw-operations-on-frame-cmd-count">red number</span>) should be the same per frame;',
+                    '<br>In "normal layers" (layer zr_N.0 or zr_N.2), should be no incremental canvas instructions per frame.',
                 '</div>'
             ].join('');
             recordContainer.className = 'print-canvas-layer-draw-operations-on-frame-record';
@@ -2202,7 +2227,7 @@
             return {
                 layersInfoMap: {},
                 recordContainer: recordContainer,
-                CELL_MAX: 90
+                CELL_MAX: cellMax || 90,
             };
         }
 
@@ -2225,13 +2250,21 @@
             if (!layerInfo) {
                 layerInfo = _drawOpCtx.layersInfoMap[layerId] = {
                     recordLineCellCount: 0,
-                    recordLineTitle: document.createElement('div'),
+                    recordLineTitle: document.createElement('span'),
+                    recordLineAvg: document.createElement('span'),
                     recordLineContainer: document.createElement('div')
                 };
-                layerInfo.recordLineTitle.innerHTML = 'layer ' + layerId + ': <br>';
+                layerInfo.stackLengthRecord = [];
+                layerInfo.stackLengthSumInWindow = 0;
+                layerInfo.stackLengthMax = 0;
+                layerInfo.recordLineTitle.innerHTML = 'layer ' + layerId + ': ';
                 layerInfo.recordLineTitle.className = 'print-canvas-layer-draw-operations-on-frame-record-line-title';
+                layerInfo.recordLineAvg.className = 'print-canvas-layer-draw-operations-on-frame-record-line-title';
                 layerInfo.recordLineContainer.className = 'print-canvas-layer-draw-operations-on-frame-record-line';
-                _drawOpCtx.recordContainer.appendChild(layerInfo.recordLineTitle);
+                var titleLineDom = document.createElement('div');
+                titleLineDom.appendChild(layerInfo.recordLineTitle);
+                titleLineDom.appendChild(layerInfo.recordLineAvg);
+                _drawOpCtx.recordContainer.appendChild(titleLineDom);
                 _drawOpCtx.recordContainer.appendChild(layerInfo.recordLineContainer);
             }
 
@@ -2239,6 +2272,22 @@
             var ctx = canvas.getContext('2d');
             var stackLength = getStackLength(ctx);
             var thisStackLength = stackLength;
+
+            if (thisStackLength > layerInfo.stackLengthMax) {
+                layerInfo.stackLengthMax = thisStackLength;
+            }
+
+            layerInfo.stackLengthRecord.push(thisStackLength);
+            layerInfo.stackLengthSumInWindow += thisStackLength;
+            if (layerInfo.stackLengthRecord.length > _drawOpCtx.CELL_MAX) {
+                layerInfo.stackLengthSumInWindow -= layerInfo.stackLengthRecord[0];
+                layerInfo.stackLengthRecord.shift();
+            }
+            var avgStackLength = (layerInfo.stackLengthSumInWindow / layerInfo.stackLengthRecord.length).toFixed(2);
+            layerInfo.recordLineAvg.innerHTML =
+                '&nbsp;&nbsp;(avg: ' + avgStackLength
+                + ' = ' + layerInfo.stackLengthSumInWindow + ' / ' + layerInfo.stackLengthRecord.length
+                + '&nbsp;&nbsp;&nbsp;&nbsp;max: ' + layerInfo.stackLengthMax + ')';
 
             var cell;
             if (layerInfo.recordLineCellCount > _drawOpCtx.CELL_MAX) {

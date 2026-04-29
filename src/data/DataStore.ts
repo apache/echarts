@@ -175,6 +175,7 @@ class DataStore {
     // This data subset will be used in chart.
     private _indices: ArrayLike<any>;
 
+    // Count after filtered.
     private _count: number = 0;
     private _rawCount: number = 0;
 

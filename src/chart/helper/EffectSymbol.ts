@@ -24,7 +24,7 @@ import SymbolClz from './Symbol';
 import SeriesData from '../../data/SeriesData';
 import type { ZRColor, ECElement } from '../../util/types';
 import type Displayable from 'zrender/src/graphic/Displayable';
-import { SymbolDrawItemModelOption } from './SymbolDraw';
+import { SymbolDrawItemModelOption } from './baseDraw';
 
 interface RippleEffectCfg {
     showEffectOn?: 'emphasis' | 'render'

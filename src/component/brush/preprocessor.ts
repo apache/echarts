@@ -19,7 +19,7 @@
 
 
 import * as zrUtil from 'zrender/src/core/util';
-import { ECUnitOption, Dictionary } from '../../util/types';
+import { ECUnitOption } from '../../util/types';
 import { BrushOption, BrushToolboxIconType } from './BrushModel';
 import { ToolboxOption } from '../toolbox/ToolboxModel';
 import { ToolboxBrushFeatureOption } from '../toolbox/feature/Brush';

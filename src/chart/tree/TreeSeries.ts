@@ -33,7 +33,8 @@ import {
     CallbackDataParams,
     DefaultEmphasisFocus,
     ComponentOnCalendarOptionMixin,
-    ComponentOnMatrixOptionMixin
+    ComponentOnMatrixOptionMixin,
+    RoamHostModel
 } from '../../util/types';
 import SeriesData from '../../data/SeriesData';
 import View from '../../coord/View';
@@ -98,8 +99,6 @@ export interface TreeSeriesOption extends
      */
     edgeForkPosition?: string | number
 
-    nodeScaleRatio?: number
-
     /**
      * The orient of orthoginal layout, can be setted to 'LR', 'TB', 'RL', 'BT'.
      * and the backward compatibility configuration 'horizontal = LR', 'vertical = TB'.
@@ -131,7 +130,7 @@ export interface TreeSeriesCallbackDataParams extends CallbackDataParams {
 
 export const SERIES_TYPE_TREE = 'tree';
 
-class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
+class TreeSeriesModel extends SeriesModel<TreeSeriesOption> implements RoamHostModel {
     static readonly type = 'series.' + SERIES_TYPE_TREE;
     readonly type = TreeSeriesModel.type;
 
@@ -212,14 +211,6 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         return orient;
     }
 
-    setZoom(zoom: number) {
-        this.option.zoom = zoom;
-    }
-
-    setCenter(center: number[]) {
-        this.option.center = center;
-    }
-
     formatTooltip(
         dataIndex: number,
         multipleSeries: boolean,
@@ -251,6 +242,10 @@ class TreeSeriesModel extends SeriesModel<TreeSeriesOption> {
         params.collapsed = !node.isExpand;
 
         return params;
+    }
+
+    __ownRoamView() {
+        return this.coordinateSystem;
     }
 
     static defaultOption: TreeSeriesOption = {

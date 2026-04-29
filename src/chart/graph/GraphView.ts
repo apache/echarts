@@ -17,14 +17,12 @@
 * under the License.
 */
 
-import SymbolDraw, { ListForSymbolDraw } from '../helper/SymbolDraw';
+import SymbolDraw from '../helper/SymbolDraw';
 import LineDraw from '../helper/LineDraw';
 import RoamController from '../../component/helper/RoamController';
 import {
-    updateViewOnZoom,
-    updateViewOnPan,
-    RoamControllerHost,
-    RoamPayload
+    isRoamPayloadHasZoom,
+    updateRoamControllerSimply,
 } from '../../component/helper/roamHelper';
 import * as graphic from '../../util/graphic';
 import adjustEdge from './adjustEdge';
@@ -32,9 +30,15 @@ import {getNodeGlobalScale} from './graphHelper';
 import ChartView from '../../view/Chart';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
-import GraphSeriesModel, { GraphNodeItemOption, GraphEdgeItemOption, SERIES_TYPE_GRAPH } from './GraphSeries';
-import { CoordinateSystem } from '../../coord/CoordinateSystem';
-import View from '../../coord/View';
+import GraphSeriesModel, {
+    GraphNodeItemOption, GraphEdgeItemOption, SERIES_TYPE_GRAPH
+} from './GraphSeries';
+import View, {
+    applyViewCoordSysTransToElement,
+    getOwnRoamViewCoordSys,
+    VIEW_COORD_SYS_TRANS_OVERALL,
+    viewCoordSysCopyOverallMatrix,
+} from '../../coord/View';
 import Symbol from '../helper/Symbol';
 import SeriesData from '../../data/SeriesData';
 import Line from '../helper/Line';
@@ -44,14 +48,12 @@ import { simpleLayoutEdge } from './simpleLayoutHelper';
 import { circularLayout, rotateNodeLabel } from './circularLayoutHelper';
 import { clone, extend } from 'zrender/src/core/util';
 import ECLinePath from '../helper/LinePath';
-import { NullUndefined } from '../../util/types';
+import { NullUndefined, RoamHostView, RoamPayload } from '../../util/types';
 import { getThumbnailBridge, ThumbnailBridge } from '../../component/helper/thumbnailBridge';
+import { ListForSymbolDraw } from '../helper/baseDraw';
 
-function isViewCoordSys(coordSys: CoordinateSystem): coordSys is View {
-    return coordSys.type === 'view';
-}
 
-class GraphView extends ChartView {
+class GraphView extends ChartView implements RoamHostView {
 
     static readonly type = SERIES_TYPE_GRAPH;
     readonly type = SERIES_TYPE_GRAPH;
@@ -60,7 +62,6 @@ class GraphView extends ChartView {
     private _lineDraw: LineDraw;
 
     private _controller: RoamController;
-    private _controllerHost: RoamControllerHost;
 
     private _firstRender: boolean;
 
@@ -82,9 +83,6 @@ class GraphView extends ChartView {
         const group = this.group;
         const mainGroup = new graphic.Group();
         this._controller = new RoamController(api.getZr());
-        this._controllerHost = {
-            target: mainGroup
-        } as RoamControllerHost;
 
         mainGroup.add(symbolDraw.group);
         mainGroup.add(lineDraw.group);
@@ -99,12 +97,13 @@ class GraphView extends ChartView {
     }
 
     render(seriesModel: GraphSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        const coordSys = seriesModel.coordinateSystem;
+        const ownCoordSys = getOwnRoamViewCoordSys(seriesModel);
         let isForceLayout = false;
 
         this._model = seriesModel;
         this._api = api;
         this._active = true;
+        const mainGroup = this._mainGroup;
 
         const thumbnailInfo = this._getThumbnailInfo();
         if (thumbnailInfo) {
@@ -113,17 +112,13 @@ class GraphView extends ChartView {
 
         const symbolDraw = this._symbolDraw;
         const lineDraw = this._lineDraw;
-        if (isViewCoordSys(coordSys)) {
-            const groupNewProp = {
-                x: coordSys.x, y: coordSys.y,
-                scaleX: coordSys.scaleX, scaleY: coordSys.scaleY
-            };
-            if (this._firstRender) {
-                this._mainGroup.attr(groupNewProp);
-            }
-            else {
-                graphic.updateProps(this._mainGroup, groupNewProp, seriesModel);
-            }
+        if (ownCoordSys) {
+            applyViewCoordSysTransToElement(
+                mainGroup,
+                VIEW_COORD_SYS_TRANS_OVERALL,
+                ownCoordSys,
+                this._firstRender ? null : seriesModel,
+            );
         }
         // Fix edge contact point with node
         adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
@@ -137,7 +132,17 @@ class GraphView extends ChartView {
 
         this._updateNodeAndLinkScale();
 
-        this._updateController(null, seriesModel, api);
+        if (ownCoordSys) {
+            updateRoamControllerSimply(
+                seriesModel,
+                api,
+                this._controller,
+                function (e, x, y) {
+                    return seriesModel.coordinateSystem.containPoint([x, y]);
+                },
+                null,
+            );
+        }
 
         clearTimeout(this._layoutTimeout);
         const forceLayout = seriesModel.forceLayout;
@@ -236,9 +241,7 @@ class GraphView extends ChartView {
 
     dispose() {
         this.remove();
-
         this._controller && this._controller.dispose();
-        this._controllerHost = null;
     }
 
     private _startForceLayoutIteration(
@@ -264,89 +267,33 @@ class GraphView extends ChartView {
         })();
     }
 
-    private _updateController(
-        clipRect: graphic.BoundingRect | NullUndefined,
+    /**
+     * @implements RoamHostView['__updateOnOwnRoam']
+     */
+    __updateOnOwnRoam(
+        payload: RoamPayload,
         seriesModel: GraphSeriesModel,
         api: ExtensionAPI
-    ) {
-        const controller = this._controller;
-        const controllerHost = this._controllerHost;
-        const coordSys = seriesModel.coordinateSystem;
-
-        if (!isViewCoordSys(coordSys)) {
-            controller.disable();
-            return;
-        }
-        controller.enable(seriesModel.get('roam'), {
-            api,
-            zInfo: {component: seriesModel},
-            triggerInfo: {
-                roamTrigger: seriesModel.get('roamTrigger'),
-                isInSelf: (e, x, y) => coordSys.containPoint([x, y]),
-                isInClip: (e, x, y) => !clipRect || clipRect.contain(x, y),
-            },
-        });
-        controllerHost.zoomLimit = seriesModel.get('scaleLimit');
-        controllerHost.zoom = coordSys.getZoom();
-
-        controller
-            .off('pan')
-            .off('zoom')
-            .on('pan', (e) => {
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'graphRoam',
-                    dx: e.dx,
-                    dy: e.dy
-                });
-            })
-            .on('zoom', (e) => {
-                api.dispatchAction({
-                    seriesId: seriesModel.id,
-                    type: 'graphRoam',
-                    zoom: e.scale,
-                    originX: e.originX,
-                    originY: e.originY
-                });
-            });
-    }
-
-    /**
-     * A performance shortcut - called by action handler to update the view directly
-     * without any data/visual processing (which are assumed to be unchanged), while
-     * ensuring consistent behavior between internal and external action triggers.
-     */
-    updateViewOnPan(
-        seriesModel: GraphSeriesModel,
-        api: ExtensionAPI,
-        params: Pick<RoamPayload, 'dx' | 'dy'>
     ): void {
-        if (!this._active) {
+        const ownCoordSys = getOwnRoamViewCoordSys(seriesModel);
+        if (!this._active || !ownCoordSys) {
             return;
         }
-        updateViewOnPan(this._controllerHost, params.dx, params.dy);
-        this._updateThumbnailWindow();
-    }
 
-    /**
-     * A performance shortcut - called by action handler to update the view directly
-     * without any data/visual processing (which are assumed to be unchanged), while
-     * ensuring consistent behavior between internal and external action triggers.
-     */
-    updateViewOnZoom(
-        seriesModel: GraphSeriesModel,
-        api: ExtensionAPI,
-        params: Pick<RoamPayload, 'zoom' | 'originX' | 'originY'>
-    ) {
-        if (!this._active) {
-            return;
+        applyViewCoordSysTransToElement(
+            this._mainGroup,
+            VIEW_COORD_SYS_TRANS_OVERALL,
+            ownCoordSys,
+            null,
+        );
+
+        if (isRoamPayloadHasZoom(payload)) {
+            this._updateNodeAndLinkScale();
+            adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
+            this._lineDraw.updateLayout();
+            // Only update label layout on zoom
+            api.updateLabelLayout();
         }
-        updateViewOnZoom(this._controllerHost, params.zoom, params.originX, params.originY);
-        this._updateNodeAndLinkScale();
-        adjustEdge(seriesModel.getGraph(), getNodeGlobalScale(seriesModel));
-        this._lineDraw.updateLayout();
-        // Only update label layout on zoom
-        api.updateLabelLayout();
         this._updateThumbnailWindow();
     }
 
@@ -408,7 +355,10 @@ class GraphView extends ChartView {
     private _updateThumbnailWindow() {
         const info = this._getThumbnailInfo();
         if (info) {
-            info.bridge.updateWindow(info.coordSys.transform, this._api);
+            info.bridge.updateWindow(
+                viewCoordSysCopyOverallMatrix(null, info.coordSys),
+                this._api
+            );
         }
     }
 
@@ -432,7 +382,7 @@ class GraphView extends ChartView {
         bridgeGroup.add(symbolGroup);
         bridgeGroup.add(lineGroup);
 
-        // TODO: reuse elemenents for performance in large graph?
+        // TODO: reuse elements for performance in large graph?
         for (let i = 0; i < symbolNodes.length; i++) {
             const node = symbolNodes[i];
             const sub = (node as graphic.Group).children()[0];
@@ -472,7 +422,7 @@ class GraphView extends ChartView {
             roamType: seriesModel.get('roam'),
             viewportRect: null,
             group: bridgeGroup,
-            targetTrans: info.coordSys.transform,
+            targetTrans: viewCoordSysCopyOverallMatrix(null, info.coordSys),
         });
     }
 }

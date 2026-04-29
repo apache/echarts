@@ -27,16 +27,16 @@
 
 import Group from 'zrender/src/graphic/Group';
 import Element, {ElementEvent, ElementTextConfig} from 'zrender/src/Element';
-import { DataFormatMixin } from '../model/mixin/dataFormat';
-import GlobalModel from '../model/Global';
-import ExtensionAPI from '../core/ExtensionAPI';
-import SeriesModel from '../model/Series';
+import type { DataFormatMixin } from '../model/mixin/dataFormat';
+import type GlobalModel from '../model/Global';
+import type ExtensionAPI from '../core/ExtensionAPI';
+import type SeriesModel from '../model/Series';
 import { createHashMap, HashMap } from 'zrender/src/core/util';
 import { TaskPlanCallbackReturn, TaskProgressParams } from '../core/task';
-import SeriesData from '../data/SeriesData';
+import type SeriesData from '../data/SeriesData';
 import { Dictionary, ElementEventName, ImageLike, TextAlign, TextVerticalAlign } from 'zrender/src/core/types';
 import { PatternObject } from 'zrender/src/graphic/Pattern';
-import { TooltipMarker } from './format';
+import type { TooltipMarker } from './format';
 import { AnimationEasing } from 'zrender/src/animation/easing';
 import { LinearGradientObject } from 'zrender/src/graphic/LinearGradient';
 import { RadialGradientObject } from 'zrender/src/graphic/RadialGradient';
@@ -45,11 +45,15 @@ import { TSpanStyleProps } from 'zrender/src/graphic/TSpan';
 import { PathStyleProps } from 'zrender/src/graphic/Path';
 import { ImageStyleProps } from 'zrender/src/graphic/Image';
 import ZRText, { TextStyleProps } from 'zrender/src/graphic/Text';
-import { Source } from '../data/Source';
-import Model from '../model/Model';
-import { DataStoreDimensionType } from '../data/DataStore';
-import { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
-import { PrimaryTimeUnit } from './time';
+import type { Source } from '../data/Source';
+import type Model from '../model/Model';
+import type { DataStoreDimensionType } from '../data/DataStore';
+import type { DimensionUserOuputEncode } from '../data/helper/dimensionHelper';
+import type { PrimaryTimeUnit } from './time';
+import type ChartView from '../view/Chart';
+import type ComponentModel from '../model/Component';
+import type View from '../coord/View';
+import type ComponentView from '../view/Component';
 
 
 // ---------------------------
@@ -111,6 +115,8 @@ export interface ComponentTypeInfo {
     main: ComponentMainType; // Never null/undefined. `''` represents absence.
     sub: ComponentSubType; // Never null/undefined. `''` represents absence.
 }
+
+export const COMPONENT_MAIN_TYPE_SERIES = 'series';
 
 export interface ECElement extends Element {
     highDownSilentOnTouch?: boolean;
@@ -184,7 +190,7 @@ export interface DownplayPayload extends Payload {
     notBlur?: boolean
 }
 
-// Payload includes override anmation info
+// Payload includes override animation info
 export interface PayloadAnimationPart {
     duration?: number
     easing?: AnimationEasing
@@ -294,7 +300,18 @@ export interface ActionInfo {
     type: string;
     // If not provided, use the same string of `type`.
     event?: string;
-    // update method.
+    // Update method. Can be:
+    //  - `ECUpdateMethodName`
+    //    - e.g., 'update'
+    //  - `ComponentMainType.ComponentSubType:ECUpdateMethodName`: (FIXME: Not a rigorous mechanism!)
+    //    Only call a specified view method directly.
+    //    - e.g., 'series:focusNodeAdjacency': (DANGEROUS!)
+    //      Call `View['focusNodeAdjacency']` method of all series or filtered if payload
+    //      `{xxxId, xxxName, xxxIndex}` is provided.
+    //    - e.g., ':updateAxisPointer': (DANGEROUS!)
+    //      Call `View['updateAxisPointer']` method of all series and components or filtered
+    //      if payload `{xxxId, xxxName, xxxIndex}` is provided.
+    // By default 'update' (i.e., EC_FULL_UPDATE).
     update?: string;
     // `ActionHandler` is designed to do nothing other than modify models.
     action?: ActionHandler;
@@ -308,6 +325,8 @@ export interface ActionInfo {
     // When `refineEvent` is provided, still publish the auto generated "event for connect" to users.
     // Only for backward compatibility, do not use it in future actions and events.
     publishNonRefinedEvent?: boolean;
+    // Experimental - may change in future; only internal usage is allowed.
+    componentQuery?: boolean;
 }
 export interface ActionHandler {
     (payload: Payload, ecModel: GlobalModel, api: ExtensionAPI): void | ECEventData;
@@ -319,6 +338,10 @@ export interface ActionRefineEvent {
         eventContent: ECActionRefinedEventContent<ECActionRefinedEvent>
     }
 }
+export type ActionUpdateComponentQuery = {
+    mainType: ComponentMainType
+    indexList: number[]
+}[];
 
 export interface OptionPreprocessor {
     (option: ECUnitOption, isTheme: boolean): void
@@ -354,7 +377,7 @@ export interface StageHandler {
 
     /**
      * Indicate that the task will only be piped in the pipeline of the returned series.
-     * It is called in EC_PREPARE_UPDATE, before `CoordinateSystem['create']`.
+     * It is called in EC_PREPARE, before `CoordinateSystem['create']`.
      * It is available for both `reset` and `overallReset`.
      */
     getTargetSeries?: (ecModel: GlobalModel, api: ExtensionAPI) => HashMap<SeriesModel>;
@@ -397,7 +420,8 @@ export interface StageHandler {
      *  and `reset` of downsteams tasks may also be called in EC_PROGRESSIVE_CYCLE.
      *  But in this case, `CoordinateSystem#create` and `CoordinateSystem#update` are not called.
      *  Only lifecycle like `coordsys:aftercreate` can be ensured to be only called in EC_FULL_UPDATE
-     *  of EC_MAIN_CYCLE, but not in EC_PROGRESSIVE_CYCLE and EC_APPEND_DATA_CYCLE.
+     *  of EC_FULL_UPDATE_CYCLE and EC_PARTIAL_UPDATE_CYCLE, but not in EC_PROGRESSIVE_CYCLE and
+     *  EC_APPEND_DATA_CYCLE.
      */
     reset?: StageHandlerReset;
 
@@ -1154,18 +1178,26 @@ export interface RoamOptionMixin {
      */
     roamTrigger?: 'global' | 'selfRect' | NullUndefined
     /**
-     * Current center position.
+     * @see VIEW_COORD_SYS_CENTER_ZOOM_DEFINITION
      */
     center?: (number | string)[]
     /**
-     * Current zoom level. Default is 1
+     * Current transformation scale. Default is 1.
+     * @see VIEW_COORD_SYS_CENTER_ZOOM_DEFINITION
      */
     zoom?: number
-
+    /**
+     * Limit of `zoom`. The name is inconsistent for historical reason.
+     */
     scaleLimit?: {
         min?: number
         max?: number
     }
+
+    /**
+     * Symbol size scale ratio on roaming.
+     */
+    nodeScaleRatio?: number
 }
 
 export interface PreserveAspectMixin {
@@ -2139,3 +2171,41 @@ export interface AriaOption extends AriaLabelOption {
 export interface AriaOptionMixin {
     aria?: AriaOption
 }
+
+
+export interface RoamPayload extends Payload {
+    type: `${string}${typeof ROAM_ACTION_TYPE_SUFFIX}`
+    dx: number
+    dy: number
+    // This is a delta zoom, not an absolute zoom.
+    zoom: number
+    originX: number
+    originY: number
+}
+
+export const ROAM_ACTION_TYPE_SUFFIX = 'Roam';
+
+/**
+ * @usage class Xxx implements RoamHostModel {...}
+ */
+export interface RoamHostModel {
+    // Can return a VIEW_COORD_SYS only if the it is owned by this series or component.
+    // For example, if a series graph lays out on a separate geo component, do not return;
+    // Otherwise, graph can return if it has an exclusive VIEW_COORD_SYS.
+    __ownRoamView: () => View | NullUndefined;
+}
+export type RoamHostComponentOrSeries = ComponentModel<ComponentOption & RoamOptionMixin> & RoamHostModel;
+
+export interface RoamHostView {
+    /**
+     * A performance shortcut - called by action handler to update the view directly
+     * without any data/visual processing (which are assumed to be unchanged), while
+     * ensuring consistent behavior between internal and external action triggers.
+     *
+     * Only "own coordinate system" is updated here. Dependent series/components should
+     * be updated in `ChartView['updateTransform']` or `ComponentView['updateTransform']`.
+     */
+    __updateOnOwnRoam(payload: RoamPayload, componentOrSeries: ComponentModel, api: ExtensionAPI): void
+}
+
+export type ChartComponentRoamHostView = (ChartView | ComponentView) & RoamHostView;

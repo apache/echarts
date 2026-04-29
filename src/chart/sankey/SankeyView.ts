@@ -19,7 +19,7 @@
 
 import * as graphic from '../../util/graphic';
 import { enterEmphasis, leaveEmphasis, toggleHoverEmphasis, setStatesStylesFromModel } from '../../util/states';
-import { LayoutOrient, ECElement } from '../../util/types';
+import { LayoutOrient, ECElement, RoamHostView, RoamPayload } from '../../util/types';
 import type { PathProps, PathStyleProps } from 'zrender/src/graphic/Path';
 import SankeySeriesModel, { SankeyEdgeItemOption, SankeyNodeItemOption, SERIES_TYPE_SANKEY } from './SankeySeries';
 import ChartView from '../../view/Chart';
@@ -32,8 +32,11 @@ import { getECData } from '../../util/innerStore';
 import { isString, retrieve3 } from 'zrender/src/core/util';
 import type { GraphEdge } from '../../data/Graph';
 import RoamController from '../../component/helper/RoamController';
-import * as roamHelper from '../../component/helper/roamHelper';
-import View from '../../coord/View';
+import { applyViewCoordSysTransToElement, VIEW_COORD_SYS_TRANS_OVERALL } from '../../coord/View';
+import {
+    createIsInSelfByPointerCheckerEl,
+    createViewCoordSysSimply, updateRoamControllerSimply
+} from '../../component/helper/roamHelper';
 
 class SankeyPathShape {
     x1 = 0;
@@ -103,32 +106,26 @@ class SankeyPath extends graphic.Path<SankeyPathProps> {
     }
 }
 
-class SankeyView extends ChartView {
+class SankeyView extends ChartView implements RoamHostView {
 
     static readonly type = SERIES_TYPE_SANKEY;
     readonly type = SERIES_TYPE_SANKEY;
 
-    private _model: SankeySeriesModel;
     private _mainGroup = new graphic.Group();
-    private _focusAdjacencyDisabled = false;
+    // private _focusAdjacencyDisabled = false;
 
     private _data: SeriesData;
 
     private _controller: RoamController;
-    private _controllerHost: roamHelper.RoamControllerHost;
+    private _firstRender: boolean;
 
     init(ecModel: GlobalModel, api: ExtensionAPI): void {
         this._controller = new RoamController(api.getZr());
-
-        this._controllerHost = {
-            target: this.group
-        } as roamHelper.RoamControllerHost;
-
         this.group.add(this._mainGroup);
+        this._firstRender = true;
     }
 
     render(seriesModel: SankeySeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
-        const sankeyView = this;
         const graph = seriesModel.getGraph();
         const mainGroup = this._mainGroup;
         const layoutInfo = seriesModel.layoutInfo;
@@ -140,15 +137,20 @@ class SankeyView extends ChartView {
         const edgeData = seriesModel.getData('edge');
         const orient = seriesModel.get('orient');
 
-        this._model = seriesModel;
-
         mainGroup.removeAll();
 
         mainGroup.x = layoutInfo.x;
         mainGroup.y = layoutInfo.y;
 
         this._updateViewCoordSys(seriesModel, api);
-        roamHelper.updateController(seriesModel, api, mainGroup, this._controller, this._controllerHost, null);
+
+        updateRoamControllerSimply(
+            seriesModel,
+            api,
+            this._controller,
+            createIsInSelfByPointerCheckerEl(mainGroup),
+            null,
+        );
 
         // generate a bezire Curve for each edge
         graph.eachEdge(function (edge) {
@@ -335,7 +337,7 @@ class SankeyView extends ChartView {
             const itemModel = nodeData.getItemModel<SankeyNodeItemOption>(dataIndex);
             if (itemModel.get('draggable')) {
                 el.drift = function (this: typeof el, dx, dy) {
-                    sankeyView._focusAdjacencyDisabled = true;
+                    // sankeyView._focusAdjacencyDisabled = true;
                     this.shape.x += dx;
                     this.shape.y += dy;
                     this.dirty();
@@ -347,9 +349,9 @@ class SankeyView extends ChartView {
                         localY: this.shape.y / height
                     });
                 };
-                el.ondragend = function () {
-                    sankeyView._focusAdjacencyDisabled = false;
-                };
+                // el.ondragend = function () {
+                //     sankeyView._focusAdjacencyDisabled = false;
+                // };
                 el.draggable = true;
                 el.cursor = 'move';
             }
@@ -362,32 +364,42 @@ class SankeyView extends ChartView {
         }
 
         this._data = seriesModel.getData();
+        this._firstRender = false;
+    }
+
+    __updateOnOwnRoam(
+        payload: RoamPayload,
+        seriesModel: SankeySeriesModel,
+        api: ExtensionAPI
+    ): void {
+        applyViewCoordSysTransToElement(
+            this.group,
+            VIEW_COORD_SYS_TRANS_OVERALL,
+            seriesModel.coordinateSystem,
+            null
+        );
     }
 
     dispose() {
         this._controller && this._controller.dispose();
-        this._controllerHost = null;
     }
 
     private _updateViewCoordSys(seriesModel: SankeySeriesModel, api: ExtensionAPI) {
         const layoutInfo = seriesModel.layoutInfo;
-        const width = layoutInfo.width;
-        const height = layoutInfo.height;
 
-        const viewCoordSys = seriesModel.coordinateSystem = new View(null, {api, ecModel: seriesModel.ecModel});
-        viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
+        const ownCoordSys = seriesModel.coordinateSystem = createViewCoordSysSimply(
+            seriesModel,
+            api,
+            layoutInfo.x, layoutInfo.y, layoutInfo.width, layoutInfo.height
+            // 0, 0, layoutInfo.width, layoutInfo.height
+        );
 
-        viewCoordSys.setBoundingRect(0, 0, width, height);
-
-        viewCoordSys.setCenter(seriesModel.get('center'));
-        viewCoordSys.setZoom(seriesModel.get('zoom'));
-
-        this._controllerHost.target.attr({
-            x: viewCoordSys.x,
-            y: viewCoordSys.y,
-            scaleX: viewCoordSys.scaleX,
-            scaleY: viewCoordSys.scaleY
-        });
+        applyViewCoordSysTransToElement(
+            this.group,
+            VIEW_COORD_SYS_TRANS_OVERALL,
+            ownCoordSys,
+            this._firstRender ? null : seriesModel,
+        );
     }
 }
 

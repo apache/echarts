@@ -216,7 +216,7 @@ function animateOrSetProps<Props>(
  *         position: [100, 100]
  *     }, seriesModel, function () { console.log('Animation done!'); });
  */
- function updateProps<Props extends ElementProps>(
+function updateProps<Props extends ElementProps>(
     el: Element<Props>,
     props: Props,
     // TODO: TYPE AnimatableModel

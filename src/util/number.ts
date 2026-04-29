@@ -129,7 +129,11 @@ export const parsePercent = parsePositionOption;
  * @see {parsePositionSizeOption} and also accept a string preset.
  * @see {PositionSizeOption}
  */
-export function parsePositionOption(option: unknown, percentBase: number, percentOffset?: number): number {
+export function parsePositionOption(
+    option: unknown,
+    percentBase: number,
+    percentOffset?: number
+): number {
     switch (option) {
         case 'center':
         case 'middle':
@@ -148,20 +152,37 @@ export function parsePositionOption(option: unknown, percentBase: number, percen
 }
 
 /**
- * Accept number, or numeric stirng (`'123'`), or percentage ('100%'), as x/y/width/height pixel number.
+ * Accept number, or numeric string (`'123'`), or percentage ('100%'), as x/y/width/height pixel number.
  * If null/undefined or invalid, return NaN.
  * (But allow JS type coercion (`+option`) due to backward compatibility)
  * @see {PositionSizeOption}
  */
-export function parsePositionSizeOption(option: unknown, percentBase: number, percentOffset?: number): number {
+export function parsePositionSizeOption(
+    option: unknown,
+    percentBase: number,
+    // Typical usage of `percentOffset`: percent value is based on an specific rect rather than canvas viewport:
+    //  `parsePercent(percentOrAbsoluteLeft, rect.width, rect.x)`
+    percentOffset?: number
+): number {
     if (zrUtil.isString(option)) {
-        if (_trim(option).match(/%$/)) {
+        if (isOptionStringPercent(option)) {
             return parseFloat(option) / 100 * percentBase + (percentOffset || 0);
         }
         return parseFloat(option);
     }
     // Allow flexible input due to backward compatibility.
     return option == null ? NaN : +option;
+}
+
+/**
+ * Perserve the same rule with `parsePositionSizeOption`.
+ */
+export function isPositionSizeOptionPercent(option: unknown) {
+    return zrUtil.isString(option) && isOptionStringPercent(option);
+}
+
+function isOptionStringPercent(option: string): boolean {
+    return !!_trim(option).match(/%$/);
 }
 
 /**

@@ -641,7 +641,7 @@ echarts.use([${seriesImportName}]);`);
      *     {mainType: 'series',
      *     filter: function (model, index) {...}}
      * );
-     * // result like [component0, componnet1, ...]
+     * // result like [component0, component1, ...]
      */
     findComponents(condition: QueryConditionKindA): ComponentModel[] {
         const query = condition.query;
@@ -959,21 +959,25 @@ echarts.use([${seriesImportName}]);`);
 
 
 /**
- * @param condition.mainType Mandatory.
- * @param condition.subType Optional.
- * @param condition.query like {xxxIndex, xxxId, xxxName},
- *        where xxx is mainType.
- *        If query attribute is null/undefined or has no index/id/name,
- *        do not filtering by query conditions, which is convenient for
- *        no-payload situations or when target of action is global.
- * @param condition.filter parameter: component, return boolean.
+ * Either `mainType` or `query` should be provided.
+ * A valid `query` (containing either xxxId, xxxName or xxxIndex) takes precedence
+ * if `query` and `mainType` are both provided.
+ * `query` is like `{xxxIndex, xxxId, xxxName}`,
+ *      where xxx is mainType.
+ *      If query attribute is null/undefined or has no index/id/name,
+ *      do not filtering by query conditions, which is convenient for
+ *      no-payload situations or when target of action is global.
+ * `subType` and `filter` provide further filtering to the above result.
+ * `subType` is determined by `hasOwnProperty`.
+ *
+ * @see {makeQueryConditionKindA}
  */
 export interface QueryConditionKindA {
-    mainType: ComponentMainType;
-    subType?: ComponentSubType;
     query?: {
         [k: string]: number | number[] | string | string[]
     };
+    mainType?: ComponentMainType;
+    subType?: ComponentSubType;
     filter?: (cmpt: ComponentModel) => boolean;
 }
 

@@ -31,7 +31,7 @@ export interface ThumbnailBridgeRendered {
     targetTrans: ThumbnailTargetTransformRawToViewport;
     z2Range: {min: number, max: number};
     viewportRect: BoundingRect;
-    // Use version becuase:
+    // Use version because:
     //  - `renderContent` may be called asynchronously by graph force layout.
     //  - The order of `updateContent` and `ComponentView['render']` is not guaranteed.
     renderVersion: number;
@@ -51,7 +51,7 @@ export class ThumbnailBridgeImpl implements ThumbnailBridge {
     }
 
     reset(api: ExtensionAPI) {
-        this._renderVersion = api.getECMainCycleVersion();
+        this._renderVersion = api.getECUpdateCycleVersion();
     }
 
     renderContent(opt: {

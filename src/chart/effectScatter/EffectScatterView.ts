@@ -27,6 +27,8 @@ import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import EffectScatterSeriesModel from './EffectScatterSeries';
 import { StageHandlerProgressExecutor } from '../../util/types';
+import { createCoordSysClipAreaSimply } from '../helper/createClipPathFromCoordSys';
+import { SymbolDrawUpdateOpt } from '../helper/baseDraw';
 
 class EffectScatterView extends ChartView {
     static readonly type = 'effectScatter';
@@ -41,14 +43,8 @@ class EffectScatterView extends ChartView {
     render(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
         const data = seriesModel.getData();
         const effectSymbolDraw = this._symbolDraw;
-        effectSymbolDraw.updateData(data, {clipShape: this._getClipShape(seriesModel)});
+        effectSymbolDraw.updateData(data, createSymbolDrawOpt(seriesModel));
         this.group.add(effectSymbolDraw.group);
-    }
-
-    _getClipShape(seriesModel: EffectScatterSeriesModel) {
-        const coordSys = seriesModel.coordinateSystem;
-        const clipArea = coordSys && coordSys.getArea && coordSys.getArea();
-        return seriesModel.get('clip', true) ? clipArea : null;
     }
 
     updateTransform(seriesModel: EffectScatterSeriesModel, ecModel: GlobalModel, api: ExtensionAPI) {
@@ -65,7 +61,7 @@ class EffectScatterView extends ChartView {
             }, data);
         }
 
-        this._symbolDraw.updateLayout();
+        this._symbolDraw.updateLayout(createSymbolDrawOpt(seriesModel));
     }
 
     _updateGroupTransform(seriesModel: EffectScatterSeriesModel) {
@@ -79,6 +75,12 @@ class EffectScatterView extends ChartView {
     remove(ecModel: GlobalModel, api: ExtensionAPI) {
         this._symbolDraw && this._symbolDraw.remove(true);
     }
-
 }
+
+function createSymbolDrawOpt(seriesModel: EffectScatterSeriesModel): SymbolDrawUpdateOpt {
+    return {
+        clipShape: createCoordSysClipAreaSimply(seriesModel)
+    };
+}
+
 export default EffectScatterView;

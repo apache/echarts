@@ -408,8 +408,8 @@ function performStatisticsForRecord(
     }
     if (!ecPrepareCacheMiss && ecPrepareLiPosMinGap != null) {
         // Consider the fact in practice:
-        //  - Series data can only be changed in EC_PREPARE_UPDATE.
-        //  - The relationship between series and axes can only be changed in EC_PREPARE_UPDATE and
+        //  - Series data can only be changed in EC_PREPARE.
+        //  - The relationship between series and axes can only be changed in EC_PREPARE and
         //    SERIES_FILTER.
         //  (See EC_CYCLE for more info)
         // Therefore, some statistics results can be cached in `GlobalModelCachePerECPrepare` to avoid

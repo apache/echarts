@@ -40,7 +40,7 @@ import Model from '../../model/Model';
 import { TreemapRenderPayload, TreemapMovePayload, TreemapZoomToNodePayload } from './treemapAction';
 import { initExtentForUnion } from '../../util/model';
 import { RoamOptionMixin } from '../../util/types';
-import { clampByZoomLimit } from '../../component/helper/roamHelper';
+import { clampByZoomLimit } from '../../coord/View';
 
 const mathMax = Math.max;
 const mathMin = Math.min;

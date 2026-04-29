@@ -1,5 +1,13 @@
 [
   {
+    "link": "",
+    "comment": "Modified to use a decal pool per echarts instance rather than globally.",
+    "type": "Bug Fixing",
+    "markedBy": "100pah",
+    "lastVersion": "6.0.0",
+    "markTime": 1777393658132
+  },
+  {
     "link": "https://github.com/apache/echarts/pull/20865",
     "comment": "Sunburst use the first color for the \"Back Button\" after drilling down so it starts with the second theme color. v6 fixed this problem.",
     "type": "Bug Fixing",

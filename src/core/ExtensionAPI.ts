@@ -27,6 +27,7 @@ import type ComponentView from '../view/Component';
 import type ChartView from '../view/Chart';
 import type SeriesModel from '../model/Series';
 import type GlobalModel from '../model/Global';
+import { COMPONENT_MAIN_TYPE_SERIES } from '../util/types';
 
 const availableMethods: (keyof EChartsType)[] = [
     'getDom',
@@ -72,7 +73,8 @@ abstract class ExtensionAPI {
     abstract getViewOfComponentModel(componentModel: ComponentModel): ComponentView;
     abstract getViewOfSeriesModel(seriesModel: SeriesModel): ChartView;
     abstract getModel(): GlobalModel;
-    abstract getECMainCycleVersion(): number;
+    // @return Never be null/undefined
+    abstract getECUpdateCycleVersion(): number;
     /**
      * PENDING: a temporary method - may be refactored.
      * Whether a "threshold hoverLayer" is used.
@@ -81,6 +83,15 @@ abstract class ExtensionAPI {
      * but this method does not need to cover this case.
      */
     abstract usingTHL(): boolean;
+}
+
+export function getViewOfComponentOrSeries(
+    api: ExtensionAPI,
+    componentOrSeries: ComponentModel
+): ChartView | ComponentView {
+    return componentOrSeries.mainType === COMPONENT_MAIN_TYPE_SERIES
+        ? api.getViewOfSeriesModel(componentOrSeries as SeriesModel)
+        : api.getViewOfComponentModel(componentOrSeries);
 }
 
 export default ExtensionAPI;

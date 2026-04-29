@@ -21,7 +21,7 @@ import ExtensionAPI from '../../core/ExtensionAPI';
 import GlobalModel from '../../model/Global';
 import ComponentView from '../../view/Component';
 import { ThumbnailModel } from './ThumbnailModel';
-import { NullUndefined, RoamOptionMixin } from '../../util/types';
+import { NullUndefined, RoamOptionMixin, RoamPayload } from '../../util/types';
 import BoundingRect from 'zrender/src/core/BoundingRect';
 import * as matrix from 'zrender/src/core/matrix';
 import RoamController, { RoamEventParams } from '../helper/RoamController';
@@ -30,10 +30,13 @@ import { createBoxLayoutReference, getBoxLayoutParams, getLayoutRect } from '../
 import { expandOrShrinkRect, Rect, Group, traverseUpdateZ, retrieveZInfo } from '../../util/graphic';
 import { RectShape } from 'zrender/src/graphic/shape/Rect';
 import { applyTransform } from 'zrender/src/core/vector';
-import View from '../../coord/View';
+import View, {
+    VIEW_COORD_SYS_TRANS_RAW, viewCoordSysCopyTrans,
+    viewCoordSysSetBoundingRect, viewCoordSysSetViewRect,
+    viewCoordSysCopyOverallMatrix
+} from '../../coord/View';
 import { bind, defaults, extend } from 'zrender/src/core/util';
 import type ComponentModel from '../../model/Component';
-import { RoamPayload } from '../helper/roamHelper';
 import { ThumbnailBridgeRendered } from './ThumbnailBridgeImpl';
 
 
@@ -70,7 +73,7 @@ export class ThumbnailView extends ComponentView {
             return;
         }
 
-        this._renderVersion = api.getECMainCycleVersion();
+        this._renderVersion = api.getECUpdateCycleVersion();
         const group = this.group;
 
         group.removeAll();
@@ -159,8 +162,8 @@ export class ThumbnailView extends ComponentView {
 
         this._bgRect.z2 = bridgeRendered.z2Range.min - 10;
 
-        coordSys.setBoundingRect(bridgeRect.x, bridgeRect.y, bridgeRect.width, bridgeRect.height);
-        // Use `getLayoutRect` is just to find an approperiate rect in thumbnail.
+        viewCoordSysSetBoundingRect(coordSys, bridgeRect.x, bridgeRect.y, bridgeRect.width, bridgeRect.height);
+        // Use `getLayoutRect` is just to find an appropriate rect in thumbnail.
         const viewRect = getLayoutRect(
             {
                 left: 'center',
@@ -169,8 +172,9 @@ export class ThumbnailView extends ComponentView {
             },
             contentRect
         );
-        coordSys.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
-        bridgeGroup.attr(coordSys.getTransformInfo().raw);
+        viewCoordSysSetViewRect(coordSys, viewRect.x, viewRect.y, viewRect.width, viewRect.height);
+        viewCoordSysCopyTrans(bridgeGroup, coordSys, VIEW_COORD_SYS_TRANS_RAW);
+        bridgeGroup.dirty();
 
         this._windowRect.z2 = bridgeRendered.z2Range.max + 10;
 
@@ -198,7 +202,7 @@ export class ThumbnailView extends ComponentView {
         }
 
         const invTargetTrans = matrix.invert([], bridgeRendered.targetTrans);
-        const transTargetToThis = matrix.mul([], this._coordSys.transform, invTargetTrans);
+        const transTargetToThis = matrix.mul([], viewCoordSysCopyOverallMatrix(null, this._coordSys), invTargetTrans);
         this._transThisToTarget = matrix.invert([], transTargetToThis);
 
         let viewportRect = bridgeRendered.viewportRect;
@@ -242,6 +246,10 @@ export class ThumbnailView extends ComponentView {
             .off('zoom')
             .on('pan', bind(this._onPan, this))
             .on('zoom', bind(this._onZoom, this));
+        // PENDING: Currently roaming animation (when roaming args are changed;
+        // e.g., `center` and `zoom` are changed) is not supported in thumbnail.
+        // Animation should be able to be interrupted on pan and zoom, and synchronize
+        // back to the target. See VIEW_COORD_SYS_ANIMATION.
     }
 
     private _onPan(event: RoamEventParams['pan']): void {

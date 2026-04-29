@@ -28,9 +28,10 @@ import {createSymbol} from '../../util/symbol';
 import * as vec2 from 'zrender/src/core/vector';
 import * as curveUtil from 'zrender/src/core/curve';
 import type SeriesData from '../../data/SeriesData';
-import { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
+import { LineDrawSeriesScope } from './LineDraw';
 import Model from '../../model/Model';
 import { ColorString } from '../../util/types';
+import { LineDrawModelOption } from './baseDraw';
 
 export type ECSymbolOnEffectLine = ReturnType<typeof createSymbol> & {
     __t: number

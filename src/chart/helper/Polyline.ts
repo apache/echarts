@@ -19,9 +19,10 @@
 
 import * as graphic from '../../util/graphic';
 import { toggleHoverEmphasis } from '../../util/states';
-import type { LineDrawSeriesScope, LineDrawModelOption } from './LineDraw';
+import type { LineDrawSeriesScope } from './LineDraw';
 import type SeriesData from '../../data/SeriesData';
 import { BlurScope, DefaultEmphasisFocus } from '../../util/types';
+import { LineDrawModelOption } from './baseDraw';
 
 class Polyline extends graphic.Group {
     constructor(lineData: SeriesData, idx: number, seriesScope: LineDrawSeriesScope) {
@@ -88,6 +89,7 @@ class Polyline extends graphic.Group {
 
     updateLayout(lineData: SeriesData, idx: number) {
         const polyline = this.childAt(0) as graphic.Polyline;
+        polyline.stopAnimation();
         polyline.setShape('points', lineData.getItemLayout(idx));
     };
 

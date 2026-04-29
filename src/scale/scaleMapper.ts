@@ -153,7 +153,7 @@ export type ScaleMapperTransformInOpt =
  *
  *
  * @tutorial [SCALE_EXTENT_CONSTRUCTION]:
- *  The full construction processing of the scale extent in EC_MAIN_CYCLE:
+ *  The full construction processing of the scale extent in EC_FULL_UPDATE_CYCLE:
  *  - step#1. At `CoordinateSystem#create` stage, requirements of collecting series data extents are
  *            committed to `associateSeriesWithAxis`, and `Scale` instances are created.
  *  - step#2. Call `scaleRawExtentInfoCreate` to really collect series data extent and create
@@ -226,7 +226,7 @@ export interface ScaleMapperGeneric<This> {
 
     /**
      * [NOTICE]:
-     *  In EC_MAIN_CYCLE, scale extent is finally determined at `coordSys#update` stage.
+     *  In EC_FULL_UPDATE_CYCLE, scale extent is finally determined at `coordSys#update` stage.
      *
      * Get a clone of the scale extent.
      * An extent is always in an increase order.

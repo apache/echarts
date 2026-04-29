@@ -41,6 +41,8 @@ import {
     ParsedModelFinderKnown,
     initExtentForUnion
 } from '../../util/model';
+import { viewCoordSysCopyBoundingRect, viewCoordSysCopyOverallMatrix } from '../../coord/View';
+import { boundingRectApplyTransform } from 'zrender/src/core/BoundingRect';
 
 type COORD_CONVERTS_INDEX = 0 | 1;
 
@@ -399,10 +401,9 @@ const panelRectBuilders: Record<BrushTargetBuilderKey, PanelRectBuilder> = {
     },
 
     geo: function (this: BrushTargetInfoGeo) {
-        const coordSys = this.coordSys;
-        const rect = coordSys.getBoundingRect().clone();
-        // geo roam and zoom transform
-        rect.applyTransform(graphic.getTransform(coordSys));
+        const viewCoordSys = this.coordSys.view;
+        const rect = viewCoordSysCopyBoundingRect(null, viewCoordSys);
+        boundingRectApplyTransform(rect, rect, viewCoordSysCopyOverallMatrix(null, viewCoordSys));
         return rect;
     }
 };

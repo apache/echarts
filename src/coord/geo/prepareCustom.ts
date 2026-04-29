@@ -19,6 +19,7 @@
 
 import * as zrUtil from 'zrender/src/core/util';
 import Geo from './Geo';
+import { viewCoordSysGetZoomOption } from '../View';
 
 function dataToCoordSize(this: Geo, dataSize: number[], dataItem: number[]): number[] {
     dataItem = dataItem || [0, 0];
@@ -35,7 +36,8 @@ function dataToCoordSize(this: Geo, dataSize: number[], dataItem: number[]): num
 }
 
 export default function geoPrepareCustom(coordSys: Geo) {
-    const rect = coordSys.getBoundingRect();
+    const viewCoordSys = coordSys.view;
+    const rect = viewCoordSys.getBoundingRect();
     return {
         coordSys: {
             type: 'geo',
@@ -43,7 +45,7 @@ export default function geoPrepareCustom(coordSys: Geo) {
             y: rect.y,
             width: rect.width,
             height: rect.height,
-            zoom: coordSys.getZoom()
+            zoom: viewCoordSysGetZoomOption(viewCoordSys),
         },
         api: {
             coord: function (data: number[]): number[] {
