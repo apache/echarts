@@ -19,6 +19,7 @@
 
 import DataZoomModel, {DataZoomOption} from './DataZoomModel';
 import { inheritDefaultOption } from '../../util/component';
+import { WheelAxisType } from '../helper/RoamController';
 
 export interface InsideDataZoomOption extends DataZoomOption {
 
@@ -39,6 +40,29 @@ export interface InsideDataZoomOption extends DataZoomOption {
     moveOnMouseWheel?: boolean | 'shift' | 'ctrl' | 'alt'
 
     preventDefaultMouseMove?: boolean
+
+    /**
+     * Restricts the pan (triggered by `moveOnMouseWheel`) to a single
+     * wheel axis. Has no effect on zoom — see `zoomOnMouseWheelAxis`.
+     *
+     * - Omitted (default): either wheel axis can drive the pan, preserving
+     *   the pre-existing single-`scrollDelta` behavior.
+     * - `'horizontal'`: only `deltaX` drives the pan.
+     * - `'vertical'`: only `deltaY` drives the pan.
+     */
+    moveOnMouseWheelAxis?: WheelAxisType
+
+    /**
+     * Restricts the zoom (triggered by `zoomOnMouseWheel`) to a single
+     * wheel axis. Has no effect on pan — see `moveOnMouseWheelAxis`.
+     *
+     * - Omitted (default): any wheel direction triggers zoom, matching the
+     *   pre-existing behavior where zrender's collapsed `wheelDelta` drives
+     *   the scale factor.
+     * - `'horizontal'`: only `deltaX` drives the zoom.
+     * - `'vertical'`: only `deltaY` drives the zoom.
+     */
+    zoomOnMouseWheelAxis?: WheelAxisType
 
     /**
      * Inside dataZoom don't support textStyle

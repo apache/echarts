@@ -23,7 +23,7 @@
 // pan or zoom, only dispatch one action for those data zoom
 // components.
 
-import RoamController, { RoamOption } from '../../component/helper/RoamController';
+import RoamController, { RoamOption, WheelAxisType } from '../../component/helper/RoamController';
 import * as throttleUtil from '../../util/throttle';
 import { makeInner } from '../../util/model';
 import { Dictionary, RoamOptionMixin, ZRElementEvent } from '../../util/types';
@@ -198,6 +198,10 @@ function mergeControllerParams(
         'type_undefined': -1
     };
     let preventDefaultMouseMove = true;
+    let zoomOnMouseWheelEverActive = false;
+    let moveOnMouseWheelEverActive = false;
+    let zoomOnMouseWheelAxis: WheelAxisType | undefined;
+    let moveOnMouseWheelAxis: WheelAxisType | undefined;
 
     dataZoomInfoMap.each(function (dataZoomInfo) {
         const dataZoomModel = dataZoomInfo.model;
@@ -214,17 +218,41 @@ function mergeControllerParams(
         // users may be confused why it does not work when multiple insideZooms exist.
         preventDefaultMouseMove = preventDefaultMouseMove
             && dataZoomModel.get('preventDefaultMouseMove', true);
+
+        if (dataZoomModel.get('zoomOnMouseWheel', true) !== false) {
+            const axis = dataZoomModel.get('zoomOnMouseWheelAxis', true);
+            if (!zoomOnMouseWheelEverActive) {
+                zoomOnMouseWheelAxis = axis;
+            }
+            else if (zoomOnMouseWheelAxis !== axis) {
+                zoomOnMouseWheelAxis = undefined;
+            }
+            zoomOnMouseWheelEverActive = true;
+        }
+        if (dataZoomModel.get('moveOnMouseWheel', true) !== false) {
+            const axis = dataZoomModel.get('moveOnMouseWheelAxis', true);
+            if (!moveOnMouseWheelEverActive) {
+                moveOnMouseWheelAxis = axis;
+            }
+            else if (moveOnMouseWheelAxis !== axis) {
+                moveOnMouseWheelAxis = undefined;
+            }
+            moveOnMouseWheelEverActive = true;
+        }
     });
 
     return {
         controlType: controlType,
         opt: {
-            // RoamController will enable all of these functionalities,
-            // and the final behavior is determined by its event listener
-            // provided by each inside zoom.
-            zoomOnMouseWheel: true,
+            // RoamController enables these functionalities if any inside
+            // zoom opts in, and the final behavior (including modifier
+            // specifics) is determined by its event listener provided by
+            // each inside zoom.
+            zoomOnMouseWheel: zoomOnMouseWheelEverActive,
             moveOnMouseMove: true,
-            moveOnMouseWheel: true,
+            moveOnMouseWheel: moveOnMouseWheelEverActive,
+            zoomOnMouseWheelAxis: zoomOnMouseWheelAxis,
+            moveOnMouseWheelAxis: moveOnMouseWheelAxis,
             preventDefaultMouseMove: !!preventDefaultMouseMove,
             api,
             zInfo: {

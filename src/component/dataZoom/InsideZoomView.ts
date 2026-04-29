@@ -24,7 +24,7 @@ import InsideZoomModel from './InsideZoomModel';
 import GlobalModel from '../../model/Global';
 import ExtensionAPI from '../../core/ExtensionAPI';
 import { bind } from 'zrender/src/core/util';
-import RoamController, {RoamEventParams} from '../helper/RoamController';
+import RoamController, {RoamEventParams, WheelAxisType} from '../helper/RoamController';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
 import Polar from '../../coord/polar/Polar';
 import SingleAxis from '../../coord/single/SingleAxis';
@@ -104,6 +104,14 @@ const getRangeHandlers: {
             return;
         }
 
+        // `zoomOnMouseWheelAxis` restricts the zoom to one wheel axis;
+        // unset falls back to the combined `scale` for backward
+        // compatibility.
+        const effectiveScale = pickWheelAxisValue(
+            (this.dataZoomModel as InsideZoomModel).get('zoomOnMouseWheelAxis', true),
+            e.scaleX, e.scaleY, e.scale
+        );
+
         const directionInfo = getDirectionInfo[coordSysMainType](
             null, [e.originX, e.originY], axisModel, controller, coordSysInfo
         );
@@ -113,7 +121,7 @@ const getRangeHandlers: {
                 : (directionInfo.pixel - directionInfo.pixelStart)
             ) / directionInfo.pixelLength * (range[1] - range[0]) + range[0];
 
-        const scale = Math.max(1 / e.scale, 0);
+        const scale = Math.max(1 / effectiveScale, 0);
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
         range[1] = (range[1] - percentPoint) * scale + percentPoint;
 
@@ -140,19 +148,55 @@ const getRangeHandlers: {
     }),
 
     scrollMove: makeMover(
-        function (range, axisModel, coordSysInfo, coordSysMainType, controller, e: RoamEventParams['scrollMove']
+        function (
+            this: InsideZoomView,
+            range, axisModel, coordSysInfo, coordSysMainType, controller,
+            e: RoamEventParams['scrollMove']
     ) {
-        const directionInfo = getDirectionInfo[coordSysMainType](
-            [0, 0], [e.scrollDelta, e.scrollDelta], axisModel, controller, coordSysInfo
+        // `moveOnMouseWheelAxis` restricts the pan to one wheel axis;
+        // unset falls back to the combined `scrollDelta` for backward
+        // compatibility.
+        const effectiveDelta = pickWheelAxisValue(
+            (this.dataZoomModel as InsideZoomModel).get('moveOnMouseWheelAxis', true),
+            e.scrollDeltaX, e.scrollDeltaY, e.scrollDelta
         );
-        return directionInfo.signal * (range[1] - range[0]) * e.scrollDelta;
+        const directionInfo = getDirectionInfo[coordSysMainType](
+            [0, 0], [effectiveDelta, effectiveDelta],
+            axisModel, controller, coordSysInfo
+        );
+        // Only `directionInfo.signal` is used here — the scalar already
+        // encodes the magnitude. `directionInfo.pixel` would go through
+        // `pointToCoord` for polar and no longer match the scalar.
+        return directionInfo.signal * (range[1] - range[0]) * effectiveDelta;
     })
 };
+
+/**
+ * Picks the wheel-derived value for this dataZoom given a
+ * `moveOnMouseWheelAxis` / `zoomOnMouseWheelAxis` setting. Unset falls
+ * back to the caller-supplied scalar so existing configurations keep
+ * their pre-existing behavior.
+ */
+function pickWheelAxisValue(
+    wheelAxis: WheelAxisType | undefined,
+    axisHorizontal: number,
+    axisVertical: number,
+    fallback: number
+): number {
+    if (wheelAxis === 'horizontal') {
+        return axisHorizontal;
+    }
+    if (wheelAxis === 'vertical') {
+        return axisVertical;
+    }
+    return fallback;
+}
 
 export type DataZoomGetRangeHandlers = typeof getRangeHandlers;
 
 function makeMover(
     getPercentDelta: (
+        this: InsideZoomView,
         range: [number, number],
         axisModel: AxisBaseModel,
         coordSysInfo: DataZoomReferCoordSysInfo,
@@ -177,8 +221,8 @@ function makeMover(
             return;
         }
 
-        const percentDelta = getPercentDelta(
-            range, axisModel, coordSysInfo, coordSysMainType, controller, e
+        const percentDelta = getPercentDelta.call(
+            this, range, axisModel, coordSysInfo, coordSysMainType, controller, e
         );
 
         sliderMove(percentDelta, range, [0, 100], 'all');
