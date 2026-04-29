@@ -23,7 +23,7 @@
 // pan or zoom, only dispatch one action for those data zoom
 // components.
 
-import RoamController, { RoamOption } from '../../component/helper/RoamController';
+import RoamController, { RoamOption, WheelAxisType } from '../../component/helper/RoamController';
 import * as throttleUtil from '../../util/throttle';
 import { makeInner } from '../../util/model';
 import { Dictionary, RoamOptionMixin, ZRElementEvent } from '../../util/types';
@@ -200,10 +200,8 @@ function mergeControllerParams(
     let preventDefaultMouseMove = true;
     let zoomOnMouseWheelEverActive = false;
     let moveOnMouseWheelEverActive = false;
-    // `dataZoomInfoMap` is guaranteed non-empty by the caller.
-    const firstDz = dataZoomInfoMap.get(dataZoomInfoMap.keys()[0]).model;
-    let zoomOnMouseWheelAxis = firstDz.get('zoomOnMouseWheelAxis', true);
-    let moveOnMouseWheelAxis = firstDz.get('moveOnMouseWheelAxis', true);
+    let zoomOnMouseWheelAxis: WheelAxisType | undefined;
+    let moveOnMouseWheelAxis: WheelAxisType | undefined;
 
     dataZoomInfoMap.each(function (dataZoomInfo) {
         const dataZoomModel = dataZoomInfo.model;
@@ -222,17 +220,24 @@ function mergeControllerParams(
             && dataZoomModel.get('preventDefaultMouseMove', true);
 
         if (dataZoomModel.get('zoomOnMouseWheel', true) !== false) {
+            const axis = dataZoomModel.get('zoomOnMouseWheelAxis', true);
+            if (!zoomOnMouseWheelEverActive) {
+                zoomOnMouseWheelAxis = axis;
+            }
+            else if (zoomOnMouseWheelAxis !== axis) {
+                zoomOnMouseWheelAxis = undefined;
+            }
             zoomOnMouseWheelEverActive = true;
         }
         if (dataZoomModel.get('moveOnMouseWheel', true) !== false) {
+            const axis = dataZoomModel.get('moveOnMouseWheelAxis', true);
+            if (!moveOnMouseWheelEverActive) {
+                moveOnMouseWheelAxis = axis;
+            }
+            else if (moveOnMouseWheelAxis !== axis) {
+                moveOnMouseWheelAxis = undefined;
+            }
             moveOnMouseWheelEverActive = true;
-        }
-
-        if (zoomOnMouseWheelAxis !== dataZoomModel.get('zoomOnMouseWheelAxis', true)) {
-            zoomOnMouseWheelAxis = undefined;
-        }
-        if (moveOnMouseWheelAxis !== dataZoomModel.get('moveOnMouseWheelAxis', true)) {
-            moveOnMouseWheelAxis = undefined;
         }
     });
 

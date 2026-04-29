@@ -52,11 +52,11 @@ export interface RoamOption {
     /**
      * Restrict wheel-driven zoom to a single wheel axis. Unset = no restriction.
      */
-    zoomOnMouseWheelAxis?: WheelAxisType | undefined
+    zoomOnMouseWheelAxis?: WheelAxisType
     /**
      * Restrict wheel-driven pan to a single wheel axis. Unset = no restriction.
      */
-    moveOnMouseWheelAxis?: WheelAxisType | undefined
+    moveOnMouseWheelAxis?: WheelAxisType
     /**
      * If fixed the page when pan
      */
