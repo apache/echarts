@@ -1,0 +1,137 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="lib/simpleRequire.js"></script>
+        <script src="lib/config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+            }
+            #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+            require(['echarts'], function (echarts) {
+                var lower = [0.202, 0.198, 0.194, 0.190, 0.186, 0.181, 0.178, 0.173];
+                var band = [0.045, 0.043, 0.041, 0.039, 0.036, 0.035, 0.036, 0.034];
+                var upper = lower.map(function (value, index) {
+                    return +(value + band[index]).toFixed(3);
+                });
+                var middle = lower.map(function (value, index) {
+                    return +(value + band[index] / 2).toFixed(3);
+                });
+
+                var chart = echarts.init(document.getElementById('main'));
+                chart.setOption({
+                    animation: false,
+                    color: ['#8ebdff', '#5b9cff', '#8ebdff'],
+                    toolbox: {
+                        right: 20,
+                        feature: {
+                            dataZoom: {}
+                        }
+                    },
+                    grid: {
+                        left: 70,
+                        right: 60,
+                        top: 40,
+                        bottom: 55
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['17', '04:00', '08:00', '12:00', '16:00', '20:00', '00:00', '04:00']
+                    },
+                    yAxis: {
+                        scale: true,
+                        splitLine: {
+                            lineStyle: {
+                                color: '#d8e1f2'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'lower',
+                        type: 'line',
+                        symbol: 'none',
+                        data: lower,
+                        lineStyle: {
+                            type: 'dashed',
+                            width: 2,
+                            color: '#8ebdff'
+                        }
+                    }, {
+                        name: 'band-base',
+                        type: 'line',
+                        stack: 'confidence-band',
+                        symbol: 'none',
+                        data: lower,
+                        lineStyle: {
+                            opacity: 0
+                        }
+                    }, {
+                        name: 'band',
+                        type: 'line',
+                        stack: 'confidence-band',
+                        symbol: 'none',
+                        data: band,
+                        areaStyle: {
+                            color: 'rgba(91, 156, 255, 0.35)'
+                        },
+                        lineStyle: {
+                            opacity: 0
+                        }
+                    }, {
+                        name: 'middle',
+                        type: 'line',
+                        symbol: 'none',
+                        data: middle,
+                        lineStyle: {
+                            width: 2,
+                            color: '#5b9cff'
+                        }
+                    }, {
+                        name: 'upper',
+                        type: 'line',
+                        symbol: 'none',
+                        data: upper,
+                        lineStyle: {
+                            type: 'dashed',
+                            width: 2,
+                            color: '#8ebdff'
+                        }
+                    }]
+                });
+                window.__ECHARTS_21111_CHART__ = chart;
+                window.__EC_TEST_READY__ = true;
+            });
+        </script>
+    </body>
+</html>

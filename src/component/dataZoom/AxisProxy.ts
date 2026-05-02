@@ -27,7 +27,7 @@ import { Dictionary } from '../../util/types';
 // TODO Polar?
 import DataZoomModel from './DataZoomModel';
 import { AxisBaseModel } from '../../coord/AxisBaseModel';
-import { unionAxisExtentFromData } from '../../coord/axisHelper';
+import { getDataDimensionsOnAxis, unionAxisExtentFromData } from '../../coord/axisHelper';
 import { ensureScaleRawExtentInfo } from '../../coord/scaleRawExtentInfo';
 import { getAxisMainType, isCoordSupported, DataZoomAxisDimension } from './helper';
 import { SINGLE_REFERRING } from '../../util/model';
@@ -297,7 +297,9 @@ class AxisProxy {
 
         each(seriesModels, function (seriesModel) {
             let seriesData = seriesModel.getData();
-            const dataDims = seriesData.mapDimensionsAll(axisDim);
+            // Use the same dimensions as axis extent calculation. Stacked series
+            // are rendered by their stack result dimension, not the original value dimension.
+            const dataDims = getDataDimensionsOnAxis(seriesData, axisDim);
 
             if (!dataDims.length) {
                 return;
