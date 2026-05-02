@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="lib/simpleRequire.js"></script>
+    <script src="lib/config.js"></script>
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/facePrint.js"></script>
+    <script src="lib/testHelper.js"></script>
+    <link rel="stylesheet" href="lib/reset.css" />
+</head>
+<body>
+    <div id="main"></div>
+    <script>
+        require(['echarts'], function (echarts) {
+            var bgColor = '#fff1a8';
+            var option = {
+                backgroundColor: bgColor,
+                animation: false,
+                grid: {
+                    left: 70,
+                    right: 30,
+                    top: 50,
+                    bottom: 50
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['value', 'empty A', 'empty B'],
+                    splitArea: {
+                        show: true,
+                        areaStyle: {
+                            color: ['#5470c6', '#91cc75']
+                        }
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: ['row'],
+                    splitArea: {
+                        show: true,
+                        areaStyle: {
+                            color: ['#ee6666']
+                        }
+                    }
+                },
+                visualMap: {
+                    min: 0,
+                    max: 10,
+                    show: false,
+                    inRange: {
+                        color: ['#73c0de', '#fac858']
+                    }
+                },
+                series: [{
+                    type: 'heatmap',
+                    data: [
+                        [0, 0, 8],
+                        [1, 0, ''],
+                        [2, 0, '']
+                    ],
+                    label: {
+                        show: true
+                    }
+                }]
+            };
+
+            var chart = testHelper.create(echarts, 'main', {
+                title: [
+                    'Empty heatmap cells should cover **splitArea** with chart background',
+                    'The last two cells should be pale yellow, not blue/green splitArea colors.'
+                ],
+                height: 280,
+                option: option
+            });
+
+            setTimeout(function () {
+                testHelper.printAssert(chart, function (assert) {
+                    var data = chart.getModel().getSeriesByIndex(0).getData();
+                    var filledCell = data.getItemGraphicEl(0);
+                    var emptyCellA = data.getItemGraphicEl(1);
+                    var emptyCellB = data.getItemGraphicEl(2);
+
+                    assert(filledCell);
+                    assert(emptyCellA);
+                    assert(emptyCellB);
+                    assert(emptyCellA.style.fill === bgColor);
+                    assert(emptyCellB.style.fill === bgColor);
+                });
+            }, 0);
+        });
+    </script>
+</body>
+</html>

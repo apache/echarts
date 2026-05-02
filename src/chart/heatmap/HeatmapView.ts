@@ -21,6 +21,7 @@ import * as graphic from '../../util/graphic';
 import { toggleHoverEmphasis } from '../../util/states';
 import HeatmapLayer from './HeatmapLayer';
 import * as zrUtil from 'zrender/src/core/util';
+import tokens from '../../visual/tokens';
 import ChartView from '../../view/Chart';
 import HeatmapSeriesModel, { HeatmapDataItemOption } from './HeatmapSeries';
 import type GlobalModel from '../../model/Global';
@@ -29,7 +30,7 @@ import type VisualMapModel from '../../component/visualMap/VisualMapModel';
 import type PiecewiseModel from '../../component/visualMap/PiecewiseModel';
 import type ContinuousModel from '../../component/visualMap/ContinuousModel';
 import { CoordinateSystem, isCoordinateSystemType } from '../../coord/CoordinateSystem';
-import { StageHandlerProgressParams, Dictionary, OptionDataValue } from '../../util/types';
+import { StageHandlerProgressParams, Dictionary, OptionDataValue, ZRColor } from '../../util/types';
 import type Cartesian2D from '../../coord/cartesian/Cartesian2D';
 import type Calendar from '../../coord/calendar/Calendar';
 import { setLabelStyle, getLabelStatesModels } from '../../label/labelStyle';
@@ -130,11 +131,12 @@ class HeatmapView extends ChartView {
         this.group.removeAll();
 
         const coordSys = seriesModel.coordinateSystem;
+        const emptyCellFill: ZRColor = ecModel.get('backgroundColor') || tokens.color.background;
         if (coordSys.type === 'cartesian2d'
             || coordSys.type === 'calendar'
             || coordSys.type === 'matrix'
         ) {
-            this._renderOnGridLike(seriesModel, api, 0, seriesModel.getData().count());
+            this._renderOnGridLike(seriesModel, api, emptyCellFill, 0, seriesModel.getData().count());
         }
         else if (isGeoCoordSys(coordSys)) {
             this._renderOnGeo(
@@ -154,6 +156,7 @@ class HeatmapView extends ChartView {
         api: ExtensionAPI
     ) {
         const coordSys = seriesModel.coordinateSystem;
+        const emptyCellFill: ZRColor = ecModel.get('backgroundColor') || tokens.color.background;
         if (coordSys) {
             // geo does not support incremental rendering?
             if (isGeoCoordSys(coordSys)) {
@@ -161,7 +164,7 @@ class HeatmapView extends ChartView {
             }
             else {
                 this._progressiveEls = [];
-                this._renderOnGridLike(seriesModel, api, params.start, params.end, true);
+                this._renderOnGridLike(seriesModel, api, emptyCellFill, params.start, params.end, true);
             }
         }
     }
@@ -173,6 +176,7 @@ class HeatmapView extends ChartView {
     _renderOnGridLike(
         seriesModel: HeatmapSeriesModel,
         api: ExtensionAPI,
+        emptyCellFill: ZRColor,
         start: number,
         end: number,
         incremental?: boolean
@@ -236,10 +240,11 @@ class HeatmapView extends ChartView {
             if (isCartesian2d) {
                 const dataDimX = data.get(dataDims[0], idx);
                 const dataDimY = data.get(dataDims[1], idx);
+                const value = data.get(dataDims[2], idx) as number;
 
-                // Ignore empty data and out of extent data
-                if (isNaN(data.get(dataDims[2], idx) as number)
-                    || isNaN(dataDimX as number)
+                // Ignore out of extent data. Preserve empty cells so splitArea
+                // does not show through inconsistently behind them.
+                if (isNaN(dataDimX as number)
                     || isNaN(dataDimY as number)
                     || dataDimX < xAxisExtent[0]
                     || dataDimX > xAxisExtent[1]
@@ -253,6 +258,7 @@ class HeatmapView extends ChartView {
                     dataDimX,
                     dataDimY
                 ]);
+                const emptyCell = isNaN(value);
 
                 rect = new graphic.Rect({
                     shape: {
@@ -261,10 +267,15 @@ class HeatmapView extends ChartView {
                         width,
                         height
                     },
-                    style
+                    style: emptyCell
+                        ? zrUtil.extend(zrUtil.extend({}, style), {
+                            fill: emptyCellFill
+                        })
+                        : style
                 });
             }
             else if (isMatrix) {
+                const value = data.get(dataDims[2], idx) as number;
                 const shape = coordSys.dataToLayout([
                     data.get(dataDims[0], idx),
                     data.get(dataDims[1], idx)
@@ -272,10 +283,15 @@ class HeatmapView extends ChartView {
                 if (zrUtil.eqNaN(shape.x)) {
                     continue;
                 }
+                const emptyCell = isNaN(value);
                 rect = new graphic.Rect({
                     z2: 1,
                     shape,
-                    style,
+                    style: emptyCell
+                        ? zrUtil.extend(zrUtil.extend({}, style), {
+                            fill: emptyCellFill
+                        })
+                        : style,
                 });
             }
             else { // Calendar
