@@ -53,6 +53,7 @@
     "release": "npm run build:lib && npm run build:i18n && npm run build && npm run build:esm && npm run build:extension && npm run build:ssr",
     "help": "node build/build.js --help",
     "test:visual": "node test/runTest/server.js",
+    "test:visual:copy:examples": "node test/runTest/visual-test-copy-from-examples.js",
     "test": "npx jest --config test/ut/jest.config.cjs",
     "test:single": "npx jest --config test/ut/jest.config.cjs --coverage=false -t",
     "test:single:debug": "npx --node-arg=--inspect-brk jest --runInBand --config test/ut/jest.config.cjs --coverage=false -t",

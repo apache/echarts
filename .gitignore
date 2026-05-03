@@ -213,3 +213,4 @@ todo
 /features.js
 /features.d.ts
 *.tgz
+/test/ZEXAMPLE_*
