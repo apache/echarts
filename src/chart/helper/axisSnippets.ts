@@ -20,6 +20,7 @@
 import type Axis from '../../coord/Axis';
 import { calcBandWidth } from '../../coord/axisBand';
 import { AXIS_STAT_KEY_DELIMITER, AxisStatKey, AxisStatMetrics } from '../../coord/axisStatistics';
+import { registerMetricImplLiPosMinGap } from '../../coord/axisStatisticsMetricsImpl';
 import { CoordinateSystem } from '../../coord/CoordinateSystem';
 import { AxisContainShapeHandler } from '../../coord/scaleRawExtentInfo';
 import { isOrdinalScale } from '../../scale/helper';
@@ -67,7 +68,8 @@ export function makeAxisStatKey2(seriesType: ComponentSubType, coordSysType: Coo
 /**
  * A pre-built `getMetrics`.
  */
-export function getMetricsNonOrdinalLinearPositiveMinGap(axis: Axis): AxisStatMetrics {
+export function createMetricsNonOrdinalLinearPositiveMinGap(axis: Axis): AxisStatMetrics {
+    registerMetricImplLiPosMinGap();
     return {
         // non-category scale do not use `liPosMinGap` to calculate `bandWidth`.
         liPosMinGap: !isOrdinalScale(axis.scale)

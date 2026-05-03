@@ -35,7 +35,7 @@ import { EChartsExtensionInstallRegisters } from '../../extension';
 import { registerAxisContainShapeHandler } from '../../coord/scaleRawExtentInfo';
 import {
     createBandWidthBasedAxisContainShapeHandler,
-    getMetricsNonOrdinalLinearPositiveMinGap,
+    createMetricsNonOrdinalLinearPositiveMinGap,
     makeAxisStatKey
 } from '../helper/axisSnippets';
 import { calcBandWidth } from '../../coord/axisBand';
@@ -285,7 +285,7 @@ export function registerCandlestickAxisHandlers(registers: EChartsExtensionInsta
             {
                 key: axisStatKey,
                 seriesType: SERIES_TYPE_CANDLESTICK,
-                getMetrics: getMetricsNonOrdinalLinearPositiveMinGap
+                getMetrics: createMetricsNonOrdinalLinearPositiveMinGap
             }
         );
         registerAxisContainShapeHandler(

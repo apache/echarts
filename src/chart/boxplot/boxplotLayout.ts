@@ -32,7 +32,7 @@ import { registerAxisContainShapeHandler } from '../../coord/scaleRawExtentInfo'
 import { calcBandWidth } from '../../coord/axisBand';
 import {
     createBandWidthBasedAxisContainShapeHandler,
-    getMetricsNonOrdinalLinearPositiveMinGap,
+    createMetricsNonOrdinalLinearPositiveMinGap,
     makeAxisStatKey
 } from '../helper/axisSnippets';
 
@@ -197,7 +197,7 @@ export function registerBoxplotAxisHandlers(registers: EChartsExtensionInstallRe
             {
                 key: axisStatKey,
                 seriesType: SERIES_TYPE_BOXPLOT,
-                getMetrics: getMetricsNonOrdinalLinearPositiveMinGap,
+                getMetrics: createMetricsNonOrdinalLinearPositiveMinGap,
             }
         );
         registerAxisContainShapeHandler(

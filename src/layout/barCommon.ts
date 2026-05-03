@@ -18,7 +18,7 @@
 */
 
 import { assert } from 'zrender/src/core/util';
-import { getMetricsNonOrdinalLinearPositiveMinGap } from '../chart/helper/axisSnippets';
+import { createMetricsNonOrdinalLinearPositiveMinGap } from '../chart/helper/axisSnippets';
 import type Axis from '../coord/Axis';
 import { AxisStatKey, requireAxisStatistics } from '../coord/axisStatistics';
 import { EChartsExtensionInstallRegisters } from '../extension';
@@ -45,7 +45,7 @@ export function requireAxisStatisticsForBaseBar(
             key: axisStatKey,
             seriesType,
             coordSysType,
-            getMetrics: getMetricsNonOrdinalLinearPositiveMinGap
+            getMetrics: createMetricsNonOrdinalLinearPositiveMinGap
         }
     );
 }
