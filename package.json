@@ -72,7 +72,7 @@
   },
   "dependencies": {
     "tslib": "2.3.0",
-    "zrender": "6.0.0"
+    "zrender": "6.1.0"
   },
   "devDependencies": {
     "@babel/code-frame": "7.10.4",
