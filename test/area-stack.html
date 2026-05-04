@@ -44,6 +44,7 @@ under the License.
         <div id="stack-all"></div>
         <div id="stack-positive"></div>
         <div id="stack-negative"></div>
+        <div id="stack-normalize"></div>
 
         <script>
 
@@ -749,6 +750,96 @@ under the License.
                 testHelper.create(echarts, 'stack-negative', {
                     title: 'Stacking with positive and negative values (stackStrategy: negative)',
                     option: option
+                });
+            });
+
+        </script>
+
+        <script>
+
+            require(['echarts'], function (echarts) {
+
+                var xAxisData = [];
+                var directData = [];
+                var emailData = [];
+                var adsData = [];
+                var searchData = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('Day ' + (i + 1));
+                    directData.push(Math.round(28 + Math.sin(i / 5) * 12 + (i % 9)));
+                    emailData.push(Math.round(24 + Math.cos(i / 7) * 10 + (i % 7)));
+                    adsData.push(Math.round(20 + Math.sin(i / 9 + 1) * 8 + (i % 5) * 2));
+                    searchData.push(Math.round(30 + Math.cos(i / 6 + 2) * 14 + (i % 11)));
+                }
+
+                var option = {
+                    legend: {
+                        top: 25
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    grid: {
+                        top: 80,
+                        left: 45,
+                        right: 30,
+                        bottom: 40
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: xAxisData
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 1
+                    },
+                    series: [
+                        {
+                            name: 'Direct',
+                            type: 'line',
+                            stack: 'normalized',
+                            stackNormalize: true,
+                            areaStyle: {},
+                            symbol: 'none',
+                            data: directData
+                        },
+                        {
+                            name: 'Email',
+                            type: 'line',
+                            stack: 'normalized',
+                            stackNormalize: true,
+                            areaStyle: {},
+                            symbol: 'none',
+                            data: emailData
+                        },
+                        {
+                            name: 'Ads',
+                            type: 'line',
+                            stack: 'normalized',
+                            stackNormalize: true,
+                            areaStyle: {},
+                            symbol: 'none',
+                            data: adsData
+                        },
+                        {
+                            name: 'Search',
+                            type: 'line',
+                            stack: 'normalized',
+                            stackNormalize: true,
+                            areaStyle: {},
+                            symbol: 'none',
+                            data: searchData
+                        }
+                    ]
+                };
+
+                testHelper.create(echarts, 'stack-normalize', {
+                    title: 'Normalized stacked area (top boundary should stay at 1)',
+                    option: option,
+                    height: 420
                 });
             });
 

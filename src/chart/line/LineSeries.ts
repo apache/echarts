@@ -113,6 +113,13 @@ export interface LineSeriesOption extends SeriesOption<LineStateOption<CallbackD
 
     connectNulls?: boolean
 
+    // Normalize stacked line values by the stack total.
+    // This only takes effect when all series in the same `stack` group
+    // are `series.line` and all of them have `stackNormalize: true`.
+    // Otherwise, the stack falls back to regular stacking, so enabling
+    // this on only one series in the stack has no effect.
+    stackNormalize?: boolean
+
     showSymbol?: boolean
     // false | 'auto': follow the label interval strategy.
     // true: show all symbols.
